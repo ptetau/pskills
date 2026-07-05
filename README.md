@@ -9,6 +9,10 @@ A collection of Claude Code skills. Install any skill by copying its directory i
     SKILL.md
   quiz/
     SKILL.md
+  quiz-plan/
+    SKILL.md
+  quiz-plan-execute/
+    SKILL.md
   squiz/
     SKILL.md
 ```
@@ -81,6 +85,53 @@ Reply with a letter (optionally with notes: `B, with notes: include p99 latency`
 After the last question, a resolved summary is shown before work begins.
 
 Cap: ~7 questions. For more, escalate to `/squiz`.
+
+---
+
+## `/quiz-plan` — Quiz-driven Change Plan
+
+Runs an adaptive interview (not a fixed list) to surface every assumption, ambiguity,
+and dependency in a proposed change, then writes a structured `<name>.plan.md` at the
+project root: Intent, Ground truth, Boundaries, gated Steps, Verification/rollback, and
+a live progress tracker. Step 1 always tests the riskiest assumption.
+
+**Example**
+
+```
+/quiz-plan add rate limiting to the public API routes
+```
+
+The agent drills — configurable or hardcoded limit? which middleware dir? what must not
+change? — until it can picture the exact files and changes, confirms, then emits
+`add-api-rate-limiting.plan.md` with per-step gates (AUTO / GATED) and a 12-char
+progress bar in the header.
+
+---
+
+## `/quiz-plan-execute` — Plan Executor (TDD, per-step commits)
+
+The executor twin of `/quiz-plan`. Reads a `.plan.md` and works each step to completion
+through a strict 6-stage gate — each stage must finish before the next:
+
+1. **Understand** the acceptance criteria (the step's `Done when`)
+2. **Red** — write the failing test
+3. **Green** — minimum impl to pass
+4. **Refactor** — remove duplication, meet conventions, cut complexity
+5. **Review** against acceptance criteria
+6. **Commit** — one commit per step, plan tracker updated in the same commit
+
+At start it asks whether to work in a new branch, a new git worktree, and/or dispatch
+each step to a fresh subagent. On completion it offers to squash-merge locally or open
+a PR.
+
+**Example**
+
+```
+/quiz-plan-execute add-api-rate-limiting.plan.md
+```
+
+GATED steps pause for human review; AUTO steps continue. On conflict with Intent or
+Boundaries the executor stops and asks rather than resolving it itself.
 
 ---
 
