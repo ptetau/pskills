@@ -16,7 +16,7 @@ description: >
 
 ## Overview
 
-This skill is the executor twin of `/quiz-plan`. Where `/quiz-plan` interviews the
+This skill is the executor twin of [[quiz-plan]]. Where `/quiz-plan` interviews the
 user and writes a `.plan.md`, this skill **reads that plan and does the work** — one
 step at a time, each step driven through a disciplined test-first loop, each step
 landing as its own commit.
@@ -107,7 +107,8 @@ Apply the answers:
 - **New agent per step (y):** for each step, dispatch the entire 6-stage loop to a fresh
   subagent via the Agent tool (see "Subagent dispatch" below). Default (n) = run inline.
 
-Confirm the chosen options back to the user in one line, then begin at the first
+Confirm the chosen options back to the user in one line. Set the plan header
+**Status** to `In progress` (from `Draft` / `Agreed`), then begin at the first
 unfinished step.
 
 ---
@@ -235,7 +236,8 @@ Inline mode (default) runs the identical loop in the main thread.
 
 ## ON COMPLETION — squash-merge or PR
 
-When all steps are done (tracker at 100%), ask the user:
+When all steps are done (tracker at 100%), set the plan header **Status** to `Done`,
+then ask the user:
 
 ```
 All <N> steps complete on <branch>. Finish how?

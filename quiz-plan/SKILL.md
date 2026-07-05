@@ -233,7 +233,10 @@ After generating the plan, present to the user:
 2. A one-line summary of each step
 3. Ask: *"Do you want to start executing this plan?"*
 
-If yes, transition to executor mode and begin Step 1. If no, the plan file exists on disk for later use.
+If yes, hand off to [[quiz-plan-execute]] — run `/quiz-plan-execute <path>`, which drives each
+step through a strict 6-stage TDD gate (understand → red → green → refactor → review → commit),
+one commit per step, with optional new branch / worktree / subagent. If no, the plan file exists
+on disk for later use — the user can run `/quiz-plan-execute` against it any time.
 
 ## Example
 
