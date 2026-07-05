@@ -35,11 +35,11 @@ The skill has two phases that flow sequentially: the quiz (gather), then the pla
 
 ### Phase 1: The Adaptive Quiz
 
-Interview the user through a conversational drill-down. You have a starter question bank below, but the quiz is **not limited to these 10 questions**. Each answer may reveal assumptions, ambiguities, or unknowns that need their own follow-up. Keep asking until you can write a complete, unambiguous plan.
+Interview the user one card at a time (the [[quiz]] card UX — see "The look" below), drilling deeper as answers reveal ambiguity. You have a starter question bank below, but the quiz is **not limited to these 10 questions**. Each answer may reveal assumptions, ambiguities, or unknowns that need their own follow-up. Keep asking until you can write a complete, unambiguous plan.
 
 #### Starter Question Pool
 
-These are your opening questions — a pool to draw from, **not a script to recite in order**. Skip any that the user's opening statement already answered. Ask them conversationally, woven into the flow, one at a time. Expect to ask follow-up drill questions (see next section) that go deeper.
+These are your opening questions — a pool to draw from, **not a script to recite in order**. Skip any that the user's opening statement already answered. Render each as a **quiz card** (identical to `/quiz` — see "The look" below), **one per turn**. Expect to ask follow-up drill questions (see next section) that go deeper — those are rendered as cards too.
 
 **What's the change?** — "Describe the outcome in one sentence."
 Captures: core change in plain language. → **Intent**
@@ -95,15 +95,83 @@ After each answer, **assess whether the answer reveals ambiguity or hidden assum
 - All assumptions from earlier answers have been followed up and resolved
 - You can picture a complete, ordered list of implementation steps
 
-#### Quiz Interaction Rules
+#### The look (identical to /quiz)
 
-1. Ask questions **one at a time** woven into natural conversation. Do not read from a list.
-2. Use the user's own terms in follow-ups (mirror their language).
-3. **Short answer → drill deeper.** "Probably" or "I think" means a follow-up is needed.
-4. Never argue with scope. Record what the user says — if it's risky, Boundaries will flag it.
-5. **Drill until clear** (see signs above). Only proceed to confirmation when you have no remaining questions.
-6. Once you're satisfied the drill is exhausted, summarise what you heard and ask: *"Does this look right? Anything to add or change?"* This confirmation gates Phase 2.
-7. If the user revises a previous answer during confirmation, update your notes and check if the revision opens new questions. Do not re-ask every question.
+The question UX is **the same terminal-card experience as [[quiz]]** — same Apple //e × IBM Plex aesthetic, same markers, same rhythm. Render every question (starter *and* drill follow-up) as its own fenced code block card. **One question per message, always** — never stack two cards in the same turn.
+
+##### The question card
+
+````
+```
+┌─ quiz · 03/·· ──────────────────────────────────────┐
+│ [?] Where does the rate-limit middleware live?      │
+│     why it matters: fixes which files the plan edits │
+└──────────────────────────────────────────────────────┘
+
+  A · internal/api/middleware/   next to the logging middleware
+  B · a new top-level package     e.g. pkg/ratelimit/
+  C · not sure                    I'll go read the code and report
+
+  // reply: A | B | C    (optional: add a note after the letter)
+```
+````
+
+Then on the next chat line, in plain prose, one sentence: *"Pick A, B, or C — or reply `B, with notes: …` to add detail."*
+
+The counter is `quiz · NN/··`. Because the drill is **adaptive**, the total is unknown while asking, so the denominator stays `··`. Increment the index each turn (`01`, `02`, `03`…). In the final resolved view, backfill the real total (`07/07`).
+
+For **free-text** answers (commands, file paths, branch name) where lettered options don't fit, drop the `A · …` options and end the card with `// reply: <your answer>` instead — the card frame, `[?]` marker, and `why it matters:` line stay identical.
+
+##### The rhythm (between questions)
+
+After each reply, echo a one-line `[✓]` confirmation for the just-answered question, then *immediately* render the next card in the same message:
+
+```
+turn 1 — agent: render Q1 card + reply hint
+turn 2 — user: "A"
+turn 3 — agent: "[✓] 01 change → A · add rate limiting"  then Q2 card + reply hint
+turn 4 — user: "B, with notes: env-configurable, default 100/min"
+turn 5 — agent: "[✓] 02 limit → B · configurable (note: default 100/min)"  then Q3
+…
+```
+
+##### Final resolved view (after the drill is exhausted)
+
+When you have no remaining questions, restate the whole set with `[✓]` markers (backfilling the real total) so the user can spot a mistake before Phase 2:
+
+```
+[✓] 01 change   → add rate limiting to public API routes
+[✓] 02 limit    → configurable   (note: default 100/min)
+[✓] 03 location → internal/api/middleware/
+…
+[✓] 07 branch   → feature/rate-limiting
+```
+
+Then in one plain sentence: *"Does this look right? Say `wait` if anything's wrong — otherwise I'll write the plan."* This confirmation gates Phase 2.
+
+##### Rules of the look
+
+1. **Always a fenced code block.** Monospace is the aesthetic — render as a code block, not prose with hyphens.
+2. **Top border `quiz · NN/··`.** Lowercase. Box-drawing chars (`┌─┐│└┘`) for the header; plain ASCII for the rest.
+3. **`[?]` for open, `[✓]` for resolved.** Match the [[quiz]]/[[squiz]] convention exactly.
+4. **Options as `A · short-label   longer-explanation`**, two-space indent, ≤~70 chars wide so it survives mobile.
+5. **Optional `why it matters:` line** — one short clause, only when the consequence helps the user answer.
+6. **`// reply:` hint at the bottom** of every card.
+7. **One question per turn — never stack.** Each card its own message. Wait for the reply before the next.
+8. **No emojis** in the cards (except as literal sample content in option text).
+9. **No cap.** Unlike `/quiz` (which caps at ~7 and escalates to `/squiz`), the plan drill runs as long as ambiguity remains — keep rendering cards until the "Signs you're done asking" above are all true.
+
+##### Reply parsing (same as /quiz)
+
+Be permissive. Accept `A` / `a` / `Option A`; `B, with notes: …`; `B (…)`; `skip` / `you decide` / `n/a` (explicit skip, you choose). If the user types free prose ("the middleware one"), match to the closest option and confirm in your echo. If they answer several at once (`1a2b3c`), parse the run, echo all `[✓]` lines in order, and move to the next unanswered question.
+
+##### Drill behaviour within the card UX
+
+1. Use the user's own terms in follow-up cards (mirror their language).
+2. **Short/hedged answer → drill deeper.** "Probably" or "I think" means the next card is a follow-up on that point.
+3. Never argue with scope. Record what the user says — Boundaries will flag risk.
+4. **Drill until clear** (see "Signs you're done asking"). Only render the resolved view when no questions remain.
+5. If the user revises an earlier answer in the resolved view, update your notes, check whether the revision opens a new question (render one more card if so). Don't re-ask everything.
 
 ### Phase 2: Write the Plan
 
@@ -242,56 +310,60 @@ on disk for later use — the user can run `/quiz-plan-execute` against it any t
 
 **User:** "/quiz-plan I want to add rate limiting to the API"
 
-### Quiz interaction (showing adaptive drilling)
+### Quiz interaction (card UX, showing adaptive drilling)
 
-**Agent:** "One sentence — what are we changing?"
+Every question is a card — one per turn, `[✓]` echo before the next — exactly like `/quiz`.
+
+```
+┌─ quiz · 01/·· ──────────────────────────────────────┐
+│ [?] One sentence — what are we changing?            │
+└──────────────────────────────────────────────────────┘
+
+  // reply: <your answer>
+```
 **User:** "Add rate limiting to the public API routes."
 
-**Agent:** "What problem does this solve?"
-**User:** "One client hammers us and degrades service for everyone. No rate limiting exists today."
+```
+[✓] 01 change → add rate limiting to public API routes
 
-*Drill: the answer says "public API routes" — what about internal services that might share an IP pool?*
+┌─ quiz · 02/·· ──────────────────────────────────────┐
+│ [?] What's the riskiest part — most likely to break?│
+│     why it matters: step 1 of the plan tests it     │
+└──────────────────────────────────────────────────────┘
 
-**Agent:** "What's the riskiest part — the thing most likely to break?"
-**User:** "We accidentally rate-limit our own internal services if they share an IP pool with a bad client."
+  // reply: <your answer>
+```
+**User:** "We accidentally rate-limit our own internal services if they share an IP pool."
 
-*Drill noted. Move to files.*
+```
+[✓] 02 risk → internal services throttled if they share an IP pool
 
-**Agent:** "What files are we touching?"
-**User:** "The router, and I'll add a middleware package. Plus go.mod for the library."
+┌─ quiz · 03/·· ──────────────────────────────────────┐
+│ [?] Where does the middleware live?                 │
+│     why it matters: fixes which files the plan edits │
+└──────────────────────────────────────────────────────┘
 
-*Drill: "middleware package" is vague — where exactly?*
+  A · internal/api/middleware/   next to logging middleware
+  B · a new package               e.g. pkg/ratelimit/
+  C · not sure                    I'll go read the code
 
-**Agent:** "Where does the middleware live — `internal/api/middleware/` or somewhere else?"
-**User:** "Yeah, `internal/api/middleware/` — there's already a pattern there for logging middleware."
+  // reply: A | B | C
+```
+**User:** "A — there's already a logging-middleware pattern there."
 
-*Drill: existing pattern means we need to inspect it. Capture as convention.*
+*(Drill continues as cards: limit configurable-or-hardcoded, must-not-touch, verification, build/test commands, branch — one card each, until no ambiguity remains.)*
 
-**Agent:** "Anything we must not touch?"
-**User:** "Don't touch the auth middleware. Don't change private/internal routes."
-
-**Agent:** "How will we verify this is done?"
-**User:** "Integration test — 100 rapid requests from the same IP, expect 429 on the 101st."
-
-*Drill: does the user want a configurable limit, or is 100 hardcoded?*
-
-**Agent:** "What's the rate limit — configurable or hardcoded?"
-**User:** "Configurable via env var, default 100 requests per minute."
-
-**Agent:** "Rollback if this goes wrong?"
-**User:** "git revert."
-
-**Agent:** "Build and test commands?"
-**User:** "`go build ./...` and `go test ./...`"
-
-*Drill: conventions check — user mentioned the logging middleware pattern. Verify.*
-
-**Agent:** "Before I write the plan — any existing docs (CLAUDE.md, ADRs) I should read? Or a branch name?"
-**User:** "Branch is `feature/rate-limiting`. No other docs needed."
-
-*Drill exhausted. No more ambiguous answers. Confirm:*
-
-**Agent:** "Here's what I captured: [summary]. Does this look right?"
+```
+[✓] 01 change    → add rate limiting to public API routes
+[✓] 02 risk      → internal services throttled if IP pool shared
+[✓] 03 location  → internal/api/middleware/   (note: mirror logging mw)
+[✓] 04 limit     → configurable   (note: env var, default 100/min)
+[✓] 05 must-not  → auth middleware, private/internal routes
+[✓] 06 verify    → integration test: 101st rapid req → 429
+[✓] 07 commands  → go build ./...  ·  go test ./...
+[✓] 08 branch    → feature/rate-limiting
+```
+**Agent:** *"Does this look right? Say `wait` if anything's wrong — otherwise I'll write the plan."*
 **User:** "Looks good."
 
 ### Generated plan
@@ -314,7 +386,7 @@ on disk for later use — the user can run `/quiz-plan-execute` against it any t
 
 ## Notes
 
-- This skill is designed for a conversational, quiz-style interaction. Do not dump all questions at once.
+- This skill uses the **same terminal-card quiz UX as [[quiz]]** — one card per turn, `[✓]` echoes, never dump all questions at once. The only differences: the drill is adaptive (denominator `··` until resolved) and there's no ~7-question cap.
 - If the user gives minimal answers, keep the plan short. If they give detailed answers, include all details.
 - If the user already has a clear idea of the steps, skip to step generation — capture their steps directly.
 - The plan file should be committed to the repository alongside the code changes so the plan stays with the branch.
