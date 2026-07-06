@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** In progress
 **Branch:** `master` · **Plan location:** `C:\dev\pskills\build-probe-skill.plan.md`
-**Progress:** ████████░░░░ 4/6 steps completed (67%)
+**Progress:** ██████████░░ 5/6 steps completed (83%)
 
 ## How to use this document (read this first, every session)
 
@@ -120,7 +120,7 @@ Sized so each step fits one session. Gate meanings: **AUTO** means complete and 
   files; every named `Workflow` hook matches the tool contract; read-only guarantee stated.
 - **Out of scope here:** README; global install.
 
-### Step 5: Update README · `[ ]` GATED
+### Step 5: Update README · `[x]` GATED
 
 - **Do:** Add `probe/` to the install-list tree and a `## /probe — Exploratory Tester`
   section (purpose + example), matching the style of the other skill sections.
@@ -211,4 +211,14 @@ Decided: frontmatter mirrors quiz/quiz-plan-execute style (folded `description: 
 Surprises: same Write-tool guardrail did NOT trigger for "SKILL.md" (only the exact
            basename "report-template.md" is blocked), so this file was authored and
            refactored with Write/Edit normally, no Bash workaround needed.
+
+[2026-07-06] Step 5: done
+Changed: README.md (install tree + new `## /probe` section)
+Decided: inserted `probe/` alphabetically in the install tree (argue, probe, quiz,
+         quiz-plan, quiz-plan-execute, squiz) and listed its references/ subfiles
+         since probe (unlike the others) ships reference files, not just SKILL.md.
+         Placed the `## /probe` section immediately after `/argue` to match the
+         tree's alphabetical order; body mirrors sibling sections' shape (one
+         paragraph purpose + fenced **Example**).
+Surprises: none.
 ```

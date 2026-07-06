@@ -7,6 +7,11 @@ A collection of Claude Code skills. Install any skill by copying its directory i
 ~/.claude/skills/
   argue/
     SKILL.md
+  probe/
+    SKILL.md
+    references/
+      findings.schema.json
+      report-template.md
   quiz/
     SKILL.md
   quiz-plan/
@@ -51,6 +56,31 @@ CONTRADICTIONS  (proven UNSAT by Z3)
 
 VERDICT   1 contradiction  ·  1 tension  ·  1 ambiguity
 ```
+
+---
+
+## `/probe` — Exploratory Tester
+
+Autonomous exploratory bug hunting for a running app. `probe` reads docs/specs,
+commit history, and code to build an app map and derive user-facing feature flows,
+then fans out a **flow × dimension** matrix of read-only probe agents (via a
+`Workflow`) that statically reason about the code and then live-drive the app
+non-destructively — recording surprises and bugs with repro + evidence. An
+adversarial verify pass drops false positives before `probe` writes a
+severity-ranked Markdown report plus a machine-readable JSON findings file.
+Every probe agent is strictly read-only; nothing it does may mutate the target app.
+
+**Example**
+
+```
+/probe the staging checkout flow at https://staging.example.com
+```
+
+`probe` maps `checkout`, `sign-up`, and `apply-discount-code` as feature flows,
+fans out one read-only agent per (flow, quality-dimension) cell — functional,
+robustness, security, perf, a11y, ux — verifies the raw findings adversarially, and
+writes `probe-report.md` (ranked findings with repro + evidence) and
+`probe-findings.json` (validating against `probe/references/findings.schema.json`).
 
 ---
 
