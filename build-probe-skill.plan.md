@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** In progress
 **Branch:** `master` · **Plan location:** `C:\dev\pskills\build-probe-skill.plan.md`
-**Progress:** ██░░░░░░░░░░ 1/6 steps completed (17%)
+**Progress:** ████░░░░░░░░ 2/6 steps completed (33%)
 
 ## How to use this document (read this first, every session)
 
@@ -89,7 +89,7 @@ Sized so each step fits one session. Gate meanings: **AUTO** means complete and 
 - **Out of scope here:** real probing logic, live-driving an app, the app-understanding
   phase, report writing. Dummy findings only.
 
-### Step 2: Author `references/findings.schema.json` · `[ ]` GATED
+### Step 2: Author `references/findings.schema.json` · `[x]` GATED
 
 - **Do:** Define the machine-readable findings JSON schema: array of findings, each with
   id, flow, dimension (functional|robustness|security|perf|a11y|ux), severity, title,
@@ -167,4 +167,13 @@ Decided: fan-out unit = one agent() per (flow x dimension) cell, collected via p
          dims = 6 agents, matrixProven:true, 6/6 findings valid, 0 errors, ~4s.
 Surprises: none — Workflow fan-out + schema collect works exactly as the plan assumed.
            The riskiest assumption is retired; the skill's premise holds.
+
+[2026-07-06] Step 2: done
+Changed: probe/references/findings.schema.json (new); plan tracker
+Decided: findings file = {app, generatedAt, coverage?, findings[]}. Finding required =
+         flow/dimension/severity/title/repro; id/description/evidence/verified/confidence
+         optional so raw probe output (like step-1 findings) validates pre-enrichment.
+         dimension enum = functional|robustness|security|perf|a11y|ux (matches broad scope);
+         severity enum = low|medium|high|critical. $defs reuse for dimension/severity.
+Surprises: none. Validated with python jsonschema (Draft 2020-12); all 6 step-1 findings pass.
 ```
