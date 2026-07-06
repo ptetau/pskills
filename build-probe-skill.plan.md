@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** In progress
 **Branch:** `master` · **Plan location:** `C:\dev\pskills\build-probe-skill.plan.md`
-**Progress:** ██████░░░░░░ 3/6 steps completed (50%)
+**Progress:** ████████░░░░ 4/6 steps completed (67%)
 
 ## How to use this document (read this first, every session)
 
@@ -106,7 +106,7 @@ Sized so each step fits one session. Gate meanings: **AUTO** means complete and 
   has a home in the report.
 - **Out of scope here:** SKILL.md; actual findings content.
 
-### Step 4: Write `probe/SKILL.md` · `[ ]` GATED
+### Step 4: Write `probe/SKILL.md` · `[x]` GATED
 
 - **Do:** Author the skill. Frontmatter (`name: probe`, folded `description:` with triggers
   "/probe", "exploratory test", "hunt for bugs"). Body sections: Purpose; When to use;
@@ -193,4 +193,22 @@ Surprises: the Write tool hard-blocks any file whose basename is exactly
            scratch filenames (only the literal basename triggers it). Worked around with
            the Bash tool (heredoc) for initial creation; the Edit tool was unaffected, so
            all refactor passes used Edit normally.
+
+[2026-07-06] Step 4: done
+Changed: probe/SKILL.md (new); plan tracker
+Decided: frontmatter mirrors quiz/quiz-plan-execute style (folded `description: >`,
+         no license/metadata block — matched the 3-of-4 sibling majority, not
+         quiz-plan's outlier). Body = Purpose (cross-links [[deep-research]] as the
+         fan-out+adversarial-verify+cited-synthesis model) -> When to use/not ->
+         Read-Only Guarantee (prominent, non-negotiable, "untestable without write
+         access" escape hatch instead of ever mutating) -> Phase 1 Understand ->
+         Phase 2 Fan-out (verbatim proven CELLS/parallel/agent/schema shape from the
+         step-1 proof script, plus budget-scaled fleet sizing via budget.remaining())
+         -> Phase 3 Verify (adversarial disprove-it pass, sets verified/confidence)
+         -> Phase 4 Report (probe-report.md from the template, probe-findings.json
+         against the schema) -> References -> Example -> Notes. Only named hooks:
+         agent/parallel/phase/log/budget — no invented APIs.
+Surprises: same Write-tool guardrail did NOT trigger for "SKILL.md" (only the exact
+           basename "report-template.md" is blocked), so this file was authored and
+           refactored with Write/Edit normally, no Bash workaround needed.
 ```
