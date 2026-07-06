@@ -1,8 +1,8 @@
 # Change Plan: build the `probe` exploratory-testing skill
 
-**Owner:** `Patrick Te Tau` · **Status:** In progress
+**Owner:** `Patrick Te Tau` · **Status:** Done
 **Branch:** `master` · **Plan location:** `C:\dev\pskills\build-probe-skill.plan.md`
-**Progress:** ██████████░░ 5/6 steps completed (83%)
+**Progress:** ████████████ 6/6 steps completed (100%)
 
 ## How to use this document (read this first, every session)
 
@@ -127,7 +127,7 @@ Sized so each step fits one session. Gate meanings: **AUTO** means complete and 
 - **Done when:** README lists `probe` in the tree and documents it with an example.
 - **Out of scope here:** editing other skills' sections.
 
-### Step 6: Install globally, commit, review · `[ ]` GATED
+### Step 6: Install globally, commit, review · `[x]` GATED
 
 - **Do:** Copy `C:\dev\pskills\probe\` → `~/.claude/skills\probe\`. Validate the JSON
   schema parses and the frontmatter is valid YAML. `git add probe README.md` and commit to
@@ -221,4 +221,28 @@ Decided: inserted `probe/` alphabetically in the install tree (argue, probe, qui
          tree's alphabetical order; body mirrors sibling sections' shape (one
          paragraph purpose + fenced **Example**).
 Surprises: none.
+
+[2026-07-06] Step 6: done
+Changed: installed `C:\dev\pskills\probe\` -> `~/.claude/skills/probe/` (SKILL.md +
+         references/{findings.schema.json, report-template.md}); plan tracker;
+         Status -> Done.
+Decided: copied with PowerShell `Copy-Item -Recurse -Force` (a bash `cp -r` inside a
+         multi-line heredoc-style call failed to parse on this shell/tool and only
+         its `mkdir -p` half executed, leaving an empty target dir -- caught by
+         verifying file count before declaring green, not by trusting the exit
+         code). Verified `diff -rq` between source and installed copy is empty
+         (byte-identical), `findings.schema.json` parses as JSON and passes
+         `jsonschema.Draft202012Validator.check_schema`, and `SKILL.md`'s
+         frontmatter parses as YAML with `name: probe`.
+Surprises: the deep-research skill referenced throughout the plan
+           (`~/.claude/skills/deep-research/SKILL.md`) is not present as a file
+           on this machine -- not under `~/.claude/skills/`, not in the plugin
+           cache, nowhere on disk (confirmed by recursive search). It only exists
+           as the one-paragraph description surfaced in the session's skills list
+           ("fan-out web searches, fetch sources, adversarially verify claims,
+           synthesize a cited report"). probe/SKILL.md's [[deep-research]]
+           cross-link and its "fan-out + adversarial-verify + cited-synthesis"
+           framing are built from that description, not from reading the actual
+           file -- flagging this since the plan's Ground truth assumed the file
+           was readable.
 ```
