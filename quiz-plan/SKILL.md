@@ -35,7 +35,7 @@ The skill has two phases that flow sequentially: the quiz (gather), then the pla
 
 ### Phase 1: The Adaptive Quiz
 
-Interview the user one card at a time (the [[quiz]] card UX — see "The look" below), drilling deeper as answers reveal ambiguity. You have a starter question bank below, but the quiz is **not limited to these 10 questions**. Each answer may reveal assumptions, ambiguities, or unknowns that need their own follow-up. Keep asking until you can write a complete, unambiguous plan.
+Interview the user one card at a time (the [[quiz]] card UX — see "The look" below), drilling deeper as answers reveal ambiguity. You have a starter question bank below, but the quiz is **not limited to the starter pool**. Each answer may reveal assumptions, ambiguities, or unknowns that need their own follow-up. Keep asking until you can write a complete, unambiguous plan.
 
 #### Starter Question Pool
 
@@ -70,6 +70,14 @@ Captures: rollback strategy. → **Verification and rollback → Rollback**
 
 **Branch name?** — "What branch should this work on? I can create it if needed."
 Captures: branch name. → Document header
+
+**Prior art?** — "Have we built something this shape before — here or elsewhere? Roughly how many steps did it take, and what broke or surprised us last time?"
+Captures: closest past change, rough step count, known failure modes. → **Ground truth → Prior art**
+
+**More than one way to do this?** — *(ask only when 2+ viable approaches exist)* "Are there competing approaches? Name the front-runners so we pick one deliberately instead of defaulting to the first that came to mind."
+Captures: approach options and the reason for the pick. → **Approach**
+
+> Q11 and Q12 are **appended** — Q1–Q10 keep their numbers so the template mapping below stays stable. Q12 is conditional: skip it when only one sensible approach exists.
 
 #### Adaptive Follow-up Drill (the key mechanic)
 
@@ -198,7 +206,7 @@ Derive the name from the user's description of Q1. For example:
 
 You are an agent executing this plan. Assume you have no memory of previous sessions.
 
-1. Read Intent, Ground truth, and Boundaries in full.
+1. Read Intent, Ground truth, and Boundaries in full (plus Approach, if present), then skim the Premortem so you know the failure modes this plan already accounts for.
 2. Read the Progress log to find the current state. Do not redo completed steps or reopen decisions recorded there.
 3. Resume at the first step not marked done. Respect its gate.
 4. After each step: append to the Progress log, then self-assess against the step's done criteria before moving on.
@@ -212,11 +220,17 @@ You are an agent executing this plan. Assume you have no memory of previous sess
 
 **Not doing:** [from Q4]
 
+## Approach
+
+**Chosen:** [one line — the approach this plan implements]
+**Considered:** [from Q12 — the front-running alternatives and why each was rejected. Omit this whole section if only one sensible approach existed; don't invent alternatives to look thorough.]
+
 ## Ground truth
 
 - **Key files:** [from Q3]
 - **Build / test / lint:** [from Q6]
 - **Conventions:** [from Q7]
+- **Prior art:** [from Q11 — the closest past change, its rough step count, and what broke last time. Informs scope and seeds the Premortem. "None known" is a valid answer.]
 
 **Verification rule:** before calling any function, API, or library feature not listed above, read its actual definition in the source or installed package. Never write a call from memory of what the API "probably" looks like. If you can't find the definition, stop and ask.
 
@@ -225,8 +239,18 @@ You are an agent executing this plan. Assume you have no memory of previous sess
 - **May modify:** [inferred from Q3 and Q4]
 - **Must not touch:** [from Q4]
 - **Stop and ask when:** a test you didn't expect fails, a change is needed outside "may modify", a step's instructions are ambiguous, or you've attempted the same fix twice without success. Two failed attempts means the plan is wrong, not that you should try harder.
+- **Assumptions (re-check every step):** [the novel things this plan takes as true that would invalidate it if false — e.g. "the ORM emits one query per row", "the feature flag defaults off in prod". This is a *different* list from the Verification rule above (which is about reading APIs, not from memory) and the single Riskiest assumption below (which drives Step 1). If execution falsifies any item here, stop and ask — do not patch around it.]
 
 **Riskiest assumption:** [from Q5] tested in step [1], which is why it comes first.
+
+## Premortem
+
+Written *after* the Steps below are drafted (it operates on the whole plan, not a single guess). Assume this plan shipped and failed. List the likely causes; each points to the step or boundary that already defends against it — **not** a restated fix:
+
+- **[cause of failure]** → defended by step [N] / Boundaries "[rule]" / Assumption "[item]"
+- **[cause of failure]** → …
+
+Any cause with no defending step, boundary, or assumption is a gap: add a mitigation step or a stop-condition before finalizing the plan. Do **not** displace Step 1 — it stays the Riskiest-assumption test; premortem mitigations are inserted after it or folded into an existing step's *Done when*.
 
 ## Steps
 
@@ -293,13 +317,16 @@ When generating steps from the quiz answers:
 6. A step should fit in one session. If a step would require 20 file changes, split it further.
 7. The last step should always include running the build, test, and lint commands from Q6.
 8. **Tracker maintenance is part of each step.** Whenever a step is completed, the agent must also update the progress bar and checkboxes in the plan file header.
+9. **Pick the approach before the steps.** When Q12 surfaced 2+ viable approaches, choose one deliberately, record the choice and why the alternatives lost in the **Approach** section, then generate steps for the winner only. Don't leave the fork unresolved in the steps.
+10. **Run a premortem after the steps are drafted, before presenting.** With the ordered steps in hand, assume the plan shipped and failed and list the likely causes. Fold each cause into: an existing step's *Done when*, a new mitigation step inserted **after** Step 1, or a Boundaries stop-condition / Assumption. Populate the **Premortem** section with cause → defender lines. This is a check on the drafted plan, not a rehash of Q5 — Q5 named the single riskiest thing (Step 1); the premortem sweeps for the rest.
 
 #### Output
 
 After generating the plan, present to the user:
 1. The file path of the created plan
 2. A one-line summary of each step
-3. Ask: *"Do you want to start executing this plan?"*
+3. The top 2–3 premortem causes and which step/boundary defends each (so the user sees the failure analysis before agreeing)
+4. Ask: *"Do you want to start executing this plan?"*
 
 If yes, hand off to [[quiz-plan-execute]] — run `/quiz-plan-execute <path>`, which drives each
 step through a strict 6-stage TDD gate (understand → red → green → refactor → review → commit),
@@ -381,6 +408,11 @@ Every question is a card — one per turn, `[✓]` echo before the next — exac
 4. `[ ]` Add integration test: 100 rapid requests → 429 on 101st (GATED)
 5. `[ ]` Run full test suite and lint (AUTO)
 
+**Premortem excerpt** (run after the steps were drafted):
+> - **Internal services throttled** → defended by step 2 (whitelist internal IPs) + Boundaries "must not touch private/internal routes"
+> - **Limit hard-coded, can't tune in prod** → defended by step 2 (env-configurable, default 100/min)
+> - **Limiter counts across replicas inconsistently** → gap → added Assumption "rate state is per-instance, not shared" for the executor to re-check
+
 *After step 1 completes, the header updates to:*
 > **Progress:** ██░░░░░░░░░░ 1/5 steps completed (20%)
 
@@ -390,3 +422,4 @@ Every question is a card — one per turn, `[✓]` echo before the next — exac
 - If the user gives minimal answers, keep the plan short. If they give detailed answers, include all details.
 - If the user already has a clear idea of the steps, skip to step generation — capture their steps directly.
 - The plan file should be committed to the repository alongside the code changes so the plan stays with the branch.
+- **Robustness additions** (Approach / Prior art / Assumptions / Premortem) come from evidence-backed planning practice: deliberate approach selection (multi-plan beats first-draft), the outside view (anchor scope to the closest past change), and Klein's premortem (imagining failure already happened surfaces ~30% more failure causes than "what might go wrong"). They are all **additive sections** — [[quiz-plan-execute]] parses only Intent, Ground truth, Boundaries, Steps (`Done when`), and the Progress log, so nothing here changes what the executor consumes. Two design choices keep the new material *live* rather than decorative: Assumptions sit in **Boundaries** (which the executor re-checks every step), and every Premortem cause resolves to a real step, boundary, or assumption the executor already runs — never a free-floating note.
