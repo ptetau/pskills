@@ -41,19 +41,29 @@ Every question is rendered as its own fenced code block styled like a terminal w
 
 ````
 ```
-┌─ quiz · 01/03 ──────────────────────────────────────┐
-│ [?] How should the welcome screen greet a user?     │
-│     why it matters: sets tone for the whole app     │
+┌─ quiz · 01/03 ───────────────────────────────────────┐
+│ [?] How should the welcome screen greet a user?      │
+│     why it matters: sets tone for the whole app      │
 └──────────────────────────────────────────────────────┘
 
-  A · plain         "Welcome. Pick a habit to start."
-  B · warm          "Hey — glad you're here. What's the
-                     one thing you want to do daily?"
-  C · playful       "First habit incoming. No pressure 🌱"
+  A · plain (recommended)   Says the goal straight ("Pick a habit to
+                             start") — fits a utility app where users
+                             want speed over small talk, and it's the
+                             safest default for a first-run screen.
+  B · warm                  Greets before asking ("Hey — glad you're
+                             here...") — worth it if retention depends
+                             on emotional buy-in, at the cost of an
+                             extra beat before the user can act.
+  C · playful                Light tone with emoji ("First habit
+                             incoming...") — suits a casual audience,
+                             but risks feeling flippant for anyone
+                             using this for serious habit-tracking.
 
   // reply: A | B | C    (optional: add a note after the letter)
 ```
 ````
+
+Each option is one fluid sentence: **what** it does, **why** it fits the situation just described, **how** it plays out in practice (the cost or benefit the user actually feels). One option carries `(recommended)` — see Rule 5.
 
 Then on the next chat line, in plain prose, a single sentence: *"Pick A, B, or C — or reply `B, with notes: …` if you want to add detail."*
 
@@ -90,18 +100,19 @@ Then in one plain sentence: *"Going with these — say `wait` if anything's wron
 1. **Always use a fenced code block** for the question cards. Monospace is the aesthetic — it must render as a code block, not prose with hyphens.
 2. **Top border with `quiz · NN/NN`** as the marker. Lowercase. Use box-drawing characters (`┌─┐│└┘`) for the question header; plain ASCII for the rest.
 3. **`[?]` for open, `[✓]` for resolved.** Match the squiz convention exactly.
-4. **Options as `A · short-label    longer-explanation`**, two spaces of indent, single line each where possible. Wrap with continued indent for longer text. Never more than ~70 chars wide so it survives mobile.
-5. **Optional `why it matters:` line** under the question — one short clause, only when the user benefits from knowing the consequence.
-6. **`// reply:` hint at the bottom** of every card, with the comment slash to match the squiz `//` accent.
-7. **One question per turn — never stack.** Each card lives in its own message. Wait for the user's reply before rendering the next.
-8. **Cap at ~7 questions total.** If you need more, switch to `/squiz` instead.
-9. **No emojis** in the cards themselves (except as actual sample content, like option text). The aesthetic is text-mode.
+4. **Options as `A · short-label`, then one fluid sentence** covering what the option does, why it fits the problem just described, and how it plays out in practice — the concrete cost or benefit, not a vague gesture at "trade-offs." Two-space indent, wrap with continued indent, keep each option to ~3-4 lines so it survives mobile.
+5. **Mark exactly one option `(recommended)`** whenever you have enough context to judge — never a coin-flip default. The reasoning must live inside that option's sentence and name the specific problem, constraint, or goal that makes it the practical choice here. If it's a genuine toss-up, skip the tag rather than force one.
+6. **Optional `why it matters:` line** under the question — one short clause, only when the user benefits from knowing the consequence.
+7. **`// reply:` hint at the bottom** of every card, with the comment slash to match the squiz `//` accent.
+8. **One question per turn — never stack.** Each card lives in its own message. Wait for the user's reply before rendering the next.
+9. **Cap at ~7 questions total.** If you need more, switch to `/squiz` instead.
+10. **No emojis** in the cards themselves (except as actual sample content, like option text). The aesthetic is text-mode.
 
 ## Flow
 
 1. User triggers `/quiz` or says something like "ask me quickly".
 2. Agent identifies all the questions that matter (max ~7; if more, switch to `/squiz` and tell the user). Internally decides an order — most-load-bearing first.
-3. Agent renders the **first question only** as a code block, followed by a one-sentence plain-prose reply hint. Counter shows `01/N`.
+3. Agent renders the **first question only** as a code block — each option a what/why/how sentence, one marked `(recommended)` per Rule 5 — followed by a one-sentence plain-prose reply hint. Counter shows `01/N`.
 4. User replies with a single letter, optionally with notes.
 5. Agent echoes a one-line `[✓]` confirmation for that question, then *immediately* renders the next question card in the same message.
 6. Repeat 4–5 until the last question is answered.
@@ -116,7 +127,7 @@ Be permissive. Accept any of:
 - `A` / `a` / `Option A` — straight pick
 - `B, with notes: skip the metrics slide` — pick with a note
 - `B (skip the metrics)` — pick with a parenthetical note
-- `skip` / `you decide` / `n/a` — explicit skip, you choose
+- `skip` / `you decide` / `n/a` / "go with your pick" — defer to the option already marked `(recommended)` on that card
 
 If the user types free prose instead of a letter ("yeah do the warm one"), match it to the closest option and confirm in your echo. If they answer multiple questions at once anyway (e.g. `1c2a3b4b`), accept it gracefully — parse the run, echo all the `[✓]` lines in order, and move straight to the implication or the next unanswered question.
 
