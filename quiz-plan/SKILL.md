@@ -1,6 +1,6 @@
 ---
 name: quiz-plan
-description: Interactive quiz-driven planning. Asks structured questions to gather context, then generates a comprehensive Change Plan document with Intent, Ground truth, Boundaries, Steps, Verification, and Progress log. Use for any non-trivial code change that needs a clear plan before implementation.
+description: Interactive quiz-driven planning. Asks structured questions to gather context, then generates a comprehensive Change Plan document with Intent, Approach, Ground truth, Boundaries, Steps, Verification, and Progress log. The draft is red-teamed against its own Boundaries, riskiest assumption, scope, and a failure premortem before being presented. Use for any non-trivial code change that needs a clear plan before implementation.
 license: MIT license
 metadata:
     skill-author: K-Dense Inc.
@@ -31,7 +31,8 @@ Do **not** use for:
 
 ## Workflow
 
-The skill has two phases that flow sequentially: the quiz (gather), then the plan (document).
+The skill has three phases that flow sequentially: the quiz (gather), the plan (draft),
+then a red-team pass on the draft before it's presented.
 
 ### Phase 1: The Adaptive Quiz
 
@@ -72,7 +73,7 @@ Captures: rollback strategy. → **Verification and rollback → Rollback**
 Captures: branch name. → Document header
 
 **Prior art?** — "Have we built something this shape before — here or elsewhere? Roughly how many steps did it take, and what broke or surprised us last time?"
-Captures: closest past change, rough step count, known failure modes. → **Ground truth → Prior art**
+Captures: closest past change, rough step count, known failure modes. → **Ground truth → Prior art** (and it seeds the Phase 3 premortem)
 
 **More than one way to do this?** — *(ask only when 2+ viable approaches exist)* "Are there competing approaches? Name the front-runners so we pick one deliberately instead of defaulting to the first that came to mind."
 Captures: approach options and the reason for the pick. → **Approach**
@@ -111,18 +112,27 @@ The question UX is **the same terminal-card experience as [[quiz]]** — same Ap
 
 ````
 ```
-┌─ quiz · 03/·· ──────────────────────────────────────┐
-│ [?] Where does the rate-limit middleware live?      │
+┌─ quiz · 03/·· ───────────────────────────────────────┐
+│ [?] Where does the rate-limit middleware live?       │
 │     why it matters: fixes which files the plan edits │
 └──────────────────────────────────────────────────────┘
 
-  A · internal/api/middleware/   next to the logging middleware
-  B · a new top-level package     e.g. pkg/ratelimit/
-  C · not sure                    I'll go read the code and report
+  A · internal/api/middleware/ (recommended)   Sits next to the existing
+                                 logging middleware — matches the pattern
+                                 already in the codebase, so reviewers
+                                 recognize the shape and no new package
+                                 needs wiring into the build.
+  B · a new top-level package    e.g. pkg/ratelimit/ — worth it if this
+                                 grows into a reusable module later, but
+                                 adds an extra import path for a first cut.
+  C · not sure                   I'll go read the code and report back
+                                 before locking in a location.
 
   // reply: A | B | C    (optional: add a note after the letter)
 ```
 ````
+
+Same what/why/how sentence and `(recommended)` tag rules as [[quiz]] — see Rules of the look below.
 
 Then on the next chat line, in plain prose, one sentence: *"Pick A, B, or C — or reply `B, with notes: …` to add detail."*
 
@@ -162,16 +172,17 @@ Then in one plain sentence: *"Does this look right? Say `wait` if anything's wro
 1. **Always a fenced code block.** Monospace is the aesthetic — render as a code block, not prose with hyphens.
 2. **Top border `quiz · NN/··`.** Lowercase. Box-drawing chars (`┌─┐│└┘`) for the header; plain ASCII for the rest.
 3. **`[?]` for open, `[✓]` for resolved.** Match the [[quiz]]/[[squiz]] convention exactly.
-4. **Options as `A · short-label   longer-explanation`**, two-space indent, ≤~70 chars wide so it survives mobile.
-5. **Optional `why it matters:` line** — one short clause, only when the consequence helps the user answer.
-6. **`// reply:` hint at the bottom** of every card.
-7. **One question per turn — never stack.** Each card its own message. Wait for the reply before the next.
-8. **No emojis** in the cards (except as literal sample content in option text).
-9. **No cap.** Unlike `/quiz` (which caps at ~7 and escalates to `/squiz`), the plan drill runs as long as ambiguity remains — keep rendering cards until the "Signs you're done asking" above are all true.
+4. **Options as `A · short-label`, then one fluid sentence** covering what the option does, why it fits the problem just described, and how it plays out in practice — the concrete cost or benefit. Two-space indent, wrap with continued indent, ~3-4 lines max so it survives mobile.
+5. **Mark exactly one option `(recommended)`** whenever you have enough context to judge. The reasoning lives inside that option's sentence and names the specific ground-truth fact, constraint, or risk that makes it the practical choice — not a generic default. Skip the tag on a genuine toss-up.
+6. **Optional `why it matters:` line** — one short clause, only when the consequence helps the user answer.
+7. **`// reply:` hint at the bottom** of every card.
+8. **One question per turn — never stack.** Each card its own message. Wait for the reply before the next.
+9. **No emojis** in the cards (except as literal sample content in option text).
+10. **No cap.** Unlike `/quiz` (which caps at ~7 and escalates to `/squiz`), the plan drill runs as long as ambiguity remains — keep rendering cards until the "Signs you're done asking" above are all true.
 
 ##### Reply parsing (same as /quiz)
 
-Be permissive. Accept `A` / `a` / `Option A`; `B, with notes: …`; `B (…)`; `skip` / `you decide` / `n/a` (explicit skip, you choose). If the user types free prose ("the middleware one"), match to the closest option and confirm in your echo. If they answer several at once (`1a2b3c`), parse the run, echo all `[✓]` lines in order, and move to the next unanswered question.
+Be permissive. Accept `A` / `a` / `Option A`; `B, with notes: …`; `B (…)`; `skip` / `you decide` / `n/a` / "go with your pick" (defer to the option marked `(recommended)`). If the user types free prose ("the middleware one"), match to the closest option and confirm in your echo. If they answer several at once (`1a2b3c`), parse the run, echo all `[✓]` lines in order, and move to the next unanswered question.
 
 ##### Drill behaviour within the card UX
 
@@ -183,15 +194,15 @@ Be permissive. Accept `A` / `a` / `Option A`; `B, with notes: …`; `B (…)`; `
 
 ### Phase 2: Write the Plan
 
-After the quiz is confirmed, generate a `.plan.md` file at the project root.
+After the quiz is confirmed, generate a `.plan.md` file inside a `plans/` subfolder at the project root (create `plans/` if it doesn't already exist).
 
 #### File name
 
-`<kebab-case-name>.plan.md`
+`plans/<kebab-case-name>.plan.md`
 
 Derive the name from the user's description of Q1. For example:
-- "Add OAuth login to the API" → `add-oauth-login.plan.md`
-- "Refactor the auth middleware" → `refactor-auth-middleware.plan.md`
+- "Add OAuth login to the API" → `plans/add-oauth-login.plan.md`
+- "Refactor the auth middleware" → `plans/refactor-auth-middleware.plan.md`
 
 #### Template
 
@@ -206,7 +217,7 @@ Derive the name from the user's description of Q1. For example:
 
 You are an agent executing this plan. Assume you have no memory of previous sessions.
 
-1. Read Intent, Ground truth, and Boundaries in full (plus Approach, if present), then skim the Premortem so you know the failure modes this plan already accounts for.
+1. Read Intent, Ground truth, and Boundaries in full (plus Approach, if present).
 2. Read the Progress log to find the current state. Do not redo completed steps or reopen decisions recorded there.
 3. Resume at the first step not marked done. Respect its gate.
 4. After each step: append to the Progress log, then self-assess against the step's done criteria before moving on.
@@ -230,7 +241,7 @@ You are an agent executing this plan. Assume you have no memory of previous sess
 - **Key files:** [from Q3]
 - **Build / test / lint:** [from Q6]
 - **Conventions:** [from Q7]
-- **Prior art:** [from Q11 — the closest past change, its rough step count, and what broke last time. Informs scope and seeds the Premortem. "None known" is a valid answer.]
+- **Prior art:** [from Q11 — the closest past change, its rough step count, and what broke last time. Informs scope and seeds the Phase 3 premortem. "None known" is a valid answer.]
 
 **Verification rule:** before calling any function, API, or library feature not listed above, read its actual definition in the source or installed package. Never write a call from memory of what the API "probably" looks like. If you can't find the definition, stop and ask.
 
@@ -239,18 +250,9 @@ You are an agent executing this plan. Assume you have no memory of previous sess
 - **May modify:** [inferred from Q3 and Q4]
 - **Must not touch:** [from Q4]
 - **Stop and ask when:** a test you didn't expect fails, a change is needed outside "may modify", a step's instructions are ambiguous, or you've attempted the same fix twice without success. Two failed attempts means the plan is wrong, not that you should try harder.
-- **Assumptions (re-check every step):** [the novel things this plan takes as true that would invalidate it if false — e.g. "the ORM emits one query per row", "the feature flag defaults off in prod". This is a *different* list from the Verification rule above (which is about reading APIs, not from memory) and the single Riskiest assumption below (which drives Step 1). If execution falsifies any item here, stop and ask — do not patch around it.]
+- **Assumptions (re-check every step):** [the novel things this plan takes as true that would invalidate it if false — e.g. "the ORM emits one query per row", "the feature flag defaults off in prod". Distinct from the Verification rule above (read APIs, don't guess) and the single Riskiest assumption below (which drives Step 1). If execution falsifies any item here, stop and ask — do not patch around it.]
 
 **Riskiest assumption:** [from Q5] tested in step [1], which is why it comes first.
-
-## Premortem
-
-Written *after* the Steps below are drafted (it operates on the whole plan, not a single guess). Assume this plan shipped and failed. List the likely causes; each points to the step or boundary that already defends against it — **not** a restated fix:
-
-- **[cause of failure]** → defended by step [N] / Boundaries "[rule]" / Assumption "[item]"
-- **[cause of failure]** → …
-
-Any cause with no defending step, boundary, or assumption is a gap: add a mitigation step or a stop-condition before finalizing the plan. Do **not** displace Step 1 — it stays the Riskiest-assumption test; premortem mitigations are inserted after it or folded into an existing step's *Done when*.
 
 ## Steps
 
@@ -318,19 +320,49 @@ When generating steps from the quiz answers:
 7. The last step should always include running the build, test, and lint commands from Q6.
 8. **Tracker maintenance is part of each step.** Whenever a step is completed, the agent must also update the progress bar and checkboxes in the plan file header.
 9. **Pick the approach before the steps.** When Q12 surfaced 2+ viable approaches, choose one deliberately, record the choice and why the alternatives lost in the **Approach** section, then generate steps for the winner only. Don't leave the fork unresolved in the steps.
-10. **Run a premortem after the steps are drafted, before presenting.** With the ordered steps in hand, assume the plan shipped and failed and list the likely causes. Fold each cause into: an existing step's *Done when*, a new mitigation step inserted **after** Step 1, or a Boundaries stop-condition / Assumption. Populate the **Premortem** section with cause → defender lines. This is a check on the drafted plan, not a rehash of Q5 — Q5 named the single riskiest thing (Step 1); the premortem sweeps for the rest.
+
+### Phase 3: Red-team the Draft
+
+Before showing the plan to the user, turn adversarial on your own draft — you wrote it,
+now try to break it. Work through each check; fix anything you can resolve from the
+quiz answers or the codebase, and hold anything you can't as one more quiz card rather
+than silently patching over it or silently dropping it.
+
+- **Premortem (the outside-in lens):** assume it's a month later and this plan shipped and
+  *failed*. Working backwards, list the likely causes (the Q11 prior art is your seed — what
+  broke last time?). For each cause, name the step, boundary, or Assumption that already
+  defends against it. Any cause with no defender is a coverage gap — add a mitigation step
+  (after Step 1, never displacing it) or a stop-condition. This differs from the mechanical
+  checks below: they ask "does a step break a rule?", the premortem asks "what failure isn't
+  represented as a step at all?"
+- **Riskiest assumption:** does Step 1 actually *test* it (falsifiable, would fail if the
+  assumption is wrong), or does it just touch the same area?
+- **Boundaries:** does any step's `Do` reach outside `May modify`? Does any step conflict
+  with `Must not touch`?
+- **Done when:** is each criterion checkable by running a command/test, or is it vague
+  ("works correctly", "handles it properly")? Rewrite vague ones concretely.
+- **Coverage gaps:** do the quiz answers imply work no step covers — a migration, a doc
+  update the Q7 conventions require, a config change for existing deployments?
+- **Ordering:** does any step depend on output/state a *later* step creates?
+- **Scope creep:** does any step's `Do` include work Q4 explicitly excluded?
+- **Rollback reachability:** if Verification's "Failing looks like" triggers mid-plan (not
+  just at the end), is the Rollback from Q9 still executable at that point?
+
+Only once this pass is clean does the plan move to `Draft` and get presented. When
+presenting, add one line noting the red-team pass ran and naming anything it caught and
+fixed (or "no issues found") — this must be visible, not a silent internal step.
 
 #### Output
 
-After generating the plan, present to the user:
+After generating the plan and completing the red-team pass, present to the user:
 1. The file path of the created plan
 2. A one-line summary of each step
-3. The top 2–3 premortem causes and which step/boundary defends each (so the user sees the failure analysis before agreeing)
+3. One line on what the red-team pass caught (or "no issues found")
 4. Ask: *"Do you want to start executing this plan?"*
 
 If yes, hand off to [[quiz-plan-execute]] — run `/quiz-plan-execute <path>`, which drives each
 step through a strict 6-stage TDD gate (understand → red → green → refactor → review → commit),
-one commit per step, with optional new branch / worktree / subagent. If no, the plan file exists
+one commit per step, with an optional new branch. If no, the plan file exists
 on disk for later use — the user can run `/quiz-plan-execute` against it any time.
 
 ## Example
@@ -342,8 +374,8 @@ on disk for later use — the user can run `/quiz-plan-execute` against it any t
 Every question is a card — one per turn, `[✓]` echo before the next — exactly like `/quiz`.
 
 ```
-┌─ quiz · 01/·· ──────────────────────────────────────┐
-│ [?] One sentence — what are we changing?            │
+┌─ quiz · 01/·· ───────────────────────────────────────┐
+│ [?] One sentence — what are we changing?             │
 └──────────────────────────────────────────────────────┘
 
   // reply: <your answer>
@@ -353,9 +385,9 @@ Every question is a card — one per turn, `[✓]` echo before the next — exac
 ```
 [✓] 01 change → add rate limiting to public API routes
 
-┌─ quiz · 02/·· ──────────────────────────────────────┐
-│ [?] What's the riskiest part — most likely to break?│
-│     why it matters: step 1 of the plan tests it     │
+┌─ quiz · 02/·· ───────────────────────────────────────┐
+│ [?] What's the riskiest part — most likely to break? │
+│     why it matters: step 1 of the plan tests it      │
 └──────────────────────────────────────────────────────┘
 
   // reply: <your answer>
@@ -365,8 +397,8 @@ Every question is a card — one per turn, `[✓]` echo before the next — exac
 ```
 [✓] 02 risk → internal services throttled if they share an IP pool
 
-┌─ quiz · 03/·· ──────────────────────────────────────┐
-│ [?] Where does the middleware live?                 │
+┌─ quiz · 03/·· ───────────────────────────────────────┐
+│ [?] Where does the middleware live?                  │
 │     why it matters: fixes which files the plan edits │
 └──────────────────────────────────────────────────────┘
 
@@ -393,9 +425,16 @@ Every question is a card — one per turn, `[✓]` echo before the next — exac
 **Agent:** *"Does this look right? Say `wait` if anything's wrong — otherwise I'll write the plan."*
 **User:** "Looks good."
 
+*(Agent drafts the plan, then red-teams it — the premortem lens surfaces "limiter counts
+requests per-replica, so the real limit is N×replicas in prod" with no step defending it,
+so a new Assumption "rate state is per-instance, not shared" is added for the executor to
+re-check; and it catches that Step 3's `Done when` said "routes work correctly", rewriting it
+as "integration test hits a public route 101 times, gets 429 on the 101st, and a whitelisted
+internal-IP route stays 200 the whole time.")*
+
 ### Generated plan
 
-**File:** `add-api-rate-limiting.plan.md`
+**File:** `plans/add-api-rate-limiting.plan.md`
 
 **Header excerpt:**
 > **Status:** Draft · **Branch:** `feature/rate-limiting`
@@ -408,11 +447,6 @@ Every question is a card — one per turn, `[✓]` echo before the next — exac
 4. `[ ]` Add integration test: 100 rapid requests → 429 on 101st (GATED)
 5. `[ ]` Run full test suite and lint (AUTO)
 
-**Premortem excerpt** (run after the steps were drafted):
-> - **Internal services throttled** → defended by step 2 (whitelist internal IPs) + Boundaries "must not touch private/internal routes"
-> - **Limit hard-coded, can't tune in prod** → defended by step 2 (env-configurable, default 100/min)
-> - **Limiter counts across replicas inconsistently** → gap → added Assumption "rate state is per-instance, not shared" for the executor to re-check
-
 *After step 1 completes, the header updates to:*
 > **Progress:** ██░░░░░░░░░░ 1/5 steps completed (20%)
 
@@ -422,4 +456,4 @@ Every question is a card — one per turn, `[✓]` echo before the next — exac
 - If the user gives minimal answers, keep the plan short. If they give detailed answers, include all details.
 - If the user already has a clear idea of the steps, skip to step generation — capture their steps directly.
 - The plan file should be committed to the repository alongside the code changes so the plan stays with the branch.
-- **Robustness additions** (Approach / Prior art / Assumptions / Premortem) come from evidence-backed planning practice: deliberate approach selection (multi-plan beats first-draft), the outside view (anchor scope to the closest past change), and Klein's premortem (imagining failure already happened surfaces ~30% more failure causes than "what might go wrong"). They are all **additive sections** — [[quiz-plan-execute]] parses only Intent, Ground truth, Boundaries, Steps (`Done when`), and the Progress log, so nothing here changes what the executor consumes. Two design choices keep the new material *live* rather than decorative: Assumptions sit in **Boundaries** (which the executor re-checks every step), and every Premortem cause resolves to a real step, boundary, or assumption the executor already runs — never a free-floating note.
+- **Robustness additions** (Approach / Prior art / Assumptions, plus the premortem lens in Phase 3) come from evidence-backed planning practice: deliberate approach selection (multi-plan beats first-draft), the outside view (anchor scope to the closest past change), and Klein's premortem (imagining failure already happened surfaces ~30% more failure causes than "what might go wrong"). They stay non-redundant by design: the premortem is **folded into the Phase 3 red-team** as one lens (it hunts failures no step represents, where the other checks hunt rule violations), not a separate section. Everything is compatible with [[quiz-plan-execute]], which parses only Intent, Ground truth, Boundaries, Steps (`Done when`), and the Progress log — the new **Approach** and **Prior art** are read-only context, while **Assumptions** live inside Boundaries specifically so the executor re-checks them every step (it re-reads Boundaries per step; Ground truth only once).

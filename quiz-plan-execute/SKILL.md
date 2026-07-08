@@ -6,10 +6,10 @@ description: >
   (2) red — write a failing test, (3) green — write impl to pass, (4) refactor,
   (5) review against acceptance criteria, (6) commit. Every stage must finish
   before the next begins; every step ends in its own commit. At start it asks
-  whether to work in a new branch, a new git worktree, and/or dispatch each step
-  to a fresh subagent. On completion it offers to squash-merge locally or open a
-  PR. Use when the user says "/quiz-plan-execute", "execute the plan", "run my
-  plan.md", or "build from the quiz-plan".
+  one question — whether to create a new branch for the work. On completion it
+  offers to squash-merge locally or open a PR. Use when the user says
+  "/quiz-plan-execute", "execute the plan", "run my plan.md", or "build from
+  the quiz-plan".
 ---
 
 # Quiz Plan Execute
@@ -44,9 +44,9 @@ Do **not** use when:
 /quiz-plan-execute [path/to/x.plan.md]
 ```
 
-Omit the path to auto-detect: glob `**/*.plan.md` at the project root. If exactly one
-match, use it. If several, list them and ask which. If none, tell the user to run
-`/quiz-plan` first and stop.
+Omit the path to auto-detect: glob `plans/*.plan.md` (non-recursive, so it excludes
+`plans/completed/`) at the project root. If exactly one match, use it. If several,
+list them and ask which. If none, tell the user to run `/quiz-plan` first and stop.
 
 ---
 
@@ -79,35 +79,45 @@ loop below consumes it directly. If a step has no falsifiable `Done when`, stop 
 the user to clarify it before starting — you cannot write a red test against a vague
 criterion.
 
-**S-3. Ask the runtime options (interactive prompt, one screen).**
+**S-3. Ask the one setup question: new branch?**
 
-Ask the user these three, up front, before any work:
+Same terminal-card aesthetic as [[quiz]] / [[quiz-plan]] — box-drawing header, `[?]` marker,
+one fluid what/why/how sentence per option, one option tagged `(recommended)` tied to this
+plan's actual size and risk. A single question, one card:
 
 ```
-Before I start executing <plan-name> (<N> steps):
+┌─ quiz · 1/1 ───────────────────────────────────────────┐
+│ [?] Create a new branch for <plan-name> (<N> steps)?  │
+└─────────────────────────────────────────────────────────┘
 
-  1. New branch?   [suggest: <branch from plan header, or feature/<plan-name>>]
-     → y (use suggested) / a name / n (work on current branch)
+  A · yes, use suggested (recommended)   Creates `<branch>` off the
+                                          current HEAD — keeps every
+                                          step's commit isolated from
+                                          whatever else is in flight,
+                                          and costs nothing to undo.
+  B · yes, custom name                   Same isolation, your naming
+                                          — use if the suggested name
+                                          collides with a convention.
+  C · no, use current branch             Fastest if you're already on
+                                          a throwaway branch, but mixes
+                                          plan commits with anything
+                                          else already there.
 
-  2. New worktree?  [y/N]
-     → if y, I create a linked worktree so your current checkout is untouched
-
-  3. New agent per step?  [y/N]
-     → if y, each step is handed to a fresh subagent (isolated context);
-       if n, I run every step inline in this thread
+  // reply: A | B | C
 ```
 
-Apply the answers:
+Apply the answer:
 
-- **New branch (y / name):** `git checkout -b <name>` from the current base. Record the
+- **New branch (A / B):** `git checkout -b <name>` from the current base. Record the
   base branch (`git rev-parse --abbrev-ref HEAD` before switching) — you need it for the
-  finish step. If the plan header already names a branch and the user accepts it, use that.
-- **New worktree (y):** `git worktree add <path> -b <branch>` (path: a sibling dir like
-  `../<repo>-<branch>`). Announce the worktree path. All subsequent work happens there.
-- **New agent per step (y):** for each step, dispatch the entire 6-stage loop to a fresh
-  subagent via the Agent tool (see "Subagent dispatch" below). Default (n) = run inline.
+  finish step. If the plan header already names a branch and the user accepts it, use that
+  (option A). Option B: ask for the custom name inline, then same checkout.
+- **No new branch (C):** stay on the current branch.
 
-Confirm the chosen options back to the user in one line. Set the plan header
+Always run in place, inline — no worktree, no per-step subagent dispatch. Those are
+fixed defaults, not asked.
+
+Confirm the chosen option back to the user in one line. Set the plan header
 **Status** to `In progress` (from `Draft` / `Agreed`), then begin at the first
 unfinished step.
 
@@ -208,42 +218,31 @@ Surprises: <anything that diverged from ground truth>
 
 ### After the step
 
-- If the step gate is **GATED**: stop, report the step result to the user, and wait for
-  review before starting the next step.
-- If the step gate is **AUTO**: continue to the next step.
-- If running subagents (see below): collect the subagent's result, verify a commit
-  landed, then continue.
-
----
-
-## Subagent dispatch (only when "new agent per step" = y)
-
-When the user opted into a fresh agent per step, dispatch each step like this:
-
-- Use the Agent tool with a general-purpose (or `lead-engineer`) subagent.
-- Hand it: the plan's Intent, Ground truth, Boundaries, and **just that one step**
-  (Do / Done when / Out of scope), plus the full 6-stage loop as its instructions.
-- Instruct it to run all 6 stages, land exactly one commit, update the plan tracker, and
-  return a short receipt (commit sha, files changed, criteria verified).
-- If the subagent reports it could not complete a stage's gate, do not let it continue —
-  treat as blocked, surface to the user.
-- Steps run **sequentially**, not in parallel — later steps depend on earlier commits and
-  the shared plan file. One subagent at a time.
-
-Inline mode (default) runs the identical loop in the main thread.
+- If the step gate is **GATED** (a human gate): report the step result to the user
+  (step name, commit sha, criteria met) and **stop — wait for review** before starting
+  the next step. GATED means a human is meant to look before the plan proceeds; that
+  pause is the point, not overhead to skip.
+- If the step gate is **AUTO**: report a one-line status and continue immediately to the
+  next step, no pause.
+- Boundaries "Stop and ask" triggers (unexpected test failure, out-of-scope change
+  needed, ambiguous instructions, two failed attempts at the same fix) stop execution
+  regardless of gate — same as always.
 
 ---
 
 ## ON COMPLETION — squash-merge or PR
 
 When all steps are done (tracker at 100%), set the plan header **Status** to `Done`,
-then ask the user:
+then move the plan file into a `completed/` folder inside its parent folder — e.g.
+`plans/<name>.plan.md` becomes `plans/completed/<name>.plan.md` (create `plans/completed/`
+if it doesn't exist; use `git mv` if the plan file is tracked, so history follows the move).
+Update the plan's own **Plan location** header field to the new path. Then ask the user:
 
 ```
 All <N> steps complete on <branch>. Finish how?
 
   1. Squash-merge locally  — squash the per-step commits into one on <base>,
-                             then delete <branch> (and worktree if used).
+                             then delete <branch>.
   2. Open a PR             — push <branch> and open a pull request via gh.
 ```
 
@@ -253,7 +252,6 @@ git checkout <base>
 git merge --squash <branch>
 git commit          # compose a summary message from the plan Intent + step list
 git branch -D <branch>
-git worktree remove <path>   # only if a worktree was created
 ```
 Show the composed squash message and confirm before committing.
 
@@ -283,4 +281,7 @@ URL when done.
 5. **Verify, don't assume.** Read real API/source definitions and the conventions the
    plan cites before writing calls. Run commands to confirm gates — never mark a gate
    passed from memory.
-6. **Respect the gate flag.** GATED steps pause for human review; AUTO steps continue.
+6. **Respect the gate flag.** GATED steps are a human gate — pause for review after
+   each one. AUTO steps report a one-line status and continue without pausing. (A
+   same-day 2026-07-07 edit briefly removed the GATED pause entirely; corrected the
+   same day — GATED pausing is the intended behaviour.)
