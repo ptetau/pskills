@@ -1,6 +1,6 @@
 ---
 name: quiz-plan
-description: Interactive quiz-driven planning. Asks structured questions to gather context, then generates a comprehensive Change Plan document with Intent, Approach, Ground truth, Boundaries, Steps, Verification, and Progress log. The draft is red-teamed against its own Boundaries, riskiest assumption, scope, and a failure premortem before being presented. Use for any non-trivial code change that needs a clear plan before implementation.
+description: Interactive quiz-driven planning. Asks structured questions to gather context, then generates a comprehensive Change Plan document with Intent, Approach, Ground truth, Boundaries, Steps, Verification, and Progress log. Steps declare a `Touches` file footprint and `Depends on` edges so independent steps can be auto-grouped for parallel execution by [[quiz-plan-execute]]. Steps default to AUTO — a step is only GATED (human checkpoint) when explicitly requested. The draft is red-teamed against its own Boundaries, riskiest assumption, scope, parallel-group correctness, and a failure premortem before being presented. Use for any non-trivial code change that needs a clear plan before implementation.
 license: MIT license
 metadata:
     skill-author: K-Dense Inc.
@@ -172,7 +172,7 @@ Then in one plain sentence: *"Does this look right? Say `wait` if anything's wro
 1. **Always a fenced code block.** Monospace is the aesthetic — render as a code block, not prose with hyphens.
 2. **Top border `quiz · NN/··`.** Lowercase. Box-drawing chars (`┌─┐│└┘`) for the header; plain ASCII for the rest.
 3. **`[?]` for open, `[✓]` for resolved.** Match the [[quiz]]/[[squiz]] convention exactly.
-4. **Options as `A · short-label`, then one fluid sentence** covering what the option does, why it fits the problem just described, and how it plays out in practice — the concrete cost or benefit. Two-space indent, wrap with continued indent, ~3-4 lines max so it survives mobile.
+4. **Options as `A · short-label`, then one fluid sentence** covering what the option does, why it fits the problem just described, and how it plays out in practice — the concrete cost or benefit. Two-space indent, wrap continuation lines with a hanging indent. **Draw the card at ≈80% of the terminal width** — border and wrapped option text fill about four-fifths of the available columns, not a narrow column. When width is unknown, assume a wide desktop terminal and draw at ~96 cols; keep a ~48-col floor for narrow/mobile. (Sample cards in this doc are drawn narrow to fit the page — widen on render.)
 5. **Mark exactly one option `(recommended)`** whenever you have enough context to judge. The reasoning lives inside that option's sentence and names the specific ground-truth fact, constraint, or risk that makes it the practical choice — not a generic default. Skip the tag on a genuine toss-up.
 6. **Optional `why it matters:` line** — one short clause, only when the consequence helps the user answer.
 7. **`// reply:` hint at the bottom** of every card.
@@ -219,7 +219,7 @@ You are an agent executing this plan. Assume you have no memory of previous sess
 
 1. Read Intent, Ground truth, and Boundaries in full (plus Approach, if present).
 2. Read the Progress log to find the current state. Do not redo completed steps or reopen decisions recorded there.
-3. Resume at the first step not marked done. Respect its gate.
+3. Resume at the first step not marked done. Respect its gate. If it carries a `Parallel group` tag shared with other not-done steps, those run together — see [[quiz-plan-execute]].
 4. After each step: append to the Progress log, then self-assess against the step's done criteria before moving on.
 5. If anything you're about to do conflicts with Intent or Boundaries, stop and ask. Do not resolve the conflict yourself.
 
@@ -256,17 +256,34 @@ You are an agent executing this plan. Assume you have no memory of previous sess
 
 ## Steps
 
-Sized so each step fits one session. Gate meanings: **AUTO** means complete and continue. **GATED** means complete, log, then stop and wait for human review.
+Sized so each step fits one session. Gate meanings: **AUTO** (default) means complete and
+continue unattended. **GATED** means complete, log, then stop and wait for human review —
+only used when the human explicitly asked for a checkpoint on that step.
+
+Each step also declares a **Touches** footprint and **Depends on** edges. These aren't
+decoration — [[quiz-plan-execute]] diffs them to decide which not-yet-done steps can run
+as a **parallel group** (concurrent agents, one per step). Get them right or grouping
+does the wrong thing silently.
 
 [Generate steps based on the change. Each step should be concrete enough that two different readers would produce the same change.]
 
-### Step 1: [name] · `[ ]` AUTO | GATED
+### Step 1: [name] · `[ ]` AUTO | GATED · Parallel group: [none | P1, P2, ...]
 
 - **Do:** [precise instructions]
 - **Done when:** [falsifiable criteria]
 - **Out of scope here:** [tempting adjacent work to exclude]
+- **Touches:** [files/globs this step actually edits — never includes the plan file itself,
+  which every step's Stage 6 touches and is deliberately excluded from grouping comparisons]
+- **Depends on:** [step numbers this step's correctness relies on, even if `Touches` doesn't
+  overlap — e.g. "Step 2" if this step reads a config flag Step 2 introduces. `none` if truly independent]
 
 [Additional steps as needed...]
+
+**Parallel group assignment rule:** two steps may share a group only if their `Touches` sets
+are disjoint **and** neither is in the other's (transitive) `Depends on` chain. The step that
+tests the **Riskiest assumption** never joins a group — it always runs alone, first. Any step
+marked **GATED** never joins a group either — an explicit human checkpoint runs alone so the
+pause point stays predictable. Groups are otherwise all-AUTO by construction.
 
 ## Verification and rollback
 
@@ -311,15 +328,16 @@ Each step's checkbox should also be updated: `[ ]` → `[x]` as steps complete.
 
 When generating steps from the quiz answers:
 
-1. **Step 1 should always test the riskiest assumption** (from Q5). This goes first because if this fails, the whole plan is invalid.
+1. **Step 1 should always test the riskiest assumption** (from Q5). This goes first because if this fails, the whole plan is invalid. It never joins a parallel group.
 2. Each step should produce a concrete, checkable outcome (a passing test, a rendered route, a working command).
-3. Default to **GATED** steps unless the user explicitly says they want auto-execution. GATED means the agent pauses and waits for human review after each step.
+3. **Default every step to AUTO.** Only mark a step **GATED** when the user explicitly asks for a human checkpoint on it (by name, or a general "gate the risky ones" instruction you then apply to the specific steps that match). Don't gate by default "to be safe" — that default was flipped because unattended AUTO execution end-to-end is now the common case, not the exception.
 4. If the change involves both infrastructure and code, separate into logical phases (infrastructure first, then code).
 5. If the change spans a backend + frontend, order steps by dependency (backend first if the frontend depends on it).
 6. A step should fit in one session. If a step would require 20 file changes, split it further.
 7. The last step should always include running the build, test, and lint commands from Q6.
 8. **Tracker maintenance is part of each step.** Whenever a step is completed, the agent must also update the progress bar and checkboxes in the plan file header.
 9. **Pick the approach before the steps.** When Q12 surfaced 2+ viable approaches, choose one deliberately, record the choice and why the alternatives lost in the **Approach** section, then generate steps for the winner only. Don't leave the fork unresolved in the steps.
+10. **Assign `Touches` and `Depends on` for every step, then compute parallel groups.** Two AUTO steps that aren't the riskiest-assumption step share a group id (`P1`, `P2`, ...) only if their `Touches` sets are disjoint and neither depends on the other, directly or transitively. Groups need 2+ steps — a step with no groupmate gets `Parallel group: none`. When unsure whether two steps are really independent, default to `none` rather than guessing a group — a missed parallel opportunity costs time, a wrong one costs a broken merge.
 
 ### Phase 3: Red-team the Draft
 
@@ -347,6 +365,11 @@ than silently patching over it or silently dropping it.
 - **Scope creep:** does any step's `Do` include work Q4 explicitly excluded?
 - **Rollback reachability:** if Verification's "Failing looks like" triggers mid-plan (not
   just at the end), is the Rollback from Q9 still executable at that point?
+- **Parallel groups:** for every declared group, are the `Touches` sets *actually* disjoint,
+  or does file-set diffing miss a real logical dependency between two steps (one reads a
+  flag/schema/contract the other introduces, even in a different file)? Add the missing
+  `Depends on` edge and split the group if so. Confirm the riskiest-assumption step and every
+  GATED step carry `Parallel group: none` — if either got swept into a group by mistake, fix it.
 
 Only once this pass is clean does the plan move to `Draft` and get presented. When
 presenting, add one line noting the red-team pass ran and naming anything it caught and
@@ -362,7 +385,8 @@ After generating the plan and completing the red-team pass, present to the user:
 
 If yes, hand off to [[quiz-plan-execute]] — run `/quiz-plan-execute <path>`, which drives each
 step through a strict 6-stage TDD gate (understand → red → green → refactor → review → commit),
-one commit per step, with an optional new branch. If no, the plan file exists
+one commit per step, with an optional new branch. Steps sharing a `Parallel group` run
+concurrently, one agent per step, each in its own worktree. If no, the plan file exists
 on disk for later use — the user can run `/quiz-plan-execute` against it any time.
 
 ## Example
@@ -456,4 +480,5 @@ internal-IP route stays 200 the whole time.")*
 - If the user gives minimal answers, keep the plan short. If they give detailed answers, include all details.
 - If the user already has a clear idea of the steps, skip to step generation — capture their steps directly.
 - The plan file should be committed to the repository alongside the code changes so the plan stays with the branch.
-- **Robustness additions** (Approach / Prior art / Assumptions, plus the premortem lens in Phase 3) come from evidence-backed planning practice: deliberate approach selection (multi-plan beats first-draft), the outside view (anchor scope to the closest past change), and Klein's premortem (imagining failure already happened surfaces ~30% more failure causes than "what might go wrong"). They stay non-redundant by design: the premortem is **folded into the Phase 3 red-team** as one lens (it hunts failures no step represents, where the other checks hunt rule violations), not a separate section. Everything is compatible with [[quiz-plan-execute]], which parses only Intent, Ground truth, Boundaries, Steps (`Done when`), and the Progress log — the new **Approach** and **Prior art** are read-only context, while **Assumptions** live inside Boundaries specifically so the executor re-checks them every step (it re-reads Boundaries per step; Ground truth only once).
+- **Robustness additions** (Approach / Prior art / Assumptions, plus the premortem lens in Phase 3) come from evidence-backed planning practice: deliberate approach selection (multi-plan beats first-draft), the outside view (anchor scope to the closest past change), and Klein's premortem (imagining failure already happened surfaces ~30% more failure causes than "what might go wrong"). They stay non-redundant by design: the premortem is **folded into the Phase 3 red-team** as one lens (it hunts failures no step represents, where the other checks hunt rule violations), not a separate section. Everything is compatible with [[quiz-plan-execute]], which parses Intent, Ground truth, Boundaries, Steps (`Done when`, `Touches`, `Depends on`, `Parallel group`), and the Progress log — the new **Approach** and **Prior art** are read-only context, while **Assumptions** live inside Boundaries specifically so the executor re-checks them every step (it re-reads Boundaries per step; Ground truth only once).
+- **Parallel groups** (`Touches` / `Depends on` / `Parallel group`) exist purely so [[quiz-plan-execute]] can safely run independent steps concurrently. `Touches` never lists the plan file itself — every step's Stage 6 writes to it, so including it would make every step look dependent on every other. When in doubt about a dependency that file-overlap alone wouldn't reveal, write it into `Depends on` rather than leaving the group assignment to guesswork.
