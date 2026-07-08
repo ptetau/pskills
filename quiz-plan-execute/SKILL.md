@@ -5,11 +5,14 @@ description: >
   through a strict 6-stage TDD gate: (1) understand acceptance criteria,
   (2) red — write a failing test, (3) green — write impl to pass, (4) refactor,
   (5) review against acceptance criteria, (6) commit. Every stage must finish
-  before the next begins; every step ends in its own commit. At start it asks
-  one question — whether to create a new branch for the work. On completion it
-  offers to squash-merge locally or open a PR. Use when the user says
-  "/quiz-plan-execute", "execute the plan", "run my plan.md", or "build from
-  the quiz-plan".
+  before the next begins; every step ends in its own commit. Steps that share a
+  `Parallel group` tag run concurrently — one agent per step, each in its own
+  git worktree, dispatched via the harness's Workflow tool when available (else
+  manual worktrees capped at 4 concurrent) — then merged back in declared step
+  order, one commit per step. At start it asks one question — whether to create
+  a new branch for the work. On completion it offers to squash-merge locally or
+  open a PR. Use when the user says "/quiz-plan-execute", "execute the plan",
+  "run my plan.md", or "build from the quiz-plan".
 ---
 
 # Quiz Plan Execute
@@ -25,6 +28,11 @@ It is deliberately strict. The 6-stage process per step is a gate, not a checkli
 a stage must be *complete and verified* before the next begins. You do not write
 implementation before a failing test exists. You do not refactor before the test is
 green. You do not commit before the step is reviewed against its acceptance criteria.
+
+Steps are usually run one at a time, in order. When the plan marks a run of steps with
+the same `Parallel group` tag, those run concurrently instead — one agent per step, each
+isolated in its own git worktree — then get merged back onto the plan branch in declared
+step order, still one commit per step. See "PARALLEL GROUP DISPATCH" below.
 
 ## When to Use This Skill
 
@@ -70,7 +78,8 @@ Read the plan file in full. Extract:
 - **Build / test / lint commands** — from Ground truth. You run these verbatim; never
   invent them.
 - **Steps** — ordered list. For each step capture: name, gate (AUTO | GATED),
-  the **Do** instructions, the **Done when** criteria, and **Out of scope here**.
+  the **Do** instructions, the **Done when** criteria, **Out of scope here**, **Touches**,
+  **Depends on**, and **Parallel group** (`none` or a group id).
 - **Progress log** — the memory of prior sessions. Find the first step not marked done
   and resume there. Do **not** redo completed steps or reopen decisions logged there.
 
@@ -114,8 +123,11 @@ Apply the answer:
   (option A). Option B: ask for the custom name inline, then same checkout.
 - **No new branch (C):** stay on the current branch.
 
-Always run in place, inline — no worktree, no per-step subagent dispatch. Those are
-fixed defaults, not asked.
+By default, every step runs in place, inline, in the main thread. The exception is
+automatic, not asked: a run of not-done steps sharing a `Parallel group` tag dispatches
+to concurrent worktree-isolated agents — see "PARALLEL GROUP DISPATCH" below. That's a
+property of the plan (set by `/quiz-plan`), not a runtime toggle, so it isn't part of
+this setup question.
 
 Confirm the chosen option back to the user in one line. Set the plan header
 **Status** to `In progress` (from `Draft` / `Agreed`), then begin at the first
@@ -230,6 +242,66 @@ Surprises: <anything that diverged from ground truth>
 
 ---
 
+## PARALLEL GROUP DISPATCH (when the plan declares one)
+
+Before running the next not-done step through the loop above, check its `Parallel group`
+field. `none` → run it exactly as described above, nothing below applies. A group id shared
+with other not-done steps → run this section instead of the single-step loop, for all of
+them at once.
+
+**PG-1. Detect the group.** Take the contiguous run of not-done steps sharing the same
+`Parallel group` id, starting at the resume point. Every step in it is AUTO — GATED steps
+never carry a group id (see [[quiz-plan]]) — so nothing here needs to reconcile grouping
+with pausing for review.
+
+**PG-2. Dispatch — prefer the harness's Workflow tool.** If the Workflow tool is available
+in this session, use it: one `agent()` call per step in the group, `isolation: 'worktree'`
+(each step gets its own throwaway worktree + branch off the current HEAD). Give each agent
+only that one step's Intent-relevant context — Ground truth, Boundaries, and the step's own
+Do / Done when / Out of scope / Touches, never the sibling steps — and instruct it to run
+Stages 1-5 of the loop above (Understand through Review) inside its worktree. Use `schema`
+to get back a receipt: `{step, worktreePath, branch, filesChanged, decided, surprises}`.
+Stop each agent short of Stage 6 — no commit, no plan-file edit — for the reason in PG-4.
+
+Workflow scripts have no filesystem or git access of their own; the script's only job is
+spawning the per-step subagents and collecting receipts. The actual git work — worktree
+creation is Workflow's, but reading diffs and merging them back — happens in your main
+thread via Bash after the group returns, not inside the workflow script.
+
+If the Workflow tool isn't available in this session, fall back to manual dispatch:
+`git worktree add <path> -b step-<n>` per step yourself (sibling dirs, e.g.
+`../<repo>-step-<n>`), then the Agent tool per step with the same instructions as above,
+batched at most 4 concurrent calls at a time (one message, up to 4 parallel tool-use
+blocks) — wait for that batch, then dispatch the next batch if the group has more steps.
+
+**PG-3. Wait for every step in the group.** A group is a barrier: don't merge anything until
+every step has either returned a receipt or failed its own Stage 1-5 gate. A step that fails
+its gate is blocked — leave its worktree in place, don't merge it, and follow Boundaries
+"Stop and ask" for that step specifically. Steps that succeeded still proceed to PG-4.
+
+**PG-4. Merge each worktree back in declared step order — never finish order — one commit
+per step, composed by you, not the subagent:**
+- For each step, ascending by step number: apply that step's diff (from its worktree) onto
+  the plan branch.
+- **You** update the plan file's tracker, checkbox, and Progress log entry for this step —
+  the subagent never touched `plan.md`. This is deliberate: every step's Stage 6 writes to
+  the same tracker/log region, so if two worktree-isolated agents both edited it, every
+  group would conflict on the plan file even with perfectly disjoint code. Doing this edit
+  once, serially, in the main thread is what avoids that.
+- Commit (same Conventional Commits format as the single-step Stage 6).
+- Remove the worktree and delete its branch.
+- **If applying a step's diff conflicts with what an earlier step in this merge already
+  landed** — the `Touches` sets were supposed to be disjoint but weren't — retry that one
+  step's Stage 1-5 loop sequentially against the now-current plan branch, exactly once,
+  silently (log it under that step's Progress-log "Surprises" line, but don't stop to ask).
+  If it fails or conflicts again on the retry, that's the existing Boundaries "two failed
+  attempts" trigger — stop and ask.
+
+**PG-5. Report and continue.** Report one status line per step in the group, then continue
+to the next step or group — no pause, since every grouped step is AUTO.
+
+---
+
 ## ON COMPLETION — squash-merge or PR
 
 When all steps are done (tracker at 100%), set the plan header **Status** to `Done`,
@@ -285,3 +357,9 @@ URL when done.
    each one. AUTO steps report a one-line status and continue without pausing. (A
    same-day 2026-07-07 edit briefly removed the GATED pause entirely; corrected the
    same day — GATED pausing is the intended behaviour.)
+7. **Parallel groups still land one commit per step, composed by the main thread.**
+   Concurrent dispatch changes *who* runs stages 1-5 (a fresh worktree-isolated agent per
+   step) and *when* they run (together), not the commit discipline — the plan file is
+   never edited by a grouped subagent, only by the main thread during merge-back, and a
+   broken independence assumption gets exactly one silent sequential retry before it
+   escalates through rule 4.
