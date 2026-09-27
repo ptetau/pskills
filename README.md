@@ -20,6 +20,13 @@ A collection of Claude Code skills. Install any skill by copying its directory i
     SKILL.md
   squiz/
     SKILL.md
+  vet/
+    SKILL.md
+    references/
+      vet.workflow.js
+      suite.schema.json
+      results.schema.json
+      report-template.md
 ```
 
 ---
@@ -188,3 +195,43 @@ Requires the `squiz` binary: see [squiz releases](https://github.com/squiz-cli/s
 
 Prefer `/quiz` for small sets of textual questions. Use `/squiz` when decisions
 are visual, numerous, or benefit from seeing all options side by side.
+
+---
+
+## `/vet` — Skill Evaluator
+
+Writes and runs an eval for another skill. A good skill meets its own rubric and gives
+much the same output every time, so `/vet` scores both:
+
+1. Reads the skill's SKILL.md and extracts the expected **output structure** and a
+   **rubric** (structure, behavior and outcome items, weighted, each citing its source)
+2. Writes **10 varied test prompts**, with scripted user replies for interactive skills
+3. Runs **3 prompts × 10 repeats**, each in its own git worktree, via a `Workflow`
+4. A **rubric judge** grades every run: met / partial / missed / n/a, with evidence
+5. **Similarity judges** classify each rubric item across repeats (and structure items
+   across prompts): identical → equivalent → minor drift → major drift → contradictory
+6. Scores **quality**, **stability**, and **overall** = √(quality × stability)
+
+The suite is saved to `evals/<skill>/suite.json` and reused, so later runs are
+comparable. You review the rubric and prompts once, when a suite is first written.
+
+**Example**
+
+```
+/vet quiz
+```
+
+**Output (excerpt)**
+
+```
+Quality 88 · Stability 74 · Overall 80.7 (B)    30/30 runs usable
+
+Where it varies
+  R5 question order · P02 — major_drift
+    6 runs (P02#1,#2,#4,#6,#7,#9): asks about audience first
+    4 runs (P02#3,#5,#8,#10):      asks about scope first
+```
+
+Writes `evals/quiz/runs/<runId>/report.md`, `results.json`, and one capture per run.
+Options: `--prompts N`, `--sample M`, `--runs R`, `--use P02,P07`, `--regen`.
+

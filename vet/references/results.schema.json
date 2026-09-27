@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pskills/vet/results.schema.json",
+  "title": "Vet results",
+  "description": "Machine-readable output of one /vet run: scores, every rubric verdict, and every similarity judgment. Written to evals/<skill>/runs/<runId>/results.json. Everything from config onward is the vet workflow's return value, unchanged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["skill", "skillSha256", "suiteSha256", "runId", "generatedAt", "config", "scores", "qualitySpread", "items", "prompts", "runs", "similarity", "excluded", "lostJudges"],
+  "properties": {
+    "skill": { "type": "string" },
+    "skillSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of SKILL.md at the time of this run."
+    },
+    "suiteSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of suite.json used. Scores are comparable only between runs with the same suite hash."
+    },
+    "runId": {
+      "type": "string",
+      "description": "UTC timestamp, e.g. 20260927T101500Z. Also the folder name."
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompts", "runs", "maxTurns", "crossPerPrompt"],
+      "properties": {
+        "prompts": { "type": "array", "items": { "type": "string" }, "description": "Prompt ids run this time." },
+        "runs": { "type": "integer", "minimum": 2, "description": "Repeats per prompt." },
+        "maxTurns": { "type": "integer" },
+        "crossPerPrompt": { "type": "integer" }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quality", "stability", "overall", "grade", "confidence", "usableRuns", "totalRuns"],
+      "properties": {
+        "quality": { "$ref": "#/$defs/score", "description": "Weighted share of rubric met across all usable runs (met 1, partial 0.5, missed 0; n/a left out)." },
+        "stability": { "$ref": "#/$defs/score", "description": "Weighted mean similarity across every (scope, item) judgment." },
+        "overall": { "$ref": "#/$defs/score", "description": "sqrt(quality x stability)." },
+        "grade": { "enum": ["A", "B", "C", "D", "F", null] },
+        "confidence": { "enum": ["normal", "low"], "description": "low when under 80% of runs were usable." },
+        "usableRuns": { "type": "integer" },
+        "totalRuns": { "type": "integer" }
+      }
+    },
+    "qualitySpread": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "median", "max"],
+      "description": "Per-run quality across usable runs.",
+      "properties": {
+        "min": { "$ref": "#/$defs/score" },
+        "median": { "$ref": "#/$defs/score" },
+        "max": { "$ref": "#/$defs/score" }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "weight", "criterion", "passRate", "stabilityWithin", "classesWithin", "stabilityCross", "classCross"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["structure", "behavior", "outcome"] },
+          "weight": { "type": "integer" },
+          "criterion": { "type": "string" },
+          "passRate": { "$ref": "#/$defs/score", "description": "Unweighted mean verdict value for this item, x100." },
+          "stabilityWithin": { "$ref": "#/$defs/score", "description": "Mean similarity for this item across repeats of the same prompt." },
+          "classesWithin": {
+            "type": "object",
+            "description": "Prompt id -> similarity class for this item.",
+            "additionalProperties": { "$ref": "#/$defs/class" }
+          },
+          "stabilityCross": { "$ref": "#/$defs/score", "description": "Similarity across prompts; structure items only." },
+          "classCross": { "anyOf": [{ "$ref": "#/$defs/class" }, { "type": "null" }] }
+        }
+      }
+    },
+    "prompts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "usableRuns", "quality", "stability"],
+        "properties": {
+          "id": { "type": "string" },
+          "usableRuns": { "type": "integer" },
+          "quality": { "$ref": "#/$defs/score" },
+          "stability": { "$ref": "#/$defs/score" }
+        }
+      }
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "prompt", "repeat", "capture", "status", "note", "quality", "verdicts", "excluded"],
+        "properties": {
+          "label": { "type": "string", "description": "e.g. P01#3" },
+          "prompt": { "type": "string" },
+          "repeat": { "type": "integer" },
+          "capture": { "type": "string", "description": "Absolute path of the run's capture file." },
+          "status": { "enum": ["completed", "blocked", "error", null] },
+          "note": { "type": "string" },
+          "quality": { "$ref": "#/$defs/score" },
+          "verdicts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "verdict", "evidence"],
+              "properties": {
+                "id": { "type": "string" },
+                "verdict": { "enum": ["met", "partial", "missed", "n/a"] },
+                "evidence": { "type": "string" }
+              }
+            }
+          },
+          "excluded": { "type": ["string", "null"], "description": "Why the run was left out of the scores, or null." }
+        }
+      }
+    },
+    "similarity": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["scope", "item", "class", "groups", "reason"],
+        "properties": {
+          "scope": { "type": "string", "description": "A prompt id for same-input repeats, or \"cross\" for across prompts." },
+          "item": { "type": "string" },
+          "class": { "$ref": "#/$defs/class" },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["runs", "description"],
+              "properties": {
+                "runs": { "type": "array", "items": { "type": "string" } },
+                "description": { "type": "string" }
+              }
+            }
+          },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "reason"],
+        "properties": {
+          "label": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "lostJudges": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Labels of similarity judges that died; their item/scope is missing from stability."
+    }
+  },
+  "$defs": {
+    "score": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "class": {
+      "enum": ["identical", "equivalent", "minor_drift", "major_drift", "contradictory"]
+    }
+  }
+}
