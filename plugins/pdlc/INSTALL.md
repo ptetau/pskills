@@ -119,6 +119,12 @@ It finds the change whose branch is being merged (from `GITHUB_HEAD_REF` in GitH
 or the current git branch) and fails if any requirement that change touches isn't
 `verified`. If no change uses the branch, it checks every change marked `in review`.
 
+## Checking the guard
+
+pdlc's plugin includes a guard that keeps its agents in their lanes: the test writer can't
+read app code, the builder can't change checks, and each reviewer sees only its packet. To
+see every decision it makes, start Claude Code with `PDLC_GUARD_LOG=/tmp/pdlc-guard.log`.
+
 ## Sharing with your team
 
 With the project scope, `.claude/settings.json` ends up like this:

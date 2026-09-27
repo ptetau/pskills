@@ -10,6 +10,7 @@ It keeps pdlc's agents in their lanes:
 Everyone else, including the main session, is left alone.
 
 Check folders come from "check folders:" in pdlc/config.md. Exit 2 blocks the call.
+Set PDLC_GUARD_LOG to a file path to log every decision.
 """
 import json
 import os
@@ -92,7 +93,13 @@ def decide(call):
 
 
 if __name__ == "__main__":
-    allowed, reason = decide(json.load(sys.stdin))
+    call = json.load(sys.stdin)
+    allowed, reason = decide(call)
+    if os.environ.get("PDLC_GUARD_LOG"):
+        with open(os.environ["PDLC_GUARD_LOG"], "a") as log:
+            log.write(json.dumps({"agent": call.get("agent_type"), "tool": call.get("tool_name"),
+                                  "input": call.get("tool_input"), "allowed": allowed,
+                                  "reason": reason}) + "\n")
     if not allowed:
         print("pdlc guard: " + reason, file=sys.stderr)
         sys.exit(2)
