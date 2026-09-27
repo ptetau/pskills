@@ -33,7 +33,10 @@ def status_of(root, req_id):
     heading = re.search(r"^### %s\b.*$" % re.escape(req_id), text, re.M)
     if not heading:
         return None
-    status = re.search(r"^Status:\s*([a-z ]+?)\s*(?:·|$)", text[heading.end():], re.M)
+    body = text[heading.end():]
+    end = re.search(r"^##", body, re.M)
+    body = body[:end.start()] if end else body
+    status = re.search(r"^Status:\s*([a-z ]+?)\s*(?:·|$)", body, re.M)
     return status.group(1) if status else "missing"
 
 

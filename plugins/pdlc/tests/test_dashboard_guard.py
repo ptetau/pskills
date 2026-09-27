@@ -44,6 +44,11 @@ class Guard(unittest.TestCase):
         self.assertFalse(self.ok({"pattern": "**/*.py"}))
         self.assertTrue(self.ok({"pattern": "*", "path": ".dashboard"}))
 
+    def test_glob_pattern_cannot_escape_the_folder(self):
+        self.assertFalse(self.ok({"path": ".dashboard", "pattern": "../**/*"}))
+        self.assertFalse(self.ok({"path": ".dashboard", "pattern": "/home/**/*.env"}))
+        self.assertTrue(self.ok({"path": ".dashboard", "pattern": "**/*.json"}))
+
     def test_exit_code_2_blocks_and_explains(self):
         run = subprocess.run([sys.executable, str(GUARD)], capture_output=True, text=True,
                              input=json.dumps({"cwd": self.cwd, "tool_input": {"file_path": "x"}}))

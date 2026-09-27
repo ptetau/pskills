@@ -17,8 +17,14 @@ def allowed(call):
         os.path.realpath(os.path.join(cwd, ".dashboard")),
         os.path.realpath(os.path.expanduser("~/.claude/agent-memory/dashboard-builder")),
     ]
-    path = os.path.realpath(os.path.join(cwd, os.path.expanduser(target)))
-    return path, any(path == root or path.startswith(root + os.sep) for root in roots)
+    paths = [os.path.realpath(os.path.join(cwd, os.path.expanduser(target)))]
+    if args.get("pattern"):
+        # A Glob pattern can climb out with ".." or start from "/", so check where it
+        # points too.
+        paths.append(os.path.realpath(os.path.join(paths[0], os.path.expanduser(args["pattern"]))))
+    inside = lambda p: any(p == root or p.startswith(root + os.sep) for root in roots)
+    bad = [p for p in paths if not inside(p)]
+    return (bad[0] if bad else paths[0]), not bad
 
 
 if __name__ == "__main__":

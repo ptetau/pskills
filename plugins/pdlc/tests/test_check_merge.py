@@ -61,6 +61,10 @@ class MergeCheck(unittest.TestCase):
         (self.root / "pdlc/changes/CH-0001-email-templates.md").write_text(
             CHANGE.format(status=status, reqs=reqs))
 
+    def write_change(self, reqs, status="in review"):
+        (self.root / "pdlc/changes/CH-0001-email-templates.md").write_text(
+            CHANGE.format(status=status, reqs=reqs))
+
     def run_check(self, *args):
         out = io.StringIO()
         with redirect_stdout(out):
@@ -92,6 +96,17 @@ class MergeCheck(unittest.TestCase):
         self.assertEqual(self.run_check("CH-0001")[0], 1)
         self.write(reqs="### CAP-email.R7 · Old thing (retire)")
         self.assertEqual(self.run_check("CH-0001")[0], 0)
+
+    def test_a_missing_status_does_not_borrow_the_next_requirements_status(self):
+        self.write(r2="verified")
+        path = self.root / "pdlc/specs/capabilities/CAP-email.md"
+        text = path.read_text().replace("Status: verified · Intents: IN-0001\n", "", 1)
+        text += "\n### CAP-email.R3 · Later\n\nStatus: verified · Intents: IN-0003\n"
+        path.write_text(text)
+        self.write_change("### CAP-email.R1 · Send plain email")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("CAP-email.R1 is missing", out)
 
     def test_fails_when_the_change_lists_no_requirements(self):
         self.write(reqs="None.")
