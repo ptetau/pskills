@@ -58,7 +58,9 @@ Utilities        pub/sub · logging · secrets
 
 | Component | API (business verbs) | Calls |
 |-----------|----------------------|-------|
-| each Client | — | `NotificationManager` only |
+| `EventsApi` (Client) | `Receive`: `POST /events` | `NotificationManager` only |
+| `AdminPortal` (Client) | `SavePreferences`: the preferences screen | `NotificationManager` only |
+| `Scheduler` (Client) | `OnTick`: every minute | `NotificationManager` only |
 | `NotificationManager` | `Notify`, `SendDue`, `SetPreferences` | `RoutingEngine`, `RenderingEngine`, `RecipientsAccess`, `DeliveryAccess`, `OutboxAccess` |
 | `RoutingEngine` | `RecipientsFor`, `Route` | nothing: the Manager looks recipients up and passes them in, so the Engine stays pure |
 | `RenderingEngine` | `Render` | nothing (templates ship with it as files) |

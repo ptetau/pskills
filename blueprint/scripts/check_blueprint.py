@@ -20,17 +20,21 @@ Errors (exit code 1):
   - a component in section 5 lacks a purpose, a signature block, or failure and retry
     semantics
   - section 6 has fewer than 3 scenarios, a scenario lacks Given/When/Then, an
-    invariant's code is never exercised, or there is no "Done when" / "Verify" line
+    invariant's code is never asserted (in a Then step or an Examples row), or there is
+    no "Done when" / "Verify" line
     with a command
   - design IDs (V1, F2, UC3, A1, FR-1, SC-1, INV-1) remain outside code blocks
+  - a flow calls a component its kind may not call (walls.md call rules), or one its
+    "May call" line doesn't list
   - with --design: a Client, Manager, Engine, or ResourceAccess in the design's walls has
-    no section 5 subsection; section 5 has a component the design doesn't; or a design
-    API verb has no matching method
+    no section 5 subsection; section 5 has a component the design doesn't; a design API
+    verb has no matching method, or a method isn't in the design's API; a design brick
+    isn't in its component's subsection; a shared contract has no type of that name
 
 Warnings: invariants outside 4-7 (fewer is right for a small domain), more than 5
 scenarios, more than 5 steps in a scenario, a Background over 4 steps, a Then step that
 asserts storage, money typed as a bare number, `any` in TypeScript, a component without
-"May call", a design brick or utility not mentioned in section 5, filler phrasing.
+"May call", a design utility not mentioned in section 5, filler phrasing.
 
 Usage:
   python check_blueprint.py notifications.blueprint.md
@@ -61,7 +65,7 @@ CODE = r"[A-Z][A-Z0-9]+(?:_[A-Z0-9]+)+"
 ERROR_CODE = re.compile(r"`(%s)`" % CODE)
 BARE_CODE = re.compile(r"\b(%s)\b" % CODE)
 QUOTED_CODE = re.compile(r"\"(%s)\"" % CODE)
-CRYPTIC_ID = re.compile(r"\b(?:(?:V|F|UC|A)\d{1,3}|(?:FR|NFR|SC|INV)-\d+)\b")
+CRYPTIC_ID = re.compile(r"\b(?:(?:V|F|UC)\d{1,3}|(?:FR|NFR|SC|INV)-\d+)\b")
 FENCE = re.compile(r"^```(\w*)[^\n]*\n(.*?)^```", re.M | re.S)
 MONEY_AS_NUMBER = re.compile(
     r"\b\w*(amount|price|total|cost|balance|fee)\w*\??\s*[:]\s*(number|float|double|f32|f64|float32|float64)\b", re.I)
@@ -69,7 +73,7 @@ STATE_TYPE = re.compile(r"\b(?:type|enum)\s+(\w*(?:Status|State))\b")
 COMPONENT = re.compile(r"\b([A-Z][A-Za-z0-9]*(?:Manager|Engine|Access))\b")
 DESIGN_CALL = re.compile(r"\b([A-Z][A-Za-z0-9]*(?:Manager|Engine|Access))\.([A-Z][A-Za-z0-9]*)\b")
 NOT_COMPONENTS = {"ResourceAccess"}
-DB_ASSERTION = re.compile(r"\b(database|db|table|row|column|sql|query)\b", re.I)
+DB_ASSERTION = re.compile(r"\b(database|db|sql|rows?|columns?)\b", re.I)
 STEP = re.compile(r"^\s*(Given|When|Then|And|But|\*)\b", re.M)
 FILLER = re.compile(r"^(in this document|this document (will|describes)|let's|here is|here's|i will|we will now)\b",
                     re.I | re.M)
@@ -98,6 +102,44 @@ def code_blocks(body, langs=None):
 
 
 COMPONENT_TYPES = {"client", "manager", "engine", "resourceaccess", "utility"}
+ALLOWED_CALLS = {  # walls.md call matrix; Utilities, storage, and vendors are always allowed
+    "client": {"manager"},
+    "manager": {"engine", "resourceaccess", "manager"},   # Manager to Manager only through a queue
+    "engine": {"resourceaccess"},
+    "resourceaccess": set(),
+    "utility": set(),
+}
+
+
+def section5_components(s5):
+    """[(name, kind or None, body)] from '### Group (Kind)' and '#### Name' headings."""
+    out, kind = [], None
+    for block in re.split(r"^(?=#{3,4}\s)", s5, flags=re.M):
+        head = block.split("\n", 1)[0]
+        if head.startswith("#### "):
+            name = head[5:].strip().strip("`")
+            out.append((name, kind, block))
+        elif head.startswith("### "):
+            g = head.lower()
+            kind = ("client" if "client" in g else "manager" if "manager" in g else "engine" if "engine" in g
+                    else "resourceaccess" if "resourceaccess" in g or "resource access" in g
+                    else "utility" if "utilit" in g else None)
+    return out
+
+
+def methods_of(body):
+    names = set()
+    for _, block in code_blocks(body, TYPED_LANGS):
+        names.update(re.findall(r"^\s*(?:func\s+(?:\([^)]*\)\s*)?)?(?:async\s+)?([a-zA-Z_]\w*)\s*\(", block, re.M))
+    return names - {"if", "for", "while", "switch", "return", "function"}
+
+
+def flow_calls(body):
+    """(callee, method) pairs named in a component's Flow bullets."""
+    calls = []
+    for m in re.finditer(r"\*\*Flows?\b.*?(?=\n- \*\*(?!Flow)|\n####|\Z)", body, re.S):
+        calls += re.findall(r"`([A-Z][A-Za-z0-9]*)\.([a-zA-Z_]\w*)", m.group(0))
+    return calls
 
 
 def design_components(design_text):
@@ -136,7 +178,7 @@ def design_components(design_text):
     return comps
 
 
-def check_design(design_text, s5, components):
+def check_design(design_text, s5, components, s3_code=""):
     """Congruence with the source design: same components, same verbs."""
     errors, warnings = [], []
     comps = design_components(design_text)
@@ -173,11 +215,38 @@ def check_design(design_text, s5, components):
                 for v in re.findall(r"`([A-Z][A-Za-z0-9]*)", cells[col]):
                     if v not in comps:
                         into.add((name, v))
+    dsections, _ = split_sections(design_text)
+    brick_section = next((b for t, b in dsections.values() if re.search(r"brick", t, re.I)), "")
+    for block in re.split(r"^(?=###\s)", brick_section, flags=re.M):
+        head = block.split("\n", 1)[0]
+        name = head[4:].strip().strip("`") if head.startswith("### ") else ""
+        if name in comps:
+            for line in strip_code(block).split("\n"):
+                cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.lstrip().startswith("|") else []
+                if cells and not set(cells[0]) <= set("-: "):
+                    for b in re.findall(r"`([A-Z][A-Za-z0-9]*)", cells[0]):
+                        bricks.add((name, b))
     for comp, brick in sorted(bricks):
         body = bodies.get(comp)
         if body is not None and not re.search(r"\b%s\b" % re.escape(brick), body, re.I):
-            warnings.append("--design: brick `%s` of `%s` is not mentioned in its section 5 subsection "
-                            "(list it under Internals)" % (brick, comp))
+            errors.append("--design: brick `%s` of `%s` is not in its section 5 subsection (list it under "
+                          "Internals)" % (brick, comp))
+    # contracts keep their names
+    contracts = set(re.findall(r"`([A-Z][A-Za-z0-9]*)`\s+used by", design_text))
+    contracts |= set(re.findall(r"`([A-Z][A-Za-z0-9]*)\s*\{", design_text))
+    for c in sorted(contracts - set(comps)):
+        if not re.search(r"\b(?:interface|type|struct|enum)\s+%s\b" % re.escape(c), s3_code):
+            errors.append("--design: shared contract `%s` from the design has no type of that name in section 3" % c)
+    # no methods the design doesn't have, where the design lists an API
+    design_verbs = {}
+    for c, v in verbs:
+        design_verbs.setdefault(c, set()).add(v.lower())
+    for c, body in bodies.items():
+        if c in design_verbs:
+            for m in sorted(methods_of(body)):
+                if m.lower() not in design_verbs[c]:
+                    errors.append("--design: `%s.%s` is not in the design's API for `%s` (a blueprint never adds "
+                                  "verbs; add it to the design first)" % (c, m, c))
     for comp, verb in sorted(verbs):
         body = bodies.get(comp)
         if body is None:
@@ -213,9 +282,13 @@ def check(text, compile_ts=False, draft=False, design_text=None):
     if not re.search(r"out[- ]of[- ]scope|non-goals", s1, re.I):
         errors.append("section 1: no out-of-scope (non-goals) list")
     assumed = len(re.findall(r"\(assumed\)", prose, re.I))
-    listed = re.search(r"#+\s*(?:decisions added[^\n]*|assumptions)\n(.*?)(?=\n#+\s|\Z)", s1, re.I | re.S)
-    decisions = len(re.findall(r"^\s*[-*]\s+", listed.group(1), re.M)) if listed else 0
-    if assumed and not re.search(r"decisions added|assumptions", s1, re.I):
+    decisions = 0
+    for listed in re.finditer(r"#+\s*(?:decisions (?:added|carried)[^\n]*|assumptions)\n(.*?)(?=\n#+\s|\Z)",
+                              s1, re.I | re.S):
+        decisions += len(re.findall(r"^\s*[-*]\s+", listed.group(1), re.M))
+    if assumed > decisions:
+        warnings.append("%d inline '(assumed)' tags but only %d decisions listed; list every one" % (assumed, decisions))
+    if assumed and not re.search(r"decisions (added|carried)|assumptions", s1, re.I):
         errors.append("%d '(assumed)' tags but section 1 has no 'Decisions added by this spec' list" % assumed)
     open_questions = len(re.findall(r"\[NEEDS CLARIFICATION", prose))
     if open_questions > 3:
@@ -298,13 +371,30 @@ def check(text, compile_ts=False, draft=False, design_text=None):
             warnings.append("section 5, %s: no 'May call' line" % name)
 
     bodies = {c.split("\n", 1)[0].strip().strip("`"): c for c in components}
+    kinds = {name: kind for name, kind, _ in section5_components(s5)}
+    for name, kind, body in section5_components(s5):
+        may = re.search(r"may call[^\n]*(?:\n(?!- \*\*)[^\n]*)*", body, re.I)
+        may_text = may.group(0) if may else ""
+        for callee, method in flow_calls(body):
+            if callee == name or callee not in kinds:
+                continue
+            ck = kinds.get(callee)
+            if kind and ck and ck not in ALLOWED_CALLS.get(kind, set()):
+                errors.append("section 5, %s: its flow calls `%s.%s`, but a %s may not call a %s (walls.md call "
+                              "rules)" % (name, callee, method, kind, ck))
+            elif may and not re.search(r"\b%s\b" % re.escape(callee), may_text):
+                errors.append("section 5, %s: its flow calls `%s.%s`, which its 'May call' line doesn't allow"
+                              % (name, callee, method))
+            elif kind == "manager" and ck == "manager":
+                warnings.append("section 5, %s: calls Manager `%s`; that is allowed only through a queue" % (name, callee))
     for n, item in enumerate(items, 1):
         enforced = re.split(r"enforced (?:by|in|at)", item, flags=re.I)
         if len(enforced) < 2:
             continue
         clause = enforced[1]
-        named = re.findall(r"`([A-Z][A-Za-z0-9]*)(?:\.([A-Za-z_][A-Za-z0-9_]*))?", clause)
-        for comp, method in named[:1] + [x for x in named[1:] if x[1]]:
+        named = [(c, m) for c, m in re.findall(r"`([A-Z][A-Za-z0-9]*)(?:\.([A-Za-z_][A-Za-z0-9_]*))?", clause)
+                 if not c.isupper() and (m or c in bodies or COMPONENT.fullmatch(c))]
+        for comp, method in named:
             if comp not in bodies:
                 errors.append("section 2, invariant %d: enforced by `%s`, which has no section 5 subsection" % (n, comp))
             elif method and not re.search(r"\b%s\s*\(" % re.escape(method), bodies[comp]):
@@ -335,9 +425,16 @@ def check(text, compile_ts=False, draft=False, design_text=None):
         steps = len(STEP.findall(body))
         if steps > 5:
             warnings.append("section 6, scenario %d (%s): %d steps; Cucumber recommends 3-5" % (n, title, steps))
-    exercised = set(BARE_CODE.findall(gherkin))
+    asserted = []
+    for sc in scenarios:
+        parts = re.split(r"^\s*Examples:", sc, flags=re.M)
+        thens = re.findall(r"^\s*Then\b.*(?:\n\s*(?:And|But)\b.*)*", parts[0], re.M)
+        asserted += thens + parts[1:]
+    exercised = set(BARE_CODE.findall("\n".join(asserted)))
+    mentioned = set(BARE_CODE.findall(gherkin))
     for code in sorted(invariant_codes - exercised):
-        errors.append("section 6: invariant error code `%s` is never exercised by a scenario" % code)
+        errors.append("section 6: invariant error code `%s` is never asserted by a scenario (in a Then step or "
+                      "an Examples row)" % code)
     if not re.search(r"(done when|verify)[^\n]*`[^`]+`", strip_code(s6), re.I):
         errors.append("section 6: no 'Done when' / 'Verify' line with the command that runs the suite")
 
@@ -348,7 +445,7 @@ def check(text, compile_ts=False, draft=False, design_text=None):
             for comment in re.findall(r"//[^\n]*|/\*.*?\*/|#[^\n]*", block, re.S):
                 s5_codes.update(BARE_CODE.findall(comment))
             s5_codes.update(QUOTED_CODE.findall(block))
-        used = {"section 2": invariant_codes, "section 5": s5_codes, "section 6": exercised}
+        used = {"section 2": invariant_codes, "section 5": s5_codes, "section 6": mentioned}
         for where, codes in used.items():
             for c in sorted(codes - catalog):
                 errors.append("%s: `%s` is not in the error catalog" % (where, c))
@@ -366,7 +463,7 @@ def check(text, compile_ts=False, draft=False, design_text=None):
              "open_questions": open_questions}
 
     if design_text is not None:
-        e, w, n = check_design(design_text, s5, components)
+        e, w, n = check_design(design_text, s5, components, contract_code)
         errors += e
         warnings += w
         stats["design_components"] = n

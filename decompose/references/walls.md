@@ -187,7 +187,9 @@ three parts:
 
 Security is stricter. IDesign's rule is to authenticate and authorize at every crossing
 of a service boundary, with each tier authenticating its immediate callers. Tenant and
-caller identity travel in the call context, not as a parameter on every verb.
+caller identity travel in the call context, not as a parameter on every verb. When the
+audited data is itself the system's record (a ledger of every balance change), the record
+is the audit trail; don't build a second one.
 
 This three-way split is the skill's synthesis; Löwy places security in Utilities and says
 little about audit or tenancy.

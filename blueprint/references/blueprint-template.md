@@ -15,6 +15,10 @@
 
 - {rejected candidate, future change, or tempting side quest}
 
+### Decisions carried from the design
+
+- {the design's own assumption, as stated there}
+
 ### Decisions added by this spec
 
 Each item was open in the design and is decided here. Review these first.

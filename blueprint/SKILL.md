@@ -76,7 +76,7 @@ A person reviews that list once. After that, nothing in the blueprint is a guess
 
 A few questions can't be defaulted, because a wrong guess would be expensive. Mark those
 inline as `[NEEDS CLARIFICATION: the specific question]`, at most three, choosing by
-impact: scope first, then security and privacy, then user experience, then technical
+impact: scope first, then security, privacy, and legal compliance, then user experience, then technical
 detail (GitHub spec-kit's rule). Ask the user to answer them. A blueprint with open
 questions is a draft: the checker reports it as not agent-ready until they are resolved.
 
@@ -107,12 +107,24 @@ From a `/decompose` design document (its sections are numbered as in
 | §7 Validation results | — | Stays in the design; link to it |
 | §7 Accepted leaks | 1. Decisions added | Each one as a known limitation: which future change will touch two components |
 | §8 Seams and migration | 1. Scope; 5. Translation at the seam | Migration steps belong to the change plan, not the blueprint |
+| §1 Assumptions | 1. Decisions carried from the design | Carried as they are |
+| §4 Cross-cutting concerns, atomic writes | 2. Invariants; 5. Constraints and Failure & retry | Each enforcement point becomes an invariant or a constraint; atomic writes name their transaction |
+| §5 Composition medium, rule tables | 5. Internals; 3. Contracts | Say whether flows are code or data; a rule table becomes typed data |
 | §9 Risks and open questions | 1. Decisions added, or `[NEEDS CLARIFICATION]` | Resolve each one, or ask |
 
 **Names carry over unchanged.** Components keep their names (`RoutingEngine`). API verbs
 become methods in the language's style: `Route` becomes `route` in TypeScript and stays
-`Route` in Go. Contracts keep their names (`Envelope`). A blueprint never adds, removes,
-or renames a component; `--design` checks this.
+`Route` in Go. Contracts keep their names (`Envelope`) and their variants; narrowing or
+widening a contract is a design change. A blueprint never adds, removes, or renames a
+component or a verb; `--design` checks this.
+
+**Lifecycles** follow the design: the Manager decides each transition, and when the state
+outlives one flow, a ResourceAccess stores it and its verbs perform each transition
+atomically. Section 4's "Stored by" line names that ResourceAccess.
+
+**Business thresholds** the design leaves to a named owner ("Legal decides the expiry"):
+choose a conservative placeholder, mark it *(assumed; owner: Legal)*, and list it. Use a
+`[NEEDS CLARIFICATION]` only when no placeholder is safe to build against.
 
 Any other design format works the same way: find the scope, rules, data, lifecycles,
 components, and behaviors, and translate each.
@@ -133,7 +145,9 @@ components, and behaviors, and translate each.
 - **In scope**: what gets built, as features in the user's words.
 - **Out of scope (non-goals)**: rejected candidates, future changes that are only tests of
   the design, and anything else a reasonable agent might wander into.
-- **Decisions added by this spec**: every *(assumed)* detail, one line each.
+- **Decisions carried from the design**: the design's own assumptions, as they are.
+- **Decisions added by this spec**: every *(assumed)* detail, one line each. Keeping the two
+  lists apart keeps the new list short enough to review.
 - A link to the source design.
 
 ## Phase 2 — Invariants
@@ -201,7 +215,9 @@ Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
    with contracts and tests placed.
 2. **Groups**, named for what they do, with the method's term in brackets:
    Entry points (Clients), Orchestration (Managers), Business rules (Engines),
-   Resource access (ResourceAccess), Shared infrastructure (Utilities). Stable business
+   Resource access (ResourceAccess), Shared infrastructure (Utilities: a subsection only
+   when the system builds one, such as a security policy; off-the-shelf logging just gets a
+   folder in the module map). Stable business
    rules that several components share (a shared domain module in the design) get a
    folder in the module map and no subsection: they are not a component. Resources (the
    databases and vendors themselves) appear in the target mode, not as components. In
@@ -222,7 +238,11 @@ Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
    - **Flows** (Managers): each public method's call sequence, one call per line.
    - **Failure and retry**: which errors are retryable and which are final, timeouts,
      backoff, idempotency on retry, and how races resolve.
-   - **Internals** (optional): the component's bricks, as private modules.
+   - **Internals**: the component's bricks from the design, as private modules. Required
+     when the design lists bricks for the component; `--design` checks it.
+   - A component's methods are the design's API verbs, no more and no fewer. A blueprint
+     may add parameters the design left implicit (an idempotency key); a new verb is a
+     design change, so add it to the design first.
 
 ## Phase 6 — Verification suite
 

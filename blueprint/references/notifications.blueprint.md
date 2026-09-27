@@ -181,7 +181,7 @@ problem details with the code in a `code` member.
 | `IDEMPOTENCY_CONFLICT` | same event ID replayed with a different payload | caller | 409 | no |
 | `QUIET_HOURS_DEFERRED` | not an error: routing held the message until quiet hours end | — | 202 | — |
 | `NO_REACHABLE_CHANNEL` | no allowed channel has a contact for the recipient | caller | 422 | no, until the recipient's data changes |
-| `INVALID_TRANSITION` | a lifecycle verb was applied to a delivery in the wrong state | supplier | 409 | no |
+| `INVALID_TRANSITION` | a lifecycle verb was applied to a delivery in the wrong state (a broken precondition, often a lost race) | caller | 409 | no |
 | `RETRIES_EXHAUSTED` | a delivery failed 5 times and is dead | supplier (vendor) | — (internal) | no |
 | `TEMPLATE_NOT_FOUND` | no template exists for the event type | supplier | 500 | no, until a template ships |
 | `PROVIDER_REJECTED` | the vendor refused the message | caller data or vendor | — (internal) | no |

@@ -125,7 +125,7 @@ The full rules, sources, and smells are in `references/walls.md` and
 | Wall | Its bricks |
 |------|------------|
 | Client | Inputs from the outside world (endpoints, UI, timers, event subscriptions) plus presentation |
-| Manager | the wiring: flows that call Engines and ResourceAccess, plus State machines. It may own Inputs that subscribe to events. Flows are code by default. Löwy stores them as data run by a workflow tool when they differ by kind of item, customer, or locale, or run long across sessions and devices; the skill adds flows that change faster than you can deploy. |
+| Manager | the wiring: flows that call Engines and ResourceAccess, plus State machines. The Manager decides each transition; when the state must outlive one flow, a ResourceAccess stores it and its verbs guard each transition as it is written (compare-and-set). It may own Inputs that subscribe to events. Flows are code by default. Löwy stores them as data run by a workflow tool when they differ by kind of item, customer, or locale, or run long across sessions and devices; the skill adds flows that change faster than you can deploy. |
 | Engine | Transforms and policies behind one stable API. New rules are new bricks or new data, not new call paths. Pure by default: the Manager passes in the data the Engine needs. If an Engine must read, it calls ResourceAccess (Löwy allows it) and the design says so. |
 | ResourceAccess | Stores, Transports, and Inputs that pull from vendors, behind business verbs. Vendor and storage details never cross its API. |
 | Utility | stable mechanisms shared by everyone |
@@ -228,7 +228,8 @@ Goal: components, their types, their APIs, and the call graph.
    PascalCase names with the type as suffix; gerund prefixes are for Engines only.
    Clients and Utilities are named for what they are (`AdminPortal`, `Scheduler`). If an Engine's name is also a feature name, ask
    what activity would survive a redesign of the feature, and name it that.
-2. **Write each component's API as business verbs.** ResourceAccess exposes verbs such
+2. **Write each component's API as business verbs.** For a Client, list its entry points
+   (routes, screens, commands). ResourceAccess exposes verbs such
    as `Deliver`, `FindRecipients`, `ConfirmDelivery`, never `Insert`, `Update`, `Save`,
    a generic `Record`, or a vendor's API.
 3. **Draw the call graph** by layer and check the call rules. Fix violations by moving
@@ -292,8 +293,10 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    need no new component and break no call rule.
 2. **Change simulation** (Parnas's 1972 test). For each volatility in the register,
    imagine it happening, at least once, and more than once if it covers distinct kinds of
-   change. List the components that must change. Target: one existing component. Two
-   exceptions don't count as leaks: adding one new ResourceAccess when the change brings
+   change. List the components that must change. Target: one existing component. These
+   exceptions don't count as leaks: a new verb on a ResourceAccess because the change
+   records a new kind of business fact (see `references/walls.md`); a new Client for a
+   new kind of caller; adding one new ResourceAccess when the change brings
    in a genuinely new resource (a new vendor or store), and a Client change when the
    change adds something a person does or must see. Record either. Two or more existing
    components changing for any other reason means a leaky wall.
@@ -335,6 +338,7 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    USE CASES     <passed>/<total> walk through cleanly
    CHANGE SIM    <passed>/<total> volatilities touch one component
    FEATURES      <n> current assembled · <n> future with ≤1 new brick
+   ASSUMPTIONS   <n> (carried into /blueprint's decisions)
    VERDICT       ready | ready, <n> accepted leaks: <list> | <n> leaks to resolve: <list>
    ```
 

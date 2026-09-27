@@ -17,7 +17,7 @@
 - **Constraints:** <deadlines, team, platform, compliance, host-system conventions>
 - **Host system (subsystem mode):** <language, framework, where it attaches, owners>
 - **Assumptions** (made instead of asking; each one is a question to confirm):
-  - A1 <assumption> — <what changes in the design if it is wrong>
+  - <assumption> — <what changes in the design if it is wrong>
 
 ## 2. Features and use cases
 
@@ -70,7 +70,11 @@ flowchart TB
 
 | Component | Type | Encapsulates | API (business verbs) | May call |
 |-----------|------|--------------|---------------------------|----------|
+| <Client> | Client | V1 (who calls, and how) | entry points: `<Verb>`: `POST /route`, a screen, a command | one Manager per use case |
 | <Noun>Manager | Manager | V2 (workflow order) | `<Verb>(...)` | Engines, Access, Utilities; other Managers only via queue |
+
+For a Client, the API column lists its entry points (routes, screens, commands), so the
+blueprint types them instead of inventing them.
 
 ## 5. Bricks (implementation inside the walls)
 
