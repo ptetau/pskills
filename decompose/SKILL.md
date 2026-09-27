@@ -298,7 +298,9 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
 
 1. **Use-case walkthrough.** Write each core use case as a call chain through the walls,
    one `Caller → Callee.Verb` per line so the direction of every call is visible. It must
-   need no new component and break no call rule.
+   need no new component and break no call rule. Start each chain with who calls and how
+   the system knows who they are (a sign-in, an API key, a card and PIN). If no part or
+   verb answers that, the design is missing one.
 2. **Change simulation** (Parnas's 1972 test). For each volatility in the register,
    imagine it happening, at least once, and more than once if it covers distinct kinds of
    change. List the components that must change. Target: one existing component. These
@@ -317,7 +319,7 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    needing an Input and a Transport, counts as one). Describe each future feature in one
    line, what it would add and where; don't design it. You may also try a rejected
    candidate to see what it would cost, but it isn't expected to pass.
-4. **Orthogonality check.** For each brick, ask: if its requirement changed a lot, what
+4. **Independence (orthogonality) check.** For each brick, ask: if its requirement changed a lot, what
    else would change? Anything other than "nothing" is a hidden dependency.
 5. **Rule and smell audit.** Call rules, names, sizes, and the smell list in
    `references/walls.md` and `references/bricks.md`.

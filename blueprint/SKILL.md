@@ -68,7 +68,8 @@ that meets an open question guesses, and each agent guesses differently.
 So every detail that the source does not state is a **decision added by this spec**:
 
 1. Decide it once, choosing the conventional default (`references/conventions.md`).
-2. Mark it inline with *(assumed)*.
+2. Mark it *(assumed)* once, where a reader first meets it. The checker compares the
+   count of marks with the count of listed decisions.
 3. List it in section 1 under **Decisions added by this spec**, with one line on what
    changes if it is wrong.
 
@@ -110,7 +111,7 @@ From a `/decompose` design document (its sections are numbered as in
 | §8 Seams and migration | 1. Scope; 5. Translation at the seam | Migration steps belong to the change plan, not the blueprint |
 | §1 Assumptions | 1. Decisions carried from the design | Carried as they are |
 | §4 Cross-cutting concerns, atomic writes | 2. Invariants; 5. Constraints and Failure & retry | Each enforcement point becomes an invariant or a constraint; atomic writes name their transaction |
-| §5 Composition medium, rule tables | 5. Internals; 3. Contracts | Say whether flows are code or data; a rule table becomes typed data |
+| §5 How the pieces are joined (composition medium), rule tables | 5. Internals; 3. Contracts | Say whether flows are code or data; a rule table becomes typed data |
 | §9 Risks and open questions | 1. Decisions added, or `[NEEDS CLARIFICATION]` | Resolve each one, or ask |
 
 **Names carry over unchanged.** Components keep their names (`RoutingEngine`). API verbs
@@ -205,8 +206,11 @@ as RFC 9457 problem details, with the code in a `code` member.
 
 ## Phase 4 — State machines
 
-Draw every lifecycle: every `...Status` or `...State` type in section 3 gets one. Use a
-Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
+Draw every lifecycle: every `...Status` or `...State` type in section 3 gets one, and so
+does every state machine brick in the design, with all of its states. Head it
+`### {Machine}Status`, or say "the design's `{Machine}` machine" under a different heading
+(`--design` checks both). Use a Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't
+render), with:
 
 - `[*]` for the start, and terminal states marked, if there are any.
 - Only legal transitions are drawn; anything not drawn is refused.
@@ -224,7 +228,8 @@ Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
 2. **Groups**, named for what they do, with the method's term in brackets:
    Entry points (Clients), Orchestration (Managers), Business rules (Engines),
    Resource access (ResourceAccess), Shared infrastructure (Utilities: a subsection only
-   when the system builds one, such as a security policy; off-the-shelf logging just gets a
+   when the system builds one, such as a security policy, and only if the design names
+   it, ideally as a `Utility` row in its walls table; off-the-shelf logging just gets a
    folder in the module map). Stable business
    rules (the design's domain module) get a folder in the module map and no subsection:
    they are not a component. Resources (the
@@ -239,18 +244,23 @@ Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
      randomness; the Manager passes in what they need (the same default `/decompose` uses).
      If the design records an Engine calling ResourceAccess, keep that call and inject the
      ResourceAccess as a read-only interface. ResourceAccess is the only code that touches
-     a vendor or storage. Managers orchestrate and hold no business rules.
-   - **May call**: from the design's call rules.
+     a vendor or storage. Managers run the steps in order and hold no business rules.
+     A Client says how its callers prove who they are (a sign-in, an API key, a card and
+     PIN). If the design doesn't say, decide it and mark it *(assumed)*.
+   - **May call**: from the design's call rules, as its own `- **May call:**` line. The
+     checker reads only that line, so "only librarians may call it" elsewhere is fine.
    - **Signatures**: a typed interface: business verbs, parameter and return types, and the
      error codes each method can return.
    - **Flows** (Managers): each public method's call sequence, one call per line: calls to
      other components, and to the domain module for stable rules. Managers apply rules by
-     calling the domain module; they never contain them.
+     calling the domain module; they never contain them. A call to another Manager goes
+     through a queue; say so on its line: "4. Queue `NoticeManager.tellHoldReady(hold)`."
    - **Failure and retry**: which errors are retryable and which are final, timeouts,
      backoff, idempotency on retry, and how races resolve. For in-process, synchronous code
      one line is enough ("in-process; errors returned as values; nothing to retry").
-   - **Internals**: the component's bricks from the design, as private modules. Required
-     when the design lists bricks for the component; `--design` checks it.
+   - **Internals**: the component's bricks from the design, as private modules, each
+     named in backticks as the design spells it (`mayBorrow` for `MayBorrow` is fine).
+     Required when the design lists bricks for the component; `--design` checks it.
    - A component's methods are the design's API verbs, no more and no fewer. A blueprint
      may add parameters the design left implicit (an idempotency key); a new verb is a
      design change, so add it to the design first.
@@ -294,8 +304,11 @@ Write 3–5 Gherkin scenarios that a test harness can run.
    that each diagram has a typed title and a key. With `--render` it renders every Mermaid
    diagram (needs `mmdc`). It also runs the plain-English check.
    With `--design` it checks congruence: every component in the design has a section 5
-   subsection, no Manager, Engine, or ResourceAccess appears that the design lacks, and each
-   design verb has a matching method. With `--compile` it type-checks TypeScript blocks
+   subsection, no Manager, Engine, or ResourceAccess appears that the design lacks, each
+   design verb has a matching method, each brick and shared contract keeps its name, and
+   each design state machine appears in section 4 with all its states. Rendering proves
+   a diagram's syntax, not its layout: open each one and fix overlapping or cut-off
+   labels (`references/c4.md`). With `--compile` it type-checks TypeScript blocks
    when `tsc` is installed.
 2. Re-read the blueprint as the coding agent: for each section, could you write the code or
    test without asking a question? Any question you would ask is a missing decision. Add it
@@ -325,11 +338,15 @@ Write 3–5 Gherkin scenarios that a test harness can run.
   message at most once" is as exact as "idempotent delivery". See
   `references/plain-language.md`; the checker measures it.
 - **Size it to the system.** A small system gets a short blueprint: fewer invariants, no
-  HTTP column without HTTP, one line where a paragraph isn't needed.
+  HTTP column without HTTP, one line where a paragraph isn't needed. Say each thing once:
+  the signature block gives the types, so prose adds only what types can't (order,
+  failure, why). Point to an invariant in section 2; don't restate it in section 5.
 - **Zero fluff.** Lead each section with its substance. No introductions, no summaries of
   what the reader is about to read.
-- **Plain domain terms.** No design IDs (`V1`, `F2`, `UC3`). Methodology terms appear once,
-  in brackets, in the group headings of section 5.
+- **Plain domain terms.** No design IDs (`V1`, `F2`, `UC3`). Methodology terms (Client,
+  Manager, Engine, ResourceAccess, Utility) appear only where the template puts them:
+  section 5's group headings, the component type in diagram boxes, and the "Words used
+  here" list. Everywhere else, say what the part does.
 - **Scannable.** Tables and short bullets; code where precision matters; each section
   readable on its own.
 - **Agent-ready.** An agent with no other context can create the directory tree, the type
@@ -367,7 +384,8 @@ modular monolith, and writes `notifications.blueprint.md`:
 - Two state machines, with transitions named after `OutboxAccess`'s lifecycle verbs.
 - The design's nine components with typed interfaces, flows, and failure and retry rules.
 - Five Gherkin scenarios that exercise every invariant, and the command that runs them.
-- Nine decisions the design left open, listed for review.
+- Eleven decisions the design left open, including how callers prove who they are, each
+  marked where it applies and listed for review.
 
-It passes `check_blueprint.py --design notifications.design.md --compile`. The full result
+It passes `check_blueprint.py --design notifications.design.md --compile --render`. The full result
 is `references/notifications.blueprint.md`.

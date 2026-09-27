@@ -82,7 +82,8 @@ Run the bundled checker on the document:
 python <skill-dir>/scripts/readability.py name.md
 ```
 
-It measures the prose only (code, names, tables, and diagrams are skipped), reports the
-average sentence length, the longest sentences, and a reading grade, and lists technical
-words the document uses but doesn't explain in its **Words used here** list. Rewrite until
+It measures the prose only (code, names, tables, and diagrams are skipped). It reports the
+average sentence length and a reading grade. It lists every sentence over 25 words with
+its line number, and every technical word the document uses but doesn't explain in its
+**Words used here** list. Rewrite until
 it prints `READS PLAINLY`, or until the only warnings left are ones you can defend.

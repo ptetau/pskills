@@ -233,7 +233,7 @@ recorded change names them. Each would be one new brick in one part if it comes.
 **Use-case walkthroughs: each task, call by call**
 
 ```
-UC1 tell people about an event now
+UC1 tell people about an event now: a product system, known by its API key
   EventsApi           → NotificationManager.Notify
   NotificationManager → RoutingEngine.RecipientsFor
   NotificationManager → RecipientsAccess.Find
@@ -244,7 +244,7 @@ UC1 tell people about an event now
   NotificationManager → DeliveryAccess.Deliver
   NotificationManager → OutboxAccess.ConfirmDelivery
 
-UC2 tell people about many events later
+UC2 tell people about many events later: a product system, then the app's own timer
   EventsApi           → NotificationManager.Notify        (ends by holding the item)
   NotificationManager → RoutingEngine.RecipientsFor
   NotificationManager → RecipientsAccess.Find
@@ -258,7 +258,7 @@ UC2 tell people about many events later
   NotificationManager → DeliveryAccess.Deliver
   NotificationManager → OutboxAccess.ConfirmDelivery
 
-UC3 choose how and when to be reached
+UC3 choose how and when to be reached: a staff member, known by the company sign-in
   AdminPortal         → NotificationManager.SetPreferences
   NotificationManager → RecipientsAccess.ChooseChannel
   NotificationManager → RecipientsAccess.SetQuietHours
