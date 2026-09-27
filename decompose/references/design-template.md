@@ -86,7 +86,8 @@ Composition medium: code | pipeline definition | state-machine table | config â€
 |-------|------|------------------------|----------|--------|
 | <Render> | Transform | <fills a template for a locale> | Envelope â†’ Envelope | F1, F3, V3 |
 
-State machines (if any):
+State machines (if any). Draw only the legal transitions: anything not drawn is refused.
+Mark terminal states, if there are any.
 
 ```
 <state> --event [guard] / effect--> <state>
@@ -142,6 +143,8 @@ result, e.g. "V3 touched RenderingEngine and PracticeApp; moved template choice 
 RenderingEngine; re-run passes">
 
 ## 8. Seams and migration (subsystem mode)
+
+In inception mode, write "Not applicable: inception" and keep the number.
 
 - **Attach point:** <the seam in the host where the subsystem plugs in>
 - **Translation at the seam:** <anti-corruption layer where the subsystem calls the host;

@@ -29,6 +29,8 @@ export interface Money { units: number; currency: CurrencyCode }          // int
 - Local time appears only where a rule is local (quiet hours, business days), with an IANA
   time zone next to it.
 - The clock is injected. Engines never read it.
+- Randomness is injected the same way: pass a random number or a seeded generator in as a
+  parameter, so Engines stay deterministic and tests can fix it.
 
 ## Identifiers and parsing
 

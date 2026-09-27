@@ -30,7 +30,8 @@ Open questions, at most three, also appear inline where they apply:
    transaction as {write}}. Violation: `{ERROR_CODE}`.
 2. …
 
-(4–7 invariants. Cover idempotency, immutability, and the hard rejections that apply.)
+(4–7 invariants for most systems; fewer for a small domain. Never pad. Cover
+idempotency, immutability, and the hard rejections where they apply.)
 
 ## 3. Core Domain Data Contracts
 
@@ -68,6 +69,8 @@ HTTP, errors are RFC 9457 problem details (`application/problem+json`) with the 
 | `{ERROR_A}` | {what went wrong} | caller | {409} | no |
 | `{ERROR_B}` | {what went wrong} | supplier | {503} | yes, with backoff |
 
+(No HTTP boundary? Drop the HTTP column.)
+
 ## 4. State Machines
 
 ### {Thing}Status
@@ -79,8 +82,9 @@ stateDiagram-v2
   {b} --> [*]
 ```
 
-Stored by `{Component}`. Each transition is a compare-and-set in `{Component.method}`.
-Any other transition: `{INVALID_TRANSITION}`. Terminal: {states}.
+Stored by `{Component}`. Each transition is performed by the verb on its arrow, as a
+compare-and-set. Anything not drawn is refused: `{INVALID_TRANSITION}`. Terminal:
+{states, or "none"}.
 
 ## 5. Module Boundaries & Interface Signatures
 

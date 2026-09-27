@@ -116,9 +116,9 @@ BLUEPRINT: notifications · TypeScript · modular monolith
 SCOPE        8 in · 4 out
 INVARIANTS   6 · codes: IDEMPOTENCY_CONFLICT, QUIET_HOURS_DEFERRED, …
 CONTRACTS    19 types · 2 state machines
-MODULES      9 components in 4 groups
+MODULES      9 components: 3 Clients · 1 Manager · 2 Engines · 3 ResourceAccess
 SCENARIOS    5 · every invariant exercised
-ASSUMED      8 decisions for review · 0 open questions
+DECISIONS    9 listed for review · 0 open questions
 CHECK        PASS
 ```
 
@@ -162,7 +162,7 @@ digests, Slack alerts, channel preferences, quiet hours, retries, localization
 DECOMPOSE: notifications · inception
 ══════════════════════════════════════════════════
 VOLATILITIES  5 contained · 3 rejected
-WALLS         1 Manager · 2 Engines · 3 ResourceAccess · 3 Utilities
+WALLS         9 components: 3 Clients · 1 Manager · 2 Engines · 3 ResourceAccess · plus 3 Utilities
 BRICKS        12 across 7 components · contracts: Envelope
 ──────────────────────────────────────────────────
 USE CASES     3/3 walk through cleanly

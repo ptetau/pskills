@@ -43,6 +43,8 @@ Each item was open in the design and is decided here. Review these first.
 - At most 5 delivery attempts, exponential backoff from 30 s capped at 1 h, full jitter. If
   wrong: three constants in `NotificationManager`.
 - Fallback language is English (`en`). If wrong: one default in `RenderingEngine`.
+- The digest goes out at 08:00 in each recipient's time zone. If wrong: one constant in
+  `Scheduler`.
 - Vendor calls time out after 10 s, until the vendors' p99.9 latency is measured. If
   wrong: one constant per transport in `DeliveryAccess`.
 - Timestamps are ISO 8601 UTC strings. If wrong: the `Instant` type.
@@ -259,6 +261,7 @@ export interface EventsApi {
 
 - **Failure & retry:** returns 202 once the event's deliveries are claimed; a replay of the
   same event returns 202 with the same count. Callers may retry on timeout or 5xx.
+- **Internals:** `OnEvent(type)`, which parses the request body into an `IncomingEvent`.
 
 #### Scheduler
 
@@ -275,6 +278,8 @@ export interface Scheduler {
 
 - **Failure & retry:** a failed tick is logged and the next tick tries again; the Manager's
   methods are idempotent, so overlapping ticks are safe.
+- **Internals:** `OnSchedule(cron)`: the digest release at 08:00 local time *(assumed)*, and
+  a one-minute tick for due retries.
 
 #### AdminPortal
 

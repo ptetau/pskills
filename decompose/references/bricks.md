@@ -50,6 +50,10 @@ Keep Transforms pure and push I/O to the edges (Inputs, Transports, Stores). Ber
 calls this a functional core inside an imperative shell. It makes most bricks testable
 with no mocks.
 
+**A Store keeps data beyond one flow**, behind ResourceAccess. State that lives only while
+a process runs (the current game, a request in progress) is a State machine's own state,
+held by the Manager.
+
 **Kind is about role; location is about the wall.** A pull from a bank feed is an Input
 (it brings data into a flow), and it lives in a ResourceAccess because the vendor is
 volatile. A timer tick is an Input that lives in a Client (the scheduler).

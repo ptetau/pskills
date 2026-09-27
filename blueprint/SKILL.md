@@ -96,7 +96,7 @@ From a `/decompose` design document (its sections are numbered as in
 |----------------|---------|-----|
 | §1 Frame: problem, users, constraints | 1. Header | System, target mode, scope; carry the design's assumptions into *Decisions added* |
 | §1 Nature of the business | 2. Invariants | Each fact that must never be violated becomes an enforceable rule |
-| §2 Features and core use cases | 1. In scope; 5. Manager methods | Features become scope bullets; each core use case becomes a Manager method |
+| §2 Features and core use cases | 1. In scope; 5. Flows | Features become scope bullets; each core use case becomes a flow across its Manager's methods |
 | §3 Volatility register | 5. "Encapsulates" line | Each component states, in plain words, the change it encapsulates (the register's "Contained by") |
 | §3 Rejected candidates; §7 Cut list | 1. Out of scope | As non-goals |
 | §4 Walls: components, APIs, call rules | 5. Modules | Same components, same groups; each API verb becomes a method; the call rules become each component's "May call" line |
@@ -105,6 +105,7 @@ From a `/decompose` design document (its sections are numbered as in
 | §5 State machines | 4. State machines | Redrawn with guards, terminal states, and illegal transitions; transitions named after the API verbs that perform them |
 | §6 Feature assembly; §7 Walkthroughs | 5. Flows; 6. Scenarios | Each walkthrough becomes the flow under its Manager method; key features become scenarios |
 | §7 Validation results | — | Stays in the design; link to it |
+| §7 Accepted leaks | 1. Decisions added | Each one as a known limitation: which future change will touch two components |
 | §8 Seams and migration | 1. Scope; 5. Translation at the seam | Migration steps belong to the change plan, not the blueprint |
 | §9 Risks and open questions | 1. Decisions added, or `[NEEDS CLARIFICATION]` | Resolve each one, or ask |
 
@@ -121,8 +122,9 @@ components, and behaviors, and translate each.
 1. **Language.** Use the host codebase's language. With no host, use the language the user
    names; otherwise ask once, offering TypeScript as the default. All code blocks in the
    blueprint use that one language.
-2. **Target mode.** The deployment style: a modular monolith by default, services only if
-   the design calls for separately deployed parts. Say it in one line.
+2. **Target mode.** What gets built and how it runs, in one line: a browser app, a CLI, a
+   library, a single service or modular monolith, or separately deployed services (only
+   if the design calls for them).
 3. **Name.** `name.blueprint.md`, next to the design document.
 
 ## Phase 1 — Header and boundary box
@@ -136,8 +138,10 @@ components, and behaviors, and translate each.
 
 ## Phase 2 — Invariants
 
-Write 4–7 rules that must hold no matter what: design by contract's invariants, made
-concrete. Find them in the nature of the business, the Engines' rules, the state machines,
+Write the rules that must hold no matter what: design by contract's invariants, made
+concrete. The format asks for 4–7, which suits most systems. A small domain may have
+fewer; never pad with a rule the types already guarantee, or one only a buggy caller could
+break. Find them in the nature of the business, the Engines' rules, the state machines,
 the atomicity notes, and anything a duplicate or a retry could break.
 
 Each invariant states:
@@ -149,9 +153,10 @@ Each invariant states:
 Name invariants; don't number them with IDs. The format's style rule bans cryptic IDs, and
 a name like **Each message is delivered at most once** is its own reference.
 
-Always cover, where they apply: idempotency (what makes two requests "the same", and what
+Cover, where they apply: idempotency (what makes two requests "the same", and what
 happens on a replay), immutability (what can never change once written), and the hard
-rejections (what the system refuses, and with which code).
+rejections (what the system refuses, and with which code). If nothing can be repeated
+harmfully, say so in one line instead of inventing an idempotency rule.
 
 ## Phase 3 — Data contracts
 
@@ -160,6 +165,8 @@ block per module or one for the whole domain. Rules (details in `references/conv
 
 - **Make illegal states unrepresentable.** Unions for enums and states, not strings;
   separate types for separate states when their fields differ.
+- **Name every lifecycle type `...Status` or `...State`** (`DeliveryStatus`, `MatchState`), so
+  readers and the checker can find its state machine.
 - **Required vs optional is explicit** on every field.
 - **Identifiers are distinct types** (branded types in TypeScript, newtypes in Go and Rust),
   so an `OrderId` can't be passed as a `CustomerId`.
@@ -170,7 +177,8 @@ block per module or one for the whole domain. Rules (details in `references/conv
 - No `any`, no untyped maps where the shape is known.
 
 End the section with an **error catalog**: a table with one row per code, giving its
-meaning, whose fault it is, its HTTP status, and whether a retry can help. Design by
+meaning, whose fault it is, its HTTP status (only when the system has an HTTP boundary;
+drop the column otherwise), and whether a retry can help. Design by
 contract settles fault: a broken precondition is the caller's fault (a 4xx), a broken
 postcondition or invariant is the supplier's (a 5xx). At an HTTP boundary, errors travel
 as RFC 9457 problem details, with the code in a `code` member.
@@ -180,7 +188,8 @@ as RFC 9457 problem details, with the code in a `code` member.
 Draw every lifecycle: every `...Status` or `...State` type in section 3 gets one. Use a
 Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
 
-- `[*]` for the start, and terminal states marked.
+- `[*]` for the start, and terminal states marked, if there are any.
+- Only legal transitions are drawn; anything not drawn is refused.
 - Each transition labeled `event [guard]`.
 - Held, waiting, and rollback branches shown, not implied.
 - One line under the diagram: where the state is stored, which method performs each
@@ -192,7 +201,9 @@ Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
    with contracts and tests placed.
 2. **Groups**, named for what they do, with the method's term in brackets:
    Entry points (Clients), Orchestration (Managers), Business rules (Engines),
-   Resource access (ResourceAccess), Shared infrastructure (Utilities). Resources (the
+   Resource access (ResourceAccess), Shared infrastructure (Utilities). Stable business
+   rules that several components share (a shared domain module in the design) get a
+   folder in the module map and no subsection: they are not a component. Resources (the
    databases and vendors themselves) appear in the target mode, not as components. In
    subsystem mode, the translation at the seam goes where the design put it: an
    anti-corruption layer is a ResourceAccess component; an open-host service is the
@@ -262,9 +273,9 @@ Write 3–5 Gherkin scenarios that a test harness can run.
    SCOPE        <n> in · <n> out
    INVARIANTS   <n> · codes: <CODE_A, CODE_B, …>
    CONTRACTS    <n> types · <n> state machines
-   MODULES      <n> components in <n> groups
+   MODULES      <n> components: <n> Clients · <n> Managers · <n> Engines · <n> ResourceAccess
    SCENARIOS    <n> · every invariant exercised
-   ASSUMED      <n> decisions for review · <n> open questions
+   DECISIONS    <n> listed for review · <n> open questions
    CHECK        PASS | DRAFT (open questions) | FAIL
    ```
 
@@ -273,6 +284,8 @@ Write 3–5 Gherkin scenarios that a test harness can run.
 
 ## Style
 
+- **Size it to the system.** A small system gets a short blueprint: fewer invariants, no
+  HTTP column without HTTP, one line where a paragraph isn't needed.
 - **Zero fluff.** Lead each section with its substance. No introductions, no summaries of
   what the reader is about to read.
 - **Plain domain terms.** No design IDs (`V1`, `F2`, `UC3`). Methodology terms appear once,
@@ -309,7 +322,7 @@ modular monolith, and writes `notifications.blueprint.md`:
 - Two state machines, with transitions named after `OutboxAccess`'s lifecycle verbs.
 - The design's nine components with typed interfaces, flows, and failure and retry rules.
 - Five Gherkin scenarios that exercise every invariant, and the command that runs them.
-- Eight decisions the design left open, listed for review.
+- Nine decisions the design left open, listed for review.
 
 It passes `check_blueprint.py --design notifications.design.md --compile`. The full result
 is `references/notifications.blueprint.md`.

@@ -135,8 +135,12 @@ Three rules connect the two ideas:
 1. **Walls first, bricks second, then re-check the walls.** Bricks often hint that two
    walls hide the same volatility, or that one wall hides two. Take the hint back to the
    volatility register and decide there. Walls move only for volatility reasons.
-2. **Only stable bricks cross walls.** Volatile bricks stay inside their wall. Shared
-   bricks belong in Utilities.
+2. **Only stable bricks cross walls.** Volatile bricks stay inside their wall. A stable
+   brick that several walls need goes where it fits: plumbing that passes the Utility test
+   (usable in a completely different system) is a Utility; stable business rules that
+   several components need (the rules of a game, a fixed calculation) go in a shared
+   domain module with no volatility of its own, which depends on nothing. That module is
+   not a component; it is the nature of the business, written down once.
 3. **A wall's API never exposes its wiring.** Callers use business verbs. A verb may be
    backed by a single brick (`RenderingEngine.Render`), but callers never see which bricks
    run or in what order, so that stays free to change.
@@ -160,7 +164,11 @@ Goal: know the mode, the scope, and the inputs before designing anything.
 1. **Pick the mode.** Inception if there is no host code for this area. Subsystem if the
    design must live inside an existing codebase.
 2. **Collect the feature list.** Use what the user gave. If they gave only a sentence,
-   brainstorm the likely features and show them for confirmation.
+   propose the smallest set of features that makes the thing work, and list likely extras
+   separately. Design for the core set. The extras are not built; they become future
+   features that test the design in Phase 5. Mark every feature you proposed as an
+   assumption, and treat volatilities that rest only on your own proposals as weak
+   evidence.
 3. **Ask only what changes the design.** Usually: who uses it, what is likely to change,
    what must not change. If more than one question is needed, ask them one at a time as
    [[quiz]] cards. If the user wants speed, state assumptions and proceed.
@@ -283,17 +291,18 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    one `Caller → Callee.Verb` per line so the direction of every call is visible. It must
    need no new component and break no call rule.
 2. **Change simulation** (Parnas's 1972 test). For each volatility in the register,
-   imagine it happening. List the components that must change. Target: one existing
-   component. Two exceptions don't
-   count as leaks: adding one new ResourceAccess when the change brings in a genuinely new
-   resource (a new vendor or store), and a Client change when the change adds a new step
-   a person performs. Record either. Two or more existing components changing for any
-   other reason means a leaky wall.
+   imagine it happening, at least once, and more than once if it covers distinct kinds of
+   change. List the components that must change. Target: one existing component. Two
+   exceptions don't count as leaks: adding one new ResourceAccess when the change brings
+   in a genuinely new resource (a new vendor or store), and a Client change when the
+   change adds something a person does or must see. Record either. Two or more existing
+   components changing for any other reason means a leaky wall.
 3. **Feature assembly.** Write every current feature as wiring over the brick catalog,
    with no logic in the wiring beyond selecting bricks and passing parameters. This
    checks that the catalog is complete. Then the real test: two or three plausible future
-   features drawn from the register. Each should need at most one new brick, inside one
-   component.
+   features drawn from the register (including extras you proposed in Phase 0). Each
+   should need at most one new brick, inside one component. You may also try a rejected
+   candidate to see what it would cost, but it isn't expected to pass.
 4. **Orthogonality check.** For each brick, ask: if its requirement changed a lot, what
    else would change? Anything other than "nothing" is a hidden dependency.
 5. **Rule and smell audit.** Call rules, names, sizes, and the smell list in
@@ -309,15 +318,18 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
 ## Phase 6 — Write it up
 
 1. Write `<name>.design.md` at the project root (or where the user asks), from
-   `references/design-template.md`. Size the document to the problem: a one-wall
-   subsystem does not need a layer diagram.
+   `references/design-template.md`. **Size the document to the problem.** The design of a
+   small system should be shorter than its code. With a handful of components, record
+   each Phase 5 check as a table row or a line, skip the layer diagram, and don't justify
+   being below Löwy's sizes: those are warnings for large systems. Keep the section
+   numbers even when a section is empty ("Not applicable: inception").
 2. Show a compact summary in chat, in a code block:
 
    ```
    DECOMPOSE: <name> · <inception | subsystem of X>
    ══════════════════════════════════════════════════
    VOLATILITIES  <n> contained · <n> rejected
-   WALLS         <n> Managers · <n> Engines · <n> ResourceAccess · <n> Utilities
+   WALLS         <n> components: <n> Clients · <n> Managers · <n> Engines · <n> ResourceAccess · plus <n> Utilities
    BRICKS        <n> across <n> components · contracts: <names>
    ──────────────────────────────────────────────────
    USE CASES     <passed>/<total> walk through cleanly

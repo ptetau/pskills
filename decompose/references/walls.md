@@ -99,6 +99,13 @@ within it changes. Managers hold the first, Engines the second.
 | **Resource** | the physical store or external system | where | Call it Storage, not Database: the kind may change |
 | **Utility** | infrastructure common to all components: security, logging, diagnostics, pub/sub, message bus, hosting | — | Test: could it be used in a completely different system, such as a smart cappuccino machine? If not, it is not a Utility |
 
+**Stable business rules** (the nature of the business, such as the rules of a game or a
+fixed calculation) get no wall of their own. If one component needs them, they are bricks
+inside it. If several do, they go in a shared domain module: pure, with no volatility of
+its own and no dependencies. It is not a component and not a Utility (it fails the
+cappuccino test). This is the skill's rule; Löwy doesn't address where unwalled logic
+lives.
+
 **Atomic business verbs.** A bank's ResourceAccess exposes `Credit` and `Debit`, not
 `UpdateBalance` or `ExecuteSql`. Those verbs relate to the nature of the business, so they
 are nearly immutable, while the storage behind them can change freely.
