@@ -1,0 +1,14 @@
+{
+  "name": "pskills",
+  "owner": {
+    "name": "Patrick Te Tau"
+  },
+  "description": "Patrick Te Tau's Claude Code skills and plugins.",
+  "plugins": [
+    {
+      "name": "pdlc",
+      "source": "./plugins/pdlc",
+      "description": "A development lifecycle harness: intents become specs, specs become small changes, changes become verified, traceable code."
+    }
+  ]
+}

@@ -310,6 +310,39 @@ Boundaries the executor stops and asks rather than resolving it itself.
 
 ---
 
+## `pdlc` — Development Lifecycle Harness
+
+A Claude Code plugin that runs your project's development lifecycle. Intents enter an
+inbox, become job, capability and design specs, then small changes that each touch one
+job or one capability. Changes are built test first, checked by an independent reviewer,
+and approved by you. Every commit traces back to its requirement and intent.
+
+It fits any kind of system, and can manage changes to this repository, including
+changes to pdlc itself.
+
+Unlike the skills above, pdlc installs as a plugin from this repo's marketplace:
+
+```
+/plugin marketplace add ptetau/pskills
+claude plugin install pdlc@pskills --scope project
+```
+
+Full steps are in `plugins/pdlc/INSTALL.md`.
+
+Skills: `ship` (runs everything), `init`, `intake`, `ready`, `change`, `tests`, `build`,
+`show`, `verify`, `conventions`, `trace`, `board`, `dashboard` (optional live dashboard).
+Agents: `recon`, `test-writer`, `builder`, `reviewer`. Read `plugins/pdlc/OUTLINE.md` for the design and
+`plans/build-pdlc-v1.plan.md` for build progress.
+
+**Example**
+
+```
+/pdlc:init
+/pdlc:ship let users reset their password by email
+```
+
+---
+
 ## `/squiz` — Visual Clarifier Document
 
 The document-mode twin of `/quiz`. Instead of one-at-a-time questions, the
