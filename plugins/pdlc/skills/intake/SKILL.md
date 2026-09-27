@@ -32,7 +32,8 @@ Read the specs in `pdlc/specs/`. For each thing the intent needs, decide where i
 
 Prefer existing specs. Create a new one only when nothing fits.
 
-If the intent could mean two different things, ask the user before going on.
+If the intent could mean two different things, ask the user before going on (see "Asking
+questions" in `pdlc/README.md`; with `defaults`, take the likelier meaning and note it).
 
 ## 3. Deepen stub specs
 

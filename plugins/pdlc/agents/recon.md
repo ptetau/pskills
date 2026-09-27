@@ -61,3 +61,7 @@ One or two sentences saying what is true today.
 For each requirement, add a line `Seen in: <file>:<line>` pointing to the code, and say
 how sure you are if you aren't. Only describe what the code really does, not what it
 should do.
+
+Describe behaviour a user or caller can see, not how the code produces it. Write "saving
+replaces the whole list", not "save calls write_text". Requirements that pin the
+implementation block every future change to it.

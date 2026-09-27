@@ -31,8 +31,8 @@ A requirement is clear when:
 
 ## 3. Ask about what is unclear
 
-Ask the user one short question at a time. Offer two or three answers and mark the one you
-recommend, with one line on why. The user can reply `skip` to take your recommendation.
+Follow "Asking questions" in `pdlc/README.md`. If run with `defaults`, don't ask: take
+your recommended answer.
 
 Write each answer into the requirement. Add a line to the intent's "Notes":
 `<requirement>: <question> → <answer>`.
@@ -47,7 +47,7 @@ specs, and in the specs they rely on. A contradiction is two statements that can
 true, for example "responds within 50 ms" and "always calls a service that takes 200 ms".
 
 For each one found, show both statements and ask the user which should change. Don't pick
-for them.
+for them, even with `defaults`: leave both requirements `proposed` and say so.
 
 ## 5. Finish
 

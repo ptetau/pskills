@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** ████░░░░░░░░ 4/13 steps completed (31%)
+**Progress:** █████░░░░░░░ 5/13 steps completed (38%)
 
 ## How to use this document (read this first, every session)
 
@@ -134,7 +134,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/skills/init/SKILL.md`, `plugins/pdlc/agents/recon.md`
 - **Depends on:** Step 3
 
-### Step 5: `intake` and `ready` · `[ ]` AUTO · Parallel group: none
+### Step 5: `intake` and `ready` · `[x]` AUTO · Parallel group: none
 
 - **Do:** Write both skills in full. Intake writes `proposed` patches and calls recon's deep
   look for stub specs. Ready asks questions one at a time and checks for contradictions,
@@ -308,4 +308,19 @@ Proven: /pdlc:init defaults ran headless on a Python unittest CLI (pyapp) and a 
 Surprises: first pyapp run stopped to ask about the map despite "defaults", and recon put
            one file in two code maps — both fixed above. The unittest naming limit was
            spotted by the init run itself.
+
+[2026-09-27] Step 5: done
+Changed: intake/ready/conventions SKILL.md, README template ("Asking questions"),
+         agents/recon.md
+Decided: every skill that asks follows one shared rule in pdlc/README.md; with
+         "defaults" it takes its recommendation and notes it. Contradictions are never
+         defaulted: ready leaves both requirements proposed and asks. Recon must describe
+         observable behaviour, never implementation.
+Proven: on pyapp, IN-0001 ("remove <n>" + crash-safe saving) went new → specifying →
+        ready. Intake deepened both stub specs through recon, then wrote JOB.R9, JOB.R10
+        and CAP-task-storage.R5 as proposed. Ready found a real contradiction between the
+        new R5 (crash-safe) and recon's R4 (which pinned write_text), asked, and after the
+        answer rewrote R4 as an outcome and marked all four ready.
+Surprises: ready first ignored "defaults" (the skill's own step said "ask"); and recon's
+           implementation-shaped requirement caused the contradiction. Both fixed.
 ```

@@ -24,7 +24,8 @@ example: "This is the first table in the app. How should tables sort and page?"
 
 Look in the code for how it is done today. Offer two or three options, each with a short
 real example from this project where one exists. Mark the one you recommend, with one line
-on why. The user can reply `skip` to take the recommendation.
+on why. Follow "Asking questions" in `pdlc/README.md`: with `defaults`, take the
+recommendation without asking.
 
 ## 3. Write it down
 

@@ -37,6 +37,15 @@ To use a port, read `ports/<port>.md` for what it does, then find the port's ada
 `config.md` and follow `adapters/<adapter>.md`. Never call a tool directly when a port
 covers it.
 
+## Asking questions
+
+Ask the user one short question at a time. Offer two or three answers and mark the one you
+recommend, with one line on why. The user can reply `skip` to take it.
+
+If the skill was run with `defaults`, don't ask. Take your recommended answer, and record
+each one in the intent's "Notes" as `<question> → <answer> (default)` so the user can
+change it later.
+
 ## Before any work
 
 Catch up on merges. For each change with status `in review`, ask the delivery port if it has
