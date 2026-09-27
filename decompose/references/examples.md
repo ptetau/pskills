@@ -200,13 +200,15 @@ they own the sequence, and the sequence is stable. New components:
 | `PricingEngine` | Engine (V1) | `Quote(basket) → quote` |
 | `PromotionsAccess` | ResourceAccess (V2) | `ActivePromotions(at)`, `Define(promotion)` |
 
-**Seam and anti-corruption layer.** The seam is the existing `compute_total(cart)` in
-`checkout/totals.py`, which both cart and checkout already call. It becomes one line that
-translates the host's `Cart` into the engine's `Basket` (SKU, category, quantity, unit
-price, customer group) and asks `PricingEngine` for a quote. That translator is the
-anti-corruption layer: Django model changes stop there. If the engine ever needs to read
-more from the host, it goes through a ResourceAccess over the host, never through direct
-model imports.
+**Seam and translation.** The seam is the existing `compute_total(cart)` in
+`checkout/totals.py`, which both cart and checkout already call. `PricingEngine` offers an
+open-host service: one API in its own terms (`Basket`, `Quote`). `compute_total` becomes
+one line that translates the host's `Cart` into a `Basket` (SKU, category, quantity, unit
+price, customer group) and asks for a quote. That translator sits on the host side of the
+seam; in Evans' terms it is the host's anti-corruption layer. Django model changes stop
+there. If the engine ever needs to read more from the host, the engine is then the
+downstream side, so it gets its own anti-corruption layer: a ResourceAccess over the host,
+never direct model imports.
 
 ```
 checkout            → compute_total(cart)        seam: translate Cart → Basket
@@ -256,6 +258,10 @@ price adjustment that V1 names.
 5. Delete the old code paths.
 
 **Validation.** Change simulation: a new promotion type touches `PricingEngine` only; moving
-promotion setup to a marketing tool touches `PromotionsAccess` only. Re-run
-`volatility.py` a quarter later: `cart ↔ checkout` coupling should fall below 30%. If it
-has not, the wall leaks and the design gets revisited.
+promotion setup to a marketing tool touches `PromotionsAccess` only. Three months after
+the switch-over, run `volatility.py` over those three months only (`--since <switch date>`)
+and over the three months before the work began (`--since … --until …`). The
+`cart ↔ checkout` coupling should fall well below its old 62%; the skill's suggested bar
+is dropping out of the report, under the 30% floor. A longer window would mostly count
+commits from before the change and show the old coupling. If it has not fallen, the wall
+leaks and the design gets revisited.
