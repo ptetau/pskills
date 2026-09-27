@@ -7,6 +7,15 @@ A collection of Claude Code skills. Install any skill by copying its directory i
 ~/.claude/skills/
   argue/
     SKILL.md
+  blueprint/
+    SKILL.md
+    references/
+      blueprint-template.md
+      conventions.md
+      notifications.blueprint.md
+      sources.md
+    scripts/
+      check_blueprint.py
   decompose/
     SKILL.md
     references/
@@ -70,6 +79,54 @@ VERDICT   1 contradiction  ·  1 tension  ·  1 ambiguity
 
 ---
 
+## `/blueprint` — Agent-Ready Spec from a Design
+
+The companion to `/decompose`. A design document explains *why* the system is shaped the
+way it is; a coding agent needs *what exactly* to build. `/blueprint` rewrites a design
+(a `name.design.md`, or any architecture doc) into an **Agent System Design Document** that
+a person can skim and an agent can implement without guessing:
+
+1. **Header and boundary box**: purpose, target mode, in scope, out of scope
+2. **System invariants**: 4–7 enforceable rules, each with where it is enforced and its
+   error code
+3. **Core data contracts**: exact types (TypeScript, Go, or Rust)
+4. **State machines**: every lifecycle, with guards, terminal states, and illegal moves
+5. **Module boundaries and signatures**: typed methods, constraints, and failure and
+   retry behavior per component
+6. **Verification suite**: 3–5 Gherkin scenarios that exercise every invariant
+
+Every detail the design leaves open (a retry count, a key format, a storage engine) is
+decided once, marked *(assumed)*, and listed for review, so no agent has to guess.
+`blueprint/scripts/check_blueprint.py` checks the result: structure, that every invariant
+has an enforcement point and an error code, that every error code is exercised by a
+scenario, that every state type has a state machine, and that no design IDs such as `V1`
+remain. With `--compile` it also type-checks the TypeScript.
+
+**Example**
+
+```
+/blueprint notifications.design.md
+```
+
+**Output (excerpt)**
+
+```
+BLUEPRINT: notifications · TypeScript · modular monolith
+══════════════════════════════════════════════════
+SCOPE        8 in · 4 out
+INVARIANTS   6 · codes: IDEMPOTENCY_CONFLICT, QUIET_HOURS_DEFERRED, …
+CONTRACTS    19 types · 2 state machines
+MODULES      9 components in 4 groups
+SCENARIOS    5 · every invariant exercised
+ASSUMED      8 decisions for review
+CHECK        PASS
+```
+
+Hand the blueprint to `/quiz-plan` for a change plan, then `/quiz-plan-execute`, which uses
+the Gherkin scenarios as its failing tests.
+
+---
+
 ## `/decompose` — Software Design by Volatility and Primitives
 
 Designs a new system (inception) or a new subsystem inside an existing codebase in
@@ -114,8 +171,8 @@ FEATURES      8 current assembled · 3 future with ≤1 new brick
 VERDICT       ready
 ```
 
-Hand the design to `/argue` to check it for contradictions, or to `/quiz-plan` to
-turn it into a change plan.
+Hand the design to `/argue` to check it for contradictions, to `/blueprint` to make it
+agent-ready, or to `/quiz-plan` to turn it into a change plan.
 
 ---
 

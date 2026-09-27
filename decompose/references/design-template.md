@@ -160,4 +160,6 @@ RenderingEngine; re-run passes">
 ## 10. Next steps
 
 - `/argue` this document to check it for contradictions.
+- `/blueprint` to turn it into an agent-ready spec: typed contracts, state machines,
+  signatures, and Gherkin scenarios.
 - `/quiz-plan` to turn the walls and migration steps into an executable change plan.

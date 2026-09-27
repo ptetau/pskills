@@ -326,9 +326,10 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    VERDICT       ready | ready, <n> accepted leaks: <list> | <n> leaks to resolve: <list>
    ```
 
-3. Offer next steps: `/argue` the design doc to check it for contradictions, and
-   `/quiz-plan` to turn the walls (and, in subsystem mode, the migration steps) into an
-   executable change plan.
+3. Offer next steps: `/argue` the design doc to check it for contradictions;
+   [[blueprint]] to turn it into an agent-ready spec (typed contracts, state machines,
+   signatures, and Gherkin scenarios); and `/quiz-plan` to turn the walls (and, in
+   subsystem mode, the migration steps) into an executable change plan.
 
 ## Rules
 
