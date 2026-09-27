@@ -1,43 +1,59 @@
 ---
 name: build
 description: >
-  Builds one pdlc change spec, test first. Writes a failing test for each step, makes it
-  pass, tidies up, and commits with trace trailers. Marks requirements built. Use when the
-  user says "/pdlc:build" or wants a change spec built.
+  Builds one pdlc change spec on its own branch, check first. For each step it writes a
+  failing check named with the requirement ID, makes it pass, tidies up, and commits with
+  trace trailers. Marks requirements built. Use when the user says "/pdlc:build", or wants
+  a planned pdlc change built.
 ---
 
 # pdlc build
 
-> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, sections 5 and 6.
-> A simplified `/quiz-plan-execute`.
+Turns one change spec into a branch with the change and its checks.
 
-## What it does
+Read `pdlc/README.md` first and follow it. The change spec should be all you need. Read
+the design specs it lists before writing anything.
 
-Turns one change spec into code on its own branch.
+## 1. Pick the change
 
-## Reads
+- If the user named a change, use it.
+- If they named an intent, take its first change that isn't `merged`.
+- Otherwise take the oldest intent with status `ready` or `building`, and its first change
+  that isn't `merged`.
 
-- The change spec. It should be all the builder needs.
-- The design specs it lists.
+Every earlier change in the intent's list must be `merged`. If one isn't, stop and say
+which, because this change may rely on it.
 
-## Writes
+## 2. Start
 
-- The change and its checks, only in the files the change spec lists.
-- One commit per step, with `Intent`, `Change`, `Req` and `Ticket` trailers.
-- Requirement status `built`. The change spec's progress log.
+- Start a branch through the delivery port. Write its name into the change spec's header.
+- Set the change to `building`. Set the intent to `building`. Tell the tracker port.
 
-## Steps
+## 3. Work each step
 
-1. Open a branch through the delivery port.
-2. For each step:
-   1. Write a check named with the requirement ID. Run it. It must fail.
-   2. Write the least code that makes it pass.
-   3. Tidy up. Follow the design specs.
-   4. Commit with the trace trailers. Log the step.
-3. Mark the change's requirements `built`. Tell the tracker port.
-4. Hand off to `verify`.
+For each step not yet ticked, in order:
+
+1. **Red.** Write the check. Its name starts with the requirement ID. Run it through the
+   checks port. It must fail. If it passes already, the check proves nothing: fix it.
+2. **Green.** Write the least change that makes the check pass. Run it again.
+3. **Tidy.** Remove repetition and follow the design specs. Run all checks. Everything
+   must still pass.
+4. **Commit** through the delivery port, with the trailers `Intent`, `Change`, `Req` and
+   `Ticket` if there is one. Tick the step and add a line to the progress log in the same
+   commit.
+
+Only touch the files the change spec lists. If you need another file, stop and ask the
+user. If they agree, add it to the change spec's "Files" first.
+
+## 4. Finish
+
+- Set each requirement in the change to `built` in its spec file. Remove any requirement
+  marked `(retire)` from its spec, along with the code and checks it no longer needs.
+- Commit with the message "Built CH-xxxx" and the trailers.
+- Tell the user the change is built, and that `/pdlc:verify` is next.
 
 ## Stop and ask when
 
-- The work needs a file the change spec doesn't list.
+- A check you didn't expect starts failing.
 - The same fix has failed twice.
+- Something in the change spec is unclear.

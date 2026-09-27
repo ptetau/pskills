@@ -1,39 +1,54 @@
 ---
 name: verify
 description: >
-  Verifies a built pdlc change. Runs the tagged checks, sends the diff to an independent
-  reviewer agent, marks requirements verified when both pass, and opens a PR for the user
-  to approve. Use when the user says "/pdlc:verify" or a build has finished.
+  Verifies a built pdlc change. Runs the checks for each requirement, sends the change to
+  an independent reviewer, marks requirements verified when both pass, runs the merge
+  check, and proposes the merge for the user to approve. Never merges. Use when the user
+  says "/pdlc:verify", or a pdlc build has finished.
 ---
 
 # pdlc verify
 
-> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, section 7.
+Decides whether a built change is good enough to merge, then asks the user to approve it.
 
-## What it does
+Read `pdlc/README.md` first and follow it.
 
-Decides whether a built change is good enough to merge. Then asks the user to approve it.
+## 1. Pick the change
 
-## Reads
+Use the change the user named. Otherwise take the change with status `building` whose
+requirements are all `built`. Switch to its branch.
 
-- The change spec, the diff, and the design specs it lists.
+## 2. Run the checks
 
-## Writes
+Through the checks port:
 
-- Requirement status `verified`, on the change's branch.
-- A PR, through the delivery port, with a table of requirements, checks and results.
+- For each requirement in the change, run its checks. Each needs at least one check, and
+  all of them must pass. "No checks found" is a failure.
+- Run all checks. Everything must pass.
 
-## Steps
+## 3. Review
 
-1. Run the checks through the checks port. Every requirement in the change needs at least
-   one passing check tagged with its ID.
-2. Send the change spec, diff and design specs to the review port. The reviewer checks
-   scope, acceptance, conventions and trailers.
-3. If either fails, send the change back to `build` with the findings.
-4. If both pass, mark the requirements `verified` and open the PR.
-5. List any `manual check` items for the user to confirm when they approve.
-6. Tell the tracker port.
+Through the review port, send the change spec, the branch's diff and commit messages, and
+the design specs the change lists.
 
-## Rules
+## 4. If anything failed
 
-- Never merge. The user approves the merge.
+Add the failures and review problems to the change spec's progress log, commit, and tell
+the user. Say `/pdlc:build` should fix them. Stop here.
+
+## 5. If everything passed
+
+1. Set each requirement in the change to `verified` in its spec file.
+2. Set the change to `in review`.
+3. Commit with the message "Verified CH-xxxx" and the trailers.
+4. Run the gate through the delivery port. It must pass. If it doesn't, something above
+   was missed: fix it before going on.
+5. Propose the merge through the delivery port. In the description, include a table of
+   each requirement, its checks and their result, the review result, and any "Manual
+   checks" for the user to confirm.
+6. If every change for the intent is now `in review` or `merged`, set the intent to
+   `in review`.
+7. Tell the tracker port.
+8. Give the user the link. Say the change merges when they approve it.
+
+Never merge yourself.
