@@ -31,6 +31,13 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
 - Change: planned → building → in review → merged. Also cancelled.
 - Spec file: stub (no requirements written yet) or active.
 
+## pdlc's own files
+
+`README.md`, `ports/`, `adapters/`, `templates/`, `bin/` and the `DES-pdlc-*` design specs
+come from the pdlc plugin. They change only when pdlc is upgraded, on main, in a commit of
+their own. Never change them on a change's branch. To change how this project works with
+pdlc, use `/pdlc:conventions` or add an adapter through the inbox.
+
 ## Using a port
 
 To use a port, read `ports/<port>.md` for what it does, then find the port's adapter in

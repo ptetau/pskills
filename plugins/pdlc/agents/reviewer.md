@@ -25,8 +25,8 @@ Check these, in order:
    names can't hold dots or dashes). The check could fail if the
    behaviour were wrong. A check that can't fail doesn't count.
 3. **Conventions.** The change follows each design spec the change spec lists.
-4. **Trace.** Every commit on the branch has `Intent`, `Change` and `Req` trailers that
-   match the change spec.
+4. **Trace.** Every commit message on the branch has `Intent:`, `Change:` and `Req:` lines
+   that match the change spec. Where they sit in the message doesn't matter.
 
 Reply in this shape:
 

@@ -15,9 +15,9 @@ Ticket: PROJ-88
 
 `Req` may list several IDs, separated by commas. Leave out `Ticket` if there is none.
 
-All trailers go in one final block with no blank lines inside it. If other trailers are
-added too (for example `Co-Authored-By`), put them in the same block, after pdlc's. Git
-only reads the last block as trailers.
+Keep all trailers in one final block where you can. If other trailers are added (for
+example `Co-Authored-By`), put them in the same block, after pdlc's, so git shows them as
+trailers. What matters for the trace is that the lines are in the message.
 
 ## Why
 

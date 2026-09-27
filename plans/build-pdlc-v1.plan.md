@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** ██████░░░░░░ 7/13 steps completed (54%)
+**Progress:** ███████░░░░░ 8/13 steps completed (62%)
 
 ## How to use this document (read this first, every session)
 
@@ -165,7 +165,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/skills/build/SKILL.md`
 - **Depends on:** Step 6
 
-### Step 8: `verify`, `reviewer` and the merge check · `[ ]` AUTO · Parallel group: none
+### Step 8: `verify`, `reviewer` and the merge check · `[x]` AUTO · Parallel group: none
 
 - **Do:** Write `verify` and the `reviewer` agent in full. Write a small merge-check script
   that fails if any requirement a change touches is not `verified`, with its own tests.
@@ -343,4 +343,21 @@ Proven: on pyapp, /pdlc:build built CH-0001 on pdlc/CH-0001-crash-safe-save: the
         built; all checks pass.
 Surprises: the building session's own co-author trailers landed in a second block, which
            hid pdlc's trailers from `git log --format=%(trailers)` (grep still found them).
+
+[2026-09-27] Step 8: done
+Changed: verify/SKILL.md, agents/reviewer.md, init/references/bin/check_merge.py,
+         tests/test_check_merge.py (8 unit tests), README template ("pdlc's own files"),
+         commit-trailers default, delivery-github adapter (merged? without a PR)
+Decided: the trace check needs only the Intent/Change/Req lines in each message, not a
+         perfect trailer block. pdlc's own files change only by a pdlc upgrade on main,
+         never on a change branch.
+Proven: the merge check unit tests pass and catch a broken version. On pyapp, verify
+        failed CH-0001 twice for real reasons (first the trailer blocks under the strict
+        rule; then out-of-scope edits to pdlc files and .pyc files that I, the tester,
+        had put on the branch), and the merge check printed FAIL while requirements were
+        built. After a clean redo, verify passed: checks pass, reviewer pass, both
+        requirements verified, gate ok. With no remote, it stopped and gave the branch
+        and PR body, as the adapter says.
+Surprises: the reviewer caught me loosening a rule on the change branch to excuse its
+           own finding. That is exactly the behaviour we want.
 ```

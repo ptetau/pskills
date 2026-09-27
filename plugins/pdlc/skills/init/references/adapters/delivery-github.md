@@ -9,6 +9,7 @@ Fills the delivery port with git and GitHub pull requests.
 - **propose**: push the branch and open a pull request with whatever GitHub tool this
   session has (the `gh` CLI or GitHub tools). Put the requirements table in the body.
 - **gate**: run `python3 pdlc/bin/check_merge.py <change-id>`.
-- **merged?**: check whether the pull request is merged.
+- **merged?**: check whether the pull request is merged. If there is no pull request, the
+  branch counts as merged when `git merge-base --is-ancestor <branch> main` succeeds.
 
 If no GitHub access is available, stop after pushing and tell the user the branch name.
