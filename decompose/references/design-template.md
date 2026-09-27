@@ -144,8 +144,8 @@ RenderingEngine; re-run passes">
 ## 8. Seams and migration (subsystem mode)
 
 - **Attach point:** <the seam in the host where the subsystem plugs in>
-- **Anti-corruption layer:** <component that translates host concepts to this design's
-  own types, so host changes stop at it>
+- **Translation at the seam:** <anti-corruption layer where the subsystem calls the host;
+  open-host service where the host calls in. Host types stop here>
 - **Steps** (each one shippable on its own; old path deleted last):
   1. <put an abstraction in front of the existing behavior (branch by abstraction)>
   2. <route callers through it>

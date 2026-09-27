@@ -147,7 +147,7 @@ which was written for publishing on the Web).
 |--------|----------|
 | Plain code calling bricks | Default. Compositions change at the same pace as the code. |
 | A table (rows of parameters) | Many variants of the same composition that differ only in values. |
-| A pipeline or state-machine definition as data | The composition itself is a recorded volatility *and* changes faster than you can deploy: flows that differ per customer, or change weekly. |
+| A pipeline definition or stored workflow | The composition itself is a recorded volatility *and* it differs by kind of item, customer, or locale, or runs long across sessions and devices (Löwy's reasons for storing workflows, run by a workflow tool), or changes faster than you can deploy (the skill's addition). |
 | A rules engine or a DSL | Almost never, for your own wiring. |
 
 Hadlow's *Configuration Complexity Clock*: hard-coded values become config, config

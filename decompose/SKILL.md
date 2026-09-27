@@ -91,8 +91,8 @@ The full rules, sources, and smells are in `references/walls.md` and
 
 - **Calls go down, never up or sideways.** Clients → one Manager per use case → Engines
   and ResourceAccess; Engines → ResourceAccess; anyone → Utilities. Managers reach other
-  Managers only through a queue. Only Managers publish or subscribe to events. Full
-  matrix in `references/walls.md`.
+  Managers only through a queue. Only Managers publish events; Clients and Managers may
+  subscribe. Full matrix in `references/walls.md`.
 - **Features are integration, not implementation** (Löwy). A new feature should mostly be
   a new interaction between existing components.
 
@@ -114,17 +114,18 @@ The full rules, sources, and smells are in `references/walls.md` and
   opposed to the wall's API) lets any brick follow any other.
 - **Mechanism, not policy.** Bricks are mechanism; "which" and "when" are policy, supplied
   as data or as a policy brick.
-- **Earn every brick.** A brick serves two or more current features, or it carries a
-  recorded volatility: it is one of the variants that volatility names (one channel, one
-  kind of discount). Otherwise the logic stays inline. Prefer duplication over the wrong
-  abstraction.
+- **Earn every brick** (the skill's rule). A brick serves two or more current features,
+  or it serves one current feature as a variant a recorded volatility names (one channel,
+  one kind of discount). Otherwise the logic stays inline. Never build a brick only a
+  future feature needs (Fowler's YAGNI covers abstractions too). Prefer duplication over
+  the wrong abstraction (Metz).
 
 ### The hybrid: how walls and bricks fit together
 
 | Wall | Its bricks |
 |------|------------|
-| Client | Inputs from the outside world (endpoints, UI, timers) plus presentation |
-| Manager | the wiring: flows that call Engines and ResourceAccess, plus State machines. It may own Inputs that subscribe to events. Flows are code by default; they become data the Manager runs only when they change faster than you can deploy (per customer, or weekly). |
+| Client | Inputs from the outside world (endpoints, UI, timers, event subscriptions) plus presentation |
+| Manager | the wiring: flows that call Engines and ResourceAccess, plus State machines. It may own Inputs that subscribe to events. Flows are code by default. Löwy stores them as data run by a workflow tool when they differ by kind of item, customer, or locale, or run long across sessions and devices; the skill adds flows that change faster than you can deploy. |
 | Engine | Transforms and policies behind one stable API. New rules are new bricks or new data, not new call paths. |
 | ResourceAccess | Stores, Transports, and Inputs that pull from vendors, behind business verbs. Vendor and storage details never cross its API. |
 | Utility | stable mechanisms shared by everyone |
@@ -147,7 +148,7 @@ Three rules connect the two ideas:
 | Input | brainstormed features, goals | a request, plus the host codebase |
 | Volatility evidence | business reasoning, interviews, roadmap | git history (`scripts/volatility.py`), commit messages, tickets, plus reasoning |
 | Walls | the whole system | the subsystem plus its seam to the host; the host's walls are given |
-| Extra output | — | attach point, anti-corruption layer, migration steps |
+| Extra output | — | attach point, translation at the seam, migration steps |
 | Extra risk | speculative walls | leaky seams; host code that depends on current behavior |
 
 The details of subsystem mode are in `references/brownfield.md`.
@@ -184,9 +185,9 @@ Goal: separate the essence from the variations.
 1. Rewrite each feature as a use case: who does what, and what the system does in response.
 2. Group variations. "Welcome email", "reset SMS", and "Slack alert" are one core use case
    ("notify someone about an event") with different parameters.
-3. Mark the **core use cases**: the few that express what the system is for. Most
-   systems have two or three, and seldom more than six. Everything else should turn out
-   to be a variation of these.
+3. Mark the **core use cases**: the few that express what the system is for. Löwy:
+   typically two or three, seldom more than six. Everything else should turn out to be a
+   variation of these.
 4. Write down the **nature of the business**: what will stay true for the life of the
    system. These things are not walled off.
 
@@ -196,8 +197,9 @@ Goal: a list of what is likely to change, with evidence, and a list of what was 
 
 1. **Generate candidates** along both axes (one customer over time, many customers now).
    Good prompts are in `references/walls.md`: named vendors, "for now" and "initially",
-   numbers and thresholds, regulation, anything a competitor does differently, anything
-   that changed in the domain over the last five to seven years.
+   numbers and thresholds, regulation, anything a competitor does differently, and
+   everything that changed in the domain over a period as long as the system's expected
+   life.
 2. **Look for solutions disguised as requirements.** "Send a Twilio SMS" is a solution. The
    need is "reach the user fast"; the volatility is the channel and the vendor.
 3. **Filter each candidate:**
@@ -219,20 +221,22 @@ Goal: components, their types, their APIs, and the call graph.
    Clients and Utilities are named for what they are (`AdminPortal`, `Scheduler`). If an Engine's name is also a feature name, ask
    what activity would survive a redesign of the feature, and name it that.
 2. **Write each component's API as business verbs.** ResourceAccess exposes verbs such
-   as `Deliver`, `FindRecipients`, `RecordOutcome`, never `Insert`, `Update`, `Select` or a
-   vendor's API.
+   as `Deliver`, `FindRecipients`, `ConfirmDelivery`, never `Insert`, `Update`, `Save`,
+   a generic `Record`, or a vendor's API.
 3. **Draw the call graph** by layer and check the call rules. Fix violations by moving
    responsibility, not by adding exceptions.
 4. **Check the size and shape.** Löwy's heuristics: about ten components in order of
-   magnitude, two to five Managers, fewer Engines than Managers, a dozen or two components
-   at most. Eight Managers means feature-based decomposition. Volatility should decrease
+   magnitude; even a large system commonly has two to five Managers, two to three Engines
+   (fewer than the Managers), three to eight ResourceAccess and Resources, and about six
+   Utilities. Eight Managers means feature-based decomposition. Volatility should decrease
    going down the layers. Apply the expendability test to each Manager (see
    `references/walls.md`). These are smell checks, not targets: when the design falls
    outside them, write down why.
 5. **Place the cross-cutting concerns** (audit, authorization, tenancy) and any writes
    that must be atomic across resources. `references/walls.md` says how.
-6. **Subsystem mode:** fit the new walls to the host. Pick the attach point (the seam),
-   and put an anti-corruption layer between host concepts and the subsystem's own types.
+6. **Subsystem mode:** fit the new walls to the host. Pick the attach point (the seam) and
+   keep host types out of the subsystem: an anti-corruption layer where the subsystem
+   calls the host, an open-host service where the host calls the subsystem.
 
 ## Phase 4 — Bricks
 
@@ -251,14 +255,18 @@ Start with the most volatile component. See `references/bricks.md` for tests and
    a receipt, a State machine takes events and returns the next state plus commands. If
    the register says the data's shape itself will change, keep that change additive
    (see `references/bricks.md`).
-4. **Split any brick that does two things.** A flag that switches between different
-   behaviors means two or more bricks. A parameter the same behavior uses (a predicate, a
-   threshold) is fine.
+4. **Split any brick that does two independent things.** A flag that switches between
+   different behaviors means two or more bricks. A parameter the same behavior uses (a
+   predicate, a threshold) is fine. Don't over-split: keep pieces together when they share
+   information or when splitting would complicate their interfaces (Ousterhout's
+   *classitis*).
 5. **Separate mechanism from policy.** Hard-coded "which" and "when" become policy bricks
    or data.
-6. **Choose the composition medium**: plain code by default; a pipeline definition, rule
-   table, or state-machine table only when the composition itself is a recorded volatility
-   *and* it changes faster than you can deploy (per customer, or weekly).
+6. **Choose the composition medium**: plain code by default. A pipeline definition, rule
+   table, or stored workflow only when the composition itself is a recorded volatility
+   *and* one of these holds: it differs by kind of item, customer, or locale, or runs long
+   across sessions and devices (Löwy's reasons for storing workflows); or it changes faster
+   than you can deploy (the skill's addition).
    Rules that end users write (an accountant's categorization rules, a marketer's
    promotions) are different: they are customer data, and their small rule language
    belongs to an Engine.
@@ -274,8 +282,9 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
 1. **Use-case walkthrough.** Write each core use case as a call chain through the walls,
    one `Caller → Callee.Verb` per line so the direction of every call is visible. It must
    need no new component and break no call rule.
-2. **Change simulation.** For each volatility in the register, imagine it happening. List
-   the components that must change. Target: one existing component. Two exceptions don't
+2. **Change simulation** (Parnas's 1972 test). For each volatility in the register,
+   imagine it happening. List the components that must change. Target: one existing
+   component. Two exceptions don't
    count as leaks: adding one new ResourceAccess when the change brings in a genuinely new
    resource (a new vendor or store), and a Client change when the change adds a new step
    a person performs. Record either. Two or more existing components changing for any

@@ -37,7 +37,7 @@ message has a recipient and content. If that stops being true, it is a different
 | ID | What changes | Axis | Contained by |
 |----|--------------|------|--------------|
 | V1 | Which channels exist, and which vendor delivers each | over time | `DeliveryAccess` |
-| V2 | Who gets what, when: preferences, quiet hours, opt-outs, regional rules | both | `RoutingEngine` |
+| V2 | Who gets what, when: preferences, quiet hours, opt-outs, regional rules | across customers | `RoutingEngine` |
 | V3 | Message content, templates, languages | over time | `RenderingEngine` |
 | V4 | Delivery flows: immediate, digest, escalate-if-unread | over time | `NotificationManager` |
 | V5 | Where recipient data lives (own DB today, a CRM later) | over time | `RecipientsAccess` |
@@ -89,8 +89,11 @@ zero or many), and Transports consume them. So any Transform can follow any othe
 | OutboxAccess | `Hold(key, window)`, `Release(due)` | Store |
 
 The Manager's other job is the wiring: one flow per use case, calling the bricks above
-through each wall's verbs. Flows are plain code for now; they become data only if V4 turns
-out to change weekly. Routing policies are an ordered list per tenant.
+through each wall's verbs. Flows are plain code for now: they are the same for every
+tenant, and none runs long (the digest is two short flows, with the held items in
+`OutboxAccess`). Escalate-if-unread (V4) would be a long-running flow; if it arrives, store
+the flows and run them with a workflow tool, as Löwy does. Routing policies are an ordered
+list per tenant.
 
 Earned: `Expand`, `Prefer`, `QuietHours`, `Render`, `Email`, `OnEvent`, and `Delivery`
 each serve two or more features. `Sms`, `Slack`, `OnSchedule`, `Hold`, and `Release` serve
@@ -135,7 +138,7 @@ UC1 notify about an event now
   RoutingEngine       → RecipientsAccess.Find
   NotificationManager → RenderingEngine.Render
   NotificationManager → DeliveryAccess.Deliver
-  NotificationManager → OutboxAccess.Record
+  NotificationManager → OutboxAccess.ConfirmDelivery
 
 UC2 notify about accumulated events later
   EventsApi           → NotificationManager.Notify        (flow ends in Hold)
@@ -149,7 +152,8 @@ UC2 notify about accumulated events later
 
 UC3 choose how and when to be reached
   AdminPortal         → NotificationManager.SetPreferences
-  NotificationManager → RecipientsAccess.SavePreferences
+  NotificationManager → RecipientsAccess.ChooseChannel
+  NotificationManager → RecipientsAccess.SetQuietHours
 ```
 
 No new component, no call upward or sideways, one Manager per use case. Pass.
