@@ -55,6 +55,7 @@ One line per technical word this blueprint uses, explained in plain words (see
 
 - **Invariant**: a rule that must always be true, no matter what happens.
 - **Idempotent**: safe to do twice; the second time changes nothing.
+- **Encapsulates**: keeps a likely change inside one part, so the rest doesn't notice.
 
 ## 2. System Invariants: rules that must always hold
 
@@ -67,8 +68,12 @@ idempotency, immutability, and the hard rejections where they apply.)
 
 ## 3. Core Domain Data Contracts: the exact shape of the data
 
-Conventions: {IDs are branded strings · money is integer minor units plus ISO 4217 code ·
-timestamps are ISO 8601 UTC strings · optional fields are marked `?`}.
+Conventions:
+
+- {IDs are branded strings, so two kinds of ID can't be mixed up.}
+- {Money is a whole number of the smallest unit (cents), plus an ISO 4217 currency code.}
+- {Times are ISO 8601 strings in UTC.}
+- {A `?` marks a field that may be missing.}
 
 ```ts
 // Identifiers
@@ -91,10 +96,10 @@ export type Result<T> = { ok: true; value: T } | { ok: false; error: ErrorCode; 
 
 ### Error catalog
 
-One row per code in `ErrorCode`. Fault follows design by contract: a broken precondition is
-the caller's fault (4xx); a broken postcondition or invariant is the supplier's (5xx). Over
-HTTP, errors are RFC 9457 problem details (`application/problem+json`) with the code in a
-`code` member.
+One row per code in `ErrorCode`. The fault column says who must fix it. It's the caller's
+fault (a 4xx status) when they sent something the method can't accept. It's ours (a 5xx
+status) when our code broke its own promise. Over HTTP, errors use RFC 9457 problem
+details (`application/problem+json`), with the code in a `code` field.
 
 | Code | Meaning | Fault | HTTP | Retry helps? |
 |------|---------|-------|------|--------------|
@@ -116,7 +121,8 @@ stateDiagram-v2
 
 Stored by `{Component}`. Each transition is performed by the verb on its arrow, as a
 compare-and-set. Anything not drawn is refused: `{INVALID_TRANSITION}`. Terminal:
-{states, or "none"}.
+{states, or "none"}. {If the design names this machine differently: "This is the design's
+`{Machine}` machine."}
 
 ## 5. Module Boundaries & Interface Signatures: the parts and how to call them
 
@@ -153,14 +159,33 @@ flowchart TB
 
 Key: light blue, a component; arrows are calls, labelled with the verbs used.
 
+### Entry points (Clients)
+
+#### {Name}
+
+- **Purpose:** {one line}
+- **Encapsulates:** {who calls, and how}
+- **Constraints:** {how callers prove who they are: a sign-in, an API key, a card and PIN}.
+  No business rules.
+- **May call:** {one Manager per use case}
+
+```ts
+export interface {Name} {
+  {entryPoint}(request: {Request}): Promise<{Response}>; // the design's entry points
+}
+```
+
+- **Failure & retry:** {what the caller sees for each error; whether it may retry}
+- **Internals:** {the design's bricks for this part, in backticks as the design spells them}
+
 ### Orchestration (Managers)
 
 #### {Noun}Manager
 
 - **Purpose:** {one line}
 - **Encapsulates:** {the likely change it contains, in plain words}
-- **Constraints:** orchestration only; no business rules.
-- **May call:** {Engines, ResourceAccess, Utilities}
+- **Constraints:** runs the steps in order; no business rules.
+- **May call:** {Engines, ResourceAccess, Utilities; other Managers only through a queue}
 
 ```ts
 export interface {Noun}Manager {
@@ -171,7 +196,9 @@ export interface {Noun}Manager {
 - **Flow of `{verb}`:**
   1. `{Engine.verb}` …
   2. `{Access.verb}` …
+  3. {Only if the design has one:} queue `{OtherManager.verb}` …
 - **Failure & retry:** {retryable vs final errors, timeouts, idempotency on retry, races}
+- **Internals:** {the design's bricks for this part, in backticks as the design spells them}
 
 ### Business rules (Engines)
 
@@ -188,6 +215,7 @@ export interface {Activity}Engine { … }
 ```
 
 - **Failure & retry:** deterministic; returns errors as values; never retried.
+- **Internals:** {the design's bricks for this part, in backticks as the design spells them}
 
 ### Resource access (ResourceAccess)
 
@@ -204,6 +232,23 @@ export interface {Noun}Access { … }
 ```
 
 - **Failure & retry:** {timeouts, which vendor errors are retried, backoff, idempotency key}
+- **Internals:** {the design's bricks for this part, in backticks as the design spells them}
+
+### Shared infrastructure (Utilities)
+
+Only a Utility this system builds and the design names. Off-the-shelf logging just gets a
+folder in the module map.
+
+#### {Utility}
+
+- **Purpose:** …
+- **May call:** nothing
+
+```ts
+export interface {Utility} { … }
+```
+
+- **Failure & retry:** …
 
 ## 6. Agent Verification Suite: tests that say when it's done
 

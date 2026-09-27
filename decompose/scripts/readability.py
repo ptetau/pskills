@@ -7,7 +7,7 @@ headings, and diagrams are skipped, because names and code must stay exact.
 
 Reports:
   - average words per sentence (aim for 15 or fewer)
-  - sentences over 25 words (aim for none), with the longest ones to rewrite
+  - every sentence over 25 words (aim for none), with its line number
   - Flesch-Kincaid grade level of the prose (aim for 7 or lower)
   - technical words used in the prose but not explained in a "Words used here" list
 
@@ -20,6 +20,7 @@ Usage:
 """
 
 import argparse
+import bisect
 import json
 import re
 import sys
@@ -37,37 +38,59 @@ JARGON = [
     "topology", "transactional", "volatile", "volatility",
 ]
 
-FENCE = re.compile(r"^```.*?^```", re.M | re.S)
+FENCE = re.compile(r"^(`{3,})[^\n]*\n.*?^\1`*[ \t]*$", re.M | re.S)   # a ```` fence may hold ``` lines
 
 
-def prose_of(text):
-    text = FENCE.sub("\n", text)
-    lines = []
-    for line in text.split("\n"):
+def prose_map(text):
+    """(prose, line_of): the prose, and a function from a prose offset to its source line."""
+    text = FENCE.sub(lambda m: "\n" * m.group(0).count("\n"), text)   # keep line numbers
+    lines, starts, offset = [], [], 0
+
+    def emit(s, lineno):
+        nonlocal offset
+        starts.append((offset, lineno))
+        lines.append(s)
+        offset += len(s) + 1
+
+    for lineno, line in enumerate(text.split("\n"), 1):
         s = line.strip()
         if not s or s.startswith(("#", "|", ">", "<!--")) or re.match(r"^[-=*_]{3,}$", s):
-            lines.append("")          # keep paragraph breaks
+            emit("", lineno)          # keep paragraph breaks
             continue
         if re.match(r"^([-*+]|\d+\.)\s+", s):
-            lines.append("")          # each list item is its own sentence
+            emit("", lineno)          # each list item is its own sentence
         s = re.sub(r"^[-*+]\s+|^\d+\.\s+", "", s)              # list markers
         s = re.sub(r"`[^`]*`", "X", s)                           # names count as one short word
         s = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", s)            # links keep their text
         s = re.sub(r"[*_]{1,2}([^*_]+)[*_]{1,2}", r"\1", s)       # emphasis
-        lines.append(s)
-    return "\n".join(lines)
+        emit(s, lineno)
+    keys = [o for o, _ in starts]
+
+    def line_of(off):
+        return starts[max(0, bisect.bisect_right(keys, off) - 1)][1] if starts else None
+    return "\n".join(lines), line_of
 
 
-def sentences_of(prose):
-    out = []
-    for para in re.split(r"\n\s*\n", prose):
-        para = " ".join(para.split())
-        if not para:
-            continue
-        for sent in re.split(r"(?<=[.!?])\s+(?=[A-Z0-9\"'(])", para):
+def prose_of(text):
+    return prose_map(text)[0]
+
+
+def sentences_of(prose, line_of=None):
+    """[(sentence, words, source line or None)] for sentences of 3 words or more."""
+    out, start = [], 0
+    for brk in list(re.finditer(r"\n\s*\n", prose)) + [None]:
+        end = brk.start() if brk else len(prose)
+        para, base = prose[start:end], start
+        start = brk.end() if brk else end
+        s0 = 0
+        for cut in [c.end() for c in re.finditer(r"(?<=[.!?])\s+(?=[A-Z0-9\"'(])", para)] + [len(para)]:
+            raw, at = para[s0:cut], base + s0
+            s0 = cut
+            sent = " ".join(raw.split())
             words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'’-]*", sent)
             if len(words) >= 3:
-                out.append((sent, words))
+                at += len(raw) - len(raw.lstrip())
+                out.append((sent, words, line_of(at) if line_of else None))
     return out
 
 
@@ -94,9 +117,9 @@ def glossary_terms(text):
 
 
 def check(text):
-    prose = prose_of(text)
-    sents = sentences_of(prose)
-    words = [w for _, ws in sents for w in ws]
+    prose, line_of = prose_map(text)
+    sents = sentences_of(prose, line_of)
+    words = [w for _, ws, _ in sents for w in ws]
     stats = {"sentences": len(sents), "words": len(words)}
     warnings = []
     if not sents:
@@ -104,17 +127,16 @@ def check(text):
     avg = len(words) / len(sents)
     syl = sum(syllables(w) for w in words) / len(words)
     grade = 0.39 * avg + 11.8 * syl - 15.59
-    long = sorted(((len(ws), s) for s, ws in sents if len(ws) > 25), reverse=True)
+    long = [(line, len(ws), s) for s, ws, line in sents if len(ws) > 25]
     stats.update({"avg_words_per_sentence": round(avg, 1), "grade": round(grade, 1),
-                  "long_sentences": len(long)})
+                  "long_sentences": len(long),
+                  "long": [{"line": line, "words": n, "text": s} for line, n, s in long]})
     if avg > 15:
         warnings.append("average sentence is %.1f words; aim for 15 or fewer" % avg)
     if grade > 7:
         warnings.append("reading grade is %.1f; aim for 7 or lower (shorter sentences, shorter words)" % grade)
-    for n, s in long[:5]:
-        warnings.append("long sentence (%d words): %s" % (n, s[:140] + ("…" if len(s) > 140 else "")))
-    if len(long) > 5:
-        warnings.append("%d more sentences over 25 words" % (len(long) - 5))
+    for line, n, s in long:
+        warnings.append("line %s: long sentence (%d words): %s" % (line, n, s[:140] + ("…" if len(s) > 140 else "")))
 
     terms, has_list = glossary_terms(text)
     used = sorted({j for j in JARGON if re.search(r"\b%s\b" % re.escape(j), prose, re.I)})

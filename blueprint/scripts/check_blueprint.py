@@ -33,7 +33,9 @@ Errors (exit code 1):
   - with --design: a Client, Manager, Engine, or ResourceAccess in the design's walls has
     no section 5 subsection; section 5 has a component the design doesn't; a design API
     verb has no matching method, or a method isn't in the design's API; a design brick
-    isn't in its component's subsection; a shared contract has no type of that name
+    isn't named (in backticks, or as a method) in its component's subsection; a shared
+    contract has no type of that name; a design state machine, or one of its states, is
+    missing from section 4
 
 Not checked: whether a contract's fields or variants match the design's.
 
@@ -42,7 +44,9 @@ above 7, technical words missing from the "Words used here" list), more than 7 i
 more than 5
 scenarios, more than 5 steps in a scenario, a Background over 4 steps, a Then step that
 asserts storage, money typed as a bare number, `any` in TypeScript, a component without
-"May call", a design utility not mentioned in section 5, filler phrasing.
+"May call", a Manager calling a Manager on a flow line that doesn't say it is queued,
+fewer *(assumed)* marks than decisions added (or more than listed), a design utility not
+mentioned in section 5, filler phrasing.
 
 Usage:
   python check_blueprint.py notifications.blueprint.md
@@ -157,11 +161,16 @@ def methods_of(body):
 
 
 def flow_calls(body):
-    """(callee, method) pairs named in a component's Flow bullets."""
+    """(callee, method, line) for each call named in a component's Flow bullets."""
     calls = []
     for m in re.finditer(r"\*\*Flows?\b.*?(?=\n- \*\*(?!Flow)|\n####|\Z)", body, re.S):
-        calls += re.findall(r"`([A-Z][A-Za-z0-9]*)\.([a-zA-Z_]\w*)", m.group(0))
+        for line in m.group(0).split("\n"):
+            calls += [(c, v, line) for c, v in re.findall(r"`([A-Z][A-Za-z0-9]*)\.([a-zA-Z_]\w*)", line)]
     return calls
+
+
+MAY_CALL = re.compile(r"^\s*[-*]\s+\*\*May call:?\*\*:?[^\n]*(?:\n(?!\s*[-*]\s+\*\*|\s*$|```)[^\n]*)*", re.I | re.M)
+QUEUED = re.compile(r"\bqueue[ds]?\b|\benqueue", re.I)
 
 
 def design_components(design_text):
@@ -292,7 +301,52 @@ def check_c4(s1, s5, components, kinds, errors, warnings):
                       "everything runs in one container")
 
 
-def check_design(design_text, s5, components, s3_code=""):
+ARROW = r"(?:→|-->|--[^\n]*?-->)"
+
+
+def design_machines(design_text):
+    """{name: {states}} for each brick whose Kind is 'State machine'.
+
+    States come from the brick's own row ("`Delivery`: pending → sending → delivered") and from
+    a code block section headed by the name ("Hold:" then "waiting --event--> ready" lines)."""
+    machines = {}
+    lines = strip_code(design_text).split("\n")
+    kind_col = brick_col = None
+    for i, line in enumerate(lines):
+        if not line.lstrip().startswith("|"):
+            kind_col = brick_col = None
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if i + 1 < len(lines) and re.match(r"^\s*\|[-| :]+\|\s*$", lines[i + 1]):
+            kind_col = next((k for k, c in enumerate(cells) if c.lower() == "kind"), None)
+            brick_col = next((k for k, c in enumerate(cells) if re.match(r"bricks?\b", c, re.I)), 0)
+            continue
+        if kind_col is None or kind_col >= len(cells) or not re.search(r"state machine", cells[kind_col], re.I):
+            continue
+        cell = cells[brick_col] if brick_col < len(cells) else ""
+        name = re.search(r"`([A-Z][A-Za-z0-9]*)", cell)
+        if name:
+            machines[name.group(1)] = (set(re.findall(r"\b([a-z][a-z_-]*)\s*(?=%s)" % ARROW, cell))
+                                       | set(re.findall(r"%s\s*([a-z][a-z_-]*)" % ARROW, cell)))
+    for _, block in code_blocks(design_text):
+        current = None
+        for line in block.split("\n"):
+            head = re.match(r"^\s*`?([A-Z][A-Za-z0-9]*)`?\s*:\s*$", line)
+            if head:
+                current = head.group(1) if head.group(1) in machines else None
+                continue
+            if current is None:
+                continue
+            m = re.match(r"^\s*([a-z][a-z_-]*)\s+--.*?-->\s*([a-z][a-z_-]*)", line)
+            if m:
+                machines[current] |= {m.group(1), m.group(2)}
+            t = re.match(r"^\s*terminal:\s*(.*)$", line, re.I)
+            if t:
+                machines[current] |= {w for w in re.findall(r"[a-z][a-z_-]*", t.group(1)) if w != "none"}
+    return machines
+
+
+def check_design(design_text, s5, components, s3_code="", s4=""):
     """Congruence with the source design: same components, same verbs."""
     errors, warnings = [], []
     comps = design_components(design_text)
@@ -305,7 +359,10 @@ def check_design(design_text, s5, components, s3_code=""):
                 warnings.append("--design: utility `%s` from the design is not mentioned in section 5" % name)
         else:
             errors.append("--design: %s `%s` is in the design but has no section 5 subsection" % (kind, name))
+    s5_kinds = {n: k for n, k, _ in section5_components(s5)}
     for h in sorted(heads - set(comps)):
+        if s5_kinds.get(h) == "utility" and re.search(r"`%s`" % re.escape(h), design_text):
+            continue    # a Utility the design names; only the walls table's typed rows are required
         errors.append("--design: `%s` is in section 5 but not in the design (a blueprint never adds components)" % h)
     bodies = {c.split("\n", 1)[0].strip().strip("`"): c for c in components}
     verbs = {(c, v) for c, v in DESIGN_CALL.findall(design_text) if c in comps}
@@ -342,11 +399,14 @@ def check_design(design_text, s5, components, s3_code=""):
                         bricks.add((name, b))
     for comp, brick in sorted(bricks):
         body = bodies.get(comp)
-        if body is not None and not re.search(r"\b%s\b" % re.escape(brick), body, re.I):
-            errors.append("--design: brick `%s` of `%s` is not in its section 5 subsection (list it under "
-                          "Internals)" % (brick, comp))
+        if body is None:
+            continue
+        named = re.search(r"`%s\b" % re.escape(brick), strip_code(body), re.I)   # `MayBorrow` or `mayBorrow`
+        if not named and brick.lower() not in {m.lower() for m in methods_of(body)}:
+            errors.append("--design: brick `%s` of `%s` is not named in its section 5 subsection (name it in "
+                          "backticks under Internals, or as a method)" % (brick, comp))
     # contracts keep their names
-    contracts = set(re.findall(r"`([A-Z][A-Za-z0-9]*)`\s+used by", design_text))
+    contracts = set(re.findall(r"`([A-Z][A-Za-z0-9]*)`,?\s+(?:is\s+)?used by", design_text))
     contracts |= set(re.findall(r"`([A-Z][A-Za-z0-9]*)\s*\{", design_text))
     for line in strip_code(design_text).split("\n"):
         if re.search(r"shared contract", line, re.I):
@@ -354,6 +414,20 @@ def check_design(design_text, s5, components, s3_code=""):
     for c in sorted(contracts - set(comps)):
         if not re.search(r"\b(?:interface|type|struct|enum)\s+%s\b" % re.escape(c), s3_code):
             errors.append("--design: shared contract `%s` from the design has no type of that name in section 3" % c)
+    # every state machine in the design keeps its name and its states in section 4
+    for machine, states in design_machines(design_text).items():
+        sections4 = re.split(r"^###\s+", s4, flags=re.M)[1:]
+        home = [m for m in sections4
+                if re.match(r"`?%s(?:Status|State|Lifecycle)?`?\s*$" % re.escape(machine), m.split("\n", 1)[0].strip())]
+        home = home or [m for m in sections4 if re.search(r"`%s`" % re.escape(machine), m)]
+        if not home:
+            errors.append("--design: state machine `%s` from the design is not in section 4 (head it '### %sStatus', "
+                          "or say 'the design's `%s` machine' under its heading)" % (machine, machine, machine))
+            continue
+        for st in sorted(states):
+            if not re.search(r"\b%s\b" % re.escape(st), home[0]):
+                errors.append("--design: state `%s` of the design's `%s` machine is missing from section 4"
+                              % (st, machine))
     # no methods the design doesn't have, where the design lists an API
     design_verbs = {}
     for c, v in verbs:
@@ -410,6 +484,9 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
     if assumed > decisions + carried:
         warnings.append("%d inline '(assumed)' tags but only %d decisions listed; list every one"
                         % (assumed, decisions + carried))
+    elif assumed < decisions:
+        warnings.append("%d decisions added but only %d marked *(assumed)* where they are used; mark each one "
+                        "at the place it applies, so a reader sees it there" % (decisions, assumed))
     if assumed and not re.search(r"decisions (added|carried)|assumptions", s1, re.I):
         errors.append("%d '(assumed)' tags but section 1 has no 'Decisions added by this spec' list" % assumed)
     open_questions = len(re.findall(r"\[NEEDS CLARIFICATION", prose))
@@ -495,15 +572,15 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
             errors.append("section 5, %s: no typed signature block" % name)
         if not re.search(r"failure|retr", comp, re.I):
             errors.append("section 5, %s: no failure and retry semantics" % name)
-        if not re.search(r"may call", comp, re.I):
-            warnings.append("section 5, %s: no 'May call' line" % name)
+        if not MAY_CALL.search(comp):
+            warnings.append("section 5, %s: no '- **May call:**' line" % name)
 
     bodies = {c.split("\n", 1)[0].strip().strip("`"): c for c in components}
     kinds = {name: kind for name, kind, _ in section5_components(s5)}
     for name, kind, body in section5_components(s5):
-        may = re.search(r"may call[^\n]*(?:\n(?!- \*\*)[^\n]*)*", body, re.I)
+        may = MAY_CALL.search(body)
         may_text = may.group(0) if may else ""
-        for callee, method in flow_calls(body):
+        for callee, method, line in flow_calls(body):
             if callee == name or callee not in kinds:
                 continue
             ck = kinds.get(callee)
@@ -513,8 +590,9 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
             elif may and not re.search(r"\b%s\b" % re.escape(callee), may_text):
                 errors.append("section 5, %s: its flow calls `%s.%s`, which its 'May call' line doesn't allow"
                               % (name, callee, method))
-            elif kind == "manager" and ck == "manager":
-                warnings.append("section 5, %s: calls Manager `%s`; that is allowed only through a queue" % (name, callee))
+            elif kind == "manager" and ck == "manager" and not QUEUED.search(line):
+                warnings.append("section 5, %s: calls Manager `%s` directly; a Manager may call another only "
+                                "through a queue (say so on that flow line: 'through the queue')" % (name, callee))
     check_c4(s1, s5, components, kinds, errors, warnings)
     for n, item in enumerate(items, 1):
         enforced = re.split(r"enforced (?:by|in|at)", item, flags=re.I)
@@ -597,7 +675,7 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
              "open_questions": open_questions}
 
     if design_text is not None:
-        e, w, n = check_design(design_text, s5, components, contract_code)
+        e, w, n = check_design(design_text, s5, components, contract_code, s4)
         errors += e
         warnings += w
         stats["design_components"] = n

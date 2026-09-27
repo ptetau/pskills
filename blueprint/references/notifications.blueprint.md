@@ -70,6 +70,9 @@ Each of these was open in the design, so this spec decides it. Check these first
 - Calls to vendors give up after 10 s. Change this once we know how fast the vendors
   really are. If wrong: one number per channel in `DeliveryAccess` changes.
 - Times are ISO 8601 strings in UTC. If wrong: the `Instant` type changes.
+- Each product system proves who it is with its own API key. If wrong: only `EventsApi`
+  changes.
+- Staff sign in with the company's sign-in. If wrong: only `AdminPortal` changes.
 
 ### Words used here
 
@@ -348,7 +351,8 @@ call them.
 
 - **Purpose:** receives events that other systems post over HTTP.
 - **Encapsulates:** which systems send events, and how.
-- **Constraints:** validates and forwards only; no routing or rendering. Calls one Manager.
+- **Constraints:** each product system proves who it is with its own API key *(assumed)*.
+  Validates and forwards only; no routing or rendering. Calls one Manager.
 - **May call:** `NotificationManager`, infrastructure.
 
 ```ts
@@ -385,7 +389,8 @@ export interface Scheduler {
 
 - **Purpose:** lets people choose their channel and quiet hours.
 - **Encapsulates:** the preferences UI.
-- **Constraints:** calls one Manager per action.
+- **Constraints:** staff sign in with the company's sign-in *(assumed)*. Calls one Manager
+  per action.
 - **May call:** `NotificationManager`.
 
 ```ts
@@ -433,7 +438,7 @@ export interface NotificationManager {
 - **Flow of `setPreferences`:** `RecipientsAccess.chooseChannel`, then
   `RecipientsAccess.setQuietHours`.
 - **Failure & retry:** `PROVIDER_UNAVAILABLE` is retryable: attempt `n` waits a random time
-  up to `min(1 h, 30 s × 2^n)` *(assumed)*. `PROVIDER_REJECTED` is final. After 5 attempts the
+  up to `min(1 h, 30 s × 2^n)`. `PROVIDER_REJECTED` is final. After 5 attempts the
   delivery becomes `dead` with `RETRIES_EXHAUSTED` and is logged. Two workers racing on
   one delivery are resolved by the compare-and-set in `OutboxAccess.startAttempt`; the
   loser gets `INVALID_TRANSITION` and moves on.
@@ -459,7 +464,9 @@ export interface RoutingEngine {
 - **Failure & retry:** deterministic; returns `NO_REACHABLE_CHANNEL` as a value; never
   retried.
 - **Internals:** policies applied in order: `Expand` (event to recipients), `Prefer`
-  (channel), `QuietHours` (defer non-urgent).
+  (channel), `QuietHours` (hold what can wait). Only `password.reset` and `alert.*` are
+  urgent *(assumed)*. Quiet hours default to 22:00 to 07:00 in the person's own time zone
+  *(assumed)*.
 
 #### RenderingEngine
 

@@ -17,7 +17,7 @@
 - **Constraints:** <deadlines, team, platform, compliance, host-system conventions>
 - **Host system (subsystem mode):** <language, framework, where it attaches, owners>
 - **Assumptions** (made instead of asking; each one is a question to confirm):
-  - <assumption> — <what changes in the design if it is wrong>
+  - <assumption>. If wrong: <what changes in the design>.
 
 ```mermaid
 C4Context
@@ -49,14 +49,17 @@ One line per technical word this document uses, explained in plain words (see
 | F1 | <...> | yes |
 | F2 | <...> | no — variation of F1 |
 
-Core use cases (the few that express the essence of the system; everything else is a
-variation of these): <UC1 — ...>, <UC2 — ...>
+Core use cases (the few that carry the essence of the system; everything else is a
+variation of them):
+
+- UC1: <one line>
+- UC2: <one line>
 
 ## 3. Volatility register: what is likely to change
 
 | ID | What changes | Axis | Evidence | Likelihood | Contained by |
 |----|--------------|------|----------|------------|--------------|
-| V1 | <e.g. which channels exist and which vendor delivers each> | over time / across customers | <interview, roadmap, git hotspot, ticket> | high / med / low | <component> |
+| V1 | <e.g. which channels exist and which vendor delivers each> | over time / across customers | <interview, roadmap, git hotspot, ticket> | high / med / low | <component; plus any new part the change-simulation exceptions allow, such as a new ResourceAccess> |
 
 **Rejected candidates** (considered and deliberately not walled off):
 
@@ -105,9 +108,12 @@ calls, labelled with the verbs used. Utilities are left out: every part may call
 |-----------|------|--------------|---------------------------|----------|
 | <Client> | Client | V1 (who calls, and how) | entry points: `<Verb>`: `POST /route`, a command, a screen, or a user action (`ClickCell`) | one Manager per use case |
 | <Noun>Manager | Manager | V2 (workflow order) | `<Verb>(...)` | Engines, Access, Utilities; other Managers only via queue |
+| <Utility> | Utility | <what it does, e.g. who is signed in and what they may do> | `<Verb>(...)` | nothing |
 
 For a Client, the API column lists its entry points (routes, commands, screens, or the
-user actions a UI handles), so the blueprint types them instead of inventing them.
+user actions a UI handles), so the blueprint types them instead of inventing them. Add a
+Utility row only for one this system builds (a security policy); off-the-shelf logging
+needs no row.
 
 ## 5. Bricks: the small pieces inside each part
 
@@ -115,7 +121,8 @@ Shared contracts (one per wall, or one shared by walls on the same flow):
 
 - `<Name>` used by <components>: <fields, which bricks may set each, invariants>
 
-Composition medium: code | pipeline definition | state-machine table | config — <why>
+How the pieces are joined (the composition medium): <in code, a pipeline definition, a
+state-machine table, or config>. Why: <reason>.
 
 ### <Component name>
 
@@ -123,11 +130,14 @@ Composition medium: code | pipeline definition | state-machine table | config �
 |-------|------|------------------------|----------|--------|
 | <Render> | Transform | <fills a template for a locale> | Envelope → Envelope | F1, F3, V3 |
 
-State machines (if any). Draw only the legal transitions: anything not drawn is refused.
-Mark terminal states, if there are any.
+State machines (if any). Give each a row above with Kind `State machine`, and draw it
+under its name. Draw only the legal transitions: anything not drawn is refused. Mark
+terminal states, if there are any.
 
 ```
-<state> --event [guard] / effect--> <state>
+<Machine>:
+  <state> --event [guard] / effect--> <state>
+  terminal: <states, or none>
 ```
 
 ## 6. Feature assembly: each feature built from the pieces
@@ -141,10 +151,11 @@ Every feature, now and plausible future, written as a composition of existing br
 
 ## 7. Validation: proof the design holds
 
-**Use-case walkthroughs** (each core use case as a call chain, one call per line):
+**Use-case walkthroughs** (each core use case as a call chain, one call per line). Start
+with who the caller is and how the system knows it (a sign-in, an API key, a card):
 
 ```
-UC1 <name>
+UC1 <name>: <who calls>, known by <how>
   <Client>        → <Noun>Manager.<Verb>
   <Noun>Manager   → <Noun>Engine.<Verb>
   <Noun>Engine    → <Noun>Access.<Verb>
@@ -162,7 +173,7 @@ Result: <pass, or which rule broke and how the walls changed>
 A new ResourceAccess for a genuinely new resource, or a Client change for a new human
 step, is not a leak; note it in the Result column.
 
-**Orthogonality check:** <for each brick whose requirement could change a lot, what else
+**Independence check:** <for each brick whose requirement could change a lot, what else
 would change; anything other than "nothing" and how it was fixed>
 
 **Rule audit:** <call rules, naming, sizing, smells found and how they were fixed>
@@ -195,7 +206,7 @@ In inception mode, write "Not applicable: inception" and keep the number.
 ## 9. Risks and open questions
 
 - <the riskiest assumption in this design, and the cheapest way to test it first>
-- <open question — who decides>
+- <open question>. Who decides: <a person or role>.
 
 ## 10. Next steps
 
