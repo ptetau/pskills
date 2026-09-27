@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** █████████░░░ 10/13 steps completed (77%)
+**Progress:** ██████████░░ 11/13 steps completed (85%)
 
 ## How to use this document (read this first, every session)
 
@@ -207,7 +207,7 @@ stop and wait for human review.
   the "tell the tracker" line in each core skill
 - **Depends on:** Step 8
 
-### Step 12: End-to-end run and README · `[ ]` AUTO · Parallel group: none
+### Step 12: End-to-end run and README · `[x]` AUTO · Parallel group: none
 
 - **Do:** In a fresh scratch project, run one new intent from inbox to merged PR using only
   pdlc skills. Fix anything that breaks. Re-read every pdlc file for plain prose. Add a short
@@ -404,4 +404,21 @@ Proven: live run in a scratch project built .dashboard/index.html with real time
         guard blocked a request to read notes.txt. Passing the answer (dark, dense,
         #e11d48) saved style.md to ~/.claude/agent-memory/dashboard-builder/ and rebuilt
         the page in that style without the question.
+
+[2026-09-27] Step 12: done (tracker none; board part waits on step 11 access)
+Changed across three runs: Req trailer only for commits touching files outside pdlc/;
+         merge check finds the change for the branch being merged (it had passed
+         vacuously); retired requirements need no check; INSTALL explains making the merge
+         check a required CI check. README and INSTALL updated earlier.
+Proven: third run on a fresh copy of the Node CLI, only pdlc skills with "defaults", no
+        manual file edits; my only actions were approving merges after the merge check
+        printed ok. IN-0001 "greet in Spanish" → CH-0001 (CAP-greeting) and CH-0002
+        (JOB-greet-cli), each built check-first, verified, gate ok, merged.
+        `greet Ana --lang es` prints "Hola, Ana!", English stays default, 3/3 checks pass.
+        All 13 non-merge commits name their intent; both code commits name their
+        requirement. trace answered "what did IN-0001 change?".
+Surprises: run 1 — my test script merged despite a FAIL (script bug; the lesson is that
+           only CI can enforce the gate) and the branch-start commit had no Req. Run 2 —
+           the vacuous merge-check pass, and review asking for a check on a retired
+           requirement. All fixed with tests before run 3.
 ```
