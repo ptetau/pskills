@@ -1,0 +1,247 @@
+{
+  "skill": "quiz",
+  "skillPath": "quiz/SKILL.md",
+  "skillSha256": "3997cb74f1bdcd14168e117b754cf5dcacd1ff1b99bcb924490e81468c875437",
+  "createdAt": "2026-09-27T11:11:06Z",
+  "structure": {
+    "summary": "Multi-turn, one question per message. Questions go through the picker where one exists; eval runs have none, so they use the plain-markdown fallback. Each later message opens with a one-line ✓ echo of the last answer, then the next question. After the last answer comes a bulleted list of echoes and a one-sentence confirmation request; after confirmation, a short paragraph on what will be done, then the work.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "Fallback question: a bold heading line `**Question N of T · Label**`, the question on the next line, 2-4 options as a bulleted list of `**X · label**: sentence`, then one reply-hint line starting with `Reply`. No code block, box drawing or emoji."
+      },
+      {
+        "id": "S2",
+        "description": "Each option's sentence says what it does and why it fits, and ends on its cost or trade-off; at most one option is marked `(recommended)` and it is listed first."
+      },
+      {
+        "id": "S3",
+        "description": "After each answer: one echo line in an exact form (`✓ N/T Label → Choice`, optionally with `(note: …)`, `(you decided: recommended)`, `(you decided: first option)` or `(from: \"…\")`), then the next question in the same message."
+      },
+      {
+        "id": "S4",
+        "description": "After the last answer: a bulleted list with one echo line per question, in order, then a one-sentence confirmation request; after confirmation, a short paragraph saying what will be done, then the work."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "Every question uses the fallback layout: a bold `**Question N of T · Label**` heading, the question, 2-4 options as a bulleted `**X · label**: sentence` list, and one `Reply …` hint line, with no code block or box drawing.",
+      "pass": "Every question has the bold heading with `N of T` and a label, the question line, 2-4 bulleted options in `**X · label**: sentence` form, and a closing `Reply …` line; nothing is fenced or boxed. (If the capture records a picker call instead, its header is at most 12 characters, the question ends with `(N of T)`, and it has 2-4 options with the recommended one first.)",
+      "partial": "The layout is mostly right, but in at least one question the heading, counter, option form or reply line is missing or malformed.",
+      "source": "Step 3: Ask it (fallback layout)"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "Each option has one sentence saying what it does and why it fits this request, ending on its cost or trade-off.",
+      "pass": "Every option on every question, the first question included, has a full sentence covering what and why that ends on a concrete cost or trade-off.",
+      "partial": "Some option sentences are fragments, or skip the why or the cost/trade-off.",
+      "source": "Step 2: Write each question"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "The rhythm holds: each answer gets a one-line echo in one of the exact forms, at the top of the message that carries the next question.",
+      "pass": "Every answered question is echoed as one line in an exact form (`✓ N/T Label → Choice` with the right suffix), and that line opens the message carrying the next question or the resolved list.",
+      "partial": "The rhythm mostly holds, but an echo is missing, uses a different form, or sits in a message of its own.",
+      "source": "Step 4: Echo each answer, then ask the next"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "After the last answer the skill shows a bulleted list with one echo line per question and asks for confirmation in one sentence; once confirmed, it says what it will do in one short paragraph before doing the work.",
+      "pass": "The resolved view is a bulleted list with every question's echo line in order, then a one-sentence confirmation request; after confirmation a short paragraph precedes the work.",
+      "partial": "The ending is there but incomplete: a question missing from the list, the list fenced or not bulleted, a multi-sentence ask, or no paragraph before the work.",
+      "source": "Step 5: Confirm, then start"
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "No assistant message contains more than one question.",
+      "pass": "Every message asks at most one numbered question.",
+      "partial": "Never applies: two questions in one message is a miss.",
+      "source": "Step 3; What not to do"
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "A question marks at most one option `(recommended)`, lists it first, and only when something the user said points to it, which its sentence names; with nothing to go on, no option is marked.",
+      "pass": "Every recommendation is listed first and names something the user said; questions with nothing to go on (typically the first question on a terse request) have no recommendation.",
+      "partial": "Recommendations exist, but at least one reason is generic, one is not listed first, or a question with nothing to go on is tagged anyway.",
+      "source": "Step 2: Recommend only on evidence"
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "The quiz commits to its question list up front: the total T stays the same from the first question to the last and matches the questions asked, and it is no more than about seven.",
+      "pass": "T never changes, equals the number of numbered questions asked, and is at most about seven (or /squiz is offered for more); any follow-up is plain prose, not a new numbered question.",
+      "partial": "Within the cap, but T changes mid-quiz, doesn't match the questions asked, or a follow-up is added as a numbered question.",
+      "source": "Step 1: Plan the questions before asking any"
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each echo records what the user actually replied, in the matching exact form: the choice, any note, `(you decided: recommended)` or `(you decided: first option)` for a deferral, `(from: \"…\")` for words matched to an option.",
+      "pass": "Every echo matches its reply and uses the matching form, notes and deferral markers included.",
+      "partial": "One echo drops a note, uses the wrong form, or maps a free-prose or deferred reply to a debatable option.",
+      "source": "Step 4: echo forms; reply reading"
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "No question, echo or resolved list is wrapped in a code block or drawn with box-drawing characters, and no emojis appear outside sample content.",
+      "pass": "Questions, echoes and the resolved list are plain markdown throughout: no fences, box drawing or decorative emojis.",
+      "partial": "One stray fence, box character or emoji.",
+      "source": "What not to do"
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The questions asked are the ones whose answers would materially change the work for this request, most load-bearing first, and none re-asks something the prompt already settled.",
+      "pass": "Every question would change the resulting work, the first is the biggest decision, and nothing already stated in the prompt is asked again.",
+      "partial": "Mostly right, but one question is filler, redundant with the prompt, or clearly out of order.",
+      "source": "Step 1: Plan the questions before asking any; Purpose"
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each question's options are realistic, distinct choices for this request, and any recommendation fits what the user said.",
+      "pass": "On every question the options are genuinely different and plausible for this request; each recommendation fits the stated context, and a question with nothing to go on has none.",
+      "partial": "One question has overlapping or strawman options, or a recommendation that ignores something the user said.",
+      "source": "Step 2: Write each question"
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The paragraph before the work and the work itself reflect every resolved answer and note, so the user gets what they chose.",
+      "pass": "Every answer and note visibly shapes the implication paragraph and the delivered work; nothing chosen is dropped or contradicted.",
+      "partial": "One answer or note is missing from, or softened in, the implication or the work.",
+      "appliesWhen": "the run reaches confirmation and the skill begins the work",
+      "source": "Step 5: Confirm, then start"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical",
+      "prompt": "a welcome email for new members of my climbing gym",
+      "exercises": "core card flow on an everyday writing task with several open decisions",
+      "replies": [
+        "B",
+        "A, with notes: mention the free intro belay class"
+      ]
+    },
+    {
+      "id": "P02",
+      "axis": "minimal",
+      "prompt": "a tagline",
+      "exercises": "a terse request with almost no context: question choice and plausible options from nothing",
+      "replies": [
+        "C",
+        "you decide"
+      ]
+    },
+    {
+      "id": "P03",
+      "axis": "rich input",
+      "prompt": "a 150-word bio for my conference talk page. I'm a backend engineer at a fintech, 8 years in, the talk is about idempotency keys in payment APIs, the audience is mid-level engineers, and it should be in third person.",
+      "exercises": "skipping decisions the prompt already settles (length, audience, person); parsing a parenthetical note",
+      "replies": [
+        "A",
+        "B (keep it modest, no buzzwords)"
+      ]
+    },
+    {
+      "id": "P04",
+      "axis": "ambiguous",
+      "prompt": "something for the team about the reorg",
+      "exercises": "an unclear format and audience: whether the first question pins down what the thing is",
+      "replies": [
+        "B",
+        "A",
+        "C, with notes: no names"
+      ]
+    },
+    {
+      "id": "P05",
+      "axis": "edge: one decision",
+      "prompt": "a name for my new grey kitten",
+      "exercises": "a request needing one or two questions at most: counter totals and a short quiz",
+      "replies": [
+        "A"
+      ]
+    },
+    {
+      "id": "P06",
+      "axis": "edge: near the cap",
+      "prompt": "an outline for the launch plan of our B2B analytics product. Audience, channels, timeline, budget, messaging, success metrics and owner are all undecided.",
+      "exercises": "many open decisions: staying within about seven questions or offering /squiz",
+      "replies": [
+        "A",
+        "B",
+        "A",
+        "C",
+        "B"
+      ]
+    },
+    {
+      "id": "P07",
+      "axis": "unusual domain",
+      "prompt": "the wording for a sign at our community seed library explaining how to borrow and return seeds",
+      "exercises": "options and recommendations in an unfamiliar domain; a deferred reply",
+      "replies": [
+        "A",
+        "go with your pick"
+      ]
+    },
+    {
+      "id": "P08",
+      "axis": "free-prose replies",
+      "prompt": "a toast for my sister's wedding",
+      "exercises": "matching free-prose replies to the closest option and echoing them",
+      "replies": [
+        "yeah the heartfelt one",
+        "short, under two minutes"
+      ]
+    },
+    {
+      "id": "P09",
+      "axis": "visual decisions",
+      "prompt": "the layout for a one-page portfolio site for a freelance illustrator",
+      "exercises": "visual choices: previews in the picker, or text options in the fallback; /squiz offered only if a short preview wouldn't do",
+      "replies": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "P10",
+      "axis": "notes on replies",
+      "prompt": "a short apology email to a customer whose order shipped a week late",
+      "exercises": "replies carrying notes that must appear in the echo, the implication and the email",
+      "replies": [
+        "B, with notes: offer 10% off their next order",
+        "A, with notes: sign it from Priya"
+      ]
+    }
+  ]
+}
