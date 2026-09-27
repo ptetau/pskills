@@ -19,7 +19,9 @@
     "runs",
     "similarity",
     "excluded",
-    "lostJudges"
+    "lostJudges",
+    "settle",
+    "trajectory"
   ],
   "properties": {
     "skill": {
@@ -49,6 +51,7 @@
       "required": [
         "prompts",
         "runs",
+        "wave",
         "maxTurns",
         "crossPerPrompt",
         "agents",
@@ -65,7 +68,12 @@
         "runs": {
           "type": "integer",
           "minimum": 2,
-          "description": "Repeats per prompt."
+          "description": "Most repeats per prompt (fewer ran if the eval stopped once settled)."
+        },
+        "wave": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Repeats per prompt per wave."
         },
         "maxTurns": {
           "type": "integer"
@@ -109,6 +117,10 @@
         "agentEstimate": {
           "type": "integer",
           "description": "Upper bound on agents this run could spawn."
+        },
+        "sessionModel": {
+          "type": "string",
+          "description": "What `session` meant for this run: the session's model name, when known."
         }
       }
     },
@@ -313,8 +325,11 @@
             "type": "integer"
           },
           "capture": {
-            "type": "string",
-            "description": "Absolute path of the run's capture file."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Path of the run's capture: in its worktree as returned by the workflow, then the copy in outputs/."
           },
           "status": {
             "enum": [
@@ -482,6 +497,98 @@
         "type": "string"
       },
       "description": "Labels of similarity judges that died; their item/scope is missing from stability."
+    },
+    "settle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "settled",
+        "settledAt",
+        "delta",
+        "patience",
+        "stopWhenSettled",
+        "wavesRun"
+      ],
+      "description": "Whether the running grade settled: it moved no more than delta points in each of the last patience waves, keeping its letter.",
+      "properties": {
+        "settled": {
+          "type": "boolean"
+        },
+        "settledAt": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "First wave from which the grade stayed settled."
+        },
+        "delta": {
+          "type": "number"
+        },
+        "patience": {
+          "type": "integer"
+        },
+        "stopWhenSettled": {
+          "type": "boolean"
+        },
+        "wavesRun": {
+          "type": "integer"
+        }
+      }
+    },
+    "trajectory": {
+      "type": "array",
+      "description": "The running grade after each wave, within-prompt stability only.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wave",
+          "runsPerPrompt",
+          "usable",
+          "quality",
+          "stability",
+          "overall",
+          "grade",
+          "moved"
+        ],
+        "properties": {
+          "wave": {
+            "type": "integer"
+          },
+          "runsPerPrompt": {
+            "type": "integer"
+          },
+          "usable": {
+            "type": "integer"
+          },
+          "quality": {
+            "$ref": "#/$defs/score"
+          },
+          "stability": {
+            "$ref": "#/$defs/score"
+          },
+          "overall": {
+            "$ref": "#/$defs/score"
+          },
+          "grade": {
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "F",
+              null
+            ]
+          },
+          "moved": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Change in overall since the previous wave."
+          }
+        }
+      }
     }
   },
   "$defs": {

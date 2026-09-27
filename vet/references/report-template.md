@@ -6,8 +6,10 @@
 **Suite:** `evals/[skill]/suite.json` · `[suiteSha256, first 12 chars]`
 **Run:** `[runId]` · [len(config.prompts)] prompts × [config.runs] runs ·
 [scores.usableRuns]/[scores.totalRuns] runs usable · confidence [scores.confidence]
-**Agents:** preset `[config.agents.preset]` · [each role whose model, effort or batch
-differs from the preset default, e.g. "grade haiku/low"; or "no overrides"]
+**Models:** skill runs on `[config.agents.run.model, with config.sessionModel if "session"]` ·
+judges on `[config.agents.grade.model, …]`
+**Agents:** preset `[config.agents.preset]` · waves of [config.wave] · [each role whose
+effort or batch differs from the preset default, e.g. "grade effort low"; or "no overrides"]
 
 *(If `skillSha256` differs from the suite's, add one line: "SKILL.md changed since this
 suite was written; the rubric may be stale. `/vet [skill] --regen` rebuilds it.")*
@@ -25,6 +27,20 @@ suite was written; the rubric may be stale. `/vet [skill] --regen` rebuilds it."
 Per-run quality: min [qualitySpread.min] · median [qualitySpread.median] · max [qualitySpread.max]
 
 *(Grade bands: A ≥ 90 · B ≥ 80 · C ≥ 70 · D ≥ 60 · F below.)*
+
+## How the grade settled
+
+*(schema: `trajectory[]` and `settle`. One row per wave; stability here is within-prompt
+only, so the final row can differ from the headline scores, which add the cross-prompt
+check.)*
+
+| Wave | Runs per prompt | Quality | Stability | Overall | Moved |
+|---|---|---|---|---|---|
+| 1 | [runsPerPrompt] | [quality] | [stability] | [overall] ([grade]) | [moved] |
+
+[One sentence: "Settled at wave N (M runs per prompt)" or "Not settled: the grade was
+still moving by X points at the last wave; more runs would help." If
+`settle.stopWhenSettled` stopped the eval early, say how many runs that saved.]
 
 ## Verdict
 

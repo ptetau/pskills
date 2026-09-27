@@ -207,24 +207,30 @@ much the same output every time, so `/vet` scores both:
 1. Reads the skill's SKILL.md and extracts the expected **output structure** and a
    **rubric** (structure, behavior and outcome items, weighted, each citing its source)
 2. Writes **10 varied test prompts**, with scripted user replies for interactive skills
-3. Runs **3 prompts × 10 repeats**, each in its own git worktree, in parallel via a `Workflow`
-4. **Rubric judges** grade every run: met / partial / missed / n/a, with evidence
-5. **Similarity judges** (one per prompt by default) classify and tally each rubric item
-   across repeats, and structure items across prompts: identical → equivalent → minor
-   drift → major drift → contradictory, with the split, e.g. `7 / 3 of 10`
-6. Scores **quality**, **stability**, and **overall** = √(quality × stability)
+3. Asks **which models** to use for the skill and for the judges, the biggest variable
+   in any eval
+4. Runs **3 prompts × 10 repeats** in waves, each run in its own git worktree, in
+   parallel via a `Workflow`
+5. **Rubric judges** grade every run: met / partial / missed / n/a, with evidence
+6. **Similarity judges** (one per prompt per wave by default) place each new run into
+   the groups so far for each rubric item and classify it: identical → equivalent →
+   minor drift → major drift → contradictory. Structure items are also compared across
+   prompts. The script tallies each split, e.g. `7 / 3 of 10`
+7. Scores **quality**, **stability**, and **overall** = √(quality × stability), and
+   records the grade after every wave so you can watch it **settle**. Add
+   `--stop-when-settled` to stop early once it does
 
 You choose what each agent does. Four roles (`run`, `grade`, `compare`, `cross`) each
 take a model, effort and batching. Presets set the batching:
 
-| Preset | Agents (3 × 10 runs) | Judges |
-|---|---|---|
-| `thorough` | ~93 | one per run, one per rubric item |
-| `lean` (default) | ~37 | one grader and one comparer per prompt |
-| `minimal` | ~34 | one judge per prompt grades and compares |
+| Preset | Agents, 3 × 10 runs in waves of 2 | One wave (`--wave 10`) | Judges |
+|---|---|---|---|
+| `thorough` | up to 213 | 93 | one per run, one per rubric item |
+| `lean` (default) | up to 61 | 37 | one grader and one comparer per prompt |
+| `minimal` | up to 46 | 34 | one judge per prompt grades and compares |
 
 Override per role in `evals/agents.json` or per run, e.g.
-`/vet quiz --agent grade.model=haiku --agent grade.effort=low`.
+`/vet quiz --agent grade.model=<model> --agent grade.effort=low`.
 
 The suite is saved to `evals/<skill>/suite.json` and reused, so later runs are
 comparable. You review the rubric and prompts once, when a suite is first written.
@@ -238,7 +244,12 @@ comparable. You review the rubric and prompts once, when a suite is first writte
 **Output (excerpt)**
 
 ```
-Quality 88 · Stability 74 · Overall 80.7 (B)    30/30 runs usable
+wave 1/5 (2 of 10 runs per prompt): quality 90.2 · stability 81.0 · overall 85.5 (B) · settling
+wave 2/5 (4 of 10 runs per prompt): quality 88.4 · stability 75.3 · overall 81.6 (B) · moved -3.9 · settling
+wave 3/5 (6 of 10 runs per prompt): quality 88.1 · stability 74.1 · overall 80.8 (B) · moved -0.8 · settling
+wave 4/5 (8 of 10 runs per prompt): quality 88.0 · stability 74.4 · overall 80.9 (B) · moved +0.1 · settled
+
+Quality 88 · Stability 74 · Overall 80.7 (B)    30/30 runs usable · settled at wave 4
 
 Where it varies
   R5 question order · P02 — major_drift
@@ -248,5 +259,5 @@ Where it varies
 
 Writes `evals/quiz/runs/<runId>/report.md`, `results.json`, and one capture per run.
 Options: `--prompts N`, `--sample M`, `--runs R`, `--use P02,P07`, `--regen`,
-`--preset`, `--agent role.key=value`.
+`--wave W`, `--stop-when-settled`, `--preset`, `--agent role.key=value`.
 

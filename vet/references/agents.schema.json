@@ -83,7 +83,7 @@
       "properties": {
         "model": {
           "type": "string",
-          "description": "\"session\" (default) inherits the session's model; otherwise an alias such as \"sonnet\" or \"haiku\", or a full model id."
+          "description": "\"session\" (default) inherits the session's model; otherwise any model alias or id the harness accepts."
         },
         "effort": {
           "enum": [
