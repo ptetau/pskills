@@ -122,9 +122,10 @@ differences:
    In the resolved view, number them `N/T` once the total is known.
 2. **No fixed list.** Unlike /quiz's Step 1, the list grows: each answer can open a
    follow-up question (see Drill behaviour below).
-3. **Free-text answers** (commands, file paths, branch names). In the picker, offer two
-   or three likely answers taken from the codebase and let "Other" take the rest. In the
-   fallback, drop the lettered options and end with `Reply with <what's needed>.`
+3. **Open questions** (a sentence, a command, a file path). Ask them in plain prose
+   even when the picker exists: a heading `**Question N · Label**`, the question, then
+   `Reply with <what's needed>.` Use the picker only when there are 2-4 real options,
+   such as a branch name you can suggest; never invent options to fill it.
 4. **No cap.** Unlike /quiz (about 7, then /squiz), the drill runs until every item in
    "Signs you're done asking" holds.
 
@@ -171,17 +172,15 @@ When no questions remain, list every answer as a bulleted list of echo lines, nu
 - ✓ 3/8 Location → internal/api/middleware/
 
 Then ask for the go-ahead, which gates Phase 2: in the picker, one `Confirm` question
-(`Write the plan (Recommended)` / `Change one`); in the fallback, one sentence:
+with options `Write the plan` and `Change one`, neither recommended; in the fallback,
+one sentence:
 *"Does this look right? Say `wait` if anything's wrong, otherwise I'll write the plan."*
 
 ##### Reply parsing (same as /quiz)
 
-Be permissive. Accept `A` / `a` / `Option A`; `B, with notes: …`; `B (…)`; `skip` /
-`you decide` / `n/a` / "go with your pick" (take the recommended option, or the first
-one if nothing was recommended). Match free prose ("the middleware one") to the closest
-option. If the user answers several at once (`1a 2b 3c`), accept them all, echo each
-line in order, and move on to the next unanswered question. Echo each answer in one of
-/quiz's exact forms.
+Read replies and write echoes exactly as [[quiz]]'s Step 4 says, including deferrals,
+notes, free prose and several answers at once. The only difference is the numbering:
+echoes read `✓ N Label → Choice` until the total is known.
 
 ##### Drill behaviour
 

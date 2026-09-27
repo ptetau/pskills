@@ -150,8 +150,8 @@ Write N prompts (default 10), P01, P02, …, each what a user would type after
   prompt, in the skill's reply format, enough to reach the end (the usual number of
   turns plus a final "yes, go"). Every repeat uses the same list in order, so keep
   replies meaningful whatever question they land on: option letters, "yes", "go
-  ahead". Run agents fall back to the recommended option if the list runs out. Leave
-  it empty for skills that never ask.
+  ahead". When the list runs out, run agents pick the recommended option, or reply
+  "you decide" if nothing is recommended. Leave it empty for skills that never ask.
 - **Order.** Put the most varied first. Runs use the first M prompts, so P01-P03 should
   already cover three different axes, typical first.
 
@@ -299,8 +299,9 @@ under `lostJudges`. Neither is ever counted as a pass or a fail.
    isn't in `.gitignore`, suggest adding it.
 6. Reply in a few lines: the three scores and grade, whether and when the grade
    settled, the weakest item and the least stable one in plain words, and the path to
-   `report.md`. If this suite has an earlier run with the same agent roles and models,
-   add the change in each score since then.
+   `report.md`. If there is an earlier run with the same `suiteSha256`, agent roles and
+   models, add the change in each score since then. A run graded under a different
+   suite version is never a baseline.
 
 ## Agent roles
 

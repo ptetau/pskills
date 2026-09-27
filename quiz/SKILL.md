@@ -111,13 +111,14 @@ picker call.
 ## Step 4: Echo each answer, then ask the next
 
 After each answer, write one echo line, then ask the next question in the same message.
-Echoes always take one of these exact forms:
+Echo the option's label without its ` (Recommended)` suffix. Echoes always take one of
+these exact forms:
 
 | The user… | Echo |
 |---|---|
 | picked an option | `✓ 2/3 Tone → Warm` |
 | picked and added a note | `✓ 2/3 Tone → Warm (note: keep it short)` |
-| deferred ("you decide", "skip", "go with your pick") | `✓ 2/3 Tone → Stoked (you decided: recommended)` |
+| deferred ("you decide", "skip", "n/a", "go with your pick") | `✓ 2/3 Tone → Stoked (you decided: recommended)` |
 | deferred where nothing was recommended | `✓ 2/3 Tone → Stoked (you decided: first option)` |
 | wrote words that match an option | `✓ 2/3 Tone → Warm (from: "the friendly one")` |
 | wrote their own answer ("Other") | `✓ 2/3 Tone → dry and funny` |
@@ -125,7 +126,7 @@ Echoes always take one of these exact forms:
 Reading replies in the fallback, be permissive: `A`, `a`, `Option A`,
 `B, with notes: …`, `B, …`, `B (…)`. If the user answers several at once (`1a 2b 3c`),
 accept them all, echo each line in order, and carry on with the first unanswered
-question.
+question, or go straight to Step 5 if none is left.
 
 ## Step 5: Confirm, then start
 
@@ -138,8 +139,8 @@ question and in order, with no code block around it:
 
 Then ask for the go-ahead:
 - **Picker:** one question with header `Confirm`, question `Go with these answers?`,
-  and options `Go (Recommended)` ("start with these answers") and `Change one` ("tell
-  me which answer to change").
+  and options `Go` ("start with these answers") and `Change one` ("tell me which answer
+  to change"). Neither is recommended: nothing the user said picks between them.
 - **Fallback:** one sentence: *"Going with these. Say `wait` if anything's wrong,
   otherwise I'll start."*
 
@@ -168,7 +169,8 @@ unless the user asks for "the squiz JSON":
 }
 ```
 
-A `null` `choice` means the user skipped that decision.
+A deferred answer ("you decide", "skip") records the option taken, with
+`"notes": "you decided"`. `choice` is `null` only when no option was taken at all.
 
 ## What not to do
 

@@ -123,20 +123,20 @@
       "id": "R11",
       "kind": "outcome",
       "weight": 3,
-      "criterion": "Each card's options are realistic, distinct choices for this request, and the recommendation is the sensible default given what the user said.",
-      "pass": "On every card the options are genuinely different, plausible for this request, and the recommendation fits the stated context.",
-      "partial": "One card has overlapping or strawman options, or a recommendation that ignores something the user said.",
-      "source": "Rules of the look #4-5"
+      "criterion": "Each question's options are realistic, distinct choices for this request, and any recommendation fits what the user said.",
+      "pass": "On every question the options are genuinely different and plausible for this request; each recommendation fits the stated context, and a question with nothing to go on has none.",
+      "partial": "One question has overlapping or strawman options, or a recommendation that ignores something the user said.",
+      "source": "Step 2: Write each question"
     },
     {
       "id": "R12",
       "kind": "outcome",
       "weight": 3,
-      "criterion": "The implication paragraph and the work that follows reflect every resolved answer and note, so the user gets what they chose.",
+      "criterion": "The paragraph before the work and the work itself reflect every resolved answer and note, so the user gets what they chose.",
       "pass": "Every answer and note visibly shapes the implication paragraph and the delivered work; nothing chosen is dropped or contradicted.",
       "partial": "One answer or note is missing from, or softened in, the implication or the work.",
       "appliesWhen": "the run reaches confirmation and the skill begins the work",
-      "source": "Flow step 8"
+      "source": "Step 5: Confirm, then start"
     }
   ],
   "prompts": [
