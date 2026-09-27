@@ -197,8 +197,8 @@ stop and wait for human review.
 
 ### Step 11: Tracker port and `board` · `[ ]` GATED · Parallel group: none
 
-- **Do:** Ask the user which board comes first (Linear, Jira or GitHub Projects). Write that
-  adapter and the `board` skill, outbound only. Make every core skill tell the tracker port
+- **Do:** The user chose GitHub Projects and Linear. Write both adapters and the `board`
+  skill, outbound only. Make every core skill tell the tracker port
   when it changes a status.
 - **Done when:** the test project's intent and changes appear as a card and sub-cards in the
   right columns, and move when their status changes.
@@ -377,4 +377,16 @@ Proven: on pyapp, /pdlc:trace went from tasks/store.py:24 (os.replace) to commit
         that CH-0002's merge hadn't been recorded yet. The next intake then ran the
         catch-up: both changes set to merged and IN-0001 to done.
 Surprises: skills weren't running the catch-up until told to in their own first line.
+
+[2026-09-27] Step 11: in progress (blocked on board access)
+Changed: adapters tracker-github-projects and tracker-linear; board/SKILL.md written in
+         full with a dry-run mode; config template gains "Tracker settings"; outline
+Decided: user chose GitHub Projects and Linear. A card's key is stored in the intent's or
+         change's existing Ticket field. GitHub Projects has no sub-items for drafts, so
+         change cards carry the intent ID in their title; Linear uses sub-issues.
+Proven: /pdlc:board dry-run on pyapp (tracker set to a GitHub project) listed 3 intents
+        and 2 changes with the right target columns and said 5 cards would be created,
+        touching nothing.
+Not yet proven: real cards on a board. This session has no GitHub Projects tools (no gh
+        CLI, no project tools in the GitHub connector) and no Linear connection.
 ```

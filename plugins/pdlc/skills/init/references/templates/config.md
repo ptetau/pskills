@@ -8,7 +8,7 @@ One adapter per port. The name is a file in `pdlc/adapters/`.
 - checks: checks-command
 - review: review-agent
 - delivery: delivery-github
-- tracker: none
+- tracker: none (or tracker-github-projects, tracker-linear)
 
 ## Checks
 
@@ -30,3 +30,9 @@ Used only when a tracker adapter is set. pdlc stage → board column.
 - building: In progress
 - in review: In review
 - done: Done
+
+## Tracker settings
+
+Only needed when a tracker adapter is set. See the adapter's file for what goes here.
+
+- none

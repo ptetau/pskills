@@ -258,7 +258,7 @@ pdlc talks to the outside world only through **ports**.
 | checks | run checks; report pass or fail per requirement ID | a command recon finds in the repo | per-stack adapters, `claude plugin eval` |
 | review | independently check a diff against its change spec | the `reviewer` agent | `/code-review`, `/security-review` |
 | delivery | branch, commit, open a PR, block merge until verified | git and GitHub PRs | local git only |
-| tracker | show pdlc's state on a board | none | Linear, Jira, GitHub Projects |
+| tracker | show pdlc's state on a board | none; ships `tracker-github-projects` and `tracker-linear` | Jira |
 | explore | poke at the running app for surprises (optional) | `/probe` | none planned |
 
 **Not ports:** the spec files, IDs and statuses. Traceability depends on them being the same
@@ -434,9 +434,7 @@ pdlc can manage changes to this repository, `pskills`, including changes to pdlc
 
 ## 16. Open questions
 
-- Which board gets the first tracker adapter: Linear, Jira or GitHub Projects?
 - Should the CI check script ship in v1, or should the delivery adapter's check be enough to
   start with?
-- Which pdlc defaults should `init` always ask about, and which should it just apply?
 - How much of pskills should `init` map at first: every skill, or only the ones the first
   intent touches?
