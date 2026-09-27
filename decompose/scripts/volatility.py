@@ -8,12 +8,17 @@ established codebase:
      in how many months, by how many people, and how long since it last changed.
   2. Component change coupling - pairs of components that keep changing in the
      same commits. High coupling across a proposed wall means the wall leaks.
-  3. File hotspots and file change coupling - the same signals at file level.
+  3. File hotspots and file change coupling - the same signals at file level. Tornhill
+     describes a hotspot as the overlap of high change frequency and large size; this
+     script's cutoff (top quartile for both, among all changed files that still exist)
+     is its own choice.
 
 Change coupling follows code-maat (Tornhill): degree = shared commits / average
-commits of the pair, as a percentage. Pairs need an average of --min-revs commits
+commits of the pair, as a percentage, truncated. Pairs need an average of --min-revs commits
 and at least --min-shared shared commits. Commits touching more than --max-changeset
 files (sweeping renames, dependency bumps) are left out of coupling entirely.
+The thresholds are code-maat's defaults for *listing* a pair. They are noise floors to
+tune per codebase, not verdicts.
 
 Noise filters: merge commits, whitespace-only changes, commits listed in
 .git-blame-ignore-revs, lockfiles, vendored/built/generated paths (default globs plus
@@ -25,6 +30,7 @@ Examples:
   python volatility.py                          # whole repo, last 12 months
   python volatility.py --path src --depth 2     # components are src/<a>/<b>
   python volatility.py --first-parent           # one changeset per merged PR
+  python volatility.py --since 2026-01-01 --until 2026-04-01   # a fixed window
   python volatility.py --since "2 years ago" --json > volatility.json
 """
 
@@ -67,7 +73,7 @@ def run_git(args, cwd, stdin=None):
     return out.stdout.decode("utf-8", "replace")
 
 
-def read_commits(repo, since, path, first_parent):
+def read_commits(repo, since, until, path, first_parent):
     """Yield (sha, timestamp, author, [(path, added, deleted)]) newest first.
 
     Renames are followed: older commits are reported under the file's newest name.
@@ -80,6 +86,8 @@ def read_commits(repo, since, path, first_parent):
         args.append("--no-merges")
     if since:
         args.append("--since=" + since)
+    if until:
+        args.append("--until=" + until)
     if path:
         args += ["--", path]
     raw = run_git(args, repo)
@@ -187,9 +195,9 @@ def coupling(commit_sets, min_revs, min_shared, min_degree, limit):
         avg = (revs[a] + revs[b]) / 2.0
         if avg < min_revs or n < min_shared:
             continue
-        degree = 100.0 * n / avg
+        degree = int(100.0 * n / avg)  # code-maat truncates
         if degree >= min_degree:
-            rows.append({"a": a, "b": b, "shared": n, "degree": round(degree),
+            rows.append({"a": a, "b": b, "shared": n, "degree": degree,
                          "revs_a": revs[a], "revs_b": revs[b]})
     rows.sort(key=lambda r: (-r["degree"], -r["shared"], r["a"], r["b"]))
     return rows[:limit]
@@ -201,7 +209,7 @@ def analyse(opts):
     patterns = ([] if opts.no_default_excludes else DEFAULT_EXCLUDES) + opts.exclude
     skip = ignored_revs(repo)
 
-    commits = [c for c in read_commits(repo, opts.since, opts.path, opts.first_parent)
+    commits = [c for c in read_commits(repo, opts.since, opts.until, opts.path, opts.first_parent)
                if c[0] not in skip]
     all_paths = {f[0] for c in commits for f in c[3]}
     drop = {p for p in all_paths if glob_excluded(p, patterns)}
@@ -250,22 +258,24 @@ def analyse(opts):
                            "authors": len(comp_authors[comp]), "churn": comp_churn[comp],
                            "files": len(comp_files[comp]), "days_since_change": age(comp_last[comp])})
 
+    # Tornhill: a hotspot is where high change frequency overlaps large size. The cutoff
+    # (above the 75th percentile for both, over every changed file that still exists; strict,
+    # so ties at the cutoff don't count) is this script's.
+    loc = {name: count_lines(repo, name) for name in file_revs}
+    live = [name for name in file_revs if loc[name]]
+    loc_cut = sorted(loc[f] for f in live)[int(len(live) * 0.75)] if live else 0
+    rev_cut = sorted(file_revs[f] for f in live)[int(len(live) * 0.75)] if live else 0
     hotspots = []
     for name, n in file_revs.most_common(opts.top):
-        hotspots.append({"file": name, "commits": n, "churn": file_churn[name],
-                         "loc": count_lines(repo, name), "days_since_change": age(file_last[name])})
-
-    # a hotspot is both frequently changed and big (Tornhill: change frequency x size)
-    live = [h for h in hotspots if h["loc"]]
-    loc_cut = sorted(h["loc"] for h in live)[int(len(live) * 0.75)] if live else 0
-    rev_cut = sorted(h["commits"] for h in live)[int(len(live) * 0.75)] if live else 0
-    for h in hotspots:
-        h["hotspot"] = bool(h["loc"]) and h["loc"] >= loc_cut and h["commits"] >= rev_cut
+        hotspots.append({"file": name, "commits": n, "churn": file_churn[name], "loc": loc[name],
+                         "days_since_change": age(file_last[name]),
+                         "hotspot": bool(loc[name]) and loc[name] > loc_cut and n > rev_cut})
 
     return {
         "repo": repo,
         "shallow_clone": shallow,
         "since": opts.since,
+        "until": opts.until,
         "path": opts.path or ".",
         "depth": opts.depth,
         "changesets": "first-parent (one per merged PR)" if opts.first_parent else "commits (merges skipped)",
@@ -295,8 +305,9 @@ def table(rows, cols):
 
 def render(report, top):
     out = ["# Volatility report\n\n"]
-    out.append("repo `%s` · path `%s` · since `%s` · depth %d · %s · %d analysed, %d bulk commits left out of coupling\n"
-               % (report["repo"], report["path"], report["since"] or "all history", report["depth"],
+    out.append("repo `%s` · path `%s` · since `%s`%s · depth %d · %s · %d analysed, %d bulk commits left out of coupling\n"
+               % (report["repo"], report["path"], report["since"] or "all history",
+                  (" until `%s`" % report["until"]) if report["until"] else "", report["depth"],
                   report["changesets"], report["commits_analysed"], report["commits_excluded_from_coupling"]))
     if report["shallow_clone"]:
         out.append("\n**Warning:** shallow clone, so history is truncated. Run `git fetch --unshallow` first.\n")
@@ -307,10 +318,12 @@ def render(report, top):
         ("authors", "authors"), ("churn", "lines churned"), ("files", "files"),
         ("days_since_change", "days since change")]))
     out.append("\n## Component change coupling\n\nComponents that change in the same commits. "
-               "A high degree across a wall means the wall leaks, or the two belong together.\n\n")
+               "Listed pairs are questions, not verdicts: expected coupling is cohesion; "
+               "surprising coupling across a wall means it leaks, or the two belong together.\n\n")
     out.append(table(report["component_coupling"], [
         ("a", "component A"), ("b", "component B"), ("shared", "shared commits"), ("degree", "degree %")]))
-    out.append("\n## File hotspots\n\nMost-changed files. `hotspot` = top quartile for both commits and size.\n\n")
+    out.append("\n## File hotspots\n\nMost-changed files. `hotspot` = top quartile for both commits and size "
+               "among all changed files (this script's cutoff).\n\n")
     out.append(table(report["hotspots"], [
         ("file", "file"), ("commits", "commits"), ("churn", "lines churned"), ("loc", "loc"),
         ("days_since_change", "days since change"), ("hotspot", "hotspot")]))
@@ -325,6 +338,7 @@ def main(argv=None):
     p.add_argument("--repo", default=".", help="any path inside the repository (default: .)")
     p.add_argument("--path", default="", help="only analyse this subtree, relative to the repo root, e.g. src/billing")
     p.add_argument("--since", default="12 months ago", help='git date (committer date), e.g. "6 months ago"; "" for all history')
+    p.add_argument("--until", default="", help='git date; with --since, measures a fixed window (e.g. before vs after a change)')
     p.add_argument("--depth", type=int, default=1, help="directory levels below --path that make a component (default 1)")
     p.add_argument("--first-parent", action="store_true", help="treat each merge on the main line as one changeset (PR-level coupling)")
     p.add_argument("--top", type=int, default=25, help="rows per table (default 25)")

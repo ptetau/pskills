@@ -18,7 +18,8 @@ SICP names the three things any such system needs:
 2. **A means of combination**: a way to build bigger things from smaller ones.
 3. **A means of abstraction**: a way to name a combination and use it as a part.
 
-A design has all three, or features will be built by hand.
+The skill's reading: a design that lacks one of the three ends up building features by
+hand.
 
 ## What "orthogonal" means
 
@@ -42,12 +43,16 @@ a brick; it is how bricks are put together.
 | ↳ **Policy** | A Transform that returns a decision: which channel, which price, allowed or not, retry or give up. | Does a change of business rule touch only the policy, never the mechanism that uses it? |
 | **Transport** | Moves data out or between parts: a vendor API, a queue, a file, another service, an event bus. | Does changing the destination leave everything upstream untouched? Does it contain no business decisions? |
 | **Store** | Keeps data over time and hands it back through business verbs. No business rules inside. | Can the storage technology change behind it without any caller noticing? |
-| **State machine** | Remembers where a long-running thing is and what may happen next: states, events, guards, transitions. | Can every transition be written as a row in a table? Are its effects returned as commands, not performed inline? |
+| **State machine** | Remembers where a long-running thing is and what may happen next: states, events, guards, transitions. | Are the states, events, and transitions explicit, and are effects returned as commands rather than performed inline? (For many states, use Harel's statecharts, with nested and parallel states, rather than a flat table.) |
 | *Wiring* | The composition that binds bricks into a feature: code, a pipeline definition, or a table. | Is a new feature new wiring plus at most one new brick, with no logic in the wiring beyond selection and parameters? |
 
 Keep Transforms pure and push I/O to the edges (Inputs, Transports, Stores). Bernhardt
 calls this a functional core inside an imperative shell. It makes most bricks testable
 with no mocks.
+
+**A Store keeps data beyond one flow**, behind ResourceAccess. State that lives only while
+a process runs (the current game, a request in progress) is a State machine's own state,
+held by the Manager.
 
 **Kind is about role; location is about the wall.** A pull from a bank feed is an Input
 (it brings data into a flow), and it lives in a ResourceAccess because the vendor is
@@ -99,9 +104,10 @@ its invariants.
 ## Mechanism and policy
 
 A mechanism says *how* something can be done. A policy says *what, when, or whether*.
-Hydra (1974) made separating them a core rule because policy changes much faster than
-mechanism, and hard-wiring them together makes policy rigid and mechanism unstable
-(Raymond).
+Hydra (1974) made separating them a core design rule, so that one kernel of mechanisms
+could support many policies built on top of it. Raymond, writing about X, adds why it
+pays off in general: policy changes much faster than mechanism, and hard-wiring them
+together makes policy rigid and mechanism unstable.
 
 In practice: bricks are mechanism. "Which channel for this user", "which discount wins",
 "how many retries" are policy, supplied as data or as a Policy brick. If a brick has an
@@ -111,38 +117,47 @@ In practice: bricks are mechanism. "Which channel for this user", "which discoun
 
 1. **Start from two or three real features**, not an imagined platform. AWS's compass:
    "pick real customer problems you're trying to solve."
-2. **Break each feature down with Hickey's questions.** Map each answer to a brick kind:
+2. **Break each feature down with Hickey's questions** ("Simple Made Easy"), keeping each
+   answer separate from the others:
 
-   | Question | Maps to |
-   |----------|---------|
-   | *What* happens to the data? | Transforms |
-   | *Who* or what starts it? | Inputs |
-   | *When and where* does it go? | Transports (put a queue between A and B instead of A calling B) |
-   | *Why* this outcome? | Policies, as rules or data |
-   | *What must be remembered?* | Stores |
-   | *Where is it in its life?* | State machines |
+   | Hickey's question | What he means | In brick terms |
+   |-------------------|---------------|----------------|
+   | *What* | the operations: small sets of function specifications | each brick's small interface |
+   | *Who* | the entities, built from subcomponents passed in as arguments | wiring that hands bricks to each other, rather than bricks reaching for each other |
+   | *How* | the implementation, kept strictly apart from *what* | a brick's internals, hidden behind its interface |
+   | *When and where* | "stick a queue in there" instead of A calling B | Transports |
+   | *Why* | policy and rules | Policies, as rules or data |
+
+   The skill adds two questions of its own: *what must be remembered?* (Stores) and
+   *where is this thing in its life?* (State machines). Hickey warns that state complects
+   everything it touches, so keep it in few, explicit places.
 
 3. **Pull out the verbs that repeat across features.** Those are the brick candidates.
 4. **Define the shared contract** from the data every candidate needs to read or write.
-5. **Split anything that does two things.** AWS's 2003 definition: primitives are
-   indivisible; "if they can be functionally split into two they must."
+5. **Split anything that does two independent things.** AWS's 2003 vision for its public
+   services: primitives are indivisible; "if they can be functionally split into two they
+   must." Inside a codebase, balance this with Ousterhout's warning against *classitis*:
+   keep pieces together when they share information, when combining them simplifies the
+   interface, or when splitting would duplicate code.
 6. **Write every feature as wiring**: `Input → Transform → … → Transport`. A feature that
    cannot be written this way needs a new brick (justify it) or reveals a wrong wall.
 
 ## Choosing the composition medium
 
-Use the least powerful medium that works (W3C, *Rule of Least Power*).
+Use the least powerful medium that works (adapted from the W3C's *Rule of Least Power*,
+which was written for publishing on the Web).
 
 | Medium | Use when |
 |--------|----------|
 | Plain code calling bricks | Default. Compositions change at the same pace as the code. |
 | A table (rows of parameters) | Many variants of the same composition that differ only in values. |
-| A pipeline or state-machine definition as data | The composition itself is a recorded volatility, for example flows that differ per customer or change weekly without a deploy. |
+| A pipeline definition or stored workflow | The composition itself is a recorded volatility *and* it differs by kind of item, customer, or locale, or runs long across sessions and devices (Löwy's reasons for storing workflows, run by a workflow tool), or changes faster than you can deploy (the skill's addition). |
 | A rules engine or a DSL | Almost never, for your own wiring. |
 
 Hadlow's *Configuration Complexity Clock*: hard-coded values become config, config
 becomes a rules engine, the rules engine becomes a DSL, and you end up "hard coding
-everything, except now in a much crappier language." This is the Inner-Platform Effect.
+everything, except now in a much crappier language." The end state resembles the
+Inner-Platform Effect (Papadimoulis): a poor copy of the platform you started with.
 If the wiring needs loops or conditionals, write it in code.
 
 **User-written rules are different.** When end users author rules as a feature (an
@@ -161,7 +176,7 @@ of conditions and actions, no loops or variables) and grow it only on evidence.
 | Purity (Transforms) | Does it run with no I/O, clock, or globals? | Yes |
 | Depth | Is the interface small relative to what it hides? (Ousterhout: "deep modules") | Yes |
 | Easy for today | Is it easy to use for the current features? (If not, it is too general.) | Yes |
-| Earned | Does it serve two or more current features, or hold a recorded volatility? | Yes |
+| Earned | Does it serve two or more current features, or one current feature as a variant a recorded volatility names? | Yes |
 
 Ousterhout's three questions for a brick's interface:
 
@@ -174,27 +189,40 @@ needs, but the interface is not tied to one caller.
 
 ## Guardrails against over-building
 
-Bricks go wrong in one direction: too general, too early.
+Bricks usually go wrong by being too general, too early. They can also go wrong by being
+too small: Ousterhout's *classitis*, many shallow pieces whose interfaces cost more than
+they hide.
 
-- **Earn every brick.** A brick serves two or more current features, or it is the one
-  home of a recorded volatility. Otherwise, leave the logic inline in the composition.
-- **Rule of three,** when extracting bricks from existing code: do it once, duplicate it
-  the second time, extract it the third time.
+- **Earn every brick** (the skill's own rule). A Transform, policy, or Store serves two or
+  more current features, or it serves one current feature as one of the variants a
+  recorded volatility names (one channel, one kind of discount). Otherwise, leave the
+  logic inline in the composition. Inputs and Transports at the edges are exempt: every
+  feature needs a way in and out. Never merge bricks to satisfy this rule; a merged
+  brick with a mode flag is the smell below. This is looser than the rule of three on purpose: at design
+  time you are deciding where new code goes, not extracting existing duplication.
+- **Rule of three** (Roberts, via Fowler), whenever a brick would be extracted from
+  existing code, including host code in subsystem mode: do it once, duplicate it the
+  second time, extract it the third time. Two similar pieces don't yet justify a brick.
 - **Prefer duplication over the wrong abstraction** (Metz). The warning sign is passing
   parameters and adding conditional paths through shared code. The remedy is to inline
   the brick back into each caller, delete what each caller doesn't use, and extract again.
-- **YAGNI applies to features, not to changeability** (Fowler). Don't build a capability
-  nobody uses yet. Do keep the code easy to change.
+- **YAGNI** (Fowler) covers presumptive features *and* abstractions added for future
+  flexibility: "any abstraction that makes it harder to understand the code for current
+  requirements is presumed guilty." Its exemption is refactoring, effort that makes the
+  code easier to modify. So build bricks for today's features, and never a brick that
+  only a future feature needs.
 - **Future features are tests, not tasks.** Use them to check that the design would absorb
   them. Don't build them.
-- **Watch the public surface.** Every observable behavior of a brick will be depended on
-  by somebody (Hyrum's law). Expose as little as possible.
+- **Watch the public surface.** Hyrum's law: with enough users of an API, every
+  observable behavior will be depended on by somebody. A brick used by many compositions
+  gets there quickly, so expose as little as possible.
 
 ## Smells
 
 | Smell | What it means | Fix |
 |-------|---------------|-----|
 | A `mode`, `type`, or `kind` flag that switches between different behaviors | Two or more bricks in one | Split it. (A parameter the same behavior uses, such as a predicate or a threshold, is fine.) |
+| Many tiny bricks, each with an interface nearly as big as its body | Classitis (Ousterhout) | Merge pieces that share information or always change together |
 | A brick named after a feature (`SendWelcomeEmail`) | Feature code posing as a brick | Split into general bricks (`Render`, `Send`) plus wiring |
 | A brick that calls another brick directly to hand off work | When and where are tangled with what | Put the hand-off in the wiring or on a Transport |
 | Business rules inside a Transport or Store | Policy trapped in mechanism | Move the rule to a Policy. Exception: an invariant that must hold atomically with the write (no writes to a locked period) belongs in the Store's verb, as a guard |

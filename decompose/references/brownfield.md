@@ -9,8 +9,11 @@ that, how to read it, and how to attach a new subsystem without disturbing the h
 
 - Change history predicts defects better than code metrics. Graves et al. (2000): the
   number of times code has changed is a better indicator of faults than its length.
-  Nagappan and Ball (2005): relative churn separated fault-prone binaries from the rest
-  with 89% accuracy. Rahman and Devanbu (2013): process metrics beat code metrics.
+  Nagappan and Ball (2005): *relative* churn (normalized by size and time span) separated
+  fault-prone binaries from the rest with 89% accuracy, while absolute churn was a poor
+  predictor. Rahman and Devanbu (2013): process metrics beat code metrics.
+- `volatility.py` reports raw commit counts and churn. Read them against file size and the
+  length of the window, never as absolute scores.
 - Change coupling predicts defects too. D'Ambros, Lanza and Robbes (2009) found it
   correlates with defects more strongly than complexity metrics do. Cataldo et al. (2009)
   found logical dependencies explained most of the variance in fault proneness.
@@ -61,7 +64,10 @@ git log --oneline -- <hotspot file>          # what kind of change keeps happeni
 
 **Change coupling.** Degree is shared commits divided by the average commits of the
 pair. Thresholds follow code-maat: pairs need at least 5 commits on average, 5 shared
-commits, and 30% degree to be listed.
+commits, and 30% degree to be listed. These are noise floors for *listing* a pair, not
+verdicts. Tornhill tunes them per codebase ("I usually have to tweak and experiment") and
+typically ignores coupling below 30%. Coupling in itself is neither good nor bad; what
+matters is whether it is expected.
 
 | Pair | Meaning |
 |------|---------|
@@ -119,14 +125,22 @@ behavior runs: a dependency-injection binding, a factory, a config value, a feat
 
 ## Step 5 — Protect the new walls from the host
 
-**Anti-corruption layer** (Evans): "create an isolating layer to provide your system with
-functionality of the upstream system in terms of your own domain model." It talks to the
-host through the host's existing interface and translates in one or both directions.
+Which pattern applies depends on which side is downstream, meaning which side consumes
+the other's model.
 
-- Host types never cross it. The subsystem's API uses its own types.
-- When the subsystem reads from the host, the ACL is a ResourceAccess component over the
-  host: it hides the host as a volatile resource. When the host calls into the subsystem,
-  the ACL is a translator at the seam that builds the subsystem's own types from host types.
+**The subsystem calls the host: anti-corruption layer** (Evans). "As a downstream client,
+create an isolating layer to provide your system with functionality of the upstream
+system in terms of your own domain model." It talks to the host through the host's
+existing interface and translates. In this skill's terms it is a ResourceAccess component
+over the host, hiding the host as a volatile resource.
+
+**The host calls the subsystem: open-host service** (Evans). The subsystem publishes one
+API in its own terms (a published language). The host is now the downstream side, and the
+translator that turns host types into the subsystem's types sits on the host side of the
+seam. In Evans' terms that translator is the host's anti-corruption layer. Keep it thin
+and keep it in the seam.
+
+Either way, host types never cross into the subsystem.
 - If the host area is a big ball of mud, draw a boundary around it and don't try to model
   inside it (Evans).
 
@@ -171,8 +185,8 @@ points, find test points, break dependencies, write tests, then make the change.
 
 Conway (1968): organizations "are constrained to produce designs which are copies of the
 communication structures of these organizations." Team Topologies lists **change cadence**
-as a natural place to split a system, alongside business domain, regulation, risk,
-performance isolation, technology, and user personas.
+as a natural place to split a system, alongside business domain, regulatory compliance,
+team location, risk, performance isolation, technology, and user personas.
 
 - One team should own each new wall. If a wall is split across teams, it will leak
   along the team line.
@@ -181,18 +195,31 @@ performance isolation, technology, and user personas.
 
 ## Step 8 — Define success as a measurement
 
-Write the check into the design doc, for example: "Six months after the switch-over,
-re-run `volatility.py`. Coupling between `cart` and `checkout` is below 30%. Changes to
-promotions touch only `PricingEngine` and `PromotionsAccess`." If the numbers don't move,
-the wall leaks and the design needs another look.
+Write the check into the design doc. Measure only the period after the switch-over, and
+compare it with a window of the same length before it. A long window mostly contains
+commits from before the change and will report the old coupling. Tornhill suggests two or
+three months as a window for recent trends. For example:
+
+```
+python volatility.py --path shop --since 2026-01-01 --until 2026-04-01   # before
+python volatility.py --path shop --since 2026-05-01                      # after
+```
+
+"Three months after the switch-over, coupling between `cart` and `checkout` has fallen
+well below its old 62% (the skill's suggested bar: out of the report, under the 30%
+floor). Changes to promotions touch only `PricingEngine` and `PromotionsAccess`." If the
+numbers don't move, the wall leaks and the design needs another look.
 
 ## Rules for subsystem mode
 
 1. Measure before you decompose. Evidence nominates, reasoning decides.
-2. Don't put a wall between two components with coupling of 30% or more unless the wall
-   exists to absorb that coupling (behind an abstraction or ACL).
+2. Treat any pair the report lists (30% or more, code-maat's default floor) as a
+   question the design must answer. Don't put a wall between such a pair unless the wall
+   exists to absorb that coupling, behind an abstraction or a translation layer. (The
+   30% figure is the skill's heuristic borrowed from a tool default, not a law.)
 3. Enter the host only through seams with explicit enabling points.
-4. The subsystem owns its anti-corruption layer. Host types never cross it.
+4. Host types never cross into the subsystem: an anti-corruption layer where the
+   subsystem calls the host, an open-host service where the host calls the subsystem.
 5. Characterize the host's behavior at the seam before cutting.
 6. Stay releasable at every step. Delete transitional code on schedule.
 7. Keep volatile new code out of stable old packages, and don't depend directly on host
