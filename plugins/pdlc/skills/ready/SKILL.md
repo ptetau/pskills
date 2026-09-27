@@ -9,7 +9,7 @@ description: >
 
 # pdlc ready
 
-> Skeleton. Not built yet. See `pdlc/OUTLINE.md` sections 4 and 7.
+> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, sections 4 and 7.
 
 ## What it does
 
@@ -27,7 +27,7 @@ Makes sure every `proposed` requirement for one intent is clear, testable and co
 
 ## Steps
 
-1. For each proposed requirement, check it has acceptance checks that a test could prove.
+1. For each proposed requirement, check it has acceptance checks that a check could prove.
 2. Ask the user about anything unclear, one short question at a time, with a recommended
    answer (a simplified `/quiz`).
 3. Check the new requirements against the specs around them for contradictions

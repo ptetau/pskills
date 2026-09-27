@@ -9,7 +9,7 @@ description: >
 
 # pdlc conventions
 
-> Skeleton. Not built yet. See `pdlc/OUTLINE.md` section 10.
+> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, section 10.
 
 ## What it does
 

@@ -8,7 +8,7 @@ description: >
 
 # pdlc build
 
-> Skeleton. Not built yet. See `pdlc/OUTLINE.md` sections 5 and 6.
+> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, sections 5 and 6.
 > A simplified `/quiz-plan-execute`.
 
 ## What it does
@@ -22,7 +22,7 @@ Turns one change spec into code on its own branch.
 
 ## Writes
 
-- Code and tests, only in the files the change spec lists.
+- The change and its checks, only in the files the change spec lists.
 - One commit per step, with `Intent`, `Change`, `Req` and `Ticket` trailers.
 - Requirement status `built`. The change spec's progress log.
 
@@ -30,7 +30,7 @@ Turns one change spec into code on its own branch.
 
 1. Open a branch through the delivery port.
 2. For each step:
-   1. Write a test named with the requirement ID. Run it. It must fail.
+   1. Write a check named with the requirement ID. Run it. It must fail.
    2. Write the least code that makes it pass.
    3. Tidy up. Follow the design specs.
    4. Commit with the trace trailers. Log the step.

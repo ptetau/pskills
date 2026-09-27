@@ -9,7 +9,7 @@ description: >
 
 # pdlc trace
 
-> Skeleton. Not built yet. See `pdlc/OUTLINE.md` section 6.
+> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, section 6.
 
 ## What it does
 
@@ -19,15 +19,15 @@ Answers trace questions in plain words, with links.
 
 - `git blame` and commit trailers.
 - Specs, intents and change specs.
-- Test names tagged with requirement IDs.
+- Check names tagged with requirement IDs.
 
 ## Steps
 
 - **From code:** blame the line, read the commit's trailers, then show the requirement,
   its intents, and the ticket.
-- **From an intent:** list its requirements, their changes and commits, and the tests
+- **From an intent:** list its requirements, their changes and commits, and the checks
   that prove each requirement.
-- **From a requirement:** show its intents, its tests, and the code its commits touched.
+- **From a requirement:** show its intents, its checks, and the code its commits touched.
 
 ## Rules
 

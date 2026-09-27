@@ -9,7 +9,7 @@ description: >
 
 # pdlc intake
 
-> Skeleton. Not built yet. See `pdlc/OUTLINE.md` sections 4 and 5.
+> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, sections 4 and 5.
 
 ## What it does
 

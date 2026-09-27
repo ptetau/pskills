@@ -1,8 +1,8 @@
 # pdlc: outline
 
 pdlc is a development lifecycle harness for AI-driven work. It is a set of skills and agents
-that you drop into any project, new or old. It turns ideas into specs, specs into small
-changes, and changes into verified code. Every line of code can be traced back to the spec
+that you drop into any project, new or old, whatever kind of system it is. It turns ideas
+into specs, specs into small changes, and changes into verified code. Every line of code can be traced back to the spec
 it serves and the intent that asked for it.
 
 This outline is the design. It is written before anything is built, so expect to change it.
@@ -33,7 +33,7 @@ you. Only then can it merge.
 
 ```
  intent ──► spec patches ──► ready check ──► change spec(s) ──► build ──► verify ──► merge
- (inbox)    (job/cap/design)  (quiz, argue)   (one job or cap)   (TDD)    (tests,     (you
+ (inbox)    (job/cap/design)  (quiz, argue)   (one job or cap)   (TDD)    (checks,    (you
                                                                            reviewer)   approve)
 ```
 
@@ -120,8 +120,8 @@ proposed ──► ready ──► built ──► verified
 
 - **proposed**: written into the spec by intake, not yet checked.
 - **ready**: clear, testable and consistent with the rest of the specs.
-- **built**: code and tests exist on a branch.
-- **verified**: tests pass and review passed. Only now can the change merge.
+- **built**: the change and its checks exist on a branch.
+- **verified**: its checks pass and review passed. Only now can the change merge.
 
 Spec patches land in the real spec file straight away, with status `proposed`. There is one
 source of truth. If two intents touch the same requirement, they collide at spec time, when
@@ -131,7 +131,7 @@ To remove a requirement, a patch marks it `retiring`. It is deleted from the spe
 change that removes the code merges. Git keeps the history.
 
 Requirements found by recon in existing code start as `built` with `Source: recon`. They
-become `verified` once a change adds tests that prove them.
+become `verified` once a change adds checks that prove them.
 
 ---
 
@@ -185,13 +185,13 @@ The change spec is the only thing the builder needs to read. It is a simplified 
 The trace runs both ways, and each link is written down once.
 
 ```
- ticket ◄──► intent ◄──► requirement ◄──► test ◄──► code
- PROJ-88     IN-0012     CAP-email.R3     test name   commit trailers
+ ticket ◄──► intent ◄──► requirement ◄──► check ◄──► code
+ PROJ-88     IN-0012     CAP-email.R3     check name  commit trailers
 ```
 
 - **Intent → requirements**: the intent file lists them. Each requirement lists its intents.
-- **Requirement → tests**: every test carries the requirement ID in its name or tag, for
-  example `test CAP-email.R3 sends from template`.
+- **Requirement → checks**: every check carries the requirement ID in its name or tag, for
+  example a test called `CAP-email.R3 sends from template`.
 - **Code → requirement**: every commit carries trailers:
 
   ```
@@ -214,12 +214,13 @@ The `trace` skill answers both directions in plain words: "why does this line ex
 
 A requirement becomes `verified` only when all of these are true:
 
-1. **Tests pass.** Each requirement in the change has at least one test tagged with its ID,
-   and those tests pass. Tests are written before the code.
+1. **Checks pass.** Each requirement in the change has at least one check tagged with its
+   ID, and those checks pass. Checks are written before the change. A check is usually an
+   automated test, but can be anything that proves the requirement (see section 14).
 2. **Review passes.** A reviewer agent that did not write the code reads the change spec, the
    diff and the design specs. It checks:
    - the diff stays inside the change's files and its one job or capability;
-   - each acceptance check is met, and the tests really test it;
+   - each acceptance check is met, and the checks really prove it;
    - the design specs are followed;
    - every commit has its trace trailers.
 3. **You approve the merge.** Your time goes on judgment, not checklists.
@@ -254,7 +255,7 @@ pdlc talks to the outside world only through **ports**.
 | Port | Job | Default adapter | Later |
 |---|---|---|---|
 | inbox | list, read and add intents; set their status | markdown files in `pdlc/inbox/` | GitHub Issues, Linear, Jira |
-| tests | run tests; report pass or fail per requirement ID | a command recon finds in the repo | per-stack adapters |
+| checks | run checks; report pass or fail per requirement ID | a command recon finds in the repo | per-stack adapters, `claude plugin eval` |
 | review | independently check a diff against its change spec | the `reviewer` agent | `/code-review`, `/security-review` |
 | delivery | branch, commit, open a PR, block merge until verified | git and GitHub PRs | local git only |
 | tracker | show pdlc's state on a board | none | Linear, Jira, GitHub Projects |
@@ -351,7 +352,7 @@ pdlc is a Claude Code plugin. Its skills are called as `/pdlc:<name>`.
 | `ready` | Asks you about anything unclear (like `/quiz`), checks for contradictions (like `/argue`), then marks requirements `ready`. |
 | `change` | Splits a ready intent into milestones, one job or capability each, and writes a change spec for each. |
 | `build` | Builds one change spec, test first, one commit per step with trace trailers. Marks requirements `built`. |
-| `verify` | Runs the tests port and the review port. Marks requirements `verified` and opens the PR. |
+| `verify` | Runs the checks port and the review port. Marks requirements `verified` and opens the PR. |
 | `conventions` | Establishes or changes a convention with you, and files migration intents. |
 | `board` | Re-syncs every intent and change to the tracker. |
 | `trace` | Answers "why does this code exist?" and "what did this intent change?" |
@@ -379,16 +380,63 @@ You drop "let users reset their password" into the inbox as `IN-0012`.
 3. **change** writes two milestones. `CH-0031` adds templates to `CAP-email`. `CH-0032`
    builds `JOB-reset-password`, using email without editing it.
 4. **build** works through `CH-0031`, test first. Each commit carries its trailers.
-5. **verify** runs the tests and the reviewer. Both pass, so `CAP-email.R3` is `verified`
+5. **verify** runs the checks and the reviewer. Both pass, so `CAP-email.R3` is `verified`
    and a PR opens. You approve and it merges.
 6. The same happens for `CH-0032`. When it merges, `IN-0012` is `done`, and the card on your
    board moves to Done.
 
 ---
 
-## 14. Open questions
+## 14. Any system
+
+pdlc assumes only two things: the project is in git, and you work in Claude Code. Everything
+else is learned by recon or plugged in through a port.
+
+The words stretch to fit:
+
+- A **user** is whoever the system serves. A person clicking a screen, a developer calling an
+  API, an operator running a command, or someone typing a slash command in Claude Code.
+- A **job** is what that user is trying to get done.
+- A **capability** is something the system can do that jobs rely on.
+- A **check** is anything that proves a requirement and gives a pass or fail. Usually an
+  automated test. It can also be a script, a lint rule, an eval run, or a query against real
+  infrastructure. Checks that truly can't be automated are `manual check` items (section 7).
+
+| System | A job | A capability | A check |
+|---|---|---|---|
+| Web app | "pay an invoice" | payments, email | end-to-end test |
+| Library or API | "parse a config file" | tokenizer, error reporting | unit test |
+| Infrastructure | "deploy a new service" | networking, secrets | plan check, policy test |
+| Skill collection (this repo) | "clarify a task before starting" | question cards, plan format | `claude plugin eval`, frontmatter check |
+
+Recon learns which of these a project has. The checks port runs whatever the project uses.
+If a project has no way to run checks yet, the first intent `init` suggests is to add one.
+
+## 15. pdlc on itself
+
+pdlc can manage changes to this repository, `pskills`, including changes to pdlc.
+
+- **Two folders, two jobs.** `plugins/pdlc/` is the plugin's source. `pdlc/` at the repo root
+  is pdlc's state for this repo: its inbox, specs and change specs. They never mix.
+- **The installed version does the work.** Changes are always built by the pdlc installed
+  from the marketplace, never by the working copy being changed. A new version only takes
+  effect after it merges and you update the plugin. This stops a half-built change from
+  running itself.
+- **This repo's specs.** Each skill is a job, for example `JOB-clarify-task` for `/quiz` or
+  `JOB-run-lifecycle` for pdlc. Shared parts are capabilities, for example
+  `CAP-question-cards` or `CAP-plan-format`. The writing style is a design spec.
+- **This repo's checks.** Frontmatter and JSON must parse, `claude plugin validate` must
+  pass, and each skill gets evals that `claude plugin eval` can run. Where no eval exists
+  yet, the check is a `manual check`.
+- **Changing pdlc through pdlc.** A change to pdlc is an intent like any other. For example,
+  "add a Linear tracker adapter" becomes a capability change to pdlc, built and verified by
+  the installed pdlc.
+
+## 16. Open questions
 
 - Which board gets the first tracker adapter: Linear, Jira or GitHub Projects?
 - Should the CI check script ship in v1, or should the delivery adapter's check be enough to
   start with?
 - Which pdlc defaults should `init` always ask about, and which should it just apply?
+- How much of pskills should `init` map at first: every skill, or only the ones the first
+  intent touches?

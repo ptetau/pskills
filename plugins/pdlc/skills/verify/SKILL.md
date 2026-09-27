@@ -1,14 +1,14 @@
 ---
 name: verify
 description: >
-  Verifies a built pdlc change. Runs the tagged tests, sends the diff to an independent
+  Verifies a built pdlc change. Runs the tagged checks, sends the diff to an independent
   reviewer agent, marks requirements verified when both pass, and opens a PR for the user
   to approve. Use when the user says "/pdlc:verify" or a build has finished.
 ---
 
 # pdlc verify
 
-> Skeleton. Not built yet. See `pdlc/OUTLINE.md` section 7.
+> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, section 7.
 
 ## What it does
 
@@ -21,12 +21,12 @@ Decides whether a built change is good enough to merge. Then asks the user to ap
 ## Writes
 
 - Requirement status `verified`, on the change's branch.
-- A PR, through the delivery port, with a table of requirements, tests and results.
+- A PR, through the delivery port, with a table of requirements, checks and results.
 
 ## Steps
 
-1. Run the tests through the tests port. Every requirement in the change needs at least one
-   passing test tagged with its ID.
+1. Run the checks through the checks port. Every requirement in the change needs at least
+   one passing check tagged with its ID.
 2. Send the change spec, diff and design specs to the review port. The reviewer checks
    scope, acceptance, conventions and trailers.
 3. If either fails, send the change back to `build` with the findings.

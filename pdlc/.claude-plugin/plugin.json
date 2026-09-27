@@ -1,5 +1,0 @@
-{
-  "name": "pdlc",
-  "version": "0.1.0",
-  "description": "A development lifecycle harness: intents become specs, specs become small changes, changes become verified, traceable code."
-}

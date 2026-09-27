@@ -8,7 +8,7 @@ description: >
 
 # pdlc board
 
-> Skeleton. Not built yet. See `pdlc/OUTLINE.md` section 9.
+> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, section 9.
 
 ## What it does
 

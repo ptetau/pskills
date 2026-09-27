@@ -172,7 +172,19 @@ inbox, become job, capability and design specs, then small changes that each tou
 job or one capability. Changes are built test first, checked by an independent reviewer,
 and approved by you. Every commit traces back to its requirement and intent.
 
-Status: outline and skeletons only. Read `pdlc/OUTLINE.md` for the design and
+It fits any kind of system, and can manage changes to this repository, including
+changes to pdlc itself.
+
+Unlike the skills above, pdlc installs as a plugin from this repo's marketplace:
+
+```
+/plugin marketplace add ptetau/pskills
+claude plugin install pdlc@pskills --scope project
+```
+
+Full steps are in `plugins/pdlc/INSTALL.md`.
+
+Status: outline and skeletons only. Read `plugins/pdlc/OUTLINE.md` for the design and
 `plans/build-pdlc-v1.plan.md` for the build plan.
 
 ---

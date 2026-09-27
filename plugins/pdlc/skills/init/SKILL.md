@@ -8,11 +8,12 @@ description: >
 
 # pdlc init
 
-> Skeleton. Not built yet. See `pdlc/OUTLINE.md` sections 3, 10 and 11.
+> Skeleton. Not built yet. See the plugin's `OUTLINE.md`, sections 3, 10 and 11.
 
 ## What it does
 
-Gets a project ready for pdlc. After init, all work can enter through the inbox.
+Gets a project ready for pdlc, whatever kind of system it is. After init, all work can
+enter through the inbox.
 
 ## Reads
 
@@ -33,7 +34,8 @@ Gets a project ready for pdlc. After init, all work can enter through the inbox.
 4. Quiz the user on each default, one card at a time. The default is marked recommended,
    so `skip` accepts it. Write each answer as a design spec.
 5. Ask which adapter to use for each port. Write the choices to `config.md`.
-6. Tell the user how to add their first intent.
+6. If the project has no way to run checks yet, suggest adding one as the first intent.
+7. Tell the user how to add their first intent.
 
 ## Stop and ask when
 
