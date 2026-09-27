@@ -4,16 +4,20 @@
 **Date:** <YYYY-MM-DD> · **Scope:** <one line: what is inside the walls, what is not>
 
 > Walls come from volatility (where change is contained). Bricks come from orthogonal
-> primitives (how features are assembled). Every wall and every brick below traces to a
-> volatility (V-id) or a current feature (F-id). Anything that traces to neither was cut.
+> primitives (how features are assembled). Every component below traces to a volatility
+> (V-id); every brick traces to a volatility or a current feature (F-id). Anything that
+> traces to neither was cut.
 
 ## 1. Frame
 
-- **Problem:** <what this system does, for whom, in two sentences>
+- **Problem:** <what this system does, in two sentences>
+- **Users:** <who uses it and who calls it: people, systems, schedules>
 - **Nature of the business:** <what will not change while this system exists. These are
   deliberately NOT encapsulated.>
 - **Constraints:** <deadlines, team, platform, compliance, host-system conventions>
 - **Host system (subsystem mode):** <language, framework, where it attaches, owners>
+- **Assumptions** (made instead of asking; each one is a question to confirm):
+  - A1 <assumption> — <what changes in the design if it is wrong>
 
 ## 2. Features and use cases
 
@@ -64,14 +68,15 @@ flowchart TB
   RA1 --> R1
 ```
 
-| Component | Type | Encapsulates | Contract (business verbs) | May call |
+| Component | Type | Encapsulates | API (business verbs) | May call |
 |-----------|------|--------------|---------------------------|----------|
 | <Noun>Manager | Manager | V2 (workflow order) | `<Verb>(...)` | Engines, Access, Utilities; other Managers only via queue |
 
 ## 5. Bricks (implementation inside the walls)
 
-Shared contract that makes bricks composable: <the envelope / record / event type every
-brick accepts and returns — its fields and invariants>
+Shared contracts (one per wall, or one shared by walls on the same flow):
+
+- `<Name>` used by <components>: <fields, which bricks may set each, invariants>
 
 Composition medium: code | pipeline definition | state-machine table | config — <why>
 
@@ -116,18 +121,31 @@ Result: <pass, or which rule broke and how the walls changed>
 |------------|-----------------------------|--------|
 | V1 | <Component> | pass |
 
+A new ResourceAccess for a genuinely new resource, or a Client change for a new human
+step, is not a leak; note it in the Result column.
+
+**Orthogonality check:** <for each brick whose requirement could change a lot, what else
+would change; anything other than "nothing" and how it was fixed>
+
 **Rule audit:** <call rules, naming, sizing, smells found and how they were fixed>
+
+**Trace audit:** <any component without a V-id, any brick without an F-id or V-id, and
+what happened to it>
 
 **Measured coupling (subsystem mode):** <component pairs from volatility.py above 30%
 that a wall now separates, and why the design removes that coupling>
 
 **Cut list:** <walls or bricks considered and removed because nothing traced to them>
 
+**Revisions during validation:** <each failed check, the change made, and the re-run
+result, e.g. "V3 touched RenderingEngine and PracticeApp; moved template choice into
+RenderingEngine; re-run passes">
+
 ## 8. Seams and migration (subsystem mode)
 
 - **Attach point:** <the seam in the host where the subsystem plugs in>
 - **Anti-corruption layer:** <component that translates host concepts to this design's
-  contract, so host changes stop at it>
+  own types, so host changes stop at it>
 - **Steps** (each one shippable on its own; old path deleted last):
   1. <put an abstraction in front of the existing behavior (branch by abstraction)>
   2. <route callers through it>

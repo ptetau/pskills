@@ -49,10 +49,15 @@ Keep Transforms pure and push I/O to the edges (Inputs, Transports, Stores). Ber
 calls this a functional core inside an imperative shell. It makes most bricks testable
 with no mocks.
 
+**Kind is about role; location is about the wall.** A pull from a bank feed is an Input
+(it brings data into a flow), and it lives in a ResourceAccess because the vendor is
+volatile. A timer tick is an Input that lives in a Client (the scheduler).
+
 ## The shared contract
 
 Bricks compose because they agree on one data shape: an envelope, a record, an event. It
-is the equivalent of Unix text streams.
+is the equivalent of Unix text streams. (Not to be confused with a component's API, which
+is the business verbs callers use. The contract is what the bricks pass around inside.)
 
 - **One shape, many bricks.** Perlis: "It is better to have 100 functions operate on one
   data structure than 10 functions on 10 data structures."
@@ -66,6 +71,27 @@ is the equivalent of Unix text streams.
 - **No junk, no confusion** (Raymond). The contract should not be able to represent
   situations that cannot exist, and states that differ in reality must differ in the
   contract.
+
+**Scope.** Each wall has one shared contract for its bricks. Walls that pass data along
+the same flow may share one (the notifications example shares an `Envelope`); otherwise
+each wall keeps its own (the shop example's `Quote` stays inside `PricingEngine`).
+
+**Shapes at the edges.** Most bricks are `contract → contract`. The edges differ, and
+that's fine:
+
+| Kind | Shape |
+|------|-------|
+| Input | outside data → contract |
+| Transform, policy | contract → contract (a policy may return zero or many) |
+| Transport | contract → receipt |
+| Store | business verbs that take and return the contract |
+| State machine | (state, event) → (next state, commands to run) |
+
+**When the contract itself changes.** The contract is the least changeable thing inside a
+wall: reshaping it touches every brick. That is the price of composition, so keep it
+small. If the register says the data's shape will change (split transactions, a new
+currency field), keep the change additive: new optional fields, never renamed or
+repurposed ones.
 
 Write the contract down in the design: its fields, which bricks may set each field, and
 its invariants.
@@ -112,12 +138,18 @@ Use the least powerful medium that works (W3C, *Rule of Least Power*).
 | Plain code calling bricks | Default. Compositions change at the same pace as the code. |
 | A table (rows of parameters) | Many variants of the same composition that differ only in values. |
 | A pipeline or state-machine definition as data | The composition itself is a recorded volatility, for example flows that differ per customer or change weekly without a deploy. |
-| A rules engine or a DSL | Almost never. |
+| A rules engine or a DSL | Almost never, for your own wiring. |
 
 Hadlow's *Configuration Complexity Clock*: hard-coded values become config, config
 becomes a rules engine, the rules engine becomes a DSL, and you end up "hard coding
 everything, except now in a much crappier language." This is the Inner-Platform Effect.
 If the wiring needs loops or conditionals, write it in code.
+
+**User-written rules are different.** When end users author rules as a feature (an
+accountant's categorization rules, a marketer's promotions), the rules are customer data,
+not your wiring. The small language they are written in belongs to an Engine, as a set
+of condition and action bricks. Keep that language as small as the feature needs (a list
+of conditions and actions, no loops or variables) and grow it only on evidence.
 
 ## Tests every brick must pass
 
@@ -162,10 +194,10 @@ Bricks go wrong in one direction: too general, too early.
 
 | Smell | What it means | Fix |
 |-------|---------------|-----|
-| A `mode`, `type`, or `kind` flag that switches behavior | Two or more bricks in one | Split it |
+| A `mode`, `type`, or `kind` flag that switches between different behaviors | Two or more bricks in one | Split it. (A parameter the same behavior uses, such as a predicate or a threshold, is fine.) |
 | A brick named after a feature (`SendWelcomeEmail`) | Feature code posing as a brick | Split into general bricks (`Render`, `Send`) plus wiring |
 | A brick that calls another brick directly to hand off work | When and where are tangled with what | Put the hand-off in the wiring or on a Transport |
-| Business rules inside a Transport or Store | Policy trapped in mechanism | Move the rule to a Policy |
+| Business rules inside a Transport or Store | Policy trapped in mechanism | Move the rule to a Policy. Exception: an invariant that must hold atomically with the write (no writes to a locked period) belongs in the Store's verb, as a guard |
 | Flags and conditionals scattered to track progress | A hidden state machine | Make the state machine explicit |
 | Each brick takes its own input shape | No shared contract | Define one, adapt at the edges |
 | A brick with one caller and no volatility behind it | Speculative | Inline it |

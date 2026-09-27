@@ -29,7 +29,7 @@ in disguise: the kitchen is where you cook. The same volatility gets copied into
 domain, and the domains end up talking to each other in CRUD-like state changes. Löwy's
 one exception: domain decomposition works when the domains happen to map to areas of
 volatility. Domain language is still the right source for *names* and for the business
-verbs in contracts.
+verbs in each component's API.
 
 ## Finding the volatilities
 
@@ -99,6 +99,16 @@ within it changes. Managers hold the first, Engines the second.
 `UpdateBalance` or `ExecuteSql`. Those verbs relate to the nature of the business, so they
 are nearly immutable, while the storage behind them can change freely.
 
+A new workflow step that reorders or reuses existing facts changes only the Manager. A
+step that records a *new kind* of business fact needs a new verb; that is a new activity,
+not just a new sequence, so touching ResourceAccess is expected. Don't dodge it with a
+generic verb such as `RecordEvent`: that is CRUD by another name.
+
+**Vendors that reach the Client.** Some vendors touch the edge directly: an embedded
+widget, an inbound webhook. Keep the vendor-specific part in a thin Client adapter that
+hands the Manager a vendor-neutral result (a token, a normalized event). Everything
+after that goes through ResourceAccess.
+
 **Volatilities map to components, not one to one.** A component may hold several related
 volatilities. Some volatilities map to an operational concept (a queue, published events)
 or to a third-party service rather than to your own component.
@@ -111,8 +121,9 @@ Löwy sanctions four relaxations:
 1. Anyone may call Utilities.
 2. Managers and Engines may call ResourceAccess.
 3. Managers may call Engines.
-4. A Manager may **queue** a call to another Manager. This counts as calling down: the
-   queue is a resource, reached through its own access layer.
+4. A Manager may **queue** a call to another Manager. Löwy counts this as calling down:
+   the Manager hands a message to the queue (infrastructure, usually the message-bus
+   Utility), not to the other Manager.
 
 And these don'ts:
 
@@ -142,21 +153,46 @@ why the design wanted the call, then move the responsibility, or use a queue or 
   `MembersAccess`.
 - Manager prefix: a noun for the volatility of its use cases (`Enrollment`, `Notification`).
 - Engine prefix: a gerund or activity noun (`Pricing`, `Routing`, `Rendering`). Gerunds
-  belong to Engines only; a gerund elsewhere hints at functional decomposition.
+  belong to Engines only; a gerund elsewhere hints at functional decomposition. If the
+  prefix is also a feature's name (`Suggestion`), ask what activity would survive a
+  redesign of the feature (`Prediction`, `Matching`) and use that.
 - ResourceAccess prefix: a noun for the resource or its data (`Members`, `Payments`).
 - Never name a component after a feature (`BlackFridayDiscountService`) or a verb
-  (`SendEmail`). The business verbs belong in the contract, not the name.
+  (`SendEmail`). The business verbs belong in the API, not the name.
+
+## Concerns that touch every component
+
+**Cross-cutting business concerns** (audit trail, authorization, tenancy) touch every
+write but fail the cappuccino test, because they carry business meaning. Split each into
+three parts:
+
+| Part | Where it goes |
+|------|---------------|
+| The mechanism (a journal, a permission check, a tenant context) | a Utility |
+| The business policy (what is audited, who may do what) | a policy brick in an Engine, or data |
+| The enforcement point | the ResourceAccess verb, when it must hold atomically with the write; the Manager, when it is a workflow-level check |
+
+Tenant and caller identity travel in the call context, not as a parameter on every verb.
+
+**Writes that must be atomic across resources.** ResourceAccess components never call
+each other, so a write that spans two of them becomes the Manager's problem. First try to
+avoid it: put the facts that must change together behind one ResourceAccess, with one
+verb for the whole business action. When that is impossible, the Manager runs the steps
+as a State machine, and each step has a compensating verb that undoes it (a saga).
 
 ## Size and shape
 
 Löwy's experience (heuristics, not studies):
 
 - A typical system needs about ten building blocks, in order of magnitude: two to five
-  Managers, two to three Engines, three to eight ResourceAccess and Resources, and around
-  six Utilities. A dozen or two at most.
-- Fewer Engines than Managers: two Managers, likely one Engine; three Managers, likely two.
+  Managers, fewer Engines than Managers, three to eight ResourceAccess and Resources, and
+  around six Utilities. A dozen or two at most.
+- The Engine count follows the Managers: two Managers, likely one Engine; three, likely
+  two; five, likely three.
 - Eight Managers means the decomposition has already failed (it is functional).
 - Volatility should **decrease** going down the layers, and reuse should **increase**.
+  This is about *APIs*. A ResourceAccess over a volatile vendor changes often inside,
+  but its business verbs should rarely change.
 - Good architectures are symmetric: similar use cases produce similar call patterns.
   Investigate any asymmetry.
 
@@ -207,10 +243,11 @@ walls.
 | Components named after business nouns, each with its own everything | Domain decomposition |
 | A Client calling several Managers to complete one use case | The Client has become the system |
 | Services chained A → B → C, each passing the next one's parameters | Decomposition by time (a flowchart) |
-| CRUD verbs, SQL, or vendor types in a ResourceAccess contract | Access is not encapsulated |
-| A "Reporting" or "Database" component with no volatility behind it | A solution disguised as a requirement |
+| CRUD verbs, SQL, or vendor types in a ResourceAccess API | Access is not encapsulated |
+| A `Reporting` component with no volatility behind it, or a component named after a technology (`Database`) | A solution disguised as a requirement |
 | Many components, each for a change nobody expects | Speculative design |
-| Five or more Managers, or more Engines than Managers | Probably functional; check against the size heuristics |
+| More than five Managers, or more Engines than Managers | Probably functional; check against the size heuristics |
+| A generic verb such as `RecordEvent` or `Save` on a ResourceAccess | CRUD by another name |
 | An Engine that calls another Engine | A hidden sequence; it belongs in a Manager |
 | A lower layer that calls or subscribes to a higher one | Calling up |
 | One likely change touching several components | A volatility smeared across walls |

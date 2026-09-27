@@ -51,7 +51,7 @@ Rejected: *number of retries* (variable: a parameter, not a wall); *fax support*
 Clients          EventsApi   AdminPortal   Scheduler
 Managers         NotificationManager
 Engines          RoutingEngine   RenderingEngine
-ResourceAccess   RecipientsAccess   DeliveryAccess   NotificationLogAccess
+ResourceAccess   RecipientsAccess   DeliveryAccess   OutboxAccess
 Resources        Storage   email / SMS / Slack vendors
 Utilities        pub/sub · logging · secrets
 ```
@@ -59,12 +59,13 @@ Utilities        pub/sub · logging · secrets
 | Component | Calls |
 |-----------|-------|
 | each Client | `NotificationManager` only |
-| `NotificationManager` | `RoutingEngine`, `RenderingEngine`, `DeliveryAccess`, `NotificationLogAccess`, `RecipientsAccess` |
+| `NotificationManager` | `RoutingEngine`, `RenderingEngine`, `DeliveryAccess`, `OutboxAccess`, `RecipientsAccess` |
 | `RoutingEngine` | `RecipientsAccess` |
 | `RenderingEngine` | nothing (templates ship with it as files) |
 
 `Scheduler` is a client: time is just another caller. `NotificationManager` owns the flows;
-it is the only component that knows the order of steps.
+it is the only component that knows the order of steps. `OutboxAccess` has no row in the
+register: it hides the system's own storage, which the trace audit counts on its own.
 
 **Size check.** One Manager with two Engines is one Engine more than Löwy's usual ratio.
 Kept on purpose: routing rules and message content change for different reasons and are
@@ -72,19 +73,22 @@ owned by different people (product and compliance versus content writers). Mergi
 would put two volatilities behind one wall.
 
 **Bricks.** Shared contract: `Envelope { id, event, recipient, channel?, locale?, body?, attempts }`.
-Every brick takes and returns envelopes (a policy may return zero or many), so any brick can
-follow any other.
+Inputs produce envelopes, Transforms and policies take and return them (a policy may return
+zero or many), and Transports consume them. So any Transform can follow any other.
 
 | Component | Bricks | Kind |
 |-----------|--------|------|
-| NotificationManager | `OnEvent(type)`, `OnSchedule(cron)` | Input |
-| | `Collect(window)`, `Flush` | Store (backed by `NotificationLogAccess`) |
-| | `Delivery`: pending → sent → delivered, or failed → retrying → dead | State machine |
+| EventsApi | `OnEvent(type)` | Input |
+| Scheduler | `OnSchedule(cron)` | Input |
+| NotificationManager | `Delivery`: pending → sent → delivered, or failed → retrying → dead | State machine |
 | RoutingEngine | `Expand` (event → recipients), `Prefer`, `QuietHours` | Transform (policy) |
 | RenderingEngine | `Render(template, locale)` | Transform |
 | DeliveryAccess | `Email`, `Sms`, `Slack`, each `send(envelope) → receipt` | Transport |
+| OutboxAccess | `Hold(key, window)`, `Release(due)` | Store |
 
-Flows are data owned by the Manager. Routing policies are an ordered list per tenant.
+The Manager's other job is the wiring: one flow per use case, calling the bricks above
+through each wall's verbs. Flows are plain code for now; they become data only if V4 turns
+out to change weekly. Routing policies are an ordered list per tenant.
 
 Cut: a `Webhook` transport and an `OptOut` policy were drafted and removed. No current
 feature needs them. Each would be one new brick in one component if it arrives.
@@ -95,7 +99,7 @@ feature needs them. Each would be one new brick in one component if it arrives.
 |---------|-------------|------------|
 | F1 | `OnEvent(user.created) → Route → Render(welcome) → Send` | 0 |
 | F2 | `OnEvent(password.reset) → Route[channel=sms] → Render(reset) → Send` | 0 |
-| F3 | `OnEvent(activity.*) → Route → Collect(daily)` then `OnSchedule(08:00 local) → Flush → Render(digest) → Send` | 0 |
+| F3 | `OnEvent(activity.*) → Route → Hold(daily)` then `OnSchedule(08:00 local) → Release → Render(digest) → Send` | 0 |
 | F4 | `OnEvent(alert.*) → Route[team] → Render(alert) → Send` | 0 |
 | F5, F6 | `Prefer` and `QuietHours` inside `Route` | 0 |
 | F7 | `Delivery` state machine | 0 |
@@ -111,7 +115,7 @@ feature needs them. Each would be one new brick in one component if it arrives.
 | V1: add WhatsApp, or swap the SMS vendor | `DeliveryAccess` | pass |
 | V2: new regional rule | `RoutingEngine` | pass |
 | V3: new template or language | `RenderingEngine` (data only) | pass |
-| V4: escalate-if-unread flow | `NotificationManager` | pass |
+| V4: escalate-if-unread flow | `NotificationManager` (one new flow, one new `Wait` step) | pass |
 | V5: recipients move to a CRM | `RecipientsAccess` | pass |
 
 **Use-case walkthroughs**
@@ -123,13 +127,15 @@ UC1 notify about an event now
   RoutingEngine       → RecipientsAccess.Find
   NotificationManager → RenderingEngine.Render
   NotificationManager → DeliveryAccess.Deliver
-  NotificationManager → NotificationLogAccess.Record
+  NotificationManager → OutboxAccess.Record
 
 UC2 notify about accumulated events later
-  EventsApi           → NotificationManager.Notify        (flow ends in Collect)
-  NotificationManager → NotificationLogAccess.Hold
+  EventsApi           → NotificationManager.Notify        (flow ends in Hold)
+  NotificationManager → RoutingEngine.Route
+  RoutingEngine       → RecipientsAccess.Find
+  NotificationManager → OutboxAccess.Hold
   Scheduler           → NotificationManager.SendDigests
-  NotificationManager → NotificationLogAccess.Release
+  NotificationManager → OutboxAccess.Release
   NotificationManager → RenderingEngine.Render
   NotificationManager → DeliveryAccess.Deliver
 
@@ -181,7 +187,7 @@ Rejected: *rounding rules* (variable: a per-currency parameter); *checkout step 
 **Walls, scoped to the subsystem.** The host's cart and checkout keep acting as Managers:
 they own the sequence, and the sequence is stable. New components:
 
-| Component | Type | Contract |
+| Component | Type | API |
 |-----------|------|----------|
 | `PricingEngine` | Engine (V1) | `Quote(basket) → quote` |
 | `PromotionsAccess` | ResourceAccess (V2) | `ActivePromotions(at)`, `Define(promotion)` |
@@ -206,7 +212,7 @@ PricingEngine       → PromotionsAccess.ActivePromotions
 | Brick | Kind | One thing |
 |-------|------|-----------|
 | `Match(condition)` | Transform (policy) | selects lines by SKU, category, customer group, date window |
-| `PercentOff(n)`, `AmountOff(x)`, `FixedPrice(x)` | Transform | each adds one kind of adjustment to matched lines |
+| `PercentOff(n)`, `FixedPrice(x)`, `CheapestFree` | Transform | each adds one kind of adjustment to matched lines |
 | `Limit(scope, n)` | Transform (policy) | caps how often an adjustment applies, per order or per customer |
 | `BestOf`, `Exclusive` | Transform (policy) | decide which competing promotions survive |
 | `Round(currency)` | Transform | applies currency rounding once, at the end |
@@ -215,8 +221,10 @@ A promotion is data: `{match, adjustment, limit}`. The engine runs all active pr
 then the stacking policy (`BestOf` unless a promotion is `Exclusive`), then `Round`.
 
 The first draft had one `Adjust(kind)` brick. Its `kind` flag switched between three
-calculations, which is the mode-flag smell, so it became three bricks. A `Sequential`
-stacking policy was drafted and cut: no current feature needs it.
+calculations, which is the mode-flag smell, so it became three bricks. `Match(condition)`
+stays one brick: its condition is a predicate that the same code evaluates, a parameter
+rather than a switch. An `AmountOff` brick and a `Sequential` stacking policy were
+drafted and cut: no current feature needs them.
 
 **Feature assembly**
 
@@ -224,7 +232,9 @@ stacking policy was drafted and cut: no current feature needs it.
 |---------|-------------|------------|
 | 20% off a category | `Match(category=x) → PercentOff(20)` | 0 |
 | Staff discount | `Match(group=staff) → PercentOff(30)`, marked `Exclusive` | 0 |
-| 3-for-2 | `Match(sku in set, qty ≥ 3) → CheapestFree` | 1 (`CheapestFree`) |
+| 3-for-2 | `Match(sku in set, qty ≥ 3) → CheapestFree` | 0 |
+| Existing bundle price (migrated from host code) | `Match(sku in bundle) → FixedPrice(x)` | 0 |
+| future: $10 off orders over $100 (V1) | `Match(order_total ≥ 100) → AmountOff(10)` | 1 (`AmountOff`, inside `PricingEngine`) |
 
 **Migration** (each step ships on its own):
 

@@ -71,86 +71,73 @@ The full rules, sources, and smells are in `references/walls.md` and
 
 ### Walls (volatility-based decomposition)
 
-- **Decompose by what changes, not by what the system does.** (Parnas 1972: hide each
-  design decision that is likely to change inside one module. Löwy, *Righting Software*
-  2019: decompose based on volatility.)
-- **Volatile is not the same as variable.** A value that changes (a rate, a limit, a
-  list) is handled by data or a parameter. A thing is *volatile* when its change would
-  ripple across the system if left unwrapped.
-- **Look along two axes.** What changes for one customer over time? What differs between
-  customers at the same moment?
-- **Don't wall off the nature of the business.** Things that would make it a different
-  system if they changed are not volatilities. Walling them off is speculative design.
-- **Each volatility maps to one component type:**
+- **Decompose by what changes, not by what the system does** (Parnas 1972; Löwy,
+  *Righting Software*, 2019). Put each likely change behind one component.
+- **Volatile is not variable.** A value that changes (a rate, a limit) is data or a
+  parameter. A thing is volatile when its change would ripple across the system if left
+  unwrapped.
+- **Two axes:** what changes for one customer over time, and what differs between
+  customers at the same moment.
+- **Don't wall off the nature of the business.** Walls for changes nobody expects are
+  speculative design.
+- **Component types:**
 
   | Type | Encapsulates | Example |
   |------|--------------|---------|
-  | Client | who and what calls the system (UI, API, scheduler, other systems) | `AdminPortal` |
-  | Manager | the volatile *sequence*: the order of steps in a family of related use cases (a workflow) | `EnrollmentManager` |
+  | Client | who calls, and how: UI, API, scheduler, other systems | `AdminPortal` |
+  | Manager | the volatile *sequence* of a family of related use cases (a workflow) | `EnrollmentManager` |
   | Engine | a volatile *activity*: a business rule, calculation, or algorithm | `PricingEngine` |
   | ResourceAccess | volatile *access* to a resource, exposed as business verbs, not CRUD | `MembersAccess` |
   | Resource | the actual store or external system | database, vendor API |
-  | Utility | cross-cutting plumbing any component may use | logging, security, pub/sub |
+  | Utility | infrastructure any component may use | logging, security, pub/sub |
 
-- **Calls go down, never up, and never sideways.** Clients call one Manager per use case
-  and never call Engines. Managers call Engines and ResourceAccess. Engines call
-  ResourceAccess. Everything may call Utilities. Managers talk to other Managers only
-  through a queue. Engines don't call Engines; ResourceAccess components don't call each
-  other. Only Managers publish or subscribe to events.
-- **Features live in the integration, not in one component.** Löwy: "features are always
-  and everywhere aspects of integration, not implementation." A feature is a particular
-  way the Manager puts Engines and ResourceAccess together. Adding a feature should mostly
-  mean a new composition, not a new component.
+- **Calls go down, never up or sideways.** Clients → one Manager per use case → Engines
+  and ResourceAccess; Engines → ResourceAccess; anyone → Utilities. Managers reach other
+  Managers only through a queue. Only Managers publish or subscribe to events. Full
+  matrix in `references/walls.md`.
+- **Features are integration, not implementation** (Löwy). A new feature should mostly be
+  a new interaction between existing components.
 
 ### Bricks (orthogonal primitives)
 
-- **Orthogonal means independent.** Changing one brick never requires changing another.
-  (Hunt & Thomas's test: if a requirement behind one function changes a lot, how many
-  modules are affected? The answer should be one.)
-- **Build a small set of brick kinds:**
+- **Orthogonal means independent**: if the requirement behind one brick changes a lot,
+  nothing else changes (Hunt and Thomas).
+- **Brick kinds:**
 
   | Kind | Does | Example |
   |------|------|---------|
-  | Input | brings something into a flow: an event, a request, a timer tick | `OnEvent(type)`, `OnSchedule(cron)` |
-  | Transform | turns data into data, or into a decision; pure where possible | `Render`, `Match`, `QuietHours` |
-  | Transport | moves data somewhere else: a vendor, a queue, a file, another service | `Email.send`, `Publish` |
-  | Store | keeps data and hands it back through business verbs | `Collect(window)` backed by a log |
+  | Input | brings something into a flow: an event, a request, a timer tick, a pull from a feed | `OnEvent(type)`, `OnSchedule(cron)` |
+  | Transform | turns data into data, or into a decision (a *policy*); pure where possible | `Render`, `Match`, `QuietHours` |
+  | Transport | moves data out: a vendor, a queue, a file, another service | `Email.send`, `Publish` |
+  | Store | keeps data and hands it back through business verbs | `Hold(key, window)`, `Release(due)` |
   | State machine | remembers where a long-running thing is and what may happen next | `Delivery`: pending → sent → failed → retrying |
 
-- **One shared contract.** Every brick accepts and returns the same shape (an envelope,
-  record, or event). This is what makes composition free: any brick can follow any other,
-  and a composition can itself be used as a brick.
-- **Separate mechanism from policy.** Bricks are mechanism. What to do in a given case
-  (which channel, which discount) is policy, supplied as data or as a policy brick.
-- **Features are compositions.** Write every feature as `Input → Transform → … → Transport`.
-  A feature that cannot be written that way either needs a genuinely new brick (justify
-  it) or reveals a wrong wall.
-- **Guardrails against over-building.** A brick earns its place by serving two or more
-  current features, or by being the one home of a recorded volatility. Otherwise leave
-  the logic inline in the composition. When extracting bricks from existing code, wait
-  for the third occurrence (rule of three), and prefer duplication over the wrong
-  abstraction. Keep compositions in code until the composition itself is a volatility
-  (for example, flows that differ per customer); a config format that grows loops and
-  conditionals has become a worse programming language.
+- **A shared contract** (the one data shape the bricks pass around inside a wall, as
+  opposed to the wall's API) lets any brick follow any other.
+- **Mechanism, not policy.** Bricks are mechanism; "which" and "when" are policy, supplied
+  as data or as a policy brick.
+- **Earn every brick.** A brick serves two or more current features, or is the one home
+  of a recorded volatility. Otherwise the logic stays inline. Prefer duplication over the
+  wrong abstraction.
 
 ### The hybrid: how walls and bricks fit together
 
-| Wall | What its bricks look like |
-|------|---------------------------|
-| Manager | the composition layer: it assembles flows from Inputs, calls to Engines and ResourceAccess, and State machines. When workflows are volatile, the flow becomes data the Manager runs. |
-| Engine | a family of Transforms and policy bricks behind one stable contract. New rules are new bricks or new data, not new call paths. |
-| ResourceAccess | Stores and Transports behind business verbs. Vendor and storage details never cross its contract. |
-| Utility | stable bricks shared by everyone. |
-| Client | Inputs plus presentation. |
+| Wall | Its bricks |
+|------|------------|
+| Client | Inputs from the outside world (endpoints, UI, timers) plus presentation |
+| Manager | the wiring: flows that call Engines and ResourceAccess, plus State machines. It may own Inputs that subscribe to events. When workflows are volatile, flows become data the Manager runs. |
+| Engine | Transforms and policies behind one stable API. New rules are new bricks or new data, not new call paths. |
+| ResourceAccess | Stores, Transports, and Inputs that pull from vendors, behind business verbs. Vendor and storage details never cross its API. |
+| Utility | stable mechanisms shared by everyone |
 
 Three rules connect the two ideas:
 
 1. **Walls first, bricks second, then re-check the walls.** Bricks often reveal that two
    walls hide the same volatility (merge them) or that one wall hides two (split it).
-2. **Only stable bricks cross walls.** Volatile bricks stay inside their wall. Sharing a
-   volatile brick between two walls couples them. Shared bricks belong in Utilities.
-3. **A wall's contract never exposes its bricks.** Callers use business verbs. How the
-   bricks are wired inside is the wall's own business, free to change.
+2. **Only stable bricks cross walls.** Volatile bricks stay inside their wall. Shared
+   bricks belong in Utilities.
+3. **A wall's API never exposes its bricks.** Callers use business verbs; the wiring
+   inside is free to change.
 
 ## Two modes
 
@@ -186,7 +173,7 @@ Goal: know the mode, the scope, and the inputs before designing anything.
    *what kind* of change keeps happening. See `references/brownfield.md` for how to read
    the report.
 
-Output: a short frame (problem, users, constraints, host facts) and a numbered feature
+Output: a short frame (problem, users, constraints, assumptions, host facts) and a numbered feature
 list (F1, F2, …).
 
 ## Phase 1 — Core use cases
@@ -221,14 +208,15 @@ Goal: a list of what is likely to change, with evidence, and a list of what was 
 
 ## Phase 3 — Walls
 
-Goal: components, their types, their contracts, and the call graph.
+Goal: components, their types, their APIs, and the call graph.
 
 1. **Assign each volatility to one component** of the right type (the table above). A
    component may hold several related volatilities. Name each component for the
    volatility it hides, not for a feature: `PricingEngine`, not
    `BlackFridayDiscountService`. Names are two-part PascalCase with the type as suffix;
-   gerund prefixes are for Engines only.
-2. **Write each component's contract as business verbs.** ResourceAccess exposes verbs such
+   gerund prefixes are for Engines only. If an Engine's name is also a feature name, ask
+   what activity would survive a redesign of the feature, and name it that.
+2. **Write each component's API as business verbs.** ResourceAccess exposes verbs such
    as `Deliver`, `FindRecipients`, `RecordOutcome`, never `Insert`, `Update`, `Select` or a
    vendor's API.
 3. **Draw the call graph** by layer and check the call rules. Fix violations by moving
@@ -239,8 +227,10 @@ Goal: components, their types, their contracts, and the call graph.
    going down the layers. Apply the expendability test to each Manager (see
    `references/walls.md`). These are smell checks, not targets: when the design falls
    outside them, write down why.
-5. **Subsystem mode:** fit the new walls to the host. Pick the attach point (the seam),
-   and put an anti-corruption layer between host concepts and the subsystem's contract.
+5. **Place the cross-cutting concerns** (audit, authorization, tenancy) and any writes
+   that must be atomic across resources. `references/walls.md` says how.
+6. **Subsystem mode:** fit the new walls to the host. Pick the attach point (the seam),
+   and put an anti-corruption layer between host concepts and the subsystem's own types.
 
 ## Phase 4 — Bricks
 
@@ -252,14 +242,23 @@ Start with the most volatile component. See `references/bricks.md` for tests and
 2. **Write each feature as a short sentence and pull out the verbs.** Verbs that recur
    across features are brick candidates. Classify each: Input, Transform, Transport,
    Store, or State machine.
-3. **Define the shared contract**: the one data shape bricks exchange, its fields and
-   invariants. Every brick is `contract → contract` (a policy may return zero or many).
-4. **Split any brick that does two things.** A brick with a `mode` or `type` flag that
-   switches between behaviors is two or more bricks.
+3. **Define the shared contract**: the data shape the wall's bricks exchange, with its
+   fields and invariants. Each wall has one; walls that pass data along the same flow may
+   share it. Most bricks are `contract → contract` (a policy may return zero or many).
+   The edges differ: an Input produces the contract, a Transport consumes it and returns
+   a receipt, a State machine takes events and returns the next state plus commands. If
+   the register says the data's shape itself will change, keep that change additive
+   (see `references/bricks.md`).
+4. **Split any brick that does two things.** A flag that switches between different
+   behaviors means two or more bricks. A parameter the same behavior uses (a predicate, a
+   threshold) is fine.
 5. **Separate mechanism from policy.** Hard-coded "which" and "when" become policy bricks
    or data.
 6. **Choose the composition medium**: plain code by default; a pipeline definition, rule
    table, or state-machine table only when the composition itself is a recorded volatility.
+   Rules that end users write (an accountant's categorization rules, a marketer's
+   promotions) are different: they are customer data, and their small rule language
+   belongs to an Engine.
 7. **Re-check the walls** (rule 1 of the hybrid). Merge or split components if the bricks
    say so.
 
@@ -272,16 +271,24 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    one `Caller → Callee.Verb` per line so the direction of every call is visible. It must
    need no new component and break no call rule.
 2. **Change simulation.** For each volatility in the register, imagine it happening. List
-   the components that must change. Target: exactly one. Two or more means a leaky wall.
-3. **Feature assembly.** Write every current feature, and two or three plausible future
-   ones drawn from the register, as compositions of existing bricks. Target: zero new
-   bricks for current features, at most one for a future change, inside one component.
+   the components that must change. Target: one existing component. Two exceptions don't
+   count as leaks: adding one new ResourceAccess when the change brings in a genuinely new
+   resource (a new vendor or store), and a Client change when the change adds a new step
+   a person performs. Record either. Two or more existing components changing for any
+   other reason means a leaky wall.
+3. **Feature assembly.** Write every current feature as wiring over the brick catalog,
+   with no logic in the wiring beyond selecting bricks and passing parameters. This
+   checks that the catalog is complete. Then the real test: two or three plausible future
+   features drawn from the register. Each should need at most one new brick, inside one
+   component.
 4. **Orthogonality check.** For each brick, ask: if its requirement changed a lot, what
    else would change? Anything other than "nothing" is a hidden dependency.
 5. **Rule and smell audit.** Call rules, names, sizes, and the smell list in
    `references/walls.md` and `references/bricks.md`.
-6. **Trace audit.** Every wall traces to a volatility and every brick to a feature or a
-   volatility. Anything that traces to neither goes on the cut list.
+6. **Trace audit.** Every component traces to a volatility. (Every Client hides who
+   calls and how; every ResourceAccess over your own storage hides the storage
+   technology. Both count.) Every brick traces to a feature or a volatility. Anything that
+   traces to neither goes on the cut list.
 7. **Subsystem mode: measured coupling.** For every component pair above the coupling
    threshold in the volatility report, say whether the design puts a wall between them
    and why the coupling will fall. Name the metric to re-check after the change ships.
@@ -298,12 +305,12 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    ══════════════════════════════════════════════════
    VOLATILITIES  <n> contained · <n> rejected
    WALLS         <n> Managers · <n> Engines · <n> ResourceAccess · <n> Utilities
-   BRICKS        <n> across <n> components · contract: <name>
+   BRICKS        <n> across <n> components · contracts: <names>
    ──────────────────────────────────────────────────
    USE CASES     <passed>/<total> walk through cleanly
    CHANGE SIM    <passed>/<total> volatilities touch one component
    FEATURES      <n> current assembled · <n> future with ≤1 new brick
-   VERDICT       ready | <n> leaks to resolve: <short list>
+   VERDICT       ready | ready, <n> accepted leaks: <list> | <n> leaks to resolve: <list>
    ```
 
 3. Offer next steps: `/argue` the design doc to check it for contradictions, and
@@ -313,9 +320,10 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
 ## Rules
 
 - **Evidence over taste.** Every volatility cites evidence: the user's words, the roadmap,
-  or git history. Every wall and brick traces to a volatility or a feature.
+  or git history. Every component traces to a volatility; every brick to a feature or a
+  volatility.
 - **Never name a component after a feature.** Names come from the volatility hidden inside.
-- **Contracts speak business verbs.** No CRUD, no vendor types, no storage details across
+- **APIs speak business verbs.** No CRUD, no vendor types, no storage details across
   a wall.
 - **Walls before bricks; bricks never decide where walls go.** They can only prompt a
   re-check.

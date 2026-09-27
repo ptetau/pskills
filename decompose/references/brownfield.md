@@ -123,10 +123,10 @@ behavior runs: a dependency-injection binding, a factory, a config value, a feat
 functionality of the upstream system in terms of your own domain model." It talks to the
 host through the host's existing interface and translates in one or both directions.
 
-- Host types never cross it. The subsystem's contract uses its own shapes.
+- Host types never cross it. The subsystem's API uses its own types.
 - When the subsystem reads from the host, the ACL is a ResourceAccess component over the
   host: it hides the host as a volatile resource. When the host calls into the subsystem,
-  the ACL is a translator at the seam that builds the subsystem's contract from host types.
+  the ACL is a translator at the seam that builds the subsystem's own types from host types.
 - If the host area is a big ball of mud, draw a boundary around it and don't try to model
   inside it (Evans).
 
