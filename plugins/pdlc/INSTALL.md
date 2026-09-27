@@ -3,8 +3,8 @@
 pdlc is a Claude Code plugin. It works in any project that uses git, whatever the language,
 framework or kind of system.
 
-> pdlc is at the design stage. The skills install and load, but they are skeletons. See
-> `OUTLINE.md` for the design and `plans/build-pdlc-v1.plan.md` at the repo root for progress.
+> pdlc is new. See `OUTLINE.md` for the design and `plans/build-pdlc-v1.plan.md` at the
+> repo root for build progress.
 
 ## What you need
 
@@ -57,11 +57,31 @@ Init creates a `pdlc/` folder in your project. If you already have code, it maps
 asks you to confirm what it found. Then it asks you about a few defaults, one at a time.
 Reply `skip` to accept the recommended answer.
 
-When init finishes, add your first intent:
+When init finishes, add your first intent and take it through:
 
 ```
-/pdlc:intake
+/pdlc:intake <what you want, in your own words>
+/pdlc:ready        clear up anything vague, check for contradictions
+/pdlc:change       split it into changes, one job or capability each
+/pdlc:build        build the next change, check first
+/pdlc:verify       run checks and review, then propose the merge
 ```
+
+Add `defaults` to any of them to take the recommended answer instead of being asked.
+
+## Showing work on a board
+
+pdlc can show intents and changes as cards on a GitHub project or in Linear. In
+`pdlc/config.md`, set `tracker:` to `tracker-github-projects` or `tracker-linear`, fill in
+"Tracker settings" as the adapter file in `pdlc/adapters/` describes, and run:
+
+```
+/pdlc:board dry-run    see what would change
+/pdlc:board            create and move the cards
+```
+
+The session needs access to the board: the `gh` CLI for GitHub projects, or a Linear
+connection for Linear.
 
 ## Sharing with your team
 

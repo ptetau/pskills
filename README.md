@@ -184,8 +184,20 @@ claude plugin install pdlc@pskills --scope project
 
 Full steps are in `plugins/pdlc/INSTALL.md`.
 
-Status: outline and skeletons only. Read `plugins/pdlc/OUTLINE.md` for the design and
-`plans/build-pdlc-v1.plan.md` for the build plan.
+Skills: `init`, `intake`, `ready`, `change`, `build`, `verify`, `conventions`, `trace`,
+`board`. Agents: `recon`, `reviewer`. Read `plugins/pdlc/OUTLINE.md` for the design and
+`plans/build-pdlc-v1.plan.md` for build progress.
+
+**Example**
+
+```
+/pdlc:init
+/pdlc:intake let users reset their password by email
+/pdlc:ready
+/pdlc:change
+/pdlc:build
+/pdlc:verify
+```
 
 ---
 
