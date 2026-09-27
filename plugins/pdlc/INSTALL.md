@@ -93,6 +93,19 @@ deliverables, and anything stuck. It refreshes every 10 seconds; open
 `/pdlc:init` offers it, or run `/pdlc:dashboard` any time. It asks before installing,
 because it adds files to `~/.claude/agents/` and a rule to `~/.claude/CLAUDE.md`.
 
+## Enforcing the merge check
+
+pdlc runs its merge check before proposing a merge, but git itself doesn't know about it.
+To make sure nothing unverified reaches main, have your CI run this on every pull request
+and make it a required check:
+
+```
+python3 pdlc/bin/check_merge.py
+```
+
+It checks every change marked `in review`, and fails if any requirement it touches isn't
+`verified`.
+
 ## Sharing with your team
 
 With the project scope, `.claude/settings.json` ends up like this:

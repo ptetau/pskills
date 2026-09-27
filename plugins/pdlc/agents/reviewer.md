@@ -25,8 +25,10 @@ Check these, in order:
    names can't hold dots or dashes). The check could fail if the
    behaviour were wrong. A check that can't fail doesn't count.
 3. **Conventions.** The change follows each design spec the change spec lists.
-4. **Trace.** Every commit message on the branch has `Intent:`, `Change:` and `Req:` lines
-   that match the change spec. Where they sit in the message doesn't matter.
+4. **Trace.** Every commit message on the branch has `Intent:` and `Change:` lines that
+   match the change spec. Every commit that changes a file outside `pdlc/` also has a `Req:`
+   line naming requirements in the change spec. Where the lines sit in the message doesn't
+   matter. Merge commits from main need no trailers.
 
 Reply in this shape:
 

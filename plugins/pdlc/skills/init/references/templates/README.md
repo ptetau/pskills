@@ -12,6 +12,7 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
 5. A change merges only when every requirement it touches is `verified`.
 6. These files are the truth. Boards only show them.
 7. Every commit carries trace trailers (see `specs/design/DES-pdlc-commit-trailers.md`).
+   Commits that only touch `pdlc/` need no `Req`.
 8. Write plainly (see `specs/design/DES-writing-style.md`).
 
 ## Layout
