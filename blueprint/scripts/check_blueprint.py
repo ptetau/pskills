@@ -23,7 +23,7 @@ Errors (exit code 1):
     invariant's code is never asserted (in a Then step or an Examples row), or there is
     no "Done when" / "Verify" line
     with a command
-  - design IDs (V1, F2, UC3, A1, FR-1, SC-1, INV-1) remain outside code blocks
+  - design IDs (V1, F2, UC3, FR-1, SC-1, INV-1) remain outside code blocks
   - a flow calls a component its kind may not call (walls.md call rules), or one its
     "May call" line doesn't list
   - with --design: a Client, Manager, Engine, or ResourceAccess in the design's walls has
@@ -31,7 +31,9 @@ Errors (exit code 1):
     verb has no matching method, or a method isn't in the design's API; a design brick
     isn't in its component's subsection; a shared contract has no type of that name
 
-Warnings: invariants outside 4-7 (fewer is right for a small domain), more than 5
+Not checked: whether a contract's fields or variants match the design's.
+
+Warnings: more than 7 invariants, more than 5
 scenarios, more than 5 steps in a scenario, a Background over 4 steps, a Then step that
 asserts storage, money typed as a bare number, `any` in TypeScript, a component without
 "May call", a design utility not mentioned in section 5, filler phrasing.
@@ -234,6 +236,9 @@ def check_design(design_text, s5, components, s3_code=""):
     # contracts keep their names
     contracts = set(re.findall(r"`([A-Z][A-Za-z0-9]*)`\s+used by", design_text))
     contracts |= set(re.findall(r"`([A-Z][A-Za-z0-9]*)\s*\{", design_text))
+    for line in strip_code(design_text).split("\n"):
+        if re.search(r"shared contract", line, re.I):
+            contracts |= set(re.findall(r"`([A-Z][A-Za-z0-9]*)(?:`|\s*\{)", line))
     for c in sorted(contracts - set(comps)):
         if not re.search(r"\b(?:interface|type|struct|enum)\s+%s\b" % re.escape(c), s3_code):
             errors.append("--design: shared contract `%s` from the design has no type of that name in section 3" % c)
@@ -282,12 +287,17 @@ def check(text, compile_ts=False, draft=False, design_text=None):
     if not re.search(r"out[- ]of[- ]scope|non-goals", s1, re.I):
         errors.append("section 1: no out-of-scope (non-goals) list")
     assumed = len(re.findall(r"\(assumed\)", prose, re.I))
-    decisions = 0
-    for listed in re.finditer(r"#+\s*(?:decisions (?:added|carried)[^\n]*|assumptions)\n(.*?)(?=\n#+\s|\Z)",
+    decisions = carried = 0
+    for listed in re.finditer(r"#+\s*(decisions (?:added|carried)[^\n]*|assumptions)\n(.*?)(?=\n#+\s|\Z)",
                               s1, re.I | re.S):
-        decisions += len(re.findall(r"^\s*[-*]\s+", listed.group(1), re.M))
-    if assumed > decisions:
-        warnings.append("%d inline '(assumed)' tags but only %d decisions listed; list every one" % (assumed, decisions))
+        n = len(re.findall(r"^\s*[-*]\s+", listed.group(2), re.M))
+        if re.search(r"carried", listed.group(1), re.I):
+            carried += n
+        else:
+            decisions += n
+    if assumed > decisions + carried:
+        warnings.append("%d inline '(assumed)' tags but only %d decisions listed; list every one"
+                        % (assumed, decisions + carried))
     if assumed and not re.search(r"decisions (added|carried)|assumptions", s1, re.I):
         errors.append("%d '(assumed)' tags but section 1 has no 'Decisions added by this spec' list" % assumed)
     open_questions = len(re.findall(r"\[NEEDS CLARIFICATION", prose))
@@ -304,9 +314,8 @@ def check(text, compile_ts=False, draft=False, design_text=None):
     items = [i for i in re.findall(r"^\s*\d+\.\s+(.*(?:\n(?!\s*\d+\.\s).*)*)", strip_code(s2), re.M) if i.strip()]
     if not items:
         errors.append("section 2: no numbered invariants")
-    elif not 4 <= len(items) <= 7:
-        warnings.append("section 2: %d invariants; the format asks for 4-7 (fewer is right for a small domain; "
-                        "never pad with rules the types already guarantee)" % len(items))
+    elif len(items) > 7:
+        warnings.append("section 2: %d invariants; the format asks for at most 7" % len(items))
     invariant_codes = set()
     for n, item in enumerate(items, 1):
         codes = ERROR_CODE.findall(item)
@@ -354,6 +363,13 @@ def check(text, compile_ts=False, draft=False, design_text=None):
             errors.append("section 4: state type `%s` from section 3 has no '### %s' state machine" % (t, t))
         elif not any(re.search(r"stateDiagram|──\[|──►|-->|->", m) for m in home):
             errors.append("section 4: '### %s' has no diagram" % t)
+        else:
+            decl = re.search(r"\b(?:type|enum)\s+%s\b[^;{]*?=\s*([^;]+);" % re.escape(t), contract_code)
+            states = re.findall(r"\"([A-Za-z_][\w-]*)\"", decl.group(1)) if decl else []
+            diagram = "\n".join(home)
+            for st in states:
+                if not re.search(r"\b%s\b" % re.escape(st), diagram):
+                    errors.append("section 4: state `%s` of `%s` is missing from its diagram" % (st, t))
 
     # --- 5. modules
     components = re.split(r"^####\s+", s5, flags=re.M)[1:]
@@ -459,7 +475,7 @@ def check(text, compile_ts=False, draft=False, design_text=None):
 
     stats = {"invariants": len(items), "error_codes": sorted(catalog), "state_types": state_types,
              "components": len(components), "scenarios": len(scenarios), "assumed": assumed,
-             "decisions": decisions,
+             "decisions": decisions, "carried": carried,
              "open_questions": open_questions}
 
     if design_text is not None:
@@ -514,7 +530,8 @@ def main(argv=None):
     else:
         if stats:
             print("blueprint: %(invariants)d invariants · %(components)d components · %(scenarios)d scenarios · "
-                  "%(decisions)d decisions listed (%(assumed)d marked inline) · %(open_questions)d open questions"
+                  "%(decisions)d decisions added (%(assumed)d marked inline) + %(carried)d carried · "
+                  "%(open_questions)d open questions"
                   % stats)
         for e in errors:
             print("ERROR   " + e)

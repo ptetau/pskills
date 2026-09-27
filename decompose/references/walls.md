@@ -100,11 +100,11 @@ within it changes. Managers hold the first, Engines the second.
 | **Utility** | infrastructure common to all components: security, logging, diagnostics, pub/sub, message bus, hosting | — | Test: could it be used in a completely different system, such as a smart cappuccino machine? If not, it is not a Utility |
 
 **Stable business rules** (the nature of the business, such as the rules of a game or a
-fixed calculation) get no wall of their own. If one component needs them, they are bricks
-inside it. If several do, they go in a shared domain module: pure, with no volatility of
-its own and no dependencies. It is not a component and not a Utility (it fails the
-cappuccino test). This is the skill's rule; Löwy doesn't address where unwalled logic
-lives.
+fixed calculation) get no wall of their own. They go in a domain module: pure, with no
+volatility of its own and no dependencies, used by whichever components need them. It is
+not a component and not a Utility (it fails the cappuccino test). Keeping the rules there
+lets Managers stay pure orchestration even when a Manager is the only component that
+needs them. This is the skill's rule; Löwy doesn't address where unwalled logic lives.
 
 **Atomic business verbs.** A bank's ResourceAccess exposes `Credit` and `Debit`, not
 `UpdateBalance` or `ExecuteSql`. Those verbs relate to the nature of the business, so they

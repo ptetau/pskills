@@ -118,7 +118,7 @@ INVARIANTS   6 · codes: IDEMPOTENCY_CONFLICT, QUIET_HOURS_DEFERRED, …
 CONTRACTS    19 types · 2 state machines
 MODULES      9 components: 3 Clients · 1 Manager · 2 Engines · 3 ResourceAccess
 SCENARIOS    5 · every invariant exercised
-DECISIONS    9 listed for review · 0 open questions
+DECISIONS    9 added for review + 0 carried from the design · 0 open questions
 CHECK        PASS
 ```
 

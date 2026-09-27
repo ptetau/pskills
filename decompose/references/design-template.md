@@ -70,11 +70,11 @@ flowchart TB
 
 | Component | Type | Encapsulates | API (business verbs) | May call |
 |-----------|------|--------------|---------------------------|----------|
-| <Client> | Client | V1 (who calls, and how) | entry points: `<Verb>`: `POST /route`, a screen, a command | one Manager per use case |
+| <Client> | Client | V1 (who calls, and how) | entry points: `<Verb>`: `POST /route`, a command, a screen, or a user action (`ClickCell`) | one Manager per use case |
 | <Noun>Manager | Manager | V2 (workflow order) | `<Verb>(...)` | Engines, Access, Utilities; other Managers only via queue |
 
-For a Client, the API column lists its entry points (routes, screens, commands), so the
-blueprint types them instead of inventing them.
+For a Client, the API column lists its entry points (routes, commands, screens, or the
+user actions a UI handles), so the blueprint types them instead of inventing them.
 
 ## 5. Bricks (implementation inside the walls)
 

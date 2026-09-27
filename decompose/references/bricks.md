@@ -193,10 +193,12 @@ Bricks usually go wrong by being too general, too early. They can also go wrong 
 too small: Ousterhout's *classitis*, many shallow pieces whose interfaces cost more than
 they hide.
 
-- **Earn every brick** (the skill's own rule). A brick serves two or more current
-  features, or it serves one current feature as one of the variants a recorded
-  volatility names (one channel, one kind of discount). Otherwise, leave the logic
-  inline in the composition. This is looser than the rule of three on purpose: at design
+- **Earn every brick** (the skill's own rule). A Transform, policy, or Store serves two or
+  more current features, or it serves one current feature as one of the variants a
+  recorded volatility names (one channel, one kind of discount). Otherwise, leave the
+  logic inline in the composition. Inputs and Transports at the edges are exempt: every
+  feature needs a way in and out. Never merge bricks to satisfy this rule; a merged
+  brick with a mode flag is the smell below. This is looser than the rule of three on purpose: at design
   time you are deciding where new code goes, not extracting existing duplication.
 - **Rule of three** (Roberts, via Fowler), whenever a brick would be extracted from
   existing code, including host code in subsystem mode: do it once, duplicate it the

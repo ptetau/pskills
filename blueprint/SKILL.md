@@ -106,6 +106,7 @@ From a `/decompose` design document (its sections are numbered as in
 | §6 Feature assembly; §7 Walkthroughs | 5. Flows; 6. Scenarios | Each walkthrough becomes the flow under its Manager method; key features become scenarios |
 | §7 Validation results | — | Stays in the design; link to it |
 | §7 Accepted leaks | 1. Decisions added | Each one as a known limitation: which future change will touch two components |
+| §6 Future features that failed assembly | 1. Out of scope | As a non-goal, with what it would cost |
 | §8 Seams and migration | 1. Scope; 5. Translation at the seam | Migration steps belong to the change plan, not the blueprint |
 | §1 Assumptions | 1. Decisions carried from the design | Carried as they are |
 | §4 Cross-cutting concerns, atomic writes | 2. Invariants; 5. Constraints and Failure & retry | Each enforcement point becomes an invariant or a constraint; atomic writes name their transaction |
@@ -218,8 +219,8 @@ Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
    Resource access (ResourceAccess), Shared infrastructure (Utilities: a subsection only
    when the system builds one, such as a security policy; off-the-shelf logging just gets a
    folder in the module map). Stable business
-   rules that several components share (a shared domain module in the design) get a
-   folder in the module map and no subsection: they are not a component. Resources (the
+   rules (the design's domain module) get a folder in the module map and no subsection:
+   they are not a component. Resources (the
    databases and vendors themselves) appear in the target mode, not as components. In
    subsystem mode, the translation at the seam goes where the design put it: an
    anti-corruption layer is a ResourceAccess component; an open-host service is the
@@ -235,9 +236,12 @@ Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
    - **May call**: from the design's call rules.
    - **Signatures**: a typed interface: business verbs, parameter and return types, and the
      error codes each method can return.
-   - **Flows** (Managers): each public method's call sequence, one call per line.
+   - **Flows** (Managers): each public method's call sequence, one call per line: calls to
+     other components, and to the domain module for stable rules. Managers apply rules by
+     calling the domain module; they never contain them.
    - **Failure and retry**: which errors are retryable and which are final, timeouts,
-     backoff, idempotency on retry, and how races resolve.
+     backoff, idempotency on retry, and how races resolve. For in-process, synchronous code
+     one line is enough ("in-process; errors returned as values; nothing to retry").
    - **Internals**: the component's bricks from the design, as private modules. Required
      when the design lists bricks for the component; `--design` checks it.
    - A component's methods are the design's API verbs, no more and no fewer. A blueprint
@@ -295,7 +299,7 @@ Write 3–5 Gherkin scenarios that a test harness can run.
    CONTRACTS    <n> types · <n> state machines
    MODULES      <n> components: <n> Clients · <n> Managers · <n> Engines · <n> ResourceAccess
    SCENARIOS    <n> · every invariant exercised
-   DECISIONS    <n> listed for review · <n> open questions
+   DECISIONS    <n> added for review + <n> carried from the design · <n> open questions
    CHECK        PASS | DRAFT (open questions) | FAIL
    ```
 

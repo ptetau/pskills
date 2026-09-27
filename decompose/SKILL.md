@@ -114,9 +114,11 @@ The full rules, sources, and smells are in `references/walls.md` and
   opposed to the wall's API) lets any brick follow any other.
 - **Mechanism, not policy.** Bricks are mechanism; "which" and "when" are policy, supplied
   as data or as a policy brick.
-- **Earn every brick** (the skill's rule). A brick serves two or more current features,
-  or it serves one current feature as a variant a recorded volatility names (one channel,
-  one kind of discount). Otherwise the logic stays inline. Never build a brick only a
+- **Earn every brick** (the skill's rule). A Transform, policy, or Store serves two or more
+  current features, or it serves one current feature as a variant a recorded volatility
+  names (one channel, one kind of discount). Otherwise the logic stays inline. Inputs and
+  Transports at the edges are exempt: every feature needs a way in and out. Never merge
+  bricks to satisfy this rule; a merged brick with a mode flag is a smell. Never build a brick only a
   future feature needs (Fowler's YAGNI covers abstractions too). Prefer duplication over
   the wrong abstraction (Metz).
 
@@ -137,10 +139,10 @@ Three rules connect the two ideas:
    volatility register and decide there. Walls move only for volatility reasons.
 2. **Only stable bricks cross walls.** Volatile bricks stay inside their wall. A stable
    brick that several walls need goes where it fits: plumbing that passes the Utility test
-   (usable in a completely different system) is a Utility; stable business rules that
-   several components need (the rules of a game, a fixed calculation) go in a shared
-   domain module with no volatility of its own, which depends on nothing. That module is
-   not a component; it is the nature of the business, written down once.
+   (usable in a completely different system) is a Utility; stable business rules (the
+   rules of a game, a fixed calculation) go in a domain module with no volatility of its
+   own, which depends on nothing. That module is not a component; it is the nature of the
+   business, written down once, and it keeps rules out of Managers.
 3. **A wall's API never exposes its wiring.** Callers use business verbs. A verb may be
    backed by a single brick (`RenderingEngine.Render`), but callers never see which bricks
    run or in what order, so that stays free to change.
@@ -228,8 +230,8 @@ Goal: components, their types, their APIs, and the call graph.
    PascalCase names with the type as suffix; gerund prefixes are for Engines only.
    Clients and Utilities are named for what they are (`AdminPortal`, `Scheduler`). If an Engine's name is also a feature name, ask
    what activity would survive a redesign of the feature, and name it that.
-2. **Write each component's API as business verbs.** For a Client, list its entry points
-   (routes, screens, commands). ResourceAccess exposes verbs such
+2. **Write each component's API as business verbs.** For a Client, list its entry points:
+   routes, commands, screens, or the user actions a UI handles (`ClickCell`). ResourceAccess exposes verbs such
    as `Deliver`, `FindRecipients`, `ConfirmDelivery`, never `Insert`, `Update`, `Save`,
    a generic `Record`, or a vendor's API.
 3. **Draw the call graph** by layer and check the call rules. Fix violations by moving
@@ -296,7 +298,8 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    change. List the components that must change. Target: one existing component. These
    exceptions don't count as leaks: a new verb on a ResourceAccess because the change
    records a new kind of business fact (see `references/walls.md`); a new Client for a
-   new kind of caller; adding one new ResourceAccess when the change brings
+   new kind of caller; a new Engine when the change brings in a new volatile activity;
+   adding one new ResourceAccess when the change brings
    in a genuinely new resource (a new vendor or store), and a Client change when the
    change adds something a person does or must see. Record either. Two or more existing
    components changing for any other reason means a leaky wall.
@@ -304,7 +307,9 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    with no logic in the wiring beyond selecting bricks and passing parameters. This
    checks that the catalog is complete. Then the real test: two or three plausible future
    features drawn from the register (including extras you proposed in Phase 0). Each
-   should need at most one new brick, inside one component. You may also try a rejected
+   should need at most one new brick, inside one component (a new two-way resource,
+   needing an Input and a Transport, counts as one). Describe each future feature in one
+   line, what it would add and where; don't design it. You may also try a rejected
    candidate to see what it would cost, but it isn't expected to pass.
 4. **Orthogonality check.** For each brick, ask: if its requirement changed a lot, what
    else would change? Anything other than "nothing" is a hidden dependency.
@@ -322,10 +327,14 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
 
 1. Write `<name>.design.md` at the project root (or where the user asks), from
    `references/design-template.md`. **Size the document to the problem.** The design of a
-   small system should be shorter than its code. With a handful of components, record
-   each Phase 5 check as a table row or a line, skip the layer diagram, and don't justify
-   being below Löwy's sizes: those are warnings for large systems. Keep the section
-   numbers even when a section is empty ("Not applicable: inception").
+   small system should be shorter than its code. A **small system** (one Manager, and no
+   more than one Engine or ResourceAccess) gets a short form:
+   - Phase 5 is one table, one row per check, with "n/a" where a check has nothing to
+     test (orthogonality with two bricks, expendability for a Manager with nothing
+     below it).
+   - No layer diagram, and no justifying being below Löwy's sizes: those are warnings for
+     large systems.
+   - Empty sections keep their number in one line ("Not applicable: inception").
 2. Show a compact summary in chat, in a code block:
 
    ```
@@ -336,7 +345,7 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    BRICKS        <n> across <n> components · contracts: <names>
    ──────────────────────────────────────────────────
    USE CASES     <passed>/<total> walk through cleanly
-   CHANGE SIM    <passed>/<total> volatilities touch one component
+   CHANGE SIM    <passed>/<total> simulations across <n> volatilities touch one component
    FEATURES      <n> current assembled · <n> future with ≤1 new brick
    ASSUMPTIONS   <n> (carried into /blueprint's decisions)
    VERDICT       ready | ready, <n> accepted leaks: <list> | <n> leaks to resolve: <list>
