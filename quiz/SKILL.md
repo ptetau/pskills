@@ -1,139 +1,156 @@
 ---
 name: quiz
 description: >
-  Quick inline chat clarifier with the Apple //e × IBM Plex "Squiz" terminal
-  aesthetic. Renders ONE question at a time as a compact ASCII question card
-  in the chat — the user replies with a single option letter (e.g. "B" or
-  "B, with notes: …"), the agent echoes the resolved line, then immediately
-  renders the next question. Never stack multiple questions in one message.
-  The inline-chat twin of /squiz (which renders a full visual document for
-  offline-style fill-in). Use when the user says "/quiz", "quiz me", "ask me
-  a few questions", or signals they want a fast back-and-forth rather than a
-  rendered document. Prefer /quiz over /squiz when there are only ~1-7
-  questions, when the user is on mobile, when speed matters, or when the
-  questions are mostly textual.
+  Quick inline clarifier. Asks ONE question at a time before starting work, through
+  the native picker (the AskUserQuestion tool) when the session has it and as a short
+  plain-markdown question otherwise; never ASCII cards or code blocks. Plans a fixed,
+  ordered question list up front so the same request gets the same questions, grounds
+  every recommendation in what the user said, echoes each answer in one line, then
+  shows the resolved answers for a final OK before work begins. The inline twin of
+  /squiz (which renders a full visual document). Use when the user says "/quiz",
+  "quiz me", "ask me a few questions", or wants a fast back-and-forth rather than a
+  rendered document. Prefer /quiz over /squiz for about 1-7 mostly textual questions,
+  on mobile, or when speed matters.
 ---
 
-# Quiz: Inline Terminal-Styled Clarifier
+# Quiz: Inline Clarifier
 
 ## Purpose
 
-`/quiz` is the inline-chat twin of [[squiz]]. Same job — gather clarifications before doing work — but rendered as compact text-mode "cards" inside the chat instead of a full interactive document. The aesthetic is the same retro Apple //e × IBM Plex terminal: monospace code blocks, `[?]` / `[✓]` markers, `// notes` callouts, numbered/lettered options.
+`/quiz` gathers the decisions that matter before doing the work, one question at a
+time. It's the inline twin of [[squiz]]: same job, but each question is either a native
+picker the user clicks or a short markdown question they answer with a letter.
 
 Use `/quiz` when:
-- There are roughly **1-7 small questions**, asked **one per turn**.
-- The user is **on mobile** or wants quick back-and-forth.
-- The questions are **mostly textual** (tone, scope, name) — no visual options to compare.
-- The user signals speed ("ask me real quick", "couple of questions").
+- there are about **1-7 questions**, asked **one per turn**;
+- the user wants a quick back-and-forth, or is **on mobile**;
+- the questions are mostly **textual** (tone, scope, name), or a short preview per
+  option is enough to show a visual choice.
 
 Use `/squiz` instead when:
-- There are 8+ questions and the user benefits from seeing them all at once.
-- Options need **visual previews** (wireframes, sample layouts, chart types).
-- The user explicitly asks for "the doc", "the form", or "/squiz".
+- there are 8+ questions and seeing them all at once helps;
+- options need side-by-side visual comparison bigger than a short preview;
+- the user asks for "the doc", "the form", or `/squiz`.
 
-When in doubt, default to `/quiz`. It costs less, ships sooner, and the user can always escalate by saying "give me the full squiz".
+When in doubt, use `/quiz`. The user can always say "give me the full squiz".
 
-## The look (this matters)
+## Step 1: Plan the questions before asking any
 
-Every question is rendered as its own fenced code block styled like a terminal worksheet. **One question per message, always** — never stack two cards in the same turn. Keep it tight and consistent — the aesthetic is half the appeal.
+The same request should get the same questions. Before the first question, build the
+whole list with this procedure, then commit to it:
 
-### The question card
+1. Walk these dimensions, in this order:
+   1. **Purpose and audience**: what it's for and who it's for.
+   2. **Style**: tone for writing, look for design, conventions for code.
+   3. **Scope**: length, size, what's in or out.
+   4. **Focus**: what leads, what matters most.
+   5. **Next step**: the call to action, output format, or where it goes.
+2. For each dimension, ask one question only if the prompt leaves it open **and** the
+   answer would change the work. Skip anything the prompt already settles. A dimension
+   takes a second question only when it holds two independent decisions that both
+   change the work.
+3. The list, in that order, is the quiz. The most load-bearing questions come first by
+   construction. Cap it at 7; if more remain, offer `/squiz` (see Escalation).
+4. **Commit.** The total, T, is fixed once the first question is asked. Don't add,
+   drop or reorder numbered questions after that. If an answer opens a new ambiguity,
+   ask one plain-prose follow-up (not a new numbered question) right after echoing it.
 
+## Step 2: Write each question
+
+Each question has:
+- a **label** of one or two words, at most 12 characters (e.g. `Tone`, `Audience`);
+- the **question**, one sentence ending in `?`, in the user's own terms;
+- **2-4 options**. Each option is a short label (1-5 words) and one sentence that says
+  what it does, why it fits this request, and **ends on its cost or trade-off**. Every
+  option gets that sentence, including options on the first question;
+- at most **one recommended option**, listed first. List the rest from most to least
+  likely to fit.
+
+**Recommend only on evidence.** Recommend an option only when something the user said
+points to it, and name that thing in its sentence ("since this is a climbing gym").
+When nothing they said favours any option, which is typical for the first question on a
+terse request, recommend nothing. Never recommend two.
+
+## Step 3: Ask it
+
+**Picker.** When the session has the `AskUserQuestion` tool, ask each question through
+it: one question per call.
+- `header`: the label.
+- `question`: the question, followed by ` (N of T)`.
+- `options`: the 2-4 options, the recommended one first with ` (Recommended)` at the end
+  of its label; each `description` is the option's sentence.
+- `multiSelect`: false, unless the question really is "pick any that apply".
+- `preview`: only for visual choices (a layout, sample text, a code shape), as a short
+  mockup per option.
+
+The user can always choose "Other" and type their own answer.
+
+**Fallback.** When there's no picker, or the user asks for text, write the question as
+plain markdown in the message itself. No code blocks, no box drawing, no emojis.
+Exactly this layout:
+
+````markdown
+**Question 1 of 3 · Tone**
+What tone should the welcome email have?
+
+- **A · Stoked (recommended)**: matches how climbers talk to each other, since this is
+  a climbing gym; it can read as try-hard to a quieter crowd.
+- **B · Warm**: friendly and personal, a safe fit for a mixed membership; it carries
+  less energy.
+- **C · Plain**: facts first and quickest to read; it can feel like a receipt.
+
+Reply A, B or C, optionally with a note (e.g. `B, keep it short`).
 ````
-```
-┌─ quiz · 01/03 ───────────────────────────────────────┐
-│ [?] How should the welcome screen greet a user?      │
-│     why it matters: sets tone for the whole app      │
-└──────────────────────────────────────────────────────┘
 
-  A · plain (recommended)   Says the goal straight ("Pick a habit to
-                             start") — fits a utility app where users
-                             want speed over small talk, and it's the
-                             safest default for a first-run screen.
-  B · warm                  Greets before asking ("Hey — glad you're
-                             here...") — worth it if retention depends
-                             on emotional buy-in, at the cost of an
-                             extra beat before the user can act.
-  C · playful                Light tone with emoji ("First habit
-                             incoming...") — suits a casual audience,
-                             but risks feeling flippant for anyone
-                             using this for serious habit-tracking.
+(The fence above is only to show the layout. Render it as markdown, never inside a code
+block.) When there's no recommendation, drop `(recommended)` from every option.
 
-  // reply: A | B | C    (optional: add a note after the letter)
-```
-````
+**One question per message, always.** Never stack two questions in one message or one
+picker call.
 
-Each option is one fluid sentence: **what** it does, **why** it fits the situation just described, **how** it plays out in practice (the cost or benefit the user actually feels). One option carries `(recommended)` — see Rule 5.
+## Step 4: Echo each answer, then ask the next
 
-Then on the next chat line, in plain prose, a single sentence: *"Pick A, B, or C — or reply `B, with notes: …` if you want to add detail."*
+After each answer, write one echo line, then ask the next question in the same message.
+Echoes always take one of these exact forms:
 
-The `01/03` counter shows the user where they are in the sequence — increment it as you go (`02/03`, `03/03`).
+| The user… | Echo |
+|---|---|
+| picked an option | `✓ 2/3 Tone → Warm` |
+| picked and added a note | `✓ 2/3 Tone → Warm (note: keep it short)` |
+| deferred ("you decide", "skip", "go with your pick") | `✓ 2/3 Tone → Stoked (you decided: recommended)` |
+| deferred where nothing was recommended | `✓ 2/3 Tone → Stoked (you decided: first option)` |
+| wrote words that match an option | `✓ 2/3 Tone → Warm (from: "the friendly one")` |
+| wrote their own answer ("Other") | `✓ 2/3 Tone → dry and funny` |
 
-### The rhythm (between questions)
+Reading replies in the fallback, be permissive: `A`, `a`, `Option A`,
+`B, with notes: …`, `B, …`, `B (…)`. If the user answers several at once (`1a 2b 3c`),
+accept them all, echo each line in order, and carry on with the first unanswered
+question.
 
-After each reply, echo a one-line `[✓]` confirmation for the just-answered question, then *immediately* render the next card in the same message. The flow looks like:
+## Step 5: Confirm, then start
 
-```
-turn 1 — agent: render Q1 card + reply hint
-turn 2 — user: "B"
-turn 3 — agent: "[✓] 01 audience → B · investors"  then Q2 card + reply hint
-turn 4 — user: "A, with notes: skip metrics slide"
-turn 5 — agent: "[✓] 02 length → A · ≤10 slides (note: skip metrics)"  then Q3
-…
-final  — agent: full resolved summary + "say `wait` if anything's wrong"
-```
+After the last answer, list every answer as a bulleted list of echo lines, one per
+question and in order, with no code block around it:
 
-### Final resolved view (after the last question)
+- ✓ 1/3 Tone → Stoked
+- ✓ 2/3 Focus → Getting started (note: mention the free intro belay class)
+- ✓ 3/3 Length → Short and scannable
 
-After the user answers the LAST question, restate the whole set with `[✓]` markers so they can spot a mistake before you proceed:
+Then ask for the go-ahead:
+- **Picker:** one question with header `Confirm`, question `Go with these answers?`,
+  and options `Go (Recommended)` ("start with these answers") and `Change one` ("tell
+  me which answer to change").
+- **Fallback:** one sentence: *"Going with these. Say `wait` if anything's wrong,
+  otherwise I'll start."*
 
-```
-[✓] 01 audience  → B · investors
-[✓] 02 length    → A · ≤10 slides   (note: skip metrics slide)
-[✓] 03 tone      → C · punchy        (note: no jokes)
-```
-
-Then in one plain sentence: *"Going with these — say `wait` if anything's wrong, otherwise I'll start."*
-
-## Rules of the look
-
-1. **Always use a fenced code block** for the question cards. Monospace is the aesthetic — it must render as a code block, not prose with hyphens.
-2. **Top border with `quiz · NN/NN`** as the marker. Lowercase. Use box-drawing characters (`┌─┐│└┘`) for the question header; plain ASCII for the rest.
-3. **`[?]` for open, `[✓]` for resolved.** Match the squiz convention exactly.
-4. **Options as `A · short-label`, then one fluid sentence** covering what the option does, why it fits the problem just described, and how it plays out in practice — the concrete cost or benefit, not a vague gesture at "trade-offs." Two-space indent, wrap continuation lines with a hanging indent. **Draw the card at ≈80% of the terminal width** — the top border and the wrapped option text should fill about four-fifths of the available columns, not a narrow column. When the terminal width is unknown, assume a wide desktop terminal and draw at ~96 cols; keep a ~48-col floor so narrow/mobile terminals still render. (The sample cards in this doc are drawn narrow to fit the page — widen them on render.)
-5. **Mark exactly one option `(recommended)`** whenever you have enough context to judge — never a coin-flip default. The reasoning must live inside that option's sentence and name the specific problem, constraint, or goal that makes it the practical choice here. If it's a genuine toss-up, skip the tag rather than force one.
-6. **Optional `why it matters:` line** under the question — one short clause, only when the user benefits from knowing the consequence.
-7. **`// reply:` hint at the bottom** of every card, with the comment slash to match the squiz `//` accent.
-8. **One question per turn — never stack.** Each card lives in its own message. Wait for the user's reply before rendering the next.
-9. **Cap at ~7 questions total.** If you need more, switch to `/squiz` instead.
-10. **No emojis** in the cards themselves (except as actual sample content, like option text). The aesthetic is text-mode.
-
-## Flow
-
-1. User triggers `/quiz` or says something like "ask me quickly".
-2. Agent identifies all the questions that matter (max ~7; if more, switch to `/squiz` and tell the user). Internally decides an order — most-load-bearing first.
-3. Agent renders the **first question only** as a code block — each option a what/why/how sentence, one marked `(recommended)` per Rule 5 — followed by a one-sentence plain-prose reply hint. Counter shows `01/N`.
-4. User replies with a single letter, optionally with notes.
-5. Agent echoes a one-line `[✓]` confirmation for that question, then *immediately* renders the next question card in the same message.
-6. Repeat 4–5 until the last question is answered.
-7. After the last reply, agent echoes the full resolved view (all `[✓]` lines stacked) and asks for confirmation in one sentence.
-8. If confirmed, agent restates the *implication* in one short paragraph ("So I'll build X, skipping Y, with tone Z") and begins.
-9. If a reply reveals a new ambiguity, ask **one** follow-up — plain prose, no card. Don't render another card for a single straggler.
-
-## Reply parsing
-
-Be permissive. Accept any of:
-
-- `A` / `a` / `Option A` — straight pick
-- `B, with notes: skip the metrics slide` — pick with a note
-- `B (skip the metrics)` — pick with a parenthetical note
-- `skip` / `you decide` / `n/a` / "go with your pick" — defer to the option already marked `(recommended)` on that card
-
-If the user types free prose instead of a letter ("yeah do the warm one"), match it to the closest option and confirm in your echo. If they answer multiple questions at once anyway (e.g. `1c2a3b4b`), accept it gracefully — parse the run, echo all the `[✓]` lines in order, and move straight to the implication or the next unanswered question.
+Once confirmed, say what that means in one short paragraph ("So I'll write X, with Y,
+skipping Z") and begin. If the user changes an answer, update that echo line and show
+the list again; don't re-ask the rest.
 
 ## Internal JSON (for parity with /squiz)
 
-Track answers internally in the same shape `/squiz` exports, so the user can mix the two flows. You don't need to show this to the user — but if they ask for "the squiz JSON" after a quiz round, produce:
+Track answers in the same shape `/squiz` exports, so the two flows mix. Don't show it
+unless the user asks for "the squiz JSON":
 
 ```json
 {
@@ -141,9 +158,9 @@ Track answers internally in the same shape `/squiz` exports, so the user can mix
   "generatedAt": "<ISO timestamp>",
   "decisions": [
     {
-      "id": "audience",
-      "question": "Audience for the deck?",
-      "choice": { "id": "investors", "name": "investors", "summary": null },
+      "id": "tone",
+      "question": "What tone should the welcome email have?",
+      "choice": { "id": "stoked", "name": "Stoked", "summary": null },
       "notes": null
     }
   ],
@@ -153,19 +170,21 @@ Track answers internally in the same shape `/squiz` exports, so the user can mix
 
 A `null` `choice` means the user skipped that decision.
 
-## What NOT to do
+## What not to do
 
-- Don't stack two question cards in one message. Always one per turn.
-- Don't render questions as a markdown table — the box-drawing characters and code-block monospace are the look.
-- Don't use bold/italic markdown inside the cards — the code block won't render formatting; rely on layout instead.
-- Don't apologize for the format or explain the aesthetic. Just render.
-- Don't render a quiz card every time you need clarification — that's overkill. Use it when you have a real cluster of decisions to lock in, the same trigger that warrants a `/squiz`.
-- Don't ask the same question twice. If a reply was ambiguous, ask once in plain prose to clarify, then move on.
+- No ASCII cards, box-drawing characters, or code blocks around questions or echoes.
+- Don't stack questions: one per message, one per picker call.
+- Don't change the numbered list, or its total, after the first question.
+- Don't recommend without a reason taken from what the user said.
+- Don't ask the same question twice. If a reply was unclear, ask once in plain prose.
+- Don't run a quiz for a single small clarification. Just ask it in a sentence.
 
 ## Escalation to /squiz
 
-If, mid-quiz, you realize the question is more visual than expected ("actually you should *see* these options"), tell the user in one sentence and offer to switch:
+Picker previews cover most visual choices, so stay in `/quiz` where you can. Offer
+`/squiz` in one sentence, and don't switch on your own, when there are more than 7
+questions, or when the options need a side-by-side comparison bigger than a short
+preview:
 
-> "This one's easier to pick if you can see the layouts — want me to render a full Squiz for just the visual decisions? Otherwise I'll keep going text-only."
-
-Don't auto-escalate. Let the user choose.
+> "This one's easier to pick if you can see the layouts side by side. Want a full Squiz
+> for just the visual decisions? Otherwise I'll keep going here."

@@ -90,30 +90,23 @@ criterion.
 
 **S-3. Ask the one setup question: new branch?**
 
-Same terminal-card aesthetic as [[quiz]] / [[quiz-plan]] — box-drawing header, `[?]` marker,
-one fluid what/why/how sentence per option, one option tagged `(recommended)` tied to this
-plan's actual size and risk. A single question, one card:
+Ask it the [[quiz]] way: through the picker (the `AskUserQuestion` tool) when the session
+has it, and as a plain-markdown question otherwise. No ASCII card or code block. One
+question, with one fluid what/why/cost sentence per option and one option recommended,
+tied to this plan's actual size and risk:
 
-```
-┌─ quiz · 1/1 ───────────────────────────────────────────┐
-│ [?] Create a new branch for <plan-name> (<N> steps)?  │
-└─────────────────────────────────────────────────────────┘
+- **header:** `Branch`
+- **question:** `Create a new branch for <plan-name> (<N> steps)?`
+- **A · Yes, use `<branch>` (recommended)**: creates it off the current HEAD, keeping
+  every step's commit isolated from whatever else is in flight; it costs nothing to undo.
+- **B · Yes, custom name**: the same isolation under your own name; use it if the
+  suggested name clashes with a convention.
+- **C · No, use the current branch**: fastest if you're already on a throwaway branch;
+  it mixes plan commits with anything already there.
 
-  A · yes, use suggested (recommended)   Creates `<branch>` off the
-                                          current HEAD — keeps every
-                                          step's commit isolated from
-                                          whatever else is in flight,
-                                          and costs nothing to undo.
-  B · yes, custom name                   Same isolation, your naming
-                                          — use if the suggested name
-                                          collides with a convention.
-  C · no, use current branch             Fastest if you're already on
-                                          a throwaway branch, but mixes
-                                          plan commits with anything
-                                          else already there.
-
-  // reply: A | B | C
-```
+In the picker, `(Recommended)` goes at the end of option A's label. In the fallback,
+use /quiz's layout: `**Question 1 of 1 · Branch**`, the question, the three options as
+a bulleted list, then `Reply A, B or C.`
 
 Apply the answer:
 

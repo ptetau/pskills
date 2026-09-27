@@ -1,34 +1,26 @@
 {
   "skill": "quiz",
   "skillPath": "quiz/SKILL.md",
-  "skillSha256": "e6139c8b59037554be0d932c49d90f9c2d189dc466c4b58a2956dbf7e93237b4",
-  "createdAt": "2026-09-27T09:13:16Z",
+  "skillSha256": "3997cb74f1bdcd14168e117b754cf5dcacd1ff1b99bcb924490e81468c875437",
+  "createdAt": "2026-09-27T11:11:06Z",
   "structure": {
-    "summary": "Multi-turn. Each assistant message carries exactly one question card, then waits; each later message opens with a one-line [✓] echo of the last answer before the next card. After the last answer comes a stacked resolved view and a one-sentence confirmation request; after confirmation, a short implication paragraph and then the work.",
+    "summary": "Multi-turn, one question per message. Questions go through the picker where one exists; eval runs have none, so they use the plain-markdown fallback. Each later message opens with a one-line ✓ echo of the last answer, then the next question. After the last answer comes a bulleted list of echoes and a one-sentence confirmation request; after confirmation, a short paragraph on what will be done, then the work.",
     "elements": [
       {
         "id": "S1",
-        "description": "Question card inside a fenced code block: box-drawn header (┌─┐│└┘) whose top border carries a lowercase `quiz · NN/NN` counter, a `[?]` question line, an optional `why it matters:` line, the options, and a `// reply:` hint as the last line."
+        "description": "Fallback question: a bold heading line `**Question N of T · Label**`, the question on the next line, 2-4 options as a bulleted list of `**X · label**: sentence`, then one reply-hint line starting with `Reply`. No code block, box drawing or emoji."
       },
       {
         "id": "S2",
-        "description": "Options as `A · short-label` lines, each followed by one fluid sentence (what it does, why it fits, how it plays out), two-space indent with hanging-indent wraps."
+        "description": "Each option's sentence says what it does and why it fits, and ends on its cost or trade-off; at most one option is marked `(recommended)` and it is listed first."
       },
       {
         "id": "S3",
-        "description": "A one-sentence plain-prose reply hint on the line after the card, outside the code block."
+        "description": "After each answer: one echo line in an exact form (`✓ N/T Label → Choice`, optionally with `(note: …)`, `(you decided: recommended)`, `(you decided: first option)` or `(from: \"…\")`), then the next question in the same message."
       },
       {
         "id": "S4",
-        "description": "After each user reply: a one-line `[✓] NN label → X · choice` echo (with any note), followed in the same message by the next card."
-      },
-      {
-        "id": "S5",
-        "description": "After the last reply: the full resolved view, one `[✓]` line per question stacked, then a one-sentence confirmation request."
-      },
-      {
-        "id": "S6",
-        "description": "After confirmation: a short paragraph restating the implication (what will be done, skipped, and how), then the work begins."
+        "description": "After the last answer: a bulleted list with one echo line per question, in order, then a one-sentence confirmation request; after confirmation, a short paragraph saying what will be done, then the work."
       }
     ]
   },
@@ -38,85 +30,85 @@
       "kind": "structure",
       "structureRef": "S1",
       "weight": 2,
-      "criterion": "Every question card is a fenced code block with a box-drawn header whose top border carries a lowercase `quiz · NN/NN` counter, a `[?]` question line, and a `// reply:` hint as its last line.",
-      "pass": "All cards have the code block, box-drawn header, lowercase `quiz · NN/NN` counter in the top border, `[?]` line and closing `// reply:` hint.",
-      "partial": "Cards are code blocks with a box header, but in at least one card the counter, `[?]` marker or `// reply:` hint is missing or malformed.",
-      "source": "The look → The question card; Rules of the look #1-3, #7"
+      "criterion": "Every question uses the fallback layout: a bold `**Question N of T · Label**` heading, the question, 2-4 options as a bulleted `**X · label**: sentence` list, and one `Reply …` hint line, with no code block or box drawing.",
+      "pass": "Every question has the bold heading with `N of T` and a label, the question line, 2-4 bulleted options in `**X · label**: sentence` form, and a closing `Reply …` line; nothing is fenced or boxed. (If the capture records a picker call instead, its header is at most 12 characters, the question ends with `(N of T)`, and it has 2-4 options with the recommended one first.)",
+      "partial": "The layout is mostly right, but in at least one question the heading, counter, option form or reply line is missing or malformed.",
+      "source": "Step 3: Ask it (fallback layout)"
     },
     {
       "id": "R2",
       "kind": "structure",
       "structureRef": "S2",
       "weight": 2,
-      "criterion": "Options are lettered `A · short-label` lines, each with one sentence saying what the option does, why it fits this request, and its practical cost or benefit.",
-      "pass": "Every option on every card has the `X · label` form and a single sentence covering what, why and the concrete cost or benefit.",
-      "partial": "Label form is right, but some option sentences are fragments, list-like, or skip the why or the cost/benefit.",
-      "source": "Rules of the look #4"
+      "criterion": "Each option has one sentence saying what it does and why it fits this request, ending on its cost or trade-off.",
+      "pass": "Every option on every question, the first question included, has a full sentence covering what and why that ends on a concrete cost or trade-off.",
+      "partial": "Some option sentences are fragments, or skip the why or the cost/trade-off.",
+      "source": "Step 2: Write each question"
     },
     {
       "id": "R3",
       "kind": "structure",
-      "structureRef": "S4",
+      "structureRef": "S3",
       "weight": 2,
-      "criterion": "The turn rhythm holds: each card is followed by a one-sentence prose reply hint, and each answer is echoed as a one-line `[✓]` confirmation that opens the message carrying the next card.",
-      "pass": "Every card has the prose hint after it, and every answered question gets its one-line `[✓]` echo at the top of the next message, followed by the next card.",
-      "partial": "The rhythm mostly holds but at least one prose hint or `[✓]` echo is missing, or an echo sits in a message of its own.",
-      "source": "The look → The rhythm; Flow steps 3 and 5"
+      "criterion": "The rhythm holds: each answer gets a one-line echo in one of the exact forms, at the top of the message that carries the next question.",
+      "pass": "Every answered question is echoed as one line in an exact form (`✓ N/T Label → Choice` with the right suffix), and that line opens the message carrying the next question or the resolved list.",
+      "partial": "The rhythm mostly holds, but an echo is missing, uses a different form, or sits in a message of its own.",
+      "source": "Step 4: Echo each answer, then ask the next"
     },
     {
       "id": "R4",
       "kind": "structure",
-      "structureRef": "S5",
+      "structureRef": "S4",
       "weight": 2,
-      "criterion": "After the last answer the skill shows a resolved view with one `[✓]` line per question and asks for confirmation in one sentence; once confirmed, it restates the implication in one short paragraph before doing the work.",
-      "pass": "Resolved view lists every question as a `[✓]` line, a one-sentence confirmation ask follows, and after confirmation a short implication paragraph precedes the work.",
-      "partial": "The ending is there but incomplete: a question missing from the resolved view, a multi-sentence ask, or no implication paragraph.",
-      "source": "Final resolved view; Flow steps 7-8"
+      "criterion": "After the last answer the skill shows a bulleted list with one echo line per question and asks for confirmation in one sentence; once confirmed, it says what it will do in one short paragraph before doing the work.",
+      "pass": "The resolved view is a bulleted list with every question's echo line in order, then a one-sentence confirmation request; after confirmation a short paragraph precedes the work.",
+      "partial": "The ending is there but incomplete: a question missing from the list, the list fenced or not bulleted, a multi-sentence ask, or no paragraph before the work.",
+      "source": "Step 5: Confirm, then start"
     },
     {
       "id": "R5",
       "kind": "behavior",
       "weight": 2,
-      "criterion": "No assistant message contains more than one question card.",
-      "pass": "Every message has at most one card.",
-      "partial": "Never applies: two cards in one message is a miss.",
-      "source": "Rules of the look #8; What NOT to do"
+      "criterion": "No assistant message contains more than one question.",
+      "pass": "Every message asks at most one numbered question.",
+      "partial": "Never applies: two questions in one message is a miss.",
+      "source": "Step 3; What not to do"
     },
     {
       "id": "R6",
       "kind": "behavior",
       "weight": 2,
-      "criterion": "Each card marks exactly one option `(recommended)` and that option's sentence names the specific reason it fits this request.",
-      "pass": "Every card has exactly one `(recommended)` with a reason tied to the request (or no tag on a card that is a genuine toss-up).",
-      "partial": "Tags are present but at least one card's reason is generic, or one card has two tags or an unexplained tag.",
-      "source": "Rules of the look #5"
+      "criterion": "A question marks at most one option `(recommended)`, lists it first, and only when something the user said points to it, which its sentence names; with nothing to go on, no option is marked.",
+      "pass": "Every recommendation is listed first and names something the user said; questions with nothing to go on (typically the first question on a terse request) have no recommendation.",
+      "partial": "Recommendations exist, but at least one reason is generic, one is not listed first, or a question with nothing to go on is tagged anyway.",
+      "source": "Step 2: Recommend only on evidence"
     },
     {
       "id": "R7",
       "kind": "behavior",
       "weight": 1,
-      "criterion": "The quiz asks no more than about seven questions, and the counter's total stays the same and matches the number actually asked.",
-      "pass": "Seven or fewer questions (or an offer to switch to /squiz for more), and the `NN/NN` total is constant and equals the questions asked.",
-      "partial": "Within the cap but the counter's total changes mid-quiz or ends up not matching.",
-      "source": "Rules of the look #9; The look → counter"
+      "criterion": "The quiz commits to its question list up front: the total T stays the same from the first question to the last and matches the questions asked, and it is no more than about seven.",
+      "pass": "T never changes, equals the number of numbered questions asked, and is at most about seven (or /squiz is offered for more); any follow-up is plain prose, not a new numbered question.",
+      "partial": "Within the cap, but T changes mid-quiz, doesn't match the questions asked, or a follow-up is added as a numbered question.",
+      "source": "Step 1: Plan the questions before asking any"
     },
     {
       "id": "R8",
       "kind": "behavior",
       "weight": 2,
-      "criterion": "Each `[✓]` echo records what the user actually replied: the letter and any note, the recommended option for a skip or 'you decide', or the closest option for free prose.",
-      "pass": "Every echo matches the reply it confirms, notes included.",
-      "partial": "One echo drops a note or maps a free-prose or deferred reply to a debatable option.",
-      "source": "Reply parsing"
+      "criterion": "Each echo records what the user actually replied, in the matching exact form: the choice, any note, `(you decided: recommended)` or `(you decided: first option)` for a deferral, `(from: \"…\")` for words matched to an option.",
+      "pass": "Every echo matches its reply and uses the matching form, notes and deferral markers included.",
+      "partial": "One echo drops a note, uses the wrong form, or maps a free-prose or deferred reply to a debatable option.",
+      "source": "Step 4: echo forms; reply reading"
     },
     {
       "id": "R9",
       "kind": "behavior",
       "weight": 1,
-      "criterion": "Cards contain no markdown bold or italics, no tables, and no emojis outside sample content.",
-      "pass": "No bold/italic markup, tables or decorative emojis inside any card.",
-      "partial": "One stray instance.",
-      "source": "Rules of the look #10; What NOT to do"
+      "criterion": "No question, echo or resolved list is wrapped in a code block or drawn with box-drawing characters, and no emojis appear outside sample content.",
+      "pass": "Questions, echoes and the resolved list are plain markdown throughout: no fences, box drawing or decorative emojis.",
+      "partial": "One stray fence, box character or emoji.",
+      "source": "What not to do"
     },
     {
       "id": "R10",
@@ -125,7 +117,7 @@
       "criterion": "The questions asked are the ones whose answers would materially change the work for this request, most load-bearing first, and none re-asks something the prompt already settled.",
       "pass": "Every question would change the resulting work, the first is the biggest decision, and nothing already stated in the prompt is asked again.",
       "partial": "Mostly right, but one question is filler, redundant with the prompt, or clearly out of order.",
-      "source": "Flow step 2; Purpose"
+      "source": "Step 1: Plan the questions before asking any; Purpose"
     },
     {
       "id": "R11",
@@ -235,7 +227,7 @@
       "id": "P09",
       "axis": "visual decisions",
       "prompt": "the layout for a one-page portfolio site for a freelance illustrator",
-      "exercises": "visual choices: offering /squiz without auto-escalating, text options otherwise",
+      "exercises": "visual choices: previews in the picker, or text options in the fallback; /squiz offered only if a short preview wouldn't do",
       "replies": [
         "A",
         "B"
