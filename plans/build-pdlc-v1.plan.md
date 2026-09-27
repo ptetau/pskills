@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** █░░░░░░░░░░░ 1/13 steps completed (8%)
+**Progress:** ██░░░░░░░░░░ 2/13 steps completed (15%)
 
 ## How to use this document (read this first, every session)
 
@@ -97,7 +97,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/.claude-plugin/**`, repo-root marketplace file if needed
 - **Depends on:** none
 
-### Step 2: Templates and port contracts · `[ ]` AUTO · Parallel group: none
+### Step 2: Templates and port contracts · `[x]` AUTO · Parallel group: none
 
 - **Do:** In `plugins/pdlc/skills/init/references/`, write:
   - `templates/`: intent, job spec, capability spec, design spec, change spec, `config.md`.
@@ -273,4 +273,14 @@ Proven: `claude plugin validate` passes for the plugin and the marketplace. Inst
         enabled. A headless session dispatched the pdlc:recon agent and got a reply.
 Surprises: project settings store enabledPlugins as an object ({"pdlc@pskills": true}),
            not an array. INSTALL.md uses the object form.
+
+[2026-09-27] Step 2: done
+Changed: plugins/pdlc/skills/init/references/{templates,ports,adapters}/
+Decided: six templates (intent, job, capability, design, change, config); five port
+         contracts with conformance checks; four default adapters. Spec files carry
+         "Status: stub|active"; changes go planned → building → in review → merged |
+         cancelled. The change spec header is one line
+         (Intent · Scope · Status · Ticket · Branch) so a script can read it. The merge
+         check lives at pdlc/bin/check_merge.py in the project (built in step 8).
+Surprises: none.
 ```
