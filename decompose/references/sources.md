@@ -47,4 +47,19 @@ source was available, the entry says so.
 
 ## Subsystems in established codebases
 
-<!-- BROWNFIELD_SOURCES -->
+| Source | Contributes |
+|--------|-------------|
+| Adam Tornhill, *Your Code as a Crime Scene* and *Software Design X-Rays* (2018); code-maat — <https://github.com/adamtornhill/code-maat> | Hotspots (change frequency × size); change coupling as a hidden dependency; the coupling formula and default thresholds used by `volatility.py` (min-revs 5, min-shared 5, min-coupling 30%, max-changeset 30) |
+| CodeScene docs on change coupling and code age — <https://codescene.io/docs/guides/technical/change-coupling.html> | Coupling is neither good nor bad in itself; organize code by age |
+| Graves, Karr, Marron and Siy, "Predicting Fault Incidence Using Software Change History", IEEE TSE 2000 — <https://cs.uwaterloo.ca/~m2nagapp/courses/CS846/1171/papers/graves_tse98.pdf> | Number of changes predicts faults better than length |
+| Nagappan and Ball, "Use of Relative Code Churn Measures to Predict System Defect Density", ICSE 2005 — <https://www.microsoft.com/en-us/research/publication/use-of-relative-code-churn-measures-to-predict-system-defect-density/> | Relative churn separates fault-prone binaries with 89% accuracy |
+| D'Ambros, Lanza and Robbes, "On the Relationship Between Change Coupling and Software Defects", WCRE 2009 — <https://www.inf.usi.ch/lanza/PUBS/P/DAmb2009e.pdf> | Change coupling correlates with defects more than complexity does |
+| Cataldo et al., "Software Dependencies, Work Dependencies, and Their Impact on Failures", IEEE TSE 2009 — <https://herbsleb.org/web-pubs/pdfs/cataldo-software-2009.pdf> | Logical dependencies explain most of the variance in fault proneness |
+| Rahman and Devanbu, "How, and Why, Process Metrics Are Better", ICSE 2013 — <https://research.cs.queensu.ca/home/ahmed/home/teaching/CISC880/F17/papers/HowAndWhyProcessMetricsAreBetter.pdf> | Process metrics beat code metrics for prediction |
+| Michael Feathers, *Working Effectively with Legacy Code* (2004) — <https://www.informit.com/articles/article.aspx?p=359417&seqNum=3> | Seams and enabling points; the legacy code change algorithm; sprout and wrap |
+| Martin Fowler, "Strangler Fig Application" (2004, rewritten 2024) — <https://martinfowler.com/bliki/StranglerFigApplication.html>; "Patterns of Legacy Displacement" — <https://martinfowler.com/articles/patterns-legacy-displacement/> | Growing a new system around an old one; transitional architecture; event interception; asset capture |
+| Martin Fowler, "Branch by Abstraction" (2014) — <https://martinfowler.com/bliki/BranchByAbstraction.html>; Paul Hammant (2007) — <https://paulhammant.com/blog/branch_by_abstraction.html> | Replacing behavior in place while staying releasable |
+| Eric Evans, *Domain-Driven Design Reference* (2015) — <https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf> | Anti-corruption layer; conformist, open-host service, published language, separate ways; boundary around a big ball of mud |
+| Melvin Conway, "How Do Committees Invent?", 1968 — <https://www.melconway.com/Home/Committees_Paper.html>; Fowler, "Conway's Law" — <https://martinfowler.com/bliki/ConwaysLaw.html> | Designs copy communication structures; the inverse Conway maneuver |
+| Skelton and Pais, *Team Topologies* (2019), fracture planes (secondary: <https://brain.mikecordell.com/fracture-planes>) | Change cadence as a natural split line |
+| Hyrum's Law — <https://www.hyrumslaw.com/> | Implicit behavior at a seam is part of the contract |
