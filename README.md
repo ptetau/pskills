@@ -11,21 +11,27 @@ A collection of Claude Code skills. Install any skill by copying its directory i
     SKILL.md
     references/
       blueprint-template.md
+      c4.md
       conventions.md
       notifications.blueprint.md
+      plain-language.md
       sources.md
     scripts/
       check_blueprint.py
+      readability.py
   decompose/
     SKILL.md
     references/
       bricks.md
       brownfield.md
+      c4.md
       design-template.md
       examples.md
+      plain-language.md
       sources.md
       walls.md
     scripts/
+      readability.py
       volatility.py
   probe/
     SKILL.md
@@ -122,8 +128,17 @@ DECISIONS    9 added for review + 0 carried from the design · 0 open questions
 CHECK        PASS
 ```
 
+It draws a C4 container diagram (what runs, and which parts each container holds) and a
+C4 component diagram (who calls whom), and the checker confirms both match the text.
+`--render` renders every diagram with Mermaid.
+
 Hand the blueprint to `/quiz-plan` for a change plan, then `/quiz-plan-execute`, which uses
 the Gherkin scenarios as its failing tests.
+
+**Both skills write in plain English**, for a bright 10-year-old: short sentences, common
+words, and every technical word explained in a "Words used here" list. Names, types, and
+error codes stay exact. `readability.py` (shipped with both) measures sentence length and
+reading grade, and lists unexplained technical words.
 
 ---
 
@@ -142,6 +157,9 @@ two passes, then proves the result:
 3. **Proof** — walk the core use cases through the walls, simulate each likely change
    (target: one component touched), and assemble current and future features from
    existing bricks (target: at most one new brick).
+
+It draws the result as C4 diagrams: a system context diagram, and a component diagram
+with one band per layer, where every arrow is an allowed call.
 
 In an existing codebase it measures volatility from git history instead of guessing:
 `decompose/scripts/volatility.py` reports component churn, change coupling, and

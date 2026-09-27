@@ -26,6 +26,10 @@ Errors (exit code 1):
   - design IDs (V1, F2, UC3, FR-1, SC-1, INV-1) remain outside code blocks
   - a flow calls a component its kind may not call (walls.md call rules), or one its
     "May call" line doesn't list
+  - section 5 has no C4 component diagram, or it leaves out a component, shows one section 5
+    doesn't define, or draws a call the call rules forbid; section 1 has neither a C4
+    container diagram placing every component nor a line saying there is one container
+  - with --render: a Mermaid diagram does not render (needs mmdc)
   - with --design: a Client, Manager, Engine, or ResourceAccess in the design's walls has
     no section 5 subsection; section 5 has a component the design doesn't; a design API
     verb has no matching method, or a method isn't in the design's API; a design brick
@@ -33,7 +37,9 @@ Errors (exit code 1):
 
 Not checked: whether a contract's fields or variants match the design's.
 
-Warnings: more than 7 invariants, more than 5
+Warnings: plain-English problems (see readability.py: long sentences, a reading grade
+above 7, technical words missing from the "Words used here" list), more than 7 invariants,
+more than 5
 scenarios, more than 5 steps in a scenario, a Background over 4 steps, a Then step that
 asserts storage, money typed as a bare number, `any` in TypeScript, a component without
 "May call", a design utility not mentioned in section 5, filler phrasing.
@@ -53,6 +59,12 @@ import shutil
 import subprocess
 import sys
 import tempfile
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    import readability  # ships alongside this script
+except ImportError:  # pragma: no cover
+    readability = None
 
 SECTIONS = [
     (1, r"boundary|scope"),
@@ -111,6 +123,14 @@ ALLOWED_CALLS = {  # walls.md call matrix; Utilities, storage, and vendors are a
     "resourceaccess": set(),
     "utility": set(),
 }
+
+KIND_NAMES = {"client": "Client", "manager": "Manager", "engine": "Engine",
+              "resourceaccess": "ResourceAccess", "resource": "Resource", "utility": "Utility"}
+
+
+def a_kind(kind):
+    name = KIND_NAMES.get(kind, kind)
+    return ("an " if name[:1] in "AEIOU" else "a ") + name
 
 
 def section5_components(s5):
@@ -180,6 +200,98 @@ def design_components(design_text):
     return comps
 
 
+C4_ELEMENT = re.compile(r"^\s*(Person|Person_Ext|System|System_Ext|SystemDb|SystemDb_Ext|SystemQueue|SystemQueue_Ext|"
+                        r"Container|Container_Ext|ContainerDb|ContainerDb_Ext|ContainerQueue|ContainerQueue_Ext|"
+                        r"Component|Component_Ext|ComponentDb|ComponentDb_Ext|ComponentQueue|ComponentQueue_Ext)"
+                        r"\(\s*(\w+)\s*,\s*\"([^\"]*)\"(.*)\)\s*$", re.M)
+C4_REL = re.compile(r"^\s*(?:Rel|BiRel|Rel_[UDLR]|Rel_Up|Rel_Down|Rel_Left|Rel_Right|Rel_Back)\(\s*(\w+)\s*,\s*(\w+)",
+                    re.M)
+
+
+FLOW_NODE = re.compile(r"^\s*(\w+)\s*(?:\[\(|\(\[|\[\[|\(\(|\[|\(|\{)\s*\"(.*?)\"", re.M)
+FLOW_EDGE = re.compile(r"^\s*(\w+)\s*(?:-->|-\.->|==>)\s*(?:\|[^|]*\|\s*)?(\w+)", re.M)
+
+
+def c4_blocks(body, kind):
+    """Mermaid blocks of one C4 diagram kind (C4Context, C4Container, C4Component, ...).
+
+    A component diagram may also be a C4-styled flowchart whose boxes say "[Component: Kind]"."""
+    out = []
+    for lang, b in code_blocks(body, {"mermaid"}):
+        head = re.sub(r"^\s*---.*?---\s*", "", b, flags=re.S)
+        if re.match(r"\s*%s\b" % kind, head):
+            out.append(b)
+        elif kind == "C4Component" and re.match(r"\s*(flowchart|graph)\b", head) and "[Component:" in b:
+            out.append(b)
+    return out
+
+
+def diagram_parts(b):
+    """({alias: (name, element kind)}, [(from alias, to alias)]) from a C4 macro or C4-styled flowchart."""
+    elements, rels = {}, []
+    for m in C4_ELEMENT.finditer(b):
+        elements[m.group(2)] = (m.group(3).strip("`"), m.group(1))
+    rels += C4_REL.findall(b)
+    for m in FLOW_NODE.finditer(b):
+        label = m.group(2)
+        bold = re.search(r"<b>(.*?)</b>", label)
+        name = (bold.group(1) if bold else re.split(r"<br\s*/?>", label)[0]).strip().strip("`")
+        kind = re.search(r"\[(Component|Container|External system|Person)[^\]]*\]", label)
+        elements.setdefault(m.group(1), (name, "Component" if kind and kind.group(1) == "Component"
+                                          else (kind.group(1) if kind else "other")))
+    rels += FLOW_EDGE.findall(b)
+    return elements, rels
+
+
+def check_c4(s1, s5, components, kinds, errors, warnings):
+    """Diagrams must name the same components as the text, and arrows must follow the call rules."""
+    names = {c.split("\n", 1)[0].strip().strip("`") for c in components}
+    built = {n for n in names if kinds.get(n) != "utility"}
+    for where, body in (("section 1", s1), ("section 5", s5)):
+        for m in re.finditer(r"^```mermaid\n(.*?)^```\n?((?:\s*\n)*[^\n]*)", body, re.M | re.S):
+            b, after = m.group(1), m.group(2)
+            if not (re.match(r"\s*C4\w+", b) or "[Component:" in b):
+                continue
+            title = re.search(r"^\s*title:?\s*\"?([^\n\"]+)", b, re.M)
+            if not title:
+                warnings.append("%s: a C4 diagram has no title (c4model.com: title every diagram with its type "
+                                "and scope)" % where)
+            elif not re.search(r"context|container|component|dynamic|deployment", title.group(1), re.I):
+                warnings.append("%s: diagram title '%s' doesn't say its type (e.g. 'Component diagram for …')"
+                                % (where, title.group(1).strip()))
+            if not re.match(r"\s*key\b", after.strip(), re.I):
+                warnings.append("%s: no 'Key:' line under a C4 diagram (c4model.com: every diagram needs a key)"
+                                % where)
+    comp = c4_blocks(s5, "C4Component")
+    if not comp and len(built) > 3:
+        errors.append("section 5: no C4 component diagram of the parts and their calls (```mermaid C4Component, or a "
+                      "flowchart whose boxes say [Component: Kind]); C4 makes it optional only for 3 parts or fewer")
+    for b in comp:
+        elements, rels = diagram_parts(b)
+        labels = {name for name, kind in elements.values() if kind.startswith("Component")}
+        for n in sorted(built - labels):
+            errors.append("section 5: `%s` is missing from the C4 component diagram" % n)
+        for l in sorted(labels - names):
+            if not re.search(r"storage|store|database|db|queue|vendor|resource", l, re.I):
+                errors.append("section 5: the C4 component diagram shows `%s`, which section 5 doesn't define" % l)
+        alias = {a: name for a, (name, kind) in elements.items()}
+        for a, b2 in rels:
+            src, dst = alias.get(a), alias.get(b2)
+            ks, kd = kinds.get(src), kinds.get(dst)
+            if ks and kd and kd not in ALLOWED_CALLS.get(ks, set()):
+                errors.append("section 5: the C4 diagram draws `%s` calling `%s`, but %s may not call %s"
+                              % (src, dst, a_kind(ks), a_kind(kd)))
+    cont = c4_blocks(s1, "C4Container")
+    if cont:
+        text = "\n".join(cont)
+        for n in sorted(built):
+            if not re.search(r"\b%s\b" % re.escape(n), text):
+                errors.append("section 1: `%s` is not placed in any container of the C4 container diagram" % n)
+    elif not re.search(r"one container|single container", s1, re.I):
+        errors.append("section 1: no C4 container diagram (```mermaid C4Container), and no line saying "
+                      "everything runs in one container")
+
+
 def check_design(design_text, s5, components, s3_code=""):
     """Congruence with the source design: same components, same verbs."""
     errors, warnings = [], []
@@ -215,7 +327,7 @@ def check_design(design_text, s5, components, s3_code=""):
         for col, into in ((api_col, verbs), (brick_col, bricks)):
             if col is not None and col < len(cells):
                 for v in re.findall(r"`([A-Z][A-Za-z0-9]*)", cells[col]):
-                    if v not in comps:
+                    if v not in comps and not v.isupper():   # skip HTTP methods and codes
                         into.add((name, v))
     dsections, _ = split_sections(design_text)
     brick_section = next((b for t, b in dsections.values() if re.search(r"brick", t, re.I)), "")
@@ -262,7 +374,7 @@ def check_design(design_text, s5, components, s3_code=""):
     return errors, warnings, len(comps)
 
 
-def check(text, compile_ts=False, draft=False, design_text=None):
+def check(text, compile_ts=False, draft=False, design_text=None, render=False):
     errors, warnings = [], []
     sections, order = split_sections(text)
 
@@ -396,13 +508,14 @@ def check(text, compile_ts=False, draft=False, design_text=None):
                 continue
             ck = kinds.get(callee)
             if kind and ck and ck not in ALLOWED_CALLS.get(kind, set()):
-                errors.append("section 5, %s: its flow calls `%s.%s`, but a %s may not call a %s (walls.md call "
-                              "rules)" % (name, callee, method, kind, ck))
+                errors.append("section 5, %s: its flow calls `%s.%s`, but %s may not call %s (walls.md call "
+                              "rules)" % (name, callee, method, a_kind(kind), a_kind(ck)))
             elif may and not re.search(r"\b%s\b" % re.escape(callee), may_text):
                 errors.append("section 5, %s: its flow calls `%s.%s`, which its 'May call' line doesn't allow"
                               % (name, callee, method))
             elif kind == "manager" and ck == "manager":
                 warnings.append("section 5, %s: calls Manager `%s`; that is allowed only through a queue" % (name, callee))
+    check_c4(s1, s5, components, kinds, errors, warnings)
     for n, item in enumerate(items, 1):
         enforced = re.split(r"enforced (?:by|in|at)", item, flags=re.I)
         if len(enforced) < 2:
@@ -472,8 +585,13 @@ def check(text, compile_ts=False, draft=False, design_text=None):
             errors.append("line %d: cryptic design ID '%s'; use the domain term" % (i, m.group(0)))
     if FILLER.search(prose):
         warnings.append("filler phrasing found; lead with substance")
+    if readability is not None:
+        rw, rs = readability.check(text)
+        warnings += ["plain English: " + w for w in rw]
+        plain = rs
 
-    stats = {"invariants": len(items), "error_codes": sorted(catalog), "state_types": state_types,
+    stats = {"reading_grade": plain.get("grade") if readability is not None else None,
+             "invariants": len(items), "error_codes": sorted(catalog), "state_types": state_types,
              "components": len(components), "scenarios": len(scenarios), "assumed": assumed,
              "decisions": decisions, "carried": carried,
              "open_questions": open_questions}
@@ -483,6 +601,29 @@ def check(text, compile_ts=False, draft=False, design_text=None):
         errors += e
         warnings += w
         stats["design_components"] = n
+
+    if render:
+        mmdc = shutil.which("mmdc")
+        blocks = [b for _, b in code_blocks(text, {"mermaid"})]
+        if not mmdc:
+            warnings.append("--render: mmdc (Mermaid CLI) not found on PATH; skipped")
+        else:
+            cfg = os.environ.get("MMDC_PUPPETEER_CONFIG")
+            with tempfile.TemporaryDirectory() as d:
+                for i, b in enumerate(blocks, 1):
+                    src, out = os.path.join(d, "d%d.mmd" % i), os.path.join(d, "d%d.svg" % i)
+                    with open(src, "w", encoding="utf-8") as f:
+                        f.write(b)
+                    cmd = [mmdc, "-i", src, "-o", out] + (["-p", cfg] if cfg else [])
+                    r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=180)
+                    if r.returncode != 0 or not os.path.exists(out):
+                        title = re.search(r"^\s*title:?\s*\"?([^\"\n]+)", b, re.M)
+                        name = title.group(1).strip() if title else b.strip().split("\n", 1)[0]
+                        log = r.stdout.decode("utf-8", "replace")
+                        err = re.search(r"^Error:.*?(?=^\S*\.parseError|^\s+at |\Z)", log, re.M | re.S)
+                        errors.append("--render: diagram %d (%s) does not render:\n    %s"
+                                      % (i, name, (err.group(0) if err else log[-600:]).strip().replace("\n", "\n    ")))
+            stats["rendered"] = len(blocks)
 
     if compile_ts:
         ts = [b for _, b in code_blocks(text, {"ts", "typescript"})]
@@ -512,6 +653,8 @@ def main(argv=None):
     p.add_argument("--design", help="the source design document, to check the two are congruent")
     p.add_argument("--draft", action="store_true", help="allow open [NEEDS CLARIFICATION] questions")
     p.add_argument("--compile", action="store_true", help="type-check TypeScript blocks with tsc, if installed")
+    p.add_argument("--render", action="store_true",
+                   help="render every Mermaid diagram with mmdc, if installed (MMDC_PUPPETEER_CONFIG for a browser config)")
     p.add_argument("--json", action="store_true", help="machine-readable output")
     opts = p.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
@@ -522,7 +665,7 @@ def main(argv=None):
     if opts.design:
         with open(opts.design, encoding="utf-8") as f:
             design = f.read()
-    errors, warnings, stats = check(text, opts.compile, opts.draft, design)
+    errors, warnings, stats = check(text, opts.compile, opts.draft, design, opts.render)
     status = "FAIL" if errors else ("DRAFT" if stats.get("open_questions") else "PASS")
     if opts.json:
         json.dump({"status": status, "errors": errors, "warnings": warnings, "stats": stats}, sys.stdout, indent=2)

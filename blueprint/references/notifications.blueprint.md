@@ -3,80 +3,124 @@
 **Source design:** `notifications.design.md` (the worked example in `decompose/references/examples.md`)
 · **Language:** TypeScript · **Status:** draft
 
-## 1. Header & Boundary Box
+## 1. Header & Boundary Box: what gets built, and what doesn't
 
-**System:** tells people about events in other systems, by email, SMS, or Slack, in their
-language, on the channel and at the time they prefer.
-**Target mode:** modular monolith in TypeScript on Node.js 20, Postgres for storage *(assumed)*,
-one process with an in-process scheduler.
+**System:** tells people when something happens in another system. It sends email, SMS,
+or Slack messages, in each person's language, on the channel and at the time they choose.
+**Target mode:** one app in TypeScript on Node.js 20, with a Postgres database
+*(assumed)*. A timer inside the app wakes it every minute.
+
+```mermaid
+C4Container
+  title Container diagram for Notifications: where each part runs
+  Person(staff, "Staff member", "Sets how and when people are reached")
+  System_Ext(apps, "Product systems", "Send events about users")
+  System_Boundary(sys, "Notifications") {
+    Container(app, "Notifications app", "Node.js 20, TypeScript", "Holds EventsApi, AdminPortal, Scheduler, NotificationManager, RoutingEngine, RenderingEngine, RecipientsAccess, DeliveryAccess, OutboxAccess")
+    ContainerDb(db, "Database", "Postgres", "Recipients, the outbox, and delivery history")
+  }
+  System_Ext(vendors, "Email, SMS, and Slack vendors", "Deliver the messages")
+  Rel(apps, app, "Posts events", "HTTPS")
+  Rel(staff, app, "Sets preferences", "HTTPS")
+  Rel(app, db, "Reads and writes", "SQL")
+  Rel(app, vendors, "Sends messages", "HTTPS")
+  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
+```
+
+Key: the blue boxes run inside our system; grey boxes are other systems; the figure is a
+person. Each container lists the components it holds. Arrows show who calls whom, and how.
 
 ### In scope
 
-- Welcome email when someone signs up.
-- Password-reset code by SMS.
-- Daily digest email of activity.
-- Ops alerts posted to Slack.
-- Each user picks their preferred channel.
-- Quiet hours: nothing non-urgent at night.
-- Failed deliveries are retried.
-- Messages in the user's language.
+- A welcome email when someone signs up.
+- A password-reset code by SMS.
+- A daily email that sums up what happened (the digest).
+- Alerts for the operations team, posted to Slack.
+- Each person picks the channel they prefer.
+- Quiet hours: nothing that can wait is sent at night.
+- If sending fails, try again.
+- Messages in each person's language.
 
 ### Out of scope (non-goals)
 
-- New channels (WhatsApp, webhooks), opt-out management, escalate-if-unread flows, and
-  moving recipient data to a CRM. The design absorbs each of these later; don't build them.
+- New channels (WhatsApp, webhooks), opting out, "send a text if the email isn't read",
+  and moving recipient data to another system. The design leaves room for each one.
+  Don't build them now.
 - Marketing campaigns, A/B tests, and analytics.
-- A template editor. Templates ship as files with the rendering module.
-- Fax, or anything else the design rejected as speculative.
+- A template editor. Templates ship as files inside `RenderingEngine`.
+- Fax, and anything else the design ruled out.
 
 ### Decisions added by this spec
 
-Each item was open in the design and is decided here. Review these first.
+Each of these was open in the design, so this spec decides it. Check these first.
 
-- Storage is Postgres; the outbox and delivery records share one database. If wrong: only
-  the ResourceAccess implementations change.
-- Idempotency key is `eventId:recipientId:channel`, kept 30 days. If wrong: the key format
-  in `OutboxAccess.claim` changes.
-- Urgent events are `password.reset` and `alert.*`; everything else is non-urgent. If
-  wrong: the urgency table in `RoutingEngine` changes.
-- Default quiet hours are 22:00–07:00 in the recipient's time zone. If wrong: one default.
-- At most 5 delivery attempts, exponential backoff from 30 s capped at 1 h, full jitter. If
-  wrong: three constants in `NotificationManager`.
-- Fallback language is English (`en`). If wrong: one default in `RenderingEngine`.
-- The digest goes out at 08:00 in each recipient's time zone. If wrong: one constant in
-  `Scheduler`.
-- Vendor calls time out after 10 s, until the vendors' p99.9 latency is measured. If
-  wrong: one constant per transport in `DeliveryAccess`.
-- Timestamps are ISO 8601 UTC strings. If wrong: the `Instant` type.
+- Storage is one Postgres database. If wrong: only the ResourceAccess parts change.
+- A message is known by `eventId:recipientId:channel`, kept for 30 days. If wrong:
+  `OutboxAccess.claim` changes.
+- Urgent events are `password.reset` and `alert.*`. Everything else can wait. If wrong:
+  one table in `RoutingEngine` changes.
+- Quiet hours are 22:00 to 07:00 in the person's own time zone, unless they pick others.
+  If wrong: one default changes.
+- Try sending up to 5 times. Wait 30 s, then longer each time, up to 1 h, plus a random
+  part. If wrong: three numbers in `NotificationManager` change.
+- If a message isn't written in the person's language, use English (`en`). If wrong: one
+  default in `RenderingEngine` changes.
+- The digest goes out at 08:00 in each person's time zone. If wrong: one number in
+  `Scheduler` changes.
+- Calls to vendors give up after 10 s. Change this once we know how fast the vendors
+  really are. If wrong: one number per channel in `DeliveryAccess` changes.
+- Times are ISO 8601 strings in UTC. If wrong: the `Instant` type changes.
 
-## 2. System Invariants
+### Words used here
 
-1. **Each message is delivered at most once.** A message is identified by
-   `eventId:recipientId:channel` *(assumed)*. Replaying the same event returns the original
-   receipt and sends nothing. Replaying the same key with a different payload is refused.
-   Enforced by `OutboxAccess.claim`, in the same transaction as the outbox insert.
-   Violation: `IDEMPOTENCY_CONFLICT`.
-2. **No non-urgent message is delivered during the recipient's quiet hours.** It is held
-   and released when quiet hours end. Enforced by `RoutingEngine.route`, which returns a
-   deferral. Deferral reason: `QUIET_HOURS_DEFERRED`.
-3. **Every message reaches at least one channel the recipient allows, or is rejected.** It
-   is never dropped silently. Enforced by `RoutingEngine.route`. Violation:
-   `NO_REACHABLE_CHANNEL`.
-4. **A delivery's history only moves forward.** `delivered` and `dead` are final and never
-   change. Enforced by `OutboxAccess`'s lifecycle verbs (`startAttempt`, `failAttempt`,
-   `scheduleRetry`, `giveUp`, `confirmDelivery`), each a compare-and-set on the current
-   state. Violation: `INVALID_TRANSITION`.
-5. **Retries are bounded.** After 5 failed attempts *(assumed)* a delivery becomes `dead`
-   and is reported, never retried again. Enforced by `NotificationManager` through the
+- **Client, Manager, Engine, ResourceAccess**: the four kinds of part. A Client takes
+  requests in. A Manager runs the steps of a task in order. An Engine applies rules. A
+  ResourceAccess part talks to storage or an outside service.
+- **Envelope**: the record that carries one message through the steps.
+- **Outbox**: the table that remembers every message and how far it has got.
+- **Invariant**: a rule that must always be true.
+- **Idempotent, idempotency**: safe to do twice; the second time changes nothing.
+- **Atomic, atomically**: all or nothing. Nothing is left half done.
+- **Compare-and-set**: change a value only if it is still what you expect. If someone
+  changed it first, refuse.
+- **Backoff**: waiting a little longer after each failed try.
+- **Jitter**: a random extra wait, so many tries don't all happen at once.
+- **Deterministic**: always gives the same answer for the same input.
+- **Precondition**: something that must be true before a step can run.
+- **Postcondition**: something a step promises is true when it finishes.
+- **Payload**: the data sent with a request.
+- **Latency**: how long something takes to answer.
+- **Orchestration**: running the steps of a task in the right order.
+- **Encapsulates**: keeps a likely change inside one part, so the rest doesn't notice.
+
+## 2. System Invariants: rules that must always hold
+
+1. **Each message is sent at most once.** A message is known by
+   `eventId:recipientId:channel` *(assumed)*. If the same event comes in again, the app
+   returns the first result and sends nothing new. If it comes back with different data,
+   it is refused. Enforced by `OutboxAccess.claim`, in the same database transaction that
+   saves the message. Violation: `IDEMPOTENCY_CONFLICT`.
+2. **Nothing that can wait is sent during quiet hours.** The message is held, then sent
+   when quiet hours end. Enforced by `RoutingEngine.route`, which answers "wait until
+   then". Reason: `QUIET_HOURS_DEFERRED`.
+3. **Every message reaches a channel the person allows, or is refused.** It is never
+   quietly dropped. Enforced by `RoutingEngine.route`. Violation: `NO_REACHABLE_CHANNEL`.
+4. **A delivery only moves forward.** Once it is `delivered` or `dead`, it never changes.
+   Enforced by `OutboxAccess`'s lifecycle verbs (`startAttempt`, `failAttempt`,
+   `scheduleRetry`, `giveUp`, `confirmDelivery`). Each one is a compare-and-set on the
+   current state. Violation: `INVALID_TRANSITION`.
+5. **Tries are limited.** After 5 failed tries *(assumed)*, a delivery is marked `dead`
+   and reported. It is never tried again. Enforced by `NotificationManager`, using the
    delivery state machine. Outcome: `RETRIES_EXHAUSTED`.
-6. **A message is never sent without its content.** Rendering either produces the full
-   message, falling back to English, or fails. Enforced by `RenderingEngine.render`.
-   Violation: `TEMPLATE_NOT_FOUND`.
+6. **No message goes out without its text.** Rendering either makes the whole message,
+   falling back to English, or fails. Enforced by `RenderingEngine.render`. Violation:
+   `TEMPLATE_NOT_FOUND`.
 
-## 3. Core Domain Data Contracts
+## 3. Core Domain Data Contracts: the exact shape of the data
 
-Conventions: IDs are branded strings; timestamps are ISO 8601 UTC strings *(assumed)*;
-optional fields are marked `?`; errors are values, never thrown across a module boundary.
+How the types work. Each kind of ID has its own type, so one can't be passed as another.
+Times are ISO 8601 strings in UTC *(assumed)*. A `?` marks a field that may be missing.
+Errors come back as values; they are never thrown from one part to another.
 
 ```ts
 // Identifiers
@@ -172,9 +216,9 @@ export type Result<T> = { ok: true; value: T } | { ok: false; error: ErrorCode; 
 
 ### Error catalog
 
-Fault follows design by contract: a broken precondition is the caller's fault (4xx), a
-broken postcondition or invariant is the supplier's (5xx). Over HTTP, errors are RFC 9457
-problem details with the code in a `code` member.
+Whose fault is it? If the caller broke a precondition, it's the caller's fault (a 4xx
+status). If our code broke a promise, it's ours (a 5xx status). Over HTTP, errors use RFC
+9457 problem details, with the code in a `code` field.
 
 | Code | Meaning | Fault | HTTP | Retry helps? |
 |------|---------|-------|------|--------------|
@@ -188,7 +232,7 @@ problem details with the code in a `code` member.
 | `PROVIDER_UNAVAILABLE` | the vendor timed out or answered 408, 429, or 5xx | vendor | — (internal) | yes, with backoff |
 | `RECIPIENT_NOT_FOUND` | no recipient has that ID | caller | 404 | no |
 
-## 4. State Machines
+## 4. State Machines: how things move from one state to the next
 
 ### DeliveryStatus
 
@@ -205,9 +249,9 @@ stateDiagram-v2
   dead --> [*]
 ```
 
-Stored by `OutboxAccess`. Each transition is the lifecycle verb on its arrow, performed as a
-compare-and-set on the current state. Any other transition: `INVALID_TRANSITION`.
-Terminal: `delivered`, `dead`.
+Stored by `OutboxAccess`. Each arrow is done by the verb written on it, as a
+compare-and-set. Any move that isn't drawn is refused with `INVALID_TRANSITION`. Final
+states: `delivered` and `dead`.
 
 ### HeldItemState
 
@@ -218,10 +262,10 @@ stateDiagram-v2
   released --> [*]
 ```
 
-Stored by `OutboxAccess`. `release` moves every due item in one transaction; a released item
-can't be held again: `INVALID_TRANSITION`.
+Stored by `OutboxAccess`. `release` moves every item that is due, all in one
+transaction. A released item can't be held again: `INVALID_TRANSITION`.
 
-## 5. Module Boundaries & Interface Signatures
+## 5. Module Boundaries & Interface Signatures: the parts and how to call them
 
 ### Module map
 
@@ -241,6 +285,62 @@ src/
 tests/
   features/                   section 6 scenarios
 ```
+
+### Component diagram
+
+Every part of the app, one layer per band, and who calls whom. Each arrow is a call the
+design allows; the labels are the verbs used.
+
+```mermaid
+---
+title: "Component diagram for the notifications app: who calls whom"
+---
+flowchart TB
+  subgraph app["Notifications app [container]"]
+    subgraph clients["Clients: how requests come in"]
+      events["<b>EventsApi</b><br/>[Component: Client, TypeScript]<br/>Takes events in over HTTP"]
+      portal["<b>AdminPortal</b><br/>[Component: Client, TypeScript]<br/>The preferences screen"]
+      sched["<b>Scheduler</b><br/>[Component: Client, TypeScript]<br/>Wakes the app every minute"]
+    end
+    subgraph managers["Managers: the steps, in order"]
+      mgr["<b>NotificationManager</b><br/>[Component: Manager, TypeScript]<br/>Runs each task's steps"]
+    end
+    subgraph engines["Engines: the rules"]
+      routing["<b>RoutingEngine</b><br/>[Component: Engine, TypeScript]<br/>Who gets what, where, and when"]
+      rendering["<b>RenderingEngine</b><br/>[Component: Engine, TypeScript]<br/>Writes the message text"]
+    end
+    subgraph access["ResourceAccess: storage and vendors"]
+      recipients["<b>RecipientsAccess</b><br/>[Component: ResourceAccess, TypeScript]<br/>Recipients and their choices"]
+      delivery["<b>DeliveryAccess</b><br/>[Component: ResourceAccess, TypeScript]<br/>Hands messages to vendors"]
+      outbox["<b>OutboxAccess</b><br/>[Component: ResourceAccess, TypeScript]<br/>Each delivery's state"]
+    end
+  end
+  db[("<b>Database</b><br/>[Container: Postgres]")]
+  vendors["<b>Email, SMS, Slack vendors</b><br/>[External system]"]
+  engines ~~~ access
+  events -->|Notify| mgr
+  portal -->|SetPreferences| mgr
+  sched -->|SendDue| mgr
+  mgr -->|RecipientsFor, Route| routing
+  mgr -->|Render| rendering
+  mgr -->|Find, ChooseChannel, SetQuietHours| recipients
+  mgr -->|Deliver| delivery
+  mgr -->|Claim, Hold, Release, lifecycle verbs| outbox
+  recipients -->|SQL| db
+  outbox -->|SQL| db
+  delivery -->|HTTPS| vendors
+  classDef component fill:#85bbf0,stroke:#5d82a8,color:#000
+  classDef external fill:#999999,stroke:#6b6b6b,color:#fff
+  classDef store fill:#438dd5,stroke:#2e6295,color:#fff
+  class events,portal,sched,mgr,routing,rendering,recipients,delivery,outbox component
+  class vendors external
+  class db store
+```
+
+Key: light blue, a component in the app; dark blue, the database; grey, another system.
+Bands run top to bottom: Clients, Managers, Engines, ResourceAccess. Arrows are calls, and
+their labels are the verbs used. Utilities (logging, secrets) are left out: every part may
+call them.
 
 ### Entry points (Clients)
 
@@ -444,7 +544,7 @@ export interface OutboxAccess {
   only where the current state is the one its arrow starts from, otherwise
   `INVALID_TRANSITION`. Storage errors are retried twice with jitter.
 
-## 6. Agent Verification Suite
+## 6. Agent Verification Suite: tests that say when it's done
 
 ```gherkin
 Feature: Notifications are delivered once, on the right channel, at the right time

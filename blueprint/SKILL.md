@@ -137,7 +137,10 @@ components, and behaviors, and translate each.
    blueprint use that one language.
 2. **Target mode.** What gets built and how it runs, in one line: a browser app, a CLI, a
    library, a single service or modular monolith, or separately deployed services (only
-   if the design calls for them).
+   if the design calls for them). Then draw the **C4 container diagram**: each container
+   (an app, a database, a queue) and the components it holds. Components are never split
+   across containers; C4: "it's the container that's the deployable unit". With one
+   container, one line saying so is enough. See `references/c4.md`.
 3. **Name.** `name.blueprint.md`, next to the design document.
 
 ## Phase 1 — Header and boundary box
@@ -149,6 +152,8 @@ components, and behaviors, and translate each.
 - **Decisions carried from the design**: the design's own assumptions, as they are.
 - **Decisions added by this spec**: every *(assumed)* detail, one line each. Keeping the two
   lists apart keeps the new list short enough to review.
+- **Words used here**: each technical word the blueprint uses, explained in one plain
+  line.
 - A link to the source design.
 
 ## Phase 2 — Invariants
@@ -214,6 +219,8 @@ Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
 
 1. **Module map**: a directory tree an agent can create as is, one folder per component,
    with contracts and tests placed.
+   Then the **C4 component diagram**: the design's diagram, redrawn inside its container,
+   with each box's technology added. Required when there are more than three parts.
 2. **Groups**, named for what they do, with the method's term in brackets:
    Entry points (Clients), Orchestration (Managers), Business rules (Engines),
    Resource access (ResourceAccess), Shared infrastructure (Utilities: a subsection only
@@ -273,7 +280,7 @@ Write 3–5 Gherkin scenarios that a test harness can run.
 1. Run the checker, against the design, and fix until it passes:
 
    ```
-   python <skill-dir>/scripts/check_blueprint.py name.blueprint.md --design name.design.md --compile
+   python <skill-dir>/scripts/check_blueprint.py name.blueprint.md --design name.design.md --compile --render
    ```
 
    It checks structure, invariant enforcement points and codes, that every code is in the
@@ -282,6 +289,10 @@ Write 3–5 Gherkin scenarios that a test harness can run.
    scenario, that no scenario uses an undefined code, that section 6 ends with a verify
    command, that no design IDs such as `V1` or `F2` remain, and that no
    `[NEEDS CLARIFICATION]` is left open (use `--draft` while questions are still out).
+   Its C4 checks confirm that the component diagram names exactly section 5's components,
+   that every arrow obeys the call rules, that every component sits in a container, and
+   that each diagram has a typed title and a key. With `--render` it renders every Mermaid
+   diagram (needs `mmdc`). It also runs the plain-English check.
    With `--design` it checks congruence: every component in the design has a section 5
    subsection, no Manager, Engine, or ResourceAccess appears that the design lacks, and each
    design verb has a matching method. With `--compile` it type-checks TypeScript blocks
@@ -308,6 +319,11 @@ Write 3–5 Gherkin scenarios that a test harness can run.
 
 ## Style
 
+- **Plain English.** Write every sentence for a bright 10-year-old: one idea per sentence,
+  common words, and each technical word explained once in section 1's "Words used here"
+  list. Names, types, error codes, and numbers stay exact. Plain is not vague: "send each
+  message at most once" is as exact as "idempotent delivery". See
+  `references/plain-language.md`; the checker measures it.
 - **Size it to the system.** A small system gets a short blueprint: fewer invariants, no
   HTTP column without HTTP, one line where a paragraph isn't needed.
 - **Zero fluff.** Lead each section with its substance. No introductions, no summaries of
@@ -329,7 +345,12 @@ Write 3–5 Gherkin scenarios that a test harness can run.
 - `references/notifications.blueprint.md`: a worked blueprint of `/decompose`'s
   notifications example. It passes the checker.
 - `references/sources.md`: the sources behind the conventions.
-- `scripts/check_blueprint.py`: the checker. Standard library only.
+- `references/c4.md`: the C4 diagrams: which level each skill draws, the notation rules,
+  and Mermaid examples that render. Shared with `/decompose`.
+- `references/plain-language.md`: how to write it in plain English; shared with
+  `/decompose`.
+- `scripts/check_blueprint.py`: the checker. Standard library only. It also runs
+  `scripts/readability.py`, which ships alongside it (and with `/decompose`).
 
 ## Example
 

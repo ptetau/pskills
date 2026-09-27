@@ -73,3 +73,14 @@ source was available, the entry says so.
 | Melvin Conway, "How Do Committees Invent?", 1968 — <https://www.melconway.com/Home/Committees_Paper.html>; Fowler, "Conway's Law" — <https://martinfowler.com/bliki/ConwaysLaw.html> | Designs copy communication structures; the inverse Conway maneuver |
 | Skelton and Pais, *Team Topologies* (2019), fracture planes (secondary: <https://brain.mikecordell.com/fracture-planes>) | Change cadence as a natural split line |
 | Hyrum's Law — <https://www.hyrumslaw.com/> | Implicit behavior at a seam is part of the contract |
+
+## Diagrams and plain language
+
+| Source | Contributes |
+|--------|-------------|
+| Simon Brown, the C4 model — <https://c4model.com> (abstractions, diagrams, notation, checklist) | The four levels; container and component definitions ("it's the container that's the deployable unit"); draw component diagrams only when they add value; titles, keys, typed elements, labelled one-way arrows; "notation independent" |
+| Simon Brown, "Modular monolith" — <https://simonbrown.je/modular-monolith/> | Well-defined components in a monolith are a stepping stone to microservices: choosing containers is a separate decision |
+| Mermaid, C4 diagrams — <https://mermaid.js.org/syntax/c4.html> | C4Context and C4Container syntax (experimental; no automatic layout; no legend), so component diagrams are drawn as C4-style flowcharts |
+| GitHub, creating diagrams — <https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams> | Mermaid renders in GitHub Markdown |
+| Kincaid, Fishburne, Rogers and Chissom, "Derivation of New Readability Formulas" (1975) — <https://stars.library.ucf.edu/istlibrary/56/> | The Flesch–Kincaid grade level that `readability.py` reports |
+

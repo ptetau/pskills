@@ -185,8 +185,12 @@ Goal: know the mode, the scope, and the inputs before designing anything.
    *what kind* of change keeps happening. See `references/brownfield.md` for how to read
    the report.
 
-Output: a short frame (problem, users, constraints, assumptions, host facts) and a numbered feature
-list (F1, F2, …).
+5. **Draw the system context diagram** (C4 level 1): the system as one box, the people who
+   use it, and the other systems it talks to. In subsystem mode, the host is the system.
+   See `references/c4.md`.
+
+Output: a short frame (problem, users, constraints, assumptions, host facts), a context
+diagram, and a numbered feature list (F1, F2, …).
 
 ## Phase 1 — Core use cases
 
@@ -235,7 +239,9 @@ Goal: components, their types, their APIs, and the call graph.
    as `Deliver`, `FindRecipients`, `ConfirmDelivery`, never `Insert`, `Update`, `Save`,
    a generic `Record`, or a vendor's API.
 3. **Draw the call graph** by layer and check the call rules. Fix violations by moving
-   responsibility, not by adding exceptions.
+   responsibility, not by adding exceptions. Draw it as a C4 component diagram, one band
+   per layer, inside the system's boundary (containers are `/blueprint`'s choice). Skip
+   the diagram when there are three parts or fewer. See `references/c4.md`.
 4. **Check the size and shape.** Löwy's heuristics: about ten components in order of
    magnitude; even a large system commonly has two to five Managers, two to three Engines
    (fewer than the Managers), three to eight ResourceAccess and Resources, and about six
@@ -335,7 +341,11 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    - No layer diagram, and no justifying being below Löwy's sizes: those are warnings for
      large systems.
    - Empty sections keep their number in one line ("Not applicable: inception").
-2. Show a compact summary in chat, in a code block:
+2. Check it reads plainly: `python <skill-dir>/scripts/readability.py <name>.design.md`.
+   Rewrite the flagged sentences, and add any unexplained word to "Words used here".
+   Check every diagram renders: `mmdc` if it is installed, or paste it into
+   <https://mermaid.live>. Give each one a title naming its type and a `Key:` line under it.
+3. Show a compact summary in chat, in a code block:
 
    ```
    DECOMPOSE: <name> · <inception | subsystem of X>
@@ -351,13 +361,17 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    VERDICT       ready | ready, <n> accepted leaks: <list> | <n> leaks to resolve: <list>
    ```
 
-3. Offer next steps: `/argue` the design doc to check it for contradictions;
+4. Offer next steps: `/argue` the design doc to check it for contradictions;
    [[blueprint]] to turn it into an agent-ready spec (typed contracts, state machines,
    signatures, and Gherkin scenarios); and `/quiz-plan` to turn the walls (and, in
    subsystem mode, the migration steps) into an executable change plan.
 
 ## Rules
 
+- **Plain English.** Write the design for a bright 10-year-old: short sentences, common
+  words, and every technical word explained once in a "Words used here" list in §1.
+  Names, code, and numbers stay exact. See `references/plain-language.md`, and run
+  `scripts/readability.py` on the finished document.
 - **Evidence over taste.** Every volatility cites evidence: the user's words, the roadmap,
   or git history. Every component traces to a volatility; every brick to a feature or a
   volatility.
@@ -386,6 +400,12 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
 - `references/examples.md` — a worked inception example (notifications) and a worked
   subsystem example (promotions in an existing shop).
 - `references/sources.md` — where each idea comes from, with links.
+- `references/c4.md` — the C4 diagrams: which level each skill draws, the notation rules,
+  and Mermaid examples that render. Shared with `/blueprint`.
+- `references/plain-language.md` — how to write the design in plain English; shared with
+  `/blueprint`.
+- `scripts/readability.py` — checks the finished design reads plainly: sentence length,
+  reading grade, unexplained technical words. Shared with `/blueprint`.
 - `scripts/volatility.py` — measures component volatility, change coupling, and hotspots
   from git history. Standard library only.
 

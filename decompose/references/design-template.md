@@ -8,7 +8,7 @@
 > (V-id); every brick traces to a volatility or a current feature (F-id). Anything that
 > traces to neither was cut.
 
-## 1. Frame
+## 1. Frame: what this is and who it is for
 
 - **Problem:** <what this system does, in two sentences>
 - **Users:** <who uses it and who calls it: people, systems, schedules>
@@ -19,7 +19,30 @@
 - **Assumptions** (made instead of asking; each one is a question to confirm):
   - <assumption> — <what changes in the design if it is wrong>
 
-## 2. Features and use cases
+```mermaid
+C4Context
+  title System context diagram for <System>
+  Person(user, "<Who uses it>", "<what they get from it>")
+  System_Ext(caller, "<Another system>", "<what it does>")
+  System(sys, "<System>", "<what it does, in one plain sentence>")
+  System_Ext(vendor, "<An outside service>", "<what it does>")
+  Rel(caller, sys, "<Does what to>", "<protocol>")
+  Rel(sys, vendor, "<Does what through>", "<protocol>")
+  Rel(user, sys, "<Does what with>")
+```
+
+Key: the blue box is the system we design; grey boxes are other systems; figures are
+people. Arrows show who calls whom. (See `c4.md`.)
+
+### Words used here
+
+One line per technical word this document uses, explained in plain words (see
+`plain-language.md`). For example:
+
+- **Volatility**: how likely something is to change.
+- **Manager**: the part that runs the steps of a task in order.
+
+## 2. Features and use cases: what it must do
 
 | ID | Feature (as the user would say it) | Core use case? |
 |----|--------------------------------------|----------------|
@@ -29,7 +52,7 @@
 Core use cases (the few that express the essence of the system; everything else is a
 variation of these): <UC1 — ...>, <UC2 — ...>
 
-## 3. Volatility register
+## 3. Volatility register: what is likely to change
 
 | ID | What changes | Axis | Evidence | Likelihood | Contained by |
 |----|--------------|------|----------|------------|--------------|
@@ -43,30 +66,40 @@ variation of these): <UC1 — ...>, <UC2 — ...>
 | <...> | nature of the business: if this changes, it is a different system |
 | <...> | speculative: no evidence it will change |
 
-## 4. Walls (architecture)
+## 4. Walls: the parts, and who may call whom
+
+A C4 component diagram, one band per layer (see `c4.md`). Skip it when there are three
+parts or fewer; the table below says the same thing.
 
 ```mermaid
+---
+title: "Component diagram for <System>: the parts, and who calls whom"
+---
 flowchart TB
-  subgraph Clients
-    C1[<Client>]
+  subgraph sys["<System> [software system]"]
+    subgraph clients["Clients: how requests come in"]
+      c1["<b><Client></b><br/>[Component: Client]<br/><what it takes in>"]
+    end
+    subgraph managers["Managers: the steps, in order"]
+      m1["<b><Noun>Manager</b><br/>[Component: Manager]<br/><the steps it runs>"]
+    end
+    subgraph engines["Engines: the rules"]
+      e1["<b><Activity>Engine</b><br/>[Component: Engine]<br/><the rule it applies>"]
+    end
+    subgraph access["ResourceAccess: storage and vendors"]
+      a1["<b><Noun>Access</b><br/>[Component: ResourceAccess]<br/><what it reads and writes>"]
+    end
   end
-  subgraph Business logic
-    M1[<Noun>Manager]
-    E1[<Noun>Engine]
-  end
-  subgraph Resource access
-    RA1[<Noun>Access]
-  end
-  subgraph Resources
-    R1[(<store or external system>)]
-  end
-  U[[Utilities: <logging, security, pub/sub>]]
-  C1 --> M1
-  M1 --> E1
-  M1 --> RA1
-  E1 --> RA1
-  RA1 --> R1
+  r1[("<b>Storage</b><br/>[Resource]")]
+  engines ~~~ access
+  c1 -->|<Verb>| m1
+  m1 -->|<Verb>| e1
+  m1 -->|<Verb>| a1
+  a1 --> r1
 ```
+
+Key: light blue, a part we build; dark blue, storage; grey, another system. Arrows are
+calls, labelled with the verbs used. Utilities are left out: every part may call them.
 
 | Component | Type | Encapsulates | API (business verbs) | May call |
 |-----------|------|--------------|---------------------------|----------|
@@ -76,7 +109,7 @@ flowchart TB
 For a Client, the API column lists its entry points (routes, commands, screens, or the
 user actions a UI handles), so the blueprint types them instead of inventing them.
 
-## 5. Bricks (implementation inside the walls)
+## 5. Bricks: the small pieces inside each part
 
 Shared contracts (one per wall, or one shared by walls on the same flow):
 
@@ -97,7 +130,7 @@ Mark terminal states, if there are any.
 <state> --event [guard] / effect--> <state>
 ```
 
-## 6. Feature assembly
+## 6. Feature assembly: each feature built from the pieces
 
 Every feature, now and plausible future, written as a composition of existing bricks.
 
@@ -106,7 +139,7 @@ Every feature, now and plausible future, written as a composition of existing br
 | F1 | `<Input> → <Transform> → <Transport>` | 0 |
 | future: <V1 happens> | `<same, one brick swapped>` | 1 (inside <component>) |
 
-## 7. Validation
+## 7. Validation: proof the design holds
 
 **Use-case walkthroughs** (each core use case as a call chain, one call per line):
 
@@ -146,7 +179,7 @@ that a wall now separates, and why the design removes that coupling>
 result, e.g. "V3 touched RenderingEngine and PracticeApp; moved template choice into
 RenderingEngine; re-run passes">
 
-## 8. Seams and migration (subsystem mode)
+## 8. Seams and migration: how it joins the existing system (subsystem mode)
 
 In inception mode, write "Not applicable: inception" and keep the number.
 
