@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** ██████████░░ 11/13 steps completed (85%)
+**Progress:** ███████░░░░░ 11/20 steps completed (55%)
 
 ## How to use this document (read this first, every session)
 
@@ -232,6 +232,72 @@ stop and wait for human review.
   this works.
 - **Touches:** `pdlc/**` (new, repo root), the files the chosen intent changes
 - **Depends on:** Step 12
+
+### Step 14: Folder per change, and handoffs · `[ ]` AUTO · Parallel group: none
+
+- **Do:** Each change lives in `pdlc/changes/CH-xxxx-name/` with `change.md`, `handoff.md`,
+  `review/`, `review.gif` and `frames/`. Every stage reads the latest handoff first and
+  writes one at the end (intent stages in the intent's "Handoff" section). Update the merge
+  check, templates, skills and README template.
+- **Done when:** unit tests pass on the new layout, and a live run writes a handoff at each stage.
+- **Touches:** `plugins/pdlc/**`
+- **Depends on:** Step 12
+
+### Step 15: Stacked changes · `[ ]` AUTO · Parallel group: none
+
+- **Do:** A change branches from the change before it (recorded as `Base:`), its PR targets
+  that branch, and PRs are retargeted when the one below merges. Fixes to a lower change
+  are merged up the stack.
+- **Done when:** a live run builds the second change on the first's unmerged branch.
+- **Touches:** build, verify, delivery adapter, README template, reviewer packets
+- **Depends on:** Step 14
+
+### Step 16: Test writer, locked tests, plugin guard · `[ ]` AUTO · Parallel group: none
+
+- **Do:** Add `test-writer` and `builder` agents and a `tests` skill. The change spec gains
+  "Interface" and "Check files". The test writer writes checks from the spec alone, they
+  must fail, and they are locked (`Tests-Locked: <sha>`). A plugin hook stops the test
+  writer reading app code and the builder editing checks; the merge check fails if checks
+  changed after the lock.
+- **Done when:** unit tests cover the guard and the lock; live, the hook blocks both.
+- **Touches:** `plugins/pdlc/**`
+- **Depends on:** Step 14
+
+### Step 17: Independent reviewers with remits and packets · `[ ]` AUTO · Parallel group: none
+
+- **Do:** Remits (tests, specification, security, quality, compliance, privacy) as project
+  files. A script builds one packet per remit: tests packets get spec and tests only, code
+  packets get spec and code only. One fresh reviewer per packet, reading only its packet.
+  The merge check requires every configured remit to pass.
+- **Done when:** unit tests cover packets and the merge check; live, six reviews run.
+- **Touches:** `plugins/pdlc/**`
+- **Depends on:** Step 16
+
+### Step 18: Visual review and GIFs · `[ ]` AUTO · Parallel group: none
+
+- **Do:** A `show` skill and `record_gif.mjs` record each acceptance check being performed,
+  in a browser (web) or a terminal-style page (CLI), as `review.gif` plus key frames. The
+  specification reviewer sees the frames. The commit names the GIF; the PR embeds it.
+- **Done when:** real GIFs are produced for a web app and a CLI.
+- **Touches:** `plugins/pdlc/**`
+- **Depends on:** Step 17
+
+### Step 19: `/pdlc:ship` · `[ ]` AUTO · Parallel group: none
+
+- **Do:** One skill runs intake → ready → change → per change: tests → build → show →
+  verify → propose, stacking changes, defaulting questions, and stopping only for
+  contradictions, out-of-scope files, repeated failure, or the end of the stack.
+- **Done when:** one `/pdlc:ship` call takes an intent to stacked, verified PRs.
+- **Touches:** `plugins/pdlc/skills/ship/`
+- **Depends on:** Step 18
+
+### Step 20: End-to-end on a web app and a CLI · `[ ]` AUTO · Parallel group: none
+
+- **Do:** Run `/pdlc:ship` on a fresh small web app and on the Node CLI. Fix what breaks.
+- **Done when:** both reach verified, stacked PRs with GIFs, locked tests and six passing
+  reviews, with no manual file edits.
+- **Touches:** anything in `plugins/pdlc/` the runs show is broken
+- **Depends on:** Step 19
 
 ## Verification and rollback
 
