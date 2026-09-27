@@ -1,21 +1,19 @@
 ---
 name: decompose
 description: >
-  Software design for a new system (inception) or a new subsystem inside an
-  established codebase. First sets the walls with volatility-based decomposition:
-  components are placed around what is likely to change (Managers for changing
-  workflows, Engines for changing business rules, ResourceAccess for changing storage
-  and third parties) so a change lands in one place. Then designs the inside of each
-  wall as a small set of orthogonal, composable primitives (inputs, transforms,
-  transports, stores, state machines) so features are assembled from bricks instead of
-  hand-built. In an existing codebase it measures volatility from git history (hotspots
-  and change coupling) instead of guessing. Validates the design by walking the core
-  use cases, simulating each likely change, and assembling current and future features
-  from the bricks, then writes a `<name>.design.md`. Use when the user says
-  "/decompose", asks to design, architect, or break down a system or subsystem, asks
-  where service or module boundaries should go, wants to turn a brainstormed feature
-  list into an architecture, or asks how to add a subsystem to an existing codebase
-  without the change rippling everywhere.
+  Software design for a new system or for a new subsystem inside an established
+  codebase. Sets the walls with volatility-based decomposition: components go around
+  what is likely to change (Managers for changing workflows, Engines for changing
+  rules, ResourceAccess for changing storage and vendors), so each change lands in one
+  place. Then designs the inside of each wall as a few orthogonal, composable
+  primitives (inputs, transforms, transports, stores, state machines), so features are
+  assembled rather than hand-built. In an existing codebase it measures volatility from
+  git history instead of guessing. Validates the design by walking the core use cases,
+  simulating each likely change, and assembling future features, then writes a design
+  document. Use when the user says "/decompose", asks to design, architect, or break
+  down a system or subsystem, asks where service or module boundaries should go, wants
+  to turn a feature list into an architecture, or wants to add a subsystem without the
+  change rippling everywhere.
 ---
 
 # Decompose: walls from volatility, bricks from primitives
