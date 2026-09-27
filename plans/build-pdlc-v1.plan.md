@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** █████░░░░░░░ 5/13 steps completed (38%)
+**Progress:** ██████░░░░░░ 6/13 steps completed (46%)
 
 ## How to use this document (read this first, every session)
 
@@ -145,7 +145,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/skills/intake/SKILL.md`, `plugins/pdlc/skills/ready/SKILL.md`
 - **Depends on:** Step 4
 
-### Step 6: `change` · `[ ]` AUTO · Parallel group: none
+### Step 6: `change` · `[x]` AUTO · Parallel group: none
 
 - **Do:** Write the skill in full. It splits a ready intent into milestones, one job or
   capability each, capabilities before jobs, and writes a change spec per milestone.
@@ -323,4 +323,12 @@ Proven: on pyapp, IN-0001 ("remove <n>" + crash-safe saving) went new → specif
         answer rewrote R4 as an outcome and marked all four ready.
 Surprises: ready first ignored "defaults" (the skill's own step said "ask"); and recon's
            implementation-shaped requirement caused the contradiction. Both fixed.
+
+[2026-09-27] Step 6: done
+Changed: none (skill worked as written)
+Proven: on pyapp, IN-0001 split into CH-0001 (CAP-task-storage, crash-safe save; files
+        tasks/store.py, tests/test_store.py) then CH-0002 (JOB-manage-tasks, remove;
+        files tasks/cli.py, tests/test_cli.py). Capability first; the job change lists no
+        capability files.
+Surprises: none.
 ```
