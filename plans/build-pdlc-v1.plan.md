@@ -389,4 +389,19 @@ Proven: /pdlc:board dry-run on pyapp (tracker set to a GitHub project) listed 3 
         touching nothing.
 Not yet proven: real cards on a board. This session has no GitHub Projects tools (no gh
         CLI, no project tools in the GitHub connector) and no Linear connection.
+
+[2026-09-27] Extra (user request): optional live dashboard
+Changed: skills/dashboard/ (SKILL.md, references/dashboard-builder.md,
+         dashboard-builder-guard.py, claude-md-rule.md); init offers it (step 6);
+         tests/test_dashboard_guard.py (6 tests); README, INSTALL, OUTLINE
+Decided: opt-in only, default no even with "defaults", because it writes to ~/.claude.
+         The agent (opus, effort medium, memory user, preloads dataviz and
+         artifact-design) may only use .dashboard/ and its memory; a PreToolUse guard in
+         its frontmatter enforces this and it has no shell. The style question goes
+         through the main session, since a subagent can't ask the user directly.
+Proven: live run in a scratch project built .dashboard/index.html with real times, the
+        default action on each question, a 10-second reload, and the style question; the
+        guard blocked a request to read notes.txt. Passing the answer (dark, dense,
+        #e11d48) saved style.md to ~/.claude/agent-memory/dashboard-builder/ and rebuilt
+        the page in that style without the question.
 ```

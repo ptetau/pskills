@@ -185,7 +185,7 @@ claude plugin install pdlc@pskills --scope project
 Full steps are in `plugins/pdlc/INSTALL.md`.
 
 Skills: `init`, `intake`, `ready`, `change`, `build`, `verify`, `conventions`, `trace`,
-`board`. Agents: `recon`, `reviewer`. Read `plugins/pdlc/OUTLINE.md` for the design and
+`board`, `dashboard` (optional live dashboard). Agents: `recon`, `reviewer`. Read `plugins/pdlc/OUTLINE.md` for the design and
 `plans/build-pdlc-v1.plan.md` for build progress.
 
 **Example**

@@ -356,6 +356,7 @@ pdlc is a Claude Code plugin. Its skills are called as `/pdlc:<name>`.
 | `conventions` | Establishes or changes a convention with you, and files migration intents. |
 | `board` | Re-syncs every intent and change to the tracker. |
 | `trace` | Answers "why does this code exist?" and "what did this intent change?" |
+| `dashboard` | Optional. Installs a `dashboard-builder` agent and a CLAUDE.md rule for a live status page, after asking. |
 
 `ready`, `build` and `verify` are simplified versions of `/quiz` and `/argue`,
 `/quiz-plan-execute`, and `/probe`. They keep the ideas and drop everything pdlc doesn't need.

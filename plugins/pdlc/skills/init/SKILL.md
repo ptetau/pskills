@@ -84,7 +84,14 @@ Show the adapters in `pdlc/config.md` and ask if the defaults are right. v1 ship
 user wants a tracker, say it needs a tracker adapter first, which can be added as an
 intent.
 
-### 6. Finish
+### 6. Offer the live dashboard
+
+Ask if they'd like pdlc's optional live dashboard: one page showing tasks, questions
+waiting for them, deliverables and anything stuck. If yes, follow the `pdlc:dashboard`
+skill. With `defaults`, don't install it; just mention at the end that `/pdlc:dashboard`
+adds it.
+
+### 7. Finish
 
 - Commit the new `pdlc/` folder on its own, with the message "Set up pdlc".
 - Tell the user how to add their first intent: describe it to `/pdlc:intake`.

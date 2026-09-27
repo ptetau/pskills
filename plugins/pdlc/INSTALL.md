@@ -83,6 +83,16 @@ pdlc can show intents and changes as cards on a GitHub project or in Linear. In
 The session needs access to the board: the `gh` CLI for GitHub projects, or a Linear
 connection for Linear.
 
+## Optional: live dashboard
+
+pdlc can install a helper agent, `dashboard-builder`, that keeps one web page showing tasks
+and their status, questions waiting for you with the default action, the latest
+deliverables, and anything stuck. It refreshes every 10 seconds; open
+`.dashboard/index.html` with a double-click. The first time, it asks what style you like.
+
+`/pdlc:init` offers it, or run `/pdlc:dashboard` any time. It asks before installing,
+because it adds files to `~/.claude/agents/` and a rule to `~/.claude/CLAUDE.md`.
+
 ## Sharing with your team
 
 With the project scope, `.claude/settings.json` ends up like this:
