@@ -191,8 +191,10 @@ its rubric was already reviewed.
    }
    ```
 
-   All paths must be absolute: run agents work from inside their own worktrees. If
-   the tool refuses `scriptPath`, read the file and pass its contents as `script`.
+   All paths must be absolute: run agents work from inside their own worktrees. The
+   Workflow tool only accepts a `scriptPath` inside the working directory, so it
+   refuses the copy installed under `~/.claude/skills/`. When that happens, read the
+   file and pass its contents, unchanged, as `script`.
    **Never edit the script for a run.** The evaluator must vary as little as the
    skills it scores, so every eval runs the same file.
 
