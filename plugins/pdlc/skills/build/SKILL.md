@@ -33,8 +33,10 @@ which, because this change may rely on it.
 
 For each step not yet ticked, in order:
 
-1. **Red.** Write the check. Its name starts with the requirement ID. Run it through the
-   checks port. It must fail. If it passes already, the check proves nothing: fix it.
+1. **Red.** Write the check. Its name carries the requirement ID. Run it through the
+   checks port. For new behaviour it must fail; if it passes already, the check proves
+   nothing, so fix it. For behaviour that already exists (a requirement only reworded), a
+   pass is fine: say so in the progress log.
 2. **Green.** Write the least change that makes the check pass. Run it again.
 3. **Tidy.** Remove repetition and follow the design specs. Run all checks. Everything
    must still pass.

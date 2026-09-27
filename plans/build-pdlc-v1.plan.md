@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** ██████░░░░░░ 6/13 steps completed (46%)
+**Progress:** ██████░░░░░░ 7/13 steps completed (54%)
 
 ## How to use this document (read this first, every session)
 
@@ -155,7 +155,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/skills/change/SKILL.md`
 - **Depends on:** Step 5
 
-### Step 7: `build` · `[ ]` AUTO · Parallel group: none
+### Step 7: `build` · `[x]` AUTO · Parallel group: none
 
 - **Do:** Write the skill in full, borrowing the test-first loop from `/quiz-plan-execute`
   but dropping worktrees, parallel groups and anything else pdlc doesn't need.
@@ -331,4 +331,16 @@ Proven: on pyapp, IN-0001 split into CH-0001 (CAP-task-storage, crash-safe save;
         files tasks/cli.py, tests/test_cli.py). Capability first; the job change lists no
         capability files.
 Surprises: none.
+
+[2026-09-27] Step 7: done
+Changed: build/SKILL.md (red-first nuance), commit-trailers default and delivery-github
+         adapter (one trailer block)
+Decided: a check for behaviour that already exists may pass at once; red-first applies to
+         new behaviour. pdlc trailers share one final block with any other trailers.
+Proven: on pyapp, /pdlc:build built CH-0001 on pdlc/CH-0001-crash-safe-save: the R5 check
+        failed first against in-place write_text, then passed after write-to-temp and
+        os.replace. One commit per step with Intent/Change/Req; both requirements set to
+        built; all checks pass.
+Surprises: the building session's own co-author trailers landed in a second block, which
+           hid pdlc's trailers from `git log --format=%(trailers)` (grep still found them).
 ```

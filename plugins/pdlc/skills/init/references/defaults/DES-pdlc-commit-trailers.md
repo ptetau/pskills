@@ -15,6 +15,10 @@ Ticket: PROJ-88
 
 `Req` may list several IDs, separated by commas. Leave out `Ticket` if there is none.
 
+All trailers go in one final block with no blank lines inside it. If other trailers are
+added too (for example `Co-Authored-By`), put them in the same block, after pdlc's. Git
+only reads the last block as trailers.
+
 ## Why
 
 These lines are how any line of code leads back to its requirement and intent.
