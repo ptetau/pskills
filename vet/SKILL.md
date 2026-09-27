@@ -271,8 +271,9 @@ Workflow runtime runs up to min(16, CPU cores − 2) agents at once and queues t
 rest: 14 on a 16-core machine, only 2 on a 4-core one, so check `nproc` before
 promising a finish time.
 
-Runs whose agent died, whose grader died or skipped them, or whose capture is
-missing or not verbatim are left out of the scores and listed under `excluded`.
+Runs whose agent died or never executed the skill (`not_run`), whose grader died or
+skipped them, or whose capture is missing or not verbatim are left out of the scores
+and listed under `excluded`.
 Similarity judgments that are missing (the judge died or skipped an item) are listed
 under `lostJudges`. Neither is ever counted as a pass or a fail.
 
@@ -401,6 +402,11 @@ same wave size. Judges on a different model or batch setting score differently.
   agent, because workflows don't nest. Those runs come back `blocked`.
 - Skills that need a running app, a connector, or a binary the environment lacks come
   back `blocked`. They are still graded, so the report shows what they managed.
+- The harness can relay the user's latest message to every workflow agent. If that
+  message is about the eval ("quit and restart it"), agents may take it as addressed
+  to them. Every agent prompt says the message was for the launching session, which
+  has already acted on it. If many runs still come back `not_run`, the eval is
+  invalid: fix the cause and re-run rather than reporting scores.
 - Judges are models, and their own noise lands in the scores. The "choose the lower
   one when torn" rules reduce it. Re-running the same suite shows how much remains.
 - Scripted replies keep the user side fixed. A skill whose questions vary between runs

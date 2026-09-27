@@ -111,7 +111,11 @@ const optsFor = (role, opts) => {
 const RUN_SCHEMA = {
   type: 'object',
   properties: {
-    status: { type: 'string', enum: ['completed', 'blocked', 'error'] },
+    status: {
+      type: 'string',
+      enum: ['completed', 'blocked', 'error', 'not_run'],
+      description: 'not_run: you did not execute the skill at all (say why in note)',
+    },
     capture: { type: 'string', description: 'Absolute path of the capture file you wrote inside your working directory' },
     assistantTurns: { type: 'integer' },
     fallbackReplies: { type: 'integer', description: 'How many user replies were [fallback]' },
@@ -217,6 +221,11 @@ const SIM_BATCH_SCHEMA = {
 
 // ── Prompt text ─────────────────────────────────────────────────────────────
 
+// The harness may relay the user's latest message to every agent. That message was
+// written to the session that launched this eval, which has already acted on it
+// (a request to stop or restart an earlier eval, say, is why this one exists).
+const CONTEXT = `Context: the user started this eval with /vet, and this task is part of it. The session that launched it may relay the user's latest message to you. That message was written to that session, which has already acted on it; for example, if it asked to stop or restart an earlier eval, this is the new one. Carry out this task unless the message plainly asks for this eval to stop.`
+
 // Each run writes its capture inside its own worktree (isolated agents can't
 // write outside it) and reports the absolute path. Judges read it from there;
 // /vet copies the captures into evals/<skill>/runs/<runId>/outputs/ afterwards.
@@ -249,6 +258,8 @@ const itemText = (i) =>
 // every repeat of a prompt. Only the capture path at the end differs.
 const runPrompt = (p, r) => `You are running a Claude Code skill for a user, inside a scratch git worktree (your working directory).
 
+${CONTEXT}
+
 Skill: ${SKILL.name}
 Instructions: ${SKILL.file}
 Read that file first, then any files it points to (resolve relative paths against ${SKILL.dir}). Follow it exactly as if the harness had just loaded it for you. Do not invoke it through the Skill tool. Do not read anything under an evals/ directory.
@@ -264,6 +275,7 @@ Whenever the skill would end its turn and wait for the user (a question, a choic
 Rules:
 - Stay inside your working directory: write every file there, scratch files included. Do not push, open pull requests, post comments, send messages, or change anything outside it.
 - If the skill needs something you don't have (a running app, a connector, a binary), do what you can, say so where the skill would, and report status "blocked".
+- If you don't execute the skill at all, still write the capture file, and report status "not_run" with the reason in note.
 - Your messages must be exactly what the user would see. Never mention testing, grading or this setup in them.
 
 When the run is over, write the capture file ${captureName(p, r)} inside your working directory, in this shape:
@@ -304,6 +316,8 @@ const GRADE_EACH = `Grade each run on its own, as if it were the only one. Don't
 
 const gradePrompt = (p, capture) => `You are grading one run of the Claude Code skill "${SKILL.name}" against a rubric. Judge only what the run produced, not what the skill promises.
 
+${CONTEXT}
+
 Read the run's capture: ${capture}
 It holds the transcript of the run and any files the run wrote.
 
@@ -312,6 +326,8 @@ ${gradeContext(p)}
 ${GRADE_RULES}`
 
 const gradeBatchPrompt = (p, labels) => `You are grading ${labels.length} runs of the Claude Code skill "${SKILL.name}" against a rubric. Every run got the same input. Judge only what each run produced, not what the skill promises.
+
+${CONTEXT}
 
 Captures (each holds one run's transcript and any files it wrote):
 ${captureList(labels)}
@@ -360,6 +376,8 @@ const placePrompt = (p, jobs, k) => {
   const fresh = uniq(jobs.flatMap((j) => j.unplaced)).filter((l) => !examples.includes(l))
   return `You are checking how consistently the Claude Code skill "${SKILL.name}" behaves across repeated runs, wave ${k} of up to ${WAVES}. You judge sameness, not quality: ten identical wrong answers are "identical".
 
+${CONTEXT}
+
 ${SAME_INPUT(p)}
 
 Captures to read (each once):
@@ -376,6 +394,8 @@ const mergedPrompt = (p, newLabels, jobs, k) => {
   const examples = exampleLabels(jobs).filter((l) => !newLabels.includes(l))
   const pending = uniq(jobs.flatMap((j) => j.unplaced)).filter((l) => !newLabels.includes(l) && !examples.includes(l))
   return `You are grading ${newLabels.length} new run(s) of the Claude Code skill "${SKILL.name}" against a rubric, then checking how consistently it behaves across all runs so far (wave ${k} of up to ${WAVES}). Every run got the same input.
+
+${CONTEXT}
 
 Runs to grade and place:
 ${captureList(newLabels)}
@@ -396,6 +416,8 @@ ${PLACE_STEPS}`
 
 const simPrompt = (item, labels, scope) => `You are checking how consistently the Claude Code skill "${SKILL.name}" behaves across runs, for ONE rubric item. You judge sameness, not quality: ten identical wrong answers are "identical".
 
+${CONTEXT}
+
 ${scope}
 
 Rubric item:
@@ -409,6 +431,8 @@ ${SIM_STEPS}`
 const simBatchPrompt = (jobs, scope) => {
   const pool = uniq(jobs.flatMap((j) => j.labels))
   return `You are checking how consistently the Claude Code skill "${SKILL.name}" behaves across runs, for EACH rubric item below. You judge sameness, not quality: ten identical wrong answers are "identical".
+
+${CONTEXT}
 
 ${scope}
 
@@ -492,6 +516,7 @@ async function runOne(p, r) {
     optsFor('run', { label: `run:${base.label}`, phase: 'Run', isolation: 'worktree', schema: RUN_SCHEMA }),
   ).catch(() => null)
   if (!run) return { ...base, excluded: 'run agent died' }
+  if (run.status === 'not_run') return { ...base, run, excluded: `skill not run: ${run.note || 'no reason given'}` }
   if (!run.capture || !run.capture.startsWith('/')) return { ...base, run, excluded: 'capture path not reported' }
   CAPTURES[base.label] = run.capture
   base.capture = run.capture

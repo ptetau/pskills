@@ -336,8 +336,10 @@
               "completed",
               "blocked",
               "error",
+              "not_run",
               null
-            ]
+            ],
+            "description": "not_run: the run agent never executed the skill; such runs are excluded, not graded."
           },
           "note": {
             "type": "string"
