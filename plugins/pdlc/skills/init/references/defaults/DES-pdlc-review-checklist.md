@@ -1,19 +1,19 @@
-# DES-pdlc-review-checklist · What review checks
+# DES-pdlc-review-checklist · How changes are reviewed
 
 Status: agreed · Default: yes · Ask at init: no
 
 ## Rule
 
-A change passes review only if:
+Every change gets independent reviews, one per remit, each by a fresh reviewer that sees
+only its packet:
 
-1. It only touches the files its change spec lists.
-2. It stays inside its one job, capability or design spec. A job change never edits a
-   capability.
-3. Every acceptance check is met, and a check really proves it. A check that can't fail
-   doesn't count.
-4. It follows every design spec the change lists.
-5. Every commit has its trailers, and every check names its requirement ID.
+- **tests**: the spec and the checks, never the code;
+- **specification, security, quality, compliance, privacy**: the spec and the code, never
+  the checks.
+
+What each remit judges is in `pdlc/reviews/`. Which remits run is in `pdlc/config.md`. A
+change passes review only when every remit passes.
 
 ## Why
 
-The same checklist on every change keeps review fair and fast.
+Reviewers who see only what they judge can't be swayed by how the work was done.

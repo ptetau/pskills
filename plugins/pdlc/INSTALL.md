@@ -57,15 +57,27 @@ Init creates a `pdlc/` folder in your project. If you already have code, it maps
 asks you to confirm what it found. Then it asks you about a few defaults, one at a time.
 Reply `skip` to accept the recommended answer.
 
-When init finishes, add your first intent and take it through:
+When init finishes, the quickest start is:
 
 ```
-/pdlc:intake <what you want, in your own words>
+/pdlc:ship <what you want, in your own words>
+```
+
+It runs every stage below on recommended answers, stacks the changes, and stops only when
+it needs you. Or go a stage at a time:
+
+```
+/pdlc:intake <what you want>   turn it into spec changes
 /pdlc:ready        clear up anything vague, check for contradictions
 /pdlc:change       split it into changes, one job or capability each
-/pdlc:build        build the next change, check first
-/pdlc:verify       run checks and review, then propose the merge
+/pdlc:tests        a test writer writes the checks from the spec; they're locked
+/pdlc:build        a builder writes code until the locked checks pass
+/pdlc:show         record the change working as a GIF
+/pdlc:verify       run checks and independent reviews, then propose the merge
 ```
+
+The visual review needs Node. `show` installs its tools (Playwright, gifenc, pngjs) into
+`pdlc/.tools/` the first time.
 
 Add `defaults` to any of them to take the recommended answer instead of being asked.
 

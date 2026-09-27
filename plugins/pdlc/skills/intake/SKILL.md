@@ -60,6 +60,8 @@ done, stop and ask the user how the two should fit together.
 
 - In the intent's "Requirements" section, list every requirement you added, changed or
   retired, with one word for which (added, changed, retiring).
+- Write the intent's "Handoff" for ready (see `pdlc/templates/handoff.md`): what you
+  wrote, what you assumed, what looks unclear.
 - Commit the spec and intent files with the message "Specify IN-xxxx: <name>" and the
   trailer `Intent: IN-xxxx`.
 - Tell the tracker port.

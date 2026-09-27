@@ -35,6 +35,11 @@ Read `pdlc/README.md` first. Never change any file.
 3. List the commits that name it: `git log --all --grep "Req:.*<ID>"`, and the files they
    changed.
 
+## Change folders
+
+Each change lives in `pdlc/changes/CH-xxxx-name/`: its spec is `change.md`, and its
+review results, GIF and handoff sit next to it. Link to them when they help.
+
 ## Say when a link is missing
 
 For example: a commit with no trailers, a requirement with no checks, or an intent that

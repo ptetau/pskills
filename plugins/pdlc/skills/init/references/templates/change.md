@@ -1,6 +1,6 @@
 # CH-0000 · Short name
 
-Intent: IN-0000 · Scope: CAP-name · Status: planned · Ticket: none · Branch: none
+Intent: IN-0000 · Scope: CAP-name · Status: planned · Ticket: none · Branch: none · Base: main
 
 ## Delivers
 
@@ -8,7 +8,8 @@ One or two sentences. What is true when this change merges.
 
 ## Requirements
 
-Copied from the specs, with their acceptance checks.
+Copied from the specs, with their acceptance checks. Add ` (retire)` to the heading of a
+requirement this change removes.
 
 ### CAP-name.R1 · Short title
 
@@ -19,11 +20,24 @@ Copied from the specs, with their acceptance checks.
 - CAP-... (used, not changed)
 - DES-... (conventions to follow)
 
+## Interface
+
+What the checks may call, so the test writer never needs to see the code: function names
+and arguments, commands and flags, routes, page elements. Each with the file it lives in.
+
+- `name(args)` in `path/to/file`
+
 ## Files
 
-Only these files may change.
+App files this change may touch. The builder changes only these.
 
 - path/to/file
+
+## Check files
+
+Check files for this change. Only the test writer writes these.
+
+- path/to/check
 
 ## Steps
 

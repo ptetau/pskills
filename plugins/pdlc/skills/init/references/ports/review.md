@@ -1,25 +1,26 @@
 # Port: review
 
-An independent review of one change. The reviewer did not write the change.
+Independent reviews of one change: one reviewer per remit, each seeing only its packet.
 
 ## Operations
 
-- **review**: given a change spec, the diff for its branch, and the design specs it lists,
-  return pass or fail and a list of problems. Each problem has a file, a line, what is
-  wrong, and the rule it breaks.
+- **review**: given a change and a list of remits, build one packet per remit and have a
+  separate, fresh reviewer judge each. Return each remit's result: pass or fail, and its
+  problems. Each result is saved as `review/<remit>/result.md` in the change folder.
 
-## What the reviewer checks
+## Remits
 
-1. Scope: only the change's files, one job or capability, and a job never edits a capability.
-2. Acceptance: each acceptance check is met and a check really proves it.
-3. Conventions: the design specs are followed.
-4. Trace: each commit has its trailers and each check names its requirement ID.
+Described in `pdlc/reviews/`: tests, specification, security, quality, compliance,
+privacy. The project may edit them and chooses which run in `pdlc/config.md`.
+
+The tests packet holds the spec and the checks, never the code. Every other packet holds
+the spec and the code, never the checks.
 
 ## Success
 
-A diff that edits a file outside the change's list fails review.
+A change with a problem in one remit fails that remit, whatever the others say.
 
 ## Conformance check
 
-1. Take a change that lists one file. Make a diff that also edits a second file.
-2. Review it. It fails, and names the second file as out of scope.
+1. Take a change that lists one app file. Make a diff that also edits a second file.
+2. Review it with the specification remit. It fails and names the second file.

@@ -28,13 +28,17 @@ Once the specs are clear enough to build from, pdlc writes a **change spec**. A 
 covers exactly one job or one capability. It lists the requirements it will deliver, the
 other specs it relies on, and the files it needs to touch. Nothing else.
 
-The change is built test first, reviewed by an agent that did not write it, and approved by
-you. Only then can it merge.
+Its checks are written first, from the spec, by a test writer that never sees the code,
+and then locked. A builder that can't touch the checks writes the code. The change is
+recorded as a GIF, judged by independent reviewers (one per remit, each seeing only its
+packet), and approved by you. Only then can it merge.
 
 ```
- intent ──► spec patches ──► ready check ──► change spec(s) ──► build ──► verify ──► merge
- (inbox)    (job/cap/design)  (quiz, argue)   (one job or cap)   (TDD)    (checks,    (you
-                                                                           reviewer)   approve)
+ intent ─► spec patches ─► ready ─► change specs ─► tests ─► build ─► show ─► verify ─► merge
+ (inbox)   (job/cap/design) (clarify, (one job or    (written  (builder, (GIF)  (checks +   (you
+                            contra-   cap each,       first,    can't            6 inde-     approve)
+                            dictions) stacked)        locked)   touch tests)     pendent
+                                                                                 reviews)
 ```
 
 ---
@@ -165,7 +169,7 @@ The system can send an email built from a named template and a set of values.
 - Given a missing template, when we send, then we get a clear error and nothing is sent.
 ```
 
-### Change spec (`pdlc/changes/CH-0031-email-templates.md`)
+### Change spec (`pdlc/changes/CH-0031-email-templates/change.md`)
 
 The change spec is the only thing the builder needs to read. It is a simplified form of the
 `.plan.md` format used by `/quiz-plan`.
@@ -174,7 +178,10 @@ The change spec is the only thing the builder needs to read. It is a simplified 
 - **Requirements**: the requirement IDs it will build, with their acceptance checks copied in.
 - **Relies on**: the other specs it uses, by ID. For a job change, the capabilities it calls.
   Always the design specs that apply.
-- **Files**: only the files this change may touch, drawn from the code map.
+- **Interface**: what the checks may call, so the test writer never needs the code.
+- **Files**: only the app files this change may touch, drawn from the code map.
+- **Check files**: the checks, which only the test writer may change.
+- **Tests-Locked**: the commit where the checks were locked.
 - **Steps**: small steps, each naming the requirement it serves and the test that proves it.
 - **Progress log**: what happened, appended as work goes.
 
@@ -212,7 +219,40 @@ The `trace` skill answers both directions in plain words: "why does this line ex
 
 ## 7. Verification
 
-A requirement becomes `verified` only when all of these are true:
+### Who does what
+
+| Who | Sees | Writes | Never |
+|---|---|---|---|
+| test writer | the spec, the interface, existing checks | checks | reads app code |
+| builder | the spec, app code, the locked checks | app code | changes checks |
+| reviewer (one per remit) | only its packet | its result | sees another packet or result |
+
+A guard in the plugin enforces this for every file tool, by agent. The builder needs a
+shell to run checks, so the merge check is the backstop: it fails if any check changed
+after the lock.
+
+### Independent reviews
+
+One fresh reviewer per remit, each given one packet built by `make_packets.py`:
+
+- **tests**: the spec and the checks, never the code. Runs right after the checks are
+  locked, before any code is written.
+- **specification, security, quality, compliance, privacy**: the spec and the code, never
+  the checks. They run in parallel after the visual review. The specification reviewer
+  also looks at the GIF's frames.
+
+The project can edit each remit in `pdlc/reviews/` and choose which run in `config.md`.
+
+### Visual review
+
+`show` plays each acceptance line in the real app (a browser for web apps, a terminal for
+CLIs and libraries) and saves `review.gif` and its frames in the change folder. The commit
+names the GIF, and the pull request embeds it.
+
+### The gate
+
+A change can merge only when all of these are true, and `check_merge.py` confirms the
+first three:
 
 1. **Checks pass.** Each requirement in the change has at least one check tagged with its
    ID, and those checks pass. Checks are written before the change. A check is usually an
@@ -351,8 +391,11 @@ pdlc is a Claude Code plugin. Its skills are called as `/pdlc:<name>`.
 | `intake` | Takes an intent from the inbox and writes spec patches with `proposed` requirements. |
 | `ready` | Asks you about anything unclear (like `/quiz`), checks for contradictions (like `/argue`), then marks requirements `ready`. |
 | `change` | Splits a ready intent into milestones, one job or capability each, and writes a change spec for each. |
-| `build` | Builds one change spec, test first, one commit per step with trace trailers. Marks requirements `built`. |
-| `verify` | Runs the checks port and the review port. Marks requirements `verified` and opens the PR. |
+| `tests` | Has the test writer write the checks from the spec, confirms they fail, locks them, and has them reviewed. |
+| `build` | Has the builder write app code until the locked checks pass. Marks requirements `built`. |
+| `show` | Records the change working as `review.gif` and frames. |
+| `verify` | Runs every check and the independent code reviews. Marks requirements `verified` and proposes the merge. |
+| `ship` | Runs every stage end to end, stacking changes, on recommended answers. Picks up where it left off. |
 | `conventions` | Establishes or changes a convention with you, and files migration intents. |
 | `board` | Re-syncs every intent and change to the tracker. |
 | `trace` | Answers "why does this code exist?" and "what did this intent change?" |
@@ -366,7 +409,9 @@ pdlc is a Claude Code plugin. Its skills are called as `/pdlc:<name>`.
 | Agent | What it does |
 |---|---|
 | `recon` | Read-only scout. Maps a codebase, or one area of it, into draft specs. |
-| `reviewer` | Independent reviewer. Checks a diff against its change spec and the design specs. Never sees how the code was written. |
+| `test-writer` | Writes checks from the spec alone. Never reads app code. |
+| `builder` | Writes app code until the locked checks pass. Never changes checks. |
+| `reviewer` | Judges one packet for one remit. Sees nothing else. |
 
 ---
 

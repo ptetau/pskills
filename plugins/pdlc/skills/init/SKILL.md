@@ -35,6 +35,7 @@ Create `pdlc/` at the project root with:
 - `pdlc/ports/`: every file in `references/ports/`.
 - `pdlc/adapters/`: every file in `references/adapters/`.
 - `pdlc/bin/`: every file in `references/bin/`.
+- `pdlc/reviews/`: every file in `references/reviews/`.
 - Empty `pdlc/inbox/`, `pdlc/changes/`, `pdlc/specs/jobs/`, `pdlc/specs/capabilities/`
   and `pdlc/specs/design/`. Put a `.gitkeep` in each so git keeps it.
 
@@ -68,19 +69,25 @@ For each file in `references/defaults/`:
 - If the user picks something else, rewrite the rule to match and set `Default: no`.
 - Copy the result to `pdlc/specs/design/`.
 
-### 4. Set up checks
+### 4. Set up checks and the visual review
 
 Fill in the "Checks" section of `pdlc/config.md` with recon's answer: the command that
-runs all checks, and the command that runs only one requirement's checks. Confirm both
-with the user.
+runs all checks, the command that runs only one requirement's checks, and the check
+folders. Confirm them with the user.
+
+Set the visual adapter: `visual-web` if the project serves pages, with "Visual" `start`
+and `url` filled in from recon; otherwise `visual-terminal`. Add `pdlc/.tools/` to the
+project's `.gitignore`.
 
 If the project has no way to run checks yet, say so. Suggest that the first intent adds
 one.
 
 ### 5. Pick adapters
 
-Show the adapters in `pdlc/config.md` and ask if the defaults are right. v1 ships:
-`inbox-files`, `checks-command`, `review-agent`, `delivery-github`, and no tracker. If the
+Show the adapters in `pdlc/config.md` and ask if the defaults are right. pdlc ships:
+`inbox-files`, `checks-command`, `review-agent`, `delivery-github`, `visual-web` or
+`visual-terminal`, and no tracker (`tracker-github-projects` and `tracker-linear` are
+available). If the
 user wants a tracker, say it needs a tracker adapter first, which can be added as an
 intent.
 
@@ -94,4 +101,5 @@ adds it.
 ### 7. Finish
 
 - Commit the new `pdlc/` folder on its own, with the message "Set up pdlc".
-- Tell the user how to add their first intent: describe it to `/pdlc:intake`.
+- Tell the user how to start: `/pdlc:ship <what you want>` runs everything, or they can go
+  a stage at a time, starting with `/pdlc:intake`.

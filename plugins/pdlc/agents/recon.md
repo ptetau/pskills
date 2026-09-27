@@ -32,11 +32,14 @@ recent git history. Don't read everything. Then report:
    the files or folders it owns.
 2. **Jobs.** For each: a short lowercase name, who does it, one sentence on what they are
    trying to get done, the files or folders it owns, and the capabilities it uses.
-3. **Checks.** How checks are run today: the command for all of them, and how to run only
-   the ones whose name contains some text. Say "none found" if there are none.
-4. **Conventions.** Patterns you can see (naming, layout, error handling, style configs).
+3. **Checks.** How checks are run today: the command for all of them, how to run only the
+   ones whose name contains some text, and the folders they live in. Say "none found" if
+   there are none.
+4. **Running it.** Whether the project serves pages. If it does, the command that starts
+   it and the address it answers on.
+5. **Conventions.** Patterns you can see (naming, layout, error handling, style configs).
    List any place where two patterns do the same job.
-5. **Unsure.** Anything you couldn't decide.
+6. **Unsure.** Anything you couldn't decide.
 
 Each file belongs to at most one job or capability. If a file mixes both, give it to the
 job and say so under "Unsure".

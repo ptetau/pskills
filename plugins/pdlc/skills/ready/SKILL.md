@@ -15,7 +15,8 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 
 ## 1. Gather
 
-Read the intent. If none was named, take the oldest intent with status `specifying`.
+Read the intent and its "Handoff". If none was named, take the oldest intent with status
+`specifying`.
 Collect every requirement in its "Requirements" section that is `proposed` or `retiring`,
 and the specs they sit in.
 
@@ -54,6 +55,8 @@ for them, even with `defaults`: leave both requirements `proposed` and say so.
 - Set each clear requirement from `proposed` to `ready`. Leave `retiring` as it is.
 - If every requirement for the intent is now `ready` or `retiring`, set the intent to
   `ready`.
+- Write the intent's "Handoff" for change: what was decided, and anything the plan should
+  know.
 - Commit with the message "Ready IN-xxxx: <name>" and the trailer `Intent: IN-xxxx`.
 - Tell the tracker port.
 - Tell the user what changed, and that `/pdlc:change` is next.

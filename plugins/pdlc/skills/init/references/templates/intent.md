@@ -21,3 +21,7 @@ Filled in by change. The changes that deliver this intent, in order.
 ## Notes
 
 Decisions and answers from ready, newest last.
+
+## Handoff
+
+Written by each intent stage (intake, ready, change) for the next one. Replace it each time.
