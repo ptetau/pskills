@@ -21,6 +21,9 @@ Each item was open in the design and is decided here. Review these first.
 
 - {decision}: {chosen value}. If wrong: {what changes}.
 
+Open questions, at most three, also appear inline where they apply:
+`[NEEDS CLARIFICATION: {the specific question}]`. Answer them before an agent builds.
+
 ## 2. System Invariants
 
 1. **{Rule name}.** {One checkable sentence.} Enforced by `{Component.method}` {in the same
@@ -53,6 +56,18 @@ export type ErrorCode = "{ERROR_A}" | "{ERROR_B}";
 export type Result<T> = { ok: true; value: T } | { ok: false; error: ErrorCode; detail?: string };
 ```
 
+### Error catalog
+
+One row per code in `ErrorCode`. Fault follows design by contract: a broken precondition is
+the caller's fault (4xx); a broken postcondition or invariant is the supplier's (5xx). Over
+HTTP, errors are RFC 9457 problem details (`application/problem+json`) with the code in a
+`code` member.
+
+| Code | Meaning | Fault | HTTP | Retry helps? |
+|------|---------|-------|------|--------------|
+| `{ERROR_A}` | {what went wrong} | caller | {409} | no |
+| `{ERROR_B}` | {what went wrong} | supplier | {503} | yes, with backoff |
+
 ## 4. State Machines
 
 ### {Thing}Status
@@ -84,7 +99,7 @@ tests/
 #### {Noun}Manager
 
 - **Purpose:** {one line}
-- **Absorbs change:** {the likely change it contains, in plain words}
+- **Encapsulates:** {the likely change it contains, in plain words}
 - **Constraints:** orchestration only; no business rules.
 - **May call:** {Engines, ResourceAccess, Utilities}
 
@@ -104,9 +119,10 @@ export interface {Noun}Manager {
 #### {Activity}Engine
 
 - **Purpose:** …
-- **Absorbs change:** …
-- **Constraints:** pure and in-memory: no network, storage, clock, or randomness (injected).
-- **May call:** {ResourceAccess, Utilities}
+- **Encapsulates:** …
+- **Constraints:** pure and in-memory: no network, storage, clock, or randomness. The
+  Manager passes in what it needs.
+- **May call:** {Utilities; a read-only ResourceAccess only if the design records one}
 
 ```ts
 export interface {Activity}Engine { … }
@@ -119,7 +135,7 @@ export interface {Activity}Engine { … }
 #### {Noun}Access
 
 - **Purpose:** …
-- **Absorbs change:** {the vendor or storage that may change}
+- **Encapsulates:** {the vendor or storage that may change}
 - **Constraints:** the only code that touches {vendor or storage}; exposes business verbs,
   never CRUD or vendor types.
 - **May call:** {Resources, Utilities}
@@ -149,3 +165,8 @@ Feature: {capability}
       | input | code |
       | {x}   | {ERROR_A} |
 ```
+
+**Verify:** `{npm test -- tests/features}`
+
+**Done when:** every scenario above passes (they fail before the work starts), and every
+existing test still passes.

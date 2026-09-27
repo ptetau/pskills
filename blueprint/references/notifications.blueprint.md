@@ -43,9 +43,8 @@ Each item was open in the design and is decided here. Review these first.
 - At most 5 delivery attempts, exponential backoff from 30 s capped at 1 h, full jitter. If
   wrong: three constants in `NotificationManager`.
 - Fallback language is English (`en`). If wrong: one default in `RenderingEngine`.
-- `RoutingEngine` stays pure: the Manager looks recipients up and passes them in, instead
-  of the Engine calling `RecipientsAccess` as the design allows. If wrong: `RoutingEngine`
-  gets an injected read-only recipient lookup.
+- Vendor calls time out after 10 s, until the vendors' p99.9 latency is measured. If
+  wrong: one constant per transport in `DeliveryAccess`.
 - Timestamps are ISO 8601 UTC strings. If wrong: the `Instant` type.
 
 ## 2. System Invariants
@@ -62,8 +61,9 @@ Each item was open in the design and is decided here. Review these first.
    is never dropped silently. Enforced by `RoutingEngine.route`. Violation:
    `NO_REACHABLE_CHANNEL`.
 4. **A delivery's history only moves forward.** `delivered` and `dead` are final and never
-   change. Enforced by `OutboxAccess.transition` as a compare-and-set on the current state.
-   Violation: `INVALID_TRANSITION`.
+   change. Enforced by `OutboxAccess`'s lifecycle verbs (`startAttempt`, `failAttempt`,
+   `scheduleRetry`, `giveUp`, `confirmDelivery`), each a compare-and-set on the current
+   state. Violation: `INVALID_TRANSITION`.
 5. **Retries are bounded.** After 5 failed attempts *(assumed)* a delivery becomes `dead`
    and is reported, never retried again. Enforced by `NotificationManager` through the
    delivery state machine. Outcome: `RETRIES_EXHAUSTED`.
@@ -168,25 +168,43 @@ export type ErrorCode =
 export type Result<T> = { ok: true; value: T } | { ok: false; error: ErrorCode; detail?: string };
 ```
 
+### Error catalog
+
+Fault follows design by contract: a broken precondition is the caller's fault (4xx), a
+broken postcondition or invariant is the supplier's (5xx). Over HTTP, errors are RFC 9457
+problem details with the code in a `code` member.
+
+| Code | Meaning | Fault | HTTP | Retry helps? |
+|------|---------|-------|------|--------------|
+| `IDEMPOTENCY_CONFLICT` | same event ID replayed with a different payload | caller | 409 | no |
+| `QUIET_HOURS_DEFERRED` | not an error: routing held the message until quiet hours end | — | 202 | — |
+| `NO_REACHABLE_CHANNEL` | no allowed channel has a contact for the recipient | caller | 422 | no, until the recipient's data changes |
+| `INVALID_TRANSITION` | a lifecycle verb was applied to a delivery in the wrong state | supplier | 409 | no |
+| `RETRIES_EXHAUSTED` | a delivery failed 5 times and is dead | supplier (vendor) | — (internal) | no |
+| `TEMPLATE_NOT_FOUND` | no template exists for the event type | supplier | 500 | no, until a template ships |
+| `PROVIDER_REJECTED` | the vendor refused the message | caller data or vendor | — (internal) | no |
+| `PROVIDER_UNAVAILABLE` | the vendor timed out or answered 408, 429, or 5xx | vendor | — (internal) | yes, with backoff |
+| `RECIPIENT_NOT_FOUND` | no recipient has that ID | caller | 404 | no |
+
 ## 4. State Machines
 
 ### DeliveryStatus
 
 ```mermaid
 stateDiagram-v2
-  [*] --> pending: claimed [new idempotency key]
-  pending --> sending: dispatch
-  sending --> delivered: provider accepted
-  sending --> failed: PROVIDER_UNAVAILABLE or PROVIDER_REJECTED
-  failed --> retrying: [retryable and attempts < 5]
-  failed --> dead: [final error or attempts = 5] / RETRIES_EXHAUSTED
-  retrying --> sending: backoff elapsed
+  [*] --> pending: claim [new idempotency key]
+  pending --> sending: startAttempt
+  sending --> delivered: confirmDelivery [provider accepted]
+  sending --> failed: failAttempt [PROVIDER_UNAVAILABLE or PROVIDER_REJECTED]
+  failed --> retrying: scheduleRetry [retryable and attempts < 5]
+  failed --> dead: giveUp [final error or attempts = 5] / RETRIES_EXHAUSTED
+  retrying --> sending: startAttempt [backoff elapsed]
   delivered --> [*]
   dead --> [*]
 ```
 
-Stored by `OutboxAccess`. Every transition is a compare-and-set in `OutboxAccess.transition`
-(expected current state, next state). Any other transition: `INVALID_TRANSITION`.
+Stored by `OutboxAccess`. Each transition is the lifecycle verb on its arrow, performed as a
+compare-and-set on the current state. Any other transition: `INVALID_TRANSITION`.
 Terminal: `delivered`, `dead`.
 
 ### HeldItemState
@@ -227,12 +245,13 @@ tests/
 #### EventsApi
 
 - **Purpose:** receives events that other systems post over HTTP.
-- **Absorbs change:** which systems send events, and how.
+- **Encapsulates:** which systems send events, and how.
 - **Constraints:** validates and forwards only; no routing or rendering. Calls one Manager.
 - **May call:** `NotificationManager`, infrastructure.
 
 ```ts
-// POST /events  body: IncomingEvent  →  202 { accepted: number }  |  400  |  409 IDEMPOTENCY_CONFLICT
+// POST /events  body: IncomingEvent  →  202 { accepted: number }
+// errors: application/problem+json with a `code` member; status from the error catalog
 export interface EventsApi {
   receive(event: IncomingEvent): Promise<Result<{ accepted: number }>>;
 }
@@ -244,7 +263,7 @@ export interface EventsApi {
 #### Scheduler
 
 - **Purpose:** fires the digest release every morning, and wakes due retries.
-- **Absorbs change:** when things run.
+- **Encapsulates:** when things run.
 - **Constraints:** a timer only; calls one Manager per tick.
 - **May call:** `NotificationManager`.
 
@@ -260,7 +279,7 @@ export interface Scheduler {
 #### AdminPortal
 
 - **Purpose:** lets people choose their channel and quiet hours.
-- **Absorbs change:** the preferences UI.
+- **Encapsulates:** the preferences UI.
 - **Constraints:** calls one Manager per action.
 - **May call:** `NotificationManager`.
 
@@ -279,7 +298,7 @@ export interface AdminPortal {
 #### NotificationManager
 
 - **Purpose:** runs the notification flows and the delivery lifecycle.
-- **Absorbs change:** the delivery flows: immediate, digest, and later escalation.
+- **Encapsulates:** the delivery flows: immediate, digest, and later escalation.
 - **Constraints:** orchestration only; every business rule lives in an Engine.
 - **May call:** `RoutingEngine`, `RenderingEngine`, `RecipientsAccess`, `DeliveryAccess`,
   `OutboxAccess`, infrastructure.
@@ -300,9 +319,10 @@ export interface NotificationManager {
   4. For each envelope, `OutboxAccess.claim(key, envelope)`. An existing key with the same
      payload is skipped; a different payload returns `IDEMPOTENCY_CONFLICT`.
   5. On defer, or for a digest event, `OutboxAccess.hold(key, releaseAt)` and stop.
-  6. `RenderingEngine.render(envelope)`, then `DeliveryAccess.deliver(envelope)`.
-  7. `OutboxAccess.transition` to `failed`, or `OutboxAccess.confirmDelivery`; on failure
-     apply the retry policy.
+  6. `RenderingEngine.render(envelope)`.
+  7. `OutboxAccess.startAttempt`, then `DeliveryAccess.deliver`; then
+     `OutboxAccess.confirmDelivery`, or `OutboxAccess.failAttempt` and the retry policy
+     (`scheduleRetry` or `giveUp`).
 - **Flow of `sendDue`:** `OutboxAccess.release(now)` for held items, then steps 6–7 for each;
   then `OutboxAccess.dueRetries(now)` and steps 6–7 for each.
 - **Flow of `setPreferences`:** `RecipientsAccess.chooseChannel`, then
@@ -310,8 +330,8 @@ export interface NotificationManager {
 - **Failure & retry:** `PROVIDER_UNAVAILABLE` is retryable: attempt `n` waits a random time
   up to `min(1 h, 30 s × 2^n)` *(assumed)*. `PROVIDER_REJECTED` is final. After 5 attempts the
   delivery becomes `dead` with `RETRIES_EXHAUSTED` and is logged. Two workers racing on
-  one delivery are resolved by the compare-and-set in `OutboxAccess.transition`; the loser
-  gets `INVALID_TRANSITION` and moves on.
+  one delivery are resolved by the compare-and-set in `OutboxAccess.startAttempt`; the
+  loser gets `INVALID_TRANSITION` and moves on.
 - **Internals:** the `Delivery` state machine (section 4) and one flow per use case.
 
 ### Business rules (Engines)
@@ -319,10 +339,10 @@ export interface NotificationManager {
 #### RoutingEngine
 
 - **Purpose:** decides who gets a message, on which channel, and when.
-- **Absorbs change:** preferences, quiet hours, and regional rules, which differ by customer.
+- **Encapsulates:** preferences, quiet hours, and regional rules, which differ by customer.
 - **Constraints:** pure and in-memory: no network, storage, clock, or randomness. The
   current time and recipient data are passed in.
-- **May call:** infrastructure only. Recipients are passed in *(assumed)*.
+- **May call:** infrastructure only. The Manager passes recipients in, as in the design.
 
 ```ts
 export interface RoutingEngine {
@@ -339,7 +359,7 @@ export interface RoutingEngine {
 #### RenderingEngine
 
 - **Purpose:** turns an envelope and a template into the message text.
-- **Absorbs change:** message content, templates, and languages.
+- **Encapsulates:** message content, templates, and languages.
 - **Constraints:** pure; templates are loaded once at startup from `templates/`.
 - **May call:** infrastructure.
 
@@ -357,7 +377,7 @@ export interface RenderingEngine {
 #### RecipientsAccess
 
 - **Purpose:** reads and updates recipient profiles and preferences.
-- **Absorbs change:** where recipient data lives (the system's own database now, a CRM later).
+- **Encapsulates:** where recipient data lives (the system's own database now, a CRM later).
 - **Constraints:** the only code that touches recipient storage.
 - **May call:** storage, infrastructure.
 
@@ -375,7 +395,7 @@ export interface RecipientsAccess {
 #### DeliveryAccess
 
 - **Purpose:** hands a rendered message to the right vendor.
-- **Absorbs change:** which channels exist and which vendor delivers each.
+- **Encapsulates:** which channels exist and which vendor delivers each.
 - **Constraints:** the only code that touches email, SMS, or Slack vendors; no business
   decisions.
 - **May call:** vendor APIs, secrets, infrastructure.
@@ -386,15 +406,16 @@ export interface DeliveryAccess {
 }
 ```
 
-- **Failure & retry:** 10 s timeout per call. Timeouts, 429, and 5xx become
-  `PROVIDER_UNAVAILABLE`, other 4xx become `PROVIDER_REJECTED`. It never retries itself;
-  the Manager owns retries. The idempotency key is sent to vendors that accept one.
+- **Failure & retry:** 10 s timeout per call *(assumed)*. Timeouts, 408, 429, and 5xx become
+  `PROVIDER_UNAVAILABLE`, other 4xx become `PROVIDER_REJECTED`. A `Retry-After` from the
+  vendor is passed back so the Manager can honor it. It never retries itself; the Manager
+  owns retries, so retries happen at one layer only. The idempotency key is sent to vendors that accept one.
 - **Internals:** one transport per channel: `Email`, `Sms`, `Slack`.
 
 #### OutboxAccess
 
 - **Purpose:** keeps every delivery's state, and the held digest items.
-- **Absorbs change:** how delivery state is stored.
+- **Encapsulates:** how delivery state is stored.
 - **Constraints:** the only code that touches the outbox tables; enforces idempotency and
   forward-only transitions atomically.
 - **May call:** storage, infrastructure.
@@ -402,8 +423,10 @@ export interface DeliveryAccess {
 ```ts
 export interface OutboxAccess {
   claim(key: IdempotencyKey, envelope: Envelope): Promise<Result<DeliveryRecord>>;     // IDEMPOTENCY_CONFLICT
-  transition(id: DeliveryId, from: DeliveryStatus, to: DeliveryStatus,
-             patch?: Partial<DeliveryRecord>): Promise<Result<DeliveryRecord>>;        // INVALID_TRANSITION
+  startAttempt(id: DeliveryId): Promise<Result<DeliveryRecord>>;                     // INVALID_TRANSITION
+  failAttempt(id: DeliveryId, error: ErrorCode): Promise<Result<DeliveryRecord>>;      // INVALID_TRANSITION
+  scheduleRetry(id: DeliveryId, at: Instant): Promise<Result<DeliveryRecord>>;         // INVALID_TRANSITION
+  giveUp(id: DeliveryId): Promise<Result<DeliveryRecord>>;                             // INVALID_TRANSITION
   hold(key: IdempotencyKey, releaseAt: Instant): Promise<Result<void>>;
   release(now: Instant): Promise<Result<DeliveryRecord[]>>;
   dueRetries(now: Instant): Promise<Result<DeliveryRecord[]>>;
@@ -412,8 +435,8 @@ export interface OutboxAccess {
 ```
 
 - **Failure & retry:** `claim` inserts with a unique key; on conflict it compares payloads
-  and returns the existing record or `IDEMPOTENCY_CONFLICT`. `transition` and
-  `confirmDelivery` update only where the current state matches, otherwise
+  and returns the existing record or `IDEMPOTENCY_CONFLICT`. Each lifecycle verb updates
+  only where the current state is the one its arrow starts from, otherwise
   `INVALID_TRANSITION`. Storage errors are retried twice with jitter.
 
 ## 6. Agent Verification Suite
@@ -468,3 +491,8 @@ Feature: Notifications are delivered once, on the right channel, at the right ti
       | delivered | sending |
       | dead      | retrying |
 ```
+
+**Verify:** `npm test -- tests/features`
+
+**Done when:** every scenario above passes (they fail before the work starts), and every
+existing test still passes.

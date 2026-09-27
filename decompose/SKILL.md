@@ -108,7 +108,7 @@ The full rules, sources, and smells are in `references/walls.md` and
   | Transform | turns data into data, or into a decision (a *policy*); pure where possible | `Render`, `Match`, `QuietHours` |
   | Transport | moves data out: a vendor, a queue, a file, another service | `Email.send`, `Publish` |
   | Store | keeps data and hands it back through business verbs | `Hold(key, window)`, `Release(due)` |
-  | State machine | remembers where a long-running thing is and what may happen next | `Delivery`: pending → sent → failed → retrying |
+  | State machine | remembers where a long-running thing is and what may happen next | `Delivery`: pending → sending → failed → retrying |
 
 - **A shared contract** (the one data shape the bricks pass around inside a wall, as
   opposed to the wall's API) lets any brick follow any other.
@@ -126,7 +126,7 @@ The full rules, sources, and smells are in `references/walls.md` and
 |------|------------|
 | Client | Inputs from the outside world (endpoints, UI, timers, event subscriptions) plus presentation |
 | Manager | the wiring: flows that call Engines and ResourceAccess, plus State machines. It may own Inputs that subscribe to events. Flows are code by default. Löwy stores them as data run by a workflow tool when they differ by kind of item, customer, or locale, or run long across sessions and devices; the skill adds flows that change faster than you can deploy. |
-| Engine | Transforms and policies behind one stable API. New rules are new bricks or new data, not new call paths. |
+| Engine | Transforms and policies behind one stable API. New rules are new bricks or new data, not new call paths. Pure by default: the Manager passes in the data the Engine needs. If an Engine must read, it calls ResourceAccess (Löwy allows it) and the design says so. |
 | ResourceAccess | Stores, Transports, and Inputs that pull from vendors, behind business verbs. Vendor and storage details never cross its API. |
 | Utility | stable mechanisms shared by everyone |
 

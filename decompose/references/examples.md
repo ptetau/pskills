@@ -56,15 +56,24 @@ Resources        Storage   email / SMS / Slack vendors
 Utilities        pub/sub · logging · secrets
 ```
 
-| Component | Calls |
-|-----------|-------|
-| each Client | `NotificationManager` only |
-| `NotificationManager` | `RoutingEngine`, `RenderingEngine`, `DeliveryAccess`, `OutboxAccess`, `RecipientsAccess` |
-| `RoutingEngine` | `RecipientsAccess` |
-| `RenderingEngine` | nothing (templates ship with it as files) |
+| Component | API (business verbs) | Calls |
+|-----------|----------------------|-------|
+| each Client | — | `NotificationManager` only |
+| `NotificationManager` | `Notify`, `SendDue`, `SetPreferences` | `RoutingEngine`, `RenderingEngine`, `RecipientsAccess`, `DeliveryAccess`, `OutboxAccess` |
+| `RoutingEngine` | `RecipientsFor`, `Route` | nothing: the Manager looks recipients up and passes them in, so the Engine stays pure |
+| `RenderingEngine` | `Render` | nothing (templates ship with it as files) |
+| `RecipientsAccess` | `Find`, `ChooseChannel`, `SetQuietHours` | storage |
+| `DeliveryAccess` | `Deliver` | email, SMS, and Slack vendors |
+| `OutboxAccess` | `Claim`, `Hold`, `Release`, `DueRetries`, `StartAttempt`, `FailAttempt`, `ScheduleRetry`, `GiveUp`, `ConfirmDelivery` | storage |
 
-`Scheduler` is a client: time is just another caller. `NotificationManager` owns the flows;
-it is the only component that knows the order of steps. `OutboxAccess` has no row in the
+`Scheduler` is a client: time is just another caller, and `SendDue` releases held items and
+wakes due retries. `NotificationManager` owns the flows; it is the only component that
+knows the order of steps.
+
+Retries mean a message can be attempted more than once, so `OutboxAccess.Claim` makes each
+(event, recipient, channel) deliverable once. The delivery lifecycle is a set of business
+verbs (`StartAttempt`, `FailAttempt`, `ScheduleRetry`, `GiveUp`, `ConfirmDelivery`), not a
+generic state setter. `OutboxAccess` has no row in the
 register: it hides the system's own storage, which the trace audit counts on its own.
 
 **Size check.** Two departures from Löwy's heuristics, both kept on purpose. One Manager
@@ -74,15 +83,16 @@ content change for different reasons and are owned by different people (product 
 compliance versus content writers). Merging them would put two volatilities behind one
 wall.
 
-**Bricks.** Shared contract: `Envelope { id, event, recipient, channel?, locale?, body?, attempts }`.
-Inputs produce envelopes, Transforms and policies take and return them (a policy may return
+**Bricks.** Shared contract:
+`Envelope { eventId, eventType, recipientId, urgency, channel?, locale?, body?, data }`.
+Attempts and receipts belong to the delivery, kept by `OutboxAccess`. Inputs produce envelopes, Transforms and policies take and return them (a policy may return
 zero or many), and Transports consume them. So any Transform can follow any other.
 
 | Component | Bricks | Kind |
 |-----------|--------|------|
 | EventsApi | `OnEvent(type)`: other systems post events to it over HTTP | Input |
 | Scheduler | `OnSchedule(cron)` | Input |
-| NotificationManager | `Delivery`: pending → sent → delivered, or failed → retrying → dead | State machine |
+| NotificationManager | `Delivery`: pending → sending → delivered, or sending → failed → retrying → sending, or failed → dead | State machine |
 | RoutingEngine | `Expand` (event → recipients), `Prefer`, `QuietHours` | Transform (policy) |
 | RenderingEngine | `Render(template, locale)` | Transform |
 | DeliveryAccess | `Email`, `Sms`, `Slack`, each `send(envelope) → receipt` | Transport |
@@ -134,21 +144,28 @@ component if it arrives.
 ```
 UC1 notify about an event now
   EventsApi           → NotificationManager.Notify
+  NotificationManager → RoutingEngine.RecipientsFor
+  NotificationManager → RecipientsAccess.Find
   NotificationManager → RoutingEngine.Route
-  RoutingEngine       → RecipientsAccess.Find
+  NotificationManager → OutboxAccess.Claim
   NotificationManager → RenderingEngine.Render
+  NotificationManager → OutboxAccess.StartAttempt
   NotificationManager → DeliveryAccess.Deliver
   NotificationManager → OutboxAccess.ConfirmDelivery
 
 UC2 notify about accumulated events later
   EventsApi           → NotificationManager.Notify        (flow ends in Hold)
+  NotificationManager → RoutingEngine.RecipientsFor
+  NotificationManager → RecipientsAccess.Find
   NotificationManager → RoutingEngine.Route
-  RoutingEngine       → RecipientsAccess.Find
+  NotificationManager → OutboxAccess.Claim
   NotificationManager → OutboxAccess.Hold
-  Scheduler           → NotificationManager.SendDigests
+  Scheduler           → NotificationManager.SendDue
   NotificationManager → OutboxAccess.Release
   NotificationManager → RenderingEngine.Render
+  NotificationManager → OutboxAccess.StartAttempt
   NotificationManager → DeliveryAccess.Deliver
+  NotificationManager → OutboxAccess.ConfirmDelivery
 
 UC3 choose how and when to be reached
   AdminPortal         → NotificationManager.SetPreferences

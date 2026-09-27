@@ -94,7 +94,7 @@ within it changes. Managers hold the first, Engines the second.
 |------|--------------|---------|-------|
 | **Client** | who calls, and the technology they call with: UI, API, scheduler, other systems | who | Löwy: ideally a single point of entry into the system, and at least as few as possible, because every entry point is another place to handle authentication, authorization, scalability, and hosting |
 | **Manager** | the volatile *sequence* of a family of related use cases (a workflow) | what | Mostly composition. Should be "almost expendable" |
-| **Engine** | a volatile *activity*: a business rule, calculation, or algorithm | how | Löwy: essentially the Strategy pattern. May be shared between Managers |
+| **Engine** | a volatile *activity*: a business rule, calculation, or algorithm | how | Löwy: essentially the Strategy pattern. May be shared between Managers. Pure by default (the Manager passes the data in); an Engine that must read calls ResourceAccess, and the design says so |
 | **ResourceAccess** | volatile *access* to a resource, including resources in other systems | how (to reach it) | Exposes **atomic business verbs**, not CRUD or I/O |
 | **Resource** | the physical store or external system | where | Call it Storage, not Database: the kind may change |
 | **Utility** | infrastructure common to all components: security, logging, diagnostics, pub/sub, message bus, hosting | — | Test: could it be used in a completely different system, such as a smart cappuccino machine? If not, it is not a Utility |
@@ -239,9 +239,10 @@ the layer diagram, one line per call, so the direction of each call is visible:
 
 ```
 UC1 notify about an event
-  EventsApi         → NotificationManager.Notify
+  EventsApi           → NotificationManager.Notify
+  NotificationManager → RoutingEngine.RecipientsFor
+  NotificationManager → RecipientsAccess.Find
   NotificationManager → RoutingEngine.Route
-  RoutingEngine       → RecipientsAccess.Find
   NotificationManager → RenderingEngine.Render
   NotificationManager → DeliveryAccess.Deliver
 ```

@@ -74,6 +74,12 @@ So every detail that the source does not state is a **decision added by this spe
 
 A person reviews that list once. After that, nothing in the blueprint is a guess.
 
+A few questions can't be defaulted, because a wrong guess would be expensive. Mark those
+inline as `[NEEDS CLARIFICATION: the specific question]`, at most three, choosing by
+impact: scope first, then security and privacy, then user experience, then technical
+detail (GitHub spec-kit's rule). Ask the user to answer them. A blueprint with open
+questions is a draft: the checker reports it as not agent-ready until they are resolved.
+
 If a decision would change the design itself (a new component, a different call path), do
 not make it. Stop and ask, or send the user back to `/decompose`.
 
@@ -83,22 +89,29 @@ Read the design in full, and in subsystem mode read the host codebase: its langu
 framework, directory conventions, error handling, and existing types. The blueprint follows
 the host's conventions over this skill's defaults.
 
-From a `/decompose` design document:
+From a `/decompose` design document (its sections are numbered as in
+`decompose/references/design-template.md`):
 
 | Design section | Goes to | How |
 |----------------|---------|-----|
-| Frame, users, constraints, assumptions | 1. Header | Purpose, target mode, scope; carry assumptions into *Decisions added* |
-| Nature of the business | 2. Invariants | Each fact that must never be violated becomes an enforceable rule |
-| Features and core use cases | 1. In scope; 5. Manager methods | Features become scope bullets; each core use case becomes a Manager method with its call sequence |
-| Volatility register | 5. "Absorbs change" line | Each component states, in plain words, the change it contains |
-| Rejected candidates, cut list | 1. Out of scope | As non-goals |
-| Walls: components, APIs, call rules | 5. Modules | Grouped by type; the call rules become each component's "May call" line |
-| Bricks and shared contracts | 3. Contracts; 5. Internals | Contracts become types; bricks become private modules inside their component |
-| State machines | 4. State machines | Redrawn with guards, terminal states, and illegal transitions |
-| Feature assembly, walkthroughs | 5. Flows; 6. Scenarios | Call sequences under each Manager method; key features become scenarios |
-| Validation results | — | Stays in the design; link to it |
-| Seams and migration | 1. Scope; 5. Translation at the seam | Migration steps belong to the change plan, not the blueprint |
-| Risks and open questions | 1. Decisions added, or stop and ask | Resolve each one, or ask |
+| §1 Frame: problem, users, constraints | 1. Header | System, target mode, scope; carry the design's assumptions into *Decisions added* |
+| §1 Nature of the business | 2. Invariants | Each fact that must never be violated becomes an enforceable rule |
+| §2 Features and core use cases | 1. In scope; 5. Manager methods | Features become scope bullets; each core use case becomes a Manager method |
+| §3 Volatility register | 5. "Encapsulates" line | Each component states, in plain words, the change it encapsulates (the register's "Contained by") |
+| §3 Rejected candidates; §7 Cut list | 1. Out of scope | As non-goals |
+| §4 Walls: components, APIs, call rules | 5. Modules | Same components, same groups; each API verb becomes a method; the call rules become each component's "May call" line |
+| §5 Shared contracts | 3. Contracts | Each contract becomes exact types, keeping its name |
+| §5 Bricks | 5. Internals | Each brick becomes a private module inside its component |
+| §5 State machines | 4. State machines | Redrawn with guards, terminal states, and illegal transitions; transitions named after the API verbs that perform them |
+| §6 Feature assembly; §7 Walkthroughs | 5. Flows; 6. Scenarios | Each walkthrough becomes the flow under its Manager method; key features become scenarios |
+| §7 Validation results | — | Stays in the design; link to it |
+| §8 Seams and migration | 1. Scope; 5. Translation at the seam | Migration steps belong to the change plan, not the blueprint |
+| §9 Risks and open questions | 1. Decisions added, or `[NEEDS CLARIFICATION]` | Resolve each one, or ask |
+
+**Names carry over unchanged.** Components keep their names (`RoutingEngine`). API verbs
+become methods in the language's style: `Route` becomes `route` in TypeScript and stays
+`Route` in Go. Contracts keep their names (`Envelope`). A blueprint never adds, removes,
+or renames a component; `--design` checks this.
 
 Any other design format works the same way: find the scope, rules, data, lifecycles,
 components, and behaviors, and translate each.
@@ -133,6 +146,9 @@ Each invariant states:
   must be atomic with a write.
 - **The error code** raised when something tries to break it, in `UPPER_SNAKE_CASE`.
 
+Name invariants; don't number them with IDs. The format's style rule bans cryptic IDs, and
+a name like **Each message is delivered at most once** is its own reference.
+
 Always cover, where they apply: idempotency (what makes two requests "the same", and what
 happens on a replay), immutability (what can never change once written), and the hard
 rejections (what the system refuses, and with which code).
@@ -153,6 +169,12 @@ block per module or one for the whole domain. Rules (details in `references/conv
   result or error type that carries it.
 - No `any`, no untyped maps where the shape is known.
 
+End the section with an **error catalog**: a table with one row per code, giving its
+meaning, whose fault it is, its HTTP status, and whether a retry can help. Design by
+contract settles fault: a broken precondition is the caller's fault (a 4xx), a broken
+postcondition or invariant is the supplier's (a 5xx). At an HTTP boundary, errors travel
+as RFC 9457 problem details, with the code in a `code` member.
+
 ## Phase 4 — State machines
 
 Draw every lifecycle: every `...Status` or `...State` type in section 3 gets one. Use a
@@ -170,13 +192,19 @@ Mermaid `stateDiagram-v2` (or ASCII when Mermaid won't render), with:
    with contracts and tests placed.
 2. **Groups**, named for what they do, with the method's term in brackets:
    Entry points (Clients), Orchestration (Managers), Business rules (Engines),
-   Resource access (ResourceAccess), Shared infrastructure (Utilities).
+   Resource access (ResourceAccess), Shared infrastructure (Utilities). Resources (the
+   databases and vendors themselves) appear in the target mode, not as components. In
+   subsystem mode, the translation at the seam goes where the design put it: an
+   anti-corruption layer is a ResourceAccess component; an open-host service is the
+   subsystem's own API, with the host-side translator named in the flow.
 3. **Per component**, as a `#### ComponentName` subsection:
    - **Purpose**: one line.
-   - **Absorbs change**: the likely change it contains, in plain words.
+   - **Encapsulates**: the likely change it contains, in plain words.
    - **Constraints**: Engines are pure and in-memory, with no network, storage, clock, or
-     randomness (inject them). ResourceAccess is the only code that touches a vendor or
-     storage. Managers orchestrate and hold no business rules.
+     randomness; the Manager passes in what they need (the same default `/decompose` uses).
+     If the design records an Engine calling ResourceAccess, keep that call and inject the
+     ResourceAccess as a read-only interface. ResourceAccess is the only code that touches
+     a vendor or storage. Managers orchestrate and hold no business rules.
    - **May call**: from the design's call rules.
    - **Signatures**: a typed interface: business verbs, parameter and return types, and the
      error codes each method can return.
@@ -196,22 +224,33 @@ Write 3–5 Gherkin scenarios that a test harness can run.
   scenario.
 - **Declarative steps**: state *what* happens in domain terms, not clicks, URLs, or SQL.
 - **Concrete values**: real IDs, amounts, and times in the steps, so each scenario is a key
-  example, not a description.
-- Each scenario tests one behavior, with `Given`, `When`, and `Then` in that order.
+  example (Adzic), with boundary values where a rule has a threshold.
+- **One behavior per scenario**, in 3–5 steps. `Given` puts the system in a known state,
+  `When` is one event or action, and `Then` asserts an observable outcome (a response, a
+  message sent, a status a caller can read), not a row in a database.
+- A `Background` holds shared context only, in four lines or fewer.
+- **End with the definition of done**: the command that runs the suite, and one line saying
+  that done means these scenarios pass and the existing tests still pass (SWE-bench's
+  FAIL_TO_PASS and PASS_TO_PASS).
 
 ## Phase 7 — Check and deliver
 
-1. Run the checker and fix until it passes:
+1. Run the checker, against the design, and fix until it passes:
 
    ```
-   python <skill-dir>/scripts/check_blueprint.py name.blueprint.md
+   python <skill-dir>/scripts/check_blueprint.py name.blueprint.md --design name.design.md --compile
    ```
 
-   It checks structure, invariant enforcement points and codes, that every state type has a
-   state machine, that every component has signatures and failure semantics, that every
-   invariant's code is exercised by a scenario, that no scenario uses an undefined code,
-   and that no design IDs such as `V1` or `F2` remain. With `--compile` it also type-checks
-   TypeScript blocks when `tsc` is installed.
+   It checks structure, invariant enforcement points and codes, that every code is in the
+   error catalog, that every state type has a state machine, that every component has
+   signatures and failure semantics, that every invariant's code is exercised by a
+   scenario, that no scenario uses an undefined code, that section 6 ends with a verify
+   command, that no design IDs such as `V1` or `F2` remain, and that no
+   `[NEEDS CLARIFICATION]` is left open (use `--draft` while questions are still out).
+   With `--design` it checks congruence: every component in the design has a section 5
+   subsection, no Manager, Engine, or ResourceAccess appears that the design lacks, and each
+   design verb has a matching method. With `--compile` it type-checks TypeScript blocks
+   when `tsc` is installed.
 2. Re-read the blueprint as the coding agent: for each section, could you write the code or
    test without asking a question? Any question you would ask is a missing decision. Add it
    to *Decisions added*, or ask the user.
@@ -225,8 +264,8 @@ Write 3–5 Gherkin scenarios that a test harness can run.
    CONTRACTS    <n> types · <n> state machines
    MODULES      <n> components in <n> groups
    SCENARIOS    <n> · every invariant exercised
-   ASSUMED      <n> decisions for review
-   CHECK        PASS
+   ASSUMED      <n> decisions for review · <n> open questions
+   CHECK        PASS | DRAFT (open questions) | FAIL
    ```
 
 4. Offer next steps: review the *Decisions added* list; `/quiz-plan` to turn the blueprint
@@ -254,3 +293,23 @@ Write 3–5 Gherkin scenarios that a test harness can run.
   notifications example. It passes the checker.
 - `references/sources.md`: the sources behind the conventions.
 - `scripts/check_blueprint.py`: the checker. Standard library only.
+
+## Example
+
+```
+/blueprint notifications.design.md
+```
+
+The skill reads the design from `/decompose`'s worked example, chooses TypeScript and a
+modular monolith, and writes `notifications.blueprint.md`:
+
+- Six invariants: at-most-once delivery, quiet hours, no silent drops, forward-only
+  delivery history, bounded retries, no message without content.
+- Nineteen types, including the design's `Envelope`, plus an error catalog of nine codes.
+- Two state machines, with transitions named after `OutboxAccess`'s lifecycle verbs.
+- The design's nine components with typed interfaces, flows, and failure and retry rules.
+- Five Gherkin scenarios that exercise every invariant, and the command that runs them.
+- Eight decisions the design left open, listed for review.
+
+It passes `check_blueprint.py --design notifications.design.md --compile`. The full result
+is `references/notifications.blueprint.md`.
