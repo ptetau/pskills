@@ -7,6 +7,17 @@ A collection of Claude Code skills. Install any skill by copying its directory i
 ~/.claude/skills/
   argue/
     SKILL.md
+  decompose/
+    SKILL.md
+    references/
+      bricks.md
+      brownfield.md
+      design-template.md
+      examples.md
+      sources.md
+      walls.md
+    scripts/
+      volatility.py
   probe/
     SKILL.md
     references/
@@ -56,6 +67,55 @@ CONTRADICTIONS  (proven UNSAT by Z3)
 
 VERDICT   1 contradiction  ·  1 tension  ·  1 ambiguity
 ```
+
+---
+
+## `/decompose` — Software Design by Volatility and Primitives
+
+Designs a new system (inception) or a new subsystem inside an existing codebase in
+two passes, then proves the result:
+
+1. **Walls** — volatility-based decomposition. Find what is likely to change and put
+   each thing behind one component: Managers for changing workflows, Engines for
+   changing rules, ResourceAccess for changing storage and third parties. A change
+   then lands in one place.
+2. **Bricks** — orthogonal primitives. Inside each wall, build a small set of
+   independent parts (inputs, transforms, transports, stores, state machines) that
+   share one contract, and assemble features as compositions of them.
+3. **Proof** — walk the core use cases through the walls, simulate each likely change
+   (target: one component touched), and assemble current and future features from
+   existing bricks (target: at most one new brick).
+
+In an existing codebase it measures volatility from git history instead of guessing:
+`decompose/scripts/volatility.py` reports component churn, change coupling, and
+hotspots (standard-library Python, works on Windows). The output is a
+`<name>.design.md` with the volatility register, walls, bricks, feature assembly,
+validation results, and (for subsystems) the seam and migration steps.
+
+**Example**
+
+```
+/decompose a notifications service: welcome emails, password-reset SMS, daily
+digests, Slack alerts, channel preferences, quiet hours, retries, localization
+```
+
+**Output (excerpt)**
+
+```
+DECOMPOSE: notifications · inception
+══════════════════════════════════════════════════
+VOLATILITIES  5 contained · 3 rejected
+WALLS         1 Manager · 2 Engines · 3 ResourceAccess · 3 Utilities
+BRICKS        14 across 4 components · contract: Envelope
+──────────────────────────────────────────────────
+USE CASES     3/3 walk through cleanly
+CHANGE SIM    5/5 volatilities touch one component
+FEATURES      8 current assembled · 3 future with ≤1 new brick
+VERDICT       ready
+```
+
+Hand the design to `/argue` to check it for contradictions, or to `/quiz-plan` to
+turn it into a change plan.
 
 ---
 
