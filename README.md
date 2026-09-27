@@ -106,7 +106,7 @@ DECOMPOSE: notifications · inception
 ══════════════════════════════════════════════════
 VOLATILITIES  5 contained · 3 rejected
 WALLS         1 Manager · 2 Engines · 3 ResourceAccess · 3 Utilities
-BRICKS        14 across 4 components · contract: Envelope
+BRICKS        12 across 4 components · contract: Envelope
 ──────────────────────────────────────────────────
 USE CASES     3/3 walk through cleanly
 CHANGE SIM    5/5 volatilities touch one component

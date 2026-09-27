@@ -48,20 +48,28 @@ Rejected: *number of retries* (variable: a parameter, not a wall); *fax support*
 **Walls**
 
 ```
-Clients         EventsApi        AdminPortal        Scheduler
-                    \                |                /
-Managers                   NotificationManager
-                         /          |            \
-Engines        RoutingEngine   RenderingEngine    |
-                         \          |            /
-ResourceAccess  RecipientsAccess  DeliveryAccess  NotificationLogAccess
-                    |                |                |
-Resources          DB        email / SMS / Slack      DB
-Utilities: pub/sub · logging · secrets
+Clients          EventsApi   AdminPortal   Scheduler
+Managers         NotificationManager
+Engines          RoutingEngine   RenderingEngine
+ResourceAccess   RecipientsAccess   DeliveryAccess   NotificationLogAccess
+Resources        Storage   email / SMS / Slack vendors
+Utilities        pub/sub · logging · secrets
 ```
+
+| Component | Calls |
+|-----------|-------|
+| each Client | `NotificationManager` only |
+| `NotificationManager` | `RoutingEngine`, `RenderingEngine`, `DeliveryAccess`, `NotificationLogAccess`, `RecipientsAccess` |
+| `RoutingEngine` | `RecipientsAccess` |
+| `RenderingEngine` | nothing (templates ship with it as files) |
 
 `Scheduler` is a client: time is just another caller. `NotificationManager` owns the flows;
 it is the only component that knows the order of steps.
+
+**Size check.** One Manager with two Engines is one Engine more than Löwy's usual ratio.
+Kept on purpose: routing rules and message content change for different reasons and are
+owned by different people (product and compliance versus content writers). Merging them
+would put two volatilities behind one wall.
 
 **Bricks.** Shared contract: `Envelope { id, event, recipient, channel?, locale?, body?, attempts }`.
 Every brick takes and returns envelopes (a policy may return zero or many), so any brick can
@@ -70,13 +78,16 @@ follow any other.
 | Component | Bricks | Kind |
 |-----------|--------|------|
 | NotificationManager | `OnEvent(type)`, `OnSchedule(cron)` | Input |
-| | `Collect(window)`, `Flush` | Transform (state kept in `NotificationLogAccess`) |
+| | `Collect(window)`, `Flush` | Store (backed by `NotificationLogAccess`) |
 | | `Delivery`: pending → sent → delivered, or failed → retrying → dead | State machine |
-| RoutingEngine | `Expand` (event → recipients), `Prefer`, `QuietHours`, `OptOut` | Transform (policy) |
+| RoutingEngine | `Expand` (event → recipients), `Prefer`, `QuietHours` | Transform (policy) |
 | RenderingEngine | `Render(template, locale)` | Transform |
-| DeliveryAccess | `Email`, `Sms`, `Slack`, `Webhook`, each `send(envelope) → receipt` | Transport |
+| DeliveryAccess | `Email`, `Sms`, `Slack`, each `send(envelope) → receipt` | Transport |
 
 Flows are data owned by the Manager. Routing policies are an ordered list per tenant.
+
+Cut: a `Webhook` transport and an `OptOut` policy were drafted and removed. No current
+feature needs them. Each would be one new brick in one component if it arrives.
 
 **Feature assembly**
 
@@ -103,9 +114,31 @@ Flows are data owned by the Manager. Routing policies are an ordered list per te
 | V4: escalate-if-unread flow | `NotificationManager` | pass |
 | V5: recipients move to a CRM | `RecipientsAccess` | pass |
 
-**Use-case walkthrough (F1)**: `EventsApi → NotificationManager.Notify → RoutingEngine.Route →
-RecipientsAccess.Find → RenderingEngine.Render → DeliveryAccess.Deliver → NotificationLogAccess.Record`.
-No new component needed, no sideways or upward call. Pass.
+**Use-case walkthroughs**
+
+```
+UC1 notify about an event now
+  EventsApi           → NotificationManager.Notify
+  NotificationManager → RoutingEngine.Route
+  RoutingEngine       → RecipientsAccess.Find
+  NotificationManager → RenderingEngine.Render
+  NotificationManager → DeliveryAccess.Deliver
+  NotificationManager → NotificationLogAccess.Record
+
+UC2 notify about accumulated events later
+  EventsApi           → NotificationManager.Notify        (flow ends in Collect)
+  NotificationManager → NotificationLogAccess.Hold
+  Scheduler           → NotificationManager.SendDigests
+  NotificationManager → NotificationLogAccess.Release
+  NotificationManager → RenderingEngine.Render
+  NotificationManager → DeliveryAccess.Deliver
+
+UC3 choose how and when to be reached
+  AdminPortal         → NotificationManager.SetPreferences
+  NotificationManager → RecipientsAccess.SavePreferences
+```
+
+No new component, no call upward or sideways, one Manager per use case. Pass.
 
 ---
 
@@ -145,9 +178,27 @@ across two modules. That is why cart and checkout keep changing together. The ch
 Rejected: *rounding rules* (variable: a per-currency parameter); *checkout step order*
 (measured as stable).
 
-**Walls, scoped to the subsystem.** The host's checkout keeps acting as the Manager.
-`PricingEngine` and `PromotionsAccess` are new. A small anti-corruption layer, `QuoteAdapter`,
-turns the host's `Cart` model into the engine's `Basket`, so Django model changes stop there.
+**Walls, scoped to the subsystem.** The host's cart and checkout keep acting as Managers:
+they own the sequence, and the sequence is stable. New components:
+
+| Component | Type | Contract |
+|-----------|------|----------|
+| `PricingEngine` | Engine (V1) | `Quote(basket) → quote` |
+| `PromotionsAccess` | ResourceAccess (V2) | `ActivePromotions(at)`, `Define(promotion)` |
+
+**Seam and anti-corruption layer.** The seam is the existing `compute_total(cart)` in
+`checkout/totals.py`, which both cart and checkout already call. It becomes one line that
+translates the host's `Cart` into the engine's `Basket` (SKU, category, quantity, unit
+price, customer group) and asks `PricingEngine` for a quote. That translator is the
+anti-corruption layer: Django model changes stop there. If the engine ever needs to read
+more from the host, it goes through a ResourceAccess over the host, never through direct
+model imports.
+
+```
+checkout            → compute_total(cart)        seam: translate Cart → Basket
+compute_total       → PricingEngine.Quote
+PricingEngine       → PromotionsAccess.ActivePromotions
+```
 
 **Bricks inside PricingEngine.** Shared contract:
 `Quote { lines[], adjustments[], total }`.
@@ -155,21 +206,25 @@ turns the host's `Cart` model into the engine's `Basket`, so Django model change
 | Brick | Kind | One thing |
 |-------|------|-----------|
 | `Match(condition)` | Transform (policy) | selects lines by SKU, category, customer group, date window |
-| `Adjust(percent | amount | fixed_price)` | Transform | adds an adjustment to matched lines |
-| `Limit(per_order | per_customer)` | Transform (policy) | caps how often an adjustment applies |
-| `Stack(best_of | sequential | exclusive)` | Transform (policy) | combines competing promotions |
+| `PercentOff(n)`, `AmountOff(x)`, `FixedPrice(x)` | Transform | each adds one kind of adjustment to matched lines |
+| `Limit(scope, n)` | Transform (policy) | caps how often an adjustment applies, per order or per customer |
+| `BestOf`, `Exclusive` | Transform (policy) | decide which competing promotions survive |
 | `Round(currency)` | Transform | applies currency rounding once, at the end |
 
-A promotion is data: `{match, adjust, limit}`. The engine runs all active promotions,
-then `Stack`, then `Round`.
+A promotion is data: `{match, adjustment, limit}`. The engine runs all active promotions,
+then the stacking policy (`BestOf` unless a promotion is `Exclusive`), then `Round`.
+
+The first draft had one `Adjust(kind)` brick. Its `kind` flag switched between three
+calculations, which is the mode-flag smell, so it became three bricks. A `Sequential`
+stacking policy was drafted and cut: no current feature needs it.
 
 **Feature assembly**
 
 | Feature | Composition | New bricks |
 |---------|-------------|------------|
-| 20% off a category | `Match(category=x) → Adjust(percent 20)` | 0 |
-| Staff discount | `Match(group=staff) → Adjust(percent 30)`, `Stack(exclusive)` | 0 |
-| 3-for-2 | `Match(sku in set, qty ≥ 3) → Adjust(cheapest_free)` | 1 (`Adjust` variant) |
+| 20% off a category | `Match(category=x) → PercentOff(20)` | 0 |
+| Staff discount | `Match(group=staff) → PercentOff(30)`, marked `Exclusive` | 0 |
+| 3-for-2 | `Match(sku in set, qty ≥ 3) → CheapestFree` | 1 (`CheapestFree`) |
 
 **Migration** (each step ships on its own):
 

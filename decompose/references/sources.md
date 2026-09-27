@@ -6,7 +6,17 @@ source was available, the entry says so.
 
 ## Walls: volatility-based decomposition
 
-<!-- WALLS_SOURCES -->
+| Source | Contributes |
+|--------|-------------|
+| David Parnas, "On the Criteria To Be Used in Decomposing Systems into Modules", CACM 1972 — <https://www.win.tue.nl/~wstomv/edu/2ip30/references/criteria_for_modularization.pdf> | The original argument: modules hide design decisions likely to change, not steps in a flowchart; the KWIC comparison; hide processing order in one module |
+| Juval Löwy, *Righting Software* (2019), ch. 2 excerpt — <https://www.informit.com/articles/article.aspx?p=2995357> (and `&seqNum=2`, `&seqNum=3`) | Against functional and domain decomposition; decompose based on volatility; volatile vs variable; the two axes; solutions masquerading as requirements; the nature of the business; speculative design; design for competitors |
+| Löwy, "Righting Software" slides, SDD 2022 — <http://sddvault.s3.amazonaws.com/presentation-slides/sdd2022/Righting%20Software.pdf> | The component taxonomy (Clients, Managers, Engines, ResourceAccess, Resources, Utilities); atomic business verbs vs CRUD |
+| IDesign, "The IDesign Method" (2010) and management overview — <https://www.idesign.net/assets/documents/IDesign-Method-Management-Overview.pdf> | Closed architecture; call chains over the layer diagram; small sets of composable components |
+| Löwy on SE Radio 407 (2020) — <https://se-radio.net/2020/04/episode-407-juval-lowy-on-righting-software/>; InfoQ review and Q&A — <https://www.infoq.com/articles/book-review-righting-software/> | "Features are aspects of integration, not implementation"; composable design; core use cases; about ten building blocks; the prime directive |
+| Book passages quoted by readers (secondary): coderanch threads — <https://coderanch.com/t/729242/engineering/Righting-Software-Core-Cases>; Bookey summary — <https://cdn.bookey.app/files/pdf/book/en/righting-software.pdf> | Sequence vs activity; Engines as Strategy; call-rule relaxations and don'ts; naming; size heuristics; "almost expendable" Managers; volatility decreasing down the layers |
+| Mary Branscombe, ZDNet review of *Righting Software* (2020) — <https://www.zdnet.com/article/righting-software-book-review-building-blocks-for-software-architects/> | Criticisms: opinionated, heuristic numbers, little on modern delivery practice |
+| Robert C. Martin, "Granularity" (1996) — <https://staff.cs.utu.fi/staff/jouni.smed/doos_06/material/Granularity.pdf>; "The Single Responsibility Principle" (2014) — <https://blog.cleancoder.com/uncle-bob/2014/05/08/SingleReponsibilityPrinciple.html>; "Design Principles and Design Patterns" (2000) — <https://staff.cs.utu.fi/~jounsmed/doos_06/material/DesignPrinciplesAndPatterns.pdf> | Common Closure, Single Responsibility (one actor), Stable Dependencies, Stable Abstractions |
+| Gamma, Helm, Johnson and Vlissides, *Design Patterns* (1994), §1.8, as quoted in *Design Patterns Explained* — <https://www.informit.com/articles/article.aspx?p=1398602> | "Encapsulate the concept that varies" |
 
 ## Bricks: orthogonal primitives
 

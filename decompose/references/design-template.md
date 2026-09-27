@@ -98,9 +98,17 @@ Every feature, now and plausible future, written as a composition of existing br
 
 ## 7. Validation
 
-**Use-case walkthroughs** (each core use case as a call chain across the walls):
+**Use-case walkthroughs** (each core use case as a call chain, one call per line):
 
-- UC1: `Client → Manager.Verb → Engine.Verb → Access.Verb → Resource` — <pass / what broke>
+```
+UC1 <name>
+  <Client>        → <Noun>Manager.<Verb>
+  <Noun>Manager   → <Noun>Engine.<Verb>
+  <Noun>Engine    → <Noun>Access.<Verb>
+  <Noun>Manager   → <Noun>Access.<Verb>
+```
+
+Result: <pass, or which rule broke and how the walls changed>
 
 **Change simulation** (each volatility happening; target is one component touched):
 

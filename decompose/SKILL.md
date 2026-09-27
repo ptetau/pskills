@@ -86,17 +86,19 @@ The full rules, sources, and smells are in `references/walls.md` and
   | Type | Encapsulates | Example |
   |------|--------------|---------|
   | Client | who and what calls the system (UI, API, scheduler, other systems) | `AdminPortal` |
-  | Manager | the volatile *sequence*: the order of steps in a use case (workflow) | `EnrollmentManager` |
+  | Manager | the volatile *sequence*: the order of steps in a family of related use cases (a workflow) | `EnrollmentManager` |
   | Engine | a volatile *activity*: a business rule, calculation, or algorithm | `PricingEngine` |
   | ResourceAccess | volatile *access* to a resource, exposed as business verbs, not CRUD | `MembersAccess` |
   | Resource | the actual store or external system | database, vendor API |
   | Utility | cross-cutting plumbing any component may use | logging, security, pub/sub |
 
-- **Calls go down, never up, and never sideways.** Clients call Managers. Managers call
-  Engines and ResourceAccess. Engines call ResourceAccess. Everything may call Utilities.
-  Managers talk to other Managers only through a queue. Engines don't call Engines.
-  ResourceAccess components don't call each other.
-- **Features live in the integration, not in one component.** A feature is a particular
+- **Calls go down, never up, and never sideways.** Clients call one Manager per use case
+  and never call Engines. Managers call Engines and ResourceAccess. Engines call
+  ResourceAccess. Everything may call Utilities. Managers talk to other Managers only
+  through a queue. Engines don't call Engines; ResourceAccess components don't call each
+  other. Only Managers publish or subscribe to events.
+- **Features live in the integration, not in one component.** Löwy: "features are always
+  and everywhere aspects of integration, not implementation." A feature is a particular
   way the Manager puts Engines and ResourceAccess together. Adding a feature should mostly
   mean a new composition, not a new component.
 
@@ -123,11 +125,13 @@ The full rules, sources, and smells are in `references/walls.md` and
 - **Features are compositions.** Write every feature as `Input → Transform → … → Transport`.
   A feature that cannot be written that way either needs a genuinely new brick (justify
   it) or reveals a wrong wall.
-- **Guardrails against over-building.** Extract a brick when you have at least two real
-  uses and a third in view (rule of three). Prefer duplication over the wrong abstraction.
-  Keep compositions in code until the composition itself is a volatility (for example,
-  flows that differ per customer); a config format that grows loops and conditionals has
-  become a worse programming language.
+- **Guardrails against over-building.** A brick earns its place by serving two or more
+  current features, or by being the one home of a recorded volatility. Otherwise leave
+  the logic inline in the composition. When extracting bricks from existing code, wait
+  for the third occurrence (rule of three), and prefer duplication over the wrong
+  abstraction. Keep compositions in code until the composition itself is a volatility
+  (for example, flows that differ per customer); a config format that grows loops and
+  conditionals has become a worse programming language.
 
 ### The hybrid: how walls and bricks fit together
 
@@ -192,8 +196,9 @@ Goal: separate the essence from the variations.
 1. Rewrite each feature as a use case: who does what, and what the system does in response.
 2. Group variations. "Welcome email", "reset SMS", and "Slack alert" are one core use case
    ("notify someone about an event") with different parameters.
-3. Mark the **core use cases**: the small number (usually two to six) that express what the
-   system is for. Everything else should turn out to be a variation of these.
+3. Mark the **core use cases**: the few that express what the system is for. Most
+   systems have two or three, and seldom more than six. Everything else should turn out
+   to be a variation of these.
 4. Write down the **nature of the business**: what will stay true for the life of the
    system. These things are not walled off.
 
@@ -204,7 +209,7 @@ Goal: a list of what is likely to change, with evidence, and a list of what was 
 1. **Generate candidates** along both axes (one customer over time, many customers now).
    Good prompts are in `references/walls.md`: named vendors, "for now" and "initially",
    numbers and thresholds, regulation, anything a competitor does differently, anything
-   that changed in the last two years.
+   that changed in the domain over the last five to seven years.
 2. **Look for solutions disguised as requirements.** "Send a Twilio SMS" is a solution. The
    need is "reach the user fast"; the volatility is the channel and the vendor.
 3. **Filter each candidate:**
@@ -218,17 +223,22 @@ Goal: a list of what is likely to change, with evidence, and a list of what was 
 
 Goal: components, their types, their contracts, and the call graph.
 
-1. **Assign each volatility to one component** of the right type (the table above). Name
-   each component for the volatility it hides, not for a feature: `PricingEngine`, not
-   `BlackFridayDiscountService`.
+1. **Assign each volatility to one component** of the right type (the table above). A
+   component may hold several related volatilities. Name each component for the
+   volatility it hides, not for a feature: `PricingEngine`, not
+   `BlackFridayDiscountService`. Names are two-part PascalCase with the type as suffix;
+   gerund prefixes are for Engines only.
 2. **Write each component's contract as business verbs.** ResourceAccess exposes verbs such
    as `Deliver`, `FindRecipients`, `RecordOutcome`, never `Insert`, `Update`, `Select` or a
    vendor's API.
 3. **Draw the call graph** by layer and check the call rules. Fix violations by moving
    responsibility, not by adding exceptions.
-4. **Check the size.** Most systems need only a handful of Managers and a comparable or
-   smaller number of Engines. Many Managers usually means feature-based decomposition. A
-   Manager with no volatility behind it should be merged.
+4. **Check the size and shape.** Löwy's heuristics: about ten components in order of
+   magnitude, two to five Managers, fewer Engines than Managers, a dozen or two components
+   at most. Eight Managers means feature-based decomposition. Volatility should decrease
+   going down the layers. Apply the expendability test to each Manager (see
+   `references/walls.md`). These are smell checks, not targets: when the design falls
+   outside them, write down why.
 5. **Subsystem mode:** fit the new walls to the host. Pick the attach point (the seam),
    and put an anti-corruption layer between host concepts and the subsystem's contract.
 
@@ -258,8 +268,9 @@ Start with the most volatile component. See `references/bricks.md` for tests and
 Goal: prove the design, don't assert it. Run every check and record the results in the
 design doc. Fix and re-run until they pass, or record why a failure is accepted.
 
-1. **Use-case walkthrough.** Write each core use case as a call chain through the walls.
-   It must need no new component and break no call rule.
+1. **Use-case walkthrough.** Write each core use case as a call chain through the walls,
+   one `Caller → Callee.Verb` per line so the direction of every call is visible. It must
+   need no new component and break no call rule.
 2. **Change simulation.** For each volatility in the register, imagine it happening. List
    the components that must change. Target: exactly one. Two or more means a leaky wall.
 3. **Feature assembly.** Write every current feature, and two or three plausible future
