@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** ██░░░░░░░░░░ 2/13 steps completed (15%)
+**Progress:** ███░░░░░░░░░ 3/13 steps completed (23%)
 
 ## How to use this document (read this first, every session)
 
@@ -111,7 +111,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/skills/init/references/{templates,ports,adapters}/**`
 - **Depends on:** Step 1
 
-### Step 3: Default design specs · `[ ]` AUTO · Parallel group: none
+### Step 3: Default design specs · `[x]` AUTO · Parallel group: none
 
 - **Do:** Write pdlc's defaults as design specs in `plugins/pdlc/skills/init/references/defaults/`:
   ID formats, check tagging, commit trailers, review checklist, board columns, writing style.
@@ -282,5 +282,15 @@ Decided: six templates (intent, job, capability, design, change, config); five p
          cancelled. The change spec header is one line
          (Intent · Scope · Status · Ticket · Branch) so a script can read it. The merge
          check lives at pdlc/bin/check_merge.py in the project (built in step 8).
+Surprises: none.
+
+[2026-09-27] Step 3: done
+Changed: plugins/pdlc/skills/init/references/defaults/ (six design specs)
+Decided: defaults = ids, check tagging, commit trailers, review checklist, branches,
+         writing style. Each says "Ask at init: yes|no" — this answers the outline's open
+         question: ask about check tagging, branches and writing style; apply ids,
+         trailers and the review checklist without asking (they are near-core). Board
+         columns live in config.md, not a design spec, and are only asked about when a
+         tracker is set.
 Surprises: none.
 ```
