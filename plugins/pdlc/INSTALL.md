@@ -103,8 +103,9 @@ and make it a required check:
 python3 pdlc/bin/check_merge.py
 ```
 
-It checks every change marked `in review`, and fails if any requirement it touches isn't
-`verified`.
+It finds the change whose branch is being merged (from `GITHUB_HEAD_REF` in GitHub Actions,
+or the current git branch) and fails if any requirement that change touches isn't
+`verified`. If no change uses the branch, it checks every change marked `in review`.
 
 ## Sharing with your team
 

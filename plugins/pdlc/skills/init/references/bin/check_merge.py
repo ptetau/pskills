@@ -5,11 +5,17 @@ Fails if any requirement a change touches is not verified.
 
 Usage:
   python3 pdlc/bin/check_merge.py CH-0031   check one change
-  python3 pdlc/bin/check_merge.py           check every change with status "in review"
+  python3 pdlc/bin/check_merge.py           check the change for the current branch, or,
+                                            if no change uses this branch, every change
+                                            with status "in review"
+
+In CI the current branch is read from GITHUB_HEAD_REF when it is set.
 
 Run it from the project root. Exit code 0 means the change may merge.
 """
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -58,16 +64,34 @@ def check_change(root, path):
     return problems
 
 
-def main(argv, root=Path(".")):
+def current_branch(root):
+    """The branch being merged: GITHUB_HEAD_REF in CI, else git's current branch."""
+    if os.environ.get("GITHUB_HEAD_REF"):
+        return os.environ["GITHUB_HEAD_REF"]
+    try:
+        out = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root,
+                             capture_output=True, text=True)
+    except OSError:
+        return None
+    return out.stdout.strip() if out.returncode == 0 else None
+
+
+def main(argv, root=Path("."), branch=None):
     changes = root / "pdlc" / "changes"
+    everything = sorted(changes.glob("CH-*.md"))
     if len(argv) > 1:
         paths = sorted(changes.glob(argv[1] + "-*.md"))
         if not paths:
             print("No change spec found for %s" % argv[1])
             return 1
     else:
-        paths = [p for p in sorted(changes.glob("CH-*.md"))
-                 if re.search(r"Status:\s*in review\b", p.read_text())]
+        branch = branch or current_branch(root)
+        paths = [p for p in everything
+                 if branch and re.search(r"Branch:\s*%s\s*$" % re.escape(branch),
+                                         p.read_text(), re.M)]
+        if not paths:
+            paths = [p for p in everything
+                     if re.search(r"Status:\s*in review\b", p.read_text())]
     failed = False
     for path in paths:
         problems = check_change(root, path)

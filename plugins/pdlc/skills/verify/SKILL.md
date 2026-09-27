@@ -23,7 +23,8 @@ requirements are all `built`. Switch to its branch.
 Through the checks port:
 
 - For each requirement in the change, run its checks. Each needs at least one check, and
-  all of them must pass. "No checks found" is a failure.
+  all of them must pass. "No checks found" is a failure, except for a requirement marked
+  `(retire)`, which should have none left.
 - Run all checks. Everything must pass.
 
 ## 3. Review

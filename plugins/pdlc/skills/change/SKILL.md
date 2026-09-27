@@ -44,7 +44,8 @@ Use `pdlc/templates/change.md`. Take the next free change number. Name the file
   file, put it inside the code map's folders. A job change must not list files from a
   capability's code map.
 - **Steps:** small steps, usually one per requirement. Each names its requirement, the
-  check that proves it (named with the requirement ID), and "Done when".
+  check that proves it (named with the requirement ID), and "Done when". A `(retire)`
+  requirement gets no check: its step removes the code and checks that only served it.
 - **Manual checks:** any acceptance check that can't be automated, or "none".
 
 ## 4. Finish

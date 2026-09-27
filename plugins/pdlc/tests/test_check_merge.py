@@ -32,7 +32,7 @@ Status: {r2} · Intents: IN-0002
 
 CHANGE = """# CH-0001 · Email templates
 
-Intent: IN-0002 · Scope: CAP-email · Status: {status} · Ticket: none · Branch: none
+Intent: IN-0002 · Scope: CAP-email · Status: {status} · Ticket: none · Branch: {branch}
 
 ## Requirements
 
@@ -55,20 +55,20 @@ class MergeCheck(unittest.TestCase):
         self.tmp.cleanup()
 
     def write(self, r1="verified", r2="verified", reqs="### CAP-email.R2 · Send from a template",
-              status="in review"):
+              status="in review", branch="none"):
         (self.root / "pdlc/specs/capabilities/CAP-email.md").write_text(
             CAPABILITY.format(r1=r1, r2=r2))
         (self.root / "pdlc/changes/CH-0001-email-templates.md").write_text(
-            CHANGE.format(status=status, reqs=reqs))
+            CHANGE.format(status=status, reqs=reqs, branch=branch))
 
     def write_change(self, reqs, status="in review"):
         (self.root / "pdlc/changes/CH-0001-email-templates.md").write_text(
-            CHANGE.format(status=status, reqs=reqs))
+            CHANGE.format(status=status, reqs=reqs, branch="none"))
 
-    def run_check(self, *args):
+    def run_check(self, *args, branch=None):
         out = io.StringIO()
         with redirect_stdout(out):
-            code = check_merge.main(["check_merge.py", *args], root=self.root)
+            code = check_merge.main(["check_merge.py", *args], root=self.root, branch=branch)
         return code, out.getvalue()
 
     def test_passes_when_every_requirement_is_verified(self):
@@ -121,6 +121,17 @@ class MergeCheck(unittest.TestCase):
         self.assertEqual(self.run_check()[0], 0)
         self.write(r2="built", status="in review")
         self.assertEqual(self.run_check()[0], 1)
+
+
+    def test_no_argument_checks_the_change_for_the_current_branch_whatever_its_status(self):
+        self.write(r2="built", status="building", branch="pdlc/CH-0001-email-templates")
+        code, out = self.run_check(branch="pdlc/CH-0001-email-templates")
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL CH-0001", out)
+
+    def test_a_branch_with_no_change_spec_checks_changes_in_review(self):
+        self.write(r2="verified", status="in review", branch="pdlc/CH-0001-email-templates")
+        self.assertEqual(self.run_check(branch="some-other-branch")[0], 0)
 
 
 if __name__ == "__main__":

@@ -23,7 +23,9 @@ Check these, in order:
 2. **Acceptance.** For each acceptance check in the change spec, find the check that proves
    it. The check's name carries the requirement ID (`CAP-email.R3`, or `CAP_email_R3` where
    names can't hold dots or dashes). The check could fail if the
-   behaviour were wrong. A check that can't fail doesn't count.
+   behaviour were wrong. A check that can't fail doesn't count. A requirement marked
+   `(retire)` needs no check: instead confirm it is gone from its spec, and that the code
+   and checks that only served it are gone too.
 3. **Conventions.** The change follows each design spec the change spec lists.
 4. **Trace.** Every commit message on the branch has `Intent:` and `Change:` lines that
    match the change spec. Every commit that changes a file outside `pdlc/` also has a `Req:`
