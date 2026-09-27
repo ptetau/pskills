@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pskills/vet/suite.schema.json",
+  "title": "Vet eval suite",
+  "description": "The saved eval for one skill: the output structure and rubric drawn from its SKILL.md, and the test prompts. Lives at evals/<skill>/suite.json and is reused by every later /vet run so scores stay comparable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["skill", "skillPath", "skillSha256", "createdAt", "structure", "rubric", "prompts"],
+  "properties": {
+    "skill": {
+      "type": "string",
+      "description": "Skill name, as typed after the slash."
+    },
+    "skillPath": {
+      "type": "string",
+      "description": "Path to the skill's SKILL.md: relative to the repo root when inside it, otherwise absolute or ~-prefixed."
+    },
+    "skillSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of SKILL.md when the suite was written. A later mismatch means the rubric may be stale."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "structure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "elements"],
+      "description": "What the skill's output looks like, as SKILL.md specifies it.",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "One or two sentences: turn pattern (single reply or multi-turn) and the overall shape."
+        },
+        "elements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "description"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^S[0-9]+$" },
+              "description": {
+                "type": "string",
+                "description": "One required part of the output: a section, block, format, file, or turn rule."
+              }
+            }
+          }
+        }
+      }
+    },
+    "rubric": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 14,
+      "items": { "$ref": "#/$defs/item" }
+    },
+    "prompts": {
+      "type": "array",
+      "minItems": 2,
+      "description": "Ordered so that any leading slice is as varied as possible. A run with --sample M uses the first M.",
+      "items": { "$ref": "#/$defs/prompt" }
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "criterion", "pass", "partial", "weight", "source"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^R[0-9]+$" },
+        "kind": {
+          "type": "string",
+          "enum": ["structure", "behavior", "outcome"],
+          "description": "structure: the shape of the output. behavior: a process rule visible in the output. outcome: whether the output does its job for the user."
+        },
+        "criterion": {
+          "type": "string",
+          "description": "One checkable claim about the output."
+        },
+        "pass": {
+          "type": "string",
+          "description": "What the output looks like when the item is fully met."
+        },
+        "partial": {
+          "type": "string",
+          "description": "What a half-met item looks like."
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "3 = core purpose, 2 = important, 1 = nice to have."
+        },
+        "appliesWhen": {
+          "type": "string",
+          "description": "Condition under which the item applies; omit for always. Judges mark the item n/a when it is false."
+        },
+        "source": {
+          "type": "string",
+          "description": "Where in SKILL.md this comes from: a heading, rule number, or short quote."
+        },
+        "structureRef": {
+          "type": "string",
+          "pattern": "^S[0-9]+$",
+          "description": "For structure items: the structure element it checks."
+        }
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prompt", "axis", "exercises", "replies"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^P[0-9]{2}$" },
+        "prompt": {
+          "type": "string",
+          "description": "What the user types after /<skill>."
+        },
+        "axis": {
+          "type": "string",
+          "description": "The main way this prompt differs from the others, e.g. typical, minimal input, ambiguous, large input, unusual domain."
+        },
+        "exercises": {
+          "type": "string",
+          "description": "One line on which parts of the skill this prompt tests."
+        },
+        "replies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Scripted user replies, used in order whenever the skill waits for the user. Empty for skills that never ask."
+        }
+      }
+    }
+  }
+}
