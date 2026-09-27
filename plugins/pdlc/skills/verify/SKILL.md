@@ -55,7 +55,9 @@ the progress log, commit, and tell the user which stage is next. Stop here.
    - the GIF, embedded (the delivery adapter says how);
    - a table of each requirement, its checks and their result;
    - a table of each remit and its result, linking each `result.md`;
-   - the lock commit, and any "Manual checks" for the user to confirm.
+   - the lock commit, and any "Manual checks" for the user to confirm;
+   - every detail marked *(assumed)* in the change spec and its requirements, one line
+     each, so the user reviews them in one place.
 5. If every change for the intent is now `in review` or `merged`, set the intent to
    `in review`.
 6. Write `handoff.md`: the link, and what the user needs to confirm. Commit it.

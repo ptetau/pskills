@@ -30,7 +30,9 @@ Read the specs in `pdlc/specs/`. For each thing the intent needs, decide where i
 - What the system can do, used by jobs → a **capability** spec.
 - How we do something everywhere → a **design** spec.
 
-Prefer existing specs. Create a new one only when nothing fits.
+Prefer existing specs. Create a new one only when nothing fits. When you create a
+capability, draw it around something likely to change (a vendor, a set of rules, a
+store) and name it for that, not for a feature: `CAP-payments`, not `CAP-checkout-button`.
 
 If the intent could mean two different things, ask the user before going on (see "Asking
 questions" in `pdlc/README.md`; with `defaults`, take the likelier meaning and note it).

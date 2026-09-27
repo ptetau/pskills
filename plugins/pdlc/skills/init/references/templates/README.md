@@ -88,6 +88,10 @@ main.
 Ask the user one short question at a time. Offer two or three answers and mark the one you
 recommend, with one line on why. The user can reply `skip` to take it.
 
+Anything a skill decides without being told (a name, a limit, a default answer) is
+marked *(assumed)* where it is written, and listed in the handoff, so nothing is guessed
+silently.
+
 If the skill was run with `defaults`, don't ask. Take your recommended answer, and record
 each one in the handoff's "Decided on defaults" and the intent's "Notes" as
 `<question> → <answer> (default)` so the user can change it later.

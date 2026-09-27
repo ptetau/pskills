@@ -42,12 +42,16 @@ and write `change.md` in it from `pdlc/templates/change.md`.
 - **Requirements:** copy each requirement's heading and acceptance checks. Add ` (retire)`
   to the heading of any requirement that is `retiring`.
 - **Relies on:** for a job change, the capabilities it uses, marked "used, not changed".
-  Always list the design specs that apply, including `DES-writing-style` and
-  `DES-pdlc-check-tagging`.
+  Always list the design specs that apply, including `DES-writing-style`,
+  `DES-pdlc-check-tagging` and `DES-errors`.
 - **Interface:** what the checks may call. The test writer never sees the code, so this
   must be enough to write every check: function names and arguments, commands and flags,
-  routes, page elements and what they show. Each with the file it lives in. Decide new
-  names here, following the code's existing style.
+  routes, page elements and what they show. For each entry give the file it lives in,
+  what goes in and what comes out (with types where the language has them), and every
+  error it can give, by its code in `DES-errors`. Under "Test seams", say how a check
+  controls the clock, randomness and outside vendors or stores, or write "none". Decide
+  new names here, following the code's existing style, and mark each new name
+  *(assumed)*.
 - **Files:** only the app files this change needs. Start from the spec's code map. A job
   change must not list files from a capability's code map.
 - **Check files:** the check files this change adds or changes, inside the check folders

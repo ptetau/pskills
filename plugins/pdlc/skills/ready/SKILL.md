@@ -27,6 +27,13 @@ A requirement is clear when:
 - It says what must be true, not how to build it.
 - Each acceptance check is a "Given …, when …, then …" line that a check could prove with a
   pass or fail.
+- Each line uses concrete values ("Ana", "80", "15%"), not "a user" or "some amount".
+- Where there is a limit, there are lines just inside and just outside it (59:59 and
+  60:00 for a one-hour limit).
+- Each line checks one behaviour, and its "then" is something a caller can see: a reply,
+  an output, a message sent. Never a stored row.
+- Each failure line names its error code, and the code is in `DES-errors`. For a new
+  code, add it to `DES-errors` as part of this intent.
 - Words like "fast", "easy" or "secure" have a number or a rule behind them.
 - Every capability and design spec it relies on exists, or is part of this intent.
 
@@ -35,7 +42,8 @@ A requirement is clear when:
 Follow "Asking questions" in `pdlc/README.md`. If run with `defaults`, don't ask: take
 your recommended answer.
 
-Write each answer into the requirement. Add a line to the intent's "Notes":
+Write each answer into the requirement. When the answer was taken by default, mark it
+*(assumed)* where it appears in the requirement. Add a line to the intent's "Notes":
 `<requirement>: <question> → <answer>`.
 
 If a design spec is missing (for example, the first time the project shows a table), use

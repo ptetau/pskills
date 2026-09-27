@@ -41,7 +41,10 @@ Create `pdlc/` at the project root with:
 
 ### 2. Map existing code
 
-Skip this step if the project has no code yet.
+If the project has no code yet (a new build), there is nothing to map. Instead, recommend
+that the user runs `/decompose` first, if it is installed, to decide where the main parts
+go, then starts their first intent with its result. Don't run it yourself, and don't wait
+for it: carry on with the next step.
 
 Start the `pdlc:recon` agent and ask for a **thin map** of the project. Then show the user
 what it found, as two short lists: capabilities and jobs, each with its code map. Ask if

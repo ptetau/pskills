@@ -22,10 +22,19 @@ requirement this change removes.
 
 ## Interface
 
-What the checks may call, so the test writer never needs to see the code: function names
-and arguments, commands and flags, routes, page elements. Each with the file it lives in.
+What the checks may call, so the test writer never needs to see the code. For each entry:
+the file it lives in, what goes in and what comes out (with types where the language has
+them), and every error it can give, by code from `DES-errors`.
 
-- `name(args)` in `path/to/file`
+- `send(template: TemplateName, to: Email) -> SentId` in `src/email.js`
+  - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`
+
+### Test seams
+
+How a check controls what it can't wait for or reach: the clock, randomness, and outside
+vendors or stores. Write "none" if the checks need none.
+
+- clock: `send(..., { now })` takes the current time
 
 ## Files
 

@@ -24,8 +24,12 @@ For each acceptance line under "Requirements":
 1. Write at least one check that proves it.
 2. Name the check with its requirement ID, as `DES-pdlc-check-tagging` says.
 3. Call the app only through what "Interface" lists. If the interface doesn't give you
-   what you need, stop and say what is missing. Don't guess at internals.
-4. Make sure the check would fail if the behaviour were wrong.
+   what you need, stop and say what is missing. Don't guess at internals. This includes
+   an error code an acceptance line expects but the Interface doesn't list, and a test
+   seam you need (the clock, randomness, a vendor) that isn't listed.
+4. For a failure, check the exact error code, never just "something went wrong". A
+   check that passes for any error passes for a typo too.
+5. Make sure the check would fail if the behaviour were wrong.
 
 A requirement marked `(retire)` gets no check. Remove any existing check that only proved
 it. You can't delete files: if a whole check file served only that requirement, say so in

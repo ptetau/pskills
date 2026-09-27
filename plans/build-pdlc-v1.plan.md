@@ -521,4 +521,20 @@ Changed: 13 fixes. check_merge reads the newest Tests-Locked line (new test); te
          "missing" error; intent handoffs use ### headings.
 Open: board commits card keys on main while change headers are edited on branches, so the
       Ticket line can conflict at merge. Needs a decision on where tracker keys live.
+
+[2026-09-27] Borrowed from /decompose and /blueprint (user chose "borrow, don't bundle")
+Why: four independent advisers (deep integration, skeptic, change quality, cost and user
+     experience) agreed: never run /blueprint as a separate document inside pdlc; never run
+     either on routine intents; pdlc's real gaps are capability boundaries and a thin
+     Interface for the blind test writer.
+Changed: change template and change skill: Interface entries give types, error codes and
+         "Test seams" (clock, randomness, vendors); new names are marked (assumed).
+         test-writer stops on a missing error code or seam and checks exact codes. tests
+         remit: every listed code has a check. ready: concrete values, boundary values,
+         observable "then", named error codes. New default DES-errors (the error list),
+         listed under Relies on for every change. verify lists every (assumed) detail in
+         the PR. intake: draw a capability around something likely to change. init: on a
+         new build with no code, recommend /decompose first; never run it.
+Not done, on purpose: blueprint documents, an architecture remit, bundling, auto-running
+         /decompose.
 ```
