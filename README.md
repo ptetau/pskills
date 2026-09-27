@@ -165,6 +165,18 @@ Boundaries the executor stops and asks rather than resolving it itself.
 
 ---
 
+## `pdlc` — Development Lifecycle Harness (design stage)
+
+A Claude Code plugin that runs your project's development lifecycle. Intents enter an
+inbox, become job, capability and design specs, then small changes that each touch one
+job or one capability. Changes are built test first, checked by an independent reviewer,
+and approved by you. Every commit traces back to its requirement and intent.
+
+Status: outline and skeletons only. Read `pdlc/OUTLINE.md` for the design and
+`plans/build-pdlc-v1.plan.md` for the build plan.
+
+---
+
 ## `/squiz` — Visual Clarifier Document
 
 The document-mode twin of `/quiz`. Instead of one-at-a-time cards, the
