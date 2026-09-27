@@ -17,6 +17,10 @@ How should a check show which requirement it proves?
 The requirement ID starts the check's name, for example `CAP-email.R3 sends from a
 template`. A check that proves two requirements names both.
 
+If the check runner doesn't allow `.` or `-` in names (Python's `unittest`, for example),
+write the ID with underscores instead: `test_CAP_email_R3_sends_from_a_template`. Both forms
+count as the same ID. Use one form per project.
+
 ## Why
 
 The trace from requirement to check is only as good as this naming, so it must be simple

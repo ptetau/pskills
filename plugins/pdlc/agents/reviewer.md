@@ -21,7 +21,8 @@ Check these, in order:
    files for this change's own spec, intent and change spec are fine. The change stays
    inside its one scope. A job change never edits a capability's files.
 2. **Acceptance.** For each acceptance check in the change spec, find the check that proves
-   it. The check's name starts with the requirement ID. The check could fail if the
+   it. The check's name carries the requirement ID (`CAP-email.R3`, or `CAP_email_R3` where
+   names can't hold dots or dashes). The check could fail if the
    behaviour were wrong. A check that can't fail doesn't count.
 3. **Conventions.** The change follows each design spec the change spec lists.
 4. **Trace.** Every commit on the branch has `Intent`, `Change` and `Req` trailers that

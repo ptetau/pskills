@@ -38,6 +38,9 @@ recent git history. Don't read everything. Then report:
    List any place where two patterns do the same job.
 5. **Unsure.** Anything you couldn't decide.
 
+Each file belongs to at most one job or capability. If a file mixes both, give it to the
+job and say so under "Unsure".
+
 Keep each item to one or two lines.
 
 ## A deep look at one area

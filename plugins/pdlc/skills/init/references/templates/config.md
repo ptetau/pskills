@@ -17,6 +17,8 @@ requirement. Filled in by init.
 
 - all: `...`
 - one requirement: `...` (use {req} where the requirement ID goes)
+- ID form in check names: `CAP-email.R3` or `CAP_email_R3` (for runners that don't allow
+  `.` or `-` in names)
 
 ## Board columns
 

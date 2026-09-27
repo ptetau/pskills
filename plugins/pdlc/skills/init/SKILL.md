@@ -19,8 +19,9 @@ The files to copy are in the `references/` folder next to this file.
 
 - The project must be a git repository. If it isn't, stop and say so.
 - If `pdlc/` already exists at the project root, stop. Say pdlc is already set up.
-- If the user passed `defaults`, accept the recommended answer to every question below
-  without asking. Say which answers you took at the end.
+- If the user passed `defaults`, don't ask anything. Accept recon's map as it is, pick the
+  more common pattern wherever two compete, and take the recommended answer to every
+  question. List everything you decided at the end, so the user can change it.
 
 ## Steps
 
@@ -45,6 +46,10 @@ Start the `pdlc:recon` agent and ask for a **thin map** of the project. Then sho
 what it found, as two short lists: capabilities and jobs, each with its code map. Ask if
 anything should be merged, split or renamed. These boundaries matter, because every change
 must stay inside one.
+
+Each file belongs to at most one code map. If a file is in two, ask which spec owns it. If
+a file mixes job and capability code, give it to the job and note that the capability
+could be split out later.
 
 For each job and capability the user keeps, create a spec from the job or capability
 template. Set `Status: stub`, fill in the summary and code map, and leave the requirements

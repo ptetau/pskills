@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** ███░░░░░░░░░ 3/13 steps completed (23%)
+**Progress:** ████░░░░░░░░ 4/13 steps completed (31%)
 
 ## How to use this document (read this first, every session)
 
@@ -122,7 +122,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/skills/init/references/defaults/**`
 - **Depends on:** Step 2
 
-### Step 4: `init` and `recon` · `[ ]` AUTO · Parallel group: none
+### Step 4: `init` and `recon` · `[x]` AUTO · Parallel group: none
 
 - **Do:** Write `init` and the `recon` agent in full, following the outline. Init copies the
   references, runs recon's thin map on existing code of any kind, lets the user adjust the map, quizzes
@@ -293,4 +293,19 @@ Decided: defaults = ids, check tagging, commit trailers, review checklist, branc
          columns live in config.md, not a design spec, and are only asked about when a
          tracker is set.
 Surprises: none.
+
+[2026-09-27] Step 4: done
+Changed: init/SKILL.md, agents/recon.md, init references (README template, check_merge.py
+         added to bin/), check-tagging default, checks-command adapter, config template
+Decided: init takes "defaults" to run without questions (needed for headless runs and
+         quick starts). Each file belongs to at most one code map; mixed files go to the
+         job. Check names may carry the ID with underscores (CAP_email_R3) where the runner
+         forbids dots and dashes. A pdlc/README.md in each project holds the shared rules
+         so each skill stays short.
+Proven: /pdlc:init defaults ran headless on a Python unittest CLI (pyapp) and a Node
+        node:test CLI (nodecli). Both got a full pdlc/ folder, one job and one capability
+        from recon, six design specs, filled checks commands, and a "Set up pdlc" commit.
+Surprises: first pyapp run stopped to ask about the map despite "defaults", and recon put
+           one file in two code maps — both fixed above. The unittest naming limit was
+           spotted by the init run itself.
 ```
