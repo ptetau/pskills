@@ -55,11 +55,20 @@ For an intent: intake → ready → change. For each change: tests → build →
 
 Every stage starts by reading the latest handoff, and ends by writing one:
 
-- intent stages write the intent's "Handoff" section;
+- intent stages write the intent's "Handoff" section, with the template's sections as
+  `###` headings under it, so the whole handoff stays inside that one section;
 - change stages write `changes/CH-xxxx-name/handoff.md`.
 
 Use `templates/handoff.md`. Take the time from the real clock (`date -Iseconds`). Replace
 the old handoff; git keeps the history.
+
+## Where change state lives
+
+A change's status, lock and handoff are committed on its own branch. On main, a change
+that hasn't merged still reads `planned`. Before picking a change by its status, list the
+change branches (`git branch --list`) and read each change's `change.md` from its branch
+(`git show <branch>:pdlc/changes/<folder>/change.md`). A change with no branch is
+`planned`.
 
 ## Stacked changes
 
@@ -86,8 +95,9 @@ each one in the handoff's "Decided on defaults" and the intent's "Notes" as
 ## Before any work
 
 Catch up on merges. For each change with status `in review`, ask the delivery port if it
-has merged. If it has, set the change to `merged`, and retarget any pull request that was
-based on its branch to that branch's base. When every change for an intent has merged, set
+has merged. If it has, set the change to `merged`. For any change whose `Base:` is its
+branch, set that `Base:` to the merged change's own base, commit it on that change's
+branch, and retarget its pull request (if it has one) to the same base. When every change for an intent has merged, set
 the intent to `done`.
 
 ## pdlc's own files

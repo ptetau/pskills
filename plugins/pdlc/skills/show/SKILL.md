@@ -22,7 +22,7 @@ whose requirements are all `built`. Switch to its branch.
 ## 2. Get the recorder ready
 
 The recorder is `pdlc/bin/record_gif.mjs`. It needs Node, `playwright`, `gifenc` and `pngjs`.
-If `node pdlc/bin/record_gif.mjs` says one is missing, install them into `pdlc/.tools/`:
+If recording (step 4) stops with `missing <name>`, install them into `pdlc/.tools/`:
 `npm install --prefix pdlc/.tools playwright gifenc pngjs`, then
 `npx --prefix pdlc/.tools playwright install chromium` if no browser is found. Make sure
 `pdlc/.tools/` is in `.gitignore`.
@@ -36,7 +36,8 @@ Follow the visual port and its adapter in `pdlc/config.md`. Write
   a caption: the requirement ID, then the acceptance line in a few words.
 - Show the behaviour the way a user meets it: pages and clicks for a web app, commands and
   their output for a CLI, a short script calling the interface for a library.
-- End with a step that runs all checks and shows they pass.
+- For a terminal script, end with a step that runs all checks and shows they pass. The
+  recorder runs commands only in terminal scripts, so a web script leaves this out.
 
 ## 4. Record
 

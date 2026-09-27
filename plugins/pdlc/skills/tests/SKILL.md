@@ -17,6 +17,9 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 
 - Use the change the user named. Otherwise take the first change, in the intent's order,
   with status `planned`.
+- If the change already has a branch (it was sent back here from build or verify), switch
+  to that branch instead of starting one, keep its `Base:`, and go to step 2 with the
+  reason it was sent back. Leave its status as it is until step 6.
 - Its base is the branch of the change before it in the intent's list, or `main` for the
   first. The change before it doesn't need to be merged: changes stack.
 - Start the branch through the delivery port, from the base. Write `Branch:` and `Base:`
@@ -27,6 +30,9 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 
 Start the `pdlc:test-writer` agent. Give it the change spec's path and nothing else. It
 writes the checks listed under "Check files".
+
+The test writer can't delete files. If it says a check file served only a `(retire)`
+requirement, delete that file yourself with `git rm` before the lock.
 
 If it says the "Interface" is missing something, add it to the change spec yourself (you
 can see the code), then start the test writer again.
@@ -41,17 +47,19 @@ Run each requirement's checks through the checks port.
   in the progress log.
 - A check that errors because the interface doesn't exist yet counts as failing, as long
   as the error is about the missing interface and not a mistake in the check.
+- When the change was sent back from build or verify, app code already exists, so a fixed
+  check may pass. That is fine; note each result in the progress log.
 
 ## 4. Lock
 
 1. Commit the check files with the message "Tests CH-xxxx", with `Intent`, `Change` and
    `Req` trailers.
 2. Write that commit's hash into the change spec on its own line under the header:
-   `Tests-Locked: <hash>`.
+   `Tests-Locked: <hash>`. On a re-lock, replace the old line.
 3. Commit the change spec ("Lock tests CH-xxxx", trailers `Intent` and `Change`).
 
 From now on, only the test writer may change these files, and only through this skill.
-Doing so makes a new lock, and the merge check reads the newest one.
+Doing so makes a new lock, which replaces the old `Tests-Locked:` line.
 
 ## 5. Review the checks
 

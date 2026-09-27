@@ -20,7 +20,8 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 
 - If the user described something new, start at intake with their words.
 - If they named an intent or change, start from its current status.
-- Otherwise take the oldest intent that isn't `done`, `paused` or `cancelled`.
+- Otherwise take the oldest intent that isn't `in review`, `done`, `paused` or
+  `cancelled`. An intent `in review` has every change proposed and waits on the user.
 
 Read its latest handoff. The handoffs and statuses say exactly where things are, so ship
 can always pick up after a stop, a crash or a new session.
@@ -51,7 +52,8 @@ for each change: tests → build → show → verify → propose
 ## 4. Stop only for these
 
 1. A contradiction between requirements (ready never defaults these).
-2. A change needing a file outside its "Files", or an interface it doesn't list.
+2. A change needing a file outside its "Files". (A missing "Interface" entry is not a
+   stop: the tests stage adds it.)
 3. The same stage failing three times.
 4. The end: every change proposed.
 

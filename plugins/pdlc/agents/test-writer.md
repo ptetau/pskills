@@ -28,7 +28,8 @@ For each acceptance line under "Requirements":
 4. Make sure the check would fail if the behaviour were wrong.
 
 A requirement marked `(retire)` gets no check. Remove any existing check that only proved
-it.
+it. You can't delete files: if a whole check file served only that requirement, say so in
+your reply and the skill deletes it.
 
 Don't run the checks; the skill that started you does that. Reply with the checks you
 wrote, one line each: file, check name, requirement.

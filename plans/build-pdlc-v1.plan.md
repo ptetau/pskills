@@ -508,4 +508,17 @@ Surprises: subagents can't start subagents, so ship runs stages in the main sess
            checks (no browser check runner), so change now files an intent to add one.
 Known limit: the builder has a shell, which the file guard can't watch; the merge check's
            lock comparison catches any change to check files.
+
+[2026-09-27] Second review (skills, templates and scripts read as one system)
+Changed: 13 fixes. check_merge reads the newest Tests-Locked line (new test); tests can
+         take a change back (existing branch, keeps Base, accepts checks that pass on
+         built code) and deletes retired check files before the lock; ship skips intents
+         already in review and no longer stops for a missing interface entry; the tests
+         and specification remits exempt retired requirements; show's final checks step
+         is terminal-only; board columns cover every status; catch-up rewrites a stacked
+         change's Base when the one below merges; README says change state lives on the
+         change's branch; delivery follows DES-pdlc-branches; show installs tools on a
+         "missing" error; intent handoffs use ### headings.
+Open: board commits card keys on main while change headers are edited on branches, so the
+      Ticket line can conflict at merge. Needs a decision on where tracker keys live.
 ```

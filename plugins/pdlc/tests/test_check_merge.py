@@ -219,6 +219,15 @@ class MergeCheck(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("changed after the tests were locked: test/email.test.js", out)
 
+    def test_reads_the_newest_lock_when_an_old_one_is_left(self):
+        test_file, old = self.locked_repo()
+        test_file.write_text("test('CAP-email.R2 fills values', () => { /* fixed */ })\n")
+        git(self.root, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qam", "relock")
+        new = git(self.root, "rev-parse", "HEAD")
+        self.write(checks="- test/email.test.js",
+                   lock="Tests-Locked: %s\nTests-Locked: %s\n" % (old, new))
+        self.assertEqual(self.run_check("CH-0001")[0], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

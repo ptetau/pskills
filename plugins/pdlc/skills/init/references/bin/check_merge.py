@@ -88,7 +88,9 @@ def check_change(root, folder):
             problems.append("%s is %s, not verified" % (req_id, status))
 
     checks = check_files(text)
-    lock = re.search(r"^Tests-Locked:\s*([0-9a-f]{7,40})\b", text, re.M)
+    # A re-lock may leave the older line in place; the newest (last) one counts.
+    locks = list(re.finditer(r"^Tests-Locked:\s*([0-9a-f]{7,40})\b", text, re.M))
+    lock = locks[-1] if locks else None
     if checks and not lock:
         problems.append("tests are not locked (no Tests-Locked line)")
     elif checks:

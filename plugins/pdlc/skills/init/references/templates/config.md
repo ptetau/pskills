@@ -37,14 +37,19 @@ How to run the app for the visual review. Filled in by init.
 
 ## Board columns
 
-Used only when a tracker adapter is set. pdlc stage → board column.
+Used only when a tracker adapter is set. pdlc status → board column, for intents and
+changes.
 
 - new: Backlog
 - specifying: Backlog
+- paused: Backlog
 - ready: Ready
+- planned: Ready
+- testing: In progress
 - building: In progress
 - in review: In review
 - done: Done
+- merged: Done
 
 ## Tracker settings
 

@@ -24,4 +24,5 @@ Decisions and answers from ready, newest last.
 
 ## Handoff
 
-Written by each intent stage (intake, ready, change) for the next one. Replace it each time.
+Written by each intent stage (intake, ready, change) for the next one, from the handoff
+template with its sections as `###` headings. Replace it each time.
