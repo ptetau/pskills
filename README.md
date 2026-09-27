@@ -229,9 +229,14 @@ writes `probe-report.md` (ranked findings with repro + evidence) and
 
 ## `/quiz` — Inline Clarifier
 
-Asks clarifying questions one at a time as compact terminal-style cards before
-starting work. Use it to lock in decisions (audience, scope, tone, approach)
-without a back-and-forth prose conversation.
+Asks clarifying questions one at a time before starting work, to lock in decisions
+(audience, scope, tone, approach) without a back-and-forth prose conversation. Each
+question is a native picker the user clicks, or, where there's no picker, a short
+plain-markdown question answered with a letter.
+
+It plans its questions up front in a fixed order (purpose, style, scope, focus, next
+step), so the same request gets the same questions, and it recommends an option only
+when something the user said points to it.
 
 **Example**
 
@@ -239,23 +244,20 @@ without a back-and-forth prose conversation.
 /quiz a dashboard that shows real-time API health metrics
 ```
 
-**Output**
+**Output** (plain-markdown fallback; with a picker the same options are clickable)
 
-```
-┌─ quiz · 01/04 ──────────────────────────────────────┐
-│ [?] Who is the primary audience for this dashboard? │
-│     why it matters: drives layout and data density  │
-└──────────────────────────────────────────────────────┘
+> **Question 1 of 3 · Audience**
+> Who is the primary audience for this dashboard?
+>
+> - **A · Engineers**: raw metrics, dense, no fluff; hard for anyone outside the team to read.
+> - **B · Managers**: trends and status rather than raw numbers; hides the detail on-call needs.
+> - **C · Both**: an overview with a drill-down toggle; more to build.
+>
+> Reply A, B or C, optionally with a note.
 
-  A · engineers     raw metrics, dense, no fluff
-  B · managers      trends and status, not raw numbers
-  C · both          overview + drill-down toggle
-
-  // reply: A | B | C
-```
-
-Reply with a letter (optionally with notes: `B, with notes: include p99 latency`).
-After the last question, a resolved summary is shown before work begins.
+Reply with a letter, optionally with a note (`B, include p99 latency`). Each answer is
+echoed in one line (`✓ 1/3 Audience → Managers`), and after the last question the
+resolved list is shown for a final OK before work begins.
 
 Cap: ~7 questions. For more, escalate to `/squiz`.
 
@@ -310,7 +312,7 @@ Boundaries the executor stops and asks rather than resolving it itself.
 
 ## `/squiz` — Visual Clarifier Document
 
-The document-mode twin of `/quiz`. Instead of one-at-a-time cards, the
+The document-mode twin of `/quiz`. Instead of one-at-a-time questions, the
 [squiz](https://github.com/squiz-cli/squiz) Go binary renders a self-contained
 interactive HTML document with all decisions at once, retro Apple //e styling,
 and mini-wireframe previews for visual options.

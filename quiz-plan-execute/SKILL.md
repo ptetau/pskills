@@ -90,38 +90,34 @@ criterion.
 
 **S-3. Ask the one setup question: new branch?**
 
-Same terminal-card aesthetic as [[quiz]] / [[quiz-plan]] — box-drawing header, `[?]` marker,
-one fluid what/why/how sentence per option, one option tagged `(recommended)` tied to this
-plan's actual size and risk. A single question, one card:
+Ask it the [[quiz]] way: through the picker (the `AskUserQuestion` tool) when the session
+has it, and as a plain-markdown question otherwise. No ASCII card or code block. One
+question, with one fluid what/why/cost sentence per option:
 
-```
-┌─ quiz · 1/1 ───────────────────────────────────────────┐
-│ [?] Create a new branch for <plan-name> (<N> steps)?  │
-└─────────────────────────────────────────────────────────┘
+- **header:** `Branch`
+- **question:** `Create a new branch for <plan-name> (<N> steps)?`
+- **A · Yes, use `<branch>`**: creates it off the current HEAD, keeping every step's
+  commit isolated from whatever else is in flight; it costs nothing to undo.
+- **B · No, use the current branch**: fastest if you're already on a throwaway branch;
+  it mixes plan commits with anything already there.
+- **A custom name**: the picker's "Other", or in the fallback, any reply that is a
+  branch name.
 
-  A · yes, use suggested (recommended)   Creates `<branch>` off the
-                                          current HEAD — keeps every
-                                          step's commit isolated from
-                                          whatever else is in flight,
-                                          and costs nothing to undo.
-  B · yes, custom name                   Same isolation, your naming
-                                          — use if the suggested name
-                                          collides with a convention.
-  C · no, use current branch             Fastest if you're already on
-                                          a throwaway branch, but mixes
-                                          plan commits with anything
-                                          else already there.
-
-  // reply: A | B | C
-```
+Recommend on evidence, as /quiz does: recommend A when you're on the repo's default
+branch or the plan has more than one step; recommend B when the current branch is
+already named for this plan; otherwise recommend nothing. In the picker,
+`(Recommended)` goes at the end of that option's label. In the fallback, use /quiz's
+layout: `**Question 1 of 1 · Branch**`, the question, options A and B as a bulleted
+list, then `Reply A or B, or type a branch name.`
 
 Apply the answer:
 
-- **New branch (A / B):** `git checkout -b <name>` from the current base. Record the
-  base branch (`git rev-parse --abbrev-ref HEAD` before switching) — you need it for the
-  finish step. If the plan header already names a branch and the user accepts it, use that
-  (option A). Option B: ask for the custom name inline, then same checkout.
-- **No new branch (C):** stay on the current branch.
+- **A, or a typed branch name:** `git checkout -b <name>` from the current base, using
+  `<branch>` for A. Record the base branch (`git rev-parse --abbrev-ref HEAD` before
+  switching); you need it for the finish step. If the plan header already names a
+  branch, that is `<branch>`.
+- **B:** stay on the current branch.
+- **Anything else** (e.g. "not sure"): ask once in plain prose which of the two to do.
 
 By default, every step runs in place, inline, in the main thread. The exception is
 automatic, not asked: a run of not-done steps sharing a `Parallel group` tag dispatches
