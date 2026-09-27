@@ -310,7 +310,7 @@ Boundaries the executor stops and asks rather than resolving it itself.
 
 ---
 
-## `pdlc` — Development Lifecycle Harness (design stage)
+## `pdlc` — Development Lifecycle Harness
 
 A Claude Code plugin that runs your project's development lifecycle. Intents enter an
 inbox, become job, capability and design specs, then small changes that each touch one
