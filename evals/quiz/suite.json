@@ -1,0 +1,255 @@
+{
+  "skill": "quiz",
+  "skillPath": "quiz/SKILL.md",
+  "skillSha256": "e6139c8b59037554be0d932c49d90f9c2d189dc466c4b58a2956dbf7e93237b4",
+  "createdAt": "2026-09-27T09:13:16Z",
+  "structure": {
+    "summary": "Multi-turn. Each assistant message carries exactly one question card, then waits; each later message opens with a one-line [✓] echo of the last answer before the next card. After the last answer comes a stacked resolved view and a one-sentence confirmation request; after confirmation, a short implication paragraph and then the work.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "Question card inside a fenced code block: box-drawn header (┌─┐│└┘) whose top border carries a lowercase `quiz · NN/NN` counter, a `[?]` question line, an optional `why it matters:` line, the options, and a `// reply:` hint as the last line."
+      },
+      {
+        "id": "S2",
+        "description": "Options as `A · short-label` lines, each followed by one fluid sentence (what it does, why it fits, how it plays out), two-space indent with hanging-indent wraps."
+      },
+      {
+        "id": "S3",
+        "description": "A one-sentence plain-prose reply hint on the line after the card, outside the code block."
+      },
+      {
+        "id": "S4",
+        "description": "After each user reply: a one-line `[✓] NN label → X · choice` echo (with any note), followed in the same message by the next card."
+      },
+      {
+        "id": "S5",
+        "description": "After the last reply: the full resolved view, one `[✓]` line per question stacked, then a one-sentence confirmation request."
+      },
+      {
+        "id": "S6",
+        "description": "After confirmation: a short paragraph restating the implication (what will be done, skipped, and how), then the work begins."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "Every question card is a fenced code block with a box-drawn header whose top border carries a lowercase `quiz · NN/NN` counter, a `[?]` question line, and a `// reply:` hint as its last line.",
+      "pass": "All cards have the code block, box-drawn header, lowercase `quiz · NN/NN` counter in the top border, `[?]` line and closing `// reply:` hint.",
+      "partial": "Cards are code blocks with a box header, but in at least one card the counter, `[?]` marker or `// reply:` hint is missing or malformed.",
+      "source": "The look → The question card; Rules of the look #1-3, #7"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "Options are lettered `A · short-label` lines, each with one sentence saying what the option does, why it fits this request, and its practical cost or benefit.",
+      "pass": "Every option on every card has the `X · label` form and a single sentence covering what, why and the concrete cost or benefit.",
+      "partial": "Label form is right, but some option sentences are fragments, list-like, or skip the why or the cost/benefit.",
+      "source": "Rules of the look #4"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "The turn rhythm holds: each card is followed by a one-sentence prose reply hint, and each answer is echoed as a one-line `[✓]` confirmation that opens the message carrying the next card.",
+      "pass": "Every card has the prose hint after it, and every answered question gets its one-line `[✓]` echo at the top of the next message, followed by the next card.",
+      "partial": "The rhythm mostly holds but at least one prose hint or `[✓]` echo is missing, or an echo sits in a message of its own.",
+      "source": "The look → The rhythm; Flow steps 3 and 5"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 2,
+      "criterion": "After the last answer the skill shows a resolved view with one `[✓]` line per question and asks for confirmation in one sentence; once confirmed, it restates the implication in one short paragraph before doing the work.",
+      "pass": "Resolved view lists every question as a `[✓]` line, a one-sentence confirmation ask follows, and after confirmation a short implication paragraph precedes the work.",
+      "partial": "The ending is there but incomplete: a question missing from the resolved view, a multi-sentence ask, or no implication paragraph.",
+      "source": "Final resolved view; Flow steps 7-8"
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "No assistant message contains more than one question card.",
+      "pass": "Every message has at most one card.",
+      "partial": "Never applies: two cards in one message is a miss.",
+      "source": "Rules of the look #8; What NOT to do"
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each card marks exactly one option `(recommended)` and that option's sentence names the specific reason it fits this request.",
+      "pass": "Every card has exactly one `(recommended)` with a reason tied to the request (or no tag on a card that is a genuine toss-up).",
+      "partial": "Tags are present but at least one card's reason is generic, or one card has two tags or an unexplained tag.",
+      "source": "Rules of the look #5"
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "The quiz asks no more than about seven questions, and the counter's total stays the same and matches the number actually asked.",
+      "pass": "Seven or fewer questions (or an offer to switch to /squiz for more), and the `NN/NN` total is constant and equals the questions asked.",
+      "partial": "Within the cap but the counter's total changes mid-quiz or ends up not matching.",
+      "source": "Rules of the look #9; The look → counter"
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each `[✓]` echo records what the user actually replied: the letter and any note, the recommended option for a skip or 'you decide', or the closest option for free prose.",
+      "pass": "Every echo matches the reply it confirms, notes included.",
+      "partial": "One echo drops a note or maps a free-prose or deferred reply to a debatable option.",
+      "source": "Reply parsing"
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "Cards contain no markdown bold or italics, no tables, and no emojis outside sample content.",
+      "pass": "No bold/italic markup, tables or decorative emojis inside any card.",
+      "partial": "One stray instance.",
+      "source": "Rules of the look #10; What NOT to do"
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The questions asked are the ones whose answers would materially change the work for this request, most load-bearing first, and none re-asks something the prompt already settled.",
+      "pass": "Every question would change the resulting work, the first is the biggest decision, and nothing already stated in the prompt is asked again.",
+      "partial": "Mostly right, but one question is filler, redundant with the prompt, or clearly out of order.",
+      "source": "Flow step 2; Purpose"
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each card's options are realistic, distinct choices for this request, and the recommendation is the sensible default given what the user said.",
+      "pass": "On every card the options are genuinely different, plausible for this request, and the recommendation fits the stated context.",
+      "partial": "One card has overlapping or strawman options, or a recommendation that ignores something the user said.",
+      "source": "Rules of the look #4-5"
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The implication paragraph and the work that follows reflect every resolved answer and note, so the user gets what they chose.",
+      "pass": "Every answer and note visibly shapes the implication paragraph and the delivered work; nothing chosen is dropped or contradicted.",
+      "partial": "One answer or note is missing from, or softened in, the implication or the work.",
+      "appliesWhen": "the run reaches confirmation and the skill begins the work",
+      "source": "Flow step 8"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical",
+      "prompt": "a welcome email for new members of my climbing gym",
+      "exercises": "core card flow on an everyday writing task with several open decisions",
+      "replies": [
+        "B",
+        "A, with notes: mention the free intro belay class"
+      ]
+    },
+    {
+      "id": "P02",
+      "axis": "minimal",
+      "prompt": "a tagline",
+      "exercises": "a terse request with almost no context: question choice and plausible options from nothing",
+      "replies": [
+        "C",
+        "you decide"
+      ]
+    },
+    {
+      "id": "P03",
+      "axis": "rich input",
+      "prompt": "a 150-word bio for my conference talk page. I'm a backend engineer at a fintech, 8 years in, the talk is about idempotency keys in payment APIs, the audience is mid-level engineers, and it should be in third person.",
+      "exercises": "skipping decisions the prompt already settles (length, audience, person); parsing a parenthetical note",
+      "replies": [
+        "A",
+        "B (keep it modest, no buzzwords)"
+      ]
+    },
+    {
+      "id": "P04",
+      "axis": "ambiguous",
+      "prompt": "something for the team about the reorg",
+      "exercises": "an unclear format and audience: whether the first question pins down what the thing is",
+      "replies": [
+        "B",
+        "A",
+        "C, with notes: no names"
+      ]
+    },
+    {
+      "id": "P05",
+      "axis": "edge: one decision",
+      "prompt": "a name for my new grey kitten",
+      "exercises": "a request needing one or two questions at most: counter totals and a short quiz",
+      "replies": [
+        "A"
+      ]
+    },
+    {
+      "id": "P06",
+      "axis": "edge: near the cap",
+      "prompt": "an outline for the launch plan of our B2B analytics product. Audience, channels, timeline, budget, messaging, success metrics and owner are all undecided.",
+      "exercises": "many open decisions: staying within about seven questions or offering /squiz",
+      "replies": [
+        "A",
+        "B",
+        "A",
+        "C",
+        "B"
+      ]
+    },
+    {
+      "id": "P07",
+      "axis": "unusual domain",
+      "prompt": "the wording for a sign at our community seed library explaining how to borrow and return seeds",
+      "exercises": "options and recommendations in an unfamiliar domain; a deferred reply",
+      "replies": [
+        "A",
+        "go with your pick"
+      ]
+    },
+    {
+      "id": "P08",
+      "axis": "free-prose replies",
+      "prompt": "a toast for my sister's wedding",
+      "exercises": "matching free-prose replies to the closest option and echoing them",
+      "replies": [
+        "yeah the heartfelt one",
+        "short, under two minutes"
+      ]
+    },
+    {
+      "id": "P09",
+      "axis": "visual decisions",
+      "prompt": "the layout for a one-page portfolio site for a freelance illustrator",
+      "exercises": "visual choices: offering /squiz without auto-escalating, text options otherwise",
+      "replies": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "P10",
+      "axis": "notes on replies",
+      "prompt": "a short apology email to a customer whose order shipped a week late",
+      "exercises": "replies carrying notes that must appear in the echo, the implication and the email",
+      "replies": [
+        "B, with notes: offer 10% off their next order",
+        "A, with notes: sign it from Priya"
+      ]
+    }
+  ]
+}
