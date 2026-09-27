@@ -30,7 +30,12 @@ def check_folders(cwd):
     line = re.search(r"^- check folders:\s*(.+)$", text, re.M)
     if not line:
         return DEFAULT_CHECK_FOLDERS
-    return [f.strip(" `/") for f in line.group(1).split(",") if f.strip(" `/")]
+    value = line.group(1)
+    quoted = re.findall(r"`([^`]+)`", value)
+    # Take the backticked folders when there are any, so a trailing note such as
+    # "(where checks live; ...)" isn't read as part of a folder name.
+    items = quoted if quoted else re.sub(r"\s*\(.*$", "", value).split(",")
+    return [f.strip(" `/") for f in items if f.strip(" `/")] or DEFAULT_CHECK_FOLDERS
 
 
 def targets(cwd, tool, args):
@@ -96,10 +101,14 @@ if __name__ == "__main__":
     call = json.load(sys.stdin)
     allowed, reason = decide(call)
     if os.environ.get("PDLC_GUARD_LOG"):
-        with open(os.environ["PDLC_GUARD_LOG"], "a") as log:
-            log.write(json.dumps({"agent": call.get("agent_type"), "tool": call.get("tool_name"),
-                                  "input": call.get("tool_input"), "allowed": allowed,
-                                  "reason": reason}) + "\n")
+        # A log that can't be written must never turn a block into an allow.
+        try:
+            with open(os.environ["PDLC_GUARD_LOG"], "a") as log:
+                log.write(json.dumps({"agent": call.get("agent_type"), "tool": call.get("tool_name"),
+                                      "input": call.get("tool_input"), "allowed": allowed,
+                                      "reason": reason}) + "\n")
+        except OSError:
+            pass
     if not allowed:
         print("pdlc guard: " + reason, file=sys.stderr)
         sys.exit(2)

@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** ███████░░░░░ 11/20 steps completed (55%)
+**Progress:** ██████████░░ 17/20 steps completed (85%)
 
 ## How to use this document (read this first, every session)
 
@@ -233,7 +233,7 @@ stop and wait for human review.
 - **Touches:** `pdlc/**` (new, repo root), the files the chosen intent changes
 - **Depends on:** Step 12
 
-### Step 14: Folder per change, and handoffs · `[ ]` AUTO · Parallel group: none
+### Step 14: Folder per change, and handoffs · `[x]` AUTO · Parallel group: none
 
 - **Do:** Each change lives in `pdlc/changes/CH-xxxx-name/` with `change.md`, `handoff.md`,
   `review/`, `review.gif` and `frames/`. Every stage reads the latest handoff first and
@@ -243,7 +243,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/**`
 - **Depends on:** Step 12
 
-### Step 15: Stacked changes · `[ ]` AUTO · Parallel group: none
+### Step 15: Stacked changes · `[x]` AUTO · Parallel group: none
 
 - **Do:** A change branches from the change before it (recorded as `Base:`), its PR targets
   that branch, and PRs are retargeted when the one below merges. Fixes to a lower change
@@ -252,7 +252,7 @@ stop and wait for human review.
 - **Touches:** build, verify, delivery adapter, README template, reviewer packets
 - **Depends on:** Step 14
 
-### Step 16: Test writer, locked tests, plugin guard · `[ ]` AUTO · Parallel group: none
+### Step 16: Test writer, locked tests, plugin guard · `[x]` AUTO · Parallel group: none
 
 - **Do:** Add `test-writer` and `builder` agents and a `tests` skill. The change spec gains
   "Interface" and "Check files". The test writer writes checks from the spec alone, they
@@ -263,7 +263,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/**`
 - **Depends on:** Step 14
 
-### Step 17: Independent reviewers with remits and packets · `[ ]` AUTO · Parallel group: none
+### Step 17: Independent reviewers with remits and packets · `[x]` AUTO · Parallel group: none
 
 - **Do:** Remits (tests, specification, security, quality, compliance, privacy) as project
   files. A script builds one packet per remit: tests packets get spec and tests only, code
@@ -273,7 +273,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/**`
 - **Depends on:** Step 16
 
-### Step 18: Visual review and GIFs · `[ ]` AUTO · Parallel group: none
+### Step 18: Visual review and GIFs · `[x]` AUTO · Parallel group: none
 
 - **Do:** A `show` skill and `record_gif.mjs` record each acceptance check being performed,
   in a browser (web) or a terminal-style page (CLI), as `review.gif` plus key frames. The
@@ -282,7 +282,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/**`
 - **Depends on:** Step 17
 
-### Step 19: `/pdlc:ship` · `[ ]` AUTO · Parallel group: none
+### Step 19: `/pdlc:ship` · `[x]` AUTO · Parallel group: none
 
 - **Do:** One skill runs intake → ready → change → per change: tests → build → show →
   verify → propose, stacking changes, defaulting questions, and stopping only for
@@ -487,4 +487,25 @@ Surprises: run 1 — my test script merged despite a FAIL (script bug; the lesso
            only CI can enforce the gate) and the branch-start commit had no Req. Run 2 —
            the vacuous merge-check pass, and review asking for a check on a retired
            requirement. All fixed with tests before run 3.
+
+[2026-09-27] Steps 14-19: done
+Changed: change folders and handoffs; stacked changes (Base:); test-writer and builder
+         agents, tests skill, Tests-Locked; plugin guard hook by agent_type; six remit
+         files, make_packets.py, parallel reviewers; record_gif.mjs, show skill, visual
+         port and adapters; ship skill. 44 unit tests, each failing first.
+Proven: the guard blocked pdlc:test-writer reading src/greet.js and pdlc:builder editing
+        test/greet.test.js (live, logged). GIFs recorded in terminal mode (Node CLI) and
+        browser mode (web app). One `/pdlc:ship defaults` call on a fresh tip-calculator
+        web app turned "split the bill" into three stacked changes (CAP-tip-calculation,
+        HTTP serving, JOB-calculate-a-tip), each with locked, independently reviewed
+        tests, a GIF, five passing code reviews and a green merge check on its branch.
+Surprises: subagents can't start subagents, so ship runs stages in the main session and
+           the stages start the role agents. A code review then found five bugs (guard
+           misread the template's check-folder line, which ship worked around mid-run; an
+           unwritable guard log turned blocks into allows; missing base branch gave empty
+           packets; recorder left the app running on errors and kept stale frames). All
+           fixed, three with new failing-first tests. The page change had no automated
+           checks (no browser check runner), so change now files an intent to add one.
+Known limit: the builder has a shell, which the file guard can't watch; the merge check's
+           lock comparison catches any change to check files.
 ```

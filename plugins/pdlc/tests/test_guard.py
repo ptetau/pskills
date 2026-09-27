@@ -99,6 +99,20 @@ class Guard(unittest.TestCase):
         self.assertTrue(self.ok("pdlc:test-writer", "Write", file_path="tests/test_x.py"))
         self.assertFalse(self.ok("pdlc:builder", "Write", file_path="tests/test_x.py"))
 
+    def test_reads_the_check_folder_line_as_the_template_writes_it(self):
+        (self.cwd / "pdlc/config.md").write_text(
+            "## Checks\n\n- check folders: `test/` (where checks live; only the test writer may change them)\n")
+        self.assertFalse(self.ok("pdlc:builder", "Edit", file_path="test/a.test.js"))
+        self.assertTrue(self.ok("pdlc:test-writer", "Write", file_path="test/a.test.js"))
+
+    def test_an_unwritable_log_still_blocks(self):
+        env = dict(__import__("os").environ, PDLC_GUARD_LOG="/nonexistent-dir/guard.log")
+        run = subprocess.run([sys.executable, str(GUARD)], capture_output=True, text=True, env=env,
+                             input=json.dumps({"agent_type": "pdlc:builder", "tool_name": "Edit",
+                                               "cwd": str(self.cwd),
+                                               "tool_input": {"file_path": "test/a.js"}}))
+        self.assertEqual(run.returncode, 2)
+
     def test_blocking_exits_2_with_a_reason(self):
         run = subprocess.run([sys.executable, str(GUARD)], capture_output=True, text=True,
                              input=json.dumps({"agent_type": "pdlc:builder", "tool_name": "Edit",

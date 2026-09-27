@@ -80,20 +80,23 @@ async function launch() {
   }
 }
 
+// Start from an empty frames folder, so frames from an earlier, longer recording don't
+// linger and reach the reviewers.
+fs.rmSync(path.join(outDir, "frames"), { recursive: true, force: true });
 fs.mkdirSync(path.join(outDir, "frames"), { recursive: true });
 let app;
-if (script.start) {
-  app = spawn(script.start, { shell: true, stdio: "ignore", detached: true });
-  if (script.base_url) await waitForUrl(script.base_url);
-}
-
-const browser = await launch();
-const page = await browser.newPage({ viewport: { width, height } });
+let browser;
 const frames = [];
 const lines = [];
 let caption = "";
 
 try {
+  if (script.start) {
+    app = spawn(script.start, { shell: true, stdio: "ignore", detached: true });
+    if (script.base_url) await waitForUrl(script.base_url);
+  }
+  browser = await launch();
+  const page = await browser.newPage({ viewport: { width, height } });
   const steps = script.steps || [];
   for (const [i, step] of steps.entries()) {
     if (step.caption) caption = step.caption;
@@ -122,7 +125,7 @@ try {
     frames.push(shot);
   }
 } finally {
-  await browser.close();
+  if (browser) await browser.close();
   if (app) try { process.kill(-app.pid); } catch {}
 }
 

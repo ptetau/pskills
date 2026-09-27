@@ -55,7 +55,10 @@ and write `change.md` in it from `pdlc/templates/change.md`.
 - **Steps:** usually one per requirement. Each names its requirement, the check that
   proves it (named with the requirement ID), and "Done when". A `(retire)` requirement
   gets no check: its step removes the code and checks that only served it.
-- **Manual checks:** any acceptance check that can't be automated, or "none".
+- **Manual checks:** any acceptance check that can't be automated, or "none". If one could
+  be automated but the project has no check runner that can reach it (for example page
+  behaviour with no browser checks), add an intent through the inbox port to add such a
+  runner, unless the inbox already has one, and say so in the handoff.
 
 ## 4. Finish
 

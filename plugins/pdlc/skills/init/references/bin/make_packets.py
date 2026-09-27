@@ -86,7 +86,12 @@ def main(argv, root=Path(".")):
 
     checks = re.findall(r"^-\s+`?([^`\s]+)`?", section(change, "Check files"), re.M)
     checks = [c for c in checks if c.lower() != "none"]
-    changed = [f for f in git(root, "diff", "--name-only", base + "...HEAD").split() if f]
+    listed = subprocess.run(["git", "diff", "--name-only", base + "...HEAD"], cwd=root,
+                            capture_output=True, text=True)
+    if listed.returncode != 0:
+        print("Can't diff against %s: %s" % (base, listed.stderr.strip()))
+        return 1
+    changed = [f for f in listed.stdout.splitlines() if f]
     tests = [f for f in changed if f in checks]
     code = [f for f in changed if f not in checks and not f.startswith("pdlc/")]
 

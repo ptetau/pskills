@@ -111,6 +111,12 @@ class Packets(unittest.TestCase):
         self.assertIn("frames/01.png", self.packet("specification"))
         self.assertNotIn("frames/01.png", self.packet("security"))
 
+    def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):
+        change = self.folder / "change.md"
+        change.write_text(change.read_text().replace("Base: main", "Base: no-such-branch"))
+        self.assertEqual(make_packets.main(["x", "CH-0001"], root=self.root), 1)
+        self.assertFalse((self.folder / "review").exists())
+
     def test_can_make_a_single_remit(self):
         make_packets.main(["x", "CH-0001", "tests"], root=self.root)
         self.assertEqual([p.name for p in (self.folder / "review").iterdir()], ["tests"])
