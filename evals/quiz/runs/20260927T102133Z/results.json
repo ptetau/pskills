@@ -1,0 +1,1530 @@
+{
+  "skill": "quiz",
+  "skillSha256": "e6139c8b59037554be0d932c49d90f9c2d189dc466c4b58a2956dbf7e93237b4",
+  "suiteSha256": "bf0323ef819074b542700080b1616cad24ce2d3ef45878255f26db907d2863ba",
+  "runId": "20260927T102133Z",
+  "generatedAt": "2026-09-27T10:49:23Z",
+  "config": {
+    "prompts": [
+      "P01",
+      "P02"
+    ],
+    "runs": 3,
+    "wave": 1,
+    "maxTurns": 12,
+    "crossPerPrompt": 2,
+    "agents": {
+      "preset": "minimal",
+      "run": {
+        "model": "sonnet",
+        "effort": "session"
+      },
+      "grade": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "prompt"
+      },
+      "compare": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "merged"
+      },
+      "cross": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "all"
+      }
+    },
+    "agentEstimate": 13
+  },
+  "scores": {
+    "quality": 93.3,
+    "stability": 59.7,
+    "overall": 74.6,
+    "grade": "C",
+    "confidence": "normal",
+    "usableRuns": 6,
+    "totalRuns": 6
+  },
+  "settle": {
+    "settled": false,
+    "settledAt": null,
+    "delta": 2,
+    "patience": 2,
+    "stopWhenSettled": false,
+    "wavesRun": 3
+  },
+  "trajectory": [
+    {
+      "wave": 1,
+      "runsPerPrompt": 1,
+      "usable": 2,
+      "quality": 95,
+      "stability": null,
+      "overall": null,
+      "grade": null,
+      "moved": null
+    },
+    {
+      "wave": 2,
+      "runsPerPrompt": 2,
+      "usable": 4,
+      "quality": 93.5,
+      "stability": 70.8,
+      "overall": 81.4,
+      "grade": "B",
+      "moved": null
+    },
+    {
+      "wave": 3,
+      "runsPerPrompt": 3,
+      "usable": 6,
+      "quality": 93.3,
+      "stability": 61.1,
+      "overall": 75.5,
+      "grade": "C",
+      "moved": -5.9
+    }
+  ],
+  "qualitySpread": {
+    "min": 88,
+    "median": 93,
+    "max": 100
+  },
+  "items": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "Every question card is a fenced code block with a box-drawn header whose top border carries a lowercase `quiz · NN/NN` counter, a `[?]` question line, and a `// reply:` hint as its last line.",
+      "passRate": 100,
+      "stabilityWithin": 100,
+      "classesWithin": {
+        "P01": "identical",
+        "P02": "identical"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "Options are lettered `A · short-label` lines, each with one sentence saying what the option does, why it fits this request, and its practical cost or benefit.",
+      "passRate": 83.3,
+      "stabilityWithin": 62.5,
+      "classesWithin": {
+        "P01": "identical",
+        "P02": "major_drift"
+      },
+      "agreementWithin": 66.7,
+      "stabilityCross": 25,
+      "classCross": "major_drift"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The turn rhythm holds: each card is followed by a one-sentence prose reply hint, and each answer is echoed as a one-line `[✓]` confirmation that opens the message carrying the next card.",
+      "passRate": 100,
+      "stabilityWithin": 100,
+      "classesWithin": {
+        "P01": "identical",
+        "P02": "identical"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "After the last answer the skill shows a resolved view with one `[✓]` line per question and asks for confirmation in one sentence; once confirmed, it restates the implication in one short paragraph before doing the work.",
+      "passRate": 100,
+      "stabilityWithin": 95,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "identical"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "No assistant message contains more than one question card.",
+      "passRate": 100,
+      "stabilityWithin": 100,
+      "classesWithin": {
+        "P01": "identical",
+        "P02": "identical"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each card marks exactly one option `(recommended)` and that option's sentence names the specific reason it fits this request.",
+      "passRate": 66.7,
+      "stabilityWithin": 25,
+      "classesWithin": {
+        "P01": "major_drift",
+        "P02": "major_drift"
+      },
+      "agreementWithin": 50,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "The quiz asks no more than about seven questions, and the counter's total stays the same and matches the number actually asked.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 66.7,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each `[✓]` echo records what the user actually replied: the letter and any note, the recommended option for a skip or 'you decide', or the closest option for free prose.",
+      "passRate": 91.7,
+      "stabilityWithin": 62.5,
+      "classesWithin": {
+        "P01": "identical",
+        "P02": "major_drift"
+      },
+      "agreementWithin": 83.4,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "Cards contain no markdown bold or italics, no tables, and no emojis outside sample content.",
+      "passRate": 100,
+      "stabilityWithin": 100,
+      "classesWithin": {
+        "P01": "identical",
+        "P02": "identical"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The questions asked are the ones whose answers would materially change the work for this request, most load-bearing first, and none re-asks something the prompt already settled.",
+      "passRate": 100,
+      "stabilityWithin": 25,
+      "classesWithin": {
+        "P01": "major_drift",
+        "P02": "major_drift"
+      },
+      "agreementWithin": 33.3,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each card's options are realistic, distinct choices for this request, and the recommendation is the sensible default given what the user said.",
+      "passRate": 100,
+      "stabilityWithin": 42.5,
+      "classesWithin": {
+        "P01": "major_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 83.4,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The implication paragraph and the work that follows reflect every resolved answer and note, so the user gets what they chose.",
+      "passRate": 83.3,
+      "stabilityWithin": 25,
+      "classesWithin": {
+        "P01": "major_drift",
+        "P02": "major_drift"
+      },
+      "agreementWithin": 33.3,
+      "stabilityCross": null,
+      "classCross": null
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "usableRuns": 3,
+      "quality": 97.3,
+      "stability": 64.6
+    },
+    {
+      "id": "P02",
+      "usableRuns": 3,
+      "quality": 89.3,
+      "stability": 57.6
+    }
+  ],
+  "runs": [
+    {
+      "label": "P01#1",
+      "prompt": "P01",
+      "repeat": 1,
+      "capture": "evals/quiz/runs/20260927T102133Z/outputs/P01-r01.md",
+      "status": "completed",
+      "note": "",
+      "quality": 100,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 01/02 ────────────────────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "B · download the app / set up login   Gets account logistics done first, which helps if class booking already runs through the app anyway, but it delays getting them on the wall and can feel like busywork for someone eager to climb."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "[✓] 01 tone → B · stoked & energetic"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "Going with these — say `wait` if anything's wrong, otherwise I'll start."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 02/02 ────────────────────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "the single action most likely to turn a signup into a regular"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 02/02 ────────────────────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "[✓] 02 CTA → A · book their first orientation   (note: mention the free intro belay class)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "absent"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "[?] What tone should the welcome email have?"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "C · point them to community channels  Leads with belonging over paperwork"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "So I'll write the welcome email in a stoked, energetic climbing-crew voice, with the main call-to-action being booking their first orientation session — and I'll flag that the intro belay class is free, since that's the easiest way in."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P01#2",
+      "prompt": "P01",
+      "repeat": 2,
+      "capture": "evals/quiz/runs/20260927T102133Z/outputs/P01-r02.md",
+      "status": "completed",
+      "note": "",
+      "quality": 96,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 01/03 ──────────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "fits a gym whose culture runs on psych and shared stoke, and it's the voice climbers already use with each other, though it can read as try-hard for a quieter crowd."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "[✓] 01 tone → B · stoked & energetic"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "Going with these — say `wait` if anything's wrong, otherwise I'll start."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "[✓] 03 close → A · book the intro belay class"
+        },
+        {
+          "id": "R6",
+          "verdict": "partial",
+          "evidence": "because a single, concrete step converts far better than a list of options"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "quiz · 03/03"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "[✓] 02 focus → A · getting-started essentials (note: mention the free intro belay class)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "B · stoked & energetic (recommended)"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "why it matters: sets the voice for every member touchpoint that follows"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "fits a gym whose culture runs on psych and shared stoke"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "leading with getting-started essentials (waiver, gear rental, and the free Intro to Belay class you flagged), and closing on one clear action — booking that intro class"
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P01#3",
+      "prompt": "P01",
+      "repeat": 3,
+      "capture": "evals/quiz/runs/20260927T102133Z/outputs/P01-r03.md",
+      "status": "completed",
+      "note": "",
+      "quality": 96,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 01/03 ───────────────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "A · warm & personal (recommended)             Greets each new member like a friend"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "Pick A, B, or C — or reply `B, with notes: …` if you want to add detail."
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "Going with these — say `wait` if anything's wrong, otherwise I'll start."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 01/03"
+        },
+        {
+          "id": "R6",
+          "verdict": "partial",
+          "evidence": "A · short & scannable (recommended)           A few short sections with bold headers and bullets, readable on a phone in under a minute — best for a first-touch email"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "quiz · 03/03"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "[✓] 02 focus → A · getting-started essentials  (note: mention the free intro belay class)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "absent"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "What tone should the welcome email strike?"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "A · warm & personal (recommended)             Greets each new member like a friend (\"So glad you're here\")"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "with a clear callout for the free intro belay class, all kept short and scannable for a quick first read"
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#1",
+      "prompt": "P02",
+      "repeat": 1,
+      "capture": "evals/quiz/runs/20260927T102133Z/outputs/P02-r01.md",
+      "status": "completed",
+      "note": "",
+      "quality": 90,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 01/04 ────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "A · a tech product or app        Leads with the benefit before the feature,"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "[✓] 01 subject → C · personal project, portfolio, or creative work"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "Going with these — say `wait` if anything's wrong, otherwise I'll start."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 02/04 ────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R6",
+          "verdict": "partial",
+          "evidence": "which is the safer bet when you'd rather be instantly clear than clever."
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 04/04 ────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "[✓] 02 tone → B · warm and personal (via: you decide)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "A · plain and direct       States what the project is or does in a few"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "[?] What's this tagline for?"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "A · short and punchy,        Fits anywhere it'll get reused — a bio, a"
+        },
+        {
+          "id": "R12",
+          "verdict": "partial",
+          "evidence": "Made with care, worth a look."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#2",
+      "prompt": "P02",
+      "repeat": 2,
+      "capture": "evals/quiz/runs/20260927T102133Z/outputs/P02-r02.md",
+      "status": "completed",
+      "note": "",
+      "quality": 88,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "quiz · 01/03"
+        },
+        {
+          "id": "R2",
+          "verdict": "partial",
+          "evidence": "For a bio line, portfolio header, or resume tagline — built around a person's skills and positioning rather than a product's feature set."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "[✓] 01 subject → C · general-purpose placeholder"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "Going with these — say `wait` if anything's wrong, otherwise I'll start."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "quiz · 02/03"
+        },
+        {
+          "id": "R6",
+          "verdict": "partial",
+          "evidence": "A · a named product/app (recommended)   You've already got a specific product or app in mind"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "quiz · 03/03"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "[✓] 02 tone → A · bold & confident"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "A · bold & confident (recommended)   States a clear promise with no hedging"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "[?] What's this tagline for?"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "B · the identity/attitude   Defines who the brand is as a personality"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "So this one's a general-purpose placeholder line — bold and confident in tone, built around the outcome rather than identity or contrast."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#3",
+      "prompt": "P02",
+      "repeat": 3,
+      "capture": "evals/quiz/runs/20260927T102133Z/outputs/P02-r03.md",
+      "status": "completed",
+      "note": "",
+      "quality": 90,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 01/03 ────────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R2",
+          "verdict": "partial",
+          "evidence": "A portfolio or bio-style line for a person or a\n      one-off project — more voice-driven and\n      idiosyncratic since there's no corporate style\n      guide it has to fit."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "[✓] 01 subject → C · a personal brand or creative project"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "Going with these — say `wait` if anything's wrong, otherwise I'll start."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 02/03 ────────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "A · confident and minimal      Few words, no wasted breath, favors credibility\n      (recommended)              over cleverness — the safest default for a\n                                  personal line with no fixed venue locked in yet"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "┌─ quiz · 03/03 ────────────────────────────────────────────────────────────────────┐"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "[✓] 02 tone → A · confident and minimal (via you decide)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "A · confident and minimal      Few words, no wasted breath, favors credibility"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "why it matters: everything else — tone, length, where it lives — follows     from who's reading it"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "the safest default for a personal line with no fixed venue locked in yet, and it ages well since it isn't tied to a trend."
+        },
+        {
+          "id": "R12",
+          "verdict": "partial",
+          "evidence": "Made with care, built to last."
+        }
+      ],
+      "excluded": null
+    }
+  ],
+  "similarity": [
+    {
+      "scope": "P01",
+      "item": "R1",
+      "class": "identical",
+      "reason": "All three runs use the exact same box-drawn header template (lowercase `quiz · NN/NN` in the top border, `[?]` line, closing `// reply:` hint as the last line of the block) with zero deviation.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Both cards use a box-drawn header with lowercase `quiz · NN/NN` in the top border, a `[?]` line, and a closing `// reply:` hint."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R2",
+      "class": "identical",
+      "reason": "Every option on every card in every run rigidly follows `X · label` plus a single fluid sentence covering what/why/cost-benefit, with no fragments or list-like exceptions anywhere.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Every option is `X · label` followed by one fluid sentence covering what/why/cost-benefit."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R3",
+      "class": "identical",
+      "reason": "Every card in every run is followed by the same one-sentence prose hint, and every answered question is echoed as a one-line `[✓]` at the top of the next message before the next card, with no exceptions.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Each card is followed by a one-sentence prose hint, and each reply is echoed as a one-line `[✓]` at the top of the next message."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R4",
+      "class": "equivalent",
+      "reason": "The resolved-view stacking and the confirmation-ask sentence ('Going with these — say `wait`...') are worded identically across all three runs, but the implication paragraph's content necessarily differs because P01#3's third resolved answer (length/format) differs in kind from P01#1's CTA and P01#2's close.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Resolved view stacks both `[✓]` lines, a one-sentence confirmation ask follows, then a short implication paragraph precedes the email."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R5",
+      "class": "identical",
+      "reason": "In every run, no assistant message ever carries more than one card; the summary/confirmation and final work messages carry none.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Each assistant message contains at most one card (assistant 3 and 4 contain none)."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R6",
+      "class": "major_drift",
+      "reason": "Which card gets genuinely climbing-tied reasoning differs by run: P01#1 is climbing-specific throughout, P01#2 is climbing-specific only on the tone card, and P01#3 is climbing-specific only on the focus card while tone and length lean generic — a materially different distribution each time.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Exactly one `(recommended)` tag per card, each justified with a climbing-gym-specific reason (crew voice, ropes-course rules)."
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Exactly one (recommended) tag per card, but only the tone card's reasoning is climbing-specific; the focus and close cards lean on generic reasoning (new-member drop-off rates, one-step-converts-better) not distinctly tied to a climbing gym."
+        },
+        {
+          "runs": [
+            "P01#3"
+          ],
+          "description": "Exactly one (recommended) tag per card, but only the focus card's reasoning is climbing-specific ('what a first-time member needs before they can climb'); the tone card's reasoning is gym-generic and the length card's reasoning ('best for a first-touch email') is fully generic."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1
+        ],
+        "agreement": 33.3,
+        "split": "1 / 1 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R7",
+      "class": "minor_drift",
+      "reason": "P01#3 asks three questions with the counter fixed at 03/03 throughout, matching P01#2's count exactly but one more than P01#1's two-question, 02/02 run — the same constant-counter approach with one question added or dropped between runs.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Two questions asked, counter fixed at 02/02 throughout, matching the count actually asked."
+        },
+        {
+          "runs": [
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Three questions asked, counter fixed at 03/03 throughout, matching the count actually asked — one more question than the other run."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R8",
+      "class": "identical",
+      "reason": "In every run each echo reproduces the exact letter chosen (including a fallback-selected letter) and carries the user's note verbatim, with no drift observed.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Both echoes reproduce the exact letter chosen, and the second carries the user's note verbatim."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R9",
+      "class": "identical",
+      "reason": "Cards stay plain text with no bold/italic, tables, or emoji in any run; bold formatting appears only in the final email outside any card, consistently.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Cards use plain text only — no bold/italic markup, tables, or emojis (bold appears only in the final email, outside any card)."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R10",
+      "class": "major_drift",
+      "reason": "All runs front-load tone and never re-ask the terse prompt, but the specific second/third decisions chosen differ in kind across runs: P01#1 pairs tone with a CTA question (2 total), P01#2 pairs tone with focus-then-close (3 total), and P01#3 pairs tone with focus-then-length/format (3 total) — a materially different set of surfaced decisions each time.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Asks tone first (biggest voice decision), then the CTA — both materially shape the email and neither restates anything the terse prompt already specified."
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Asks tone first, then splits the second decision into two separate questions — what the email leads with and what it closes on — three total, still front-loading tone and never re-asking anything the terse prompt already settled."
+        },
+        {
+          "runs": [
+            "P01#3"
+          ],
+          "description": "Front-loads tone like the other runs, but the second and third questions are content focus (what the email leads with) followed by email length/shape — a different combination from either existing run."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1
+        ],
+        "agreement": 33.3,
+        "split": "1 / 1 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R11",
+      "class": "major_drift",
+      "reason": "For the identical prompt and identical tone question, P01#1 and P01#2 both recommend 'stoked & energetic' while P01#3 recommends 'warm & personal' instead — a flipped default on the single most load-bearing decision, which is a material difference in outcome rather than mere wording.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2"
+          ],
+          "description": "Each card offers three genuinely distinct, plausible options for a gym welcome email, with a recommendation matching the climbing-gym context."
+        },
+        {
+          "runs": [
+            "P01#3"
+          ],
+          "description": "Options stay distinct and plausible on every card, but the tone card's recommended default flips to 'warm & personal' (versus 'stoked & energetic' in the other runs) and the length card's recommendation reasoning is generic rather than climbing-tied."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R12",
+      "class": "major_drift",
+      "reason": "Each run's implication paragraph and email do faithfully reflect that run's own resolved answers, but because the third resolved decision and resulting email structure differ substantially (P01#1 centers on booking orientation with belay class as an aside, P01#2 closes the email on booking the belay class itself, P01#3 gives the belay class its own bulleted section in a short-and-scannable layout), the delivered content and structure diverge materially across runs.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Implication paragraph names tone, CTA, and the belay-class note; the email delivers all three (energetic voice, orientation booking as the ask, free intro belay class called out)."
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Implication paragraph names tone, focus (getting-started essentials plus the belay-class note), and close; the email delivers all three, but the free intro belay class surfaces as both a bulleted feature and the closing call-to-action itself, rather than as an aside under a separate orientation CTA."
+        },
+        {
+          "runs": [
+            "P01#3"
+          ],
+          "description": "Implication paragraph names tone, focus (with the belay-class note), and length/format; the delivered email covers all three, with the free intro belay class as its own clearly flagged section separate from any CTA, formatted short and scannable with bold headers and bullets."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1
+        ],
+        "agreement": 33.3,
+        "split": "1 / 1 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R1",
+      "class": "identical",
+      "reason": "All three runs render every card as a fenced box with a lowercase quiz · NN/NN counter in the top border, a [?] line, an optional why-it-matters line, and a closing // reply: line, executed the same templated way in each run.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Every card is a fenced block with box top border carrying lowercase `quiz · NN/NN`, a `[?]` line, optional why-it-matters, and a closing `// reply:` line"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R2",
+      "class": "major_drift",
+      "reason": "Whether option sentences are full sentences or fragments varies across runs (none in P02#1, two in P02#2, three in P02#3) and the specific options affected differ each time, so the item is present in some runs and absent in others rather than a consistent pattern with minor detail changes.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "All options use `X · label` with one sentence covering what/why/cost-benefit"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Options mostly use verb-led `X · label` sentences like P02#1, but card1's B and C options are written as sentence fragments (no subject+verb main clause), so not every option is a full what/why/cost-benefit sentence."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Options are mostly verb-led sentences, but card1's C option and card2's A and B options are noun-phrase fragments/list-like (no finite main verb before the dash), a different set of affected options than either P02#1 (no fragments) or P02#2 (fragments only in card1 B/C)."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1
+        ],
+        "agreement": 33.3,
+        "split": "1 / 1 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R3",
+      "class": "identical",
+      "reason": "Every card in all three runs is followed by a one-sentence prose hint, and every reply opens the next message as a one-line [✓] echo before the next card, with no deviation.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Each card followed by a one-sentence prose hint; each reply opens the next message as a one-line `[✓]` echo before the next card"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R4",
+      "class": "identical",
+      "reason": "All three runs close with a stacked [✓] resolved view, a one-sentence confirmation ask ('Going with these — say wait...'), and a short implication paragraph before the delivered work, in the same order and form.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Stacked `[✓]` resolved view, one-sentence confirmation ask, then a short implication paragraph before the delivered taglines"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R5",
+      "class": "identical",
+      "reason": "Every assistant message across all three runs carries at most one card; no run ever doubles up.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Exactly one card per assistant message throughout"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R6",
+      "class": "major_drift",
+      "reason": "Like P02#1, P02#3 correctly leaves the first (subject) card untagged as a genuine toss-up and grounds later recommendations in established context, whereas P02#2 instead tags the untethered first card with an ungrounded reason — a material difference in whether the first-card tag is present and justified, not just a wording change.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#3"
+          ],
+          "description": "One `(recommended)` per applicable card (Q1 has none, a genuine toss-up); Q2/Q3 reasons tie to the personal-project context, Q4's reason is a generic clarity-vs-cleverness heuristic"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Q1 (asked before any context exists) also gets a `(recommended)` tag whose reason isn't grounded in anything the user said, unlike P02#1 where Q1 is left untagged as a genuine toss-up; later cards' recommendations tie correctly to context established by then."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R7",
+      "class": "minor_drift",
+      "reason": "P02#3 asks 3 questions with the counter fixed at NN/03 throughout, matching P02#2's count and behavior exactly, while P02#1 asked one more question (4, NN/04); the underlying approach (fixed total matching actual count) holds in all three, only the specific count differs.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "4 questions asked, counter fixed at NN/04 throughout, matching the count"
+        },
+        {
+          "runs": [
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "3 questions asked, counter fixed at NN/03 throughout, matching the count (one fewer question than P02#1's 4)."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R8",
+      "class": "major_drift",
+      "reason": "P02#3's 'you decide' echo includes a provenance note ('(via you decide)'), matching P02#1's behavior of always including the note; P02#2 omits the note entirely for the same kind of reply, which is a presence-versus-absence difference rather than mere wording variation.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#3"
+          ],
+          "description": "Plain-letter replies echoed as the letter/label; 'you decide' echoed as the recommended option with a `(via: you decide)` note"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Plain-letter replies are echoed as letter/label just as in P02#1, but the 'you decide' reply's echo omits the `(via: you decide)` provenance note that P02#1 includes."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R9",
+      "class": "identical",
+      "reason": "Cards in all three runs are plain text throughout, with no bold/italic markup, tables, or decorative emoji.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Cards are plain text: no bold/italic markup, no tables, no decorative emoji"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R10",
+      "class": "major_drift",
+      "reason": "Each run asks a different specific set of questions (P02#1: subject/tone/length/focus; P02#2: subject/tone/emphasis; P02#3: subject/tone/length), so while all are individually well-chosen and non-redundant, the actual question sets diverge materially across runs rather than sharing one approach with minor variation.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "Question order is subject, tone, length, focus — each materially shapes the tagline, none redundant with the sparse prompt"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Question order is subject, tone, emphasis — three materially relevant, non-redundant questions, omitting the length question that P02#1 asked."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Question order is subject, tone, length — three materially relevant, non-redundant questions, omitting both P02#1's fourth 'focus' question and P02#2's 'emphasis' question in favor of a length question instead."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1
+        ],
+        "agreement": 33.3,
+        "split": "1 / 1 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R11",
+      "class": "minor_drift",
+      "reason": "All three runs give distinct, plausible options per card with recommendations that fit the context established by prior answers; the specific options and wording differ by run (different subject/tone/length choices), which is a details-differ variation on the same consistent approach.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Each card's three options are distinct and plausible; recommendations are defensible defaults given the personal-project/warm-tone context established earlier"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R12",
+      "class": "major_drift",
+      "reason": "Each run's shortfall (or lack thereof) in matching the work to the resolved answers takes a different form: P02#1 breaks a stated word-count constraint, P02#2 has no violation at all, and P02#3 has a tonal drift in one delivered tagline instead of a length break — materially different outcomes rather than the same defect with cosmetic differences.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "Implication paragraph names all four resolved answers, but one delivered tagline ('Made with care, worth a look.', 6 words) breaks the chosen 3-5 word length"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Implication paragraph names all three resolved answers (subject, tone, emphasis); no length constraint was chosen, and none of the delivered taglines contradicts a resolved answer."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Implication paragraph names all three resolved answers (subject, tone, length); every delivered tagline respects the chosen word-count range, but one tagline ('Made with care, built to last.') reads warmer than the chosen 'confident and minimal' tone — a tonal softening rather than the length violation seen in P02#1, and unlike P02#2's clean match."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1
+        ],
+        "agreement": 33.3,
+        "split": "1 / 1 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R1",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2"
+          ],
+          "description": "Every card's box header shows both the [?] question line and a second 'why it matters:' line."
+        },
+        {
+          "runs": [
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "Only the first card's header includes a 'why it matters:' line; later cards show just the [?] line."
+        }
+      ],
+      "reason": "Every card in all four runs is a fenced code block with a box-drawn header carrying the lowercase 'quiz · NN/NN' counter, a [?] line, and a closing '// reply:' hint as the last line — fully consistent. The only difference is a non-required second header line ('why it matters:') that P01 runs include on every card while P02 runs include only on the first, a detail added/dropped rather than a break in the required shape.",
+      "tally": {
+        "counts": [
+          2,
+          2
+        ],
+        "agreement": 50,
+        "split": "2 / 2 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R2",
+      "class": "major_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2"
+          ],
+          "description": "Every lettered option's sentence states what it does, why it fits, and an explicit cost/benefit trade-off (via 'though'/'at the cost of'/'but') on every option in every card."
+        },
+        {
+          "runs": [
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "Options use the same 'X · label' form, but many sentences — especially all three options on the first card, and 'recommended' options in later cards — state only what/why and omit an explicit cost or benefit clause."
+        }
+      ],
+      "reason": "Both groups format options identically as 'X · label' lines, but they differ materially in whether the required cost/benefit component is actually present: P01 runs supply it for every single option across every card, while P02 runs systematically drop it for roughly half the options (all of card 1, and the recommended pick in later cards) — exactly the line the rubric draws between a full pass and a partial.",
+      "tally": {
+        "counts": [
+          2,
+          2
+        ],
+        "agreement": 50,
+        "split": "2 / 2 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R3",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P02#1"
+          ],
+          "description": "Rhythm holds throughout, and answer echoes add a parenthetical annotation ('(note: …)' or '(via: you decide)') reflecting how the choice was reached."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Rhythm holds throughout, but the echo for a 'you decide' reply drops the '(via: you decide)' annotation, showing only the resolved option."
+        }
+      ],
+      "reason": "In every run each card is followed by a one-sentence reply hint, and each answer's one-line [✓] echo opens the next message immediately before the next card (or the resolved view for the last question) — the rhythm itself never breaks. The only inconsistency is a cosmetic '(via: you decide)' annotation on the echo that appears in three runs but is silently dropped in one for the same scripted reply.",
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R4",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P02#1"
+          ],
+          "description": "The resolved [✓] list is shown as plain text lines (no code fence) directly above the confirmation sentence."
+        },
+        {
+          "runs": [
+            "P01#2",
+            "P02#2"
+          ],
+          "description": "The resolved [✓] list is wrapped in a fenced code block above the same confirmation sentence."
+        }
+      ],
+      "reason": "Every run lists all of its questions as [✓] lines and closes with the near-identical one-sentence ask ('Going with these — say `wait` if anything's wrong, otherwise I'll start.'), then gives a short paragraph restating the implication before presenting the work — the ending's substance is essentially fixed. The only difference is whether the resolved list sits inside a code fence, which splits cleanly between the first and second repeat of each prompt.",
+      "tally": {
+        "counts": [
+          2,
+          2
+        ],
+        "agreement": 50,
+        "split": "2 / 2 of 4",
+        "clean": true
+      }
+    }
+  ],
+  "excluded": [],
+  "lostJudges": []
+}

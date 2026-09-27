@@ -1,0 +1,645 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pskills/vet/results.schema.json",
+  "title": "Vet results",
+  "description": "Machine-readable output of one /vet run: scores, every rubric verdict, and every similarity judgment. Written to evals/<skill>/runs/<runId>/results.json. Everything from config onward is the vet workflow's return value, unchanged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "skill",
+    "skillSha256",
+    "suiteSha256",
+    "runId",
+    "generatedAt",
+    "config",
+    "scores",
+    "qualitySpread",
+    "items",
+    "prompts",
+    "runs",
+    "similarity",
+    "excluded",
+    "lostJudges",
+    "settle",
+    "trajectory"
+  ],
+  "properties": {
+    "skill": {
+      "type": "string"
+    },
+    "skillSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of SKILL.md at the time of this run."
+    },
+    "suiteSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of suite.json used. Scores are comparable only between runs with the same suite hash."
+    },
+    "runId": {
+      "type": "string",
+      "description": "UTC timestamp, e.g. 20260927T101500Z. Also the folder name."
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prompts",
+        "runs",
+        "wave",
+        "maxTurns",
+        "crossPerPrompt",
+        "agents",
+        "agentEstimate"
+      ],
+      "properties": {
+        "prompts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Prompt ids run this time."
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 2,
+          "description": "Most repeats per prompt (fewer ran if the eval stopped once settled)."
+        },
+        "wave": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Repeats per prompt per wave."
+        },
+        "maxTurns": {
+          "type": "integer"
+        },
+        "crossPerPrompt": {
+          "type": "integer"
+        },
+        "agents": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "preset",
+            "run",
+            "grade",
+            "compare",
+            "cross"
+          ],
+          "description": "Effective agent roles for this run, after the preset and any overrides. Scores are comparable only between runs with the same suite and the same roles.",
+          "properties": {
+            "preset": {
+              "enum": [
+                "thorough",
+                "lean",
+                "minimal"
+              ]
+            },
+            "run": {
+              "$ref": "#/$defs/role"
+            },
+            "grade": {
+              "$ref": "#/$defs/role"
+            },
+            "compare": {
+              "$ref": "#/$defs/role"
+            },
+            "cross": {
+              "$ref": "#/$defs/role"
+            }
+          }
+        },
+        "agentEstimate": {
+          "type": "integer",
+          "description": "Upper bound on agents this run could spawn."
+        },
+        "sessionModel": {
+          "type": "string",
+          "description": "What `session` meant for this run: the session's model name, when known."
+        }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quality",
+        "stability",
+        "overall",
+        "grade",
+        "confidence",
+        "usableRuns",
+        "totalRuns"
+      ],
+      "properties": {
+        "quality": {
+          "$ref": "#/$defs/score",
+          "description": "Weighted share of rubric met across all usable runs (met 1, partial 0.5, missed 0; n/a left out)."
+        },
+        "stability": {
+          "$ref": "#/$defs/score",
+          "description": "Weighted mean similarity across every (scope, item) judgment."
+        },
+        "overall": {
+          "$ref": "#/$defs/score",
+          "description": "sqrt(quality x stability)."
+        },
+        "grade": {
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "F",
+            null
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "normal",
+            "low"
+          ],
+          "description": "low when under 80% of runs were usable."
+        },
+        "usableRuns": {
+          "type": "integer"
+        },
+        "totalRuns": {
+          "type": "integer"
+        }
+      }
+    },
+    "qualitySpread": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min",
+        "median",
+        "max"
+      ],
+      "description": "Per-run quality across usable runs.",
+      "properties": {
+        "min": {
+          "$ref": "#/$defs/score"
+        },
+        "median": {
+          "$ref": "#/$defs/score"
+        },
+        "max": {
+          "$ref": "#/$defs/score"
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "weight",
+          "criterion",
+          "passRate",
+          "stabilityWithin",
+          "classesWithin",
+          "agreementWithin",
+          "stabilityCross",
+          "classCross"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "structure",
+              "behavior",
+              "outcome"
+            ]
+          },
+          "weight": {
+            "type": "integer"
+          },
+          "criterion": {
+            "type": "string"
+          },
+          "passRate": {
+            "$ref": "#/$defs/score",
+            "description": "Unweighted mean verdict value for this item, x100."
+          },
+          "stabilityWithin": {
+            "$ref": "#/$defs/score",
+            "description": "Mean similarity for this item across repeats of the same prompt."
+          },
+          "classesWithin": {
+            "type": "object",
+            "description": "Prompt id -> similarity class for this item.",
+            "additionalProperties": {
+              "$ref": "#/$defs/class"
+            }
+          },
+          "agreementWithin": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Mean share of runs in the largest group for this item, across prompts (from the tallies)."
+          },
+          "stabilityCross": {
+            "$ref": "#/$defs/score",
+            "description": "Similarity across prompts; structure items only."
+          },
+          "classCross": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/class"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "prompts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "usableRuns",
+          "quality",
+          "stability"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "usableRuns": {
+            "type": "integer"
+          },
+          "quality": {
+            "$ref": "#/$defs/score"
+          },
+          "stability": {
+            "$ref": "#/$defs/score"
+          }
+        }
+      }
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label",
+          "prompt",
+          "repeat",
+          "capture",
+          "status",
+          "note",
+          "quality",
+          "verdicts",
+          "excluded"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "e.g. P01#3"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "repeat": {
+            "type": "integer"
+          },
+          "capture": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Path of the run's capture: in its worktree as returned by the workflow, then the copy in outputs/."
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "blocked",
+              "error",
+              "not_run",
+              null
+            ],
+            "description": "not_run: the run agent never executed the skill; such runs are excluded, not graded."
+          },
+          "note": {
+            "type": "string"
+          },
+          "quality": {
+            "$ref": "#/$defs/score"
+          },
+          "verdicts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "verdict",
+                "evidence"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "verdict": {
+                  "enum": [
+                    "met",
+                    "partial",
+                    "missed",
+                    "n/a"
+                  ]
+                },
+                "evidence": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "excluded": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the run was left out of the scores, or null."
+          }
+        }
+      }
+    },
+    "similarity": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scope",
+          "item",
+          "class",
+          "groups",
+          "reason",
+          "tally"
+        ],
+        "properties": {
+          "scope": {
+            "type": "string",
+            "description": "A prompt id for same-input repeats, or \"cross\" for across prompts."
+          },
+          "item": {
+            "type": "string"
+          },
+          "class": {
+            "$ref": "#/$defs/class"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "runs",
+                "description"
+              ],
+              "properties": {
+                "runs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "tally": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "counts",
+              "agreement",
+              "split",
+              "clean"
+            ],
+            "description": "How the judge's groups split the runs, counted by the script rather than the judge.",
+            "properties": {
+              "counts": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "Group sizes, largest first."
+              },
+              "agreement": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Share of placed runs in the largest group."
+              },
+              "split": {
+                "type": "string",
+                "description": "e.g. \"7 / 3 of 10\"."
+              },
+              "clean": {
+                "type": "boolean",
+                "description": "False if the groups didn't place every compared run exactly once."
+              }
+            }
+          }
+        }
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label",
+          "reason"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "lostJudges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Labels of similarity judges that died; their item/scope is missing from stability."
+    },
+    "settle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "settled",
+        "settledAt",
+        "delta",
+        "patience",
+        "stopWhenSettled",
+        "wavesRun"
+      ],
+      "description": "Whether the running grade settled: it moved no more than delta points in each of the last patience waves, keeping its letter.",
+      "properties": {
+        "settled": {
+          "type": "boolean"
+        },
+        "settledAt": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "First wave from which the grade stayed settled."
+        },
+        "delta": {
+          "type": "number"
+        },
+        "patience": {
+          "type": "integer"
+        },
+        "stopWhenSettled": {
+          "type": "boolean"
+        },
+        "wavesRun": {
+          "type": "integer"
+        }
+      }
+    },
+    "trajectory": {
+      "type": "array",
+      "description": "The running grade after each wave, within-prompt stability only.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wave",
+          "runsPerPrompt",
+          "usable",
+          "quality",
+          "stability",
+          "overall",
+          "grade",
+          "moved"
+        ],
+        "properties": {
+          "wave": {
+            "type": "integer"
+          },
+          "runsPerPrompt": {
+            "type": "integer"
+          },
+          "usable": {
+            "type": "integer"
+          },
+          "quality": {
+            "$ref": "#/$defs/score"
+          },
+          "stability": {
+            "$ref": "#/$defs/score"
+          },
+          "overall": {
+            "$ref": "#/$defs/score"
+          },
+          "grade": {
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "F",
+              null
+            ]
+          },
+          "moved": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Change in overall since the previous wave."
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "score": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "class": {
+      "enum": [
+        "identical",
+        "equivalent",
+        "minor_drift",
+        "major_drift",
+        "contradictory"
+      ]
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "effort"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "\"session\" when inherited."
+        },
+        "effort": {
+          "type": "string",
+          "description": "\"session\" when inherited."
+        },
+        "agentType": {
+          "type": "string"
+        },
+        "batch": {
+          "enum": [
+            "run",
+            "prompt",
+            "item",
+            "merged",
+            "all"
+          ]
+        }
+      }
+    }
+  }
+}
