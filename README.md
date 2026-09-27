@@ -24,6 +24,7 @@ A collection of Claude Code skills. Install any skill by copying its directory i
     SKILL.md
     references/
       vet.workflow.js
+      agents.schema.json
       suite.schema.json
       results.schema.json
       report-template.md
@@ -206,11 +207,24 @@ much the same output every time, so `/vet` scores both:
 1. Reads the skill's SKILL.md and extracts the expected **output structure** and a
    **rubric** (structure, behavior and outcome items, weighted, each citing its source)
 2. Writes **10 varied test prompts**, with scripted user replies for interactive skills
-3. Runs **3 prompts × 10 repeats**, each in its own git worktree, via a `Workflow`
-4. A **rubric judge** grades every run: met / partial / missed / n/a, with evidence
-5. **Similarity judges** classify each rubric item across repeats (and structure items
-   across prompts): identical → equivalent → minor drift → major drift → contradictory
+3. Runs **3 prompts × 10 repeats**, each in its own git worktree, in parallel via a `Workflow`
+4. **Rubric judges** grade every run: met / partial / missed / n/a, with evidence
+5. **Similarity judges** (one per prompt by default) classify and tally each rubric item
+   across repeats, and structure items across prompts: identical → equivalent → minor
+   drift → major drift → contradictory, with the split, e.g. `7 / 3 of 10`
 6. Scores **quality**, **stability**, and **overall** = √(quality × stability)
+
+You choose what each agent does. Four roles (`run`, `grade`, `compare`, `cross`) each
+take a model, effort and batching. Presets set the batching:
+
+| Preset | Agents (3 × 10 runs) | Judges |
+|---|---|---|
+| `thorough` | ~93 | one per run, one per rubric item |
+| `lean` (default) | ~37 | one grader and one comparer per prompt |
+| `minimal` | ~34 | one judge per prompt grades and compares |
+
+Override per role in `evals/agents.json` or per run, e.g.
+`/vet quiz --agent grade.model=haiku --agent grade.effort=low`.
 
 The suite is saved to `evals/<skill>/suite.json` and reused, so later runs are
 comparable. You review the rubric and prompts once, when a suite is first written.
@@ -233,5 +247,6 @@ Where it varies
 ```
 
 Writes `evals/quiz/runs/<runId>/report.md`, `results.json`, and one capture per run.
-Options: `--prompts N`, `--sample M`, `--runs R`, `--use P02,P07`, `--regen`.
+Options: `--prompts N`, `--sample M`, `--runs R`, `--use P02,P07`, `--regen`,
+`--preset`, `--agent role.key=value`.
 

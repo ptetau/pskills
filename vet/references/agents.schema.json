@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pskills/vet/agents.schema.json",
+  "title": "Vet agent roles",
+  "description": "Which agents do what in a /vet run. Optional file evals/agents.json sets repo-wide defaults; --preset and --agent role.key=value override it for one run. A preset fills in batch for each judge role; anything set explicitly wins.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "preset": {
+      "enum": [
+        "thorough",
+        "lean",
+        "minimal"
+      ],
+      "description": "thorough: grade per run, compare per item, cross per item. lean (default): grade per prompt, compare per prompt, cross in one judge. minimal: one judge per prompt grades and compares, cross in one judge."
+    },
+    "run": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/role"
+        }
+      ],
+      "not": {
+        "required": [
+          "batch"
+        ]
+      },
+      "description": "Executes the skill. Changing its model changes what is being tested, not just the cost. Takes no batch."
+    },
+    "grade": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/role"
+        }
+      ],
+      "properties": {
+        "batch": {
+          "enum": [
+            "run",
+            "prompt"
+          ]
+        }
+      },
+      "description": "Rubric judge. batch run: one judge per run. batch prompt: one judge grades every run of a prompt."
+    },
+    "compare": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/role"
+        }
+      ],
+      "properties": {
+        "batch": {
+          "enum": [
+            "item",
+            "prompt",
+            "merged"
+          ]
+        }
+      },
+      "description": "Similarity across repeats of one prompt. batch item: one judge per (prompt, rubric item). batch prompt: one judge per prompt compares every item. batch merged: the per-prompt grade judge also compares (forces grade.batch prompt)."
+    },
+    "cross": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/role"
+        }
+      ],
+      "properties": {
+        "batch": {
+          "enum": [
+            "item",
+            "all"
+          ]
+        }
+      },
+      "description": "Structure across different prompts. batch item: one judge per structure item. batch all: one judge for all of them."
+    }
+  },
+  "$defs": {
+    "role": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "\"session\" (default) inherits the session's model; otherwise an alias such as \"sonnet\" or \"haiku\", or a full model id."
+        },
+        "effort": {
+          "enum": [
+            "session",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "description": "Reasoning effort; \"session\" (default) inherits."
+        },
+        "agentType": {
+          "type": "string",
+          "description": "A custom subagent type from the same registry as the Agent tool."
+        },
+        "batch": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

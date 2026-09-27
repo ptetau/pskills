@@ -1,11 +1,11 @@
 export const meta = {
   name: 'vet',
   description: 'Run a skill repeatedly in isolated worktrees, grade each run against its rubric, and judge how much the runs differ',
-  whenToUse: 'Called by the /vet skill, which passes the suite and run settings in args',
+  whenToUse: 'Called by the /vet skill, which passes the suite, run settings and agent roles in args',
   phases: [
     { title: 'Run', detail: 'one agent per (prompt, repeat), each in its own git worktree' },
-    { title: 'Grade', detail: 'one rubric judge per run' },
-    { title: 'Compare', detail: 'one similarity judge per (prompt, rubric item), plus cross-prompt structure checks' },
+    { title: 'Grade', detail: 'rubric judges: one per run, or one per prompt' },
+    { title: 'Compare', detail: 'similarity judges per prompt (or per item), plus cross-prompt structure checks' },
   ],
 }
 
@@ -18,8 +18,9 @@ export const meta = {
 //   suite:          { structure, rubric, prompts }  prompts already cut to this run's selection
 //   runs:           repeats per prompt (default 10, minimum 2)
 //   maxTurns:       assistant turns per run before stopping (default 12)
-//   crossPerPrompt: runs per prompt shown to each cross-prompt judge (default 2)
+//   crossPerPrompt: runs per prompt shown to cross-prompt judges (default 2)
 //   outDir:         absolute directory the capture files go in
+//   agents:         { preset, run, grade, compare, cross }, see "Agent roles" below
 // }
 
 const SKILL = args && args.skill
@@ -40,6 +41,60 @@ const VERDICT = { met: 1, partial: 0.5, missed: 0 }
 const SIMILARITY = { identical: 1, equivalent: 0.9, minor_drift: 0.6, major_drift: 0.25, contradictory: 0 }
 const WEIGHT = Object.fromEntries(RUBRIC.map((i) => [i.id, i.weight || 1]))
 
+// ── Agent roles ─────────────────────────────────────────────────────────────
+// Four roles: run (executes the skill), grade (rubric judge), compare
+// (similarity across repeats of one prompt), cross (structure across prompts).
+// Each role takes model ("session" = inherit), effort, agentType, and the judges
+// take batch, which sets how much work one agent does:
+//   grade.batch:   run    one judge per run
+//                  prompt one judge grades every run of a prompt
+//   compare.batch: item   one judge per (prompt, rubric item)
+//                  prompt one judge per prompt compares every item
+//                  merged the per-prompt grade judge also compares (needs grade.batch prompt)
+//   cross.batch:   item   one judge per structure item
+//                  all    one judge for every structure item
+// A preset fills in batch; anything set explicitly wins.
+
+const PRESETS = {
+  thorough: { grade: { batch: 'run' }, compare: { batch: 'item' }, cross: { batch: 'item' } },
+  lean: { grade: { batch: 'prompt' }, compare: { batch: 'prompt' }, cross: { batch: 'all' } },
+  minimal: { grade: { batch: 'prompt' }, compare: { batch: 'merged' }, cross: { batch: 'all' } },
+}
+const BATCH = { grade: ['run', 'prompt'], compare: ['item', 'prompt', 'merged'], cross: ['item', 'all'] }
+const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max']
+const ROLE_KEYS = ['model', 'effort', 'agentType', 'batch']
+
+const AGENTS_IN = args.agents || {}
+const PRESET = AGENTS_IN.preset || 'lean'
+if (!PRESETS[PRESET]) throw new Error(`vet: unknown preset "${PRESET}"; use one of ${Object.keys(PRESETS).join(', ')}`)
+const AGENTS = {}
+for (const role of ['run', 'grade', 'compare', 'cross']) {
+  const c = { ...(PRESETS[PRESET][role] || {}), ...(AGENTS_IN[role] || {}) }
+  for (const k of Object.keys(c)) {
+    if (!ROLE_KEYS.includes(k)) throw new Error(`vet: agents.${role}.${k} is not a setting; use ${ROLE_KEYS.join(', ')}`)
+  }
+  if (c.effort && !EFFORTS.includes(c.effort)) throw new Error(`vet: agents.${role}.effort must be one of ${EFFORTS.join(', ')}`)
+  if (c.batch !== undefined && !(BATCH[role] || []).includes(c.batch)) {
+    throw new Error(`vet: agents.${role}.batch "${c.batch}" is not allowed; use ${(BATCH[role] || ['(none)']).join(', ')}`)
+  }
+  if (c.model === 'session') delete c.model
+  if (c.effort === 'session') delete c.effort
+  AGENTS[role] = c
+}
+if (AGENTS.compare.batch === 'merged' && AGENTS.grade.batch !== 'prompt') {
+  log('compare.batch "merged" needs grade.batch "prompt"; using that')
+  AGENTS.grade.batch = 'prompt'
+}
+
+const optsFor = (role, opts) => {
+  const c = AGENTS[role]
+  const o = { ...opts }
+  if (c.model) o.model = c.model
+  if (c.effort) o.effort = c.effort
+  if (c.agentType) o.agentType = c.agentType
+  return o
+}
+
 // ── Schemas each agent must return ──────────────────────────────────────────
 
 const RUN_SCHEMA = {
@@ -55,45 +110,67 @@ const RUN_SCHEMA = {
   required: ['status', 'capture', 'assistantTurns', 'fallbackReplies', 'filesWritten', 'note'],
 }
 
+const VERDICTS = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      id: { type: 'string' },
+      verdict: { type: 'string', enum: ['met', 'partial', 'missed', 'n/a'] },
+      evidence: { type: 'string', description: 'Shortest verbatim quote that proves the verdict, or "absent"' },
+    },
+    required: ['id', 'verdict', 'evidence'],
+  },
+}
+const CAPTURE_OK = { type: 'boolean', description: 'False if the capture is missing, empty, or summarised instead of verbatim' }
+
 const GRADE_SCHEMA = {
   type: 'object',
-  properties: {
-    captureOk: { type: 'boolean', description: 'False if the capture is missing, empty, or summarised instead of verbatim' },
-    items: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          verdict: { type: 'string', enum: ['met', 'partial', 'missed', 'n/a'] },
-          evidence: { type: 'string', description: 'Shortest verbatim quote that proves the verdict, or "absent"' },
-        },
-        required: ['id', 'verdict', 'evidence'],
-      },
-    },
-  },
+  properties: { captureOk: CAPTURE_OK, items: VERDICTS },
   required: ['captureOk', 'items'],
 }
 
+const GRADED_RUNS = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: { label: { type: 'string', description: 'Run label, e.g. "P01#3"' }, captureOk: CAPTURE_OK, items: VERDICTS },
+    required: ['label', 'captureOk', 'items'],
+  },
+}
+
+const GROUPS = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      runs: { type: 'array', items: { type: 'string' }, description: 'Run labels, e.g. "P01#3"' },
+      description: { type: 'string', description: 'One line on how this group handles the item' },
+    },
+    required: ['runs', 'description'],
+  },
+}
+const CLASS = { type: 'string', enum: Object.keys(SIMILARITY) }
+const REASON = { type: 'string', description: 'One or two sentences on what differs, or why nothing does' }
+
 const SIM_SCHEMA = {
   type: 'object',
-  properties: {
-    groups: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          runs: { type: 'array', items: { type: 'string' }, description: 'Run labels, e.g. "P01#3"' },
-          description: { type: 'string', description: 'One line on how this group handles the item' },
-        },
-        required: ['runs', 'description'],
-      },
-    },
-    class: { type: 'string', enum: Object.keys(SIMILARITY) },
-    reason: { type: 'string', description: 'One or two sentences on what differs, or why nothing does' },
-  },
+  properties: { groups: GROUPS, class: CLASS, reason: REASON },
   required: ['groups', 'class', 'reason'],
 }
+
+const COMPARED_ITEMS = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: { item: { type: 'string', description: 'Rubric item id, e.g. "R3"' }, groups: GROUPS, class: CLASS, reason: REASON },
+    required: ['item', 'groups', 'class', 'reason'],
+  },
+}
+
+const GRADE_BATCH_SCHEMA = { type: 'object', properties: { runs: GRADED_RUNS }, required: ['runs'] }
+const SIM_BATCH_SCHEMA = { type: 'object', properties: { items: COMPARED_ITEMS }, required: ['items'] }
+const MERGED_SCHEMA = { type: 'object', properties: { runs: GRADED_RUNS, items: COMPARED_ITEMS }, required: ['runs', 'items'] }
 
 // ── Prompt text ─────────────────────────────────────────────────────────────
 
@@ -101,6 +178,7 @@ const pad2 = (n) => String(n).padStart(2, '0')
 const labelOf = (p, r) => `${p.id}#${r}`
 const captureOf = (p, r) => `${OUT}/${p.id}-r${pad2(r)}.md`
 const invocation = (p) => `/${SKILL.name} ${p.prompt}`.trim()
+const captureList = (runs) => runs.map((x) => `- ${x.label}: ${x.capture}`).join('\n')
 
 const repliesText = (p) =>
   p.replies && p.replies.length
@@ -154,12 +232,7 @@ For every file the run created or changed in your worktree (check git status, in
 
 Then return the structured result.`
 
-const gradePrompt = (p, capture) => `You are grading one run of the Claude Code skill "${SKILL.name}" against a rubric. Judge only what the run produced, not what the skill promises.
-
-Read the run's capture: ${capture}
-It holds the transcript of the run and any files the run wrote.
-
-The run was given:
+const gradeContext = (p) => `The run was given:
 ${invocation(p)}
 Scripted user replies, in order: ${JSON.stringify(p.replies || [])}
 
@@ -167,9 +240,9 @@ Expected output structure:
 ${structureText()}
 
 Rubric:
-${RUBRIC.map(itemText).join('\n')}
+${RUBRIC.map(itemText).join('\n')}`
 
-Give every rubric item one verdict, in rubric order:
+const GRADE_RULES = `Give every rubric item one verdict, in rubric order:
 - met: the pass description holds in full.
 - partial: the partial description holds, or the item is only partly satisfied.
 - missed: absent or wrong.
@@ -178,10 +251,41 @@ Evidence is the shortest verbatim quote from the capture that proves the verdict
 When torn between two verdicts, choose the lower one.
 Set captureOk to false if the capture is missing, empty, or a summary rather than the verbatim messages.`
 
+const gradePrompt = (p, capture) => `You are grading one run of the Claude Code skill "${SKILL.name}" against a rubric. Judge only what the run produced, not what the skill promises.
+
+Read the run's capture: ${capture}
+It holds the transcript of the run and any files the run wrote.
+
+${gradeContext(p)}
+
+${GRADE_RULES}`
+
+const GRADE_EACH = `Grade each run on its own, as if it were the only one. Don't compare runs while grading, and don't let one run's verdicts pull another's. Return one entry per run, using its label.`
+
+const gradeBatchPrompt = (p, runs) => `You are grading ${runs.length} runs of the Claude Code skill "${SKILL.name}" against a rubric. Every run got the same input. Judge only what each run produced, not what the skill promises.
+
+Captures (each holds one run's transcript and any files it wrote):
+${captureList(runs)}
+
+${gradeContext(p)}
+
+${GRADE_EACH}
+
+${GRADE_RULES}`
+
+const SIM_STEPS = `1. Group the runs so that runs in one group handle the item the same way: the same content, choices and structure, though the wording may differ. Put every run in exactly one group, using its label. Describe each group in one line.
+2. Classify the item across all the runs:
+   identical: every run handles it the same way, near word for word.
+   equivalent: every run lands on the same substance and choices, in different words.
+   minor_drift: the same approach throughout, but details differ (a point added or dropped, a different order, different examples).
+   major_drift: some runs differ materially in content or approach, or the item is present in some runs and absent in others.
+   contradictory: runs reach incompatible outcomes (opposite choices, conflicting conclusions).
+When torn between two classes, choose the less similar one.`
+
 const SAME_INPUT = (p) =>
   `Every run below got the same input, ${JSON.stringify(invocation(p))}, with the same scripted replies. Any difference between them comes from the skill.`
 const CROSS_INPUT =
-  'The runs below got DIFFERENT inputs, so their content will differ. Ignore content. Compare only the shape this item describes: sections, their order, formats, turn pattern, file layout.'
+  'The runs below got DIFFERENT inputs, so their content will differ. Ignore content. Compare only the shape each item describes: sections, their order, formats, turn pattern, file layout.'
 
 const simPrompt = (item, runs, scope) => `You are checking how consistently the Claude Code skill "${SKILL.name}" behaves across runs, for ONE rubric item. You judge sameness, not quality: ten identical wrong answers are "identical".
 
@@ -191,89 +295,166 @@ Rubric item:
 ${itemText(item)}
 
 Captures (read each one and look only at the part relevant to this item):
-${runs.map((x) => `- ${x.label}: ${x.capture}`).join('\n')}
+${captureList(runs)}
 
-1. Group the runs so that runs in one group handle this item the same way: the same content, choices and structure, though the wording may differ. Put every run in exactly one group, using its label. Describe each group in one line.
-2. Classify the item across all the runs:
-   identical: every run handles it the same way, near word for word.
-   equivalent: every run lands on the same substance and choices, in different words.
-   minor_drift: the same approach throughout, but details differ (a point added or dropped, a different order, different examples).
-   major_drift: some runs differ materially in content or approach, or the item is present in some runs and absent in others.
-   contradictory: runs reach incompatible outcomes (opposite choices, conflicting conclusions).
-When torn between two classes, choose the less similar one.`
+${SIM_STEPS}`
+
+// jobs: [{ item, runs }]. Runs may differ per item (cross-prompt skips runs where an item is n/a).
+const uniqueRuns = (runs) => runs.filter((x, i) => runs.findIndex((y) => y.label === x.label) === i)
+const simJobsText = (jobs) => {
+  const pool = uniqueRuns(jobs.flatMap((j) => j.runs))
+  return jobs
+    .map((j) => itemText(j.item) + (j.runs.length === pool.length ? '' : `\n   compare only: ${j.runs.map((x) => x.label).join(', ')}`))
+    .join('\n')
+}
+
+const simBatchPrompt = (jobs, scope) => `You are checking how consistently the Claude Code skill "${SKILL.name}" behaves across runs, for EACH rubric item below. You judge sameness, not quality: ten identical wrong answers are "identical".
+
+${scope}
+
+Captures (read each one once):
+${captureList(uniqueRuns(jobs.flatMap((j) => j.runs)))}
+
+Rubric items:
+${simJobsText(jobs)}
+
+For each item, looking only at the part of each output relevant to that item:
+${SIM_STEPS}
+Judge each item on its own; don't let one item's class pull another's. Answer every item, in rubric order.`
+
+const mergedPrompt = (p, runs, items) => `You are grading ${runs.length} runs of the Claude Code skill "${SKILL.name}" against a rubric, then checking how consistently it behaved across them. Every run got the same input.
+
+Captures (each holds one run's transcript and any files it wrote; read each one once):
+${captureList(runs)}
+
+${gradeContext(p)}
+
+Part 1, grading. ${GRADE_EACH}
+
+${GRADE_RULES}
+
+Part 2, sameness. Only after grading every run: for each of these rubric items, ${items.map((i) => i.id).join(', ')}, compare the runs whose capture is ok. You judge sameness, not quality: ten identical wrong answers are "identical". For each item, looking only at the part of each output relevant to it:
+${SIM_STEPS}
+Answer every listed item, in rubric order.`
 
 // ── Run, grade, compare ─────────────────────────────────────────────────────
 
-async function runAndGrade(p, r) {
-  const base = { prompt: p.id, repeat: r, label: labelOf(p, r), capture: captureOf(p, r) }
-  const run = await agent(runPrompt(p, r), {
-    label: `run:${base.label}`,
-    phase: 'Run',
-    isolation: 'worktree',
-    schema: RUN_SCHEMA,
-  })
-  if (!run) return { ...base, excluded: 'run agent died' }
-  const grade = await agent(gradePrompt(p, base.capture), {
-    label: `grade:${base.label}`,
-    phase: 'Grade',
-    schema: GRADE_SCHEMA,
-  })
-  if (!grade) return { ...base, run, excluded: 'grader died' }
-  if (!grade.captureOk) return { ...base, run, grade, excluded: 'capture missing or not verbatim' }
-  return { ...base, run, grade }
+const lostJudges = []
+const baseOf = (p, r) => ({ prompt: p.id, repeat: r, label: labelOf(p, r), capture: captureOf(p, r) })
+const withGrade = (rec, grade, lostReason) => {
+  if (!grade) return { ...rec, excluded: lostReason }
+  if (!grade.captureOk) return { ...rec, grade, excluded: 'capture missing or not verbatim' }
+  return { ...rec, grade }
 }
-
 const verdictOf = (g, id) => {
   const hit = g.grade.items.find((x) => x.id === id)
   return hit ? hit.verdict : null
 }
 
-const lostJudges = []
-async function compareOne(item, runs, scope, scopeLabel) {
-  const label = `compare:${scopeLabel}/${item.id}`
-  const s = await agent(simPrompt(item, runs, scope), { label, phase: 'Compare', schema: SIM_SCHEMA }).catch(() => null)
-  if (!s) {
-    lostJudges.push(label)
-    log(`${label}: judge died; this item/scope is left out of stability`)
-    return null
+async function runOne(p, r) {
+  const base = baseOf(p, r)
+  const run = await agent(
+    runPrompt(p, r),
+    optsFor('run', { label: `run:${base.label}`, phase: 'Run', isolation: 'worktree', schema: RUN_SCHEMA }),
+  ).catch(() => null)
+  if (!run) return { ...base, excluded: 'run agent died' }
+  if (AGENTS.grade.batch !== 'run') return { ...base, run }
+  const grade = await agent(
+    gradePrompt(p, base.capture),
+    optsFor('grade', { label: `grade:${base.label}`, phase: 'Grade', schema: GRADE_SCHEMA }),
+  ).catch(() => null)
+  return withGrade({ ...base, run }, grade, 'grader died')
+}
+
+// Keep a judge's answer for each expected item; anything missing is logged, never scored.
+function collect(list, items, scope, label) {
+  const byItem = new Map((list || []).map((s) => [s.item, s]))
+  const out = []
+  for (const item of items) {
+    const s = byItem.get(item.id)
+    if (!s || !(s.class in SIMILARITY)) {
+      lostJudges.push(`${label}/${item.id}`)
+      continue
+    }
+    out.push({ scope, item: item.id, class: s.class, groups: s.groups, reason: s.reason })
   }
-  return { scope: scopeLabel, item: item.id, class: s.class, groups: s.groups, reason: s.reason }
+  if (!list) log(`${label}: judge died; its items are left out of stability`)
+  else if (out.length < items.length) log(`${label}: ${items.length - out.length} item(s) missing from the answer; left out of stability`)
+  return out
+}
+
+async function compareOne(role, item, runs, scope, scopeLabel) {
+  const label = `compare:${scopeLabel}/${item.id}`
+  const s = await agent(simPrompt(item, runs, scope), optsFor(role, { label, phase: 'Compare', schema: SIM_SCHEMA })).catch(() => null)
+  return collect(s ? [{ item: item.id, ...s }] : null, [item], scopeLabel, label)
+}
+
+async function compareBatch(role, jobs, scope, scopeLabel) {
+  const label = `compare:${scopeLabel}`
+  const out = await agent(simBatchPrompt(jobs, scope), optsFor(role, { label, phase: 'Compare', schema: SIM_BATCH_SCHEMA })).catch(() => null)
+  return collect(out && out.items, jobs.map((j) => j.item), scopeLabel, label)
+}
+
+// Stage 1 for one prompt: every repeat, then its grading (per run, or one judge for all).
+async function runAndGrade(p) {
+  let recs = (await parallel(reps.map((r) => () => runOne(p, r)))).map((x, i) => x || { ...baseOf(p, reps[i]), excluded: 'lost' })
+  let merged = null
+  if (AGENTS.grade.batch === 'prompt') {
+    const alive = recs.filter((x) => !x.excluded)
+    if (alive.length) {
+      const merging = AGENTS.compare.batch === 'merged'
+      const label = `${merging ? 'judge' : 'grade'}:${p.id}`
+      const out = await agent(
+        merging ? mergedPrompt(p, alive, RUBRIC) : gradeBatchPrompt(p, alive),
+        optsFor('grade', { label, phase: 'Grade', schema: merging ? MERGED_SCHEMA : GRADE_BATCH_SCHEMA }),
+      ).catch(() => null)
+      const byLabel = new Map(((out && out.runs) || []).map((g) => [g.label, g]))
+      recs = recs.map((x) => (x.excluded ? x : withGrade(x, byLabel.get(x.label) || null, out ? 'grader skipped this run' : 'grader died')))
+      if (merging) merged = { label, items: out ? out.items : null }
+    }
+  }
+  log(`${p.id}: ${recs.filter((x) => !x.excluded).length}/${R} runs usable`)
+  return { recs, merged }
+}
+
+// Stage 2 for one prompt: similarity across its usable runs.
+async function compareRuns({ recs, merged }, p) {
+  const usable = recs.filter((x) => !x.excluded)
+  if (usable.length < 2) {
+    log(`${p.id}: ${usable.length} usable runs, too few to compare; skipping its similarity judges`)
+    return { prompt: p.id, graded: recs, similarity: [] }
+  }
+  // An item that is n/a in every run has nothing to compare.
+  const items = RUBRIC.filter((item) => usable.some((g) => verdictOf(g, item.id) !== 'n/a'))
+  let similarity
+  if (AGENTS.compare.batch === 'merged') {
+    similarity = collect(merged && merged.items, items, p.id, merged ? merged.label : `judge:${p.id}`)
+  } else if (AGENTS.compare.batch === 'prompt') {
+    similarity = await compareBatch('compare', items.map((item) => ({ item, runs: usable })), SAME_INPUT(p), p.id)
+  } else {
+    similarity = (await parallel(items.map((item) => () => compareOne('compare', item, usable, SAME_INPUT(p), p.id)))).filter(Boolean).flat()
+  }
+  return { prompt: p.id, graded: recs, similarity }
 }
 
 const reps = Array.from({ length: R }, (_, i) => i + 1)
 const structureItems = RUBRIC.filter((i) => i.kind === 'structure')
-log(
-  `vet ${SKILL.name}: ${PROMPTS.length} prompts x ${R} runs = ${PROMPTS.length * R} runs, ` +
-    `${RUBRIC.length} rubric items, up to ${PROMPTS.length * R * 2 + PROMPTS.length * RUBRIC.length + structureItems.length} agents`,
-)
+const M = PROMPTS.length
+const estimate =
+  M * R +
+  (AGENTS.grade.batch === 'run' ? M * R : M) +
+  ({ item: M * RUBRIC.length, prompt: M, merged: 0 })[AGENTS.compare.batch] +
+  (structureItems.length ? (AGENTS.cross.batch === 'item' ? structureItems.length : 1) : 0)
+log(`vet ${SKILL.name}: preset ${PRESET}, ${M} prompts x ${R} runs = ${M * R} runs, ${RUBRIC.length} rubric items, up to ${estimate} agents`)
+log('Runs, grades and comparisons overlap. The Workflow runtime runs up to 16 agents at once (fewer on small machines) and queues the rest.')
 
-const perPrompt = await pipeline(
-  PROMPTS,
-  // Stage 1: run and grade every repeat of this prompt. This waits for all
-  // repeats of one prompt (not all prompts): the similarity judges need them together.
-  (p) =>
-    parallel(reps.map((r) => () => runAndGrade(p, r))).then((xs) =>
-      xs.map((x, i) => x || { prompt: p.id, repeat: reps[i], label: labelOf(p, reps[i]), capture: captureOf(p, reps[i]), excluded: 'lost' }),
-    ),
-  // Stage 2: one similarity judge per rubric item across this prompt's usable runs.
-  async (graded, p) => {
-    const usable = graded.filter((g) => !g.excluded)
-    if (usable.length < 2) {
-      log(`${p.id}: ${usable.length} usable runs, too few to compare; skipping its similarity judges`)
-      return { prompt: p.id, graded, similarity: [] }
-    }
-    // An item that is n/a in every run has nothing to compare.
-    const items = RUBRIC.filter((item) => usable.some((g) => verdictOf(g, item.id) !== 'n/a'))
-    const similarity = await parallel(items.map((item) => () => compareOne(item, usable, SAME_INPUT(p), p.id)))
-    return { prompt: p.id, graded, similarity: similarity.filter(Boolean) }
-  },
-)
+const perPrompt = await pipeline(PROMPTS, runAndGrade, compareRuns)
 
 const byPrompt = perPrompt.map(
   (x, i) =>
     x || {
       prompt: PROMPTS[i].id,
-      graded: reps.map((r) => ({ prompt: PROMPTS[i].id, repeat: r, label: labelOf(PROMPTS[i], r), capture: captureOf(PROMPTS[i], r), excluded: 'lost' })),
+      graded: reps.map((r) => ({ ...baseOf(PROMPTS[i], r), excluded: 'lost' })),
       similarity: [],
     },
 )
@@ -290,7 +471,38 @@ const crossJobs = structureItems
 if (crossJobs.length < structureItems.length) {
   log(`cross-prompt check: ${structureItems.length - crossJobs.length} structure item(s) skipped; they have usable runs from fewer than two prompts`)
 }
-const cross = (await parallel(crossJobs.map(({ item, runs }) => () => compareOne(item, runs, CROSS_INPUT, 'cross')))).filter(Boolean)
+let cross = []
+if (crossJobs.length && AGENTS.cross.batch === 'all') {
+  cross = await compareBatch('cross', crossJobs, CROSS_INPUT, 'cross')
+} else if (crossJobs.length) {
+  cross = (await parallel(crossJobs.map(({ item, runs }) => () => compareOne('cross', item, runs, CROSS_INPUT, 'cross')))).filter(Boolean).flat()
+}
+
+// ── Tallies: count how each judgment split the runs ─────────────────────────
+// Counted here, not by the judge. A judgment whose groups don't place every
+// compared run exactly once is flagged, and its tally is taken over the runs it did place.
+
+const expectedRuns = (s) => {
+  if (s.scope === 'cross') {
+    const job = crossJobs.find((j) => j.item.id === s.item)
+    return job ? job.runs.map((x) => x.label) : []
+  }
+  const pp = byPrompt.find((x) => x.prompt === s.scope)
+  return pp ? pp.graded.filter((g) => !g.excluded).map((g) => g.label) : []
+}
+const tallyOf = (s) => {
+  const expected = expectedRuns(s)
+  const seen = s.groups.flatMap((g) => g.runs)
+  const counts = s.groups.map((g) => g.runs.length).sort((a, b) => b - a)
+  const placed = seen.length
+  const clean = placed === expected.length && new Set(seen).size === placed && seen.every((l) => expected.includes(l))
+  return {
+    counts,
+    agreement: placed ? Math.round((1000 * counts[0]) / placed) / 10 : null,
+    split: `${counts.join(' / ')} of ${placed}`,
+    clean,
+  }
+}
 
 // ── Scores (plain arithmetic, no judge involved) ────────────────────────────
 
@@ -321,7 +533,11 @@ const runs = allRuns.map((g) => ({
 }))
 
 const within = byPrompt.flatMap((x) => x.similarity)
-const allSimilarity = within.concat(cross)
+const allSimilarity = within.concat(cross).map((s) => ({ ...s, tally: tallyOf(s) }))
+const untidy = allSimilarity.filter((s) => !s.tally.clean)
+if (untidy.length) {
+  log(`${untidy.length} judgment(s) didn't place every run exactly once: ${untidy.map((s) => `${s.scope}/${s.item}`).join(', ')}`)
+}
 
 const quality = pct(wmean(usableRuns.flatMap(qualityPairs)))
 const stability = pct(wmean(similarityPairs(allSimilarity)))
@@ -332,8 +548,8 @@ const median = (xs) => (xs.length ? (xs.length % 2 ? xs[(xs.length - 1) / 2] : r
 
 const items = RUBRIC.map((i) => {
   const values = usableRuns.map((g) => VERDICT[verdictOf(g, i.id)]).filter((v) => v !== undefined)
-  const mine = within.filter((s) => s.item === i.id)
-  const crossHit = cross.find((s) => s.item === i.id)
+  const mine = allSimilarity.filter((s) => s.item === i.id && s.scope !== 'cross')
+  const crossHit = allSimilarity.find((s) => s.item === i.id && s.scope === 'cross')
   return {
     id: i.id,
     kind: i.kind,
@@ -342,6 +558,7 @@ const items = RUBRIC.map((i) => {
     passRate: pct(mean(values)),
     stabilityWithin: pct(mean(mine.map((s) => SIMILARITY[s.class]))),
     classesWithin: Object.fromEntries(mine.map((s) => [s.scope, s.class])),
+    agreementWithin: round1(mean(mine.map((s) => s.tally.agreement).filter((x) => x !== null))),
     stabilityCross: crossHit ? pct(SIMILARITY[crossHit.class]) : null,
     classCross: crossHit ? crossHit.class : null,
   }
@@ -358,9 +575,23 @@ const prompts = byPrompt.map((x) => {
 })
 
 const usableShare = allRuns.length ? usableRuns.length / allRuns.length : 0
+const effectiveAgents = { preset: PRESET }
+for (const role of ['run', 'grade', 'compare', 'cross']) {
+  const c = AGENTS[role]
+  effectiveAgents[role] = { model: c.model || 'session', effort: c.effort || 'session' }
+  if (c.agentType) effectiveAgents[role].agentType = c.agentType
+  if (c.batch) effectiveAgents[role].batch = c.batch
+}
 
 return {
-  config: { prompts: PROMPTS.map((p) => p.id), runs: R, maxTurns: MAX_TURNS, crossPerPrompt: CROSS_PER_PROMPT },
+  config: {
+    prompts: PROMPTS.map((p) => p.id),
+    runs: R,
+    maxTurns: MAX_TURNS,
+    crossPerPrompt: CROSS_PER_PROMPT,
+    agents: effectiveAgents,
+    agentEstimate: estimate,
+  },
   scores: {
     quality,
     stability,

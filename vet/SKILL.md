@@ -7,9 +7,11 @@ description: >
   expected output structure and a rubric, writes varied test prompts (with scripted
   user replies for interactive skills), runs a sample of them many times each in
   isolated git worktrees via a Workflow, grades every run with a rubric judge, and has
-  similarity judges classify each rubric item by how much it changed across repeats
-  and, for structure items, across prompts. Saves the suite to evals/<skill>/ so
-  later runs are comparable. Use when the user says "/vet", asks to "eval a skill",
+  similarity judges classify and tally each rubric item by how much it changed across
+  repeats and, for structure items, across prompts. Each agent role (run, grade,
+  compare, cross) can take its own model, effort and batching, via presets or
+  overrides, to trade cost against focus. Saves the suite to evals/<skill>/ so later
+  runs are comparable. Use when the user says "/vet", asks to "eval a skill",
   "test this skill", "score my skill", "how consistent is this skill", or wants to
   check a skill before trusting it.
 ---
@@ -35,6 +37,7 @@ rubric item → score.
 
 ```
 /vet <skill> [--prompts N] [--sample M] [--runs R] [--use P02,P07] [--regen]
+             [--preset thorough|lean|minimal] [--agent role.key=value …]
 ```
 
 | Argument | Default | Meaning |
@@ -45,14 +48,17 @@ rubric item → score.
 | `--runs R` | 10 | Repeats of each sampled prompt; at least 2 |
 | `--use` | none | Run these prompt ids instead of the first M |
 | `--regen` | off | Rebuild the suite even if one exists |
+| `--preset` | `lean` | How much work each judge takes on; see Agent roles |
+| `--agent role.key=value` | none | Override one role setting for this run, e.g. `--agent grade.model=haiku`; repeatable |
 
-With the defaults and a 10-item rubric, a run spawns about 95 agents: 30 runs, 30
-rubric judges, 30 similarity judges (3 prompts × 10 items) and a few cross-prompt
-judges.
+With the defaults (3 prompts × 10 runs, `lean`) and a 10-item rubric, a run spawns
+about 37 agents: 30 runs, 3 rubric judges, 3 similarity judges and 1 cross-prompt
+judge. See Agent roles to trade cost against focus.
 
 ## Files
 
 ```
+evals/agents.json             optional repo-wide agent roles    (references/agents.schema.json)
 evals/<skill>/
   suite.json                  structure, rubric, prompts   (references/suite.schema.json)
   runs/<runId>/
@@ -150,7 +156,8 @@ Then show the user, compactly:
 - the rubric as a table: id, kind, weight, criterion, source;
 - the prompts: id, axis, prompt (shortened), number of replies, with the first M
   marked as this run's sample;
-- the agent estimate: M × R × 2 + M × (rubric items) + (structure items).
+- the agent roles in effect (preset plus any overrides) and the agent estimate for
+  them (see Agent roles).
 
 Ask: "Reply `go`, or tell me what to change (e.g. `drop R4`, `make P03 harder`,
 `R2 weight 3`)." Apply edits to `suite.json` and show the changed rows only. Don't
@@ -161,10 +168,15 @@ its rubric was already reviewed.
 
 1. **Pick the prompts:** the `--use` ids (stop if any isn't in the suite), else the
    first M.
-2. **Make the run folder.** `runId` is `date -u +%Y%m%dT%H%M%SZ`. Create
+2. **Resolve the agent roles.** Start from `evals/agents.json` if it exists, apply
+   `--preset`, then each `--agent role.key=value` (`--agent grade.model=haiku` sets
+   `grade.model`). Check the result against `references/agents.schema.json`. On a
+   re-run that skips the review gate, say in one line which preset and overrides are
+   in effect and the agent estimate before starting.
+3. **Make the run folder.** `runId` is `date -u +%Y%m%dT%H%M%SZ`. Create
    `evals/<skill>/runs/<runId>/outputs/`. Note the output of `git worktree list` so
    Phase 5 can tell which worktrees this run left behind.
-3. **Call the Workflow tool** with `scriptPath` set to `references/vet.workflow.js` in
+4. **Call the Workflow tool** with `scriptPath` set to `references/vet.workflow.js` in
    this skill's own directory, and `args` as a real JSON object (not a string):
 
    ```json
@@ -174,7 +186,8 @@ its rubric was already reviewed.
      "runs": 10,
      "maxTurns": 12,
      "crossPerPrompt": 2,
-     "outDir": "<abs path to runs/<runId>/outputs>"
+     "outDir": "<abs path to runs/<runId>/outputs>",
+     "agents": { "preset": "lean", "grade": { "model": "haiku" } }
    }
    ```
 
@@ -192,21 +205,31 @@ What the script does:
   capture (transcript plus any files it created or changed) to `outputs/P01-r03.md`.
   The skill-facing part of the prompt is identical for every repeat, so differences
   come from the skill.
-- **Grade (step 3).** As each run finishes, a rubric judge reads its capture and gives
-  every item a verdict of met, partial, missed or n/a, with a verbatim quote as
-  evidence. Judges are told to pick the lower verdict when torn.
-- **Compare (step 4).** Once all repeats of a prompt are done, one similarity judge
-  per rubric item reads those captures. It groups the runs by how they handle that
-  item, then classifies the item as identical, equivalent, minor drift, major drift or
-  contradictory. It judges sameness, not quality, and picks the less similar class
-  when torn. For structure items, a cross-prompt judge also compares the first two
-  usable runs of each prompt, ignoring content and comparing only shape.
+- **Grade (step 3).** A rubric judge gives every item a verdict of met, partial,
+  missed or n/a, with a verbatim quote as evidence, and picks the lower verdict when
+  torn. With `grade.batch: run` each run gets its own judge as soon as it finishes.
+  With `prompt` (the default) one judge grades all runs of a prompt, each on its own.
+- **Compare (step 4).** Once all repeats of a prompt are done, a similarity judge
+  compares their captures. By default that is one judge per prompt covering every
+  rubric item. For each item it groups the runs by how they handle it, then classifies
+  the item as identical, equivalent, minor drift, major drift or contradictory. It
+  judges sameness, not quality, and picks the less similar class when torn. For
+  structure items, a cross-prompt judge also compares the first two usable runs of
+  each prompt, ignoring content and comparing only shape.
+- **Tally.** The script counts each item's groups itself, e.g. `7 / 3 of 10`, and
+  flags any judgment whose groups don't place every run exactly once.
 - **Score (step 5).** Plain arithmetic in the script, with no judge involved. See
   Scoring.
 
-Runs whose agent died or whose capture is missing or not verbatim are left out of the
-scores and listed under `excluded`. Similarity judges that die are listed under
-`lostJudges`. Neither is ever counted as a pass or a fail.
+It all runs in parallel. Each prompt moves from runs to grading to comparison as soon
+as its own runs finish, without waiting for other prompts. The Workflow runtime runs
+up to 16 agents at once (fewer on machines with few cores) and queues the rest, and
+the progress log shows the plan and each prompt as it finishes.
+
+Runs whose agent died, whose grader died or skipped them, or whose capture is
+missing or not verbatim are left out of the scores and listed under `excluded`.
+Similarity judgments that are missing (the judge died or skipped an item) are listed
+under `lostJudges`. Neither is ever counted as a pass or a fail.
 
 ## Phase 5: Report
 
@@ -223,8 +246,54 @@ scores and listed under `excluded`. Similarity judges that die are listed under
    write files leave their worktrees behind. List the new ones and offer to remove
    them. Remove nothing without a yes.
 5. Reply in a few lines: the three scores and grade, the weakest item and the least
-   stable one in plain words, and the path to `report.md`. If this suite has earlier
-   runs, add the change in each score since the last one.
+   stable one in plain words, and the path to `report.md`. If this suite has an
+   earlier run with the same agent roles, add the change in each score since then.
+
+## Agent roles
+
+Four roles do the work. Each can take its own `model` (`session`, the default, inherits
+the session's model; otherwise an alias like `sonnet` or `haiku`, or a full model id),
+`effort` (`low` to `max`, or `session`) and `agentType` (a custom subagent type). The
+three judge roles also take `batch`, which sets how much work one agent does.
+
+| Role | Does | `batch` options |
+|---|---|---|
+| `run` | Executes the skill, one agent per (prompt, repeat) | none |
+| `grade` | Rubric verdicts | `run`: one judge per run · `prompt`: one judge per prompt |
+| `compare` | Similarity across repeats of a prompt | `item`: one judge per (prompt, item) · `prompt`: one judge per prompt · `merged`: the per-prompt grade judge also compares |
+| `cross` | Structure across prompts | `item`: one judge per structure item · `all`: one judge |
+
+Presets set the batching. Figures are for 3 prompts × 10 runs, 10 rubric items and 3
+structure items. "Capture reads" counts how many run outputs the judges read in total,
+a rough guide to judge tokens:
+
+| Preset | grade | compare | cross | Agents | Capture reads |
+|---|---|---|---|---|---|
+| `thorough` | run | item | item | 93 | 348 |
+| `lean` (default) | prompt | prompt | all | 37 | 66 |
+| `minimal` | prompt | merged | all | 34 | 36 |
+
+Set roles for the whole repo in `evals/agents.json`, or for one run with flags:
+
+```json
+{ "preset": "lean", "grade": { "model": "haiku", "effort": "low" }, "compare": { "model": "sonnet" } }
+```
+
+```
+/vet quiz --preset thorough --agent compare.model=sonnet --agent cross.effort=low
+```
+
+Trade-offs to keep in mind:
+- The 30 runs are the measurement and usually the biggest cost. Changing
+  `run.model` changes what you are testing, not just what it costs. Leave it at
+  `session` unless you mean to test the skill on another model.
+- Bigger batches mean fewer agents and fewer reads, but each judge holds more at once.
+  A per-item judge looks at one thing across ten outputs. A per-prompt judge looks at
+  everything, and one dead judge loses that whole prompt's grades or comparisons.
+- `merged` saves the most, but the same judge grades and then compares, so its grades
+  can colour its sense of sameness.
+- Cheaper judge models add judge noise, which shows up as lower stability. If
+  stability drops after a switch, re-run once with `thorough` to check.
 
 ## Scoring
 
@@ -243,8 +312,13 @@ scores and listed under `excluded`. Similarity judges that die are listed under
   as one more scope for structure items.
 - **Overall** = √(quality × stability). Grades: A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, F below.
 - **Confidence** is `low` when fewer than 80% of runs were usable.
+- **Tallies** don't enter the score. Each judgment also carries the group sizes the
+  script counted (`7 / 3 of 10`) and `agreement`, the share of runs in the largest
+  group. The report shows them next to the class so you can see how a drift splits.
 
-Scores are comparable only between runs with the same `suiteSha256`.
+Scores are comparable only between runs with the same `suiteSha256` and the same
+agent roles (`config.agents` in results.json). Judges on a different model or batch
+setting score differently.
 
 ## Limits
 

@@ -6,6 +6,8 @@
 **Suite:** `evals/[skill]/suite.json` · `[suiteSha256, first 12 chars]`
 **Run:** `[runId]` · [len(config.prompts)] prompts × [config.runs] runs ·
 [scores.usableRuns]/[scores.totalRuns] runs usable · confidence [scores.confidence]
+**Agents:** preset `[config.agents.preset]` · [each role whose model, effort or batch
+differs from the preset default, e.g. "grade haiku/low"; or "no overrides"]
 
 *(If `skillSha256` differs from the suite's, add one line: "SKILL.md changed since this
 suite was written; the rubric may be stale. `/vet [skill] --regen` rebuilds it.")*
@@ -36,11 +38,12 @@ each time? Name the single biggest issue. No hedging beyond what the numbers sup
 ## Rubric items
 
 *(schema: `items[]`. Stability columns show the score and the class; for "same prompt",
-give the worst class across prompts. `-` where not measured.)*
+give the worst class across prompts. Agreement is `agreementWithin`, the average share
+of runs in the largest group. `-` where not measured.)*
 
-| Item | Kind | Wt | Met | Stability, same prompt | Stability, across prompts |
-|---|---|---|---|---|---|
-| R1 [criterion, shortened] | structure | 2 | [passRate]% | [stabilityWithin] · [worst class] | [stabilityCross] · [classCross] |
+| Item | Kind | Wt | Met | Stability, same prompt | Agreement | Stability, across prompts |
+|---|---|---|---|---|---|---|
+| R1 [criterion, shortened] | structure | 2 | [passRate]% | [stabilityWithin] · [worst class] | [agreementWithin]% | [stabilityCross] · [classCross] |
 
 ## Prompts
 
@@ -70,7 +73,7 @@ met/partial/missed counts, and one or two evidence quotes with run labels, from
 worst first. Show the groups so the reader sees how the runs split. Write "No item
 drifted beyond minor_drift." if none.)*
 
-### R[n] [criterion] · [scope: P01, or across prompts] — [class]
+### R[n] [criterion] · [scope: P01, or across prompts] — [class] · [tally.split]
 
 - [N] runs ([labels]): [group description]
 - [N] runs ([labels]): [group description]
@@ -87,7 +90,8 @@ is the usual cause of drift: point at the rule and say how to make it exact.)*
 
 ## Excluded runs and lost judges
 
-*(From `excluded[]` and `lostJudges[]`. Write "None." if both are empty.)*
+*(From `excluded[]`, `lostJudges[]`, and any `similarity[]` entry whose `tally.clean` is
+false (the judge didn't place every run exactly once). Write "None." if all are empty.)*
 
 - [label] — [reason]
 
