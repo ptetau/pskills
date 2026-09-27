@@ -134,9 +134,10 @@ Write N prompts (default 10), P01, P02, …, each what a user would type after
   terse, rich or long input, ambiguous, unusual domain, and edge-but-valid (right at
   the skill's own limits, e.g. a request needing exactly one question, or one near a
   stated cap).
-- **Self-contained.** Put any text the skill needs inline. Refer only to files committed
-  at HEAD, because worktrees start from HEAD. Avoid anything needing network,
-  connectors or secrets unless the skill exists to use them.
+- **Self-contained.** Put any text the skill needs inline. Run worktrees can start from
+  the repo's default branch rather than your current checkout, so refer only to files
+  committed there. Avoid anything needing network, connectors or secrets unless the
+  skill exists to use them.
 - **`exercises`:** one line on which parts of the skill the prompt tests.
 - **`replies`** (interactive skills): the answers a plausible user would give to this
   prompt, in the skill's reply format, enough to reach the end (the usual number of
@@ -225,8 +226,9 @@ What the script does:
 
 It all runs in parallel. Each prompt moves from runs to grading to comparison as soon
 as its own runs finish, without waiting for other prompts. The Workflow runtime runs
-up to 16 agents at once (fewer on machines with few cores) and queues the rest, and
-the progress log shows the plan and each prompt as it finishes.
+up to min(16, CPU cores − 2) agents at once and queues the rest: 14 on a 16-core
+machine, only 2 on a 4-core one, so check `nproc` before promising a finish time. The
+progress log shows the plan and each prompt as it finishes.
 
 Runs whose agent died, whose grader died or skipped them, or whose capture is
 missing or not verbatim are left out of the scores and listed under `excluded`.
@@ -244,9 +246,10 @@ under `lostJudges`. Neither is ever counted as a pass or a fail.
 3. Write `report.md` from `references/report-template.md`. The verdict and "What to fix"
    are the only parts you write yourself, and both must rest on the evidence in the
    results. Read the captures behind the worst items before suggesting fixes.
-4. Run `git worktree list` again and compare it with the list from Phase 4. Skills that
-   write files leave their worktrees behind. List the new ones and offer to remove
-   them. Remove nothing without a yes.
+4. Run `git worktree list` again and compare it with the list from Phase 4. The runtime
+   puts worktrees under `.claude/worktrees/`, and skills that write files leave theirs
+   behind. List the new ones and offer to remove them. Remove nothing without a yes.
+   If `.claude/worktrees/` isn't in `.gitignore`, suggest adding it.
 5. Reply in a few lines: the three scores and grade, the weakest item and the least
    stable one in plain words, and the path to `report.md`. If this suite has an
    earlier run with the same agent roles, add the change in each score since then.
