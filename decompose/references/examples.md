@@ -67,10 +67,12 @@ Utilities        pub/sub · logging · secrets
 it is the only component that knows the order of steps. `OutboxAccess` has no row in the
 register: it hides the system's own storage, which the trace audit counts on its own.
 
-**Size check.** One Manager with two Engines is one Engine more than Löwy's usual ratio.
-Kept on purpose: routing rules and message content change for different reasons and are
-owned by different people (product and compliance versus content writers). Merging them
-would put two volatilities behind one wall.
+**Size check.** Two departures from Löwy's heuristics, both kept on purpose. One Manager
+is below his usual two to five: this service has a single family of use cases. Two
+Engines for one Manager is one more than his usual ratio: routing rules and message
+content change for different reasons and are owned by different people (product and
+compliance versus content writers). Merging them would put two volatilities behind one
+wall.
 
 **Bricks.** Shared contract: `Envelope { id, event, recipient, channel?, locale?, body?, attempts }`.
 Inputs produce envelopes, Transforms and policies take and return them (a policy may return
@@ -78,7 +80,7 @@ zero or many), and Transports consume them. So any Transform can follow any othe
 
 | Component | Bricks | Kind |
 |-----------|--------|------|
-| EventsApi | `OnEvent(type)` | Input |
+| EventsApi | `OnEvent(type)`: other systems post events to it over HTTP | Input |
 | Scheduler | `OnSchedule(cron)` | Input |
 | NotificationManager | `Delivery`: pending → sent → delivered, or failed → retrying → dead | State machine |
 | RoutingEngine | `Expand` (event → recipients), `Prefer`, `QuietHours` | Transform (policy) |
@@ -90,22 +92,28 @@ The Manager's other job is the wiring: one flow per use case, calling the bricks
 through each wall's verbs. Flows are plain code for now; they become data only if V4 turns
 out to change weekly. Routing policies are an ordered list per tenant.
 
+Earned: `Expand`, `Prefer`, `QuietHours`, `Render`, `Email`, `OnEvent`, and `Delivery`
+each serve two or more features. `Sms`, `Slack`, `OnSchedule`, `Hold`, and `Release` serve
+one feature each; each is earned because it is a variant a recorded volatility names (a
+channel in V1, the digest flow in V4).
+
 Cut: a `Webhook` transport and an `OptOut` policy were drafted and removed. No current
-feature needs them. Each would be one new brick in one component if it arrives.
+feature needs them, and no volatility names them. Each would be one new brick in one
+component if it arrives.
 
 **Feature assembly**
 
 | Feature | Composition | New bricks |
 |---------|-------------|------------|
-| F1 | `OnEvent(user.created) → Route → Render(welcome) → Send` | 0 |
-| F2 | `OnEvent(password.reset) → Route[channel=sms] → Render(reset) → Send` | 0 |
-| F3 | `OnEvent(activity.*) → Route → Hold(daily)` then `OnSchedule(08:00 local) → Release → Render(digest) → Send` | 0 |
-| F4 | `OnEvent(alert.*) → Route[team] → Render(alert) → Send` | 0 |
+| F1 | `OnEvent(user.created) → Route → Render(welcome) → Deliver` | 0 |
+| F2 | `OnEvent(password.reset) → Route[channel=sms] → Render(reset) → Deliver` | 0 |
+| F3 | `OnEvent(activity.*) → Route → Hold(daily)` then `OnSchedule(08:00 local) → Release → Render(digest) → Deliver` | 0 |
+| F4 | `OnEvent(alert.*) → Route[team] → Render(alert) → Deliver` | 0 |
 | F5, F6 | `Prefer` and `QuietHours` inside `Route` | 0 |
 | F7 | `Delivery` state machine | 0 |
 | F8 | `Render`'s locale argument | 0 |
 | future: WhatsApp (V1) | a `WhatsApp` transport in `DeliveryAccess` | 1 |
-| future: escalate if unread in 15 min (V4) | `… → Send(push) → Wait(15m, unless read) → Send(sms)` | 1 (`Wait`, in the Manager) |
+| future: escalate if unread in 15 min (V4) | `… → Deliver(push) → Wait(15m, unless read) → Deliver(sms)` | 1 (`Wait`, in the Manager) |
 | future: no SMS to EU users at night (V2) | a policy in `RoutingEngine` | 1 |
 
 **Change simulation**
@@ -213,18 +221,19 @@ PricingEngine       → PromotionsAccess.ActivePromotions
 |-------|------|-----------|
 | `Match(condition)` | Transform (policy) | selects lines by SKU, category, customer group, date window |
 | `PercentOff(n)`, `FixedPrice(x)`, `CheapestFree` | Transform | each adds one kind of adjustment to matched lines |
-| `Limit(scope, n)` | Transform (policy) | caps how often an adjustment applies, per order or per customer |
 | `BestOf`, `Exclusive` | Transform (policy) | decide which competing promotions survive |
 | `Round(currency)` | Transform | applies currency rounding once, at the end |
 
-A promotion is data: `{match, adjustment, limit}`. The engine runs all active promotions,
+A promotion is data: `{match, adjustment}`. The engine runs all active promotions,
 then the stacking policy (`BestOf` unless a promotion is `Exclusive`), then `Round`.
 
 The first draft had one `Adjust(kind)` brick. Its `kind` flag switched between three
 calculations, which is the mode-flag smell, so it became three bricks. `Match(condition)`
 stays one brick: its condition is a predicate that the same code evaluates, a parameter
-rather than a switch. An `AmountOff` brick and a `Sequential` stacking policy were
-drafted and cut: no current feature needs them.
+rather than a switch. An `AmountOff` brick, a `Limit` policy (per order or per customer),
+and a `Sequential` stacking policy were drafted and cut: no current feature needs them.
+`FixedPrice`, `CheapestFree`, and `Exclusive` serve one feature each; each is a kind of
+price adjustment that V1 names.
 
 **Feature assembly**
 

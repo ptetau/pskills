@@ -137,7 +137,7 @@ Use the least powerful medium that works (W3C, *Rule of Least Power*).
 |--------|----------|
 | Plain code calling bricks | Default. Compositions change at the same pace as the code. |
 | A table (rows of parameters) | Many variants of the same composition that differ only in values. |
-| A pipeline or state-machine definition as data | The composition itself is a recorded volatility, for example flows that differ per customer or change weekly without a deploy. |
+| A pipeline or state-machine definition as data | The composition itself is a recorded volatility *and* changes faster than you can deploy: flows that differ per customer, or change weekly. |
 | A rules engine or a DSL | Almost never, for your own wiring. |
 
 Hadlow's *Configuration Complexity Clock*: hard-coded values become config, config
@@ -161,7 +161,7 @@ of conditions and actions, no loops or variables) and grow it only on evidence.
 | Purity (Transforms) | Does it run with no I/O, clock, or globals? | Yes |
 | Depth | Is the interface small relative to what it hides? (Ousterhout: "deep modules") | Yes |
 | Easy for today | Is it easy to use for the current features? (If not, it is too general.) | Yes |
-| Earned | Does it serve two or more current features, or hold a recorded volatility? | Yes |
+| Earned | Does it serve two or more current features, or is it a variant named by a recorded volatility? | Yes |
 
 Ousterhout's three questions for a brick's interface:
 
@@ -176,8 +176,9 @@ needs, but the interface is not tied to one caller.
 
 Bricks go wrong in one direction: too general, too early.
 
-- **Earn every brick.** A brick serves two or more current features, or it is the one
-  home of a recorded volatility. Otherwise, leave the logic inline in the composition.
+- **Earn every brick.** A brick serves two or more current features, or it carries a
+  recorded volatility: it is one of the variants that volatility names (one channel, one
+  kind of discount). Otherwise, leave the logic inline in the composition.
 - **Rule of three,** when extracting bricks from existing code: do it once, duplicate it
   the second time, extract it the third time.
 - **Prefer duplication over the wrong abstraction** (Metz). The warning sign is passing

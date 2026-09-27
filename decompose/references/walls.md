@@ -88,7 +88,7 @@ within it changes. Managers hold the first, Engines the second.
 
 | Type | Encapsulates | Answers | Notes |
 |------|--------------|---------|-------|
-| **Client** | who calls, and the technology they call with: UI, API, scheduler, other systems | who | Prefer a single point of entry into the system |
+| **Client** | who calls, and the technology they call with: UI, API, scheduler, other systems | who | A single point of entry: each Client enters through one Manager per use case |
 | **Manager** | the volatile *sequence* of a family of related use cases (a workflow) | what | Mostly composition. Should be "almost expendable" |
 | **Engine** | a volatile *activity*: a business rule, calculation, or algorithm | how | Löwy: essentially the Strategy pattern. May be shared between Managers |
 | **ResourceAccess** | volatile *access* to a resource, including resources in other systems | how (to reach it) | Exposes **atomic business verbs**, not CRUD or I/O |
@@ -149,8 +149,9 @@ why the design wanted the call, then move the responsibility, or use a queue or 
 
 ## Naming
 
-- Two-part PascalCase: a prefix plus the type as suffix. `TradeManager`, `PricingEngine`,
-  `MembersAccess`.
+- Managers, Engines, and ResourceAccess: two-part PascalCase, a prefix plus the type as
+  suffix. `TradeManager`, `PricingEngine`, `MembersAccess`. Clients and Utilities are named
+  for what they are (`AdminPortal`, `Scheduler`, `Logging`).
 - Manager prefix: a noun for the volatility of its use cases (`Enrollment`, `Notification`).
 - Engine prefix: a gerund or activity noun (`Pricing`, `Routing`, `Rendering`). Gerunds
   belong to Engines only; a gerund elsewhere hints at functional decomposition. If the

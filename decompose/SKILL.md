@@ -33,7 +33,7 @@ thing in many places, so one change ripples through many components.
    small set of independent parts (inputs, transforms, transports, stores, state machines)
    that share one contract, then assemble each feature as a composition of them.
 3. **Proof.** Walk the core use cases through the walls. Simulate each likely change and
-   count the components it touches (the target is one). Assemble current and plausible
+   count the components it touches (the target is one existing component). Assemble current and plausible
    future features from existing bricks (the target is zero or one new brick).
 
 Short version: **volatility decides where the walls go; primitives decide how the parts
@@ -114,28 +114,31 @@ The full rules, sources, and smells are in `references/walls.md` and
   opposed to the wall's API) lets any brick follow any other.
 - **Mechanism, not policy.** Bricks are mechanism; "which" and "when" are policy, supplied
   as data or as a policy brick.
-- **Earn every brick.** A brick serves two or more current features, or is the one home
-  of a recorded volatility. Otherwise the logic stays inline. Prefer duplication over the
-  wrong abstraction.
+- **Earn every brick.** A brick serves two or more current features, or it carries a
+  recorded volatility: it is one of the variants that volatility names (one channel, one
+  kind of discount). Otherwise the logic stays inline. Prefer duplication over the wrong
+  abstraction.
 
 ### The hybrid: how walls and bricks fit together
 
 | Wall | Its bricks |
 |------|------------|
 | Client | Inputs from the outside world (endpoints, UI, timers) plus presentation |
-| Manager | the wiring: flows that call Engines and ResourceAccess, plus State machines. It may own Inputs that subscribe to events. When workflows are volatile, flows become data the Manager runs. |
+| Manager | the wiring: flows that call Engines and ResourceAccess, plus State machines. It may own Inputs that subscribe to events. Flows are code by default; they become data the Manager runs only when they change faster than you can deploy (per customer, or weekly). |
 | Engine | Transforms and policies behind one stable API. New rules are new bricks or new data, not new call paths. |
 | ResourceAccess | Stores, Transports, and Inputs that pull from vendors, behind business verbs. Vendor and storage details never cross its API. |
 | Utility | stable mechanisms shared by everyone |
 
 Three rules connect the two ideas:
 
-1. **Walls first, bricks second, then re-check the walls.** Bricks often reveal that two
-   walls hide the same volatility (merge them) or that one wall hides two (split it).
+1. **Walls first, bricks second, then re-check the walls.** Bricks often hint that two
+   walls hide the same volatility, or that one wall hides two. Take the hint back to the
+   volatility register and decide there. Walls move only for volatility reasons.
 2. **Only stable bricks cross walls.** Volatile bricks stay inside their wall. Shared
    bricks belong in Utilities.
-3. **A wall's API never exposes its bricks.** Callers use business verbs; the wiring
-   inside is free to change.
+3. **A wall's API never exposes its wiring.** Callers use business verbs. A verb may be
+   backed by a single brick (`RenderingEngine.Render`), but callers never see which bricks
+   run or in what order, so that stays free to change.
 
 ## Two modes
 
@@ -211,8 +214,9 @@ Goal: components, their types, their APIs, and the call graph.
 1. **Assign each volatility to one component** of the right type (the table above). A
    component may hold several related volatilities. Name each component for the
    volatility it hides, not for a feature: `PricingEngine`, not
-   `BlackFridayDiscountService`. Names are two-part PascalCase with the type as suffix;
-   gerund prefixes are for Engines only. If an Engine's name is also a feature name, ask
+   `BlackFridayDiscountService`. Managers, Engines, and ResourceAccess get two-part
+   PascalCase names with the type as suffix; gerund prefixes are for Engines only.
+   Clients and Utilities are named for what they are (`AdminPortal`, `Scheduler`). If an Engine's name is also a feature name, ask
    what activity would survive a redesign of the feature, and name it that.
 2. **Write each component's API as business verbs.** ResourceAccess exposes verbs such
    as `Deliver`, `FindRecipients`, `RecordOutcome`, never `Insert`, `Update`, `Select` or a
@@ -253,12 +257,14 @@ Start with the most volatile component. See `references/bricks.md` for tests and
 5. **Separate mechanism from policy.** Hard-coded "which" and "when" become policy bricks
    or data.
 6. **Choose the composition medium**: plain code by default; a pipeline definition, rule
-   table, or state-machine table only when the composition itself is a recorded volatility.
+   table, or state-machine table only when the composition itself is a recorded volatility
+   *and* it changes faster than you can deploy (per customer, or weekly).
    Rules that end users write (an accountant's categorization rules, a marketer's
    promotions) are different: they are customer data, and their small rule language
    belongs to an Engine.
-7. **Re-check the walls** (rule 1 of the hybrid). Merge or split components if the bricks
-   say so.
+7. **Re-check the walls** (rule 1 of the hybrid). If the bricks hint that two components
+   hide the same volatility, or one hides two, go back to Phase 2 and decide from the
+   volatility register. Merge or split only if the register agrees.
 
 ## Phase 5 — Validate
 

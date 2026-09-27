@@ -115,7 +115,7 @@ UC1 <name>
 
 Result: <pass, or which rule broke and how the walls changed>
 
-**Change simulation** (each volatility happening; target is one component touched):
+**Change simulation** (each volatility happening; target is one existing component touched):
 
 | Volatility | Components that must change | Result |
 |------------|-----------------------------|--------|
