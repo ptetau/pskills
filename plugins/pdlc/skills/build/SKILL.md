@@ -11,7 +11,7 @@ description: >
 
 Turns one change spec into a branch with the change and its checks.
 
-Read `pdlc/README.md` first and follow it. The change spec should be all you need. Read
+Read `pdlc/README.md` first and follow it. Start with its "Before any work" step. The change spec should be all you need. Read
 the design specs it lists before writing anything.
 
 ## 1. Pick the change

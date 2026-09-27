@@ -2,7 +2,7 @@
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
 **Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
-**Progress:** ███████░░░░░ 8/13 steps completed (62%)
+**Progress:** █████████░░░ 10/13 steps completed (77%)
 
 ## How to use this document (read this first, every session)
 
@@ -176,7 +176,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/skills/verify/SKILL.md`, `plugins/pdlc/agents/reviewer.md`, the script and its tests
 - **Depends on:** Step 7
 
-### Step 9: `conventions` · `[ ]` AUTO · Parallel group: P1
+### Step 9: `conventions` · `[x]` AUTO · Parallel group: P1
 
 - **Do:** Write the skill in full: agree a convention with the user, write the design spec,
   file one migration intent per affected job or capability.
@@ -186,7 +186,7 @@ stop and wait for human review.
 - **Touches:** `plugins/pdlc/skills/conventions/SKILL.md`
 - **Depends on:** Step 4
 
-### Step 10: `trace` · `[ ]` AUTO · Parallel group: P1
+### Step 10: `trace` · `[x]` AUTO · Parallel group: P1
 
 - **Do:** Write the skill in full, for all three directions in the outline.
 - **Done when:** in the test project, tracing a built line leads to its requirement, intent
@@ -360,4 +360,21 @@ Proven: the merge check unit tests pass and catch a broken version. On pyapp, ve
         and PR body, as the adapter says.
 Surprises: the reviewer caught me loosening a rule on the change branch to excuse its
            own finding. That is exactly the behaviour we want.
+
+[2026-09-27] Step 9: done
+Changed: conventions/SKILL.md (migrations also for new conventions the code doesn't
+         follow), README template (DES-pdlc-* belong to the project once changed)
+Proven: on pyapp, /pdlc:conventions agreed DES-json-formatting (indent 2, sorted keys),
+        found the one writer that doesn't sort keys (CAP-task-storage), and filed IN-0002
+        "Migrate CAP-task-storage to DES-json-formatting" as new, without starting it.
+Surprises: the "pdlc's own files" rule clashed with changing DES-pdlc-* defaults; fixed.
+
+[2026-09-27] Step 10: done
+Changed: every writing skill now starts with the README's "Before any work" catch-up
+Proven: on pyapp, /pdlc:trace went from tasks/store.py:24 (os.replace) to commit 4078f47,
+        CAP-task-storage.R5, CH-0001 and IN-0001; and from IN-0001 to its four
+        requirements, two changes and their checks. It stayed read-only and pointed out
+        that CH-0002's merge hadn't been recorded yet. The next intake then ran the
+        catch-up: both changes set to merged and IN-0001 to done.
+Surprises: skills weren't running the catch-up until told to in their own first line.
 ```

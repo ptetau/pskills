@@ -11,7 +11,7 @@ description: >
 
 Decides whether a built change is good enough to merge, then asks the user to approve it.
 
-Read `pdlc/README.md` first and follow it.
+Read `pdlc/README.md` first and follow it. Start with its "Before any work" step.
 
 ## 1. Pick the change
 

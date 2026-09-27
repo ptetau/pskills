@@ -11,7 +11,7 @@ description: >
 
 Turns an intent into changes to the specs. Never writes code.
 
-Read `pdlc/README.md` first and follow it.
+Read `pdlc/README.md` first and follow it. Start with its "Before any work" step.
 
 ## 1. Get the intent
 

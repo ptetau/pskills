@@ -13,7 +13,7 @@ description: >
 Keeps the software consistent by writing conventions down and agreeing them with the user.
 Never changes a convention without asking.
 
-Read `pdlc/README.md` first and follow it.
+Read `pdlc/README.md` first and follow it. Start with its "Before any work" step.
 
 ## 1. Say what needs deciding
 
@@ -37,8 +37,9 @@ marked `proposed`, and file an intent to build the check.
 
 ## 4. File migrations
 
-Only when an existing convention changed. Find the jobs and capabilities whose code
-follows the old convention. Search the code maps for it.
+Find the jobs and capabilities whose code doesn't follow the convention as agreed. This
+happens when a convention changes, and when a new convention writes down something the
+code does in more than one way. Search the code maps.
 
 For each one, add an intent through the inbox port:
 

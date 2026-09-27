@@ -11,7 +11,7 @@ description: >
 
 Splits a ready intent into changes and writes a change spec for each.
 
-Read `pdlc/README.md` first and follow it.
+Read `pdlc/README.md` first and follow it. Start with its "Before any work" step.
 
 ## 1. Gather
 

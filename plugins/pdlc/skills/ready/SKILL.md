@@ -11,7 +11,7 @@ description: >
 
 Makes sure every requirement an intent touches is clear, testable and consistent.
 
-Read `pdlc/README.md` first and follow it.
+Read `pdlc/README.md` first and follow it. Start with its "Before any work" step.
 
 ## 1. Gather
 

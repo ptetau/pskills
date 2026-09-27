@@ -33,9 +33,11 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
 
 ## pdlc's own files
 
-`README.md`, `ports/`, `adapters/`, `templates/`, `bin/` and the `DES-pdlc-*` design specs
-come from the pdlc plugin. They change only when pdlc is upgraded, on main, in a commit of
-their own. Never change them on a change's branch. To change how this project works with
+`README.md`, `ports/`, `adapters/`, `templates/` and `bin/` come from the pdlc plugin. They
+change only when pdlc is upgraded, on main, in a commit of their own. Never change them on
+a change's branch. An upgrade may also refresh `DES-pdlc-*` design specs that still say
+`Default: yes`. Once the project changes one, it says `Default: no` and belongs to the
+project. To change how this project works with
 pdlc, use `/pdlc:conventions` or add an adapter through the inbox.
 
 ## Using a port
