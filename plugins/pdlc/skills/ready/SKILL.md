@@ -34,6 +34,8 @@ A requirement is clear when:
   an output, a message sent. Never a stored row.
 - Each failure line names its error code, and the code is in `DES-errors`. For a new
   code, add it to `DES-errors` as part of this intent.
+- Every rule its sentences state has an acceptance line, including each *(assumed)*
+  detail. A rule with no line has no check, so nothing holds it.
 - Words like "fast", "easy" or "secure" have a number or a rule behind them.
 - Every capability and design spec it relies on exists, or is part of this intent.
 
@@ -44,7 +46,7 @@ your recommended answer.
 
 Write each answer into the requirement. When the answer was taken by default, mark it
 *(assumed)* where it appears in the requirement. Add a line to the intent's "Notes":
-`<requirement>: <question> → <answer>`.
+`<requirement>: <question> → <answer> (assumed)`.
 
 If a design spec is missing (for example, the first time the project shows a table), use
 the `pdlc:conventions` skill to agree one, then come back.
@@ -55,8 +57,15 @@ Compare the requirements against each other and against the other requirements i
 specs, and in the specs they rely on. A contradiction is two statements that can't both be
 true, for example "responds within 50 ms" and "always calls a service that takes 200 ms".
 
-For each one found, show both statements and ask the user which should change. Don't pick
-for them, even with `defaults`: leave both requirements `proposed` and say so.
+Two cases are not contradictions. Fix them, add a line to "Notes" for each, and go on:
+
+- This intent's words ask for something an older requirement rules out. The newest words
+  win: change the older one, as intake does, and list it as `changed`.
+- One side is *(assumed)*. A guess gives way: change the guessed side to fit, keep its
+  mark, and update its line in "Notes".
+
+For any other contradiction, show both statements and ask the user which should change.
+Don't pick for them, even with `defaults`: leave both requirements `proposed` and say so.
 
 ## 5. Finish
 
@@ -65,6 +74,7 @@ for them, even with `defaults`: leave both requirements `proposed` and say so.
   `ready`.
 - Write the intent's "Handoff" for change: what was decided, and anything the plan should
   know.
-- Commit with the message "Ready IN-xxxx: <name>" and the trailer `Intent: IN-xxxx`.
+- Commit with the message "Ready IN-xxxx: <name>" and the trailer `Intent: IN-xxxx`,
+  even when you stop for a contradiction.
 - Tell the tracker port.
 - Tell the user what changed, and that `/pdlc:change` is next.

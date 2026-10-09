@@ -20,8 +20,10 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 - If the change already has a branch (it was sent back here from build or verify), switch
   to that branch instead of starting one, keep its `Base:`, and go to step 2 with the
   reason it was sent back. Leave its status as it is until step 6.
-- Its base is the branch of the change before it in the intent's list, or `main` for the
-  first. The change before it doesn't need to be merged: changes stack.
+- Its base is the branch of the change before it in the intent's list. For the first,
+  it is the newest change of an earlier intent that hasn't merged, if any, else `main`.
+  The change before it doesn't need to be merged, but it must be `in review` or
+  `merged`: if it isn't, finish that change's show and verify first.
 - Start the branch through the delivery port, from the base. Write `Branch:` and `Base:`
   into the change spec header. Set the change to `testing` and the intent to `building`.
 - Read the intent's "Handoff", or the change's `handoff.md` if it has one.
@@ -39,7 +41,9 @@ can see the code), then start the test writer again.
 
 ## 3. Red
 
-Run each requirement's checks through the checks port.
+Run each requirement's checks through the checks port, with a time limit of a few
+minutes. A run that doesn't finish is a broken check, not a red one: send it back to the
+test writer before you lock.
 
 - For new behaviour, every check must fail. A check that passes already proves nothing:
   send it back to the test writer with the reason.
@@ -63,11 +67,15 @@ Doing so makes a new lock, which replaces the old `Tests-Locked:` line.
 
 ## 5. Review the checks
 
+Every lock gets its own review, including a re-lock sent back from build or verify. The
+merge check refuses a tests review of an older lock.
+
 1. Run `python3 pdlc/bin/make_packets.py CH-xxxx tests`.
 2. Start a fresh `pdlc:reviewer` agent with the path of
    `pdlc/changes/CH-xxxx-…/review/tests/packet.md` and nothing else.
-3. If its `result.md` says fail, send the problems to the test writer, then run red,
-   lock and review again. After two failed rounds, stop and ask the user.
+3. Commit the packet and result. If the result says fail, send the problems to the test
+   writer, then run red, lock and review again. If it fails a third time, stop and ask
+   the user.
 
 ## 6. Finish
 

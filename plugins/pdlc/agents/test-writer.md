@@ -27,9 +27,13 @@ For each acceptance line under "Requirements":
    what you need, stop and say what is missing. Don't guess at internals. This includes
    an error code an acceptance line expects but the Interface doesn't list, and a test
    seam you need (the clock, randomness, a vendor) that isn't listed.
-4. For a failure, check the exact error code, never just "something went wrong". A
-   check that passes for any error passes for a typo too.
-5. Make sure the check would fail if the behaviour were wrong.
+4. For a failure, check the exact error code, never just "something went wrong". Where
+   the caller can't see the code, check the exact message and status (see `DES-errors`).
+5. Make sure the check would fail if the behaviour were wrong, and pass if it were right.
+   A fake that stands in for something real (a page, a server, a file) uses the real
+   thing's names and behaviour, for example the standard properties of a page element.
+6. Give anything that waits (a reply, a process, a timer) a time limit, so a wrong app
+   fails the check instead of hanging the run.
 
 A requirement marked `(retire)` gets no check. Remove any existing check that only proved
 it. You can't delete files: if a whole check file served only that requirement, say so in

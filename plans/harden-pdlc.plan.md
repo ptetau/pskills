@@ -26,7 +26,7 @@ A headless Claude Code session, in a fresh git repo that holds the app's seed:
 
 ```
 claude -p "/pdlc:init defaults" --plugin-dir <plugin> --model claude-haiku-5-5 \
-  --permission-mode acceptEdits --allowedTools "<tools>"
+  --permission-mode auto --allowedTools "<tools>"
 claude -p "/pdlc:ship defaults <intent 1>" ...   (same flags)
 claude -p "/pdlc:ship defaults <intent 2>" ...
 ```
@@ -188,5 +188,23 @@ In the orchestrator's working folder, under `r<N>/`:
 One entry per round, appended when the round ends. Newest last.
 
 ```
-(none yet)
+[2026-10-09] Round 0 (baseline, harness at e51c540)
+Setup: builds run in auto permission mode. In acceptEdits mode, init could not copy pdlc's
+       files with the shell and hand-wrote the scripts instead; auto mode copies them
+       byte-for-byte. Restarted twice before any data counted (stray processes from a
+       killed run kept writing into the app folders).
+Scores: pocket-cli 54% (H1, H7) · convert-web 55% (H1, H2, H6, H7) · polls-api 48%
+        (H1, H2, H3, H4, H6, H7) · consistency 3 / 6.
+What went wrong: almost nothing merged. Ship stopped with questions despite "defaults";
+        a newer intent's words were treated as a contradiction; verify kept finding new
+        scope and never converged; a stuck change held back verify for finished ones;
+        stages left files uncommitted; half a stack merged and crashed the app.
+Fixes (Opus, 8): newest words win; reviewers fail only on spec, design or unsafe code and
+        list follow-ups; every change runs every stage; every stage ends committed and
+        clean; intake reads change state from branches; checks must not hang; one
+        (assumed) marker with its own acceptance line; the merge check needs a tests
+        review of the current lock (3 new failing-first tests). 50 unit tests pass.
+        Word check: no app words in the diff.
+Left: half a stack merging alone; status-line conflicts across intents; commit subject
+      shapes; init copying with cp -r; guard blocks the test writer's root Glob.
 ```

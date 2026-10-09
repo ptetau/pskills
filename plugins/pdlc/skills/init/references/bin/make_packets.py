@@ -5,7 +5,9 @@ Usage:
   python3 pdlc/bin/make_packets.py CH-0001            every remit in pdlc/config.md
   python3 pdlc/bin/make_packets.py CH-0001 tests      one remit
 
-Each packet is pdlc/changes/<change>/review/<remit>/packet.md and holds:
+Each packet is pdlc/changes/<change>/review/<remit>/packet.md. Writing a packet removes
+that remit's old result.md, so a result is always about the packet next to it. A packet
+holds:
   - the remit, from pdlc/reviews/<remit>.md;
   - the spec: the change spec, the full text of each requirement it lists, and every spec
     it relies on;
@@ -123,6 +125,9 @@ def main(argv, root=Path(".")):
         target = folder / "review" / remit
         target.mkdir(parents=True, exist_ok=True)
         (target / "packet.md").write_text("\n".join(out) + "\n")
+        stale = target / "result.md"
+        if stale.exists():
+            stale.unlink()
         print("wrote %s" % (target / "packet.md").relative_to(root).as_posix())
     return 0
 

@@ -53,12 +53,16 @@ and write `change.md` in it from `pdlc/templates/change.md`.
   new names here, following the code's existing style, and mark each new name
   *(assumed)*.
 - **Files:** only the app files this change needs. Start from the spec's code map. A job
-  change must not list files from a capability's code map.
+  change must not list files from a capability's code map. Also list the project's
+  README if the change alters what it tells a user (how to run the app or its checks,
+  a command, a route, an output), and `.gitignore` if it lacks the folders the checks
+  will write.
 - **Check files:** the check files this change adds or changes, inside the check folders
   in `pdlc/config.md`.
 - **Steps:** usually one per requirement. Each names its requirement, the check that
   proves it (named with the requirement ID), and "Done when". A `(retire)` requirement
-  gets no check: its step removes the code and checks that only served it.
+  gets no check: its step removes the code and checks that only served it. A README in
+  "Files" gets a last step: it says what the change does.
 - **Manual checks:** any acceptance check that can't be automated, or "none". If one could
   be automated but the project has no check runner that can reach it (for example page
   behaviour with no browser checks), add an intent through the inbox port to add such a

@@ -79,6 +79,12 @@ class MergeCheck(unittest.TestCase):
     def config(self, remits):
         (self.root / "pdlc/config.md").write_text(CONFIG.format(remits=", ".join(remits)))
 
+    def reviewed_lock(self, sha):
+        """A tests packet built from the change spec while it carried this lock."""
+        folder = self.change / "review/tests"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "packet.md").write_text("## The change spec\n\nTests-Locked: %s\n" % sha)
+
     def passed(self, remits, result="pass"):
         for remit in remits:
             folder = self.change / "review" / remit
@@ -208,6 +214,7 @@ class MergeCheck(unittest.TestCase):
     def test_passes_when_locked_check_files_are_unchanged(self):
         _, sha = self.locked_repo()
         self.write(checks="- test/email.test.js", lock="Tests-Locked: %s\n" % sha)
+        self.reviewed_lock(sha)
         self.assertEqual(self.run_check("CH-0001")[0], 0)
 
     def test_fails_when_a_check_file_changed_after_the_lock(self):
@@ -226,6 +233,40 @@ class MergeCheck(unittest.TestCase):
         new = git(self.root, "rev-parse", "HEAD")
         self.write(checks="- test/email.test.js",
                    lock="Tests-Locked: %s\nTests-Locked: %s\n" % (old, new))
+        self.reviewed_lock(new)
+        self.assertEqual(self.run_check("CH-0001")[0], 0)
+
+    # The tests review must be of the current lock
+
+    def relocked_repo(self):
+        test_file, old = self.locked_repo()
+        test_file.write_text("test('CAP-email.R2 fills values', () => { /* fixed */ })\n")
+        git(self.root, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qam", "relock")
+        new = git(self.root, "rev-parse", "HEAD")
+        self.write(checks="- test/email.test.js", lock="Tests-Locked: %s\n" % new)
+        return old, new
+
+    def test_fails_when_the_tests_review_is_of_an_older_lock(self):
+        old, _ = self.relocked_repo()
+        self.reviewed_lock(old)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("tests review is not of the current lock", out)
+
+    def test_fails_when_the_tests_review_has_no_packet(self):
+        self.relocked_repo()
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("tests review is not of the current lock", out)
+
+    def test_a_short_hash_in_the_packet_matches_the_lock(self):
+        _, new = self.relocked_repo()
+        self.reviewed_lock(new[:7])
+        self.assertEqual(self.run_check("CH-0001")[0], 0)
+
+    def test_no_tests_remit_needs_no_tests_review_of_the_lock(self):
+        self.relocked_repo()
+        self.config(["specification"])
         self.assertEqual(self.run_check("CH-0001")[0], 0)
 
 

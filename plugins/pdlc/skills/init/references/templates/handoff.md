@@ -1,6 +1,6 @@
-# Handoff · CH-0000 · build → show
+# Handoff · <IN- or CH-ID> · <this stage> → <next stage>
 
-Time: YYYY-MM-DDTHH:MM:SS±HH:MM (from the real clock)
+Time: <the output of `date -Iseconds`; never typed by hand>
 
 ## Done
 

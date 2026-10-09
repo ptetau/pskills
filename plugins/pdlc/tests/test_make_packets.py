@@ -121,6 +121,14 @@ class Packets(unittest.TestCase):
         make_packets.main(["x", "CH-0001", "tests"], root=self.root)
         self.assertEqual([p.name for p in (self.folder / "review").iterdir()], ["tests"])
 
+    def test_a_new_packet_removes_the_old_result(self):
+        old = self.folder / "review/tests/result.md"
+        old.parent.mkdir(parents=True)
+        old.write_text("Result: pass\n")
+        make_packets.main(["x", "CH-0001", "tests"], root=self.root)
+        self.assertFalse(old.exists())
+        self.assertTrue((self.folder / "review/tests/packet.md").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

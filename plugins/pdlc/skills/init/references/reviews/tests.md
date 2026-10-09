@@ -11,6 +11,9 @@ You judge the checks, not the code. You have not seen the code.
 - Each check tests what the acceptance line says, through the "Interface" in the change
   spec. It doesn't depend on how the code is written inside.
 - Each check could fail. A check that passes whatever the code does doesn't count.
+- A correct app would pass each check. A fake that stands in for something real uses the
+  real thing's names and behaviour, so the check doesn't prove only the fake.
+- No check can hang: anything that waits on the app has a time limit.
 - Every error code listed in the Interface has a check that expects that exact code.
 - Checks control time, randomness and vendors only through the Interface's "Test seams".
 - Checks are clear enough that a failure tells you what broke.

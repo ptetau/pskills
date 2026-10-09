@@ -1,4 +1,4 @@
-# CAP-name · What the system can do
+# CAP-name · <what it can do, in a few words>
 
 Status: stub
 

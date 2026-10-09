@@ -32,7 +32,8 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
   - `handoff.md`: the latest handoff between stages;
   - `visual.json`, `review.gif`, `frames/`: the visual review;
   - `review/<remit>/packet.md` and `result.md`: each independent review.
-- `templates/`: blank copies of each document.
+- `templates/`: blank copies of each document. When you write one, replace each
+  `<placeholder>` and the guide sentence under each heading with real content.
 - `bin/`: `check_merge.py`, `make_packets.py`, `record_gif.mjs`.
 - `.tools/`: tools the visual review installs. Not committed.
 
@@ -59,8 +60,20 @@ Every stage starts by reading the latest handoff, and ends by writing one:
   `###` headings under it, so the whole handoff stays inside that one section;
 - change stages write `changes/CH-xxxx-name/handoff.md`.
 
-Use `templates/handoff.md`. Take the time from the real clock (`date -Iseconds`). Replace
-the old handoff; git keeps the history.
+Use `templates/handoff.md`. Its title names the stage writing it and the next one. Take
+the time from the real clock (`date -Iseconds`). Replace the old handoff; git keeps the
+history.
+
+Every stage, and every stop, ends the same way:
+
+- It sets the statuses it owns: tests sets `testing`, then `building`; verify sets
+  `in review` when everything passed; "Before any work" sets `merged`.
+- It commits everything it wrote: specs, the intent, the change folder, review packets
+  and results. Then `git status --porcelain` shows nothing. Files the checks leave
+  behind (caches, build output) are deleted, never committed; init lists their folders
+  in `.gitignore`.
+- Its handoff says only what the files show. Count, don't estimate: checks that ran,
+  acceptance lines shown.
 
 ## Where change state lives
 
@@ -73,8 +86,8 @@ change branches (`git branch --list`) and read each change's `change.md` from it
 ## Stacked changes
 
 A change is built on the branch of the change before it, even before that one merges.
-Its `Base:` names that branch, and its pull request targets it. The first change's base is
-main.
+Its `Base:` names that branch, and its pull request targets it. An intent's first change
+is based on the newest unmerged change of an earlier intent, or on main if there is none.
 
 ## Statuses
 
@@ -88,21 +101,22 @@ main.
 Ask the user one short question at a time. Offer two or three answers and mark the one you
 recommend, with one line on why. The user can reply `skip` to take it.
 
-Anything a skill decides without being told (a name, a limit, a default answer) is
-marked *(assumed)* where it is written, and listed in the handoff, so nothing is guessed
-silently.
+Anything a skill decides without being told (a name, a limit, a message, an order, a
+default answer) is marked *(assumed)* where it is written in a spec or change spec, and
+listed in the handoff, so nothing is guessed silently. `(assumed)` is the only marker.
 
 If the skill was run with `defaults`, don't ask. Take your recommended answer, and record
 each one in the handoff's "Decided on defaults" and the intent's "Notes" as
-`<question> → <answer> (default)` so the user can change it later.
+`<question> → <answer> (assumed)` so the user can change it later.
 
 ## Before any work
 
-Catch up on merges. For each change with status `in review`, ask the delivery port if it
-has merged. If it has, set the change to `merged`. For any change whose `Base:` is its
-branch, set that `Base:` to the merged change's own base, commit it on that change's
-branch, and retarget its pull request (if it has one) to the same base. When every change for an intent has merged, set
-the intent to `done`.
+Catch up on merges. For each change branch, ask the delivery port if it has merged
+(with no pull request, `git merge-base --is-ancestor <branch> main` says). If it has and
+main doesn't say `merged`, set the change to `merged` on main and commit. For any change
+whose `Base:` is its branch, set that `Base:` to the merged change's own base, commit it
+on that change's branch, and retarget its pull request (if it has one) to the same base.
+When every change for an intent has merged, set the intent to `done`.
 
 ## pdlc's own files
 

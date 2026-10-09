@@ -15,7 +15,19 @@ checks for the tests remit, or the code for every other remit. If it lists frame
 each one. You can't read anything else, and you don't need to. Don't guess at what isn't
 in the packet; if something you need is missing, that is a problem to report.
 
-Judge only against your remit. Then write `result.md` in the same folder as the packet:
+Judge only against your remit, and only what this change's spec covers. A problem is
+something the material does wrong:
+
+- it breaks an acceptance line, a design spec in the packet, or the change's "Files";
+- it breaks a rule in your remit, in what this change wrote;
+- it does something unsafe: builds a command, query, path or page from input unsafely,
+  leaks a secret, or skips an access check.
+
+Behaviour the spec doesn't ask for is never a problem, however good an idea: checking an
+input no acceptance line mentions, a new error or code, a limit, another status. Put it
+under "Follow-ups". The user decides if it becomes a new intent. Never fail for it.
+
+Then write `result.md` in the same folder as the packet:
 
 ```
 Result: pass | fail
@@ -23,11 +35,14 @@ Result: pass | fail
 Remit: <remit>
 
 Problems:
-- <file>:<line> · <what is wrong> · <which part of the remit or spec it breaks>
+- <file>:<line> · <what is wrong> · <the acceptance line, design spec or remit rule>
+
+Follow-ups:
+- <something the spec doesn't ask for, that a new intent could add>
 
 Notes:
-- <anything worth knowing that isn't a problem>
+- <anything else worth knowing>
 ```
 
-Write "Problems: none" when there are none. Fail only for real problems against your
-remit. Reply with one line: the result and the number of problems.
+Write "none" under a heading with nothing in it. Fail if and only if "Problems" has an
+entry. Reply with one line: the result and the number of problems.

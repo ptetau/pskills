@@ -1,4 +1,4 @@
-# JOB-name · What the user is trying to get done
+# JOB-name · <what the user gets done, in a few words>
 
 Status: stub
 

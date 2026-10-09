@@ -11,6 +11,11 @@ Interface entries and checks all use these codes, so a check can expect the exac
 |---|---|---|---|
 
 Add a row when a requirement needs a new error. Reuse a code when the meaning is the same.
+Rows are added at intake and ready, never while a change is tested, built or verified.
+
+The code is what checks and code match on. What a person sees (a message, a status) is
+up to each requirement, and need not show the code. Where the caller can't see the code,
+a check expects the exact message and status instead.
 
 ## Why
 

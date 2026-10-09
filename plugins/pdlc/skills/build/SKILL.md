@@ -32,7 +32,7 @@ listed under "Files", runs the checks, and reports back.
   `/pdlc:tests`, which asks the test writer and locks again. Then build again.
 - If it needs a file that isn't listed, ask the user. If they agree, add it to "Files"
   and start the builder again.
-- If the same problem comes back twice, stop and ask the user.
+- If the same problem comes back a third time, stop and ask the user.
 
 ## 3. Check its work
 

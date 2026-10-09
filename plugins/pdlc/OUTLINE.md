@@ -129,7 +129,8 @@ proposed ──► ready ──► built ──► verified
 
 Spec patches land in the real spec file straight away, with status `proposed`. There is one
 source of truth. If two intents touch the same requirement, they collide at spec time, when
-it is cheap to sort out, not at merge time.
+it is cheap to sort out, not at merge time. The newer intent's own words win over an older
+requirement or a guess; only words that could be read two ways go back to the user.
 
 To remove a requirement, a patch marks it `retiring`. It is deleted from the spec when the
 change that removes the code merges. Git keeps the history.
@@ -240,6 +241,10 @@ One fresh reviewer per remit, each given one packet built by `make_packets.py`:
 - **specification, security, quality, compliance, privacy**: the spec and the code, never
   the checks. They run in parallel after the visual review. The specification reviewer
   also looks at the GIF's frames.
+
+A reviewer fails a change only for what its spec covers, or for unsafe code. Anything new
+it would like (another input check, another error) is a follow-up for the user, never a
+reason to grow the change.
 
 The project can edit each remit in `pdlc/reviews/` and choose which run in `config.md`.
 

@@ -70,17 +70,20 @@ For each file in `references/defaults/`:
   time, with the recommended one marked. The user can reply `skip` to take the
   recommendation.
 - If the user picks something else, rewrite the rule to match and set `Default: no`.
-- Copy the result to `pdlc/specs/design/`.
+- Copy the result to `pdlc/specs/design/`, without its `## Question` section.
 
 ### 4. Set up checks and the visual review
 
 Fill in the "Checks" section of `pdlc/config.md` with recon's answer: the command that
-runs all checks, the command that runs only one requirement's checks, and the check
-folders. Confirm them with the user.
+runs all checks, the command that runs only one requirement's checks, the check folders,
+and the one ID form. Confirm them with the user. In `config.md`, replace every
+placeholder, example and "(or …)" hint with the value chosen, or `none`.
 
 Set the visual adapter: `visual-web` if the project serves pages, with "Visual" `start`
 and `url` filled in from recon; otherwise `visual-terminal`. Add `pdlc/.tools/` to the
-project's `.gitignore`.
+project's `.gitignore`, and the folders its language and tools write when checks run
+(for example `__pycache__/` for Python, `node_modules/` for Node). A new project with
+no code yet gets them in its first change.
 
 If the project has no way to run checks yet, say so. Suggest that the first intent adds
 one.

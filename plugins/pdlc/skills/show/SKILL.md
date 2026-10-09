@@ -19,6 +19,10 @@ the change's `handoff.md`.
 Use the change the user named. Otherwise take the first change with status `building`
 whose requirements are all `built`. Switch to its branch.
 
+Every change gets its show, even one with nothing new on screen yet. A capability shows
+its interface in a terminal (`"kind": "terminal"`), even in a web app. Never hold show
+until later changes land.
+
 ## 2. Get the recorder ready
 
 The recorder is `pdlc/bin/record_gif.mjs`. It needs Node, `playwright`, `gifenc` and `pngjs`.
@@ -33,9 +37,12 @@ Follow the visual port and its adapter in `pdlc/config.md`. Write
 `pdlc/changes/CH-xxxx-…/visual.json`:
 
 - One or more steps for each acceptance line, in order. The first step for each line sets
-  a caption: the requirement ID, then the acceptance line in a few words.
+  a caption: the requirement ID, then the acceptance line in a few words. Every line gets
+  a step; count them against the change spec.
 - Show the behaviour the way a user meets it: pages and clicks for a web app, commands and
   their output for a CLI, a short script calling the interface for a library.
+- A helper script a step runs lives in the change folder. Paths are relative to the
+  project root, so anyone can record it again.
 - For a terminal script, end with a step that runs all checks and shows they pass. The
   recorder runs commands only in terminal scripts, so a web script leaves this out.
 
@@ -47,8 +54,9 @@ empty screen, fix the script and record again. Never fix the app here.
 
 ## 5. Finish
 
-1. Commit `visual.json`, `review.gif` and `frames/`. The message says
+1. Commit `visual.json`, any helper script, `review.gif` and `frames/`. The message says
    "Visual review CH-xxxx" and has a line `Review: pdlc/changes/CH-xxxx-…/review.gif`, plus
    the trailers `Intent` and `Change`.
-2. Write `handoff.md` for verify: what the GIF shows, frame by frame.
+2. Write `handoff.md` for verify: what the GIF shows, frame by frame, and how many
+   acceptance lines it shows out of how many.
 3. Commit the handoff with the same trailers. Tell the user `/pdlc:verify` is next.

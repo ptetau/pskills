@@ -4,6 +4,7 @@
 A change may merge only when:
   - every requirement it lists is verified (and every retired one is gone from its spec);
   - its tests are locked, and no check file changed after the lock;
+  - the tests review judged the checks as locked now (its packet carries the current lock);
   - every review remit named in pdlc/config.md passed.
 
 Usage:
@@ -65,6 +66,15 @@ def check_files(text):
     return [p for p in paths if p.lower() != "none"]
 
 
+def reviewed_lock(folder, lock):
+    """True when the tests packet was built while the change spec carried this lock."""
+    packet = folder / "review" / "tests" / "packet.md"
+    if not packet.exists():
+        return False
+    seen = re.findall(r"^Tests-Locked:\s*([0-9a-f]{7,40})\b", packet.read_text(), re.M)
+    return bool(seen) and (seen[-1].startswith(lock) or lock.startswith(seen[-1]))
+
+
 def git(root, *args):
     return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True)
 
@@ -100,7 +110,12 @@ def check_change(root, folder):
         for path in diff.stdout.split():
             problems.append("changed after the tests were locked: %s" % path)
 
-    for remit in remits(root):
+    wanted = remits(root)
+    if lock and "tests" in wanted and not reviewed_lock(folder, lock.group(1)):
+        problems.append("tests review is not of the current lock %s; review the checks again"
+                        % lock.group(1))
+
+    for remit in wanted:
         result = folder / "review" / remit / "result.md"
         if not result.exists():
             problems.append("%s review has no result" % remit)

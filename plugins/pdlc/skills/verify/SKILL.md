@@ -38,11 +38,18 @@ Through the checks port:
    its own packet. Don't tell any reviewer what another found.
 4. Wait for all of them. Each writes `review/<remit>/result.md`.
 
+Commit every packet and result now, pass or fail ("Verify CH-xxxx: round <n>", trailers
+`Intent` and `Change`). A failed round's findings must stay in git.
+
 ## 4. If anything failed
 
 Collect the failing checks and every problem from the results into the change's
 `handoff.md`, addressed to build (code problems) or tests (check problems). Add a line to
 the progress log, commit, and tell the user which stage is next. Stop here.
+
+A fix stays inside the change's spec. Never add or change a requirement, an acceptance
+line or an error code on a change's branch to answer a review. A point that needs one is
+a follow-up: list it in the handoff for the user, not for build.
 
 ## 5. If everything passed
 
@@ -57,7 +64,8 @@ the progress log, commit, and tell the user which stage is next. Stop here.
    - a table of each remit and its result, linking each `result.md`;
    - the lock commit, and any "Manual checks" for the user to confirm;
    - every detail marked *(assumed)* in the change spec and its requirements, one line
-     each, so the user reviews them in one place.
+     each, so the user reviews them in one place;
+   - every follow-up from the results, for the user to add as intents if they want them.
 5. If every change for the intent is now `in review` or `merged`, set the intent to
    `in review`.
 6. Write `handoff.md`: the link, and what the user needs to confirm. Commit it.

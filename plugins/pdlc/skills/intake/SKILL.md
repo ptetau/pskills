@@ -45,26 +45,40 @@ look** at that spec's code map. Write its requirements into the spec (they come 
 
 ## 4. Write the patches
 
+First list the change branches, as "Where change state lives" in `pdlc/README.md` says.
+Statuses on main may be stale. Never edit a change spec (`changes/*/change.md`): a change
+that hasn't merged keeps what it copied. If you change a requirement that such a change
+covers, say so in the handoff; this intent's change for that spec will stack after it.
+
 Write straight into the spec files, using `pdlc/templates/` for new ones.
 
 - **New requirement:** use the next free number in that spec. Set `Status: proposed` and
   `Intents:` to this intent. Write one or two plain sentences, then acceptance checks as
-  "Given …, when …, then …" lines.
+  "Given …, when …, then …" lines. Mark each detail the intent's words don't give (a
+  message, a limit, an order, a format) *(assumed)* right where you write it.
 - **Changed requirement:** edit it in place. Set `Status: proposed`. Add this intent to
   `Intents:`.
 - **Removed requirement:** set `Status: retiring` and add this intent.
 - **New job:** list the capabilities and design specs it relies on.
 
-If a requirement you need to change is already `proposed` for another intent that isn't
-done, stop and ask the user how the two should fit together.
+**The newest words win.** If the intent asks for something an older requirement or an
+*(assumed)* detail rules out, change the older text to match. That is a changed
+requirement, not a contradiction. Find every one: a new format changes every
+example that shows the old one. Add a Note for each: `<ID>: was "<old>", now "<new>"`.
+Only when the intent's words could be read two ways is it a question for ready.
+
+If a requirement you need to change is still `proposed` for another intent that isn't
+done, ask the user how the two fit. With `defaults`, this intent wins where they differ,
+and its changes come after the other intent's.
 
 ## 5. Record and finish
 
 - In the intent's "Requirements" section, list every requirement you added, changed or
-  retired, with one word for which (added, changed, retiring).
+  retired, with one word for which (added, changed, retiring). Every requirement whose
+  text you touched is on this list.
 - Write the intent's "Handoff" for ready (see `pdlc/templates/handoff.md`): what you
   wrote, what you assumed, what looks unclear.
 - Commit the spec and intent files with the message "Specify IN-xxxx: <name>" and the
-  trailer `Intent: IN-xxxx`.
+  trailer `Intent: IN-xxxx`. Commit them even if you stop early.
 - Tell the tracker port.
 - Tell the user what you wrote, and that `/pdlc:ready` is next.
