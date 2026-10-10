@@ -25,8 +25,8 @@ fix after review), merge that branch in first, with the trailers `Intent` and `C
 
 ## 2. Build
 
-Start the `pdlc:builder` agent with the change spec's path. It changes only the app files
-listed under "Files", runs the checks, and reports back.
+Start the `pdlc:builder` agent with the change spec's absolute path. It changes only the
+app files listed under "Files", runs the checks, and replies.
 
 - If it says a check looks wrong, don't change the check. Send the reason to
   `/pdlc:tests`, which asks the test writer and locks again. Then build again.

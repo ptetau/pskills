@@ -52,13 +52,15 @@ for each change: tests → build → show → verify → propose
 
 ## 3. When a stage fails
 
-- Verify failed on code → back to build, then show and verify again. If no check caught
-  the problem, go to tests first, so a check holds the fix.
-- Verify or the tests review failed on checks → back to tests, then build, show, verify.
+- Verify failed → go to the stage its handoff names for each problem (tests, or build),
+  then on through build, show and verify. A failed review is never a question for the
+  user.
+- The tests review failed → back to tests, then build, show, verify.
 - Allow two rounds per change. On the third failure, stop.
 
 A round is one failed tests review, one failed verify, or one builder report that a check
 is wrong. Fixing a check before it is locked is not a round.
+An agent blocked twice also counts as one.
 
 ## 4. Stop only for these
 
@@ -72,11 +74,16 @@ Everything else takes the recommended answer, recorded in the handoff and the in
 notes. A missing git remote is not a stop: the delivery adapter says what to do.
 Neither is a choice about how to check, build or name something: each stage has a
 default for it (for checks the project's runner can't reach, the change skill's
-stand-in seam).
+stand-in seam). Nor is the base a change starts from: the tests skill says which.
+
+Never stop because the work is long, an agent is slow, or a tool failed. A blocked
+agent runs once more from the project root ("Starting an agent" in `pdlc/README.md`).
 
 When you stop, write why in one sentence under "Open" in the latest handoff, with what
-the user needs to decide and your recommended answer. Commit everything, so
-`git status --porcelain` shows nothing. Then tell the user the same.
+the user needs to decide and your recommended answer. The next run takes that answer, so
+it must be one the rules allow: never "merge over a failed gate" or "accept a failed
+review". Commit everything, so `git status --porcelain` shows nothing. Then tell the user
+the same.
 
 ## 5. Finish
 
@@ -88,5 +95,5 @@ Tell the user, in a few lines:
 - what is waiting for them: approving merges, bottom of the stack first, and any manual
   checks.
 
-If the session gets long, it is safe to stop. Running `/pdlc:ship` again picks up from the
-handoffs.
+Keep going until the end of the stack or a stop above. If the session is cut off from
+outside, running `/pdlc:ship` again picks up from the handoffs.

@@ -20,7 +20,8 @@ Then:
 1. Change only the files under "Files". Keep to the "Interface" the change spec gives.
 2. Write the least code that makes the checks pass, then tidy it up so it follows the
    design specs. Do every step in the change spec, including one with no check, such as
-   updating the README.
+   updating the README. Fix every review problem the handoff lists, even one no check
+   covers, with the plainest fix inside "Files".
 3. Run the checks with the command in `pdlc/config.md`. Run all of them before you finish;
    nothing else may break.
 

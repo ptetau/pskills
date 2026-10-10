@@ -44,15 +44,20 @@ Commit every packet and result now, pass or fail ("Verify CH-xxxx: round <n>", t
 ## 4. If anything failed
 
 Collect the failing checks and every problem from the results into the change's
-`handoff.md`, addressed to build (code problems) or tests (check problems). Add a line to
-the progress log, commit, and tell the user which stage is next. Stop here.
+`handoff.md`, each addressed to the stage that fixes it:
 
-A code problem that every check passed is also a gap in the checks. Address it to tests
-first: a check that fails on it is written and locked before build fixes the code.
+- a failing check, or a problem with a check → tests;
+- a problem that says an acceptance line isn't met, when every check passed → tests
+  first, for a check tagged with that line's requirement, then build;
+- any other problem (a remit rule, a design spec, unsafe code) → build. No acceptance
+  line names it, so it needs no new check.
 
-A fix stays inside the change's spec. Never add or change a requirement, an acceptance
-line or an error code on a change's branch to answer a review. A point that needs one is
-a follow-up: list it in the handoff for the user, not for build.
+Add a line to the progress log, commit, and tell the user which stage is next. Stop here.
+
+Every problem goes to tests or build, never to the user. Only a reviewer can call
+something a follow-up. Build fixes a problem inside the change's "Files" with the
+plainest fix that meets the rule, for example a clearer message. Never add or change a
+requirement, an acceptance line or an error code on a change's branch.
 
 ## 5. If everything passed
 

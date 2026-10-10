@@ -82,6 +82,46 @@ class Guard(unittest.TestCase):
         self.assertFalse(self.ok("pdlc:reviewer", "Write", file_path=base + "packet.md"))
         self.assertFalse(self.ok("pdlc:reviewer", "Edit", file_path="src/cli.js"))
 
+    # the project is found from the files, not only from the agent's working folder
+
+    def ok_from(self, cwd, agent, tool, **tool_input):
+        return guard.decide({"agent_type": agent, "tool_name": tool, "cwd": str(cwd),
+                             "tool_input": tool_input})[0]
+
+    def test_lanes_hold_when_the_agent_starts_inside_pdlc(self):
+        inner = self.cwd / "pdlc"
+        spec = str(self.cwd / "pdlc/changes/CH-0001-x/change.md")
+        self.assertTrue(self.ok_from(inner, "pdlc:test-writer", "Read", file_path=spec))
+        self.assertTrue(self.ok_from(inner, "pdlc:test-writer", "Read", file_path="config.md"))
+        self.assertFalse(self.ok_from(inner, "pdlc:test-writer", "Read",
+                                      file_path=str(self.cwd / "src/greet.js")))
+        self.assertFalse(self.ok_from(inner, "pdlc:builder", "Edit",
+                                      file_path=str(self.cwd / "test/greet.test.js")))
+        self.assertFalse(self.ok_from(inner, "pdlc:builder", "Edit", file_path="specs/jobs/JOB-x.md"))
+
+    def test_lanes_hold_when_the_agent_starts_outside_the_project(self):
+        with tempfile.TemporaryDirectory() as elsewhere:
+            spec = str(self.cwd / "pdlc/changes/CH-0001-x/change.md")
+            packet = str(self.cwd / "pdlc/changes/CH-0001-x/review/security/packet.md")
+            self.assertTrue(self.ok_from(elsewhere, "pdlc:test-writer", "Read", file_path=spec))
+            self.assertTrue(self.ok_from(elsewhere, "pdlc:reviewer", "Read", file_path=packet))
+            self.assertFalse(self.ok_from(elsewhere, "pdlc:builder", "Write",
+                                          file_path=str(self.cwd / "e2e/flow.spec.js")))
+
+    def test_a_path_outside_the_project_says_so(self):
+        with tempfile.TemporaryDirectory() as elsewhere:
+            allowed, reason = guard.decide({
+                "agent_type": "pdlc:test-writer", "tool_name": "Read", "cwd": str(self.cwd),
+                "tool_input": {"file_path": str(Path(elsewhere) / "pdlc/changes/CH-0001-x/change.md")}})
+        self.assertFalse(allowed)
+        self.assertIn("outside the project", reason)
+
+    def test_builder_and_recon_keep_their_lanes_outside_the_project(self):
+        with tempfile.TemporaryDirectory() as elsewhere:
+            scratch = str(Path(elsewhere) / "scratch.txt")
+            self.assertTrue(self.ok("pdlc:builder", "Write", file_path=scratch))
+            self.assertTrue(self.ok("pdlc:recon", "Read", file_path=scratch))
+
     # recon: read only
 
     def test_recon_never_writes(self):

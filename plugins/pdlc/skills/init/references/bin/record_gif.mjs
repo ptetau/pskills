@@ -19,6 +19,8 @@
 // }
 //
 // Every step makes one frame. A caption stays until the next step sets a new one.
+// A terminal shows each command's output and errors in order, and scrolls like a real
+// one: every frame shows the newest lines.
 // Needs playwright, gifenc and pngjs. They are looked up in pdlc/.tools, then globally.
 
 import { createRequire } from "node:module";
@@ -103,11 +105,14 @@ try {
     if (script.kind === "terminal") {
       if (step.run) {
         let out;
-        try { out = execSync(step.run, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }); }
+        // Errors go to the same stream, so a warning from a command that succeeds still shows.
+        const command = `{ ${step.run}\n} 2>&1`;
+        try { out = execSync(command, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }); }
         catch (e) { out = (e.stdout || "") + (e.stderr || ""); }
         lines.push(`<span style="color:#34d399">$</span> ${escape(step.run)}`, escape(out.trimEnd()));
       }
       await page.setContent(terminalPage(lines));
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     } else {
       if (step.goto) await page.goto(new URL(step.goto, script.base_url).href);
       if (step.click) await page.click(step.click);

@@ -50,6 +50,15 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
 
 A guard in the pdlc plugin enforces these lanes.
 
+Starting an agent:
+
+- Give it absolute paths: the project root, and the full path of each file it needs.
+- Run it in the foreground and wait for its reply. Agents that work side by side (the
+  reviewers) start together, in one message. Never stop an agent for being slow.
+- If the guard or a tool blocks it, fix the path and run it once more from the project
+  root. If it fails again, that counts as one failure of its stage. A blocked agent is
+  never a reason to stop.
+
 ## Stages and handoffs
 
 For an intent: intake → ready → change. For each change: tests → build → show → verify.
@@ -102,7 +111,8 @@ A change is built on the branch of the change before it, even before that one me
 Its `Base:` names that branch, and its pull request targets it. An intent's first change
 is based on the newest unmerged change of an earlier intent, or on main if there is none.
 If the intent has a `Branch:`, its first change starts from that branch, so it carries
-the intent's spec patches into the same pull request.
+the intent's spec patches into the same pull request. If that branch doesn't hold the
+change's base yet, the tests skill merges the base into it first.
 
 ## Statuses
 

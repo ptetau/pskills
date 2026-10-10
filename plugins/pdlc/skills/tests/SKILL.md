@@ -26,14 +26,18 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
   `merged`: if it isn't, finish that change's show and verify first.
 - Start the branch through the delivery port, from the base. An intent's first change
   starts from the intent's `Branch:` instead, when it has one, so it carries the
-  intent's specs. Write `Branch:` and `Base:` into the change spec header. Set the
-  change to `testing` and the intent to `building`.
+  intent's specs. If that branch doesn't hold the base yet
+  (`git merge-base --is-ancestor <base> <intent branch>` fails), merge the base into the
+  intent's branch first (trailer `Intent`). Where both changed a line, keep the intent's
+  text and status for requirements the intent changed, and the base's for the rest.
+- Write `Branch:` and `Base:` into the change spec header. Set the change to `testing`
+  and the intent to `building`.
 - Read the intent's "Handoff", or the change's `handoff.md` if it has one.
 
 ## 2. Write the checks
 
-Start the `pdlc:test-writer` agent. Give it the change spec's path and nothing else. It
-writes the checks listed under "Check files".
+Start the `pdlc:test-writer` agent. Give it the change spec's absolute path and nothing
+else. It writes the checks listed under "Check files".
 
 The test writer can't delete files. If it says a check file served only a `(retire)`
 requirement, delete that file yourself with `git rm` before the lock.

@@ -9,6 +9,8 @@ It keeps pdlc's agents in their lanes:
   - pdlc:recon never writes.
 Everyone else, including the main session, is left alone.
 
+The project is the nearest folder holding pdlc/config.md, found from the file first, then
+from the agent's working folder, so the lanes hold wherever the agent was started.
 Check folders come from "check folders:" in pdlc/config.md. Exit 2 blocks the call.
 Set PDLC_GUARD_LOG to a file path to log every decision.
 """
@@ -22,9 +24,21 @@ WRITES = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
 DEFAULT_CHECK_FOLDERS = ["test", "tests", "spec", "__tests__"]
 
 
-def check_folders(cwd):
+def project_root(path):
+    """The nearest folder at or above path that holds pdlc/config.md, or None."""
+    path = os.path.realpath(path)
+    while True:
+        if os.path.isfile(os.path.join(path, "pdlc", "config.md")):
+            return path
+        parent = os.path.dirname(path)
+        if parent == path:
+            return None
+        path = parent
+
+
+def check_folders(root):
     try:
-        text = open(os.path.join(cwd, "pdlc", "config.md")).read()
+        text = open(os.path.join(root, "pdlc", "config.md")).read()
     except OSError:
         return DEFAULT_CHECK_FOLDERS
     line = re.search(r"^- check folders:\s*(.+)$", text, re.M)
@@ -47,16 +61,16 @@ def targets(cwd, tool, args):
     return paths
 
 
-def inside(path, cwd, *folders):
+def inside(path, root, *folders):
     for folder in folders:
-        root = os.path.realpath(os.path.join(cwd, folder))
-        if path == root or path.startswith(root + os.sep):
+        top = os.path.realpath(os.path.join(root, folder))
+        if path == top or path.startswith(top + os.sep):
             return True
     return False
 
 
-def rel(path, cwd):
-    return os.path.relpath(path, os.path.realpath(cwd)).replace(os.sep, "/")
+def rel(path, root):
+    return os.path.relpath(path, root).replace(os.sep, "/")
 
 
 def decide(call):
@@ -68,21 +82,25 @@ def decide(call):
     if tool not in READS | WRITES or not agent.startswith("pdlc:"):
         return True, ""
     role = agent.split(":", 1)[1]
-    checks = check_folders(cwd)
+    home = project_root(cwd) or os.path.realpath(cwd)
 
     for path in targets(cwd, tool, args):
-        name = rel(path, cwd)
+        root = project_root(path) or home
+        checks = check_folders(root)
+        name = rel(path, root)
+        if role in ("test-writer", "reviewer") and name.startswith("../"):
+            return False, "%s is outside the project (%s): use the absolute path inside it" % (path, root)
         in_review = re.match(r"pdlc/changes/[^/]+/review/", name)
         if role == "test-writer":
-            if tool in READS and not ((inside(path, cwd, "pdlc") and not in_review)
-                                      or inside(path, cwd, *checks)):
+            if tool in READS and not ((inside(path, root, "pdlc") and not in_review)
+                                      or inside(path, root, *checks)):
                 return False, "the test writer may not read %s: it writes checks from the spec, without seeing app code" % name
-            if tool in WRITES and not inside(path, cwd, *checks):
+            if tool in WRITES and not inside(path, root, *checks):
                 return False, "the test writer may only write checks, not %s" % name
         elif role == "builder":
-            if tool in WRITES and inside(path, cwd, *checks):
+            if tool in WRITES and inside(path, root, *checks):
                 return False, "the builder may not change checks (%s); if a check looks wrong, stop and say why" % name
-            if tool in WRITES and inside(path, cwd, "pdlc"):
+            if tool in WRITES and inside(path, root, "pdlc"):
                 return False, "the builder may not change pdlc files (%s)" % name
         elif role == "reviewer":
             if tool in {"Glob", "Grep"}:

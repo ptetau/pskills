@@ -247,5 +247,15 @@ What went wrong: one app's first change failed the quality review three times ov
         later change should start from (intent branches added in round 1); one intent was
         split into about seven changes and stopped when the file guard blocked the test
         writer; specs were edited after ready "as an exception".
-Fixes: in progress (Opus, last fix round).
+Regression cause (found by the improver): a round 1 rule sent a review problem that no
+        check caught to tests first; a remit-rule problem has no acceptance line to tag a
+        check with, and a branch may not add one, so verify handed it to the user and
+        ship stopped. Intent branches could also miss a change built after them.
+Fixes (Opus, 5): verify sends every failed review to tests or build, never to the user,
+        and a stop never recommends merging over the gate; the guard finds the project
+        from the file, not the agent's folder (it had blocked a test writer and let a
+        builder edit checks; 4 new tests); no early stops, one retry for a blocked agent;
+        an intent's first change merges its base in by rule; terminal GIF frames show
+        the newest lines and errors (2 new tests). 58 unit tests pass (2 need the GIF
+        tools). No app words in the diff.
 ```

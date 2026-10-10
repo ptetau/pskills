@@ -45,6 +45,8 @@ Follow the visual port and its adapter in `pdlc/config.md`. Write
   project root, so anyone can record it again.
 - For a terminal script, end with a step that runs all checks and shows they pass. The
   recorder runs commands only in terminal scripts, so a web script leaves this out.
+- A terminal frame scrolls like a real terminal: it shows the newest lines, errors
+  included. Keep each step's output under one screen, so its command stays in view.
 
 ## 4. Record
 
