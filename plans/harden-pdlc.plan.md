@@ -1,6 +1,6 @@
 # Plan: harden pdlc
 
-**Owner:** Patrick Te Tau · **Status:** Draft
+**Owner:** Patrick Te Tau · **Status:** Done (final round run; results in the progress log)
 **Plan location:** `plans/harden-pdlc.plan.md`
 
 ## Goal
@@ -258,4 +258,46 @@ Fixes (Opus, 5): verify sends every failed review to tests or build, never to th
         an intent's first change merges its base in by rule; terminal GIF frames show
         the newest lines and errors (2 new tests). 58 unit tests pass (2 need the GIF
         tools). No app words in the diff.
+
+[2026-10-10] Final round (harness at b1dd8e3, no fixes after)
+Setup: five builds: the three apps, the hold-out (a Node library) and a second build of
+       the greenfield CLI. Reviewed by one Sonnet reviewer each, plus one consistency
+       reviewer. The merge stand-in was corrected to treat a branch merged before as
+       merged (pdlc's catch-up had committed to an already-merged branch, and the
+       stand-in had retried it and stopped); it was re-run on all five builds, which
+       merged four more changes in one app.
+Scores: pocket-cli 83% (no hard fail) · its second build 76% (no hard fail) ·
+        convert-web 70% (H1, H2, H7: the second intent stopped at its first change) ·
+        polls-api 56% (H1, H2, H3, H7: half a stack merged again) · hold-out 83% (no
+        hard fail) · consistency 2 / 6.
+Verdicts:
+- Stop rule (every app at least 85%, every item at least 2, no hard fail): not met.
+- Fixes generalise: yes. The hold-out had no hard fail and scored 83%, 13 points above
+  the mean of the three apps (70%).
+- Same brief, two builds: consistent. Both had no hard fail; no rubric item differed by
+  more than 1 (totals 83% and 76%).
+- Across apps: not yet consistent. Styles still differ, and scores spread 27 points.
+Still open (from the final reviews):
+- Half a stack can merge: a capability change that raises a new error merges before
+  the change that handles it, and main breaks. The gate judges one change at a time.
+- Verify fixes add behaviour that no requirement or check covers.
+- After the last merge, statuses, bases and handoffs on main stay stale; pdlc's catch-up
+  commits to branches that already merged.
+- Checks that can't tell right from wrong: sample values that pass either way, limits
+  tested near the edge, class-wide rules tested with a few examples.
+- Date rules without a clock seam at the command line.
+- Brownfield job and capability boundaries: one app put all route code in a capability,
+  so its job changes couldn't be planned.
+- Stale spec and README text after a behaviour changes; blank GIF frames accepted.
+Scoreboard (percent of the rubric; hard fails in brackets):
+| App | Round 0 | Round 1 | Round 2 | Final |
+|---|---|---|---|---|
+| pocket-cli | 54 (2) | 79 | 40 (2) | 83 |
+| pocket-cli, second build | | | | 76 |
+| convert-web | 55 (4) | 67 (1) | 74 | 70 (3) |
+| polls-api | 48 (6) | 62 (3) | 68 (3) | 56 (4) |
+| hold-out | | | | 83 |
+| consistency (of 6) | 3 | | | 2 |
+Round 0 was reviewed by three Fable reviewers per app; later rounds by one Sonnet
+reviewer per app with scripts, so round 0 is not exactly comparable.
 ```
