@@ -20,7 +20,9 @@ Filled in by change. The changes that deliver this intent, in order.
 
 ## Notes
 
-Decisions and answers from ready, newest last.
+Decisions and answers from intake, ready and change, newest last, one line each in these
+forms: `<requirement>: <question> → <answer> (assumed)`, `<ID>: was "<old>", now "<new>"`,
+`README: "<old line>" → <requirement>`.
 
 ## Handoff
 

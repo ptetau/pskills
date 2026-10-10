@@ -162,6 +162,37 @@ class MergeCheck(unittest.TestCase):
         self.write(reqs="None.")
         self.assertEqual(self.run_check("CH-0001")[0], 1)
 
+    # The assumption marker is written one way
+
+    def test_passes_with_the_plain_marker(self):
+        self.write(reqs="### CAP-email.R2 · Send from a template\n\n- Given 3 tries (assumed), then stop.")
+        path = self.root / "pdlc/specs/capabilities/CAP-email.md"
+        path.write_text(path.read_text().replace("the values are filled in.",
+                                                 "the values are filled in (assumed)."))
+        self.assertEqual(self.run_check("CH-0001")[0], 0)
+
+    def test_fails_on_another_form_of_the_marker_in_the_change_spec(self):
+        self.write(reqs="### CAP-email.R2 · Send from a template\n\n- Given 3 tries *(assumed)*, then stop.")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn('change.md: write "*(assumed)*" as "(assumed)"', out)
+
+    def test_fails_on_a_reason_inside_the_marker_in_a_requirement_of_the_change(self):
+        self.write()
+        path = self.root / "pdlc/specs/capabilities/CAP-email.md"
+        path.write_text(path.read_text().replace("the values are filled in.",
+                                                 "the values are filled in (assumed: a new name)."))
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn('CAP-email.R2: write "(assumed: a new name)" as "(assumed)"', out)
+
+    def test_ignores_the_marker_in_requirements_the_change_does_not_list(self):
+        self.write()
+        path = self.root / "pdlc/specs/capabilities/CAP-email.md"
+        path.write_text(path.read_text().replace("one email goes out.",
+                                                 "one email goes out *(assumed)*."))
+        self.assertEqual(self.run_check("CH-0001")[0], 0)
+
     # Finding the change
 
     def test_unknown_change_fails(self):

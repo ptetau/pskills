@@ -51,13 +51,17 @@ what it found, as two short lists: capabilities and jobs, each with its code map
 anything should be merged, split or renamed. These boundaries matter, because every change
 must stay inside one.
 
-Each file belongs to at most one code map. If a file is in two, ask which spec owns it. If
-a file mixes job and capability code, give it to the job and note that the capability
-could be split out later.
+Map as "Code maps" in `pdlc/README.md` says. Each entry point (a route or request
+handler, a command, a page script or event handler) belongs to the job it serves.
+Capabilities hold only the shared logic under them: storage, outside services, and the
+plumbing every job uses. A file that holds parts of several specs is mapped by parts:
+each job names its own, and the capability lists the file with `: the rest`. Each file,
+or part, is in one code map only. Leave the README out of every map.
 
 For each job and capability the user keeps, create a spec from the job or capability
 template. Set `Status: stub`, fill in the summary and code map, and leave the requirements
-section with the line "None written yet."
+section with the line "None written yet." Recon's "Unsure" items go in your summary at
+the end, never into a spec.
 
 If recon found two patterns for the same thing, ask the user which one is the convention.
 Write the answer as a design spec from the design template.
@@ -75,8 +79,8 @@ For each file in `references/defaults/`:
 ### 4. Set up checks and the visual review
 
 Fill in the "Checks" section of `pdlc/config.md` with recon's answer: the command that
-runs all checks, the command that runs only one requirement's checks, the check folders,
-and the one ID form. Confirm them with the user. In `config.md`, replace every
+runs all checks, the command that runs only one requirement's checks, the check folders
+(`tests/` if there are none yet), and the one ID form. Confirm them with the user. In `config.md`, replace every
 placeholder, example and "(or …)" hint with the value chosen, or `none`.
 
 Set the visual adapter: `visual-web` if the project serves pages, with "Visual" `start`

@@ -128,6 +128,10 @@ pdlc's plugin includes a guard that keeps its agents in their lanes: the test wr
 read app code, the builder can't change checks, and each reviewer sees only its packet. To
 see every decision it makes, start Claude Code with `PDLC_GUARD_LOG=/tmp/pdlc-guard.log`.
 
+A second hook checks each new commit on a pdlc branch against `DES-pdlc-commit-trailers`:
+its subject and its trailers. It never blocks a commit; it says what to fix with
+`git commit --amend` while the commit is still the newest. Other branches are left alone.
+
 ## Sharing with your team
 
 With the project scope, `.claude/settings.json` ends up like this:

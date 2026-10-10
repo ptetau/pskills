@@ -7,8 +7,9 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
 1. All work enters through the inbox.
 2. Specs come before code. An intent must be `ready` before any change is planned.
 3. A change covers exactly one job, one capability, or one design spec.
-4. A job change uses capabilities but never edits them. A missing capability becomes its
-   own earlier change.
+4. A job owns its entry points: its routes or request handlers, commands, page scripts.
+   A capability holds only the shared logic under them. A job change uses capabilities
+   but never edits their code. A missing capability becomes its own earlier change.
 5. Checks are written before code, by the test writer, from the spec alone. Then they are
    locked. Nobody who writes app code may change them.
 6. Reviews are independent: one fresh reviewer per remit, each seeing only its packet.
@@ -18,8 +19,9 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
    intent's changes merge together, bottom of the stack first. `bin/check_merge.py`
    checks all of this.
 8. These files are the truth. Boards and dashboards only show them.
-9. Every commit carries trace trailers (see `specs/design/DES-pdlc-commit-trailers.md`).
-   Commits that only touch `pdlc/` need no `Req`.
+9. Every commit has a subject and trace trailers from
+   `specs/design/DES-pdlc-commit-trailers.md`. A hook checks each new commit on a pdlc
+   branch; fix what it names at once, with `git commit --amend`.
 10. Write plainly (see `specs/design/DES-writing-style.md`).
 
 ## Layout
@@ -34,11 +36,29 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
   - `change.md`: the change spec;
   - `handoff.md`: the latest handoff between stages;
   - `visual.json`, `review.gif`, `frames/`: the visual review;
-  - `review/<remit>/packet.md` and `result.md`: each independent review.
+  - `review/<remit>/packet.md` and `result.md`: each independent review;
+  - `proposal.md`: the merge proposal, when the project has no remote.
 - `templates/`: blank copies of each document. When you write one, replace each
   `<placeholder>` and the guide sentence under each heading with real content.
 - `bin/`: `check_merge.py`, `make_packets.py`, `record_gif.mjs`, `record_merges.py`.
 - `.tools/`: tools the visual review installs. Not committed.
+
+## Code maps
+
+Each job and capability lists what it owns in its "Code map". Changes are scoped by it.
+
+- A job owns its entry points (a route or request handler, a command, a page script or
+  event handler), with its line in any routing table or command list.
+- A capability owns the shared logic under them: storage, outside services, and the
+  plumbing every job uses (starting the server, routing, reading a request, writing a
+  reply).
+- A file that holds parts of several specs is shared. Each code map names its parts:
+  `src/server.py: POST /reset route and handle_reset` for a job, and
+  `src/server.py: the rest` for the capability that holds the plumbing.
+- A change may list a shared file in "Files", with its own parts. It changes only those
+  parts. A new route or command adds its own part beside the others.
+- The project's README is in no code map. A change changes only what the README says
+  about its own spec, and how to run the app and the checks.
 
 ## Who does what
 
@@ -72,9 +92,9 @@ Every stage starts by reading the latest handoff, and ends by writing one:
   `###` headings under it, so the whole handoff stays inside that one section;
 - change stages write `changes/CH-xxxx-name/handoff.md`.
 
-Use `templates/handoff.md`. Its title names the stage writing it and the next one. Take
-the time from the real clock (`date -Iseconds`). Replace the old handoff; git keeps the
-history.
+Use `templates/handoff.md`. Its title is one from the template's list. Keep every
+section, with "none" under one that is empty. Take the time from the real clock
+(`date -Iseconds`). Replace the old handoff; git keeps the history.
 
 Every stage, and every stop, ends the same way:
 
@@ -138,8 +158,10 @@ Ask the user one short question at a time. Offer two or three answers and mark t
 recommend, with one line on why. The user can reply `skip` to take it.
 
 Anything a skill decides without being told (a name, a limit, a message, an order, a
-default answer) is marked *(assumed)* where it is written in a spec or change spec, and
-listed in the handoff, so nothing is guessed silently. `(assumed)` is the only marker.
+default answer) is marked `(assumed)` where it is written in a spec or change spec, and
+listed in the handoff, so nothing is guessed silently. Write the marker exactly so: plain,
+right after what it marks, with any reason outside the brackets ("at most 20 items
+(assumed), to keep the list short"). The merge check rejects any other form in a change.
 
 If the skill was run with `defaults`, don't ask. Take your recommended answer, and record
 each one in the handoff's "Decided on defaults" and the intent's "Notes" as

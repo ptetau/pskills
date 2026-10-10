@@ -17,8 +17,8 @@ the change's `handoff.md`.
 ## 1. Pick the change
 
 Use the change the user named. Otherwise take the first change, in the intent's order,
-with status `building`. If its change spec has no `Tests-Locked:` line, stop and say
-`/pdlc:tests` comes first. Switch to its branch.
+with status `building`. If its change spec's `Tests-Locked:` line has no hash, stop and
+say `/pdlc:tests` comes first. Switch to its branch.
 
 If the branch it is based on has new commits since this branch started (for example a
 fix after review), merge that branch in first, with the trailers `Intent` and `Change`.
@@ -41,7 +41,7 @@ Run all checks through the checks port. Every one must pass. Confirm with
 
 ## 4. Commit and finish
 
-1. Commit the app files with a message that says what changed, and the trailers `Intent`,
+1. Commit the app files ("Build CH-xxxx: <what changed>"), with the trailers `Intent`,
    `Change`, `Req` (the requirements it serves) and `Ticket` if there is one.
 2. Tick the change's steps, add a line to its progress log, and set each requirement in the
    change to `built` in its spec file. Remove any requirement marked `(retire)` from its

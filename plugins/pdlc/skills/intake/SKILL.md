@@ -32,8 +32,11 @@ Set the intent's status to `specifying`.
 
 Read the specs in `pdlc/specs/`. For each thing the intent needs, decide where it belongs:
 
-- What a user does → a **job** spec.
-- What the system can do, used by jobs → a **capability** spec.
+- What a user does, through a route, a command or a page, and what they get back → a
+  **job** spec, even when its code sits in a shared file.
+- What the system offers to jobs (a store, an outside service, plumbing every job uses)
+  → a **capability** spec. Its requirements say what it offers jobs, never one job's
+  user-facing behaviour.
 - How we do something everywhere → a **design** spec.
 - How something looks to the user (a format, a wording, a layout) → the **job** where
   they see it, even when a capability makes the value. Add it to each place they see
@@ -64,10 +67,10 @@ Write straight into the spec files, using `pdlc/templates/` for new ones.
 - **New requirement:** use the next free number in that spec. Set `Status: proposed` and
   `Intents:` to this intent. Write one or two plain sentences, then acceptance checks as
   "Given …, when …, then …" lines. Mark each detail the intent's words don't give (a
-  message, a limit, an order, a format) *(assumed)* right where you write it.
+  message, a limit, an order, a format) `(assumed)` right where you write it.
 - **The intent's own words bind.** Copy every example it gives (an output, a message, a
   value) into an acceptance line, exactly. Read its words plainly, for every value,
-  including the edge ones (zero, empty, a whole number). An *(assumed)* reading never
+  including the edge ones (zero, empty, a whole number). An `(assumed)` reading never
   narrows them to keep the old behaviour.
 - **Changed requirement:** edit it in place. Set `Status: proposed`. Add this intent to
   `Intents:`.
@@ -75,10 +78,23 @@ Write straight into the spec files, using `pdlc/templates/` for new ones.
 - **New job:** list the capabilities and design specs it relies on.
 
 **The newest words win.** If the intent asks for something an older requirement or an
-*(assumed)* detail rules out, change the older text to match. That is a changed
+`(assumed)` detail rules out, change the older text to match. That is a changed
 requirement, not a contradiction. Find every one: a new format changes every
 example that shows the old one. Add a Note for each: `<ID>: was "<old>", now "<new>"`.
 Only when the intent's words could be read two ways is it a question for ready.
+
+**Leave no old wording.** For each requirement you change or retire, search
+`pdlc/specs/` and the README for the old behaviour's words (a command, a message, a
+value, a button). Fix every place in the specs that still shows it:
+
+- the spec's title and summary;
+- examples and acceptance lines in other requirements;
+- cross-references (`see CAP-x.R4`): each still points at the rule it means;
+- notes, "Known gap" lines and "Changes" lists that describe it.
+
+The README is app code, so don't edit it here. Add a line to the intent's "Notes" for
+each README line that shows the old behaviour: `README: "<old line>" → <requirement>`.
+The change for that requirement fixes it.
 
 If a requirement you need to change is still `proposed` for another intent that isn't
 done, ask the user how the two fit. With `defaults`, this intent wins where they differ,

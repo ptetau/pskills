@@ -9,8 +9,9 @@ Each packet is pdlc/changes/<change>/review/<remit>/packet.md. Writing a packet 
 that remit's old result.md, so a result is always about the packet next to it. A packet
 holds:
   - the remit, from pdlc/reviews/<remit>.md;
-  - the spec: the change spec, the full text of each requirement it lists, and every spec
-    it relies on;
+  - the spec: the change spec, the title and summary of the spec it covers (everything
+    above its requirements), the full text of each requirement it lists, and every spec it
+    relies on;
   - the material: for the tests remit, the check files and nothing else; for every other
     remit, the changed app files and nothing else. The specification packet also points to
     the visual review frames.
@@ -57,6 +58,14 @@ def requirement_text(root, req_id):
     return match.group(0).strip() if match else "(%s is not in its spec)" % req_id
 
 
+def spec_head(root, spec_id):
+    """A spec's title, summary and code map: everything above its '## Requirements'."""
+    path = spec_file(root, spec_id)
+    if not path.exists():
+        return "(%s not found)" % spec_id
+    return re.split(r"^## Requirements\b", path.read_text(), maxsplit=1, flags=re.M)[0].strip()
+
+
 def fence(text):
     return "````\n" + text.rstrip() + "\n````"
 
@@ -99,7 +108,11 @@ def main(argv, root=Path(".")):
 
     reqs = re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)", section(change, "Requirements"), re.M)
     relies = re.findall(r"\b((?:JOB|CAP|DES)-[a-z0-9-]+)\b", section(change, "Relies on"))
-    spec = ["## The change spec\n", fence(change), "\n## The requirements, in full\n"]
+    scope = re.search(r"Scope:\s*((?:JOB|CAP|DES)-[a-z0-9-]+)", change)
+    spec = ["## The change spec\n", fence(change)]
+    if scope:
+        spec += ["\n## The spec it covers: title and summary\n", fence(spec_head(root, scope.group(1)))]
+    spec.append("\n## The requirements, in full\n")
     spec += [requirement_text(root, r) + "\n" for r in reqs]
     spec.append("## Specs it relies on\n")
     for spec_id in dict.fromkeys(relies):

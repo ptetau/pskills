@@ -314,4 +314,15 @@ Fixes (Opus): check_merge fails a change while another change of its intent isn'
         checklist of implied behaviour (bad input, limits, order, old data, unsafe input,
         open business rules). 77 unit tests pass (2 need the GIF tools). Not yet tried in
         a build.
+
+[2026-10-10] The last open problem and the small leftovers (decided with the user)
+Fixes (Opus): in existing code, jobs own their entry points (routes, commands, page
+        handlers); capabilities keep shared logic and plumbing; a code map may name parts
+        of a shared file, and a job change edits only its own parts. Stale text: intake
+        and ready fix titles, examples and cross-references; stale README lines go to the
+        change that owns them. The GIF recorder fails on blank frames and on steps that
+        change nothing. Date rules get a clock seam at the outermost interface. One style:
+        fixed commit subjects checked by a new hook as each commit is made, one
+        "(assumed)" form checked by the merge check, tighter templates (new proposal
+        template). 107 unit tests pass (10 need the GIF tools). Not yet tried in a build.
 ```

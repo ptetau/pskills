@@ -53,7 +53,8 @@ class Packets(unittest.TestCase):
             "pdlc/reviews/specification.md": "# Remit: specification\nJudge the spec.\n",
             "pdlc/reviews/security.md": "# Remit: security\nJudge safety.\n",
             "pdlc/specs/capabilities/CAP-greeting.md":
-                "# CAP-greeting\n\n## Requirements\n\n### CAP-greeting.R2 · Greets in Spanish\n\n"
+                "# CAP-greeting · Greets in English\n\nStatus: active\n\n## What it is for\n\n"
+                "Greets people in English only.\n\n## Requirements\n\n### CAP-greeting.R2 · Greets in Spanish\n\n"
                 "Status: built · Intents: IN-0001\n\nSays hola.\n\n### CAP-greeting.R3 · Other\n\nNot this one.\n",
             "pdlc/specs/design/DES-writing-style.md": "# DES-writing-style\nWrite plainly.\n",
             "src/greet.js": "export const greet = (n) => `Hello, ${n}!`;\n",
@@ -92,6 +93,14 @@ class Packets(unittest.TestCase):
             self.assertIn("Says hola.", text)
             self.assertNotIn("Not this one.", text)
             self.assertIn("Write plainly.", text)
+
+    def test_every_packet_has_the_title_and_summary_of_the_spec_it_covers(self):
+        make_packets.main(["x", "CH-0001"], root=self.root)
+        for remit in ["tests", "specification", "security"]:
+            text = self.packet(remit)
+            self.assertIn("# CAP-greeting · Greets in English", text)
+            self.assertIn("Greets people in English only.", text)
+            self.assertEqual(text.count("Says hola."), 1)
 
     def test_tests_packet_has_the_tests_and_no_code(self):
         make_packets.main(["x", "CH-0001"], root=self.root)

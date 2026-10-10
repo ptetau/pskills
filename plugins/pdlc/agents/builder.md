@@ -17,7 +17,8 @@ Read first:
 
 Then:
 
-1. Change only the files under "Files". Keep to the "Interface" the change spec gives.
+1. Change only the files under "Files". In a file listed with parts, change only those
+   parts. Keep to the "Interface" the change spec gives.
 2. Write the least code that makes the checks pass, then tidy it up so it follows the
    design specs. Do every step in the change spec, including one with no check, such as
    updating the README. Fix every review problem the handoff lists, even one no check

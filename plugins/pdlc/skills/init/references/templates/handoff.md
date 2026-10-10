@@ -2,13 +2,20 @@
 
 Time: <the output of `date -Iseconds`; never typed by hand>
 
+The title is one of these, and nothing else: `intake → ready`, `ready → change`,
+`change → tests`, `tests → build`, `build → show`, `show → verify`, `verify → tests` or
+`verify → build` (after a failed round), `verify → user` (proposed), and
+`<this stage> → user` when a stage stops. Keep every section below, in this order. Write
+"none" under one with nothing in it.
+
 ## Done
 
 What this stage did, in a few lines.
 
 ## Decided on defaults
 
-Questions answered with the recommended answer, so the user can change them.
+Each `(assumed)` this stage wrote, one line each, as in the intent's "Notes":
+`<requirement>: <question> → <answer> (assumed)`. "none" only if this stage wrote none.
 
 - none
 

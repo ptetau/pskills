@@ -84,8 +84,8 @@ agent runs once more from the project root ("Starting an agent" in `pdlc/README.
 When you stop, write why in one sentence under "Open" in the latest handoff, with what
 the user needs to decide and your recommended answer. The next run takes that answer, so
 it must be one the rules allow: never "merge over a failed gate" or "accept a failed
-review". Commit everything, so `git status --porcelain` shows nothing. Then tell the user
-the same.
+review". Commit everything ("Stop CH-xxxx: <why>", or "Stop IN-xxxx: <why>" for an
+intent stage), so `git status --porcelain` shows nothing. Then tell the user the same.
 
 ## 5. Finish
 

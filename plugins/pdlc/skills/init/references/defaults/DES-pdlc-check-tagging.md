@@ -21,6 +21,15 @@ If the check runner doesn't allow `.` or `-` in names (Python's `unittest`, for 
 write the ID with underscores instead: `test_CAP_email_R3_sends_from_a_template`. Both forms
 count as the same ID. Use one form per project.
 
+Lay checks out the same way everywhere:
+
+- New check files go in the check folder (`tests/` in a project that had none). Each is
+  named after the spec it proves, in the form the runner finds: `test_CAP_email.py`,
+  `CAP-email.test.js`.
+- Inside, one group per requirement (a test class or a `describe` block), named with its
+  ID: `class CAP_email_R3(unittest.TestCase)`, `describe("CAP-email.R3", ...)`.
+- Each check's name still starts with the ID, then says what it proves.
+
 ## Why
 
 The trace from requirement to check is only as good as this naming, so it must be simple

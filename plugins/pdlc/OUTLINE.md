@@ -52,9 +52,10 @@ These rules are fixed. Everything else is a default you can change.
 2. **Specs come before code.** An intent must be specified before any change is written.
 3. **One change, one thing.** A change covers exactly one job or one capability, or one
    design spec.
-4. **Jobs use capabilities; they never edit them.** If a job needs something a capability
-   can't do yet, that becomes its own earlier milestone. Capability milestones always come
-   before the job milestone that needs them.
+4. **Jobs use capabilities; they never edit them.** A job owns its entry points (its
+   routes, commands and page scripts). A capability holds only the shared logic under
+   them. If a job needs something a capability can't do yet, that becomes its own earlier
+   milestone. Capability milestones always come before the job milestone that needs them.
 5. **Verified before merge.** Every requirement a change touches must be `verified` before
    the change can merge to main.
 6. **pdlc files are the truth.** Boards and trackers show pdlc's state. They don't own it.
@@ -156,7 +157,9 @@ Each document has a template shipped with `init`. The templates are short.
 ### Job, capability and design specs
 
 - A short summary of what this is for.
-- **Code map**: the files and folders this spec owns. Used to scope changes, not to trace.
+- **Code map**: the files and folders this spec owns, or named parts of a file it shares
+  with other specs (`src/server.py: POST /reset route and handle_reset`). Used to scope
+  changes, not to trace.
 - **Requirements**, each with an ID, a status, the intents that shaped it, and acceptance
   checks written as plain "given / when / then" lines.
 - Job specs also list the capabilities and design specs they rely on.
@@ -182,7 +185,8 @@ The change spec is the only thing the builder needs to read. It is a simplified 
 - **Relies on**: the other specs it uses, by ID. For a job change, the capabilities it calls.
   Always the design specs that apply.
 - **Interface**: what the checks may call, so the test writer never needs the code.
-- **Files**: only the app files this change may touch, drawn from the code map.
+- **Files**: only the app files this change may touch, drawn from the code map. A shared
+  file is listed with this spec's parts, and only those parts change.
 - **Check files**: the checks, which only the test writer may change.
 - **Tests-Locked**: the commit where the checks were locked.
 - **Steps**: small steps, each naming the requirement it serves and the test that proves it.
@@ -212,7 +216,8 @@ The trace runs both ways, and each link is written down once.
   ```
 
   So `git blame` on any line leads to the commit, then the requirement, then the intent,
-  then the ticket. Jira and Linear pick up the `Ticket` key and show the commit on the card.
+  then the ticket. Each commit's subject also comes from one list (`Tests CH-0031`,
+  `Verified CH-0031`), and a hook checks subject and trailers as each commit is made. Jira and Linear pick up the `Ticket` key and show the commit on the card.
 - **No ID comments in source code.** They rot as code moves, and nothing checks them.
 
 The `trace` skill answers both directions in plain words: "why does this line exist?" and
@@ -255,7 +260,9 @@ The project can edit each remit in `pdlc/reviews/` and choose which run in `conf
 
 `show` plays each acceptance line in the real app (a browser for web apps, a terminal for
 CLIs and libraries) and saves `review.gif` and its frames in the change folder. The commit
-names the GIF, and the pull request embeds it.
+names the GIF, and the pull request embeds it. Each frame must show what its caption
+claims: the recorder fails a blank frame, and a step that should change the screen but
+doesn't.
 
 ### The gate
 
@@ -378,10 +385,15 @@ as design specs and agreeing them with you.
 `init` runs **recon** before anything else in an existing codebase. Recon is careful and
 read-only. It aims for "just enough", not a full survey.
 
-1. **Thin map of everything.** Recon lists the likely capabilities (from modules, services
-   and dependencies), the likely jobs (from routes, screens and commands), the test and build
-   commands, and the conventions it can see (lint configs, repeated patterns). Each becomes a
-   stub spec with a code map and no requirements yet.
+1. **Thin map of everything.** Recon lists the likely jobs (each route, screen or command
+   belongs to the job it serves), the likely capabilities (the shared logic under them:
+   storage, outside services, and plumbing every job uses), the test and build commands,
+   and the conventions it can see (lint configs, repeated patterns). Each becomes a stub
+   spec with a code map and no requirements yet. A file holding several jobs' handlers
+   and shared plumbing is mapped by parts: each job names its own, the capability takes
+   the rest, and a change edits only its own parts. We map by parts rather than move code
+   into per-job files, because a move is a diff nobody asked for, and one job's change
+   can't move other jobs' handlers without leaving its scope.
 2. **You confirm the map.** pdlc shows the list and asks you to merge, split or rename
    anything that looks wrong. The capability and job boundaries matter, because every change
    must stay inside one.

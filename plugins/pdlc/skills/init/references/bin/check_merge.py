@@ -3,6 +3,7 @@
 
 A change may merge only when:
   - every requirement it lists is verified (and every retired one is gone from its spec);
+  - its change spec and requirements write the assumption marker one way: "(assumed)";
   - its tests are locked, and no check file changed after the lock;
   - the tests review judged the checks as locked now (its packet carries the current lock),
     and names a wrong version of the code that each check fails on;
@@ -31,6 +32,8 @@ REQ = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b(.*)$", re.M)
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
 READY = ("in review", "merged")
+# The marker dressed up (*(assumed)*), or any bracket holding the word but more than it.
+MARKER = re.compile(r"[*_]+\(assumed\)[*_]+|\([^()\n]*\bassumed\b[^()\n]*\)", re.I)
 
 
 def section(text, title):
@@ -39,8 +42,8 @@ def section(text, title):
     return match.group(1) if match else ""
 
 
-def status_of(root, req_id):
-    """The requirement's status in its spec, 'missing' if it has none, None if not there."""
+def requirement_text(root, req_id):
+    """The requirement's heading and text in its spec, or None if it isn't there."""
     spec_id = req_id.rsplit(".", 1)[0]
     spec = root / "pdlc" / "specs" / KINDS[spec_id.split("-", 1)[0]] / (spec_id + ".md")
     if not spec.exists():
@@ -51,9 +54,23 @@ def status_of(root, req_id):
         return None
     body = text[heading.end():]
     end = re.search(r"^##", body, re.M)
-    body = body[:end.start()] if end else body
+    return heading.group(0) + (body[:end.start()] if end else body)
+
+
+def status_of(root, req_id):
+    """The requirement's status in its spec, 'missing' if it has none, None if not there."""
+    body = requirement_text(root, req_id)
+    if body is None:
+        return None
     status = re.search(r"^Status:\s*([a-z ]+?)\s*(?:·|$)", body, re.M)
     return status.group(1) if status else "missing"
+
+
+def marker_problems(where, text):
+    """Each assumption marker in the text written any way but "(assumed)"."""
+    return ['%s: write "%s" as "(assumed)", with any reason outside the brackets'
+            % (where, found.group(0)) for found in MARKER.finditer(text or "")
+            if found.group(0) != "(assumed)"]
 
 
 def remits(root):
@@ -195,6 +212,10 @@ def check_change(root, folder):
             problems.append("%s is not in its spec" % req_id)
         elif status != "verified":
             problems.append("%s is %s, not verified" % (req_id, status))
+
+    problems += marker_problems("change.md", text)
+    for req_id, _ in reqs:
+        problems += marker_problems(req_id, requirement_text(root, req_id))
 
     checks = check_files(text)
     # A re-lock may leave the older line in place; the newest (last) one counts.

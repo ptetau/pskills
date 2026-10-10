@@ -51,14 +51,22 @@ Follow the visual port and its adapter in `pdlc/config.md`. Write
 ## 4. Record
 
 Run `node pdlc/bin/record_gif.mjs pdlc/changes/CH-xxxx-…/visual.json pdlc/changes/CH-xxxx-…`.
-Then read a few of the frames yourself. If a frame shows an error, the wrong thing, or an
-empty screen, fix the script and record again. Never fix the app here.
+
+A frame must show what its caption claims. The recorder fails, naming the step, when a
+frame is blank, or when a click, typing, a key press or a command changes nothing on
+screen. Then fix the script and record again: a wrong selector, a missing step, or a
+command that prints nothing (print its result, or read it with the next command). Set
+`"unchanged": true` on a step only when its acceptance line says nothing changes.
+
+Then read the last frame of each acceptance line yourself. If it shows an error, the
+wrong thing, or the screen before the step, fix the script and record again. Never fix
+the app here.
 
 ## 5. Finish
 
-1. Commit `visual.json`, any helper script, `review.gif` and `frames/`. The message says
-   "Visual review CH-xxxx" and has a line `Review: pdlc/changes/CH-xxxx-…/review.gif`, plus
-   the trailers `Intent` and `Change`.
-2. Write `handoff.md` for verify: what the GIF shows, frame by frame, and how many
+1. Write `handoff.md` for verify: what the GIF shows, frame by frame, and how many
    acceptance lines it shows out of how many.
-3. Commit the handoff with the same trailers. Tell the user `/pdlc:verify` is next.
+2. Commit `visual.json`, any helper script, `review.gif`, `frames/` and the handoff
+   together ("Visual review CH-xxxx"), with the trailers `Intent`, `Change` and
+   `Review: pdlc/changes/CH-xxxx-…/review.gif`.
+3. Tell the user `/pdlc:verify` is next.

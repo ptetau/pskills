@@ -31,7 +31,7 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
   intent's branch first (trailer `Intent`). Where both changed a line, keep the intent's
   text and status for requirements the intent changed, and the base's for the rest.
 - Write `Branch:` and `Base:` into the change spec header. Set the change to `testing`
-  and the intent to `building`.
+  and the intent to `building`. Commit ("Start CH-xxxx", trailers `Intent` and `Change`).
 - Read the intent's "Handoff", or the change's `handoff.md` if it has one.
 
 ## 2. Write the checks
@@ -64,8 +64,8 @@ test writer before you lock.
 
 1. Commit the check files with the message "Tests CH-xxxx", with `Intent`, `Change` and
    `Req` trailers.
-2. Write that commit's hash into the change spec on its own line under the header:
-   `Tests-Locked: <hash>`. On a re-lock, replace the old line.
+2. Write that commit's hash into the `Tests-Locked:` line right under the change spec's
+   header: `Tests-Locked: <hash>`. On a re-lock, replace the hash.
 3. Commit the change spec ("Lock tests CH-xxxx", trailers `Intent` and `Change`).
 
 From now on, only the test writer may change these files, and only through this skill.
@@ -79,9 +79,9 @@ merge check refuses a tests review of an older lock.
 1. Run `python3 pdlc/bin/make_packets.py CH-xxxx tests`.
 2. Start a fresh `pdlc:reviewer` agent with the path of
    `pdlc/changes/CH-xxxx-…/review/tests/packet.md` and nothing else.
-3. Commit the packet and result. If the result says fail, send the problems to the test
-   writer, then run red, lock and review again. If it fails a third time, stop and ask
-   the user.
+3. Commit the packet and result ("Review tests CH-xxxx", trailers `Intent` and
+   `Change`). If the result says fail, send the problems to the test writer, then run
+   red, lock and review again. If it fails a third time, stop and ask the user.
 
 ## 6. Finish
 

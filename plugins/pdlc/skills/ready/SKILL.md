@@ -36,7 +36,7 @@ state. Go through this list, and skip what doesn't apply:
 Settle each one as a requirement with acceptance lines: add lines to the requirement it
 belongs to, or write a new `proposed` requirement in the right spec and list it in the
 intent's "Requirements" as added. Ask about each one as step 4 says; with `defaults`,
-take your recommended answer and mark it *(assumed)*. Put the list in the handoff.
+take your recommended answer and mark it `(assumed)`. Put the list in the handoff.
 What is left out here is never built without the user's approval.
 
 ## 3. Check each requirement
@@ -61,7 +61,7 @@ A requirement is clear when:
   an output, a message sent. Never a stored row.
 - Each failure line names its error code, and the code is in `DES-errors`. For a new
   code, add it to `DES-errors` as part of this intent.
-- Every rule its sentences state has an acceptance line, including each *(assumed)*
+- Every rule its sentences state has an acceptance line, including each `(assumed)`
   detail. A rule with no line has no check, so nothing holds it.
 - Words like "fast", "easy" or "secure" have a number or a rule behind them.
 - Every capability and design spec it relies on exists, or is part of this intent.
@@ -74,7 +74,7 @@ value. Never recommend a reading that keeps the old behaviour when the plain wor
 change it, or that makes one of the intent's examples come out differently.
 
 Write each answer into the requirement. When the answer was taken by default, mark it
-*(assumed)* where it appears in the requirement. Add a line to the intent's "Notes":
+`(assumed)` where it appears in the requirement. Add a line to the intent's "Notes":
 `<requirement>: <question> → <answer> (assumed)`.
 
 If a design spec is missing (for example, the first time the project shows a table), use
@@ -90,11 +90,15 @@ Two cases are not contradictions. Fix them, add a line to "Notes" for each, and 
 
 - This intent's words ask for something an older requirement rules out. The newest words
   win: change the older one, as intake does, and list it as `changed`.
-- One side is *(assumed)*. A guess gives way: change the guessed side to fit, keep its
+- One side is `(assumed)`. A guess gives way: change the guessed side to fit, keep its
   mark, and update its line in "Notes".
 
 For any other contradiction, show both statements and ask the user which should change.
 Don't pick for them, even with `defaults`: leave both requirements `proposed` and say so.
+
+Each time you change or retire a requirement here, leave no old wording, as intake's
+step 4 says: fix every title, summary, example, cross-reference and note in the specs
+that still shows the old behaviour, and list old README lines in "Notes".
 
 ## 6. Finish
 

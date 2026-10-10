@@ -29,8 +29,10 @@ For each acceptance line under "Requirements":
    seam you need (the clock, randomness, a vendor) that isn't listed.
 4. Drive the surface the line names. If it says the person clicks, the check clicks
    (through the stand-in seam if there is one) and reads what the page shows. If it
-   depends on the current time, the check sets the clock through its seam, never the
-   real clock. A check of a helper alone doesn't prove a line about the surface above it.
+   depends on the current date or time, the check sets the clock through the seam at
+   that same surface (for a command, its environment variable or flag), never the real
+   clock and never a helper below it. If the Interface gives no such seam, stop and say
+   so. A check of a helper alone doesn't prove a line about the surface above it.
 5. For a failure, check the exact error code, never just "something went wrong". Where
    the caller can't see the code, check the exact message and status (see `DES-errors`).
 6. Make sure the check would fail if the behaviour were wrong, and pass if it were right.

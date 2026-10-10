@@ -11,8 +11,9 @@ Fills the delivery port with git and GitHub pull requests.
   after a blank line. Any other trailers go in the same block, with no blank line between.
   Check with `git log -1 --format=%(trailers)`: pdlc's trailers must show.
 - **propose**: push the branch and open a pull request against the change's base, with
-  whatever GitHub tool this session has (the `gh` CLI or GitHub tools). Put the tables in
-  the body. Embed the GIF with its full address, so it plays in the pull request:
+  whatever GitHub tool this session has (the `gh` CLI or GitHub tools). The body is the
+  description from `pdlc/templates/proposal.md`. Embed the GIF with its full address, so
+  it plays in the pull request:
   `![visual review](https://github.com/<owner>/<repo>/blob/<branch>/pdlc/changes/<folder>/review.gif?raw=true)`.
   When the pull request it is based on merges, retarget this one to that one's base.
   Under "Merge together", list the intent's other changes in stack order, with their pull
@@ -26,6 +27,6 @@ Fills the delivery port with git and GitHub pull requests.
 If no GitHub access is available, stop after pushing and tell the user the branch name.
 
 If the repository has no remote, don't push. **propose** writes the description to
-`pdlc/changes/<folder>/proposal.md` and commits it on the branch; the change counts as
-proposed, and the user merges the intent's branches into main locally, together, bottom
-first. **merged?** then uses `merge-base`.
+`pdlc/changes/<folder>/proposal.md`, which verify commits with its handoff ("Propose
+CH-xxxx"); the change counts as proposed, and the user merges the intent's branches into
+main locally, together, bottom first. **merged?** then uses `merge-base`.
