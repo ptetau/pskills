@@ -128,7 +128,9 @@ proposed ──► ready ──► built ──► verified
 - **verified**: its checks pass and review passed. Only now can the change merge.
 
 Spec patches land in the real spec file straight away, with status `proposed`. There is one
-source of truth. If two intents touch the same requirement, they collide at spec time, when
+source of truth. While earlier changes are still unmerged, the patches land on the
+intent's own branch, stacked on top of them, so every branch merges in order without
+conflicts. If two intents touch the same requirement, they collide at spec time, when
 it is cheap to sort out, not at merge time. The newer intent's own words win over an older
 requirement or a guess; only words that could be read two ways go back to the user.
 

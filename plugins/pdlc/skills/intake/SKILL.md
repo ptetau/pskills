@@ -15,12 +15,17 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 
 ## 1. Get the intent
 
+First see where to work ("Where pdlc commits" in `pdlc/README.md`). If a pdlc branch is
+unmerged, switch to the newest one, so the inbox and specs you read are current.
+
 - If the user described something new, add it through the inbox port. Use their words for
   "What and why". Tell them its ID.
 - If they named an intent, read it.
 - If neither, take the oldest intent with status `new`.
 
-Set its status to `specifying`.
+If you switched to a branch, start the intent's own branch from it now, through the
+delivery port, before you commit anything. Write its name as the intent's `Branch:`.
+Set the intent's status to `specifying`.
 
 ## 2. Decide what it touches
 
@@ -29,6 +34,9 @@ Read the specs in `pdlc/specs/`. For each thing the intent needs, decide where i
 - What a user does → a **job** spec.
 - What the system can do, used by jobs → a **capability** spec.
 - How we do something everywhere → a **design** spec.
+- How something looks to the user (a format, a wording, a layout) → the **job** where
+  they see it, even when a capability makes the value. Add it to each place they see
+  it (a page, an output, a reply).
 
 Prefer existing specs. Create a new one only when nothing fits. When you create a
 capability, draw it around something likely to change (a vendor, a set of rules, a
@@ -45,7 +53,7 @@ look** at that spec's code map. Write its requirements into the spec (they come 
 
 ## 4. Write the patches
 
-First list the change branches, as "Where change state lives" in `pdlc/README.md` says.
+First list the change branches, as "Where pdlc commits" in `pdlc/README.md` says.
 Statuses on main may be stale. Never edit a change spec (`changes/*/change.md`): a change
 that hasn't merged keeps what it copied. If you change a requirement that such a change
 covers, say so in the handoff; this intent's change for that spec will stack after it.
@@ -56,6 +64,10 @@ Write straight into the spec files, using `pdlc/templates/` for new ones.
   `Intents:` to this intent. Write one or two plain sentences, then acceptance checks as
   "Given …, when …, then …" lines. Mark each detail the intent's words don't give (a
   message, a limit, an order, a format) *(assumed)* right where you write it.
+- **The intent's own words bind.** Copy every example it gives (an output, a message, a
+  value) into an acceptance line, exactly. Read its words plainly, for every value,
+  including the edge ones (zero, empty, a whole number). An *(assumed)* reading never
+  narrows them to keep the old behaviour.
 - **Changed requirement:** edit it in place. Set `Status: proposed`. Add this intent to
   `Intents:`.
 - **Removed requirement:** set `Status: retiring` and add this intent.

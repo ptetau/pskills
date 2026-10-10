@@ -9,4 +9,6 @@ You judge whether the code does what the spec says. You have not seen the checks
 - The code does nothing the spec didn't ask for.
 - Only the files in "Files" changed, and the change stays in its one scope. A job change
   never edits a capability.
+- A README in "Files" matches the change: what it adds is described, nothing it removes
+  is still described, and it says how to run the checks.
 - If frames are listed, read them. What they show must match the acceptance lines.

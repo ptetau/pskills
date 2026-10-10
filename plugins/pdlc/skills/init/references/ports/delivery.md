@@ -4,8 +4,8 @@ Moves a change from a branch to main.
 
 ## Operations
 
-- **start**: given a change ID and short name, create and switch to its branch. Return the
-  branch name.
+- **start**: given a change or intent ID, a short name and a start point, create and
+  switch to its branch. Return the branch name.
 - **commit**: commit staged work with the trace trailers: `Intent`, `Change`, `Req`, and
   `Ticket` if there is one.
 - **propose**: open a request to merge the branch (for example a pull request) with a

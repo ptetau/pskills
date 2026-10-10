@@ -5,7 +5,8 @@ A change may merge only when:
   - every requirement it lists is verified (and every retired one is gone from its spec);
   - its tests are locked, and no check file changed after the lock;
   - the tests review judged the checks as locked now (its packet carries the current lock);
-  - every review remit named in pdlc/config.md passed.
+  - every review remit named in pdlc/config.md passed;
+  - the branch merges into main without conflicts.
 
 Usage:
   python3 pdlc/bin/check_merge.py CH-0031   check one change
@@ -79,6 +80,23 @@ def git(root, *args):
     return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True)
 
 
+def conflicts_with_main(root):
+    """Files that conflict when this branch merges into main. Empty when it merges
+    cleanly, when there is no main, when this is main, or when git can't tell."""
+    try:
+        head = git(root, "rev-parse", "--verify", "-q", "HEAD")
+        main = git(root, "rev-parse", "--verify", "-q", "main")
+        if head.returncode or main.returncode or head.stdout == main.stdout:
+            return []
+        out = git(root, "merge-tree", "--write-tree", "--name-only", "--no-messages",
+                  "main", "HEAD")
+    except OSError:
+        return []
+    if out.returncode != 1:
+        return []
+    return sorted(set(out.stdout.split()[1:]))
+
+
 def check_change(root, folder):
     """A list of problems with one change. Empty means it may merge."""
     problems = []
@@ -121,6 +139,9 @@ def check_change(root, folder):
             problems.append("%s review has no result" % remit)
         elif not re.match(r"\s*Result:\s*pass\b", result.read_text(), re.I):
             problems.append("%s review did not pass" % remit)
+
+    for path in conflicts_with_main(root):
+        problems.append("conflicts with main: %s" % path)
     return problems
 
 

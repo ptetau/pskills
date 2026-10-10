@@ -47,6 +47,9 @@ Collect the failing checks and every problem from the results into the change's
 `handoff.md`, addressed to build (code problems) or tests (check problems). Add a line to
 the progress log, commit, and tell the user which stage is next. Stop here.
 
+A code problem that every check passed is also a gap in the checks. Address it to tests
+first: a check that fails on it is written and locked before build fixes the code.
+
 A fix stays inside the change's spec. Never add or change a requirement, an acceptance
 line or an error code on a change's branch to answer a review. A point that needs one is
 a follow-up: list it in the handoff for the user, not for build.
@@ -57,6 +60,8 @@ a follow-up: list it in the handoff for the user, not for build.
    `in review`.
 2. Commit the results and statuses: "Verified CH-xxxx", trailers `Intent` and `Change`.
 3. Run the gate through the delivery port. It must pass. If it doesn't, fix what it names.
+   For a conflict with main, merge main into this branch (trailers `Intent` and
+   `Change`), keeping main's text and this branch's statuses for its own requirements.
 4. Propose the merge through the delivery port, with the change's base as the target. In
    the description:
    - the GIF, embedded (the delivery adapter says how);
@@ -67,8 +72,10 @@ a follow-up: list it in the handoff for the user, not for build.
      each, so the user reviews them in one place;
    - every follow-up from the results, for the user to add as intents if they want them.
 5. If every change for the intent is now `in review` or `merged`, set the intent to
-   `in review`.
-6. Write `handoff.md`: the link, and what the user needs to confirm. Commit it.
+   `in review`, here on the change's branch.
+6. Write `handoff.md`: the link, and what the user needs to confirm. Commit it with the
+   intent ("Propose CH-xxxx", trailers `Intent` and `Change`). Every commit on a
+   change's branch carries its `Change`.
 7. Tell the tracker port. Give the user the link.
 
 Never merge yourself.

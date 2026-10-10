@@ -1,6 +1,6 @@
 # IN-0000 · Short name
 
-Status: new · Ticket: none · Added: YYYY-MM-DD
+Status: new · Ticket: none · Branch: none · Added: YYYY-MM-DD
 
 ## What and why
 

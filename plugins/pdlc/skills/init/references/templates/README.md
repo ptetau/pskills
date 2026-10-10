@@ -13,7 +13,8 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
    locked. Nobody who writes app code may change them.
 6. Reviews are independent: one fresh reviewer per remit, each seeing only its packet.
 7. A change merges only when its requirements are `verified`, its tests are unchanged
-   since the lock, and every review remit passed. `bin/check_merge.py` checks all three.
+   since the lock, every review remit passed, and its branch merges into main without
+   conflicts. `bin/check_merge.py` checks all four.
 8. These files are the truth. Boards and dashboards only show them.
 9. Every commit carries trace trailers (see `specs/design/DES-pdlc-commit-trailers.md`).
    Commits that only touch `pdlc/` need no `Req`.
@@ -75,19 +76,33 @@ Every stage, and every stop, ends the same way:
 - Its handoff says only what the files show. Count, don't estimate: checks that ran,
   acceptance lines shown.
 
-## Where change state lives
+## Where pdlc commits
 
-A change's status, lock and handoff are committed on its own branch. On main, a change
-that hasn't merged still reads `planned`. Before picking a change by its status, list the
-change branches (`git branch --list`) and read each change's `change.md` from its branch
-(`git show <branch>:pdlc/changes/<folder>/change.md`). A change with no branch is
-`planned`.
+- Init, and the intent stages (intake, ready, change) when no pdlc branch is unmerged,
+  commit on main. pdlc's records aren't code, so this is by design, even where the usual
+  rule is to branch first.
+- A change commits on its own branch: its code, status, lock and handoff. On main, a
+  change that hasn't merged still reads `planned`.
+- While any pdlc branch is unmerged, nothing is committed on main except the catch-up in
+  "Before any work". The intent stages work on the intent's own branch,
+  `pdlc/IN-xxxx-<short-name>`, started from the newest unmerged branch: the first line of
+  `git branch --no-merged main --list 'pdlc/*' --sort=-committerdate` (use the pattern
+  in `DES-pdlc-branches`). The intent's `Branch:` names it. Its spec patches then come
+  after the work they change, so every branch merges into main in order, with no
+  conflicts.
+
+Before picking an intent or a change by its status, list the unmerged branches. Read each
+change's `change.md` from its own branch
+(`git show <branch>:pdlc/changes/<folder>/change.md`), and each intent from the newest
+branch that has it. A change with no branch is `planned`.
 
 ## Stacked changes
 
 A change is built on the branch of the change before it, even before that one merges.
 Its `Base:` names that branch, and its pull request targets it. An intent's first change
 is based on the newest unmerged change of an earlier intent, or on main if there is none.
+If the intent has a `Branch:`, its first change starts from that branch, so it carries
+the intent's spec patches into the same pull request.
 
 ## Statuses
 

@@ -106,6 +106,8 @@ adds it.
 
 ### 7. Finish
 
-- Commit the new `pdlc/` folder on its own, with the message "Set up pdlc".
+- Commit the new `pdlc/` folder on its own, with the message "Set up pdlc", on main
+  (the project's default branch). Don't start a branch for it: pdlc's records live on
+  main, and every later stage looks for them there.
 - Tell the user how to start: `/pdlc:ship <what you want>` runs everything, or they can go
   a stage at a time, starting with `/pdlc:intake`.

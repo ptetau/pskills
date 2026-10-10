@@ -27,6 +27,9 @@ Behaviour the spec doesn't ask for is never a problem, however good an idea: che
 input no acceptance line mentions, a new error or code, a limit, another status. Put it
 under "Follow-ups". The user decides if it becomes a new intent. Never fail for it.
 
+What an acceptance line does ask for is always in scope. A line that isn't met, or, for
+the tests remit, isn't fully proved where the line says, is a problem, never a follow-up.
+
 Then write `result.md` in the same folder as the packet:
 
 ```

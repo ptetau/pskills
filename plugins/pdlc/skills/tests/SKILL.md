@@ -24,8 +24,10 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
   it is the newest change of an earlier intent that hasn't merged, if any, else `main`.
   The change before it doesn't need to be merged, but it must be `in review` or
   `merged`: if it isn't, finish that change's show and verify first.
-- Start the branch through the delivery port, from the base. Write `Branch:` and `Base:`
-  into the change spec header. Set the change to `testing` and the intent to `building`.
+- Start the branch through the delivery port, from the base. An intent's first change
+  starts from the intent's `Branch:` instead, when it has one, so it carries the
+  intent's specs. Write `Branch:` and `Base:` into the change spec header. Set the
+  change to `testing` and the intent to `building`.
 - Read the intent's "Handoff", or the change's `handoff.md` if it has one.
 
 ## 2. Write the checks

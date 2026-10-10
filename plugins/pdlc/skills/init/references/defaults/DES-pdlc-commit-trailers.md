@@ -16,8 +16,9 @@ Ticket: PROJ-88
 `Req` may list several IDs, separated by commas. Leave out `Ticket` if there is none.
 
 A commit that only changes files in `pdlc/` (starting a branch, logging progress, setting
-statuses) needs `Intent` and `Change`, but no `Req`. Every commit that changes anything
-else needs all three.
+statuses) needs `Intent`, but no `Req`. On a change's branch it also needs `Change`, even
+when it only sets the intent's status. Every commit that changes anything else needs all
+three.
 
 Keep all trailers in one final block where you can. If other trailers are added (for
 example `Co-Authored-By`), put them in the same block, after pdlc's, so git shows them as

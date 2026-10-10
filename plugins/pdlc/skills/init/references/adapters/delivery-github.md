@@ -2,9 +2,11 @@
 
 Fills the delivery port with git and GitHub pull requests.
 
-- **start**: `git switch -c <branch> <base>`. Name the branch as
-  `specs/design/DES-pdlc-branches.md` says (by default `pdlc/<change-id>-<short-name>`).
-  The base is the change's `Base:`. Bring main up to date first when the base is main.
+- **start**: `git switch -c <branch> <start>`. Name the branch as
+  `specs/design/DES-pdlc-branches.md` says (by default `pdlc/<ID>-<short-name>`). The
+  start is the change's `Base:`, or the intent's `Branch:` for an intent's first change,
+  or, for an intent, the newest unmerged branch. When the start is main and there is a
+  remote, pull main first.
 - **commit**: `git commit` with the trailers as the last lines of the message, one per line,
   after a blank line. Any other trailers go in the same block, with no blank line between.
   Check with `git log -1 --format=%(trailers)`: pdlc's trailers must show.

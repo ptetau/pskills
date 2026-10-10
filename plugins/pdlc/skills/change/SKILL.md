@@ -18,7 +18,8 @@ the intent's "Handoff".
 ## 1. Gather
 
 Read the intent. If none was named, take the oldest intent with status `ready`. If it
-isn't `ready`, stop and say `/pdlc:ready` comes first.
+isn't `ready`, stop and say `/pdlc:ready` comes first. If it has a `Branch:`, switch to
+it and commit there.
 
 Read every requirement it lists, the specs they sit in, the specs those rely on, and the
 code in their code maps.
@@ -48,25 +49,30 @@ and write `change.md` in it from `pdlc/templates/change.md`.
   must be enough to write every check: function names and arguments, commands and flags,
   routes, page elements and what they show. For each entry give the file it lives in,
   what goes in and what comes out (with types where the language has them), and every
-  error it can give, by its code in `DES-errors`. Under "Test seams", say how a check
-  controls the clock, randomness and outside vendors or stores, or write "none". Decide
-  new names here, following the code's existing style, and mark each new name
-  *(assumed)*.
+  error it can give, by its code in `DES-errors`. Where a line's "when" is something the
+  user does (clicks, runs a command, sends a request), list that surface, so checks
+  drive it and not only a helper below it. Decide new names here, following the code's
+  existing style, and mark each new name *(assumed)*.
+- **Test seams:** how a check controls what a line depends on: the clock (for any line
+  that depends on the current time), randomness, outside vendors or stores. If the
+  check runner can't drive the user's surface itself (a page, with no browser in the
+  runner), the seam is a stand-in: load the real page and its script into a stub page
+  with the same element ids and standard properties, stub only the network, then act as
+  the user and read what shows. Write "none" only when no line needs a seam.
 - **Files:** only the app files this change needs. Start from the spec's code map. A job
-  change must not list files from a capability's code map. Also list the project's
-  README if the change alters what it tells a user (how to run the app or its checks,
-  a command, a route, an output), and `.gitignore` if it lacks the folders the checks
-  will write.
+  change must not list files from a capability's code map. A job change always lists the
+  project's README; another change lists it if it alters what the README tells a user.
+  Also list `.gitignore` if it lacks the folders the checks will write.
 - **Check files:** the check files this change adds or changes, inside the check folders
   in `pdlc/config.md`.
 - **Steps:** usually one per requirement. Each names its requirement, the check that
   proves it (named with the requirement ID), and "Done when". A `(retire)` requirement
   gets no check: its step removes the code and checks that only served it. A README in
-  "Files" gets a last step: it says what the change does.
-- **Manual checks:** any acceptance check that can't be automated, or "none". If one could
-  be automated but the project has no check runner that can reach it (for example page
-  behaviour with no browser checks), add an intent through the inbox port to add such a
-  runner, unless the inbox already has one, and say so in the handoff.
+  "Files" gets a last step. Done when the README describes what this change adds, no
+  longer describes anything it removes, and says how to run the app and the checks,
+  with the "all" command from `pdlc/config.md`.
+- **Manual checks:** only what no check can see, such as how a page looks, or "none". A
+  missing runner or tool is never a reason, and never a stop: use a stand-in seam.
 
 ## 4. Finish
 

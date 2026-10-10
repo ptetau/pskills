@@ -16,7 +16,7 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 ## 1. Gather
 
 Read the intent and its "Handoff". If none was named, take the oldest intent with status
-`specifying`.
+`specifying`. If the intent has a `Branch:`, switch to it and commit there.
 Collect every requirement in its "Requirements" section that is `proposed` or `retiring`,
 and the specs they sit in.
 
@@ -28,8 +28,16 @@ A requirement is clear when:
 - Each acceptance check is a "Given …, when …, then …" line that a check could prove with a
   pass or fail.
 - Each line uses concrete values ("Ana", "80", "15%"), not "a user" or "some amount".
+- Every example in the intent's own words is an acceptance line, exactly as given.
+- Where a requirement says how something looks to the user, a line gives the exact text
+  they see, where they see it, for an edge value too (zero, empty, a whole number).
 - Where there is a limit, there are lines just inside and just outside it (59:59 and
   60:00 for a one-hour limit).
+- Every input it reads (an argument, a field, a request, a stored file) has lines for
+  its bad forms: missing, empty, the wrong type, too large, and, for stored data,
+  unreadable or written by an older version. The "then" is a coded refusal, or a stated
+  default for an older record. Never a crash, a hang, a stack trace, or a silent empty,
+  zero or null.
 - Each line checks one behaviour, and its "then" is something a caller can see: a reply,
   an output, a message sent. Never a stored row.
 - Each failure line names its error code, and the code is in `DES-errors`. For a new
@@ -42,7 +50,9 @@ A requirement is clear when:
 ## 3. Ask about what is unclear
 
 Follow "Asking questions" in `pdlc/README.md`. If run with `defaults`, don't ask: take
-your recommended answer.
+your recommended answer. Recommend the plain reading of the intent's words, for every
+value. Never recommend a reading that keeps the old behaviour when the plain words
+change it, or that makes one of the intent's examples come out differently.
 
 Write each answer into the requirement. When the answer was taken by default, mark it
 *(assumed)* where it appears in the requirement. Add a line to the intent's "Notes":

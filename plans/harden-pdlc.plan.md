@@ -213,4 +213,23 @@ Fixes (Opus, 8): newest words win; reviewers fail only on spec, design or unsafe
         Word check: no app words in the diff.
 Left: half a stack merging alone; status-line conflicts across intents; commit subject
       shapes; init copying with cp -r; guard blocks the test writer's root Glob.
+
+[2026-10-10] Round 1 (harness at 05d64f4)
+Setup: a usage limit cut off one ship; it was resumed once. Reviews switched to one
+       Sonnet reviewer per app plus scripts (probe runner, process facts), at the user's
+       request, and round 1 was scored that way for all three apps.
+Scores: pocket-cli 79% (no hard fail) · convert-web 67% (H1: a shown number lacked the
+        asked-for decimal) · polls-api 62% on main (H1, H2, H3). Round 0 was 54/55/48%.
+What improved: two apps merged every change (6 of 6 each); every must probe passed in
+        those two; ship took recommended answers instead of stopping; stopped changes
+        were taken up first and finished.
+What went wrong: one app's finished stack (all three branches pass the merge check,
+        20/20 probes on its tip) never reached main: a later intent's spec edits on main
+        conflicted with the first branch. Fix rounds added behaviour with no requirement
+        or check; removed features stayed in the README; a page format was guessed.
+Fixes (Opus, 5): while work is unmerged, intent stages commit on the intent's own branch
+        on top of the stack; the merge check fails a branch that conflicts with main
+        (new failing-first test); the intent's own words and examples bind; checks drive
+        what the user does, with stand-ins and clock seams; bad input is specified up
+        front; the README stays true. 52 unit tests pass. No app words in the diff.
 ```

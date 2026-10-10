@@ -26,8 +26,10 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 - Otherwise take the oldest intent that isn't `in review`, `done`, `paused` or
   `cancelled`. An intent `in review` has every change proposed and waits on the user.
 
-Read its latest handoff. The handoffs and statuses say exactly where things are, so ship
-can always pick up after a stop, a crash or a new session.
+Read intents and changes where they live: unmerged work is on its branch ("Where pdlc
+commits" in `pdlc/README.md`). Then read the latest handoff of the one you picked. The
+handoffs and statuses say exactly where things are, so ship can always pick up after a
+stop, a crash or a new session.
 
 ## 2. Run the stages
 
@@ -50,7 +52,8 @@ for each change: tests → build → show → verify → propose
 
 ## 3. When a stage fails
 
-- Verify failed on code → back to build, then show and verify again.
+- Verify failed on code → back to build, then show and verify again. If no check caught
+  the problem, go to tests first, so a check holds the fix.
 - Verify or the tests review failed on checks → back to tests, then build, show, verify.
 - Allow two rounds per change. On the third failure, stop.
 
@@ -67,6 +70,9 @@ is wrong. Fixing a check before it is locked is not a round.
 
 Everything else takes the recommended answer, recorded in the handoff and the intent's
 notes. A missing git remote is not a stop: the delivery adapter says what to do.
+Neither is a choice about how to check, build or name something: each stage has a
+default for it (for checks the project's runner can't reach, the change skill's
+stand-in seam).
 
 When you stop, write why in one sentence under "Open" in the latest handoff, with what
 the user needs to decide and your recommended answer. Commit everything, so

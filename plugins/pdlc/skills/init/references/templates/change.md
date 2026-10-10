@@ -31,8 +31,9 @@ them), and every error it can give, by code from `DES-errors`.
 
 ### Test seams
 
-How a check controls what it can't wait for or reach: the clock, randomness, and outside
-vendors or stores. Write "none" if the checks need none.
+How a check controls what it can't wait for or reach: the clock, randomness, outside
+vendors or stores, and a stand-in for a surface the runner can't drive (a page with no
+browser). Write "none" only if no line needs one.
 
 - clock: `send(..., { now })` takes the current time
 
@@ -58,8 +59,8 @@ Check files for this change. Only the test writer writes these.
 
 ## Manual checks
 
-Acceptance checks that can't be automated. The user confirms them at merge. Write "none"
-if there are none.
+Acceptance checks no check can see, such as how a page looks. The user confirms them at
+merge. Write "none" if there are none.
 
 ## Progress log
 

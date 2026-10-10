@@ -269,6 +269,40 @@ class MergeCheck(unittest.TestCase):
         self.config(["specification"])
         self.assertEqual(self.run_check("CH-0001")[0], 0)
 
+    # The branch must merge into main
+
+    def commit_all(self, message):
+        git(self.root, "add", "-A")
+        git(self.root, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", message)
+
+    def branched_repo(self):
+        """main, and a change branch that marked CAP-email.R2 verified."""
+        self.write(r2="ready")
+        git(self.root, "init", "-q", "-b", "main")
+        self.commit_all("start")
+        git(self.root, "switch", "-qc", "pdlc/CH-0001-email-templates")
+        self.write(r2="verified")
+        self.commit_all("verified")
+        git(self.root, "switch", "-q", "main")
+
+    def test_fails_when_the_branch_conflicts_with_main(self):
+        self.branched_repo()
+        spec = self.root / "pdlc/specs/capabilities/CAP-email.md"
+        spec.write_text(spec.read_text().replace("Status: ready · Intents: IN-0002",
+                                                 "Status: proposed · Intents: IN-0002, IN-0003"))
+        self.commit_all("a newer intent edits the same requirement on main")
+        git(self.root, "switch", "-q", "pdlc/CH-0001-email-templates")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("conflicts with main: pdlc/specs/capabilities/CAP-email.md", out)
+
+    def test_passes_when_the_branch_merges_into_main_cleanly(self):
+        self.branched_repo()
+        (self.root / "README.md").write_text("Something new on main.\n")
+        self.commit_all("unrelated work on main")
+        git(self.root, "switch", "-q", "pdlc/CH-0001-email-templates")
+        self.assertEqual(self.run_check("CH-0001")[0], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
