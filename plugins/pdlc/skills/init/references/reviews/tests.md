@@ -15,10 +15,29 @@ You judge the checks, not the code. You have not seen the code.
   A line that depends on the current time sets the clock through a seam. Leaving such a
   line to manual checks, when a stand-in seam could reach it, is a problem, not a
   follow-up.
-- Each check could fail. A check that passes whatever the code does doesn't count.
+- Each check could fail: it fails on a plausible wrong version of the code (see "Wrong
+  versions"). A check that passes whatever the code does doesn't count.
 - A correct app would pass each check. A fake that stands in for something real uses the
   real thing's names and behaviour, so the check doesn't prove only the fake.
 - No check can hang: anything that waits on the app has a time limit.
 - Every error code listed in the Interface has a check that expects that exact code.
 - Checks control time, randomness and vendors only through the Interface's "Test seams".
 - Checks are clear enough that a failure tells you what broke.
+
+## Wrong versions
+
+For each check, name one realistic wrong version of the code and decide whether the
+check fails on it. Write one line per check under "Wrong versions" in your result: the
+check, the wrong version, and `fails` or `passes`. A check that passes a plausible wrong
+version is a problem: name the value or line that would catch it.
+
+Watch for these traps:
+
+- Examples that also fit a wrong rule. A rule about order tested with items already in
+  that order, or in alphabetical order. Values that come out the same whether rounded
+  up, down or to the nearest. Text already in the case the rule asks for.
+- A limit not tested exactly at the edge and one past it: for "at most 20", 20 passes and
+  21 fails. Values near the edge prove nothing about the edge.
+- A rule about a whole class tested without a non-member. "Any other value is an error"
+  needs a value close to an allowed one (another case, a space, a prefix), not only a few
+  far-off ones. "Only the owner may" needs someone who isn't the owner.

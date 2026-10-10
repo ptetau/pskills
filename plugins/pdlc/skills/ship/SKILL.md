@@ -24,7 +24,9 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 - If the user described something new, start at intake with their words.
 - If they named an intent or change, start from its current status.
 - Otherwise take the oldest intent that isn't `in review`, `done`, `paused` or
-  `cancelled`. An intent `in review` has every change proposed and waits on the user.
+  `cancelled`, and doesn't await approval. An intent `in review` has every change
+  proposed and waits on the user. One whose "Notes" say `Awaits approval:` is new
+  behaviour from a review: never take it up unless the user names it.
 
 Read intents and changes where they live: unmerged work is on its branch ("Where pdlc
 commits" in `pdlc/README.md`). Then read the latest handoff of the one you picked. The
@@ -91,9 +93,9 @@ Tell the user, in a few lines:
 
 - the changes and their pull requests, in stack order, each with its GIF;
 - every answer taken by default, so they can change any of them;
-- the reviewers' follow-ups, which they may add as new intents;
-- what is waiting for them: approving merges, bottom of the stack first, and any manual
-  checks.
+- the new behaviour waiting for their approval, with the intent filed for each;
+- what is waiting for them: merging each intent's pull requests together, bottom of the
+  stack first, and any manual checks.
 
 Keep going until the end of the stack or a stop above. If the session is cut off from
 outside, running `/pdlc:ship` again picks up from the handoffs.

@@ -38,12 +38,27 @@ Through the checks port:
    its own packet. Don't tell any reviewer what another found.
 4. Wait for all of them. Each writes `review/<remit>/result.md`.
 
-Commit every packet and result now, pass or fail ("Verify CH-xxxx: round <n>", trailers
-`Intent` and `Change`). A failed round's findings must stay in git.
+## 4. New behaviour
 
-## 4. If anything failed
+A review point needs new behaviour when no acceptance line, design spec or remit rule
+asks for it: a new limit or size cap, a guard, another input check, a new error or
+status. Reviewers list these under "Follow-ups". A problem that only new behaviour would
+fix counts too. For each one, in every round:
 
-Collect the failing checks and every problem from the results into the change's
+- Never build it on this branch.
+- File it through the inbox port as a new intent, status `new`, in the reviewer's words.
+  Its "Notes" start with `Awaits approval: found reviewing CH-xxxx (<remit>)`. Skip it if
+  an intent already asks for the same thing.
+- Add its ID to the change's progress log, for the proposal.
+
+With `defaults`, never approve one. It waits for the user.
+
+Commit every packet, result and new intent now, pass or fail ("Verify CH-xxxx: round
+<n>", trailers `Intent` and `Change`). A failed round's findings must stay in git.
+
+## 5. If anything failed
+
+Collect the failing checks and every other problem from the results into the change's
 `handoff.md`, each addressed to the stage that fixes it:
 
 - a failing check, or a problem with a check → tests;
@@ -52,21 +67,26 @@ Collect the failing checks and every problem from the results into the change's
 - any other problem (a remit rule, a design spec, unsafe code) → build. No acceptance
   line names it, so it needs no new check.
 
+If a remit failed only for new behaviour, nothing is built for it: verify runs again,
+and counts as a round.
+
 Add a line to the progress log, commit, and tell the user which stage is next. Stop here.
 
-Every problem goes to tests or build, never to the user. Only a reviewer can call
-something a follow-up. Build fixes a problem inside the change's "Files" with the
-plainest fix that meets the rule, for example a clearer message. Never add or change a
-requirement, an acceptance line or an error code on a change's branch.
+Every problem goes to tests or build, never to the user. Build only makes the code meet
+an existing acceptance line, design spec or remit rule, inside the change's "Files",
+with the plainest fix, for example a clearer message. Never add or change a requirement,
+an acceptance line or an error code on a change's branch.
 
-## 5. If everything passed
+## 6. If everything passed
 
 1. Set each requirement in the change to `verified` in its spec file, and the change to
    `in review`.
 2. Commit the results and statuses: "Verified CH-xxxx", trailers `Intent` and `Change`.
-3. Run the gate through the delivery port. It must pass. If it doesn't, fix what it names.
-   For a conflict with main, merge main into this branch (trailers `Intent` and
-   `Change`), keeping main's text and this branch's statuses for its own requirements.
+3. Run the gate through the delivery port. It must pass, except for lines saying another
+   change of this intent is not ready: those clear once the whole stack is proposed. Fix
+   anything else it names. For a conflict with main, merge main into this branch
+   (trailers `Intent` and `Change`), keeping main's text and this branch's statuses for
+   its own requirements.
 4. Propose the merge through the delivery port, with the change's base as the target. In
    the description:
    - the GIF, embedded (the delivery adapter says how);
@@ -75,7 +95,10 @@ requirement, an acceptance line or an error code on a change's branch.
    - the lock commit, and any "Manual checks" for the user to confirm;
    - every detail marked *(assumed)* in the change spec and its requirements, one line
      each, so the user reviews them in one place;
-   - every follow-up from the results, for the user to add as intents if they want them.
+   - "Merge together": the intent's other changes in stack order, with their pull
+     requests where they exist. They merge together, bottom first;
+   - "New behaviour for you to approve": each intent filed in step 4 for this change,
+     by ID, one line each.
 5. If every change for the intent is now `in review` or `merged`, set the intent to
    `in review`, here on the change's branch.
 6. Write `handoff.md`: the link, and what the user needs to confirm. Commit it with the

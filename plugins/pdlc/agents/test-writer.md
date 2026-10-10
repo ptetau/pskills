@@ -36,6 +36,11 @@ For each acceptance line under "Requirements":
 6. Make sure the check would fail if the behaviour were wrong, and pass if it were right.
    A fake that stands in for something real (a page, a server, a file) uses the real
    thing's names and behaviour, for example the standard properties of a page element.
+   Pick values a plausible wrong version gets wrong:
+   - for order, sorting, rounding or case, examples only the right rule fits: items not
+     already in order or in alphabetical order, values that round differently each way;
+   - each limit exactly at the edge and one past it, never just near it;
+   - for a rule about a whole class, a member and a value just outside it.
 7. Give anything that waits (a reply, a process, a timer) a time limit, so a wrong app
    fails the check instead of hanging the run.
 

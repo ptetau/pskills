@@ -4,9 +4,13 @@
 A change may merge only when:
   - every requirement it lists is verified (and every retired one is gone from its spec);
   - its tests are locked, and no check file changed after the lock;
-  - the tests review judged the checks as locked now (its packet carries the current lock);
+  - the tests review judged the checks as locked now (its packet carries the current lock),
+    and names a wrong version of the code that each check fails on;
   - every review remit named in pdlc/config.md passed;
-  - the branch merges into main without conflicts.
+  - the branch merges into main without conflicts;
+  - every other change of its intent is "in review" or "merged" on its own branch, so the
+    intent's changes merge together;
+  - it hasn't merged already: a merged change's branch takes no new commits.
 
 Usage:
   python3 pdlc/bin/check_merge.py CH-0031   check one change
@@ -26,6 +30,7 @@ from pathlib import Path
 REQ = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b(.*)$", re.M)
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
+READY = ("in review", "merged")
 
 
 def section(text, title):
@@ -76,8 +81,84 @@ def reviewed_lock(folder, lock):
     return bool(seen) and (seen[-1].startswith(lock) or lock.startswith(seen[-1]))
 
 
+def wrong_versions(folder):
+    """The lines under "Wrong versions" in the tests review's result."""
+    result = folder / "review" / "tests" / "result.md"
+    text = result.read_text() if result.exists() else ""
+    block = re.search(r"^#*\s*Wrong versions:?\s*$(.*?)(?=^[^\s-]|\Z)", text, re.M | re.S)
+    lines = re.findall(r"^\s*-\s+(.+?)\s*$", block.group(1), re.M) if block else []
+    return [line for line in lines if line.lower() != "none"]
+
+
 def git(root, *args):
     return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True)
+
+
+def field(text, name):
+    """A header field of a change spec or intent, such as Status or Branch."""
+    match = re.search(r"\b%s:[ \t]*([^·\n]*?)[ \t]*(?:·|$)" % name, text, re.M)
+    return match.group(1) if match else None
+
+
+def show(root, ref, path):
+    """A file as it is on a branch, or None if git can't find it there."""
+    out = git(root, "show", "%s:%s" % (ref, path))
+    return out.stdout if out.returncode == 0 else None
+
+
+def branches(root):
+    """Every local and remote branch git knows."""
+    out = git(root, "for-each-ref", "--format=%(refname:short)", "refs/heads", "refs/remotes")
+    return out.stdout.split() if out.returncode == 0 else []
+
+
+def change_id(folder):
+    """CH-0031 for the folder CH-0031-email-templates."""
+    return "-".join(folder.name.split("-", 2)[:2])
+
+
+def status_on_own_branch(root, path, refs):
+    """A change's status on its own branch, the one its change spec names. A change whose
+    branch is gone counts as merged if main's copy reads "in review" or "merged". None
+    when it has no branch."""
+    for ref in refs:
+        text = show(root, ref, path)
+        branch = field(text, "Branch") if text else None
+        if branch and branch != "none" and (ref == branch or ref.endswith("/" + branch)):
+            return field(text, "Status")
+    on_main = show(root, "main", path) or show(root, "origin/main", path)
+    status = field(on_main, "Status") if on_main else None
+    return status if status in READY else None
+
+
+def partners_not_ready(root, folder, text):
+    """Problems with the other changes of this change's intent: each must be ready too."""
+    intent = field(text, "Intent")
+    found = sorted((root / "pdlc" / "inbox").glob("%s-*.md" % intent)) if intent else []
+    if not found:
+        return []
+    listed = re.findall(r"\bCH-\d+\b", section(found[0].read_text(), "Changes"))
+    problems, refs = [], branches(root)
+    for other in dict.fromkeys(listed):
+        if other == change_id(folder):
+            continue
+        specs = sorted((root / "pdlc" / "changes").glob(other + "-*/change.md"))
+        path = "pdlc/changes/%s/change.md" % specs[0].parent.name if specs else None
+        status = status_on_own_branch(root, path, refs) if path else None
+        if status is None:
+            problems.append("%s of %s is not ready (no branch)" % (other, intent))
+        elif status not in READY:
+            problems.append("%s of %s is not ready (status: %s)" % (other, intent, status))
+    return problems
+
+
+def merged_already(root, folder):
+    """True when main says this change merged, yet this branch has commits main doesn't."""
+    on_main = show(root, "main", "pdlc/changes/%s/change.md" % folder.name)
+    if not on_main or field(on_main, "Status") != "merged":
+        return False
+    ahead = git(root, "rev-list", "--count", "main..HEAD")
+    return ahead.returncode == 0 and int(ahead.stdout.strip() or 0) > 0
 
 
 def conflicts_with_main(root):
@@ -140,8 +221,22 @@ def check_change(root, folder):
         elif not re.match(r"\s*Result:\s*pass\b", result.read_text(), re.I):
             problems.append("%s review did not pass" % remit)
 
+    if checks and "tests" in wanted and (folder / "review" / "tests" / "result.md").exists():
+        lines = wrong_versions(folder)
+        if not lines:
+            problems.append('tests review lists no "Wrong versions"; review the checks again')
+        for line in lines:
+            if re.search(r"·\s*passes\b", line, re.I):
+                problems.append("tests review: a check passes a wrong version: %s" % line)
+
     for path in conflicts_with_main(root):
         problems.append("conflicts with main: %s" % path)
+
+    problems += partners_not_ready(root, folder, text)
+
+    if merged_already(root, folder):
+        problems.append("%s already merged; new commits on its branch won't reach main. "
+                        "Start a new change." % change_id(folder))
     return problems
 
 
@@ -175,7 +270,7 @@ def main(argv, root=Path("."), branch=None):
     failed = False
     for folder in folders:
         problems = check_change(root, folder)
-        name = "-".join(folder.name.split("-", 2)[:2])
+        name = change_id(folder)
         if problems:
             failed = True
             print("FAIL %s" % name)

@@ -20,8 +20,9 @@ unmerged, switch to the newest one, so the inbox and specs you read are current.
 
 - If the user described something new, add it through the inbox port. Use their words for
   "What and why". Tell them its ID.
-- If they named an intent, read it.
-- If neither, take the oldest intent with status `new`.
+- If they named an intent, read it. If its "Notes" say `Awaits approval:`, naming it is
+  the approval: remove that line.
+- If neither, take the oldest intent with status `new` that doesn't await approval.
 
 If you switched to a branch, start the intent's own branch from it now, through the
 delivery port, before you commit anything. Write its name as the intent's `Branch:`.

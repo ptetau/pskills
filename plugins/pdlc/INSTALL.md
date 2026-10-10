@@ -117,8 +117,10 @@ python3 pdlc/bin/check_merge.py
 
 It finds the change whose branch is being merged (from `GITHUB_HEAD_REF` in GitHub Actions,
 or the current git branch) and fails if any requirement that change touches isn't
-`verified`, or if the branch can't merge into `main` without conflicts (when `main` is
-fetched). If no change uses the branch, it checks every change marked `in review`.
+`verified`, if the branch can't merge into `main` without conflicts (when `main` is
+fetched), or if another change of the same intent isn't ready to merge with it. Fetch
+`main` and every branch (in GitHub Actions, `fetch-depth: 0`) so it can see them. If no
+change uses the branch, it checks every change marked `in review`.
 
 ## Checking the guard
 

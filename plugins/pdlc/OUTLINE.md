@@ -246,7 +246,8 @@ One fresh reviewer per remit, each given one packet built by `make_packets.py`:
 
 A reviewer fails a change only for what its spec covers, or for unsafe code. Anything new
 it would like (another input check, another error) is a follow-up for the user, never a
-reason to grow the change.
+reason to grow the change. Verify files each one as a new intent that waits for your
+approval.
 
 The project can edit each remit in `pdlc/reviews/` and choose which run in `config.md`.
 
@@ -271,6 +272,9 @@ first three:
    - the design specs are followed;
    - every commit has its trace trailers.
 3. **You approve the merge.** Your time goes on judgment, not checklists.
+
+An intent's changes merge together, bottom of the stack first: a change can merge only
+when every change of its intent is ready too, so main never gets half a stack.
 
 The delivery adapter blocks the merge if any requirement the change touches is not
 `verified`. A small check script does the same in CI, so the rule holds even outside pdlc.

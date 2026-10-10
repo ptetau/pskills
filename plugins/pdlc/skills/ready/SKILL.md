@@ -20,7 +20,26 @@ Read the intent and its "Handoff". If none was named, take the oldest intent wit
 Collect every requirement in its "Requirements" section that is `proposed` or `retiring`,
 and the specs they sit in.
 
-## 2. Check each requirement
+## 2. Settle what the intent implies
+
+Before anything is marked ready, list the behaviour the intent implies but doesn't
+state. Go through this list, and skip what doesn't apply:
+
+- bad and empty input;
+- limits and sizes;
+- order;
+- what happens to existing data;
+- input that could be unsafe: sizes, injection, paths;
+- business rules the words leave open: who may do what, what happens twice, what
+  happens when something is missing.
+
+Settle each one as a requirement with acceptance lines: add lines to the requirement it
+belongs to, or write a new `proposed` requirement in the right spec and list it in the
+intent's "Requirements" as added. Ask about each one as step 4 says; with `defaults`,
+take your recommended answer and mark it *(assumed)*. Put the list in the handoff.
+What is left out here is never built without the user's approval.
+
+## 3. Check each requirement
 
 A requirement is clear when:
 
@@ -47,7 +66,7 @@ A requirement is clear when:
 - Words like "fast", "easy" or "secure" have a number or a rule behind them.
 - Every capability and design spec it relies on exists, or is part of this intent.
 
-## 3. Ask about what is unclear
+## 4. Ask about what is unclear
 
 Follow "Asking questions" in `pdlc/README.md`. If run with `defaults`, don't ask: take
 your recommended answer. Recommend the plain reading of the intent's words, for every
@@ -61,7 +80,7 @@ Write each answer into the requirement. When the answer was taken by default, ma
 If a design spec is missing (for example, the first time the project shows a table), use
 the `pdlc:conventions` skill to agree one, then come back.
 
-## 4. Look for contradictions
+## 5. Look for contradictions
 
 Compare the requirements against each other and against the other requirements in the same
 specs, and in the specs they rely on. A contradiction is two statements that can't both be
@@ -77,7 +96,7 @@ Two cases are not contradictions. Fix them, add a line to "Notes" for each, and 
 For any other contradiction, show both statements and ask the user which should change.
 Don't pick for them, even with `defaults`: leave both requirements `proposed` and say so.
 
-## 5. Finish
+## 6. Finish
 
 - Set each clear requirement from `proposed` to `ready`. Leave `retiring` as it is.
 - If every requirement for the intent is now `ready` or `retiring`, set the intent to

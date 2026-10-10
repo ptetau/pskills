@@ -13,8 +13,10 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
    locked. Nobody who writes app code may change them.
 6. Reviews are independent: one fresh reviewer per remit, each seeing only its packet.
 7. A change merges only when its requirements are `verified`, its tests are unchanged
-   since the lock, every review remit passed, and its branch merges into main without
-   conflicts. `bin/check_merge.py` checks all four.
+   since the lock, every review remit passed, its branch merges into main without
+   conflicts, and every other change of its intent is `in review` or `merged`. An
+   intent's changes merge together, bottom of the stack first. `bin/check_merge.py`
+   checks all of this.
 8. These files are the truth. Boards and dashboards only show them.
 9. Every commit carries trace trailers (see `specs/design/DES-pdlc-commit-trailers.md`).
    Commits that only touch `pdlc/` need no `Req`.
@@ -35,7 +37,7 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
   - `review/<remit>/packet.md` and `result.md`: each independent review.
 - `templates/`: blank copies of each document. When you write one, replace each
   `<placeholder>` and the guide sentence under each heading with real content.
-- `bin/`: `check_merge.py`, `make_packets.py`, `record_gif.mjs`.
+- `bin/`: `check_merge.py`, `make_packets.py`, `record_gif.mjs`, `record_merges.py`.
 - `.tools/`: tools the visual review installs. Not committed.
 
 ## Who does what
@@ -77,7 +79,7 @@ history.
 Every stage, and every stop, ends the same way:
 
 - It sets the statuses it owns: tests sets `testing`, then `building`; verify sets
-  `in review` when everything passed; "Before any work" sets `merged`.
+  `in review` when everything passed; `bin/record_merges.py` sets `merged` and `done`.
 - It commits everything it wrote: specs, the intent, the change folder, review packets
   and results. Then `git status --porcelain` shows nothing. Files the checks leave
   behind (caches, build output) are deleted, never committed; init lists their folders
@@ -92,13 +94,16 @@ Every stage, and every stop, ends the same way:
   rule is to branch first.
 - A change commits on its own branch: its code, status, lock and handoff. On main, a
   change that hasn't merged still reads `planned`.
-- While any pdlc branch is unmerged, nothing is committed on main except the catch-up in
-  "Before any work". The intent stages work on the intent's own branch,
+- While any pdlc branch is unmerged, nothing is committed on main except what
+  `bin/record_merges.py` commits. The intent stages work on the intent's own branch,
   `pdlc/IN-xxxx-<short-name>`, started from the newest unmerged branch: the first line of
   `git branch --no-merged main --list 'pdlc/*' --sort=-committerdate` (use the pattern
   in `DES-pdlc-branches`). The intent's `Branch:` names it. Its spec patches then come
   after the work they change, so every branch merges into main in order, with no
   conflicts.
+- Never commit on a branch that has merged into main, not even a status or a `Base:`.
+  Work found after a change merged is a new change. The merge check refuses a merged
+  change's branch with new commits.
 
 Before picking an intent or a change by its status, list the unmerged branches. Read each
 change's `change.md` from its own branch
@@ -113,6 +118,12 @@ is based on the newest unmerged change of an earlier intent, or on main if there
 If the intent has a `Branch:`, its first change starts from that branch, so it carries
 the intent's spec patches into the same pull request. If that branch doesn't hold the
 change's base yet, the tests skill merges the base into it first.
+
+An intent's changes merge together, bottom of the stack first. The merge check fails
+each of them until all are `in review`. If a change's base has merged into main before
+the change is proposed (`git merge-base --is-ancestor <base> main`), set its `Base:` to
+main on its own branch and propose against main. Never rewrite `Base:` on a branch that
+has merged.
 
 ## Statuses
 
@@ -136,12 +147,18 @@ each one in the handoff's "Decided on defaults" and the intent's "Notes" as
 
 ## Before any work
 
-Catch up on merges. For each change branch, ask the delivery port if it has merged
-(with no pull request, `git merge-base --is-ancestor <branch> main` says). If it has and
-main doesn't say `merged`, set the change to `merged` on main and commit. For any change
-whose `Base:` is its branch, set that `Base:` to the merged change's own base, commit it
-on that change's branch, and retarget its pull request (if it has one) to the same base.
-When every change for an intent has merged, set the intent to `done`.
+Switch to main, pull it if there is a remote, and run
+`python3 pdlc/bin/record_merges.py`. It sets each change whose branch has merged to
+`merged`, and each intent whose changes have all merged to `done`, and commits that on
+main. Never do this bookkeeping by hand, and never on another branch.
+
+## New behaviour needs approval
+
+A review point that needs new behaviour (no acceptance line, design spec or remit rule
+asks for it) is never built on a change's branch. Verify files it as a new intent, status
+`new`, whose "Notes" start with `Awaits approval:`. No skill takes up such an intent on
+its own, even with `defaults`. It starts only when the user names it; then remove that
+line.
 
 ## pdlc's own files
 

@@ -23,9 +23,12 @@ something the material does wrong:
 - it does something unsafe: builds a command, query, path or page from input unsafely,
   leaks a secret, or skips an access check.
 
-Behaviour the spec doesn't ask for is never a problem, however good an idea: checking an
-input no acceptance line mentions, a new error or code, a limit, another status. Put it
-under "Follow-ups". The user decides if it becomes a new intent. Never fail for it.
+Behaviour that no acceptance line, design spec or remit rule asks for is new behaviour.
+It is never a problem, however good an idea, even when it would make the code safer:
+checking an input no acceptance line mentions, a new error or code, a limit or size cap,
+a guard, another status. The same goes for anything whose only fix is new behaviour. Put
+it under "Follow-ups": what to add, and why. Nothing is built for it in this change;
+verify files it as a new intent for the user to approve. Never fail for it.
 
 What an acceptance line does ask for is always in scope. A line that isn't met, or, for
 the tests remit, isn't fully proved where the line says, is a problem, never a follow-up.
@@ -40,12 +43,16 @@ Remit: <remit>
 Problems:
 - <file>:<line> · <what is wrong> · <the acceptance line, design spec or remit rule>
 
+Wrong versions:
+- <check> · <a plausible wrong version of the code> · fails | passes
+
 Follow-ups:
-- <something the spec doesn't ask for, that a new intent could add>
+- <new behaviour the spec doesn't ask for, and why a new intent could add it>
 
 Notes:
 - <anything else worth knowing>
 ```
 
-Write "none" under a heading with nothing in it. Fail if and only if "Problems" has an
-entry. Reply with one line: the result and the number of problems.
+"Wrong versions" is for the tests remit only; leave it out for any other. Write "none"
+under a heading with nothing in it. Fail if and only if "Problems" has an entry. Reply
+with one line: the result and the number of problems.

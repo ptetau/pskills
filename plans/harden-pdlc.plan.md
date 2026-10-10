@@ -300,4 +300,18 @@ Scoreboard (percent of the rubric; hard fails in brackets):
 | consistency (of 6) | 3 | | | 2 |
 Round 0 was reviewed by three Fable reviewers per app; later rounds by one Sonnet
 reviewer per app with scripts, so round 0 is not exactly comparable.
+
+[2026-10-10] After the final round: the user's decisions on four open problems
+Decided (with the user): an intent's changes merge together or not at all; a script
+        keeps records on main and pdlc never writes to a merged branch; the tests review
+        names a wrong version of the code for each check; new behaviour from a review
+        waits for the user's approval, and ready settles implied behaviour first.
+Fixes (Opus): check_merge fails a change while another change of its intent isn't ready,
+        fails new commits on a merged change's branch, and fails a tests review with no
+        "Wrong versions" lines or one that says "passes"; new bin/record_merges.py does
+        the bookkeeping on main only; verify files review-only behaviour as an intent
+        that awaits approval, and no skill takes it up on its own; ready walks a short
+        checklist of implied behaviour (bad input, limits, order, old data, unsafe input,
+        open business rules). 77 unit tests pass (2 need the GIF tools). Not yet tried in
+        a build.
 ```

@@ -15,6 +15,10 @@ Fills the delivery port with git and GitHub pull requests.
   the body. Embed the GIF with its full address, so it plays in the pull request:
   `![visual review](https://github.com/<owner>/<repo>/blob/<branch>/pdlc/changes/<folder>/review.gif?raw=true)`.
   When the pull request it is based on merges, retarget this one to that one's base.
+  Under "Merge together", list the intent's other changes in stack order, with their pull
+  requests where they exist. Tell the user to merge them together, bottom first, and to
+  point each next pull request at main once the one below it merges (deleting the merged
+  branch does that on GitHub).
 - **gate**: run `python3 pdlc/bin/check_merge.py <change-id>`.
 - **merged?**: check whether the pull request is merged. If there is no pull request, the
   branch counts as merged when `git merge-base --is-ancestor <branch> main` succeeds.
@@ -23,4 +27,5 @@ If no GitHub access is available, stop after pushing and tell the user the branc
 
 If the repository has no remote, don't push. **propose** writes the description to
 `pdlc/changes/<folder>/proposal.md` and commits it on the branch; the change counts as
-proposed, and the user merges the branch locally. **merged?** then uses `merge-base`.
+proposed, and the user merges the intent's branches into main locally, together, bottom
+first. **merged?** then uses `merge-base`.
