@@ -232,4 +232,20 @@ Fixes (Opus, 5): while work is unmerged, intent stages commit on the intent's ow
         (new failing-first test); the intent's own words and examples bind; checks drive
         what the user does, with stand-ins and clock seams; bad input is specified up
         front; the README stays true. 52 unit tests pass. No app words in the diff.
+
+[2026-10-10] Round 2 (harness at 5ac3983)
+Setup: no interruptions. The probe script was loosened to find an error code under any
+       key (the briefs don't name one); it had shown four false fails, which the
+       reviewer had already checked by hand.
+Scores: pocket-cli 40% (H1, H7) · convert-web 74% (no hard fail) · polls-api 68%
+        (H1, H2, H7). Round 1 was 79/67/62%; the mean fell from 69% to 61%, so the
+        regression rule applies before any new fix.
+What improved: the first intent of the app that had a merge conflict now reached main
+        (3 of 3 changes); one app merged all six changes with no hard fail.
+What went wrong: one app's first change failed the quality review three times over
+        something no requirement asked for, and nothing merged; ship asked which branch a
+        later change should start from (intent branches added in round 1); one intent was
+        split into about seven changes and stopped when the file guard blocked the test
+        writer; specs were edited after ready "as an exception".
+Fixes: in progress (Opus, last fix round).
 ```
