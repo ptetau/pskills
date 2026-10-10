@@ -103,12 +103,15 @@ hidden folder. They are never copied into an app repo or shown to the builder or
 |---|---|---|---|
 | orchestrator | this session | makes seed repos, runs builds, runs the merge stand-in, makes clean copies, starts reviewers and the improver, keeps the scoreboard | fixes an app or the harness itself |
 | builder | Haiku 5.5, through pdlc | runs init and ship exactly as above | sees the rubric, the probes, the reviews, or any hint it is judged |
-| reviewers | Fable 5.1 | judge one app each from a clean copy, the brief and the rubric; three per app plus one consistency reviewer per round | see build logs, the builder's summary, or each other's reports |
+| reviewer | Sonnet 5.5 (Fable 5.1 in round 0) | judges one app from a clean copy, the brief, the rubric, and two script outputs (probe results and process facts); one per app; a consistency reviewer only in the final round | see build logs, the builder's summary, or other reports |
 | improver | Opus 5.5 | reads the reports, may read build logs and app repos, changes `plugins/pdlc` only, runs the plugin's unit tests | names an app in the harness, sees the hold-out, touches the rubric or probes |
 | the user | | reads each round's summary; decides at the end | |
 
-Reviewers run on Fable because it runs and probes apps well, and it is neither the builder's
-model nor the improver's, so the three don't share blind spots.
+Round 0 used three Fable reviewers per app plus a consistency reviewer. From round 1, to
+cut cost, scripts do the mechanical work (`run_probes.py` runs every probe in the brief;
+`process_facts.py` collects the git and gate facts) and one Sonnet reviewer per app does
+the judging. Sonnet is neither the builder's model nor the improver's. Round 1 is scored
+with the new method for all three apps, so later rounds compare like with like.
 
 ## Separation rules
 
@@ -124,16 +127,19 @@ These keep the data honest. Break one and the round doesn't count.
    `plugins/pdlc`. It may not read the hidden folder. Before it hands back, the orchestrator
    greps its diff for app names and domain words (the hidden folder lists them). A hit is a
    failed round for the improver.
-6. The rubric, probes and prompts are frozen after round 0. Fix only typos, and log the fix.
+6. The rubric and probes are frozen after round 0. Fix only typos, and log the fix. (The
+   reviewer prompts changed once, from round 1, when reviews moved to one cheaper reviewer
+   per app at the user's request.)
 7. Every round uses the same model, the same tools list and the same seeds. Record the git
    hash of `plugins/pdlc` used for each round.
 
 ## Rounds and the stop rule
 
 - **Round 0**: build the three apps with the harness as it is. Review. The improver fixes.
-- **Rounds 1 to 3**: build the three apps again with the fixed harness. Review. Improve.
+- **Round 1 and round 2**: build the three apps again with the fixed harness. Review. Improve.
+  (Cut from three fix rounds to two, to save cost.)
 - **Stop fixing** as soon as a round has, for every app: no hard fail, every rubric item
-  scored at least 2, and a total of at least 85% of the maximum. Or after round 3, whatever
+  scored at least 2, and a total of at least 85% of the maximum. Or after round 2, whatever
   the scores.
 - **Final round**: no fixes afterwards. Build the three apps, the hold-out, and
   `pocket-cli` a second time from the same seed and intents in a separate folder
