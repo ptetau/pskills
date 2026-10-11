@@ -58,6 +58,7 @@ class Packets(unittest.TestCase):
                 "Status: built · Intents: IN-0001\n\nSays hola.\n\n### CAP-greeting.R3 · Other\n\nNot this one.\n",
             "pdlc/specs/design/DES-writing-style.md": "# DES-writing-style\nWrite plainly.\n",
             "src/greet.js": "export const greet = (n) => `Hello, ${n}!`;\n",
+            "README.md": "# Greeter\n\nThe greeter has one behavior.\n",
             "test/greet.test.js": "// old test\n",
         }.items():
             (r / path).parent.mkdir(parents=True, exist_ok=True)
@@ -119,6 +120,28 @@ class Packets(unittest.TestCase):
         make_packets.main(["x", "CH-0001"], root=self.root)
         self.assertIn("frames/01.png", self.packet("specification"))
         self.assertNotIn("frames/01.png", self.packet("security"))
+
+    def test_only_the_specification_packet_has_the_writing_check(self):
+        make_packets.main(["x", "CH-0001"], root=self.root)
+        text = self.packet("specification")
+        self.assertIn("## Writing check", text)
+        self.assertIn("pdlc/changes/CH-0001-es/change.md", text)
+        self.assertIn("No findings.", text)
+        self.assertNotIn("## Writing check", self.packet("security"))
+        self.assertNotIn("## Writing check", self.packet("tests"))
+
+    def test_the_writing_check_covers_the_text_this_change_wrote(self):
+        r = self.root
+        (r / "README.md").write_text((r / "README.md").read_text() + "It picks a color.\n")
+        (self.folder / "change.md").write_text(CHANGE + "\nThe greeting box is gray.\n")
+        (self.folder / "handoff.md").write_text("The center of the handoff.\n")
+        git(r, "add", "-A"); git(r, "commit", "-qm", "more")
+        make_packets.main(["x", "CH-0001"], root=self.root)
+        text = self.packet("specification")
+        self.assertIn('README.md:4 · NZ spelling · "color" is US spelling · write "colour"', text)
+        self.assertIn('change.md:27 · NZ spelling · "gray" is US spelling · write "grey"', text)
+        self.assertNotIn("behaviour", text)
+        self.assertNotIn("centre", text)
 
     def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):
         change = self.folder / "change.md"

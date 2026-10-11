@@ -247,7 +247,7 @@ One fresh reviewer per remit, each given one packet built by `make_packets.py`:
   locked, before any code is written.
 - **specification, security, quality, compliance, privacy**: the spec and the code, never
   the checks. They run in parallel after the visual review. The specification reviewer
-  also looks at the GIF's frames.
+  also looks at the GIF's frames and the output of `check_writing.py`.
 
 A reviewer fails a change only for what its spec covers, or for unsafe code. Anything new
 it would like (another input check, another error) is a follow-up for the user, never a

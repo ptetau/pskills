@@ -17,3 +17,6 @@ pull request text. In short:
 6. Don't write conversation or task history into an artifact. State the facts as they
    are now.
 7. Be concise.
+
+Before you commit, run `python3 plugins/pdlc/skills/init/references/bin/check_writing.py <files>`
+on the text you changed.

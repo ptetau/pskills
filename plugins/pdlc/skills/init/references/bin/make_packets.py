@@ -13,8 +13,10 @@ holds:
     above its requirements), the full text of each requirement it lists, and every spec it
     relies on;
   - the material: for the tests remit, the check files and nothing else; for every other
-    remit, the changed app files and nothing else. The specification packet also points to
-    the visual review frames.
+    remit, the changed app files and nothing else.
+The specification packet also holds the writing check and points to the visual review
+frames. The writing check is the output of check_writing.py for the lines this change
+wrote in its .md files: README, docs, specs and the change spec.
 
 Run it from the project root, on the change's branch.
 """
@@ -25,6 +27,7 @@ from pathlib import Path
 
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
+WRITING_CHECK = Path(__file__).parent / "check_writing.py"
 
 
 def section(text, title):
@@ -82,6 +85,17 @@ def material(root, base, files, title):
     return "\n".join(parts)
 
 
+def writing_check(root, base, files):
+    """The packet section with the writing check of the lines this change wrote."""
+    title = "## Writing check\n\n"
+    if not files:
+        return title + "No text files changed.\n"
+    done = subprocess.run([sys.executable, str(WRITING_CHECK), "--since", base, *files],
+                          cwd=root, capture_output=True, text=True)
+    return title + ("`pdlc/bin/check_writing.py --since %s` on %s:\n\n%s\n"
+                    % (base, ", ".join(files), fence(done.stdout + done.stderr)))
+
+
 def main(argv, root=Path(".")):
     if len(argv) < 2:
         print(__doc__)
@@ -105,6 +119,9 @@ def main(argv, root=Path(".")):
     changed = [f for f in listed.stdout.splitlines() if f]
     tests = [f for f in changed if f in checks]
     code = [f for f in changed if f not in checks and not f.startswith("pdlc/")]
+    change_spec = (folder / "change.md").relative_to(root).as_posix()
+    text_files = [f for f in changed if f.endswith(".md") and (root / f).exists()
+                  and (not f.startswith("pdlc/") or f.startswith("pdlc/specs/") or f == change_spec)]
 
     reqs = re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)", section(change, "Requirements"), re.M)
     relies = re.findall(r"\b((?:JOB|CAP|DES)-[a-z0-9-]+)\b", section(change, "Relies on"))
@@ -132,6 +149,8 @@ def main(argv, root=Path(".")):
             out.append(material(root, base, tests, "The checks"))
         else:
             out.append(material(root, base, code, "The code"))
+        if remit == "specification":
+            out.append(writing_check(root, base, text_files))
         if remit == "specification" and frames:
             out.append("## Visual review frames\n\nRead each frame to see the change working:\n")
             out += ["- %s" % f.relative_to(root).as_posix() for f in frames]

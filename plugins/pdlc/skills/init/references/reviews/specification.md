@@ -17,6 +17,8 @@ You judge whether the code does what the spec says. You have not seen the checks
 - Spec text, README text and code comments in the change follow the writing rules
   (`DES-writing-style`, in the packet). Each break is a problem: give the line and the
   rule.
+- Each finding under "Writing check" in the packet is a problem, unless you judge it a
+  false alarm. For each false alarm, say why under "Notes".
 - If frames are listed, read each one. Each must show what its caption claims, after the
   step, not the screen before it. A blank frame, or one that shows something else, is a
   problem.

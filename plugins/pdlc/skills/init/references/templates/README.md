@@ -42,7 +42,8 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
   - `proposal.md`: the merge proposal, when the project has no remote.
 - `templates/`: blank copies of each document. When you write one, replace each
   `<placeholder>` and the guide sentence under each heading with real content.
-- `bin/`: `check_merge.py`, `make_packets.py`, `record_gif.mjs`, `record_merges.py`.
+- `bin/`: `check_merge.py`, `check_writing.py`, `make_packets.py`, `record_gif.mjs`,
+  `record_merges.py`.
 - `.tools/`: tools the visual review installs. Not committed.
 
 ## Code maps

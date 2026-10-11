@@ -13,6 +13,9 @@ spelling and form.
 
 ## Rule
 
+`pdlc/bin/check_writing.py` checks rules 1, 2, 5 and 6 where it can. Reviewers judge the
+rest.
+
 ### 1. Simplified Technical English (ASD-STE100), core rules
 
 We use the core writing rules of ASD-STE100. We don't use its controlled dictionary.
