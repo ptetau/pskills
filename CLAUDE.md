@@ -3,11 +3,11 @@
 ## Writing
 
 Write everything in this repo as `plugins/pdlc/skills/init/references/defaults/DES-writing-style.md`
-(the writing rules) says: skills, agents, docs, plans, code comments, commit messages and
-pull request text. In short:
+(the writing rules) says. This covers skills, agents, docs, plans, code comments, commit
+messages and pull request text. In short:
 
 1. Use the core rules of Simplified Technical English (ASD-STE100), without its
-   dictionary. Write short sentences and use the active voice. Give one instruction per
+   dictionary. Write short sentences. Use the active voice. Give one instruction per
    sentence.
 2. Use New Zealand spelling: organise, colour, centre, analyse.
 3. Explain a concept with a concrete example.

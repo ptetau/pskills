@@ -80,6 +80,25 @@ class WritingCheck(unittest.TestCase):
                        ("analyze", "analyse")]:
             self.assertTrue(any('"%s"' % us in f and '"%s"' % nz in f for f in found), us)
 
+    def test_words_that_only_end_in_size_are_still_found(self):
+        code, found = self.check("We synthesize the notes and emphasized the risk.\n")
+        self.assertEqual(code, 1)
+        self.assertTrue(any('"synthesise"' in f for f in found))
+        self.assertTrue(any('"emphasised"' in f for f in found))
+
+    def test_size_words_are_kept(self):
+        code, found = self.check("Resize the box. The sizes are fine. Seize it. Downsized.\n")
+        self.assertEqual((code, found), (0, []))
+
+    def test_words_joined_by_a_slash_are_checked(self):
+        code, found = self.check("It is a code/infra-flavored task.\n")
+        self.assertEqual(code, 1)
+        self.assertTrue(any('"infra-flavoured"' in f or '"flavoured"' in f for f in found))
+
+    def test_real_paths_are_still_skipped(self):
+        code, found = self.check("Open docs/color.md and /usr/share/colorize now.\n")
+        self.assertEqual((code, found), (0, []))
+
     def test_the_suggestion_keeps_the_case(self):
         code, found = self.check("Color first. ORGANIZATION next.\n")
         self.assertIn('"Colour"', found[0])

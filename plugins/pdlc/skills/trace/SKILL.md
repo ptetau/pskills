@@ -2,10 +2,10 @@
 name: trace
 description: >
   Follows pdlc's trace links in either direction. Answers "why does this code exist?" by
-  going from a file and line to its commit, requirement, intent and ticket, and "what did
-  this intent change?" by going the other way. Use when the user says "/pdlc:trace", or
-  asks why some code exists, what an intent or requirement touched, or what proves a
-  requirement.
+  going from a file and line to its commit, requirement, intent and ticket. Answers "what
+  did this intent change?" by going the other way. Use when the user says "/pdlc:trace",
+  or asks why some code exists. Also use when the user asks what an intent or requirement
+  touched, or what proves a requirement.
 ---
 
 # pdlc trace
@@ -18,9 +18,9 @@ Read `pdlc/README.md` first. Never change any file.
 
 1. Run `git blame -L <line>,<line> <file>` (or `git log --follow <file>` for a whole file).
 2. Read the commit's trailers with `git log -1 --format=%B <commit>`.
-3. For each `Req`, find the requirement in `pdlc/specs/` and show its title and status.
+3. For each `Req`, find the requirement in `pdlc/specs/`. Show its title and status.
 4. For the `Intent`, show its name and status from the inbox port.
-5. Show the `Ticket` if there is one.
+5. If the commit has a `Ticket`, show it.
 
 ## From an intent
 
@@ -32,13 +32,13 @@ Read `pdlc/README.md` first. Never change any file.
 
 1. Show the requirement, its status and its intents.
 2. List the checks that prove it.
-3. List the commits that name it: `git log --all --grep "Req:.*<ID>"`, and the files they
-   changed.
+3. List the commits that name it: `git log --all --grep "Req:.*<ID>"`. Also list the files
+   those commits changed.
 
 ## Change folders
 
-Each change lives in `pdlc/changes/CH-xxxx-name/`: its spec is `change.md`, and its
-review results, GIF and handoff sit next to it. Link to them when they help.
+Each change lives in `pdlc/changes/CH-xxxx-name/`. Its spec is `change.md`. Its review
+results, GIF and handoff sit next to the spec. Link to these files when they help.
 
 ## Say when a link is missing
 

@@ -1,32 +1,36 @@
 # Walls: volatility-based decomposition
 
-How to decide the components, their boundaries, and who may call whom. The bricks (see
-`bricks.md`) are designed inside these walls afterwards. Sources are in `sources.md`.
+How to decide the components, their boundaries, and who may call whom. You design the
+bricks (see `bricks.md`) inside these walls afterwards. `sources.md` lists the sources.
 
 ## The idea in one paragraph
 
 Decompose a system by what is likely to change, not by what it does. Parnas (1972): "one
 begins with a list of difficult design decisions or design decisions which are likely to
 change. Each module is then designed to hide such a decision from the others." Löwy
-(*Righting Software*, 2019) turns this into a method: identify areas of potential change,
-encapsulate each in a component, then implement the required behavior as the
-interaction between those components. When a change comes, you "open the door of the
-appropriate vault, toss the grenade inside, and close the door." Without the walls, a
-change "is like swallowing a live hand grenade."
+(*Righting Software*, 2019) turns this into a method:
+
+1. Identify areas of potential change.
+2. Encapsulate each in a component.
+3. Implement the required behaviour as the interaction between those components.
+
+When a change comes, you "open the door of the appropriate vault, toss the grenade
+inside, and close the door." Without the walls, a change "is like swallowing a live hand
+grenade."
 
 ## Why not decompose by feature or by domain
 
 **By feature** (functional decomposition): an Invoicing service, a Billing service, a
 Shipping service. The structure mirrors the requirements, so every requirement change
-becomes a structural change. Services end up too big or too small, get chained in a
-fixed order, and the client has to stitch them together ("the client is no longer the
+becomes a structural change. Services end up too big or too small, and form chains in a
+fixed order. The client has to stitch them together ("the client is no longer the
 client — it has become the system"). Löwy's prime directive: **never design against the
 requirements.** Functional decomposition is fine for *discovering* requirements, never
 for structuring the design.
 
 **By domain** (Kitchen, Bedroom; Customers, Orders, Products) is functional decomposition
-in disguise: the kitchen is where you cook. The same volatility gets copied into every
-domain, and the domains end up talking to each other in CRUD-like state changes. Löwy's
+in disguise: the kitchen is where you cook. Each domain copies the same volatility, and
+the domains end up talking to each other in CRUD-like state changes. Löwy's
 one exception: domain decomposition works when the domains happen to map to areas of
 volatility. Domain language is still the right source for *names* and for the business
 verbs in each component's API.
@@ -45,7 +49,7 @@ There are only two ways a system faces change:
 A "customer" can be a person or a whole business. Each volatility should sit mainly on
 one axis; Löwy calls the assignment a matter of "disproportional probability", not
 exclusion. If a candidate fits neither axis, don't encapsulate it: building a component for
-it usually signals functional decomposition. If a candidate can't be placed mainly on one
+it usually signals functional decomposition. If you can't place a candidate mainly on one
 axis, that "often indicates a functional decomposition in disguise." Split it until each
 part has a home axis.
 
@@ -66,10 +70,10 @@ yes.
 - **Regulation and region.** Rules that differ by jurisdiction sit on the second axis.
 - **Competitors.** If every competitor does an activity the same way, it needs no wall.
   Where they differ is where your business may change.
-- **History.** Look back as far as the system is expected to live. Löwy: if the projected
+- **History.** Look back as far as you expect the system to live. Löwy: if the projected
   lifespan is five to seven years, start by listing everything that changed in the domain
-  over the past seven. Things that changed often will keep changing at about the same rate. In an existing codebase,
-  measure it (see `brownfield.md`).
+  over the past seven. Things that changed often will keep changing at about the same
+  rate. In an existing codebase, measure it (see `brownfield.md`).
 
 Write the list down **before** designing any component.
 
@@ -79,7 +83,7 @@ Write the list down **before** designing any component.
 |--------------|------|----|
 | **Volatile** | Open-ended; if left unwrapped, a change would ripple through many components | Give it a wall |
 | **Variable** | Bounded; easily handled with data, a parameter, or a conditional in one place | Handle it inside a component |
-| **The nature of the business** | The change is rare, *and* any attempt to encapsulate it could only be done poorly (a house becoming a 50-story tower) | Don't wall it off |
+| **The nature of the business** | The change is rare, *and* any attempt to encapsulate it could only be done poorly (a house becoming a 50-storey tower) | Don't wall it off |
 | **Speculative** | No evidence it will change within the life of the system (SCUBA-ready high heels) | Record it; don't wall it off |
 
 The nature of the business applies at every scale: company, division, application. A
@@ -92,7 +96,7 @@ within it changes. Managers hold the first, Engines the second.
 
 | Type | Encapsulates | Answers | Notes |
 |------|--------------|---------|-------|
-| **Client** | who calls, and the technology they call with: UI, API, scheduler, other systems | who | Löwy: ideally a single point of entry into the system, and at least as few as possible, because every entry point is another place to handle authentication, authorization, scalability, and hosting |
+| **Client** | who calls, and the technology they call with: UI, API, scheduler, other systems | who | Löwy: ideally a single point of entry into the system, and at least as few as possible, because every entry point is another place to handle authentication, authorisation, scalability, and hosting |
 | **Manager** | the volatile *sequence* of a family of related use cases (a workflow) | what | Mostly composition. Should be "almost expendable" |
 | **Engine** | a volatile *activity*: a business rule, calculation, or algorithm | how | Löwy: essentially the Strategy pattern. May be shared between Managers. Pure by default (the Manager passes the data in); an Engine that must read calls ResourceAccess, and the design says so |
 | **ResourceAccess** | volatile *access* to a resource, including resources in other systems | how (to reach it) | Exposes **atomic business verbs**, not CRUD or I/O |
@@ -101,23 +105,24 @@ within it changes. Managers hold the first, Engines the second.
 
 **Stable business rules** (the nature of the business, such as the rules of a game or a
 fixed calculation) get no wall of their own. They go in a domain module: pure, with no
-volatility of its own and no dependencies, used by whichever components need them. It is
-not a component and not a Utility (it fails the cappuccino test). Keeping the rules there
-lets Managers stay pure orchestration even when a Manager is the only component that
-needs them. This is the skill's rule; Löwy doesn't address where unwalled logic lives.
+volatility of its own and no dependencies, used by whichever components need them. The
+domain module is not a component and not a Utility (it fails the cappuccino test). Keeping
+the rules there lets Managers stay pure orchestration even when a Manager is the only
+component that needs them. This is the skill's rule; Löwy doesn't address where unwalled
+logic lives.
 
 **Atomic business verbs.** A bank's ResourceAccess exposes `Credit` and `Debit`, not
 `UpdateBalance` or `ExecuteSql`. Those verbs relate to the nature of the business, so they
 are nearly immutable, while the storage behind them can change freely.
 
 A new workflow step that reorders or reuses existing facts changes only the Manager. A
-step that records a *new kind* of business fact needs a new verb; that is a new activity,
+step that records a *new kind* of business fact needs a new verb. That is a new activity,
 not just a new sequence, so touching ResourceAccess is expected. Don't dodge it with a
 generic verb such as `RecordEvent`: that is CRUD by another name.
 
 **Vendors that reach the Client.** Some vendors touch the edge directly: an embedded
-widget, an inbound webhook. Keep the vendor-specific part in a thin Client adapter that
-hands the Manager a vendor-neutral result (a token, a normalized event). Everything
+widget, an inbound webhook. Keep the vendor-specific part in a thin Client adapter. The
+adapter hands the Manager a vendor-neutral result (a token, a normalised event). Everything
 after that goes through ResourceAccess.
 
 **Volatilities map to components, not one to one.** A component may hold several related
@@ -132,10 +137,10 @@ Löwy sanctions four relaxations:
 1. Anyone may call Utilities.
 2. Managers and Engines may call ResourceAccess.
 3. Managers may call Engines.
-4. A Manager may **queue** a call to another Manager. Löwy counts this as calling down:
-   "the proxy is a ResourceAccess to the underlying Resource, the queue; that is, the call
-   actually goes down, not sideways." If more than one Manager must react, publish an
-   event through the pub/sub Utility instead of queuing to each.
+4. A Manager may **queue** a call to another Manager. Löwy counts this as calling down. In
+   his words: "the proxy is a ResourceAccess to the underlying Resource, the queue; that
+   is, the call actually goes down, not sideways." If more than one Manager must react,
+   publish an event through the pub/sub Utility instead of queuing to each.
 
 And these don'ts:
 
@@ -156,26 +161,27 @@ And these don'ts:
 | Engine | no | no | yes | no | yes |
 | ResourceAccess | no | no | no | yes | yes |
 
-When a rule is broken, don't wave it through and don't just demand compliance. Find out
-why the design wanted the call, then move the responsibility, or use a queue or an event.
+If the design breaks a rule, don't wave it through. Don't just demand compliance either.
+Find out why the design wanted the call. Then move the responsibility, or use a queue or
+an event.
 
 ## Naming
 
 - Managers, Engines, and ResourceAccess: two-part PascalCase, a prefix plus the type as
-  suffix. `TradeManager`, `PricingEngine`, `MembersAccess`. Clients and Utilities are named
-  for what they are (`AdminPortal`, `Scheduler`, `Logging`).
+  suffix. `TradeManager`, `PricingEngine`, `MembersAccess`. Name Clients and Utilities for
+  what they are (`AdminPortal`, `Scheduler`, `Logging`).
 - Manager prefix: a noun for the volatility of its use cases (`Enrollment`, `Notification`).
 - Engine prefix: a gerund or activity noun (`Pricing`, `Routing`, `Rendering`). Gerunds
   belong to Engines only; a gerund elsewhere hints at functional decomposition. If the
   prefix is also a feature's name (`Suggestion`), ask what activity would survive a
-  redesign of the feature (`Prediction`, `Matching`) and use that.
+  redesign of the feature (`Prediction`, `Matching`). Use that name.
 - ResourceAccess prefix: a noun for the resource or its data (`Members`, `Payments`).
 - Never name a component after a feature (`BlackFridayDiscountService`) or a verb
   (`SendEmail`). The business verbs belong in the API, not the name.
 
 ## Concerns that touch every component
 
-**Cross-cutting business concerns** (audit trail, authorization, tenancy) touch every
+**Cross-cutting business concerns** (audit trail, authorisation, tenancy) touch every
 write but fail the cappuccino test, because they carry business meaning. Split each into
 three parts:
 
@@ -185,11 +191,11 @@ three parts:
 | The business policy (what is audited, who may do what) | a policy brick in an Engine, or data |
 | The enforcement point | the ResourceAccess verb, when it must hold atomically with the write; the Manager, when it is a workflow-level check |
 
-Security is stricter. IDesign's rule is to authenticate and authorize at every crossing
+Security is stricter. IDesign's rule is to authenticate and authorise at every crossing
 of a service boundary, with each tier authenticating its immediate callers. Tenant and
 caller identity travel in the call context, not as a parameter on every verb. When the
 audited data is itself the system's record (a ledger of every balance change), the record
-is the audit trail; don't build a second one.
+is the audit trail. Don't build a second one.
 
 This three-way split is the skill's synthesis; Löwy places security in Utilities and says
 little about audit or tenancy.
@@ -197,7 +203,7 @@ little about audit or tenancy.
 **Writes that must be atomic across resources.** ResourceAccess components never call
 each other, so a write that spans two of them becomes the Manager's problem. First try to
 avoid it: put the facts that must change together behind one ResourceAccess, with one
-verb for the whole business action. When that is impossible, the Manager runs the steps
+verb for the whole business action. If that is impossible, the Manager runs the steps
 as a State machine, and each step has a compensating verb that undoes it (a saga).
 
 ## Size and shape
@@ -206,7 +212,7 @@ Löwy's experience (heuristics, not studies):
 
 - About ten building blocks, in order of magnitude. "Even in a large system you are
   commonly looking at two to five Managers, two to three Engines, three to eight
-  ResourceAccess and Resources, and a half-dozen Utilities."
+  ResourceAccess and Resources, and a half-dozen Utilities." <!-- writing: ok -->
 - Fewer Engines than Managers: "If your system has two Managers, you will likely need one
   Engine. If your system has three Managers, two Engines is likely your number." Many
   Engines may mean functional decomposition.
@@ -217,13 +223,14 @@ Löwy's experience (heuristics, not studies):
 - Good architectures are symmetric: similar use cases produce similar call patterns.
   Investigate any asymmetry.
 
-**The expendability test for a Manager.** Imagine a change request against it. If you
-would fight it (too big, too costly), the Manager holds more than a sequence and is likely
-functional. If you would shrug (nothing to it), the Manager is expendable, which Löwy calls
-"always a design flaw"; the skill's remedy is to merge it. If you would think it through and
-estimate it, it is "almost expendable", which is right.
+**The expendability test for a Manager.** Imagine a change request against the Manager.
+If you would fight the change (too big, too costly), the Manager holds more than a
+sequence and is likely functional. If you would shrug (nothing to it), the Manager is
+expendable. Löwy calls that "always a design flaw"; the skill's remedy is to merge the
+Manager. If you would think the change through and estimate it, the Manager is "almost
+expendable", which is right.
 
-Treat all of these as smell checks. When the design falls outside them, write down why.
+Treat all of these as smell checks. If the design falls outside them, write down why.
 
 ## Features, core use cases, and validation
 
@@ -238,12 +245,12 @@ business, from everything else (variations, "fluff"). Löwy: typically two or th
 seldom more than six. His own TradeMe case study has one. They don't change unless the
 nature of the business changes.
 
-**Composable design.** Find the smallest set of components that can be put together to
+**Composable design.** Find the smallest set of components that you can put together to
 satisfy all the use cases, present and future. Every non-core use case should be a
 different interaction between the same components.
 
-**Validation.** Löwy: once every core use case can be produced as an interaction between
-the components, the design is valid. Draw each core use case as a call chain over
+**Validation.** Löwy: once the components can produce every core use case as an
+interaction, the design is valid. Draw each core use case as a call chain over
 the layer diagram, one line per call, so the direction of each call is visible:
 
 ```
@@ -256,7 +263,7 @@ UC1 notify about an event
   NotificationManager → DeliveryAccess.Deliver
 ```
 
-If a core use case can't be composed, or the validation is ambiguous, go back to the
+If you can't compose a core use case, or the validation is ambiguous, go back to the
 walls.
 
 ## Smells
@@ -305,6 +312,6 @@ walls.
 - Parnas: "The sequence in which certain items will be processed should (as far as
   practical) be hidden within a single module." In the skill's reading, that is the
   Manager's job.
-- **Change simulation** (Phase 5) is Parnas's own test. He listed changes "likely to
-  change" and compared the two designs by whether each change stayed in one module: "the
-  second change would result in changes in every module!"
+- **Change simulation** (Phase 5, Validate) is Parnas's own test. He listed changes
+  "likely to change". He compared the two designs by whether each change stayed in one
+  module: "the second change would result in changes in every module!"

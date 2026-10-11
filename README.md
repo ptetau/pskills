@@ -1,7 +1,7 @@
 # pskills
 
-A collection of Claude Code skills. Install any skill by copying its directory into
-`~/.claude/skills/` — Claude Code picks them up automatically.
+A collection of Claude Code skills. To install a skill, copy its directory into
+`~/.claude/skills/`. Claude Code then finds the skill automatically.
 
 ```
 ~/.claude/skills/
@@ -60,7 +60,7 @@ A collection of Claude Code skills. Install any skill by copying its directory i
 
 ## `/argue` — Logical Contradiction Detector
 
-Paste any text (spec, plan, essay, argument) and `/argue` will:
+Paste any text (spec, plan, essay, argument). `/argue` then does these steps:
 
 1. Break it into discrete logical claims (C1, C2, …)
 2. Encode the claims in propositional logic
@@ -95,26 +95,32 @@ VERDICT   1 contradiction  ·  1 tension  ·  1 ambiguity
 
 ## `/blueprint` — Agent-Ready Spec from a Design
 
-The companion to `/decompose`. A design document explains *why* the system is shaped the
-way it is; a coding agent needs *what exactly* to build. `/blueprint` rewrites a design
-(a `name.design.md`, or any architecture doc) into an **Agent System Design Document** that
-a person can skim and an agent can implement without guessing:
+The companion to `/decompose`. A design document explains *why* the system has its shape.
+A coding agent needs *what exactly* to build. `/blueprint` rewrites a design (a
+`name.design.md`, or any architecture doc) into an **Agent System Design Document**. A
+person can skim this document, and an agent can implement it without guessing. It has six
+sections:
 
 1. **Header and boundary box**: purpose, target mode, in scope, out of scope
-2. **System invariants**: 4–7 enforceable rules, each with where it is enforced and its
-   error code
+2. **System invariants**: 4–7 enforceable rules, each with the place that enforces it and
+   its error code
 3. **Core data contracts**: exact types (TypeScript, Go, or Rust)
 4. **State machines**: every lifecycle, with guards, terminal states, and illegal moves
 5. **Module boundaries and signatures**: typed methods, constraints, and failure and
-   retry behavior per component
+   retry behaviour per component
 6. **Verification suite**: 3–5 Gherkin scenarios that exercise every invariant
 
-Every detail the design leaves open (a retry count, a key format, a storage engine) is
-decided once, marked *(assumed)*, and listed for review, so no agent has to guess.
-`blueprint/scripts/check_blueprint.py` checks the result: structure, that every invariant
-has an enforcement point and an error code, that every error code is exercised by a
-scenario, that every state type has a state machine, and that no design IDs such as `V1`
-remain. With `--compile` it also type-checks the TypeScript.
+`/blueprint` decides every detail the design leaves open (a retry count, a key format, a
+storage engine) once. It marks each decision *(assumed)* and lists it for review, so no
+agent has to guess. `blueprint/scripts/check_blueprint.py` checks the result:
+
+- the structure;
+- every invariant has an enforcement point and an error code;
+- a scenario exercises every error code;
+- every state type has a state machine;
+- no design IDs such as `V1` remain.
+
+With `--compile`, the checker also type-checks the TypeScript.
 
 **Example**
 
@@ -136,12 +142,13 @@ DECISIONS    11 added for review + 0 carried from the design · 0 open questions
 CHECK        PASS
 ```
 
-It draws a C4 container diagram (what runs, and which parts each container holds) and a
-C4 component diagram (who calls whom), and the checker confirms both match the text.
+`/blueprint` draws a C4 container diagram (what runs, and which parts each container
+holds) and a C4 component diagram (who calls whom). The checker confirms that both
+diagrams match the text.
 `--render` renders every diagram with Mermaid.
 
-Hand the blueprint to `/quiz-plan` for a change plan, then `/quiz-plan-execute`, which uses
-the Gherkin scenarios as its failing tests.
+Hand the blueprint to `/quiz-plan` for a change plan. Then run `/quiz-plan-execute` on the
+plan. `/quiz-plan-execute` uses the Gherkin scenarios as its failing tests.
 
 **Both skills write in plain English**, for a bright 10-year-old: short sentences, common
 words, and every technical word explained in a "Words used here" list. Names, types, and
@@ -155,23 +162,24 @@ reading grade, and lists unexplained technical words.
 Designs a new system (inception) or a new subsystem inside an existing codebase in
 two passes, then proves the result:
 
-1. **Walls** — volatility-based decomposition. Find what is likely to change and put
-   each thing behind one component: Managers for changing workflows, Engines for
-   changing rules, ResourceAccess for changing storage and third parties. A change
-   then lands in one place.
+1. **Walls** — volatility-based decomposition. Find what is likely to change. Put each
+   thing behind one component. Managers hold changing workflows, Engines hold changing
+   rules, and ResourceAccess holds changing storage and third parties. A change then
+   lands in one place.
 2. **Bricks** — orthogonal primitives. Inside each wall, build a small set of
-   independent parts (inputs, transforms, transports, stores, state machines) that
-   share one contract, and assemble features as compositions of them.
-3. **Proof** — walk the core use cases through the walls, simulate each likely change
-   (target: one component touched), and assemble current and future features from
-   existing bricks (target: at most one new brick).
+   independent parts (inputs, transforms, transports, stores, state machines). The
+   parts share one contract. Assemble features as compositions of these parts.
+3. **Proof** — walk the core use cases through the walls. Simulate each likely change
+   (target: one component touched). Assemble current and future features from existing
+   bricks (target: at most one new brick).
 
-It draws the result as C4 diagrams: a system context diagram, and a component diagram
-with one band per layer, where every arrow is an allowed call.
+`/decompose` draws the result as C4 diagrams: a system context diagram and a component
+diagram. The component diagram has one band per layer, and every arrow is an allowed
+call.
 
-In an existing codebase it measures volatility from git history instead of guessing:
-`decompose/scripts/volatility.py` reports component churn, change coupling, and
-hotspots (standard-library Python, works on Windows). The output is a
+In an existing codebase, `/decompose` measures volatility from git history instead of
+guessing. `decompose/scripts/volatility.py` reports component churn, change coupling, and
+hotspots. The script is standard-library Python and works on Windows. The output is a
 `<name>.design.md` with the volatility register, walls, bricks, feature assembly,
 validation results, and (for subsystems) the seam and migration steps.
 
@@ -197,21 +205,24 @@ FEATURES      8 current assembled · 3 future with ≤1 new brick
 VERDICT       ready
 ```
 
-Hand the design to `/argue` to check it for contradictions, to `/blueprint` to make it
-agent-ready, or to `/quiz-plan` to turn it into a change plan.
+Then hand the design to one of these skills:
+
+- `/argue`, to check the design for contradictions;
+- `/blueprint`, to make the design agent-ready;
+- `/quiz-plan`, to turn the design into a change plan.
 
 ---
 
 ## `/probe` — Exploratory Tester
 
-Autonomous exploratory bug hunting for a running app. `probe` reads docs/specs,
-commit history, and code to build an app map and derive user-facing feature flows,
-then fans out a **flow × dimension** matrix of read-only probe agents (via a
-`Workflow`) that statically reason about the code and then live-drive the app
-non-destructively — recording surprises and bugs with repro + evidence. An
-adversarial verify pass drops false positives before `probe` writes a
-severity-ranked Markdown report plus a machine-readable JSON findings file.
-Every probe agent is strictly read-only; nothing it does may mutate the target app.
+Autonomous exploratory bug hunting for a running app. `probe` reads docs/specs, commit
+history, and code. From these, `probe` builds an app map and derives user-facing feature
+flows. Then it fans out a **flow × dimension** matrix of read-only probe agents (via a
+`Workflow`). Each probe agent first reasons about the code statically. Then the agent
+drives the live app non-destructively and records surprises and bugs with repro +
+evidence. An adversarial verify pass drops false positives before `probe` writes a
+severity-ranked Markdown report plus a machine-readable JSON findings file. Every probe
+agent is strictly read-only; nothing it does may mutate the target app.
 
 **Example**
 
@@ -219,11 +230,13 @@ Every probe agent is strictly read-only; nothing it does may mutate the target a
 /probe the staging checkout flow at https://staging.example.com
 ```
 
-`probe` maps `checkout`, `sign-up`, and `apply-discount-code` as feature flows,
-fans out one read-only agent per (flow, quality-dimension) cell — functional,
-robustness, security, perf, a11y, ux — verifies the raw findings adversarially, and
-writes `probe-report.md` (ranked findings with repro + evidence) and
-`probe-findings.json` (validating against `probe/references/findings.schema.json`).
+`probe` maps `checkout`, `sign-up`, and `apply-discount-code` as feature flows. It fans
+out one read-only agent per (flow, quality-dimension) cell. The quality dimensions are
+functional, robustness, security, perf, a11y and ux. `probe` verifies the raw findings
+adversarially. Then it writes two files:
+
+- `probe-report.md`: ranked findings with repro + evidence;
+- `probe-findings.json`: validates against `probe/references/findings.schema.json`.
 
 ---
 
@@ -231,12 +244,12 @@ writes `probe-report.md` (ranked findings with repro + evidence) and
 
 Asks clarifying questions one at a time before starting work, to lock in decisions
 (audience, scope, tone, approach) without a back-and-forth prose conversation. Each
-question is a native picker the user clicks, or, where there's no picker, a short
-plain-markdown question answered with a letter.
+question is a native picker the user clicks. Where there's no picker, each question is a
+short plain-markdown question that the user answers with a letter.
 
-It plans its questions up front in a fixed order (purpose, style, scope, focus, next
-step), so the same request gets the same questions, and it recommends an option only
-when something the user said points to it.
+`/quiz` plans its questions up front in a fixed order: purpose, style, scope, focus, next
+step. Because of this order, the same request gets the same questions. `/quiz` recommends
+an option only when something the user said points to it.
 
 **Example**
 
@@ -255,9 +268,9 @@ when something the user said points to it.
 >
 > Reply A, B or C, optionally with a note.
 
-Reply with a letter, optionally with a note (`B, include p99 latency`). Each answer is
-echoed in one line (`✓ 1/3 Audience → Managers`), and after the last question the
-resolved list is shown for a final OK before work begins.
+Reply with a letter, optionally with a note (`B, include p99 latency`). `/quiz` echoes
+each answer in one line (`✓ 1/3 Audience → Managers`). After the last question, `/quiz`
+shows the resolved list for a final OK before work begins.
 
 Cap: ~7 questions. For more, escalate to `/squiz`.
 
@@ -266,9 +279,9 @@ Cap: ~7 questions. For more, escalate to `/squiz`.
 ## `/quiz-plan` — Quiz-driven Change Plan
 
 Runs an adaptive interview (not a fixed list) to surface every assumption, ambiguity,
-and dependency in a proposed change, then writes a structured `<name>.plan.md` at the
-project root: Intent, Ground truth, Boundaries, gated Steps, Verification/rollback, and
-a live progress tracker. Step 1 always tests the riskiest assumption.
+and dependency in a proposed change. Then it writes a structured `<name>.plan.md` at the
+project root, with Intent, Ground truth, Boundaries, gated Steps, Verification/rollback,
+and a live progress tracker. Step 1 always tests the riskiest assumption.
 
 **Example**
 
@@ -276,10 +289,10 @@ a live progress tracker. Step 1 always tests the riskiest assumption.
 /quiz-plan add rate limiting to the public API routes
 ```
 
-The agent drills — configurable or hardcoded limit? which middleware dir? what must not
-change? — until it can picture the exact files and changes, confirms, then emits
-`add-api-rate-limiting.plan.md` with per-step gates (AUTO / GATED) and a 12-char
-progress bar in the header.
+The agent drills down: configurable or hardcoded limit? which middleware dir? what must
+not change? The agent keeps asking until it can picture the exact files and changes.
+Then it confirms and writes `add-api-rate-limiting.plan.md`. The plan has per-step gates
+(AUTO / GATED) and a 12-char progress bar in the header.
 
 ---
 
@@ -305,8 +318,9 @@ a PR.
 /quiz-plan-execute add-api-rate-limiting.plan.md
 ```
 
-GATED steps pause for human review; AUTO steps continue. On conflict with Intent or
-Boundaries the executor stops and asks rather than resolving it itself.
+GATED steps pause for human review; AUTO steps continue. If a step conflicts with Intent
+or Boundaries, the executor stops and asks. The executor doesn't resolve the conflict
+itself.
 
 ---
 
@@ -314,8 +328,9 @@ Boundaries the executor stops and asks rather than resolving it itself.
 
 A Claude Code plugin that runs your project's development lifecycle. Intents enter an
 inbox, become job, capability and design specs, then small changes that each touch one
-job or one capability. Changes are built test first, checked by an independent reviewer,
-and approved by you. Every commit traces back to its requirement and intent.
+job or one capability. pdlc builds each change test first. An independent reviewer
+checks the change, and you approve it. Every commit traces back to its requirement and
+intent.
 
 It fits any kind of system, and can manage changes to this repository, including
 changes to pdlc itself.
@@ -347,8 +362,8 @@ Agents: `recon`, `test-writer`, `builder`, `reviewer`. Read `plugins/pdlc/OUTLIN
 
 The document-mode twin of `/quiz`. Instead of one-at-a-time questions, the
 [squiz](https://github.com/squiz-cli/squiz) Go binary renders a self-contained
-interactive HTML document with all decisions at once, retro Apple //e styling,
-and mini-wireframe previews for visual options.
+interactive HTML document with all decisions at once. The document has retro Apple //e
+styling and mini-wireframe previews for visual options.
 
 The user fills it in at their own pace and pastes a single JSON payload back.
 
@@ -360,12 +375,12 @@ The user fills it in at their own pace and pastes a single JSON payload back.
 
 Squiz renders an HTML doc covering every decision (layout, tone, data model,
 progression logic). The user fills in each section and pastes the JSON result
-back — Claude reads the payload and begins implementation.
+back. Claude then reads the payload and begins implementation.
 
 Requires the `squiz` binary: see [squiz releases](https://github.com/squiz-cli/squiz/releases).
 
-Prefer `/quiz` for small sets of textual questions. Use `/squiz` when decisions
-are visual, numerous, or benefit from seeing all options side by side.
+Prefer `/quiz` for small sets of textual questions. If decisions are visual, numerous,
+or benefit from seeing all options side by side, use `/squiz`.
 
 ---
 
@@ -375,7 +390,8 @@ Writes and runs an eval for another skill. A good skill meets its own rubric and
 much the same output every time, so `/vet` scores both:
 
 1. Reads the skill's SKILL.md and extracts the expected **output structure** and a
-   **rubric** (structure, behavior and outcome items, weighted, each citing its source)
+   **rubric** (`structure`, `behavior` and `outcome` items, weighted, each citing its
+   source)
 2. Writes **10 varied test prompts**, with scripted user replies for interactive skills
 3. Asks **which models** to use for the skill and for the judges, the biggest variable
    in any eval
@@ -383,12 +399,13 @@ much the same output every time, so `/vet` scores both:
    parallel via a `Workflow`
 5. **Rubric judges** grade every run: met / partial / missed / n/a, with evidence
 6. **Similarity judges** (one per prompt per wave by default) place each new run into
-   the groups so far for each rubric item and classify it: identical → equivalent →
-   minor drift → major drift → contradictory. Structure items are also compared across
-   prompts. The script tallies each split, e.g. `7 / 3 of 10`
-7. Scores **quality**, **stability**, and **overall** = √(quality × stability), and
-   records the grade after every wave so you can watch it **settle**. Add
-   `--stop-when-settled` to stop early once it does
+   the groups so far, for each rubric item. A similarity judge classifies each new run:
+   identical → equivalent → minor drift → major drift → contradictory. The judges also
+   compare structure items across prompts. The script tallies each split, e.g.
+   `7 / 3 of 10`
+7. Scores **quality**, **stability**, and **overall** = √(quality × stability). It
+   records the grade after every wave, so you can watch the grade **settle**. To stop
+   early once the grade settles, add `--stop-when-settled`
 
 You choose what each agent does. Four roles (`run`, `grade`, `compare`, `cross`) each
 take a model, effort and batching. Presets set the batching:
@@ -402,8 +419,8 @@ take a model, effort and batching. Presets set the batching:
 Override per role in `evals/agents.json` or per run, e.g.
 `/vet quiz --agent grade.model=<model> --agent grade.effort=low`.
 
-The suite is saved to `evals/<skill>/suite.json` and reused, so later runs are
-comparable. You review the rubric and prompts once, when a suite is first written.
+`/vet` saves the suite to `evals/<skill>/suite.json` and reuses it, so later runs are
+comparable. You review the rubric and prompts once, when `/vet` first writes a suite.
 
 **Example**
 

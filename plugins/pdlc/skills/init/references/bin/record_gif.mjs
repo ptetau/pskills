@@ -22,14 +22,15 @@
 // A terminal shows each command's output and errors in order, and scrolls like a real
 // one: every frame shows the newest lines.
 //
-// A frame must show what its caption claims, so the recording fails, naming the step, when:
+// A frame must show what its caption claims. The recording fails, naming the step, when:
 //   - a frame is blank: almost every pixel is one colour;
-//   - a step that should change the screen doesn't: a click, typing or a key press that
-//     leaves the page as it was, or a command that prints nothing.
-// After a click, typing or a key press, the frame waits (up to 5 s) for the page to change
-// and settle, so it shows the result, not the page before it. A step whose acceptance line
-// says nothing changes sets "unchanged": true. No review.gif is written when a check fails.
-// Needs playwright, gifenc and pngjs. They are looked up in pdlc/.tools, then globally.
+//   - a step that should change the screen doesn't. That is a click, typing or a key press
+//     that leaves the page as it was, or a command that prints nothing.
+// After a click, typing or a key press, the recorder waits up to 5 s for the page to change
+// and settle. Then the frame shows the result, not the page before it. A step whose
+// acceptance line says nothing changes sets "unchanged": true. If a check fails, the
+// recorder writes no review.gif.
+// Needs playwright, gifenc and pngjs. It looks for them in pdlc/.tools, then globally.
 
 import { createRequire } from "node:module";
 import { execSync, spawn } from "node:child_process";

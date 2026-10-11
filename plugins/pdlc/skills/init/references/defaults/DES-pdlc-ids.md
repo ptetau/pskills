@@ -9,8 +9,8 @@ Status: agreed · Default: yes · Ask at init: no
 - Specs: `JOB-`, `CAP-` or `DES-` and a short lowercase name with dashes, for example
   `CAP-email`.
 - Requirements: the spec ID, a dot, `R` and a number, for example `CAP-email.R3`.
-- IDs never change and are never reused.
+- Never change or reuse an ID.
 
 ## Why
 
-Short, stable IDs make every link greppable, in files, commits and check names.
+Short, stable IDs let `grep` find every link: in files, commits and check names.

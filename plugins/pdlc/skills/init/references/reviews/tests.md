@@ -4,19 +4,19 @@ Default: yes
 
 You judge the checks, not the code. You have not seen the code.
 
-- Every acceptance line in the change spec has at least one check, except under a
-  requirement marked `(retire)`: those get no check, and any check that only proved them
-  is gone.
+- Every acceptance line in the change spec has at least one check. A requirement marked
+  `(retire)` is the exception: it gets no check, and any check that only proved it is
+  gone.
 - Each check's name carries its requirement ID.
 - Each check tests what the acceptance line says, through the "Interface" in the change
-  spec. It doesn't depend on how the code is written inside.
-- Each line is proved at the surface it names. A line where the person clicks is proved
-  by a check that clicks and reads what shows, not only by a check of a helper below it.
-  A line that depends on the current date or time sets the clock through a seam at that
-  same surface: a check that runs a command sets it by the command's environment
-  variable or flag. Using the real clock, or setting the time only on a helper below the
-  surface, is a problem. So is leaving such a line to manual checks when a stand-in seam
-  could reach it.
+  spec. It doesn't depend on how the code works inside.
+- A check proves each line at the surface the line names. A line where the person clicks
+  needs a check that clicks and reads what shows. A check of a helper below that surface
+  isn't enough on its own. If a line depends on the current date or time, its check sets
+  the clock through a seam at that same surface. A check that runs a command sets the
+  clock by the command's environment variable or flag. Each of these is a problem:
+  - using the real clock, or setting the time only on a helper below the surface;
+  - leaving a line to manual checks when a stand-in seam could reach its surface.
 - Each check could fail: it fails on a plausible wrong version of the code (see "Wrong
   versions"). A check that passes whatever the code does doesn't count.
 - A correct app would pass each check. A fake that stands in for something real uses the
@@ -28,10 +28,10 @@ You judge the checks, not the code. You have not seen the code.
 
 ## Wrong versions
 
-For each check, name one realistic wrong version of the code and decide whether the
-check fails on it. Write one line per check under "Wrong versions" in your result: the
-check, the wrong version, and `fails` or `passes`. A check that passes a plausible wrong
-version is a problem: name the value or line that would catch it.
+For each check, name one plausible wrong version of the code. Decide whether the check
+fails on it. Write one line per check under "Wrong versions" in your result: the check,
+the wrong version, and `fails` or `passes`. A check that passes a plausible wrong version
+is a problem: name the value or line that would catch it.
 
 Watch for these traps:
 
@@ -41,5 +41,6 @@ Watch for these traps:
 - A limit not tested exactly at the edge and one past it: for "at most 20", 20 passes and
   21 fails. Values near the edge prove nothing about the edge.
 - A rule about a whole class tested without a non-member. "Any other value is an error"
-  needs a value close to an allowed one (another case, a space, a prefix), not only a few
-  far-off ones. "Only the owner may" needs someone who isn't the owner.
+  needs a value close to an allowed one, not only a few far-off ones. A close value
+  differs by its case, a space or a prefix. "Only the owner may" needs someone who isn't
+  the owner.

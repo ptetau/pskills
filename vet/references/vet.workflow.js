@@ -17,7 +17,7 @@ export const meta = {
 //   skill:          { name, dir, file }             absolute paths in the main checkout
 //   suite:          { structure, rubric, prompts }  prompts already cut to this run's selection
 //   runs:           repeats per prompt (default 10, minimum 2)
-//   wave:           repeats per prompt per wave (default 2); the grade is updated after each wave
+//   wave:           repeats per prompt per wave (default 2); the script updates the grade after each wave
 //   settle:         { delta, patience, stop }       see "Settling" below
 //   maxTurns:       assistant turns per run before stopping (default 12)
 //   crossPerPrompt: runs per prompt shown to cross-prompt judges (default 2)
@@ -38,13 +38,13 @@ const WAVES = Math.ceil(R / W)
 const MAX_TURNS = args.maxTurns || 12
 const CROSS_PER_PROMPT = args.crossPerPrompt || 2
 
-// Settling: after every wave the running grade is recorded. It has settled once
-// the overall score has moved no more than `delta` points in each of the last
-// `patience` waves without changing letter. With `stop`, no new wave starts
-// once it has settled.
+// Settling: after every wave, the script records the running grade. The grade has
+// settled once the overall score has moved no more than `delta` points in each of
+// the last `patience` waves without changing letter. With `stop`, no new wave
+// starts once the grade has settled.
 const SETTLE = { delta: 2, patience: 2, stop: false, ...(args.settle || {}) }
 
-// Values behind the scores. n/a verdicts are left out of quality entirely.
+// Values behind the scores. Quality leaves out n/a verdicts entirely.
 const VERDICT = { met: 1, partial: 0.5, missed: 0 }
 const SIMILARITY = { identical: 1, equivalent: 0.9, minor_drift: 0.6, major_drift: 0.25, contradictory: 0 }
 const WEIGHT = Object.fromEntries(RUBRIC.map((i) => [i.id, i.weight || 1]))
@@ -221,9 +221,10 @@ const SIM_BATCH_SCHEMA = {
 
 // ── Prompt text ─────────────────────────────────────────────────────────────
 
-// The harness may relay the user's latest message to every agent. That message was
-// written to the session that launched this eval, which has already acted on it
-// (a request to stop or restart an earlier eval, say, is why this one exists).
+// The harness may relay the user's latest message to every agent. The user wrote
+// that message to the session that launched this eval. That session has already
+// acted on it (a request to stop or restart an earlier eval, say, is why this one
+// exists).
 const CONTEXT = `Context: the user started this eval with /vet, and this task is part of it. The session that launched it may relay the user's latest message to you. That message was written to that session, which has already acted on it; for example, if it asked to stop or restart an earlier eval, this is the new one. Carry out this task unless the message plainly asks for this eval to stop.`
 
 // Each run writes its capture inside its own worktree (isolated agents can't
@@ -757,8 +758,9 @@ if (crossJobs.length && AGENTS.cross.batch === 'all') {
 }
 
 // ── Tallies: count how each judgment split the runs ─────────────────────────
-// Counted here, not by the judge. A judgment whose groups don't place every
-// compared run exactly once is flagged, and its tally is taken over the runs placed.
+// The script counts these, not the judge. It flags a judgment whose groups don't
+// place every compared run exactly once, and takes that judgment's tally over the
+// runs placed.
 
 const tallyOf = (groups, expected) => {
   const seen = groups.flatMap((g) => g.runs)

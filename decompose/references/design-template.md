@@ -3,17 +3,17 @@
 **Mode:** inception | subsystem of `<host system>` · **Status:** draft | reviewed
 **Date:** <YYYY-MM-DD> · **Scope:** <one line: what is inside the walls, what is not>
 
-> Walls come from volatility (where change is contained). Bricks come from orthogonal
-> primitives (how features are assembled). Every component below traces to a volatility
-> (V-id); every brick traces to a volatility or a current feature (F-id). Anything that
-> traces to neither was cut.
+> Walls come from volatility (where the design contains change). Bricks come from
+> orthogonal primitives (how the design assembles features). Every component below traces
+> to a volatility (V-id); every brick traces to a volatility or a current feature (F-id).
+> The design cuts anything that traces to neither.
 
 ## 1. Frame: what this is and who it is for
 
 - **Problem:** <what this system does, in two sentences>
 - **Users:** <who uses it and who calls it: people, systems, schedules>
-- **Nature of the business:** <what will not change while this system exists. These are
-  deliberately NOT encapsulated.>
+- **Nature of the business:** <what will not change while this system exists. The design
+  deliberately does NOT wall these off.>
 - **Constraints:** <deadlines, team, platform, compliance, host-system conventions>
 - **Host system (subsystem mode):** <language, framework, where it attaches, owners>
 - **Assumptions** (made instead of asking; each one is a question to confirm):
@@ -71,8 +71,8 @@ variation of them):
 
 ## 4. Walls: the parts, and who may call whom
 
-A C4 component diagram, one band per layer (see `c4.md`). Skip it when there are three
-parts or fewer; the table below says the same thing.
+A C4 component diagram, one band per layer (see `c4.md`). If there are three parts or
+fewer, skip it; the table below says the same thing.
 
 ```mermaid
 ---
@@ -102,7 +102,8 @@ flowchart TB
 ```
 
 Key: light blue, a part we build; dark blue, storage; grey, another system. Arrows are
-calls, labelled with the verbs used. Utilities are left out: every part may call them.
+calls, labelled with the verbs used. The diagram leaves out Utilities: every part may
+call them.
 
 | Component | Type | Encapsulates | API (business verbs) | May call |
 |-----------|------|--------------|---------------------------|----------|
@@ -110,8 +111,8 @@ calls, labelled with the verbs used. Utilities are left out: every part may call
 | <Noun>Manager | Manager | V2 (workflow order) | `<Verb>(...)` | Engines, Access, Utilities; other Managers only via queue |
 | <Utility> | Utility | <what it does, e.g. who is signed in and what they may do> | `<Verb>(...)` | nothing |
 
-For a Client, the API column lists its entry points (routes, commands, screens, or the
-user actions a UI handles), so the blueprint types them instead of inventing them. Add a
+For a Client, the API column lists its entry points: routes, commands, screens, or the
+user actions a UI handles. Then the blueprint types them instead of inventing them. Add a
 Utility row only for one this system builds (a security policy); off-the-shelf logging
 needs no row.
 
@@ -130,8 +131,8 @@ state-machine table, or config>. Why: <reason>.
 |-------|------|------------------------|----------|--------|
 | <Render> | Transform | <fills a template for a locale> | Envelope → Envelope | F1, F3, V3 |
 
-State machines (if any). Give each a row above with Kind `State machine`, and draw it
-under its name. Draw only the legal transitions: anything not drawn is refused. Mark
+State machines (if any). Give each a row above with Kind `State machine`. Draw it under
+its name. Draw only the legal transitions: the system refuses anything not drawn. Mark
 terminal states, if there are any.
 
 ```
@@ -170,8 +171,8 @@ Result: <pass, or which rule broke and how the walls changed>
 |------------|-----------------------------|--------|
 | V1 | <Component> | pass |
 
-A new ResourceAccess for a genuinely new resource, or a Client change for a new human
-step, is not a leak; note it in the Result column.
+A new ResourceAccess for a genuinely new resource is not a leak. Nor is a Client change
+for a new human step. Note either one in the Result column.
 
 **Independence check:** <for each brick whose requirement could change a lot, what else
 would change; anything other than "nothing" and how it was fixed>
@@ -188,7 +189,7 @@ that a wall now separates, and why the design removes that coupling>
 
 **Revisions during validation:** <each failed check, the change made, and the re-run
 result, e.g. "V3 touched RenderingEngine and PracticeApp; moved template choice into
-RenderingEngine; re-run passes">
+RenderingEngine; re-run passes"> <!-- writing: ok -->
 
 ## 8. Seams and migration: how it joins the existing system (subsystem mode)
 
@@ -198,7 +199,7 @@ In inception mode, write "Not applicable: inception" and keep the number.
 - **Translation at the seam:** <anti-corruption layer where the subsystem calls the host;
   open-host service where the host calls in. Host types stop here>
 - **Steps** (each one shippable on its own; old path deleted last):
-  1. <put an abstraction in front of the existing behavior (branch by abstraction)>
+  1. <put an abstraction in front of the existing behaviour (branch by abstraction)>
   2. <route callers through it>
   3. <build the new implementation behind it>
   4. <switch over, observe, delete the old path>

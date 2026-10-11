@@ -80,9 +80,9 @@ a `finding` object in `findings.schema.json`: `id`, `flow`, `dimension`, `severi
 
 ## Surprises vs Docs/Specs
 
-*(Findings where the app's actual behavior contradicts or diverges from what the
-docs/specs in Phase 1 claimed — distinct from ordinary bugs because the gap is
-between stated intent and observed reality, not just "this is broken.")*
+*(Findings where the app's actual behaviour contradicts or diverges from what the
+docs/specs in Phase 1 claimed. These differ from ordinary bugs: the gap is between
+stated intent and observed reality, not just "this is broken.")*
 
 - `[flow]` / `[dimension]`: [what the docs/spec said] vs [what was actually observed] → see `[F-00N]`
 - *(or:)* "No surprises vs docs/specs — behavior matched the app's documented intent

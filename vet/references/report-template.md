@@ -9,7 +9,7 @@
 **Models:** skill runs on `[config.agents.run.model, with config.sessionModel if "session"]` ·
 judges on `[config.agents.grade.model, …]`
 **Agents:** preset `[config.agents.preset]` · waves of [config.wave] · [each role whose
-effort or batch differs from the preset default, e.g. "grade effort low"; or "no overrides"]
+effort or batch differs from the preset default, e.g. "grade effort low"; or "no overrides"] <!-- writing: ok -->
 
 *(If `skillSha256` differs from the suite's, add one line: "SKILL.md changed since this
 suite was written; the rubric may be stale. `/vet [skill] --regen` rebuilds it.")*
@@ -38,9 +38,9 @@ check.)*
 |---|---|---|---|---|---|
 | 1 | [runsPerPrompt] | [quality] | [stability] | [overall] ([grade]) | [moved] |
 
-[One sentence: "Settled at wave N (M runs per prompt)" or "Not settled: the grade was
-still moving by X points at the last wave; more runs would help." If
-`settle.stopWhenSettled` stopped the eval early, say how many runs that saved.]
+[One sentence. If the grade settled: "Settled at wave N (M runs per prompt)". If not:
+"Not settled: the grade was still moving by X points at the last wave; more runs would
+help." If `settle.stopWhenSettled` stopped the eval early, say how many runs that saved.]
 
 ## Verdict
 
@@ -75,7 +75,7 @@ of runs in the largest group. `-` where not measured.)*
 
 *(Items with passRate under 80, lowest first. For each: what the item asks, the
 met/partial/missed counts, and one or two evidence quotes with run labels, from
-`runs[].verdicts`. Write "Every item met in at least 80% of runs." if none.)*
+`runs[].verdicts`. If there are none, write "Every item met in at least 80% of runs.")*
 
 ### R[n] [criterion] — met in [passRate]% of runs
 
@@ -86,8 +86,8 @@ met/partial/missed counts, and one or two evidence quotes with run labels, from
 ## Where it varies
 
 *(Every similarity judgment classed major_drift or contradictory, from `similarity[]`,
-worst first. Show the groups so the reader sees how the runs split. Write "No item
-drifted beyond minor_drift." if none.)*
+worst first. Show the groups so the reader sees how the runs split. If there are none,
+write "No item drifted beyond minor_drift.")*
 
 ### R[n] [criterion] · [scope: P01, or across prompts] — [class] · [tally.split]
 
@@ -107,7 +107,7 @@ is the usual cause of drift: point at the rule and say how to make it exact.)*
 ## Excluded runs and lost judges
 
 *(From `excluded[]`, `lostJudges[]`, and any `similarity[]` entry whose `tally.clean` is
-false (the judge didn't place every run exactly once). Write "None." if all are empty.)*
+false (the judge didn't place every run exactly once). If all are empty, write "None.")*
 
 - [label] — [reason]
 

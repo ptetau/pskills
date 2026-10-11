@@ -37,4 +37,4 @@ They merge together, bottom first.
 
 ## New behaviour for you to approve
 
-Each intent verify filed for this change, by ID, one line each.
+Each intent verify filed for this change, by ID and name, one line each.

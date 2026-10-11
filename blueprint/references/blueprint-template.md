@@ -8,7 +8,8 @@
 **Target mode:** {modular monolith | event-driven services | …} in {language}, {runtime}, {storage} *(assumed, if the design did not say)*
 
 A C4 container diagram: what runs, and which components each container holds (see
-`c4.md`). With a single container, say "Everything runs in one container: {name}" instead.
+`c4.md`). If there is a single container, say "Everything runs in one container: {name}"
+instead.
 
 ```mermaid
 C4Container
@@ -41,7 +42,7 @@ person. Each container lists the components it holds.
 
 ### Decisions added by this spec
 
-Each item was open in the design and is decided here. Review these first.
+Each item was open in the design, and this spec decides it. Review these first.
 
 - {decision}: {chosen value}. If wrong: {what changes}.
 
@@ -63,8 +64,8 @@ One line per technical word this blueprint uses, explained in plain words (see
    transaction as {write}}. Violation: `{ERROR_CODE}`.
 2. …
 
-(4–7 invariants for most systems; fewer for a small domain. Never pad. Cover
-idempotency, immutability, and the hard rejections where they apply.)
+(4–7 invariants for most systems; fewer for a small domain. Never pad. Where they apply,
+cover idempotency, immutability, and the hard rejections.)
 
 ## 3. Core Domain Data Contracts: the exact shape of the data
 
@@ -94,12 +95,12 @@ export type ErrorCode = "{ERROR_A}" | "{ERROR_B}";
 export type Result<T> = { ok: true; value: T } | { ok: false; error: ErrorCode; detail?: string };
 ```
 
-### Error catalog
+### Error catalogue
 
-One row per code in `ErrorCode`. The fault column says who must fix it. It's the caller's
-fault (a 4xx status) when they sent something the method can't accept. It's ours (a 5xx
-status) when our code broke its own promise. Over HTTP, errors use RFC 9457 problem
-details (`application/problem+json`), with the code in a `code` field.
+One row per code in `ErrorCode`. The fault column says who must fix the error. If the
+caller sent something the method can't accept, it's the caller's fault (a 4xx status). If
+our code broke its own promise, it's our fault (a 5xx status). Over HTTP, errors use RFC
+9457 problem details (`application/problem+json`), with the code in a `code` field.
 
 | Code | Meaning | Fault | HTTP | Retry helps? |
 |------|---------|-------|------|--------------|
@@ -119,8 +120,9 @@ stateDiagram-v2
   StateB --> [*]
 ```
 
-Stored by `{Component}`. Each transition is performed by the verb on its arrow, as a
-compare-and-set. Anything not drawn is refused: `{INVALID_TRANSITION}`. Terminal:
+Stored by `{Component}`. The verb on each arrow performs that transition, as a
+compare-and-set. The system refuses any transition not drawn: `{INVALID_TRANSITION}`.
+Terminal:
 {states, or "none"}. {If the design names this machine differently: "This is the design's
 `{Machine}` machine."}
 

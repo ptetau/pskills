@@ -12,8 +12,8 @@ fail: a test, a script, a lint rule, an eval or a query.
 
 ## Success
 
-A check that is known to fail is reported as failing. A requirement with no checks is
-reported as having none, never as passing.
+The port reports a check that is known to fail as failing. It reports a requirement with
+no checks as having none, never as passing.
 
 ## Conformance check
 

@@ -11,9 +11,9 @@ One or two sentences. What is true when this change merges.
 
 ## Requirements
 
-Copied from the specs: each heading and its acceptance lines, in number order, and
-nothing else (no `Status:` line). Add ` (retire)` to the heading of a requirement this
-change removes.
+Copy from the specs each heading and its acceptance lines, in number order, and nothing
+else (no `Status:` line). Add ` (retire)` to the heading of a requirement this change
+removes.
 
 ### CAP-name.R1 · Short title
 
@@ -26,35 +26,37 @@ change removes.
 
 ## Interface
 
-What the checks may call, so the test writer never needs to see the code. For each entry:
-the file it lives in, what goes in and what comes out (with types where the language has
-them), and every error it can give, by code from `DES-errors`.
+What the checks may call, so the test writer never needs to see the code. For each entry,
+give the file it lives in, and what goes in and what comes out. Give types where the
+language has them. List every error the entry can give, by its code from `DES-errors`
+(the project's error codes).
 
 - `send(template: TemplateName, to: Email) -> SentId` in `src/email.js`
   - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`
 
 ### Test seams
 
-How a check controls what it can't wait for or reach: the clock, randomness, outside
-vendors or stores, and a stand-in for a surface the runner can't drive (a page with no
-browser). Each seam is reached through the outermost interface the checks call: an
-argument for a library function, an environment variable or a flag for a command, named
-in the README. Write "none" only if no line needs one.
+How a check controls what it can't wait for or reach: the clock, randomness, and outside
+vendors or stores. A seam can also stand in for a surface the runner can't drive, such as
+a page with no browser. The checks reach each seam through the outermost interface they
+call. A seam is an argument for a library function, or an environment variable or a flag
+for a command. The README names each seam. Write "none" only if no acceptance line
+needs a seam.
 
 - clock: `send(..., { now })` takes the current time
 
 ## Files
 
 App files this change may touch, from the spec's code map. The builder changes only
-these. A shared file names this spec's parts; only those parts change.
+these. A shared file names this spec's parts. Only those parts change.
 
 - path/to/file
 - path/to/server.py: POST /reset route and handle_reset
 
 ## Check files
 
-Check files for this change, named after the spec as `DES-pdlc-check-tagging` says. Only
-the test writer writes these.
+Check files for this change, named after the spec as `DES-pdlc-check-tagging` (check
+naming) says. Only the test writer writes these.
 
 - path/to/check
 
@@ -69,8 +71,8 @@ the test writer writes these.
 ## Manual checks
 
 Acceptance lines no check can see, such as how a page looks. The user confirms them at
-merge. One line each: `<requirement ID> · <the acceptance line> · how to confirm it`.
-Write "none" if there are none.
+merge. One line each: `<requirement ID> · <the acceptance line> · how to confirm it`. If
+there are none, write "none".
 
 ## Progress log
 

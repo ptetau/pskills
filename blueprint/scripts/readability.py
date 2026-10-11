@@ -2,8 +2,8 @@
 """Check that a design document or blueprint reads in plain English.
 
 The target reader is a bright 10-year-old: short sentences, common words, and every
-technical word explained. Only prose is measured. Code blocks, `inline code`, tables,
-headings, and diagrams are skipped, because names and code must stay exact.
+technical word explained. It measures only prose. It skips code blocks, `inline code`,
+tables, headings, and diagrams, because names and code must stay exact.
 
 Reports:
   - average words per sentence (aim for 15 or fewer)
@@ -25,8 +25,8 @@ import json
 import re
 import sys
 
-# Words a 10-year-old won't know. Each must be explained in the document's
-# "Words used here" list if the prose uses it.
+# Words a 10-year-old won't know. If the prose uses one, the document's
+# "Words used here" list must explain it.
 JARGON = [
     "abstraction", "asynchronous", "atomic", "atomically", "backoff", "cardinality",
     "compare-and-set", "composable", "composition", "concurrency", "decomposition",

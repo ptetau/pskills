@@ -3,13 +3,13 @@ name: squiz
 description: >
   Visual document-style clarifier rendered by the Apple //e × IBM Plex "Squiz"
   Go binary. The agent writes a compact JSON spec (squizzes, options, optional
-  spec narrative); the `squiz` CLI renders a self-contained, retro-styled
-  interactive HTML doc with mini-wireframe option art and a sticky `copy json`
-  status bar. The user fills it in at their own pace and pastes a single JSON
-  payload back. The payload carries the rendered file path + per-decision
-  anchors so the agent can navigate back to the exact section the user was
-  responding to. Theme is auto-assigned per repo (sequential, persisted) so
-  each project gets a distinct identity. Use whenever the user says "/squiz",
+  spec narrative). The `squiz` CLI renders it as a self-contained, retro-styled
+  interactive HTML doc. The doc has mini-wireframe option art and a sticky
+  `copy json` status bar. The user fills it in at their own pace and pastes a
+  single JSON payload back. The payload carries the rendered file path +
+  per-decision anchors so the agent can navigate back to the exact section the
+  user was responding to. The binary auto-assigns a theme per repo (sequential,
+  persisted), so each project gets a distinct identity. Use whenever the user says "/squiz",
   "squiz this", or asks for a richer, more designed-feeling visual version of
   /clarify-with-docs. The visual twin of /quiz (inline chat). Prefer it when
   the task is high-stakes or visual decisions matter.
@@ -19,14 +19,20 @@ description: >
 
 ## Purpose
 
-Same intent as [[clarify-with-docs]] — gather every clarifying question up front and render them as one rich interactive document the user fills in at their own pace. Squiz is the **opinionated visual implementation**: numbered "squiz cards", optional inline spec text with `{{markers}}` linking to questions, mini-wireframe option art, and a sticky bottom status bar that exports as JSON. Eight retro-terminal × editorial themes (paper / phosphor / amber / beige / rose / ocean / forest / slate), auto-assigned per repo so every project feels distinct.
+Same intent as [[clarify-with-docs]]: gather every clarifying question up front. Render the questions as one rich interactive document that the user fills in at their own pace. Squiz is the **opinionated visual implementation**. It has:
 
-Use it for high-stakes clarification where the visual identity *is* part of the message: a UX/UI brief, a product spec, a design system call, anything where the user benefits from seeing wireframe previews of their options.
+- numbered "squiz cards";
+- optional inline spec text with `{{markers}}` linking to questions;
+- mini-wireframe option art;
+- a sticky bottom status bar that exports as JSON;
+- eight retro-terminal × editorial themes (paper / phosphor / amber / beige / rose / ocean / forest / slate), auto-assigned per repo so every project feels distinct.
+
+Use it for high-stakes clarification where the visual identity *is* part of the message. Examples: a UX/UI brief, a product spec, a design system call. Use it for anything where the user benefits from seeing wireframe previews of their options.
 
 ## When to use this vs. siblings
 
 - **`/quiz`** (inline chat twin) — quick rounds, one question per turn in chat. Use when the user wants speed or is on mobile.
-- **`/clarify-with-docs`** — same document-style pattern, but unstyled. Use when you don't want the retro flavor.
+- **`/clarify-with-docs`** — same document-style pattern, but unstyled. Use when you don't want the retro flavour.
 - **`/squiz`** (this skill) — when the visual identity matters, when options benefit from mini-wireframe previews, or when the user explicitly asks for "squiz".
 
 ## The flow (3 phases, 1 binary)
@@ -35,21 +41,21 @@ Use it for high-stakes clarification where the visual identity *is* part of the 
 
 Review the conversation, memory, uploaded files. Identify every ambiguity that could materially change the output. Aim for **3-12 questions**. Fewer → use `/quiz`. More → the user will bail.
 
-Decide whether to include a **spec narrative** at the top (paragraphs with `{{markers}}` linking down to cards) — only if you have real prose you can quote. Skip it for tighter squizzes.
+Decide whether to include a **spec narrative** at the top: paragraphs with `{{markers}}` linking down to cards. Include it only if you have real prose you can quote. Skip it for tighter squizzes.
 
 ### Phase 2 — Write JSON, run the binary
 
-Write a `<name>.json` file (see Schema below), then invoke the renderer:
+Write a `<name>.json` file (see JSON Schema below). Then invoke the renderer:
 
 ```bash
 squiz <name>.json
 ```
 
-That's it. The `squiz` binary (installed via `go install` of `<this-skill>/go-renderer`) reads the JSON, picks a theme for the repo (auto, sequential, persisted), and emits `<name>.html` next to the JSON. With no extra flag it does **not** auto-open.
+The `squiz` binary comes from `go install` of `<this-skill>/go-renderer`. It reads the JSON, picks a theme for the repo (auto, sequential, persisted), and writes `<name>.html` next to the JSON. Without an extra flag, it does **not** auto-open.
 
-**Always hand the user a clickable `file://` URL** when you tell them the path. Bare Windows paths like `C:\Users\…\foo.html` aren't clickable in most terminals; `file:///C:/Users/.../foo.html` is. POSIX form: `file:///home/u/foo.html`. Use `--open` only when the user has asked for automatic browser launch — and even then, still print the URL alongside.
+**Always hand the user a clickable `file://` URL** when you tell them the path. Bare Windows paths like `C:\Users\…\foo.html` aren't clickable in most terminals; `file:///C:/Users/.../foo.html` is. POSIX form: `file:///home/u/foo.html`. Use `--open` only when the user has asked for automatic browser launch. Even then, still print the URL alongside.
 
-**Default file location:** write `squiz.json` (or a named variant like `squiz-onboarding.json`) **next to the work the squiz is about** — typically the project root or the relevant subdirectory. Output `.html` lands next to the `.json` with the same basename. Both paths are deterministic.
+**Default file location:** write `squiz.json` (or a named variant like `squiz-onboarding.json`) **next to the work the squiz is about**. This is typically the project root or the relevant subdirectory. Output `.html` lands next to the `.json` with the same basename. Both paths are deterministic.
 
 ### Phase 3 — User pastes back
 
@@ -57,7 +63,7 @@ The doc has a sticky **`copy json`** button at the bottom. Tell the user:
 
 > "Click `copy json` at the bottom, paste it back here, and I'll continue."
 
-When they paste, parse it (see "Export JSON shape" below) — the payload includes `source.file` (absolute path to the rendered HTML) and per-decision `anchor` (`#squiz-<id>`). Use these to navigate back to context if needed. Restate your updated understanding in plain prose, ask any *new* gaps as plain chat follow-ups (do NOT render a second squiz), then start the work.
+When the user pastes it, parse it (see "Export JSON shape" below). The payload includes `source.file` (absolute path to the rendered HTML) and per-decision `anchor` (`#squiz-<id>`). If needed, use these to navigate back to context. Restate your updated understanding in plain prose. Ask about any *new* gaps as plain chat follow-ups (do NOT render a second squiz). Then start the work.
 
 ## JSON Schema (input)
 
@@ -109,7 +115,7 @@ Two namespaces of curated, theme-aware SVG parts baked into the binary:
 - **`wf:*`** — UI/UX wireframe parts (calendars, charts, avatars, phone screens, controls, status, typography, graphs, metaphors, misc) — ~50 items
 - **`arch:*`** — system-design / architecture parts (servers, databases, caches, queues, network primitives, identities) — ~30 items
 
-Run `squiz catalog wf|arch|dsl` for the authoritative list with descriptions and natural-box dimensions — these are PARTS to remix, not pictures to pick from. The catalog's `--json` flag reports each entry's `naturalBox` so you can size `<use>` references in composed SVG without guessing.
+Run `squiz catalog wf|arch|dsl` for the authoritative list, with descriptions and natural-box dimensions. These are PARTS to remix, not pictures to pick from. With `--json`, `squiz catalog` reports each entry's `naturalBox`. Then you can size `<use>` references in composed SVG without guessing.
 
 ### 2. `"art": "<dsl-string>"` — parametric DSL
 
@@ -126,16 +132,16 @@ Compact strings the binary parses into themed SVG. Primitives:
 | `circle-pack:N` | `"circle-pack:12"` | N organically-arranged circles |
 | `text:"line 1\nline 2"[@FONT][?size=N&align=A&weight=W&color=C]` | `"text:\"Quiet\\nwelcome back.\"@mono?size=18&align=center&weight=700&color=accent"` | multi-line styled text (richer sibling of `sample:`). FONT = `mono`/`serif`/`sans` (default `sans`). `size` 6-36 (default 14). `align` = `left`/`center`/`right` (default `left`). `weight` 300-700 (default 400). `color` = `ink`/`ink-2`/`ink-3`/`accent`/`rule`/`rule-2` (default `ink`). Multi-line via `\n`. |
 | `flow:[a,b,c]` or `flow:[a?icon=user,b?icon=api,c?icon=database]` | `"flow:[client?icon=user,api?icon=api,db?icon=database]"` | left-to-right pipeline of named boxes connected by arrows; optional `?icon=<arch>` embeds an arch icon in each box |
-| `box:label[?icon=ARCH]` | `"box:web-tier?icon=server"` | single labeled box with optional arch icon |
-| `arrow:"label"[?dir=DIR]` | `"arrow:\"async\"?dir=down"` | standalone labeled arrow glyph; `dir` = `right` (default) / `down` / `up` / `left` |
+| `box:label[?icon=ARCH]` | `"box:web-tier?icon=server"` | single labelled box with optional arch icon |
+| `arrow:"label"[?dir=DIR]` | `"arrow:\"async\"?dir=down"` | standalone labelled arrow glyph; `dir` = `right` (default) / `down` / `up` / `left` |
 
 ### 3. `"art": "<raw svg>"` — escape hatch
 
-When library + DSL don't fit, inline raw SVG starting with `<svg`. Use CSS vars (`var(--accent)`, `var(--ink)`, `var(--ink-3)`, `var(--rule-2)`) so it inherits the active theme. Use `viewBox='0 0 100 60'` and `style='width:80%;height:auto'` to match the other forms visually.
+If library + DSL don't fit, inline raw SVG starting with `<svg`. Use CSS vars (`var(--accent)`, `var(--ink)`, `var(--ink-3)`, `var(--rule-2)`) so it inherits the active theme. Use `viewBox='0 0 100 60'` and `style='width:80%;height:auto'` to match the other forms visually.
 
 ### 4. `"art": "none"` — explicit hide
 
-Drops the art slot entirely. Card collapses. Use when **no visual is appropriate** (e.g. a name/string question where art would be padding).
+Drops the art slot entirely. The card collapses. Use when **no visual is appropriate** (e.g. a name/string question where art would be padding).
 
 ### 5. `art` omitted / empty — auto per-letter abstract
 
@@ -145,14 +151,14 @@ Subtle patterns based on option position: A = hatched, B = dotted, C = striped, 
 
 ## Theme (auto by default — don't set unless overriding)
 
-**Default behavior:** the binary auto-assigns one of 8 themes per repo, sequentially, persisted in `~/.squiz/themes.json`. Each new repo gets the next theme in rotation. Re-renders of the same repo always get the same theme. Repo key = `git remote get-url origin` if available, else the absolute working directory.
+**Default behaviour:** the binary auto-assigns one of 8 themes per repo, sequentially, persisted in `~/.squiz/themes.json`. Each new repo gets the next theme in rotation. Re-renders of the same repo always get the same theme. Repo key = `git remote get-url origin` if available, else the absolute working directory.
 
 **Precedence:**
 1. `--theme <name>` CLI flag (highest)
 2. `"theme"` field in JSON
 3. Auto-derived from repo cache
 
-**Generally**: omit `theme` from the JSON. Let it auto. Only set it if you want a specific identity for one squiz (e.g. `phosphor` for a code/infra-flavored decision).
+**Generally**: omit `theme` from the JSON. Let it auto. If you want a specific identity for one squiz (e.g. `phosphor` for a code/infra-flavoured decision), set it.
 
 The 8 themes:
 
@@ -196,7 +202,7 @@ Optional toggles: `data-scanlines="on"` for CRT character (best with `phosphor`/
 }
 ```
 
-`source.file` is the absolute path of the rendered HTML; `anchor` is the `#squiz-<id>` you can append to it to navigate to a specific decision. `choice: null` means the user skipped that decision — treat as "you decide" unless `notes` say otherwise.
+`source.file` is the absolute path of the rendered HTML; `anchor` is the `#squiz-<id>` you can append to it to navigate to a specific decision. `choice: null` means the user skipped that decision. Unless `notes` say otherwise, treat it as "you decide".
 
 ## CLI reference
 
@@ -222,32 +228,49 @@ Puts `squiz` on `$GOPATH/bin` (usually on `$PATH`). Verify with `squiz version`.
 
 ## Accessibility (built into the renderer)
 
-The rendered HTML ships with: a skip-to-decisions link, `radiogroup` ARIA roles per squiz, arrow-key navigation within each group, Enter/Space to select, visible focus rings on all interactives, modal focus trap + return-focus on close, `aria-live` progress announcements, proper `<label>` associations for notes textareas, `prefers-reduced-motion` support. No additional work for the agent.
+The rendered HTML ships with:
+
+- a skip-to-decisions link;
+- `radiogroup` ARIA roles per squiz;
+- arrow-key navigation within each group;
+- Enter/Space to select;
+- visible focus rings on all interactives;
+- modal focus trap + return-focus on close;
+- `aria-live` progress announcements;
+- proper `<label>` associations for notes textareas;
+- `prefers-reduced-motion` support.
+
+No additional work for the agent.
 
 ## Rules
 
-1. **One squiz per invocation.** If answers reveal new ambiguity, follow up in plain chat — don't render a second squiz.
+1. **One squiz per invocation.** If answers reveal new ambiguity, follow up in plain chat. Don't render a second squiz.
 2. **3-12 questions** is the sweet spot. Fewer → `/quiz`. More → the user bails.
-3. **Stable IDs.** Both squiz `id` and option `id` are stable — they come back in the JSON. Pick short kebab-or-camel slugs that will still make sense in a week.
+3. **Stable IDs.** Both squiz `id` and option `id` are stable: they come back in the JSON. Pick short kebab-or-camel slugs that will still make sense in a week.
 4. **Omit `theme`** unless you have a reason to override. Auto-rotation does the right thing.
 5. **Art is a bespoke illustration composed from parts. The library is clipart, not finished pictures.**
 
-   The `wf:` / `arch:` / DSL items are **parts** meant to be remixed inside a custom drawing — a labeled box of your own words, an arrow you draw between two icons, a small composition that shows the *specific* idea this option is about. **The default mode is composition: raw SVG that embeds one or more library references plus your own text and connecting marks.** Treat a single library token alone as a deliberate exception, not the norm.
+   The `wf:` / `arch:` / DSL items are **parts** to remix inside a custom drawing, such as:
+   - a labelled box of your own words;
+   - an arrow you draw between two icons;
+   - a small composition that shows the *specific* idea this option is about.
 
-   The composition mechanism (v0.8.0+): inside raw SVG, write `<use href="wf:phone-card" x="0" y="5" width="30" height="50"/>` to drop in a library shape; the renderer inlines it as a `<symbol>` and you get a bespoke composition with library parts. Use `squiz catalog wf --json` to discover sizing — every entry reports its `naturalBox` so you size `<use>` boxes without guessing.
+   **The default mode is composition: raw SVG that embeds one or more library references plus your own text and connecting marks.** Treat a single library token alone as a deliberate exception, not the norm.
+
+   The composition mechanism (v0.8.0+): inside raw SVG, write `<use href="wf:phone-card" x="0" y="5" width="30" height="50"/>` to drop in a library shape. The renderer inlines it as a `<symbol>`, and you get a bespoke composition with library parts. Use `squiz catalog wf --json` to discover sizing. Every entry reports its `naturalBox`, so you size `<use>` boxes without guessing.
 
    **Pick the kind of diagram first, THEN compose.** Six shapes consistently read at a glance:
 
    | Shape | When it fits | Typical recipe |
    |---|---|---|
-   | **labeled-object** | one thing with one part that matters | wf/arch icon + callout pointing at the part |
+   | **labelled-object** | one thing with one part that matters | wf/arch icon + callout pointing at the part |
    | **flow** | a process or path (request → ack, raw → cooked) | 2-4 boxes with arrows between; one highlighted |
    | **contrast / vs** | before/after, this/that, chosen/rejected | two mini-panels with `divider:vs` between them |
-   | **part-whole** | scope, subset, "this slice of that" | container with one cell emphasized |
+   | **part-whole** | scope, subset, "this slice of that" | container with one cell emphasised |
    | **metric-with-context** | a number that means something only vs a reference | sparkline + `baseline:N` reference line + label |
    | **typed-list** | a choice among siblings or named modes | `pills:a*\|b\|c*` or N rows with one accent |
 
-   **Visual budget at 100×60.** Four "ink events" max — one silhouette, one accent, one ≤6-char label, one relationship-line. More than that and the eye gives up. One accent color in one place only; if two things are accented neither is. ~30-40% of the viewBox should be empty. Asymmetric composition (centered = decorative; off-center = informative).
+   **Visual budget at 100×60.** Four "ink events" max: one silhouette, one accent, one ≤6-char label, one relationship-line. With more, the eye gives up. Use one accent colour in one place only; if you accent two things, you accent neither. ~30-40% of the viewBox should be empty. Use asymmetric composition (centred = decorative; off-centre = informative).
 
    **Authoring checklist — run before committing each art form:**
    1. **Caption it.** In one sentence, what does the picture I'm about to write actually show?
@@ -272,7 +295,7 @@ The rendered HTML ships with: a skip-to-decisions link, `radiogroup` ARIA roles 
 7. **The `quote` field on a squiz is optional.** Use it when you can point to a specific spec line that motivates the question.
 8. **Self-contained.** The doc should make sense to a user opening it cold. `SPEC_LEDE` is the one-liner that does this work.
 9. **Clickable links.** When you hand the user the rendered file, format it as a `file://` URL (`file:///C:/Users/.../foo.html` on Windows). Bare paths aren't clickable; URLs are.
-10. **Recommend when you have a real preference.** Any option can carry `"recommendation": "<one or two sentences explaining why>"`. The renderer shows a `★ RECOMMENDED` chip + the explanation as an editorial callout. Use it when the spec/constraints/audience genuinely point at one option — DON'T mark every option as recommended, and don't fluff the explanation. If you can't justify the pick in one sentence ("OVR-3's $5-VPS constraint rules out k8s; that leaves systemd vs Docker; systemd is one fewer moving part"), the recommendation isn't earned and should stay off. At most one recommendation per squiz/item.
+10. **Recommend when you have a real preference.** Any option can carry `"recommendation": "<one or two sentences explaining why>"`. The renderer shows a `★ RECOMMENDED` chip + the explanation as an editorial callout. Use it when the spec/constraints/audience genuinely point at one option. DON'T mark every option as recommended. Don't fluff the explanation. If you can't justify the pick in one sentence, the recommendation isn't earned; leave it off. A one-sentence justification looks like this: "OVR-3's $5-VPS constraint rules out k8s; that leaves systemd vs Docker; systemd is one fewer moving part". At most one recommendation per squiz/item.
 
 ## Files in this skill
 

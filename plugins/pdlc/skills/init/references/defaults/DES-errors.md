@@ -4,21 +4,25 @@ Status: agreed · Default: yes · Ask at init: no
 
 ## Rule
 
-Every error the system can give has a code here, in `UPPER_SNAKE_CASE`. Acceptance lines,
-Interface entries and checks all use these codes, so a check can expect the exact error.
+Every error the system can give has a code here, in `UPPER_SNAKE_CASE`, for example
+`INVALID_ADDRESS`. Acceptance lines, Interface entries and checks all use these codes, so a
+check can expect the exact error.
 
 | Code | Meaning | Whose fault | Retry helps? |
 |---|---|---|---|
 
-Add a row when a requirement needs a new error. Reuse a code when the meaning is the same.
-Rows are added at intake and ready, never while a change is tested, built or verified.
-Adding a row leaves `Default:` as it is. Write each row the same way: the code in
-backticks; "Whose fault" is `caller`, `system` or `outside service`; "Retry helps?" is
-`yes` or `no`.
+If a requirement needs a new error, add a row. If the meaning is the same, reuse a code.
+Add rows at intake and ready, never while a change is in tests, build or verify. When you
+add a row, leave `Default:` as it is. Write each row the same way:
 
-The code is what checks and code match on. What a person sees (a message, a status) is
-up to each requirement, and need not show the code. Where the caller can't see the code,
-a check expects the exact message and status instead.
+- the code in backticks;
+- "Whose fault": `caller`, `system` or `outside service`;
+- "Retry helps?": `yes` or `no`.
+
+Checks and the app's code match on the error code. Each requirement decides what a person
+sees, such as a message or a status. That message or status need not show the error code.
+If the caller can't see the error code, a check expects the exact message and status
+instead.
 
 ## Why
 

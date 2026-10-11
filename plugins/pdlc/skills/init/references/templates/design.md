@@ -16,7 +16,7 @@ One or two sentences.
 
 ## Requirements
 
-Only if the convention can be checked. Otherwise leave this out.
+Only if a check can prove the convention. Otherwise leave this section out.
 
 ### DES-name.R1 · Short title
 

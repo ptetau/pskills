@@ -4,9 +4,13 @@ Status: agreed · Default: yes · Ask at init: no
 
 ## Scope
 
-Everything written for engineers and agents: specs, intents, change specs, handoffs,
-review packets and results, commit messages, pull request text, code comments, agent
-instructions and messages to the user.
+Everything written for engineers and agents:
+
+- specs, intents and change specs;
+- handoffs, review packets and review results;
+- commit messages and pull request text;
+- code comments and agent instructions;
+- messages to the user.
 
 Code, commands, file names, quoted user text and other systems' names keep their own
 spelling and form.

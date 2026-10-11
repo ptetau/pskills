@@ -1,15 +1,15 @@
 # Bricks: orthogonal primitives
 
 How to design the inside of a wall. The walls (see `walls.md`) decide where change stops.
-Bricks decide how features are assembled. Sources for every idea are in `sources.md`.
+Bricks decide how you assemble features. `sources.md` gives the source for every idea.
 
 ## The idea in one paragraph
 
-Don't build features. Build a small number of independent parts, give them one shared
-way to connect, and write each feature as a composition of parts. When a new feature
-arrives, it should mostly be a new composition. This is how ALGOL 68 was designed (few
-primitive concepts, applied orthogonally, for maximum expressive power), how Unix tools
-work (small programs, one text-stream interface, pipes), and how AWS built its services
+Don't build features. Build a small number of independent parts that share one way to
+connect. Write each feature as a composition of parts. A new feature should then be
+mostly a new composition. ALGOL 68's design (few primitive concepts, applied
+orthogonally, for maximum expressive power) and Unix tools (small programs, one
+text-stream interface, pipes) follow this idea. So does AWS, in how it built its services
 ("primitives not frameworks").
 
 SICP names the three things any such system needs:
@@ -34,7 +34,7 @@ makes the whole thing dip and turn.
 ## Brick kinds
 
 Five kinds cover most application and service design. A sixth thing, the wiring, is not
-a brick; it is how bricks are put together.
+a brick; it is how you put bricks together.
 
 | Kind | Does | Orthogonality test |
 |------|------|--------------------|
@@ -51,26 +51,27 @@ calls this a functional core inside an imperative shell. It makes most bricks te
 with no mocks.
 
 **A Store keeps data beyond one flow**, behind ResourceAccess. State that lives only while
-a process runs (the current game, a request in progress) is a State machine's own state,
-held by the Manager.
+a process runs (the current game, a request in progress) is a State machine's own state.
+The Manager holds it.
 
-**Kind is about role; location is about the wall.** A pull from a bank feed is an Input
-(it brings data into a flow), and it lives in a ResourceAccess because the vendor is
+**Kind is about role; location is about the wall.** A pull from a bank feed is an Input,
+because it brings data into a flow. It lives in a ResourceAccess because the vendor is
 volatile. A timer tick is an Input that lives in a Client (the scheduler).
 
 ## The shared contract
 
-Bricks compose because they agree on one data shape: an envelope, a record, an event. It
-is the equivalent of Unix text streams. (Not to be confused with a component's API, which
-is the business verbs callers use. The contract is what the bricks pass around inside.)
+Bricks compose because they agree on one data shape: an envelope, a record, an event. The
+shared contract is the equivalent of Unix text streams. (Don't confuse it with a
+component's API, which is the business verbs callers use. The contract is what the bricks
+pass around inside.)
 
 - **One shape, many bricks.** Perlis: "It is better to have 100 functions operate on one
   data structure than 10 functions on 10 data structures."
-- **Plain values at the boundary**, not objects with behavior (Bernhardt, *Boundaries*).
+- **Plain values at the boundary**, not objects with behaviour (Bernhardt, *Boundaries*).
 - **Closure.** A composition of bricks is itself usable as a brick (SICP; Beam's
-  composite transforms). This is what lets features be built from features.
-- **Removable and reorderable stages.** Parnas (1979) warns about pipelines where a stage
-  can't be removed because its neighbors' formats don't line up. A shared contract
+  composite transforms). This is what lets you build features from features.
+- **Removable and reorderable stages.** Parnas (1979) warns about pipelines where you
+  can't remove a stage because its neighbours' formats don't line up. A shared contract
   prevents that. Pipes and Filters (Hohpe and Woolf): add, omit, or rearrange filters
   "without having to change the filters themselves."
 - **No junk, no confusion** (Raymond). The contract should not be able to represent
@@ -78,7 +79,7 @@ is the business verbs callers use. The contract is what the bricks pass around i
   contract.
 
 **Scope.** Each wall has one shared contract for its bricks. Walls that pass data along
-the same flow may share one (the notifications example shares an `Envelope`); otherwise
+the same flow may share one (the notifications example shares an `Envelope`). Otherwise
 each wall keeps its own (the shop example's `Quote` stays inside `PricingEngine`).
 
 **Shapes at the edges.** Most bricks are `contract → contract`. The edges differ, and
@@ -95,8 +96,8 @@ that's fine:
 **When the contract itself changes.** The contract is the least changeable thing inside a
 wall: reshaping it touches every brick. That is the price of composition, so keep it
 small. If the register says the data's shape will change (split transactions, a new
-currency field), keep the change additive: new optional fields, never renamed or
-repurposed ones.
+currency field), keep the change additive. Add new optional fields; never rename or
+repurpose fields.
 
 Write the contract down in the design: its fields, which bricks may set each field, and
 its invariants.
@@ -105,8 +106,8 @@ its invariants.
 
 A mechanism says *how* something can be done. A policy says *what, when, or whether*.
 Hydra (1974) made separating them a core design rule, so that one kernel of mechanisms
-could support many policies built on top of it. Raymond, writing about X, adds why it
-pays off in general: policy changes much faster than mechanism, and hard-wiring them
+could support many policies built on top of it. Raymond, writing about X, adds why the
+rule pays off in general. Policy changes much faster than mechanism, and hard-wiring them
 together makes policy rigid and mechanism unstable.
 
 In practice: bricks are mechanism. "Which channel for this user", "which discount wins",
@@ -136,16 +137,17 @@ In practice: bricks are mechanism. "Which channel for this user", "which discoun
 4. **Define the shared contract** from the data every candidate needs to read or write.
 5. **Split anything that does two independent things.** AWS's 2003 vision for its public
    services: primitives are indivisible; "if they can be functionally split into two they
-   must." Inside a codebase, balance this with Ousterhout's warning against *classitis*:
-   keep pieces together when they share information, when combining them simplifies the
+   must." Inside a codebase, balance this with Ousterhout's warning against *classitis*.
+   Keep pieces together when they share information, when combining them simplifies the
    interface, or when splitting would duplicate code.
-6. **Write every feature as wiring**: `Input → Transform → … → Transport`. A feature that
-   cannot be written this way needs a new brick (justify it) or reveals a wrong wall.
+6. **Write every feature as wiring**: `Input → Transform → … → Transport`. If you can't
+   write a feature this way, it needs a new brick (justify it), or it reveals a wrong
+   wall.
 
 ## Choosing the composition medium
 
-Use the least powerful medium that works (adapted from the W3C's *Rule of Least Power*,
-which was written for publishing on the Web).
+Use the least powerful medium that works. This rule adapts the W3C's *Rule of Least
+Power*, which the W3C wrote for publishing on the Web.
 
 | Medium | Use when |
 |--------|----------|
@@ -154,25 +156,25 @@ which was written for publishing on the Web).
 | A pipeline definition or stored workflow | The composition itself is a recorded volatility *and* it differs by kind of item, customer, or locale, or runs long across sessions and devices (Löwy's reasons for storing workflows, run by a workflow tool), or changes faster than you can deploy (the skill's addition). |
 | A rules engine or a DSL | Almost never, for your own wiring. |
 
-Hadlow's *Configuration Complexity Clock*: hard-coded values become config, config
-becomes a rules engine, the rules engine becomes a DSL, and you end up "hard coding
-everything, except now in a much crappier language." The end state resembles the
-Inner-Platform Effect (Papadimoulis): a poor copy of the platform you started with.
-If the wiring needs loops or conditionals, write it in code.
+Hadlow's *Configuration Complexity Clock* goes like this. Hard-coded values become config,
+config becomes a rules engine, and the rules engine becomes a DSL. Then you end up "hard
+coding everything, except now in a much crappier language." The end state resembles the
+Inner-Platform Effect (Papadimoulis): a poor copy of the platform you started with. If the
+wiring needs loops or conditionals, write it in code.
 
 **User-written rules are different.** When end users author rules as a feature (an
-accountant's categorization rules, a marketer's promotions), the rules are customer data,
-not your wiring. The small language they are written in belongs to an Engine, as a set
-of condition and action bricks. Keep that language as small as the feature needs (a list
-of conditions and actions, no loops or variables) and grow it only on evidence.
+accountant's categorisation rules, a marketer's promotions), the rules are customer data,
+not your wiring. The small language that users write them in belongs to an Engine, as a
+set of condition and action bricks. Keep that language as small as the feature needs: a
+list of conditions and actions, no loops or variables. Grow it only on evidence.
 
 ## Tests every brick must pass
 
 | Test | Question | Pass |
 |------|----------|------|
 | Change count | If this brick's requirement changed dramatically, what else would change? | Nothing |
-| Swap | Can this brick be replaced by another of the same kind without touching its neighbors? | Yes |
-| Remove or reorder | Can this stage be removed or moved without reshaping its neighbors? | Yes |
+| Swap | Can another brick of the same kind replace this one without touching its neighbours? | Yes |
+| Remove or reorder | Can you remove or move this stage without reshaping its neighbours? | Yes |
 | Purity (Transforms) | Does it run with no I/O, clock, or globals? | Yes |
 | Depth | Is the interface small relative to what it hides? (Ousterhout: "deep modules") | Yes |
 | Easy for today | Is it easy to use for the current features? (If not, it is too general.) | Yes |
@@ -193,35 +195,38 @@ Bricks usually go wrong by being too general, too early. They can also go wrong 
 too small: Ousterhout's *classitis*, many shallow pieces whose interfaces cost more than
 they hide.
 
-- **Earn every brick** (the skill's own rule). A Transform, policy, or Store serves two or
-  more current features, or it serves one current feature as one of the variants a
-  recorded volatility names (one channel, one kind of discount). Otherwise, leave the
-  logic inline in the composition. Inputs and Transports at the edges are exempt: every
-  feature needs a way in and out. Never merge bricks to satisfy this rule; a merged
-  brick with a mode flag is the smell below. This is looser than the rule of three on purpose: at design
-  time you are deciding where new code goes, not extracting existing duplication.
-- **Rule of three** (Roberts, via Fowler), whenever a brick would be extracted from
-  existing code, including host code in subsystem mode: do it once, duplicate it the
-  second time, extract it the third time. Two similar pieces don't yet justify a brick.
+- **Earn every brick** (the skill's own rule):
+  - A Transform, policy, or Store serves two or more current features. Failing that, it
+    serves one current feature as one of the variants a recorded volatility names (one
+    channel, one kind of discount). Otherwise, leave the logic inline in the composition.
+  - Inputs and Transports at the edges are exempt: every feature needs a way in and out.
+  - Never merge bricks to satisfy this rule. A merged brick with a mode flag is the smell
+    below.
+  - This rule is looser than the rule of three on purpose. At design time you are
+    deciding where new code goes, not extracting existing duplication.
+- **Rule of three** (Roberts, via Fowler). Use it whenever you would extract a brick from
+  existing code, including host code in subsystem mode. Do it once, duplicate it the
+  second time, and extract it the third time. Two similar pieces don't yet justify a
+  brick.
 - **Prefer duplication over the wrong abstraction** (Metz). The warning sign is passing
   parameters and adding conditional paths through shared code. The remedy is to inline
   the brick back into each caller, delete what each caller doesn't use, and extract again.
 - **YAGNI** (Fowler) covers presumptive features *and* abstractions added for future
-  flexibility: "any abstraction that makes it harder to understand the code for current
-  requirements is presumed guilty." Its exemption is refactoring, effort that makes the
-  code easier to modify. So build bricks for today's features, and never a brick that
-  only a future feature needs.
+  flexibility. Fowler: "any abstraction that makes it harder to understand the code for
+  current requirements is presumed guilty." Its exemption is refactoring, effort that
+  makes the code easier to modify. So build bricks for today's features, and never a brick
+  that only a future feature needs.
 - **Future features are tests, not tasks.** Use them to check that the design would absorb
   them. Don't build them.
-- **Watch the public surface.** Hyrum's law: with enough users of an API, every
-  observable behavior will be depended on by somebody. A brick used by many compositions
+- **Watch the public surface.** Hyrum's law: with enough users of an API, somebody will
+  depend on every observable behaviour. A brick used by many compositions
   gets there quickly, so expose as little as possible.
 
 ## Smells
 
 | Smell | What it means | Fix |
 |-------|---------------|-----|
-| A `mode`, `type`, or `kind` flag that switches between different behaviors | Two or more bricks in one | Split it. (A parameter the same behavior uses, such as a predicate or a threshold, is fine.) |
+| A `mode`, `type`, or `kind` flag that switches between different behaviours | Two or more bricks in one | Split it. (A parameter the same behaviour uses, such as a predicate or a threshold, is fine.) |
 | Many tiny bricks, each with an interface nearly as big as its body | Classitis (Ousterhout) | Merge pieces that share information or always change together |
 | A brick named after a feature (`SendWelcomeEmail`) | Feature code posing as a brick | Split into general bricks (`Render`, `Send`) plus wiring |
 | A brick that calls another brick directly to hand off work | When and where are tangled with what | Put the hand-off in the wiring or on a Transport |
@@ -230,4 +235,4 @@ they hide.
 | Each brick takes its own input shape | No shared contract | Define one, adapt at the edges |
 | A brick with one caller and no volatility behind it | Speculative | Inline it |
 | Config with loops, conditionals, or variables | The configuration clock has struck | Move that logic back to code |
-| Changing one brick forces changes in its neighbors | Not orthogonal | Find the shared hidden decision and give it one home |
+| Changing one brick forces changes in its neighbours | Not orthogonal | Find the shared hidden decision and give it one home |

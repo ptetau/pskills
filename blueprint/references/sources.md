@@ -1,14 +1,14 @@
 # Sources
 
-Where each convention in `conventions.md` comes from. Quotes were checked against these
-pages. The skill's own defaults (for example ISO 8601 UTC time) are marked as such where
-they are used.
+Where each convention in `conventions.md` comes from. The quotes match these pages.
+`conventions.md` marks the skill's own defaults (for example ISO 8601 UTC time) as such
+where it uses them.
 
 | Source | Contributes |
 |--------|-------------|
 | Cucumber, Gherkin reference — <https://cucumber.io/docs/gherkin/reference/> | Keywords; the meaning of Given, When, and Then; 3–5 steps per example; Background and Scenario Outline usage; "your examples are an executable specification" |
 | Cucumber, "Writing better Gherkin" — <https://cucumber.io/docs/bdd/better-gherkin/> | Declarative over imperative: "what, not how" |
-| Cucumber blog, "Cucumber anti-patterns (part one)" (2016) — <https://cucumber.io/blog/bdd/cucumber-antipatterns-part-one/> | One behavior per scenario |
+| Cucumber blog, "Cucumber anti-patterns (part one)" (2016) — <https://cucumber.io/blog/bdd/cucumber-antipatterns-part-one/> | One behaviour per scenario |
 | Gojko Adzic, "Focus on key examples" (2014) — <https://gojko.net/2014/05/05/focus-on-key-examples/>; *Specification by Example* — <https://www.manning.com/books/specification-by-example> | Key examples with boundary values; specifications as executable documentation |
 | Eiffel, "Design by Contract, Assertions and Exceptions" — <https://www.eiffel.org/doc/eiffel/ET-_Design_by_Contract_(tm),_Assertions_and_Exceptions> | Preconditions, postconditions, invariants, and who is at fault when each fails |
 | Yaron Minsky, "Effective ML Revisited" (2011) — <https://blog.janestreet.com/effective-ml-revisited/> | "Make illegal states unrepresentable" |
@@ -29,10 +29,10 @@ they are used.
 | Claude Code best practices — <https://code.claude.com/docs/en/best-practices> | Give the agent a check it can run; self-contained specs that name files and interfaces, state what is out of scope, and end with a verification step |
 | SWE-bench (ICLR 2024) — <https://arxiv.org/html/2310.06770> | Success judged by FAIL_TO_PASS and PASS_TO_PASS tests |
 
-The six-section format itself, its style rules (zero fluff, no cryptic IDs, agent-ready),
-and the idea of pure, in-memory Engines come from the prompt this skill was built from.
-The Engine-purity default is shared with `/decompose`, which adds that an Engine may call
-ResourceAccess when the design records it (Löwy).
+The six-section format itself comes from the prompt that this skill started from. So do
+its style rules (zero fluff, no cryptic IDs, agent-ready) and the idea of pure, in-memory
+Engines. `/decompose` shares the Engine-purity default. It adds that an Engine may call
+ResourceAccess when the design records that call (Löwy).
 
 ## Diagrams and plain language
 

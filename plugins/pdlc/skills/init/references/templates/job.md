@@ -17,7 +17,7 @@ Who does this job, and what they are trying to achieve. Two or three sentences.
 
 What this job owns: its entry points (routes or request handlers, commands, page scripts
 or event handlers) and files that serve only it. In a file shared with other specs, name
-its parts. See "Code maps" in `pdlc/README.md`. Used to scope changes.
+this job's parts. See "Code maps" in `pdlc/README.md`. pdlc scopes changes by this map.
 
 - path/to/folder/
 - path/to/server.py: POST /reset route and handle_reset
@@ -25,7 +25,7 @@ its parts. See "Code maps" in `pdlc/README.md`. Used to scope changes.
 ## Requirements
 
 What its user sees: the replies, output and pages of its entry points. `Source: recon`
-marks a requirement recon found in the code; no other requirement has a `Source`.
+marks a requirement that recon found in the code. No other requirement has a `Source`.
 
 ### JOB-name.R1 · Short title
 

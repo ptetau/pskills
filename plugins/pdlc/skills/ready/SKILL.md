@@ -2,7 +2,7 @@
 name: ready
 description: >
   Checks that a pdlc intent's spec patches are clear enough to build. Asks the user about
-  anything unclear, one question at a time, checks the specs for contradictions, and marks
+  anything unclear, one question at a time. Checks the specs for contradictions and marks
   requirements ready. Use when the user says "/pdlc:ready", or asks if an intent is ready
   to build.
 ---
@@ -15,15 +15,17 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 
 ## 1. Gather
 
-Read the intent and its "Handoff". If none was named, take the oldest intent with status
-`specifying`. If the intent has a `Branch:`, switch to it and commit there.
-Collect every requirement in its "Requirements" section that is `proposed` or `retiring`,
-and the specs they sit in.
+Read the intent the user named, and its "Handoff". If the user named none, take the oldest
+intent with status `specifying`. If the intent has a `Branch:`, switch to that branch.
+Commit there.
+
+Collect every requirement in the intent's "Requirements" section that is `proposed` or
+`retiring`. Also collect the specs those requirements sit in.
 
 ## 2. Settle what the intent implies
 
-Before anything is marked ready, list the behaviour the intent implies but doesn't
-state. Go through this list, and skip what doesn't apply:
+Before you mark anything ready, list the behaviour the intent implies but doesn't state.
+Go through this list. Skip what doesn't apply:
 
 - bad and empty input;
 - limits and sizes;
@@ -33,11 +35,15 @@ state. Go through this list, and skip what doesn't apply:
 - business rules the words leave open: who may do what, what happens twice, what
   happens when something is missing.
 
-Settle each one as a requirement with acceptance lines: add lines to the requirement it
-belongs to, or write a new `proposed` requirement in the right spec and list it in the
-intent's "Requirements" as added. Ask about each one as step 4 says; with `defaults`,
-take your recommended answer and mark it `(assumed)`. Put the list in the handoff.
-What is left out here is never built without the user's approval.
+Settle each one as a requirement with acceptance lines. Either:
+
+- add lines to the requirement it belongs to; or
+- write a new `proposed` requirement in the right spec, and list it in the intent's
+  "Requirements" as added.
+
+Ask about each one as step 4 (ask about what is unclear) says. With `defaults`, take your
+recommended answer and mark it `(assumed)`. Put the list in the handoff. Without the
+user's approval, pdlc never builds what you leave out here.
 
 ## 3. Check each requirement
 
@@ -49,65 +55,74 @@ A requirement is clear when:
 - Each line uses concrete values ("Ana", "80", "15%"), not "a user" or "some amount".
 - Every example in the intent's own words is an acceptance line, exactly as given.
 - Where a requirement says how something looks to the user, a line gives the exact text
-  they see, where they see it, for an edge value too (zero, empty, a whole number).
+  the user sees, and where. Lines also cover an edge value (zero, empty, a whole number).
 - Where there is a limit, there are lines just inside and just outside it (59:59 and
   60:00 for a one-hour limit).
-- Every input it reads (an argument, a field, a request, a stored file) has lines for
-  its bad forms: missing, empty, the wrong type, too large, and, for stored data,
-  unreadable or written by an older version. The "then" is a coded refusal, or a stated
-  default for an older record. Never a crash, a hang, a stack trace, or a silent empty,
-  zero or null.
+- Every input the requirement reads (an argument, a field, a request, a stored file) has
+  lines for its bad forms. The bad forms are missing, empty, the wrong type and too large.
+  Stored data has two more: unreadable, and written by an older version. The "then" is a
+  coded refusal, or a stated default for an older record. Never a crash, a hang, a stack
+  trace, or a silent empty, zero or null.
 - Each line checks one behaviour, and its "then" is something a caller can see: a reply,
   an output, a message sent. Never a stored row.
 - Each failure line names its error code, and the code is in `DES-errors`. For a new
   code, add it to `DES-errors` as part of this intent.
-- Every rule its sentences state has an acceptance line, including each `(assumed)`
-  detail. A rule with no line has no check, so nothing holds it.
+- Every rule the requirement's sentences state has an acceptance line, including each
+  `(assumed)` detail. A rule with no line has no check, so nothing holds it.
 - Words like "fast", "easy" or "secure" have a number or a rule behind them.
-- Every capability and design spec it relies on exists, or is part of this intent.
+- Every capability and design spec the requirement relies on exists, or is part of this
+  intent.
 
 ## 4. Ask about what is unclear
 
-Follow "Asking questions" in `pdlc/README.md`. If run with `defaults`, don't ask: take
-your recommended answer. Recommend the plain reading of the intent's words, for every
-value. Never recommend a reading that keeps the old behaviour when the plain words
-change it, or that makes one of the intent's examples come out differently.
+Follow "Asking questions" in `pdlc/README.md`. With `defaults`, don't ask. Take your
+recommended answer instead. Recommend the plain reading of the intent's words, for every
+value. Never recommend a reading that keeps the old behaviour when the plain words change
+it. Never recommend a reading that makes one of the intent's examples come out
+differently.
 
-Write each answer into the requirement. When the answer was taken by default, mark it
-`(assumed)` where it appears in the requirement. Add a line to the intent's "Notes":
-`<requirement>: <question> → <answer> (assumed)`.
+Write each answer into the requirement. If you took the answer by default:
+
+- mark the answer `(assumed)` where it appears in the requirement;
+- add a line to the intent's "Notes": `<requirement>: <question> → <answer> (assumed)`.
 
 If a design spec is missing (for example, the first time the project shows a table), use
-the `pdlc:conventions` skill to agree one, then come back.
+the `pdlc:conventions` skill to agree one. Then come back here.
 
 ## 5. Look for contradictions
 
-Compare the requirements against each other and against the other requirements in the same
-specs, and in the specs they rely on. A contradiction is two statements that can't both be
-true, for example "responds within 50 ms" and "always calls a service that takes 200 ms".
+Compare the requirements with each other. Also compare them with the other requirements in
+the same specs, and in the specs they rely on. A contradiction is two statements that
+can't both be true, for example "responds within 50 ms" and "always calls a service that
+takes 200 ms".
 
-Two cases are not contradictions. Fix them, add a line to "Notes" for each, and go on:
+Two cases are not contradictions. Fix each one, and add a line to "Notes" for it. Then go
+on:
 
 - This intent's words ask for something an older requirement rules out. The newest words
-  win: change the older one, as intake does, and list it as `changed`.
-- One side is `(assumed)`. A guess gives way: change the guessed side to fit, keep its
-  mark, and update its line in "Notes".
+  win. Change the older requirement, as intake does. List the older requirement as
+  `changed`.
+- One side is `(assumed)`. A guess gives way. Change the guessed side to fit. Keep its
+  mark. Update its line in "Notes".
 
-For any other contradiction, show both statements and ask the user which should change.
-Don't pick for them, even with `defaults`: leave both requirements `proposed` and say so.
+For any other contradiction, show both statements. Ask the user which one should change.
+Don't pick for the user, even with `defaults`. Leave both requirements `proposed`, and say
+so.
 
-Each time you change or retire a requirement here, leave no old wording, as intake's
-step 4 says: fix every title, summary, example, cross-reference and note in the specs
-that still shows the old behaviour, and list old README lines in "Notes".
+Each time you change or retire a requirement here, leave no old wording. Follow "Leave no
+old wording" in intake's step 4 (write the patches). Fix every title, summary, example,
+cross-reference and note in the specs that still shows the old behaviour. List old README
+lines in "Notes".
 
 ## 6. Finish
 
-- Set each clear requirement from `proposed` to `ready`. Leave `retiring` as it is.
+- Set each clear requirement from `proposed` to `ready`. Leave each `retiring` requirement
+  as it is.
 - If every requirement for the intent is now `ready` or `retiring`, set the intent to
   `ready`.
-- Write the intent's "Handoff" for change: what was decided, and anything the plan should
+- Write the intent's "Handoff" for change: the decisions, and anything the plan should
   know.
-- Commit with the message "Ready IN-xxxx: <name>" and the trailer `Intent: IN-xxxx`,
-  even when you stop for a contradiction.
+- Commit with the message "Ready IN-xxxx: <name>" and the trailer `Intent: IN-xxxx`. Even
+  when you stop for a contradiction, commit.
 - Tell the tracker port.
 - Tell the user what changed, and that `/pdlc:change` is next.

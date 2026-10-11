@@ -7,11 +7,12 @@ It keeps pdlc's agents in their lanes:
   - pdlc:builder never edits checks or pdlc/ files.
   - pdlc:reviewer reads only review packets and frames, and writes only its result.
   - pdlc:recon never writes.
-Everyone else, including the main session, is left alone.
+It leaves everyone else alone, including the main session.
 
-The project is the nearest folder holding pdlc/config.md, found from the file first, then
-from the agent's working folder, so the lanes hold wherever the agent was started.
-Check folders come from "check folders:" in pdlc/config.md. Exit 2 blocks the call.
+The project is the nearest folder holding pdlc/config.md. The guard looks for that folder
+from the file first, then from the agent's working folder. So the lanes hold wherever the
+agent started. Check folders come from "check folders:" in pdlc/config.md. Exit 2 blocks
+the call.
 Set PDLC_GUARD_LOG to a file path to log every decision.
 """
 import json
@@ -46,8 +47,8 @@ def check_folders(root):
         return DEFAULT_CHECK_FOLDERS
     value = line.group(1)
     quoted = re.findall(r"`([^`]+)`", value)
-    # Take the backticked folders when there are any, so a trailing note such as
-    # "(where checks live; ...)" isn't read as part of a folder name.
+    # When the line has backticked folders, take only those. Then a trailing note such as
+    # "(where checks live; ...)" doesn't become part of a folder name.
     items = quoted if quoted else re.sub(r"\s*\(.*$", "", value).split(",")
     return [f.strip(" `/") for f in items if f.strip(" `/")] or DEFAULT_CHECK_FOLDERS
 
@@ -119,7 +120,7 @@ if __name__ == "__main__":
     call = json.load(sys.stdin)
     allowed, reason = decide(call)
     if os.environ.get("PDLC_GUARD_LOG"):
-        # A log that can't be written must never turn a block into an allow.
+        # If the log can't be written, a block must still block.
         try:
             with open(os.environ["PDLC_GUARD_LOG"], "a") as log:
                 log.write(json.dumps({"agent": call.get("agent_type"), "tool": call.get("tool_name"),

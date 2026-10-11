@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """pdlc commit check. Claude Code runs this after every Bash call.
 
-When the call made a commit on a pdlc branch (one that a change spec or an intent names as
-its Branch), it checks that commit against the project's DES-pdlc-commit-trailers:
+A pdlc branch is one that a change spec or an intent names as its Branch. When the call
+made a commit on a pdlc branch, this checks the commit against the project's
+DES-pdlc-commit-trailers (commit subjects and trailers):
   - its subject is one of the shapes under "Subjects", and a change it names is this
     branch's change;
   - it carries Intent; on a change's branch, Change with that change; and Req exactly
     when it changes files outside pdlc/.
-It runs while the commit is still the newest, so `git commit --amend` fixes it at once.
-Merge commits, other branches and projects without pdlc are left alone. Exit 2 shows the
-problems to Claude.
+It runs while the commit is still the newest, so `git commit --amend` fixes the commit at
+once. It leaves merge commits, other branches and projects without pdlc alone. Exit 2
+shows the problems to Claude.
 """
 import glob
 import json

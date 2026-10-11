@@ -4,8 +4,8 @@ Status: agreed · Default: yes · Ask at init: no
 
 ## Rule
 
-Every commit made by pdlc has a subject from the list below, and ends with these lines,
-after a blank line:
+Every commit pdlc makes has a subject from the list below. It ends with these lines, after
+a blank line:
 
 ```
 Intent: IN-0012
@@ -14,7 +14,7 @@ Req: CAP-email.R3
 Ticket: PROJ-88
 ```
 
-`Req` may list several IDs, separated by commas. Leave out `Ticket` if there is none.
+`Req` may list several IDs, separated by commas. If there is no ticket, leave out `Ticket`.
 
 - Every commit carries `Intent`.
 - On a change's branch, every commit also carries `Change`, even one that only sets the
@@ -22,18 +22,18 @@ Ticket: PROJ-88
 - A commit carries `Req` exactly when it changes files outside `pdlc/` (code, checks,
   the README). A commit that only changes `pdlc/` files has no `Req`.
 
-Keep all trailers in one final block, in this order: `Intent`, `Change`, `Req`, `Ticket`,
-`Review` (the visual review's GIF), then any others (for example `Co-Authored-By`). Then
-git shows them all as trailers. What matters for the trace is that the lines are in the
-message.
+Keep all trailers in one final block, so git shows them all as trailers. Put them in this
+order: `Intent`, `Change`, `Req`, `Ticket`, `Review` (the visual review's GIF), then any
+others (for example `Co-Authored-By`). For the trace, what matters is that the lines are
+in the message.
 
 ## Subjects
 
 The first line is one of these, exactly. `<change>` is the change's ID (`CH-0031`),
 `<intent>` the intent's (`IN-0012`), `<n>` a number, and any other `<...>` a few words.
 A merge keeps git's own subject. On a pdlc branch, a hook in the pdlc plugin checks each
-new commit against this list and the trailers above. Fix what it names at once, with
-`git commit --amend`.
+new commit against this list and the trailers above. Fix what the hook names at once,
+with `git commit --amend`.
 
 - `Specify <intent>: <intent name>` (intake)
 - `Ready <intent>: <intent name>` (ready)

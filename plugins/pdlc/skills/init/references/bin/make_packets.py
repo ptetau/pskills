@@ -9,9 +9,11 @@ Each packet is pdlc/changes/<change>/review/<remit>/packet.md. Writing a packet 
 that remit's old result.md, so a result is always about the packet next to it. A packet
 holds:
   - the remit, from pdlc/reviews/<remit>.md;
-  - the spec: the change spec, the title and summary of the spec it covers (everything
-    above its requirements), the full text of each requirement it lists, and every spec it
-    relies on;
+  - the spec:
+    - the change spec;
+    - the title and summary of the spec it covers (everything above its requirements);
+    - the full text of each requirement it lists;
+    - every spec it relies on;
   - the material: for the tests remit, the check files and nothing else; for every other
     remit, the changed app files and nothing else.
 The specification packet also holds the writing check and points to the visual review

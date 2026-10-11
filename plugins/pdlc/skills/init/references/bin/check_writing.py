@@ -26,7 +26,7 @@ It doesn't read fenced code blocks, inline code, URLs, HTML comments, or front m
 other than "description". Quoted text counts toward a sentence's length, but no other
 rule reads it. These may hold an ID alone: a heading, a table row, a field line ("Req:",
 "Intent:", "Status:"), a list of IDs and a placeholder (IN-xxxx). A line that ends with
-<!-- writing: ok --> is a deliberate exception: nothing on it is reported.
+<!-- writing: ok --> is a deliberate exception: the check reports nothing on it.
 
 Reviewers judge what a script can't judge well: clear references to nouns, concrete
 examples, being concise, the active voice, and the rest of rule 1.
@@ -48,7 +48,7 @@ COMMANDS = {"run", "use", "write", "read", "set", "add", "check", "give", "keep"
             "replace", "skip", "switch", "wait"}
 RULES = ["sentence length", "NZ spelling", "ID alone", "conversation"]
 
-# US forms and the NZ form to write. Each is matched as a whole word, in any case.
+# US forms and the NZ form to write. The check matches each as a whole word, in any case.
 SPELLING = {
     "center": "centre", "centers": "centres", "centered": "centred", "centering": "centring",
     "theater": "theatre", "theaters": "theatres", "fiber": "fibre", "fibers": "fibres",
@@ -76,9 +76,11 @@ for us in ["color", "behavior", "favor", "honor", "labor", "neighbor", "flavor",
         SPELLING[us + ending] = us[:-2] + "our" + ending
 
 # "-ize", "-ization" and "-yze" forms. NZ writes "-ise", "-isation" and "-yse", except in
-# the words that end with one of IZE_KEEP ("size", "resize", "seize", "prize").
+# the words in IZE_KEEP, which are spelt with "z" in NZ too ("size", "resize", "seize").
+# The list holds whole words, so "synthesize" and "emphasize" are still found.
 IZE = re.compile(r"([a-z]+?)(iz|yz)(e|es|ed|ing|er|ers|ation|ations|ational|able)", re.I)
-IZE_KEEP = ("size", "seize", "prize", "maize", "baize", "assize", "belize")
+IZE_KEEP = {"size", "resize", "downsize", "upsize", "oversize", "undersize", "outsize",
+            "capsize", "seize", "prize", "maize", "baize", "assize", "belize"}
 
 ID = re.compile(r"\b(?:(?:IN|CH)-\d{4}\b|(?:JOB|CAP|DES)-[a-z0-9]+(?:-[a-z0-9]+)*(?:\.R\d+)?"
                 r"|R\d+\b)")
@@ -100,7 +102,10 @@ INLINE_CODE = re.compile(r"(`+)(.+?)\1")
 URL = re.compile(r"<?\bhttps?://[^\s<>()]+>?")
 LINK_TARGET = re.compile(r"(?<=\])\([^()\s]*\)")
 QUOTED = re.compile(r'"[^"]*"|“[^”]*”')
-PATH_LIKE = re.compile(r"\S*[/\\_@]\S*|\S*\w\.\w\S*")
+# A path, a name with "_" or "@", or a file name. Words joined by "/" ("and/or",
+# "code/infra-flavoured") are prose, so a path must start with "/" or "~", or have a
+# "." in it.
+PATH_LIKE = re.compile(r"(?<!\S)(?:[/~]\S*|\S*[\\_@]\S*|\S*\w\.\w\S*)")
 SENTENCE_END = re.compile(r"[.!?]+[\"'”’)\]*]*(?=\s|$)")
 ABBREVIATION = re.compile(r"\b(?:e\.g|i\.e|vs|cf)\.$", re.I)
 
@@ -216,7 +221,7 @@ def nz_spelling(word):
         if not found:
             return None
         stem, middle, ending = found.groups()
-        if middle == "iz" and (stem + "ize").endswith(IZE_KEEP):
+        if middle == "iz" and stem + "ize" in IZE_KEEP:
             return None
         fixed = stem + ("is" if middle == "iz" else "ys") + ending
     if word.isupper():

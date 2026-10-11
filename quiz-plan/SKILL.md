@@ -1,6 +1,6 @@
 ---
 name: quiz-plan
-description: Interactive quiz-driven planning. Asks structured questions to gather context, then generates a comprehensive Change Plan document with Intent, Approach, Ground truth, Boundaries, Steps, Verification, and Progress log. Steps declare a `Touches` file footprint and `Depends on` edges so independent steps can be auto-grouped for parallel execution by [[quiz-plan-execute]]. Steps default to AUTO — a step is only GATED (human checkpoint) when explicitly requested. The draft is red-teamed against its own Boundaries, riskiest assumption, scope, parallel-group correctness, and a failure premortem before being presented. Use for any non-trivial code change that needs a clear plan before implementation.
+description: Interactive quiz-driven planning. Asks structured questions to gather context. Then generates a comprehensive Change Plan document with Intent, Approach, Ground truth, Boundaries, Steps, Verification, and Progress log. Steps declare a `Touches` file footprint and `Depends on` edges, so [[quiz-plan-execute]] can auto-group independent steps for parallel execution. Steps default to AUTO; a step is GATED (human checkpoint) only when the user explicitly asks. Before presenting the draft, the skill red-teams it against its own Boundaries, riskiest assumption, scope, parallel-group correctness, and a failure premortem. Use for any non-trivial code change that needs a clear plan before implementation.
 license: MIT license
 metadata:
     skill-author: K-Dense Inc.
@@ -10,9 +10,9 @@ metadata:
 
 ## Overview
 
-This skill runs a conversational interview (quiz) to surface every assumption, ambiguity, and dependency in a proposed change, then generates a formal Change Plan document. The quiz is adaptive — it doesn't stop after a fixed set of questions. It keeps drilling until there's nothing left to clarify.
+This skill runs a conversational interview (quiz) to surface every assumption, ambiguity, and dependency in a proposed change. Then it generates a formal Change Plan document. The quiz is adaptive: it doesn't stop after a fixed set of questions. It keeps drilling until there's nothing left to clarify.
 
-The output is a `.plan.md` file containing the structured template from taste (Intent, Ground truth, Boundaries, gated Steps, Verification and rollback) plus a **live progress tracker** that humans can read at a glance to see how far along the plan is.
+The output is a `.plan.md` file. It holds the structured template from taste (Intent, Ground truth, Boundaries, gated Steps, Verification and rollback). It also holds a **live progress tracker** that shows humans at a glance how far along the plan is.
 
 ## When to Use This Skill
 
@@ -22,25 +22,25 @@ Use this skill when:
 - A change involves multiple systems, teams, or deployment steps
 - You need to document the reasoning and scope before implementing
 - A change has rollback risk or the plan needs human sign-off before execution
-- There are unclear requirements, hidden assumptions, or ambiguous scope that needs to be pinned down
+- There are unclear requirements, hidden assumptions, or ambiguous scope that you need to pin down
 
 Do **not** use for:
 - Simple fixes in 1-2 files where the path is obvious
 - Pure exploration / understanding questions
-- Changes that can be safely rolled back with `git checkout`
+- Changes that `git checkout` can safely roll back
 
 ## Workflow
 
 The skill has three phases that flow sequentially: the quiz (gather), the plan (draft),
-then a red-team pass on the draft before it's presented.
+then a red-team pass on the draft before you present it.
 
 ### Phase 1: The Adaptive Quiz
 
-Interview the user one question at a time (the [[quiz]] question UX — see "The look" below), drilling deeper as answers reveal ambiguity. You have a starter question bank below, but the quiz is **not limited to the starter pool**. Each answer may reveal assumptions, ambiguities, or unknowns that need their own follow-up. Keep asking until you can write a complete, unambiguous plan.
+Interview the user one question at a time, with the [[quiz]] question UX (see "The look" below). Drill deeper as answers reveal ambiguity. You have a starter question bank below, but the quiz is **not limited to the starter pool**. Each answer may reveal assumptions, ambiguities, or unknowns that need their own follow-up. Keep asking until you can write a complete, unambiguous plan.
 
 #### Starter Question Pool
 
-These are your opening questions — a pool to draw from, **not a script to recite in order**. Skip any that the user's opening statement already answered. Ask each as a quiz question (the same UX as `/quiz` — see "The look" below), **one per turn**. Expect to ask follow-up drill questions (see next section) that go deeper — those are asked the same way.
+These are your opening questions: a pool to draw from, **not a script to recite in order**. Skip any that the user's opening statement already answered. Ask each as a quiz question (the same UX as `/quiz`; see "The look" below), **one per turn**. Expect to ask deeper follow-up drill questions (see the next section). Ask those the same way.
 
 **What's the change?** — "Describe the outcome in one sentence."
 Captures: core change in plain language. → **Intent**
@@ -78,7 +78,7 @@ Captures: closest past change, rough step count, known failure modes. → **Grou
 **More than one way to do this?** — *(ask only when 2+ viable approaches exist)* "Are there competing approaches? Name the front-runners so we pick one deliberately instead of defaulting to the first that came to mind."
 Captures: approach options and the reason for the pick. → **Approach**
 
-> Q11 and Q12 are **appended** — Q1–Q10 keep their numbers so the template mapping below stays stable. Q12 is conditional: skip it when only one sensible approach exists.
+> The questions are Q1–Q12 in the order listed: Q1 is "What's the change?" and Q12 is "More than one way to do this?". The template below refers to them by these numbers. Q12 is conditional: skip it when only one sensible approach exists.
 
 #### Adaptive Follow-up Drill (the key mechanic)
 
@@ -88,27 +88,27 @@ After each answer, **assess whether the answer reveals ambiguity or hidden assum
 - **If they say "add a new endpoint"** → "What's the request/response shape? Should it be authenticated? What status codes for success vs error?"
 - **If they say "migrate the database"** → "Is this additive (new columns/tables) or destructive (removing/renaming)? Is there a roll-forward-only strategy or do we need a dual-write phase?"
 - **If they say "update the config"** → "What's the default value? Is it environment-specific? Will existing deployments need manual migration?"
-- **If they say "I'm not sure about X"** → "Let me go look at the current code to find out" — then explore the codebase and report back.
+- **If they say "I'm not sure about X"** → "Let me go look at the current code to find out". Then explore the codebase and report back.
 
 **Signs you need to keep asking:**
 - The answer contains words like "probably", "mostly", "should", "I think", "not sure"
 - The answer describes an outcome but not the mechanism
 - The answer covers the happy path but doesn't address edge cases
-- The answer assumes something about the codebase that hasn't been verified
+- The answer assumes something about the codebase that no one has verified
 - You, as the agent, can't yet picture the exact files and changes needed
 
 **Signs you're done asking:**
 - Every answer is concrete and unambiguous
 - You can describe exactly which files change and how, in implementation detail
 - The user has no more "I don't knows" — they're either sure or have explicitly flagged unknowns
-- All assumptions from earlier answers have been followed up and resolved
+- You have followed up and resolved all assumptions from earlier answers
 - You can picture a complete, ordered list of implementation steps
 
 #### The look (same as /quiz)
 
-Ask every question, starter and drill follow-up alike, the way [[quiz]] does: through
-the picker (the `AskUserQuestion` tool) when the session has it, and as a plain-markdown
-question otherwise. No ASCII cards, box-drawing characters or code blocks around
+Ask every question, starter and drill follow-up alike, the way [[quiz]] does. Use the
+picker (the `AskUserQuestion` tool) when the session has it. Otherwise, ask a
+plain-markdown question. No ASCII cards, box-drawing characters or code blocks around
 questions or echoes. **One question per message or picker call, always**; never stack
 two.
 
@@ -116,22 +116,29 @@ two.
 and the exact echo forms (its Steps 2-5). This skill uses them unchanged, with four
 differences:
 
-1. **Adaptive numbering.** The drill is adaptive, so the total isn't known while asking.
-   Number questions without a total: the picker question ends with ` (question N)`, the
-   fallback heading reads `**Question N · Label**`, and echoes read `✓ N Label → Choice`.
-   In the resolved view, number them `N/T` once the total is known.
-2. **No fixed list.** Unlike /quiz's Step 1, the list grows: each answer can open a
-   follow-up question (see Drill behaviour below).
-3. **Open questions** (a sentence, a command, a file path). Ask them in plain prose
-   even when the picker exists: a heading `**Question N · Label**`, the question, then
-   `Reply with <what's needed>.` Use the picker only when there are 2-4 real options,
-   such as a branch name you can suggest; never invent options to fill it.
+1. **Adaptive numbering.** The drill is adaptive, so you don't know the total while
+   asking. Number questions without a total:
+   - the picker question ends with ` (question N)`;
+   - the fallback heading reads `**Question N · Label**`;
+   - echoes read `✓ N Label → Choice`.
+
+   In the resolved view, once you know the total, number them `N/T`.
+2. **No fixed list.** Unlike /quiz's Step 1 (Plan the questions), the list grows: each
+   answer can open a follow-up question (see Drill behaviour below).
+3. **Open questions** (a sentence, a command, a file path). Ask them in plain prose even
+   when the picker exists, in this layout:
+   - a heading `**Question N · Label**`;
+   - the question;
+   - `Reply with <what's needed>.`
+
+   Use the picker only when there are 2-4 real options, such as a branch name you can
+   suggest. Never invent options to fill it.
 4. **No cap.** Unlike /quiz (about 7, then /squiz), the drill runs until every item in
    "Signs you're done asking" holds.
 
-**Recommendations** follow /quiz's rule, with the codebase counting as evidence: tag an
-option `(recommended)` only when a ground-truth fact, constraint or risk points to it,
-and name that fact in its sentence. On a genuine toss-up, recommend nothing.
+**Recommendations** follow /quiz's rule, with the codebase counting as evidence. Tag an
+option `(recommended)` only when a ground-truth fact, constraint or risk points to it.
+Name that fact in the option's sentence. On a genuine toss-up, recommend nothing.
 
 A fallback question looks like this (render it as markdown, never in a code block):
 
@@ -152,7 +159,7 @@ Reply A, B or C, optionally with a note.
 
 ##### The rhythm (between questions)
 
-After each reply, write its echo line, then ask the next question in the same message:
+After each reply, write its echo line. Then ask the next question in the same message:
 
 ```
 turn 1 · agent: question 1
@@ -164,23 +171,25 @@ turn 5 · agent: "✓ 2 Limit → configurable (note: env var, default 100/min)"
 
 ##### Final resolved view (after the drill is exhausted)
 
-When no questions remain, list every answer as a bulleted list of echo lines, numbered
-`N/T` now that the total is known, with no code block around it:
+When no questions remain, list every answer as a bulleted list of echo lines. Number
+them `N/T`, now that you know the total. Put no code block around the list:
 
 - ✓ 1/8 Change → add rate limiting to public API routes
 - ✓ 2/8 Limit → configurable (note: env var, default 100/min)
 - ✓ 3/8 Location → internal/api/middleware/
 
-Then ask for the go-ahead, which gates Phase 2: in the picker, one `Confirm` question
-with options `Write the plan` and `Change one`, neither recommended; in the fallback,
-one sentence:
-*"Does this look right? Say `wait` if anything's wrong, otherwise I'll write the plan."*
+Then ask for the go-ahead, which gates Phase 2 (Write the Plan):
+
+- In the picker, ask one `Confirm` question with options `Write the plan` and
+  `Change one`. Recommend neither.
+- In the fallback, write one sentence:
+  *"Does this look right? Say `wait` if anything's wrong, otherwise I'll write the plan."*
 
 ##### Reply parsing (same as /quiz)
 
-Read replies and write echoes exactly as [[quiz]]'s Step 4 says, including deferrals,
-notes, free prose and several answers at once. The only difference is the numbering:
-echoes read `✓ N Label → Choice` until the total is known.
+Read replies and write echoes exactly as [[quiz]]'s Step 4 (Echo each answer) says. This
+includes deferrals, notes, free prose and several answers at once. The only difference is
+the numbering: echoes read `✓ N Label → Choice` until you know the total.
 
 ##### Drill behaviour
 
@@ -190,25 +199,25 @@ echoes read `✓ N Label → Choice` until the total is known.
 3. Never argue with scope. Record what the user says; Boundaries will flag the risk.
 4. **Drill until clear** (see "Signs you're done asking"). Show the resolved view only
    when no questions remain.
-5. If the user revises an earlier answer in the resolved view, update your notes and
-   check whether the revision opens a new question (ask one more if so). Don't re-ask
+5. If the user revises an earlier answer in the resolved view, update your notes. Check
+   whether the revision opens a new question; if it does, ask one more. Don't re-ask
    everything.
 
 ### Phase 2: Write the Plan
 
-After the quiz is confirmed, generate a `.plan.md` file inside a `plans/` subfolder at the project root (create `plans/` if it doesn't already exist).
+After the user confirms the quiz, generate a `.plan.md` file inside a `plans/` subfolder at the project root. If `plans/` doesn't exist yet, create it.
 
 #### File name
 
 `plans/<kebab-case-name>.plan.md`
 
-Derive the name from the user's description of Q1. For example:
+Derive the name from the user's answer to Q1 (What's the change?). For example:
 - "Add OAuth login to the API" → `plans/add-oauth-login.plan.md`
 - "Refactor the auth middleware" → `plans/refactor-auth-middleware.plan.md`
 
 #### Template
 
-```markdown
+````markdown
 # Change Plan: [name derived from Q1]
 
 **Owner:** `[current user from git config, or "you"]` · **Status:** Draft | Agreed | In progress | Done
@@ -324,36 +333,43 @@ The bar uses exactly 12 characters (█ for done, ░ for remaining). When N is 
 When a step is executed and logged to Progress log, **also update the tracker in the header.** The tracker is human-readable — anyone opening the `.plan.md` file should see immediately how far along the work is.
 
 Each step's checkbox should also be updated: `[ ]` → `[x]` as steps complete.
-```
+````
 
 #### Step Generation Guidelines
 
 When generating steps from the quiz answers:
 
-1. **Step 1 should always test the riskiest assumption** (from Q5). This goes first because if this fails, the whole plan is invalid. It never joins a parallel group.
+1. **Step 1 should always test the riskiest assumption** (from Q5, What could go wrong?). It goes first because, if the assumption fails, the whole plan is invalid. Step 1 never joins a parallel group.
 2. Each step should produce a concrete, checkable outcome (a passing test, a rendered route, a working command).
-3. **Default every step to AUTO.** Only mark a step **GATED** when the user explicitly asks for a human checkpoint on it (by name, or a general "gate the risky ones" instruction you then apply to the specific steps that match). Don't gate by default "to be safe" — that default was flipped because unattended AUTO execution end-to-end is now the common case, not the exception.
-4. If the change involves both infrastructure and code, separate into logical phases (infrastructure first, then code).
+3. **Default every step to AUTO.** Mark a step **GATED** only when the user explicitly asks for a human checkpoint on it. The user may name the step, or give a general instruction such as "gate the risky ones". Apply a general instruction to the specific steps that match. Don't gate by default "to be safe". Unattended AUTO execution end-to-end is the common case, not the exception.
+4. If the change involves both infrastructure and code, separate it into logical phases (infrastructure first, then code).
 5. If the change spans a backend + frontend, order steps by dependency (backend first if the frontend depends on it).
 6. A step should fit in one session. If a step would require 20 file changes, split it further.
-7. The last step should always include running the build, test, and lint commands from Q6.
-8. **Tracker maintenance is part of each step.** Whenever a step is completed, the agent must also update the progress bar and checkboxes in the plan file header.
-9. **Pick the approach before the steps.** When Q12 surfaced 2+ viable approaches, choose one deliberately, record the choice and why the alternatives lost in the **Approach** section, then generate steps for the winner only. Don't leave the fork unresolved in the steps.
-10. **Assign `Touches` and `Depends on` for every step, then compute parallel groups.** Two AUTO steps that aren't the riskiest-assumption step share a group id (`P1`, `P2`, ...) only if their `Touches` sets are disjoint and neither depends on the other, directly or transitively. Groups need 2+ steps — a step with no groupmate gets `Parallel group: none`. When unsure whether two steps are really independent, default to `none` rather than guessing a group — a missed parallel opportunity costs time, a wrong one costs a broken merge.
+7. The last step should always include running the build, test, and lint commands from Q6 (Build and test commands?).
+8. **Tracker maintenance is part of each step.** Whenever the agent completes a step, it must also update the progress bar and checkboxes in the plan file header.
+9. **Pick the approach before the steps.** If Q12 (More than one way to do this?) surfaced 2+ viable approaches, choose one deliberately. Record the choice, and why the alternatives lost, in the **Approach** section. Then generate steps for the winner only. Don't leave the fork unresolved in the steps.
+10. **Assign `Touches` and `Depends on` for every step, then compute parallel groups.** Two AUTO steps may share a group id (`P1`, `P2`, ...) only if all of these hold:
+    - neither is the riskiest-assumption step;
+    - their `Touches` sets are disjoint;
+    - neither depends on the other, directly or transitively.
+
+    Groups need 2+ steps. A step with no groupmate gets `Parallel group: none`. If you're unsure whether two steps are really independent, default to `none` rather than guessing a group. A missed parallel opportunity costs time; a wrong one costs a broken merge.
 
 ### Phase 3: Red-team the Draft
 
-Before showing the plan to the user, turn adversarial on your own draft — you wrote it,
-now try to break it. Work through each check; fix anything you can resolve from the
-quiz answers or the codebase, and hold anything you can't as one more quiz question rather
-than silently patching over it or silently dropping it.
+Before showing the plan to the user, turn adversarial on your own draft: you wrote it,
+now try to break it. Work through each check below. Fix anything you can resolve from the
+quiz answers or the codebase. Hold anything you can't resolve as one more quiz question.
+Don't silently patch over it or silently drop it.
 
 - **Premortem (the outside-in lens):** assume it's a month later and this plan shipped and
-  *failed*. Working backwards, list the likely causes (the Q11 prior art is your seed — what
-  broke last time?). For each cause, name the step, boundary, or Assumption that already
-  defends against it. Any cause with no defender is a coverage gap — add a mitigation step
-  (after Step 1, never displacing it) or a stop-condition. This differs from the mechanical
-  checks below: they ask "does a step break a rule?", the premortem asks "what failure isn't
+  *failed*. Working backwards, list the likely causes. The Q11 (Prior art?) answer is your
+  seed: what broke last time? For each cause, name the step, boundary, or Assumption that
+  already defends against it.
+
+  Any cause with no defender is a coverage gap. Add a mitigation step (after Step 1, never
+  displacing it) or a stop-condition. The premortem differs from the mechanical checks
+  below. They ask "does a step break a rule?"; the premortem asks "what failure isn't
   represented as a step at all?"
 - **Riskiest assumption:** does Step 1 actually *test* it (falsifiable, would fail if the
   assumption is wrong), or does it just touch the same area?
@@ -361,21 +377,26 @@ than silently patching over it or silently dropping it.
   with `Must not touch`?
 - **Done when:** is each criterion checkable by running a command/test, or is it vague
   ("works correctly", "handles it properly")? Rewrite vague ones concretely.
-- **Coverage gaps:** do the quiz answers imply work no step covers — a migration, a doc
-  update the Q7 conventions require, a config change for existing deployments?
+- **Coverage gaps:** do the quiz answers imply work that no step covers? Examples: a
+  migration, a doc update that the Q7 (Any conventions?) answers require, a config change
+  for existing deployments.
 - **Ordering:** does any step depend on output/state a *later* step creates?
-- **Scope creep:** does any step's `Do` include work Q4 explicitly excluded?
+- **Scope creep:** does any step's `Do` include work that Q4 (What's out of bounds?)
+  explicitly excluded?
 - **Rollback reachability:** if Verification's "Failing looks like" triggers mid-plan (not
-  just at the end), is the Rollback from Q9 still executable at that point?
-- **Parallel groups:** for every declared group, are the `Touches` sets *actually* disjoint,
-  or does file-set diffing miss a real logical dependency between two steps (one reads a
-  flag/schema/contract the other introduces, even in a different file)? Add the missing
-  `Depends on` edge and split the group if so. Confirm the riskiest-assumption step and every
-  GATED step carry `Parallel group: none` — if either got swept into a group by mistake, fix it.
+  just at the end), is the Rollback from Q9 (Rollback plan?) still executable at that
+  point?
+- **Parallel groups:** for every declared group, are the `Touches` sets *actually*
+  disjoint? Or does file-set diffing miss a real logical dependency between two steps? For
+  example, one step reads a flag/schema/contract the other introduces, even in a different
+  file. If so, add the missing `Depends on` edge and split the group. Confirm that the
+  riskiest-assumption step and every GATED step carry `Parallel group: none`. If either got
+  swept into a group by mistake, fix it.
 
-Only once this pass is clean does the plan move to `Draft` and get presented. When
-presenting, add one line noting the red-team pass ran and naming anything it caught and
-fixed (or "no issues found") — this must be visible, not a silent internal step.
+Only once this pass is clean does the plan move to `Draft`, and only then do you present
+it. When you present it, add one line that says the red-team pass ran. Name anything it
+caught and fixed (or "no issues found"). This line must be visible, not a silent internal
+step.
 
 #### Output
 
@@ -385,11 +406,12 @@ After generating the plan and completing the red-team pass, present to the user:
 3. One line on what the red-team pass caught (or "no issues found")
 4. Ask: *"Do you want to start executing this plan?"*
 
-If yes, hand off to [[quiz-plan-execute]] — run `/quiz-plan-execute <path>`, which drives each
-step through a strict 6-stage TDD gate (understand → red → green → refactor → review → commit),
-one commit per step, with an optional new branch. Steps sharing a `Parallel group` run
-concurrently, one agent per step, each in its own worktree. If no, the plan file exists
-on disk for later use — the user can run `/quiz-plan-execute` against it any time.
+If yes, hand off to [[quiz-plan-execute]]: run `/quiz-plan-execute <path>`. It drives each
+step through a strict 6-stage TDD gate (understand → red → green → refactor → review →
+commit). It makes one commit per step, with an optional new branch. Steps sharing a
+`Parallel group` run concurrently, one agent per step, each in its own worktree. If no, the
+plan file stays on disk for later use. The user can run `/quiz-plan-execute` against it any
+time.
 
 ## Example
 
@@ -455,12 +477,13 @@ must-not-touch, verification, build/test commands, branch, until no ambiguity re
 **Agent:** *"Does this look right? Say `wait` if anything's wrong — otherwise I'll write the plan."*
 **User:** "Looks good."
 
-*(Agent drafts the plan, then red-teams it — the premortem lens surfaces "limiter counts
-requests per-replica, so the real limit is N×replicas in prod" with no step defending it,
-so a new Assumption "rate state is per-instance, not shared" is added for the executor to
-re-check; and it catches that Step 3's `Done when` said "routes work correctly", rewriting it
-as "integration test hits a public route 101 times, gets 429 on the 101st, and a whitelisted
-internal-IP route stays 200 the whole time.")*
+*(The agent drafts the plan, then red-teams it. The premortem lens surfaces "limiter counts
+requests per-replica, so the real limit is N×replicas in prod", and no step defends against
+it. So the agent adds a new Assumption, "rate state is per-instance, not shared", for the
+executor to re-check. The red-team pass also catches that Step 3's `Done when` said "routes
+work correctly". The agent rewrites it. It becomes: "integration test hits a public route
+101 times, gets 429 on the 101st, and a whitelisted internal-IP route stays 200 the whole
+time.")*
 
 ### Generated plan
 
@@ -482,9 +505,22 @@ internal-IP route stays 200 the whole time.")*
 
 ## Notes
 
-- This skill uses the **same question UX as [[quiz]]**: the picker when there is one, plain markdown otherwise, one question per turn, `✓` echoes, never all questions at once. The differences: the drill is adaptive (no total until it's resolved, and no fixed list up front) and there's no ~7-question cap.
+- This skill uses the **same question UX as [[quiz]]**:
+  - the picker when there is one, plain markdown otherwise;
+  - one question per turn;
+  - `✓` echoes;
+  - never all questions at once.
+
+  The differences: the drill is adaptive (no total until it's resolved, and no fixed list up front), and there's no ~7-question cap.
 - If the user gives minimal answers, keep the plan short. If they give detailed answers, include all details.
 - If the user already has a clear idea of the steps, skip to step generation — capture their steps directly.
-- The plan file should be committed to the repository alongside the code changes so the plan stays with the branch.
-- **Robustness additions** (Approach / Prior art / Assumptions, plus the premortem lens in Phase 3) come from evidence-backed planning practice: deliberate approach selection (multi-plan beats first-draft), the outside view (anchor scope to the closest past change), and Klein's premortem (imagining failure already happened surfaces ~30% more failure causes than "what might go wrong"). They stay non-redundant by design: the premortem is **folded into the Phase 3 red-team** as one lens (it hunts failures no step represents, where the other checks hunt rule violations), not a separate section. Everything is compatible with [[quiz-plan-execute]], which parses Intent, Ground truth, Boundaries, Steps (`Done when`, `Touches`, `Depends on`, `Parallel group`), and the Progress log — the new **Approach** and **Prior art** are read-only context, while **Assumptions** live inside Boundaries specifically so the executor re-checks them every step (it re-reads Boundaries per step; Ground truth only once).
-- **Parallel groups** (`Touches` / `Depends on` / `Parallel group`) exist purely so [[quiz-plan-execute]] can safely run independent steps concurrently. `Touches` never lists the plan file itself — every step's Stage 6 writes to it, so including it would make every step look dependent on every other. When in doubt about a dependency that file-overlap alone wouldn't reveal, write it into `Depends on` rather than leaving the group assignment to guesswork.
+- Commit the plan file to the repository alongside the code changes, so the plan stays with the branch.
+- **Robustness features** (Approach / Prior art / Assumptions, plus the premortem lens in Phase 3) come from evidence-backed planning practice:
+  - deliberate approach selection (multi-plan beats first-draft);
+  - the outside view (anchor scope to the closest past change);
+  - Klein's premortem (imagining failure already happened surfaces ~30% more failure causes than "what might go wrong").
+
+  These features don't overlap, by design. The premortem is **folded into the Phase 3 red-team** as one lens, not a separate section. It hunts failures no step represents, where the other checks hunt rule violations.
+
+  Everything is compatible with [[quiz-plan-execute]]. It parses Intent, Ground truth, Boundaries, Steps (`Done when`, `Touches`, `Depends on`, `Parallel group`), and the Progress log. **Approach** and **Prior art** are read-only context. **Assumptions** live inside Boundaries so that the executor re-checks them every step. The executor re-reads Boundaries per step, but Ground truth only once.
+- **Parallel groups** (`Touches` / `Depends on` / `Parallel group`) exist purely so [[quiz-plan-execute]] can safely run independent steps concurrently. `Touches` never lists the plan file itself. Every step's Stage 6 (Commit) writes to the plan file, so listing it would make every step look dependent on every other. If you're in doubt about a dependency that file overlap alone wouldn't reveal, write it into `Depends on`. Don't leave the group assignment to guesswork.

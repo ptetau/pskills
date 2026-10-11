@@ -132,8 +132,8 @@ flowchart TB
 
 Key: light blue, a part we build; dark blue, storage; grey, another system. Bands run
 top to bottom: Clients, Managers, Engines, ResourceAccess. Arrows are calls, labelled with
-the verbs used. No arrow goes up or sideways. Utilities (logging, secrets, pub/sub) are
-left out: every part may call them.
+the verbs used. No arrow goes up or sideways. The diagram leaves out Utilities (logging,
+secrets, pub/sub): every part may call them.
 
 | Component | Type | API (business verbs) | Calls |
 |-----------|------|----------------------|-------|
@@ -150,8 +150,8 @@ left out: every part may call them.
 - `Scheduler` is a client too: time is just another caller. `SendDue` sends held digest
   items and wakes up retries that are due.
 - `NotificationManager` is the only part that knows the order of the steps.
-- Because we retry, a message could be sent twice. `OutboxAccess.Claim` stops that: each
-  (event, person, channel) can be sent only once.
+- Because we retry, the app could send a message twice. `OutboxAccess.Claim` stops that:
+  the app can send each (event, person, channel) only once.
 - A delivery's life is a set of business verbs (`StartAttempt`, `FailAttempt`,
   `ScheduleRetry`, `GiveUp`, `ConfirmDelivery`), not one "set the state" call.
 - `OutboxAccess` has no row in the register. It hides our own storage, which counts on its
@@ -264,7 +264,8 @@ UC3 choose how and when to be reached: a staff member, known by the company sign
   NotificationManager → RecipientsAccess.SetQuietHours
 ```
 
-No new part is needed, no call goes up or sideways, and each task uses one Manager. Pass.
+No task needs a new part, no call goes up or sideways, and each task uses one Manager.
+Pass.
 
 ---
 
@@ -303,10 +304,10 @@ python volatility.py --path shop --depth 1 --since "18 months ago"
 
 | component | commits | days since change |
 |-----------|---------|-------------------|
-| shop/checkout | 140 | 2 |
-| shop/cart | 95 | 5 |
-| shop/catalog | 60 | 11 |
-| shop/payments | 20 | 94 |
+| `shop/checkout` | 140 | 2 |
+| `shop/cart` | 95 | 5 |
+| `shop/catalog` | 60 | 11 |
+| `shop/payments` | 20 | 94 |
 
 - `shop/cart` and `shop/checkout` change together in 62% of their commits.
 - The busiest large files are `checkout/totals.py` (58 commits, 900 lines) and
@@ -377,7 +378,7 @@ PricingEngine       → PromotionsAccess.ActivePromotions
 - The first draft had one `Adjust(kind)` brick. Its `kind` setting switched between three
   different sums, which is a smell, so it became three bricks.
 - `Match(condition)` stays one brick. Its condition is a test the same code runs, not a
-  switch between behaviors.
+  switch between behaviours.
 - Cut: `AmountOff`, a per-order or per-customer `Limit`, and a `Sequential` rule for
   choosing winners. No feature needs them today.
 - `FixedPrice`, `CheapestFree`, and `Exclusive` serve one feature each. Each is a kind of
@@ -400,7 +401,7 @@ PricingEngine       → PromotionsAccess.ActivePromotions
    "branch by abstraction".
 3. Send both cart and checkout through it. The duplicate sums go away.
 4. Rebuild each current discount as promotion data, one at a time, behind a switch. Run
-   old and new side by side, and compare the quotes before switching over.
+   old and new side by side. Compare the quotes before switching over.
 5. Delete the old code.
 
 **Proof.**

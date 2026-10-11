@@ -1,7 +1,7 @@
 # Plain language
 
-Everything this skill writes for people should read like it was written for a bright
-10-year-old. Short sentences. Common words. Every technical word explained. The same
+Everything this skill writes for people should read as if a bright 10-year-old is the
+reader. Short sentences. Common words. Every technical word explained. The same
 guide ships with `/decompose` and `/blueprint`, so their documents read alike.
 
 Plain words are not less exact. "Send each message at most once" is as exact as "delivery
@@ -48,8 +48,8 @@ actually uses. For example:
 - **Atomic**: happens all at once or not at all; nothing half-done is left behind.
 - **Precondition**: something that must be true before a step can run.
 
-Method terms (Manager, Engine, ResourceAccess, Client, Utility, brick) are defined in the
-same list the first time a document uses them.
+The same list defines the method terms (Manager, Engine, ResourceAccess, Client, Utility,
+brick) the first time a document uses them.
 
 ## Plain words for common terms
 
@@ -82,8 +82,8 @@ Run the bundled checker on the document:
 python <skill-dir>/scripts/readability.py name.md
 ```
 
-It measures the prose only (code, names, tables, and diagrams are skipped). It reports the
-average sentence length and a reading grade. It lists every sentence over 25 words with
-its line number, and every technical word the document uses but doesn't explain in its
-**Words used here** list. Rewrite until
-it prints `READS PLAINLY`, or until the only warnings left are ones you can defend.
+The checker measures the prose only (it skips code, names, tables, and diagrams). It
+reports the average sentence length and a reading grade. It lists every sentence over 25
+words, with its line number. It also lists every technical word the document uses but
+doesn't explain in its **Words used here** list. Rewrite until the checker prints
+`READS PLAINLY`, or until the only warnings left are ones you can defend.

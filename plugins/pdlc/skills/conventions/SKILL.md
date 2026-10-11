@@ -2,10 +2,10 @@
 name: conventions
 description: >
   Establishes or changes a pdlc convention with the user. Writes the agreed convention as a
-  design spec, and when an existing convention changes, files one migration intent per
-  affected job or capability. Use when the user says "/pdlc:conventions", wants to set or
-  change how something is done across the project, or another pdlc skill finds a missing
-  convention.
+  design spec. When an existing convention changes, files one migration intent per
+  affected job or capability. Use when the user says "/pdlc:conventions", or wants to set
+  or change how something is done across the project. Also use when another pdlc skill
+  finds a missing convention.
 ---
 
 # pdlc conventions
@@ -17,38 +17,44 @@ Read `pdlc/README.md` first and follow it. Start with its "Before any work" step
 
 ## 1. Say what needs deciding
 
-In one or two sentences: what the convention is about, and why it matters now. For
+Say in one or two sentences what the convention is about, and why it matters now. For
 example: "This is the first table in the app. How should tables sort and page?"
 
 ## 2. Offer options
 
-Look in the code for how it is done today. Offer two or three options, each with a short
-real example from this project where one exists. Mark the one you recommend, with one line
-on why. Follow "Asking questions" in `pdlc/README.md`: with `defaults`, take the
-recommendation without asking.
+Look in the code to see how the project does this today. Offer two or three options, each
+with a short real example from this project where one exists. Mark the one you recommend,
+with one line on why. Follow "Asking questions" in `pdlc/README.md`. With `defaults`, take
+the recommendation without asking.
 
 ## 3. Write it down
 
 - **New convention:** create `pdlc/specs/design/DES-<name>.md` from the design template.
-- **Changed convention:** edit the design spec. Set `Default: no` if it was a default.
+- **Changed convention:** edit the design spec. If the convention was a default, set
+  `Default: no`.
 
-If the convention can be checked (for example by a lint rule), add requirements for it,
-marked `proposed`, and file an intent to build the check.
+If a tool can check the convention (for example a lint rule), add requirements for the
+convention, marked `proposed`. Then file an intent to build the check.
 
 ## 4. File migrations
 
-Find the jobs and capabilities whose code doesn't follow the convention as agreed. This
-happens when a convention changes, and when a new convention writes down something the
-code does in more than one way. Search the code maps.
+Search the code maps. Find the jobs and capabilities whose code doesn't follow the
+convention as agreed. Such code exists in two cases:
 
-For each one, add an intent through the inbox port:
+- the convention changed;
+- a new convention writes down something the code does in more than one way.
+
+For each job or capability you find, add an intent through the inbox port:
 
 - Name: "Migrate <spec> to <convention>".
 - What and why: what changed, and a link to the design spec.
 
-Don't start them. Tell the user how many you filed. They choose when each one runs.
+Don't start the migration intents. The user chooses when each one runs. Tell the user how
+many you filed.
 
 ## 5. Finish
 
-Commit with the message "Convention DES-<name>" and, if another skill sent you here, that
-skill's `Intent` trailer. Then go back to that skill if there was one.
+Commit with the message "Convention DES-<name>". If another skill sent you here:
+
+- give the commit that skill's `Intent` trailer;
+- after the commit, go back to that skill.

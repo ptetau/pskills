@@ -17,11 +17,13 @@ The files to copy are in the `references/` folder next to this file.
 
 ## Before you start
 
-- The project must be a git repository. If it isn't, stop and say so.
+- If the project isn't a git repository, stop and say so.
 - If `pdlc/` already exists at the project root, stop. Say pdlc is already set up.
-- If the user passed `defaults`, don't ask anything. Accept recon's map as it is, pick the
-  more common pattern wherever two compete, and take the recommended answer to every
-  question. List everything you decided at the end, so the user can change it.
+- If the user passed `defaults`, don't ask anything. Instead:
+  - accept recon's map as it is;
+  - wherever two patterns compete, pick the more common one;
+  - take the recommended answer to every question;
+  - at the end, list everything you decided, so the user can change it.
 
 ## Steps
 
@@ -37,30 +39,32 @@ Create `pdlc/` at the project root with:
 - `pdlc/bin/`: every file in `references/bin/`.
 - `pdlc/reviews/`: every file in `references/reviews/`.
 - Empty `pdlc/inbox/`, `pdlc/changes/`, `pdlc/specs/jobs/`, `pdlc/specs/capabilities/`
-  and `pdlc/specs/design/`. Put a `.gitkeep` in each so git keeps it.
+  and `pdlc/specs/design/`. Put a `.gitkeep` in each empty folder so git keeps the folder.
 
 ### 2. Map existing code
 
-If the project has no code yet (a new build), there is nothing to map. Instead, recommend
-that the user runs `/decompose` first, if it is installed, to decide where the main parts
-go, then starts their first intent with its result. Don't run it yourself, and don't wait
-for it: carry on with the next step.
+If the project has no code yet (a new build), there is nothing to map. If `/decompose` is
+installed, recommend that the user runs it first, to decide where the main parts go. The
+user then starts their first intent with the result of `/decompose`. Don't run
+`/decompose` yourself, and don't wait for it. Carry on with the next step.
 
-Start the `pdlc:recon` agent and ask for a **thin map** of the project. Then show the user
-what it found, as two short lists: capabilities and jobs, each with its code map. Ask if
-anything should be merged, split or renamed. These boundaries matter, because every change
-must stay inside one.
+Start the `pdlc:recon` agent. Ask recon for a **thin map** of the project. Show the user
+what recon found, as two short lists: capabilities and jobs, each with its code map. Ask
+if the user wants to merge, split or rename any of them. These boundaries matter. Every
+change must stay inside one of them.
 
-Map as "Code maps" in `pdlc/README.md` says. Each entry point (a route or request
+Map the code as "Code maps" in `pdlc/README.md` says. Each entry point (a route or request
 handler, a command, a page script or event handler) belongs to the job it serves.
 Capabilities hold only the shared logic under them: storage, outside services, and the
-plumbing every job uses. A file that holds parts of several specs is mapped by parts:
-each job names its own, and the capability lists the file with `: the rest`. Each file,
-or part, is in one code map only. Leave the README out of every map.
+plumbing every job uses.
+
+Map a file that holds parts of several specs by parts. Each job names its own parts, and
+the capability lists the file with `: the rest`. Each file, or part, is in one code map
+only. Leave the README out of every map.
 
 For each job and capability the user keeps, create a spec from the job or capability
-template. Set `Status: stub`, fill in the summary and code map, and leave the requirements
-section with the line "None written yet." Recon's "Unsure" items go in your summary at
+template. Set `Status: stub`. Fill in the summary and code map. Leave the requirements
+section with the line "None written yet." Put recon's "Unsure" items in your summary at
 the end, never into a spec.
 
 If recon found two patterns for the same thing, ask the user which one is the convention.
@@ -70,48 +74,54 @@ Write the answer as a design spec from the design template.
 
 For each file in `references/defaults/`:
 
-- If it says `Ask at init: yes`, ask its question. Show the options, one question at a
-  time, with the recommended one marked. The user can reply `skip` to take the
-  recommendation.
-- If the user picks something else, rewrite the rule to match and set `Default: no`.
+- If the file says `Ask at init: yes`, ask its question. Ask one question at a time.
+  Show the options, with the recommended one marked. The user can reply `skip` to take
+  the recommendation.
+- If the user picks something else, rewrite the rule to match. Then set `Default: no`.
 - Copy the result to `pdlc/specs/design/`, without its `## Question` section.
 
 ### 4. Set up checks and the visual review
 
-Fill in the "Checks" section of `pdlc/config.md` with recon's answer: the command that
-runs all checks, the command that runs only one requirement's checks, the check folders
-(`tests/` if there are none yet), and the one ID form. Confirm them with the user. In `config.md`, replace every
-placeholder, example and "(or …)" hint with the value chosen, or `none`.
+Fill in the "Checks" section of `pdlc/config.md` with recon's answer:
 
-Set the visual adapter: `visual-web` if the project serves pages, with "Visual" `start`
-and `url` filled in from recon; otherwise `visual-terminal`. Add `pdlc/.tools/` to the
-project's `.gitignore`, and the folders its language and tools write when checks run
-(for example `__pycache__/` for Python, `node_modules/` for Node). A new project with
-no code yet gets them in its first change.
+- the command that runs all checks;
+- the command that runs only one requirement's checks;
+- the check folders (`tests/` if there are none yet);
+- the one ID form.
+
+Confirm these values with the user. In `config.md`, replace every placeholder, example and
+"(or …)" hint with the value chosen, or `none`.
+
+Set the visual adapter. If the project serves pages, use `visual-web`, and fill in
+"Visual" `start` and `url` from recon. Otherwise, use `visual-terminal`.
+
+Add `pdlc/.tools/` to the project's `.gitignore`. Also add the folders that the project's
+language and tools write when checks run. Examples: `__pycache__/` for Python,
+`node_modules/` for Node. If the project has no code yet, its first change adds those
+folders instead.
 
 If the project has no way to run checks yet, say so. Suggest that the first intent adds
 one.
 
 ### 5. Pick adapters
 
-Show the adapters in `pdlc/config.md` and ask if the defaults are right. pdlc ships:
-`inbox-files`, `checks-command`, `review-agent`, `delivery-github`, `visual-web` or
-`visual-terminal`, and no tracker (`tracker-github-projects` and `tracker-linear` are
-available). If the
-user wants a tracker, say it needs a tracker adapter first, which can be added as an
-intent.
+Show the adapters in `pdlc/config.md`. Ask if the defaults are right. By default, pdlc
+uses `inbox-files`, `checks-command`, `review-agent`, `delivery-github`, `visual-web` or
+`visual-terminal`, and no tracker. pdlc also ships `tracker-github-projects` and
+`tracker-linear`. If the user wants a tracker, say that a tracker needs a tracker adapter
+first. The user can add that adapter as an intent.
 
 ### 6. Offer the live dashboard
 
-Ask if they'd like pdlc's optional live dashboard: one page showing tasks, questions
-waiting for them, deliverables and anything stuck. If yes, follow the `pdlc:dashboard`
-skill. With `defaults`, don't install it; just mention at the end that `/pdlc:dashboard`
-adds it.
+pdlc has an optional live dashboard: one page showing tasks, questions waiting for the
+user, deliverables and anything stuck. Ask if the user wants it. If the user says yes, follow the
+`pdlc:dashboard` skill. With `defaults`, don't install the dashboard. At the end, mention
+that `/pdlc:dashboard` adds it.
 
 ### 7. Finish
 
 - Commit the new `pdlc/` folder on its own, with the message "Set up pdlc", on main
-  (the project's default branch). Don't start a branch for it: pdlc's records live on
-  main, and every later stage looks for them there.
-- Tell the user how to start: `/pdlc:ship <what you want>` runs everything, or they can go
-  a stage at a time, starting with `/pdlc:intake`.
+  (the project's default branch). Don't start a branch for this commit. pdlc's records
+  live on main, and every later stage looks for them there.
+- Tell the user how to start. `/pdlc:ship <what you want>` runs everything. Or the user
+  can go a stage at a time, starting with `/pdlc:intake`.

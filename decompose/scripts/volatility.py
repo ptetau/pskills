@@ -9,20 +9,20 @@ established codebase:
   2. Component change coupling - pairs of components that keep changing in the
      same commits. High coupling across a proposed wall means the wall leaks.
   3. File hotspots and file change coupling - the same signals at file level. Tornhill
-     describes a hotspot as the overlap of high change frequency and large size; this
-     script's cutoff (top quartile for both, among all changed files that still exist)
-     is its own choice.
+     describes a hotspot as the overlap of high change frequency and large size. This
+     script chooses its own cutoff: the top quartile for both, among all changed files
+     that still exist.
 
 Change coupling follows code-maat (Tornhill): degree = shared commits / average
-commits of the pair, as a percentage, truncated. Pairs need an average of --min-revs commits
-and at least --min-shared shared commits. Commits touching more than --max-changeset
-files (sweeping renames, dependency bumps) are left out of coupling entirely.
-The thresholds are code-maat's defaults for *listing* a pair. They are noise floors to
-tune per codebase, not verdicts.
+commits of the pair, as a percentage, truncated. A pair needs an average of --min-revs
+commits and at least --min-shared shared commits. Coupling leaves out every commit that
+touches more than --max-changeset files (sweeping renames, dependency bumps). The
+thresholds are code-maat's defaults for *listing* a pair. They are noise floors to tune
+per codebase, not verdicts.
 
 Noise filters: merge commits, whitespace-only changes, commits listed in
 .git-blame-ignore-revs, lockfiles, vendored/built/generated paths (default globs plus
-linguist-generated / linguist-vendored in .gitattributes). Renames are followed.
+linguist-generated / linguist-vendored in .gitattributes). The script follows renames.
 
 Standard library only; runs anywhere git and Python 3.8+ run (Windows included).
 
@@ -76,7 +76,7 @@ def run_git(args, cwd, stdin=None):
 def read_commits(repo, since, until, path, first_parent):
     """Yield (sha, timestamp, author, [(path, added, deleted)]) newest first.
 
-    Renames are followed: older commits are reported under the file's newest name.
+    It follows renames: it reports older commits under the file's newest name.
     """
     args = ["log", "-M", "-w", "--numstat", "-z",
             "--format=" + RECORD + "%H" + FIELD + "%at" + FIELD + "%aN"]

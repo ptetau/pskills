@@ -4,9 +4,10 @@
 A change may merge only when:
   - every requirement it lists is verified (and every retired one is gone from its spec);
   - its change spec and requirements write the assumption marker one way: "(assumed)";
-  - its tests are locked, and no check file changed after the lock;
-  - the tests review judged the checks as locked now (its packet carries the current lock),
-    and names a wrong version of the code that each check fails on;
+  - its checks are locked, and no check file changed after the lock;
+  - the tests review judged the checks as they are locked now: its packet carries the
+    current lock;
+  - the tests review names a wrong version of the code that each check fails on;
   - every review remit named in pdlc/config.md passed;
   - the branch merges into main without conflicts;
   - every other change of its intent is "in review" or "merged" on its own branch, so the
@@ -19,7 +20,7 @@ Usage:
                                             if no change uses this branch, every change
                                             with status "in review"
 
-In CI the current branch is read from GITHUB_HEAD_REF when it is set.
+In CI, the script reads the current branch from GITHUB_HEAD_REF when that variable is set.
 Run it from the project root. Exit code 0 means the change may merge.
 """
 import os
@@ -32,7 +33,7 @@ REQ = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b(.*)$", re.M)
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
 READY = ("in review", "merged")
-# The marker dressed up (*(assumed)*), or any bracket holding the word but more than it.
+# The marker with emphasis (*(assumed)*), or brackets that hold "assumed" and more text.
 MARKER = re.compile(r"[*_]+\(assumed\)[*_]+|\([^()\n]*\bassumed\b[^()\n]*\)", re.I)
 
 
@@ -90,7 +91,7 @@ def check_files(text):
 
 
 def reviewed_lock(folder, lock):
-    """True when the tests packet was built while the change spec carried this lock."""
+    """True when the tests packet carries this lock, copied from the change spec."""
     packet = folder / "review" / "tests" / "packet.md"
     if not packet.exists():
         return False
@@ -218,7 +219,7 @@ def check_change(root, folder):
         problems += marker_problems(req_id, requirement_text(root, req_id))
 
     checks = check_files(text)
-    # A re-lock may leave the older line in place; the newest (last) one counts.
+    # A re-lock may leave the older line in place. The newest (last) line counts.
     locks = list(re.finditer(r"^Tests-Locked:\s*([0-9a-f]{7,40})\b", text, re.M))
     lock = locks[-1] if locks else None
     if checks and not lock:

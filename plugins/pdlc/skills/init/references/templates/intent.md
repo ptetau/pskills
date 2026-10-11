@@ -8,13 +8,13 @@ What you want to be true, and why, in your own words. A few sentences is enough.
 
 ## Requirements
 
-Filled in by intake. The requirements this intent added or changed.
+Intake fills this in. The requirements this intent added or changed.
 
 - none yet
 
 ## Changes
 
-Filled in by change. The changes that deliver this intent, in order.
+The change stage fills this in. The changes that deliver this intent, in order.
 
 - none yet
 
@@ -26,5 +26,5 @@ forms: `<requirement>: <question> → <answer> (assumed)`, `<ID>: was "<old>", n
 
 ## Handoff
 
-Written by each intent stage (intake, ready, change) for the next one, from the handoff
-template with its sections as `###` headings. Replace it each time.
+Each intent stage (intake, ready, change) writes this for the next one, from the handoff
+template, with its sections as `###` headings. Replace it each time.

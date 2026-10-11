@@ -12,23 +12,23 @@ Errors (exit code 1):
   - section 2 has no invariants, or an invariant lacks an error code or an enforcement
     point ("Enforced by `Component.method`"), or names a component or method that
     section 5 doesn't have
-  - section 3 has no typed code block or no error catalog table, or the catalog and the
-    quoted codes in the contracts disagree
+  - section 3 has no typed code block or no error catalogue table, or the catalogue and
+    the quoted codes in the contracts disagree
   - a code used anywhere (invariants, section 5 prose, comments, and strings, scenarios)
-    is missing from the error catalog
+    is missing from the error catalogue
   - a Status/State type from section 3 has no '### Type' state machine with a diagram
   - a component in section 5 lacks a purpose, a signature block, or failure and retry
     semantics
   - section 6 has fewer than 3 scenarios, a scenario lacks Given/When/Then, an
     invariant's code is never asserted (in a Then step or an Examples row), or there is
-    no "Done when" / "Verify" line
-    with a command
+    no "Done when" / "Verify" line with a command
   - design IDs (V1, F2, UC3, FR-1, SC-1, INV-1) remain outside code blocks
   - a flow calls a component its kind may not call (walls.md call rules), or one its
     "May call" line doesn't list
-  - section 5 has no C4 component diagram, or it leaves out a component, shows one section 5
-    doesn't define, or draws a call the call rules forbid; section 1 has neither a C4
-    container diagram placing every component nor a line saying there is one container
+  - section 5 has no C4 component diagram, or the diagram leaves out a component, shows
+    one section 5 doesn't define, or draws a call the call rules forbid
+  - section 1 has neither a C4 container diagram placing every component nor a line
+    saying there is one container
   - with --render: a Mermaid diagram does not render (needs mmdc)
   - with --design: a Client, Manager, Engine, or ResourceAccess in the design's walls has
     no section 5 subsection; section 5 has a component the design doesn't; a design API
@@ -39,14 +39,18 @@ Errors (exit code 1):
 
 Not checked: whether a contract's fields or variants match the design's.
 
-Warnings: plain-English problems (see readability.py: long sentences, a reading grade
-above 7, technical words missing from the "Words used here" list), more than 7 invariants,
-more than 5
-scenarios, more than 5 steps in a scenario, a Background over 4 steps, a Then step that
-asserts storage, money typed as a bare number, `any` in TypeScript, a component without
-"May call", a Manager calling a Manager on a flow line that doesn't say it is queued,
-fewer *(assumed)* marks than decisions added (or more than listed), a design utility not
-mentioned in section 5, filler phrasing.
+Warnings:
+  - plain-English problems (see readability.py: long sentences, a reading grade above 7,
+    technical words missing from the "Words used here" list)
+  - more than 7 invariants, more than 5 scenarios, more than 5 steps in a scenario, or a
+    Background over 4 steps
+  - a Then step that asserts storage
+  - money typed as a bare number, or `any` in TypeScript
+  - a component without "May call"
+  - a Manager calling a Manager on a flow line that doesn't say the call is queued
+  - fewer *(assumed)* marks than decisions added (or more than listed)
+  - a design utility that section 5 doesn't mention
+  - filler phrasing
 
 Usage:
   python check_blueprint.py notifications.blueprint.md
@@ -514,7 +518,7 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
             errors.append("section 2, invariant %d: no enforcement point ('Enforced by `Component.method`')" % n)
         invariant_codes.update(codes)
 
-    # --- 3. contracts and error catalog
+    # --- 3. contracts and error catalogue
     typed = code_blocks(s3, TYPED_LANGS)
     if not typed:
         errors.append("section 3: no typed code block (```ts, ```go, or ```rust)")

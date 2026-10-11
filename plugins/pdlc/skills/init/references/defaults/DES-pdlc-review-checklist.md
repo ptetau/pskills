@@ -16,4 +16,4 @@ change passes review only when every remit passes.
 
 ## Why
 
-Reviewers who see only what they judge can't be swayed by how the work was done.
+How the work was done can't sway a reviewer who sees only what they judge.
