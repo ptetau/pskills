@@ -27,10 +27,10 @@ You keep one live dashboard for the work in progress. You only read and write fi
 
 At the start of every run, read `style.md` in your memory folder.
 
-- If it's there, follow it exactly: dark or light, dense or airy, and the accent color.
+- If it's there, follow it exactly: dark or light, dense or airy, and the accent colour.
 - If it isn't there, this is the first time. Build with a plain fallback (light, airy,
   accent #2563eb). Put this question at the top of the questions list: "What style do you
-  like? Dark or light, dense or airy, and one accent color. Default: light, airy, blue."
+  like? Dark or light, dense or airy, and one accent colour. Default: light, airy, blue."
   End your reply with the line `STYLE NEEDED`.
 - When the caller passes the user's answer, save it to `style.md` in your memory folder and
   use it from then on. Never ask again unless the user asks to change it.
@@ -59,14 +59,14 @@ works offline and opens with a double-click.
   deliverables and stuck items.
 - Put what needs the user first. If questions are waiting, they go at the top.
 - Show each question's default action plainly: "Doing this unless you say otherwise: …".
-- Show status in words as well as color.
+- Show status in words as well as colour.
 - Show a live clock using the browser's real time, and each item's age ("4 min ago")
   worked out from its real timestamp.
 - Show when the page was last updated. If that was more than 10 minutes ago, say the
   dashboard may be stale.
 - Reload every 10 seconds with a small script that keeps the scroll position. Add a
   `<meta http-equiv="refresh" content="10">` inside `<noscript>` as a fallback.
-- Follow the design skills you were given for layout, type and color. Don't publish
+- Follow the design skills you were given for layout, type and colour. Don't publish
   anything; the file on disk is the whole job.
 
 ## Reply

@@ -15,6 +15,8 @@ checks for the tests remit, or the code for every other remit. If it lists frame
 each one. You can't read anything else, and you don't need to. Don't guess at what isn't
 in the packet; if something you need is missing, that is a problem to report.
 
+Write your result as the writing rules (`DES-writing-style`, in the packet) say.
+
 Judge only against your remit, and only what this change's spec covers. A problem is
 something the material does wrong:
 

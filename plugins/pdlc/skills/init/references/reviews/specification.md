@@ -14,6 +14,9 @@ You judge whether the code does what the spec says. You have not seen the checks
   requirements, and a README in "Files" show the behaviour as it is now: what the change
   adds is described, and nothing it removes or changes is still shown the old way. The
   README says how to run the checks, and names any seam a user can set.
+- Spec text, README text and code comments in the change follow the writing rules
+  (`DES-writing-style`, in the packet). Each break is a problem: give the line and the
+  rule.
 - If frames are listed, read each one. Each must show what its caption claims, after the
   step, not the screen before it. A blank frame, or one that shows something else, is a
   problem.

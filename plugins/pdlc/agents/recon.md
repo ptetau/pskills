@@ -23,6 +23,9 @@ collection of documents or skills. Use these words for all of them:
 
 You will be asked for one of two things.
 
+Write every comment, message and spec line as `pdlc/specs/design/DES-writing-style.md`
+(the writing rules) says.
+
 ## A thin map
 
 Look at the layout, the main modules, the entry points, the dependencies, the docs and the

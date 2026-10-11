@@ -22,7 +22,9 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
 9. Every commit has a subject and trace trailers from
    `specs/design/DES-pdlc-commit-trailers.md`. A hook checks each new commit on a pdlc
    branch; fix what it names at once, with `git commit --amend`.
-10. Write plainly (see `specs/design/DES-writing-style.md`).
+10. Write everything as `specs/design/DES-writing-style.md` (the writing rules) says: specs,
+    handoffs, commit messages, pull requests, review results, code comments and messages
+    to the user.
 
 ## Layout
 

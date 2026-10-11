@@ -34,3 +34,6 @@ stop and explain. Don't work around it.
 
 Don't commit; the skill that started you does that. Reply with the files you changed, one
 line each, and the check results.
+
+Write every comment, message and spec line as `pdlc/specs/design/DES-writing-style.md`
+(the writing rules) says.

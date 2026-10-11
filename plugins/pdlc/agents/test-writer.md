@@ -17,6 +17,9 @@ You may read:
 - `pdlc/config.md`, for how checks run;
 - existing checks in the check folders, to match their style and helpers.
 
+Write every comment, message and spec line as `pdlc/specs/design/DES-writing-style.md`
+(the writing rules) says.
+
 Write checks only in the files listed under "Check files" in the change spec.
 
 For each acceptance line under "Requirements":

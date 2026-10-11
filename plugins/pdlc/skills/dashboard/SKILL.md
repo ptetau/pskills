@@ -47,7 +47,7 @@ Only after a yes:
 
 - Say what was installed, and where.
 - Say the rule takes effect in the next session, and that the first time, the helper will
-  ask what style they like: dark or light, dense or airy, and one accent color.
+  ask what style they like: dark or light, dense or airy, and one accent colour.
 - Say that if a design skill in the agent's `skills:` list isn't installed on this
   machine, they can remove it from `~/.claude/agents/dashboard-builder.md`.
 
