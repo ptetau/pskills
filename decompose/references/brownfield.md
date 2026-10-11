@@ -212,8 +212,8 @@ python volatility.py --path shop --since 2026-05-01                      # after
 ```
 
 "Three months after the switch-over, coupling between `cart` and `checkout` has fallen
-well below its old 62% (the skill's suggested bar: out of the report, under the 30%
-floor). Changes to promotions touch only `PricingEngine` and `PromotionsAccess`." <!-- writing: ok -->
+well below its old 62%. The skill's suggested bar is under 30%, where the report stops
+listing the pair. Changes to promotions touch only `PricingEngine` and `PromotionsAccess`."
 
 If the numbers don't move, the wall leaks and the design needs another look.
 

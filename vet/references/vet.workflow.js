@@ -191,7 +191,7 @@ const PLACED_ITEMS = {
 const PLACE_SCHEMA = { type: 'object', properties: { items: PLACED_ITEMS }, required: ['items'] }
 const MERGED_SCHEMA = { type: 'object', properties: { runs: GRADED_RUNS, items: PLACED_ITEMS }, required: ['runs', 'items'] }
 
-// Cross-prompt judgments are one-shot, so the judge draws the groups itself.
+// Cross-prompt judgements are one-shot, so the judge draws the groups itself.
 const GROUPS = {
   type: 'array',
   items: {
@@ -597,7 +597,7 @@ const qualityPairs = (g) =>
   RUBRIC.map((i) => [WEIGHT[i.id], VERDICT[verdictOf(g, i.id)]]).filter(([, v]) => v !== undefined)
 const similarityPairs = (list) => list.filter((s) => s.item in WEIGHT).map((s) => [WEIGHT[s.item], SIMILARITY[s.class]])
 
-// The within-prompt judgments as of wave k (all waves when k is null): the latest
+// The within-prompt judgements as of wave k (all waves when k is null): the latest
 // class per applicable item, for prompts with at least two usable runs by then.
 function withinAt(k) {
   const out = []
@@ -757,9 +757,9 @@ if (crossJobs.length && AGENTS.cross.batch === 'all') {
   cross = outs.filter(Boolean).flat()
 }
 
-// ── Tallies: count how each judgment split the runs ─────────────────────────
-// The script counts these, not the judge. It flags a judgment whose groups don't
-// place every compared run exactly once, and takes that judgment's tally over the
+// ── Tallies: count how each judgement split the runs ─────────────────────────
+// The script counts these, not the judge. It flags a judgement whose groups don't
+// place every compared run exactly once, and takes that judgement's tally over the
 // runs placed.
 
 const tallyOf = (groups, expected) => {
@@ -786,7 +786,7 @@ const crossTallied = cross.map((s) => {
 const allSimilarity = within.concat(crossTallied)
 const untidy = allSimilarity.filter((s) => !s.tally.clean)
 if (untidy.length) {
-  log(`${untidy.length} judgment(s) didn't place every run exactly once: ${untidy.map((s) => `${s.scope}/${s.item}`).join(', ')}`)
+  log(`${untidy.length} judgement(s) didn't place every run exactly once: ${untidy.map((s) => `${s.scope}/${s.item}`).join(', ')}`)
 }
 
 // ── Final scores ────────────────────────────────────────────────────────────

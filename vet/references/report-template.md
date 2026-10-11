@@ -59,7 +59,7 @@ of runs in the largest group. `-` where not measured.)*
 
 | Item | Kind | Wt | Met | Stability, same prompt | Agreement | Stability, across prompts |
 |---|---|---|---|---|---|---|
-| R1 [criterion, shortened] | structure | 2 | [passRate]% | [stabilityWithin] · [worst class] | [agreementWithin]% | [stabilityCross] · [classCross] |
+| R1 [criterion, shortened] | `structure` | 2 | [passRate]% | [stabilityWithin] · [worst class] | [agreementWithin]% | [stabilityCross] · [classCross] |
 
 ## Prompts
 
@@ -85,7 +85,7 @@ met/partial/missed counts, and one or two evidence quotes with run labels, from
 
 ## Where it varies
 
-*(Every similarity judgment classed major_drift or contradictory, from `similarity[]`,
+*(Every similarity judgement classed major_drift or contradictory, from `similarity[]`,
 worst first. Show the groups so the reader sees how the runs split. If there are none,
 write "No item drifted beyond minor_drift.")*
 
@@ -102,7 +102,7 @@ write "No item drifted beyond minor_drift.")*
 should move. Only suggest what the evidence above supports. A vague rule in SKILL.md
 is the usual cause of drift: point at the rule and say how to make it exact.)*
 
-1. [section] — [change] → moves [R-ids]
+1. [section] — [change] → moves [each R-id with its short name, e.g. R6 (grounded recommendation)]
 
 ## Excluded runs and lost judges
 

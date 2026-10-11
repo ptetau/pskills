@@ -94,15 +94,17 @@ criterion.
 **S-3. Ask the one setup question: new branch?**
 
 Ask it the [[quiz]] way. Use the picker (the `AskUserQuestion` tool) when the session has
-it. Otherwise, ask a plain-markdown question. No ASCII card or code block. One question,
-with one fluid what/why/cost sentence per option:
+it. Otherwise, ask a plain-markdown question. No ASCII card or code block. Ask one
+question. Give each option three short sentences: what, why and cost, as /quiz's Step 2
+(Write each question) says.
 
 - **header:** `Branch`
 - **question:** `Create a new branch for <plan-name> (<N> steps)?`
-- **A · Yes, use `<branch>`**: creates it off the current HEAD, isolating every step's
-  commit from whatever else is in flight; it costs nothing to undo.
-- **B · No, use the current branch**: fastest if you're already on a throwaway branch;
-  it mixes plan commits with anything already there.
+- **A · Yes, use `<branch>`**: It creates `<branch>` off the current HEAD. It keeps
+  every step's commit apart from other work in flight. It costs nothing to undo.
+- **B · No, use the current branch**: Each step commits straight to the current branch.
+  It is the fastest choice on a throwaway branch. It mixes plan commits with anything
+  already there.
 - **A custom name**: the picker's "Other", or in the fallback, any reply that is a
   branch name.
 

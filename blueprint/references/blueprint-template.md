@@ -42,7 +42,7 @@ person. Each container lists the components it holds.
 
 ### Decisions added by this spec
 
-Each item was open in the design, and this spec decides it. Review these first.
+The design leaves each item open, and this spec decides it. Review these first.
 
 - {decision}: {chosen value}. If wrong: {what changes}.
 
@@ -141,7 +141,8 @@ tests/
 ### Component diagram
 
 The design's component diagram, redrawn inside its container, with technology added
-(`[Component: Manager, TypeScript]`). Required when there are more than three parts.
+(`[Component: Manager, TypeScript]`). If there are more than three parts, this diagram is
+required.
 
 ```mermaid
 ---
@@ -257,7 +258,7 @@ export interface {Utility} { … }
 ```gherkin
 Feature: {capability}
 
-  Scenario: {one behavior}
+  Scenario: {one behaviour}
     Given {context with concrete values}
     When {one action}
     Then {observable outcome, with the error code where one applies}

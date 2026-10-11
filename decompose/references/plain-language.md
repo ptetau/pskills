@@ -20,9 +20,11 @@ Everything around them is plain English.
 
 ## Rules
 
-1. **One idea per sentence.** Aim for 15 words or fewer. Never go over 25.
-2. **Use the everyday word.** "Use", not "utilize". "Send", not "dispatch". "Can't
-   change", not "immutable". "Rule", not "invariant", unless you explain it.
+1. **One idea per sentence.** Aim for 15 words or fewer. Never go over 20 words in an
+   instruction, or 25 in any other sentence. An instruction starts with a command verb,
+   such as "Use" or "Keep".
+2. **Use the everyday word.** "Use", not "utilise". "Send", not "dispatch". "Can't
+   change", not "immutable". "Rule", not "invariant". If you need "invariant", explain it.
 3. **Say who does what.** "The Manager decides the order", not "the order is determined".
 4. **Explain each technical word once**, the first time it matters, in plain words. Then
    add it to the **Words used here** list in section 1. A word that is hard to explain is
@@ -32,6 +34,17 @@ Everything around them is plain English.
 6. **Start with the point.** The first sentence of each section says what matters most.
 7. **Lists for steps and options.** Tables for comparisons. Prose for reasons.
 8. **No filler.** No "In this document we will…", no "It is important to note that…".
+9. **Put a condition first.** "If the vendor times out, try again", not "Try again if the
+   vendor times out".
+10. **Use New Zealand spelling**: "behaviour", "catalogue", "organise". Names and code keep
+    their own spelling (`color: #000` in a diagram).
+11. **Give an ID with its name**: "V3 (message content)", never "V3" alone. A trace
+    column, such as a brick's **Serves** column, may list IDs alone. A blueprint uses no
+    design IDs at all.
+12. **State the facts as they are now.** Don't tell how the document came about, or who
+    asked for what. Give the reason for the design as it is. Write "One `Adjust(kind)`
+    brick would mix three different sums, so the design uses three bricks". Don't write
+    "The first draft had one brick".
 
 ## Words used here
 
@@ -83,7 +96,8 @@ python <skill-dir>/scripts/readability.py name.md
 ```
 
 The checker measures the prose only (it skips code, names, tables, and diagrams). It
-reports the average sentence length and a reading grade. It lists every sentence over 25
-words, with its line number. It also lists every technical word the document uses but
-doesn't explain in its **Words used here** list. Rewrite until the checker prints
-`READS PLAINLY`, or until the only warnings left are ones you can defend.
+reports the average sentence length and a reading grade. It lists every sentence over its
+limit (20 words for an instruction, 25 for any other sentence), with its line number. It
+also lists every technical word the document uses but doesn't explain in its **Words used
+here** list. Rewrite until the checker prints `READS PLAINLY`, or until the only warnings
+left are ones you can defend.

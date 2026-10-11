@@ -199,23 +199,24 @@ Why each brick earns its place:
 - `Expand`, `Prefer`, `QuietHours`, `Render`, `Email`, `OnEvent`, and `Delivery` each
   serve two or more features.
 - `Sms`, `Slack`, `Hold`, and `Release` serve one feature each. Each is one of the
-  choices a recorded change names: a channel in V1, the digest in V4.
+  choices a recorded change names: a channel in V1 (channels and vendors), the digest in
+  V4 (delivery flows).
 - `OnEvent` and `OnSchedule` are Inputs, the way in, so they need no other reason.
 
 Cut: a `Webhook` transport and an `OptOut` policy. No feature needs them today, and no
-recorded change names them. Each would be one new brick in one part if it comes.
+recorded change names them. If either one comes, it is one new brick in one part.
 
 **Feature assembly: each feature built from the pieces**
 
 | Feature | How it's built | New bricks |
 |---------|----------------|------------|
-| F1 | `OnEvent(user.created) → Route → Render(welcome) → Deliver` | 0 |
-| F2 | `OnEvent(password.reset) → Route[channel=sms] → Render(reset) → Deliver` | 0 |
-| F3 | `OnEvent(activity.*) → Route → Hold(daily)` then `OnSchedule(08:00 local) → Release → Render(digest) → Deliver` | 0 |
-| F4 | `OnEvent(alert.*) → Route[team] → Render(alert) → Deliver` | 0 |
-| F5, F6 | `Prefer` and `QuietHours` inside `Route` | 0 |
-| F7 | the `Delivery` state machine | 0 |
-| F8 | `Render`'s locale argument | 0 |
+| F1 (welcome email) | `OnEvent(user.created) → Route → Render(welcome) → Deliver` | 0 |
+| F2 (reset code) | `OnEvent(password.reset) → Route[channel=sms] → Render(reset) → Deliver` | 0 |
+| F3 (digest) | `OnEvent(activity.*) → Route → Hold(daily)` then `OnSchedule(08:00 local) → Release → Render(digest) → Deliver` | 0 |
+| F4 (ops alerts) | `OnEvent(alert.*) → Route[team] → Render(alert) → Deliver` | 0 |
+| F5, F6 (channel choice, quiet hours) | `Prefer` and `QuietHours` inside `Route` | 0 |
+| F7 (retries) | the `Delivery` state machine | 0 |
+| F8 (languages) | `Render`'s locale argument | 0 |
 | future: WhatsApp (V1) | a `WhatsApp` transport in `DeliveryAccess` | 1 |
 | future: escalate if unread in 15 min (V4) | `… → Deliver(push) → Wait(15m, unless read) → Deliver(sms)` | 1 (`Wait`, in the Manager) |
 | future: no SMS to EU users at night (V2) | a policy in `RoutingEngine` | 1 |
@@ -375,14 +376,15 @@ PricingEngine       → PromotionsAccess.ActivePromotions
 - A promotion is data: `{match, adjustment}`.
 - The engine runs every active promotion, then the rule for choosing winners (`BestOf`
   unless a promotion is `Exclusive`), then `Round`.
-- The first draft had one `Adjust(kind)` brick. Its `kind` setting switched between three
-  different sums, which is a smell, so it became three bricks.
-- `Match(condition)` stays one brick. Its condition is a test the same code runs, not a
+- One `Adjust(kind)` brick would mix three different sums behind its `kind` setting,
+  which is a smell. So the design uses three bricks: `PercentOff`, `FixedPrice`, and
+  `CheapestFree`.
+- `Match(condition)` is one brick. Its condition is a test the same code runs, not a
   switch between behaviours.
 - Cut: `AmountOff`, a per-order or per-customer `Limit`, and a `Sequential` rule for
   choosing winners. No feature needs them today.
-- `FixedPrice`, `CheapestFree`, and `Exclusive` serve one feature each. Each is a kind of
-  price rule that V1 names.
+- `FixedPrice`, `CheapestFree`, and `Exclusive` serve one feature each. Each is a variant
+  that V1 (price rules) names.
 
 **Feature assembly**
 

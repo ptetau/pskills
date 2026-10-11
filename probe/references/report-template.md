@@ -85,7 +85,7 @@ docs/specs in Phase 1 claimed. These differ from ordinary bugs: the gap is betwe
 stated intent and observed reality, not just "this is broken.")*
 
 - `[flow]` / `[dimension]`: [what the docs/spec said] vs [what was actually observed] → see `[F-00N]`
-- *(or:)* "No surprises vs docs/specs — behavior matched the app's documented intent
+- *(or:)* "No surprises vs docs/specs — behaviour matched the app's documented intent
   everywhere it was probed."
 
 ---

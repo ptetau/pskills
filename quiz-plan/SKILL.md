@@ -48,7 +48,7 @@ Captures: core change in plain language. → **Intent**
 **Why?** — "What's wrong today? What specific problem are you solving?"
 Captures: concrete pain point. → **Intent**
 
-**What files are involved?** — "Which files or packages do you expect to touch? List paths if you know them, or describe the area of the codebase."
+**What files are involved?** — "Which files or packages do you expect to touch? If you know the paths, list them. Otherwise, describe the area of the codebase."
 Captures: file paths, modules. → **Ground truth → Key files**
 
 **What's out of bounds?** — "Anything you explicitly don't want changed? Adjacent work to not do here?"
@@ -69,7 +69,7 @@ Captures: verification criteria. → **Verification and rollback**
 **Rollback plan?** — "If this goes wrong, how do we undo it? Git revert? Feature flag? DB rollback?"
 Captures: rollback strategy. → **Verification and rollback → Rollback**
 
-**Branch name?** — "What branch should this work on? I can create it if needed."
+**Branch name?** — "What branch should this work on? If the branch doesn't exist yet, I can create it."
 Captures: branch name. → Document header
 
 **Prior art?** — "Have we built something this shape before — here or elsewhere? Roughly how many steps did it take, and what broke or surprised us last time?"
@@ -78,7 +78,7 @@ Captures: closest past change, rough step count, known failure modes. → **Grou
 **More than one way to do this?** — *(ask only when 2+ viable approaches exist)* "Are there competing approaches? Name the front-runners so we pick one deliberately instead of defaulting to the first that came to mind."
 Captures: approach options and the reason for the pick. → **Approach**
 
-> The questions are Q1–Q12 in the order listed: Q1 is "What's the change?" and Q12 is "More than one way to do this?". The template below refers to them by these numbers. Q12 is conditional: skip it when only one sensible approach exists.
+> The questions are Q1–Q12 in the order listed: Q1 is "What's the change?" and Q12 is "More than one way to do this?". The template below names each one by its number and title, such as "Q4 (What's out of bounds?)". Q12 is conditional: skip it when only one sensible approach exists.
 
 #### Adaptive Follow-up Drill (the key mechanic)
 
@@ -138,7 +138,10 @@ differences:
 
 **Recommendations** follow /quiz's rule, with the codebase counting as evidence. Tag an
 option `(recommended)` only when a ground-truth fact, constraint or risk points to it.
-Name that fact in the option's sentence. On a genuine toss-up, recommend nothing.
+Name that fact in the option's why sentence. On a genuine toss-up, recommend nothing.
+
+**Options** follow /quiz's Step 2 (Write each question): a short label, then three short
+sentences for what, why and cost.
 
 A fallback question looks like this (render it as markdown, never in a code block):
 
@@ -146,13 +149,14 @@ A fallback question looks like this (render it as markdown, never in a code bloc
 **Question 3 · Location**
 Where does the rate-limit middleware live?
 
-- **A · internal/api/middleware/ (recommended)**: sits next to the existing logging
-  middleware, so reviewers recognise the pattern and no new package needs wiring in; it
-  ties the limiter to that folder's conventions.
-- **B · a new top-level package**: e.g. `pkg/ratelimit/`, worth it if this grows into a
-  reusable module; it adds an import path for a first cut.
-- **C · not sure**: I'll read the code and report back before locking a location; it
-  costs one extra round.
+- **A · internal/api/middleware/ (recommended)**: The limiter sits next to the existing
+  logging middleware. Reviewers know that pattern, and no new package needs wiring in.
+  It ties the limiter to that folder's conventions.
+- **B · a new top-level package**: The limiter gets its own package, such as
+  `pkg/ratelimit/`. That pays off if the limiter grows into a reusable module. It adds
+  an import path for a first cut.
+- **C · not sure**: I read the code and report back before I pick a location. The
+  choice then rests on the code, not on memory. It costs one extra round.
 
 Reply A, B or C, optionally with a note.
 ````
@@ -182,8 +186,8 @@ Then ask for the go-ahead, which gates Phase 2 (Write the Plan):
 
 - In the picker, ask one `Confirm` question with options `Write the plan` and
   `Change one`. Recommend neither.
-- In the fallback, write one sentence:
-  *"Does this look right? Say `wait` if anything's wrong, otherwise I'll write the plan."*
+- In the fallback, write one line, in these words:
+  *"Does this look right? If anything is wrong, say `wait`. Otherwise I'll write the plan."*
 
 ##### Reply parsing (same as /quiz)
 
@@ -218,111 +222,114 @@ Derive the name from the user's answer to Q1 (What's the change?). For example:
 #### Template
 
 ````markdown
-# Change Plan: [name derived from Q1]
+# Change Plan: [name derived from Q1 (What's the change?)]
 
 **Owner:** `[current user from git config, or "you"]` · **Status:** Draft | Agreed | In progress | Done
-**Branch:** `[from Q10]` · **Plan location:** `[path to this file]`
+**Branch:** `[from Q10 (Branch name?)]` · **Plan location:** `[path to this file]`
 **Progress:** [visual bar] `[X]/[N] steps completed ([P]%)`
 
 ## How to use this document (read this first, every session)
 
-You are an agent executing this plan. Assume you have no memory of previous sessions.
+You are the agent that executes this plan. Assume you remember nothing from earlier sessions.
 
-1. Read Intent, Ground truth, and Boundaries in full (plus Approach, if present).
-2. Read the Progress log to find the current state. Do not redo completed steps or reopen decisions recorded there.
-3. Resume at the first step not marked done. Respect its gate. If it carries a `Parallel group` tag shared with other not-done steps, those run together — see [[quiz-plan-execute]].
-4. After each step: append to the Progress log, then self-assess against the step's done criteria before moving on.
-5. If anything you're about to do conflicts with Intent or Boundaries, stop and ask. Do not resolve the conflict yourself.
+1. Read Intent, Ground truth and Boundaries in full. If the plan has an Approach section, read it too.
+2. Read the Progress log to find the current state. Don't redo a completed step. Don't reopen a decision that the log records.
+3. Resume at the first step not marked done. Respect its gate. If other not-done steps share its `Parallel group` tag, those steps run together. [[quiz-plan-execute]] says how.
+4. After each step, append an entry to the Progress log. Then check the step against its `Done when` criteria before you start the next step.
+5. If an action would conflict with Intent or Boundaries, stop and ask. Don't resolve the conflict yourself.
 
 ## Intent
 
-[From Q2 — what's wrong and what will be observably different]
+[From Q2 (Why?): what is wrong today, and what will be different that someone can see]
 
-[From Q4 — scope exclusions]
+[From Q4 (What's out of bounds?): what this change leaves out]
 
-**Not doing:** [from Q4]
+**Not doing:** [from Q4 (What's out of bounds?)]
 
 ## Approach
 
-**Chosen:** [one line — the approach this plan implements]
-**Considered:** [from Q12 — the front-running alternatives and why each was rejected. Omit this whole section if only one sensible approach existed; don't invent alternatives to look thorough.]
+**Chosen:** [one line: the approach this plan uses]
+**Considered:** [from Q12 (More than one way to do this?): each front-running alternative, and why the plan rejects it. If only one sensible approach exists, leave out this whole section. Don't invent alternatives to look thorough.]
 
 ## Ground truth
 
-- **Key files:** [from Q3]
-- **Build / test / lint:** [from Q6]
-- **Conventions:** [from Q7]
-- **Prior art:** [from Q11 — the closest past change, its rough step count, and what broke last time. Informs scope and seeds the Phase 3 premortem. "None known" is a valid answer.]
+- **Key files:** [from Q3 (What files are involved?)]
+- **Build / test / lint:** [from Q6 (Build and test commands?)]
+- **Conventions:** [from Q7 (Any conventions?)]
+- **Prior art:** [from Q11 (Prior art?): the closest past change, its rough step count, and what broke last time. Prior art helps set the scope and seeds the Phase 3 premortem. "None known" is a valid answer.]
 
-**Verification rule:** before calling any function, API, or library feature not listed above, read its actual definition in the source or installed package. Never write a call from memory of what the API "probably" looks like. If you can't find the definition, stop and ask.
+**Verification rule:** before you call a function, API or library feature not listed above, read its definition. Find the definition in the source or the installed package. Never write a call from memory of how the API "probably" looks. If you can't find the definition, stop and ask.
 
 ## Boundaries
 
-- **May modify:** [inferred from Q3 and Q4]
-- **Must not touch:** [from Q4]
-- **Stop and ask when:** a test you didn't expect fails, a change is needed outside "may modify", a step's instructions are ambiguous, or you've attempted the same fix twice without success. Two failed attempts means the plan is wrong, not that you should try harder.
-- **Assumptions (re-check every step):** [the novel things this plan takes as true that would invalidate it if false — e.g. "the ORM emits one query per row", "the feature flag defaults off in prod". Distinct from the Verification rule above (read APIs, don't guess) and the single Riskiest assumption below (which drives Step 1). If execution falsifies any item here, stop and ask — do not patch around it.]
+- **May modify:** [inferred from Q3 (What files are involved?) and Q4 (What's out of bounds?)]
+- **Must not touch:** [from Q4 (What's out of bounds?)]
+- **Stop and ask when:**
+  - a test you didn't expect fails;
+  - a step needs a change outside "May modify";
+  - a step's instructions are ambiguous;
+  - the same fix has failed twice.
 
-**Riskiest assumption:** [from Q5] tested in step [1], which is why it comes first.
+  Two failed attempts mean the plan is wrong. They don't mean you should try harder.
+- **Assumptions (re-check every step):** [the new things this plan takes as true. If one of them is false, the plan is invalid. Examples: "the ORM emits one query per row", "the feature flag defaults to off in prod". This list differs from the Verification rule above, which says to read APIs, not guess. It also differs from the single Riskiest assumption below, which drives Step 1. If execution proves an item false, stop and ask. Don't patch around it.]
+
+**Riskiest assumption:** [from Q5 (What could go wrong?)]. Step [1] tests it, so that step comes first.
 
 ## Steps
 
-Sized so each step fits one session. Gate meanings: **AUTO** (default) means complete and
-continue unattended. **GATED** means complete, log, then stop and wait for human review —
-only used when the human explicitly asked for a checkpoint on that step.
+Each step fits in one session. The gates mean:
 
-Each step also declares a **Touches** footprint and **Depends on** edges. These aren't
-decoration — [[quiz-plan-execute]] diffs them to decide which not-yet-done steps can run
-as a **parallel group** (concurrent agents, one per step). Get them right or grouping
-does the wrong thing silently.
+- **AUTO** (the default): complete the step, then continue unattended.
+- **GATED**: complete the step and log it. Then stop and wait for a human review. Use GATED only when the human explicitly asked for a checkpoint on that step.
 
-[Generate steps based on the change. Each step should be concrete enough that two different readers would produce the same change.]
+Each step also declares a **Touches** footprint and **Depends on** edges. [[quiz-plan-execute]] compares them to decide which not-done steps can run together as a **parallel group**, one agent per step. Get them right. If they are wrong, grouping does the wrong thing, and nothing warns you.
+
+[Write the steps for this change. Make each step concrete enough that two readers would make the same change.]
 
 ### Step 1: [name] · `[ ]` AUTO | GATED · Parallel group: [none | P1, P2, ...]
 
 - **Do:** [precise instructions]
 - **Done when:** [falsifiable criteria]
-- **Out of scope here:** [tempting adjacent work to exclude]
-- **Touches:** [files/globs this step actually edits — never includes the plan file itself,
-  which every step's Stage 6 touches and is deliberately excluded from grouping comparisons]
-- **Depends on:** [step numbers this step's correctness relies on, even if `Touches` doesn't
-  overlap — e.g. "Step 2" if this step reads a config flag Step 2 introduces. `none` if truly independent]
+- **Out of scope here:** [tempting nearby work to leave out]
+- **Touches:** [the files or globs this step edits. Never list the plan file itself. Every step's Stage 6 (Commit) edits the plan file, so grouping leaves it out.]
+- **Depends on:** [the steps this step needs in order to be correct, even when the `Touches` sets don't overlap. Example: "Step 2", when this step reads a config flag that Step 2 adds. If the step is truly independent, write `none`.]
 
 [Additional steps as needed...]
 
-**Parallel group assignment rule:** two steps may share a group only if their `Touches` sets
-are disjoint **and** neither is in the other's (transitive) `Depends on` chain. The step that
-tests the **Riskiest assumption** never joins a group — it always runs alone, first. Any step
-marked **GATED** never joins a group either — an explicit human checkpoint runs alone so the
-pause point stays predictable. Groups are otherwise all-AUTO by construction.
+**Parallel group assignment rule:** two steps may share a group only if both of these hold:
+
+- their `Touches` sets are disjoint;
+- neither step is in the other's `Depends on` chain, directly or through other steps.
+
+The step that tests the **Riskiest assumption** never joins a group. That step always runs first, alone. A **GATED** step never joins a group either. A human checkpoint runs alone, so the pause point stays predictable. So every group holds only AUTO steps.
 
 ## Verification and rollback
 
-- **Human verifies by:** [from Q8]
-- **Failing looks like:** [signals that mean stop and roll back]
-- **Rollback:** [from Q9]
-- **Kill criteria:** [conditions under which the human abandons this change]
+- **Human verifies by:** [from Q8 (How will you verify?)]
+- **Failing looks like:** [the signals that mean stop and roll back]
+- **Rollback:** [from Q9 (Rollback plan?)]
+- **Kill criteria:** [the conditions that make the human abandon this change]
 
 ## Progress log
 
-One entry per step, appended at execution time (not written ahead). Newest last. This log is the only memory that survives between sessions, so record decisions, not just actions.
+Append one entry per step when the step runs. Don't write entries ahead. Put the newest entry last. This log is the only memory that survives between sessions, so record decisions, not just actions.
 
 ```
 [date] Step 1: pending | in progress | done | blocked
 Changed: [files touched, one line]
-Decided: [choices made and why, so they aren't re-litigated next session]
+Decided: [choices made and why, so the next session doesn't reopen them]
 Surprises: [anything that didn't match ground truth or the plan]
 ```
 
 #### Progress Tracker Maintenance
 
-When writing the plan, generate the tracker like this:
+When you write the plan, make the tracker like this:
 
 ```markdown
 **Progress:** ████░░░░░░░░ 2/6 steps completed (33%)
 ```
 
-The bar uses exactly 12 characters (█ for done, ░ for remaining). When N is not evenly divisible by 12, round to the nearest char. Examples:
+The bar has exactly 12 characters: █ for done, ░ for remaining. Round the number of █ characters to the nearest whole number. Examples:
 
 - 0/4 steps completed → `░░░░░░░░░░░░ 0/4 (0%)`
 - 1/4 steps completed → `███░░░░░░░░░ 1/4 (25%)`
@@ -330,9 +337,9 @@ The bar uses exactly 12 characters (█ for done, ░ for remaining). When N is 
 - 3/4 steps completed → `█████████░░░ 3/4 (75%)`
 - 4/4 steps completed → `████████████ 4/4 (100%)`
 
-When a step is executed and logged to Progress log, **also update the tracker in the header.** The tracker is human-readable — anyone opening the `.plan.md` file should see immediately how far along the work is.
+When a step runs and gets its Progress log entry, **also update the tracker in the header.** The tracker is for humans. Anyone who opens the `.plan.md` file sees at once how far along the work is.
 
-Each step's checkbox should also be updated: `[ ]` → `[x]` as steps complete.
+Also update each step's checkbox: `[ ]` becomes `[x]` when the step is done.
 ````
 
 #### Step Generation Guidelines
@@ -449,12 +456,13 @@ the fallback layout; with a picker, the same questions arrive as clickable optio
 > **Question 3 · Location**
 > Where does the rate-limit middleware live?
 >
-> - **A · internal/api/middleware/ (recommended)**: sits next to the existing logging
->   middleware, so reviewers recognise the pattern; it ties the limiter to that folder's
->   conventions.
-> - **B · a new package**: e.g. `pkg/ratelimit/`, reusable later; it adds an import path
->   for a first cut.
-> - **C · not sure**: I'll read the code and report back; it costs one extra round.
+> - **A · internal/api/middleware/ (recommended)**: The limiter sits next to the
+>   existing logging middleware. Reviewers know that pattern. It ties the limiter to that
+>   folder's conventions.
+> - **B · a new package**: The limiter gets its own package, such as `pkg/ratelimit/`.
+>   Other services can reuse the package later. It adds an import path for a first cut.
+> - **C · not sure**: I read the code and report back. The choice then rests on the
+>   code, not on memory. It costs one extra round.
 >
 > Reply A, B or C, optionally with a note.
 
@@ -474,7 +482,7 @@ must-not-touch, verification, build/test commands, branch, until no ambiguity re
 > - ✓ 7/8 Commands → `go build ./...` and `go test ./...`
 > - ✓ 8/8 Branch → feature/rate-limiting
 
-**Agent:** *"Does this look right? Say `wait` if anything's wrong — otherwise I'll write the plan."*
+**Agent:** *"Does this look right? If anything is wrong, say `wait`. Otherwise I'll write the plan."*
 **User:** "Looks good."
 
 *(The agent drafts the plan, then red-teams it. The premortem lens surfaces "limiter counts

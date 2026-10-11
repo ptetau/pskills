@@ -535,14 +535,14 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
             first = line.strip().strip("|").split("|")[0]
             catalog.update(ERROR_CODE.findall(first))
     if not catalog:
-        errors.append("section 3: no error catalog (a table with one `CODE` per row: meaning, fault, "
+        errors.append("section 3: no error catalogue (a table with one `CODE` per row: meaning, fault, "
                       "HTTP status, retryable)")
     typed_codes = set(QUOTED_CODE.findall(contract_code))
     if catalog and typed_codes:
         for c in sorted(typed_codes - catalog):
-            errors.append("section 3: `%s` is in the contract types but not in the error catalog" % c)
+            errors.append("section 3: `%s` is in the contract types but not in the error catalogue" % c)
         for c in sorted(catalog - typed_codes):
-            errors.append("section 3: `%s` is in the error catalog but not in the contract types" % c)
+            errors.append("section 3: `%s` is in the error catalogue but not in the contract types" % c)
 
     # --- 4. state machines
     if not (re.search(r"stateDiagram", s4) or re.search(r"──\[|──►|-->|->", s4)):
@@ -659,7 +659,7 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
         used = {"section 2": invariant_codes, "section 5": s5_codes, "section 6": mentioned}
         for where, codes in used.items():
             for c in sorted(codes - catalog):
-                errors.append("%s: `%s` is not in the error catalog" % (where, c))
+                errors.append("%s: `%s` is not in the error catalogue" % (where, c))
 
     # --- global
     for i, line in enumerate(prose.split("\n"), 1):

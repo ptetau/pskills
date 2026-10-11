@@ -148,7 +148,8 @@ diagrams match the text.
 `--render` renders every diagram with Mermaid.
 
 Hand the blueprint to `/quiz-plan` for a change plan. Then run `/quiz-plan-execute` on the
-plan. `/quiz-plan-execute` uses the Gherkin scenarios as its failing tests.
+plan. For each step, `/quiz-plan-execute` writes a failing test from the step's acceptance
+criteria before it writes any code.
 
 **Both skills write in plain English**, for a bright 10-year-old: short sentences, common
 words, and every technical word explained in a "Words used here" list. Names, types, and
@@ -262,12 +263,16 @@ an option only when something the user said points to it.
 > **Question 1 of 3 · Audience**
 > Who is the primary audience for this dashboard?
 >
-> - **A · Engineers**: raw metrics, dense, no fluff; hard for anyone outside the team to read.
-> - **B · Managers**: trends and status rather than raw numbers; hides the detail on-call needs.
-> - **C · Both**: an overview with a drill-down toggle; more to build.
+> - **A · Engineers**: It shows dense raw metrics with no fluff. It suits the team that
+>   runs the API. It is hard for anyone outside the team to read.
+> - **B · Managers**: It shows trends and status, not raw numbers. It suits people who
+>   track health over weeks. It hides the detail that on-call needs.
+> - **C · Both**: It gives an overview with a drill-down toggle. It serves both groups
+>   from one page. It takes more to build.
 >
 > Reply A, B or C, optionally with a note.
 
+Each option gives three short sentences: what it is, why it fits, and what it costs.
 Reply with a letter, optionally with a note (`B, include p99 latency`). `/quiz` echoes
 each answer in one line (`✓ 1/3 Audience → Managers`). After the last question, `/quiz`
 shows the resolved list for a final OK before work begins.
@@ -279,9 +284,9 @@ Cap: ~7 questions. For more, escalate to `/squiz`.
 ## `/quiz-plan` — Quiz-driven Change Plan
 
 Runs an adaptive interview (not a fixed list) to surface every assumption, ambiguity,
-and dependency in a proposed change. Then it writes a structured `<name>.plan.md` at the
-project root, with Intent, Ground truth, Boundaries, gated Steps, Verification/rollback,
-and a live progress tracker. Step 1 always tests the riskiest assumption.
+and dependency in a proposed change. Then it writes a structured `plans/<name>.plan.md`,
+with Intent, Ground truth, Boundaries, gated Steps, Verification/rollback, and a live
+progress tracker. Step 1 always tests the riskiest assumption.
 
 **Example**
 
@@ -291,8 +296,8 @@ and a live progress tracker. Step 1 always tests the riskiest assumption.
 
 The agent drills down: configurable or hardcoded limit? which middleware dir? what must
 not change? The agent keeps asking until it can picture the exact files and changes.
-Then it confirms and writes `add-api-rate-limiting.plan.md`. The plan has per-step gates
-(AUTO / GATED) and a 12-char progress bar in the header.
+Then it confirms and writes `plans/add-api-rate-limiting.plan.md`. The plan has per-step
+gates (AUTO / GATED) and a 12-char progress bar in the header.
 
 ---
 
@@ -308,14 +313,17 @@ through a strict 6-stage gate — each stage must finish before the next:
 5. **Review** against acceptance criteria
 6. **Commit** — one commit per step, plan tracker updated in the same commit
 
-At start it asks whether to work in a new branch, a new git worktree, and/or dispatch
-each step to a fresh subagent. On completion it offers to squash-merge locally or open
-a PR.
+At the start it asks one question: whether to create a new branch for the work. Steps
+run one at a time, in order, in the main thread. Steps that share a `Parallel group` tag
+in the plan run at the same time instead. Each of those steps gets its own agent in its
+own git worktree. The executor merges their work back in step order, one commit per
+step. When all steps are done, it moves the plan to `plans/completed/` and offers to
+squash-merge locally or open a PR.
 
 **Example**
 
 ```
-/quiz-plan-execute add-api-rate-limiting.plan.md
+/quiz-plan-execute plans/add-api-rate-limiting.plan.md
 ```
 
 GATED steps pause for human review; AUTO steps continue. If a step conflicts with Intent

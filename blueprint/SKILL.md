@@ -230,7 +230,7 @@ each state machine `### {Machine}Status`, or say "the design's `{Machine}` machi
 different heading (`--design` checks both). Use a Mermaid `stateDiagram-v2` (or ASCII when
 Mermaid won't render), with:
 
-- `[*]` for the start, and a mark on each terminal state, if there are any.
+- `[*]` for the start, and a mark on each terminal state (a machine may have none).
 - Only the legal transitions. The system refuses any transition the diagram doesn't draw.
 - A label on each transition: `event [guard]`.
 - Held, waiting, and rollback branches, shown and not implied.
@@ -242,7 +242,8 @@ Mermaid won't render), with:
 1. **Module map**: a directory tree an agent can create as is, one folder per component,
    with contracts and tests placed.
    Then the **C4 component diagram**: the design's diagram, redrawn inside its container,
-   with each box's technology added. Required when there are more than three parts.
+   with each box's technology added. If there are more than three parts, the diagram is
+   required.
 2. **Groups**, named for what they do, with the method's term in brackets:
    - Entry points (Clients)
    - Orchestration (Managers)
@@ -286,7 +287,8 @@ Mermaid won't render), with:
      one line is enough ("in-process; errors returned as values; nothing to retry").
    - **Internals**: the component's bricks from the design, as private modules, each
      named in backticks as the design spells it (`mayBorrow` for `MayBorrow` is fine).
-     Required when the design lists bricks for the component; `--design` checks it.
+     If the design lists bricks for the component, this line is required; `--design`
+     checks it.
    - A component's methods are the design's API verbs, no more and no fewer. A blueprint
      may add parameters the design left implicit (an idempotency key). A new verb is a
      design change, so add the verb to the design first.

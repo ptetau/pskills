@@ -324,8 +324,10 @@ Start with the most volatile component. See `references/bricks.md` for tests and
 
 ## Phase 5 — Validate
 
-Goal: prove the design, don't assert it. Run every check. Record the results in the
-design doc. Fix and re-run until the checks pass, or record why you accept a failure.
+Goal: prove the design, don't assert it. Run every check. Fix and re-run until the checks
+pass, or record why you accept a failure. Record the results in the design doc as they are
+now, not the drafts before them. Under "Choices the checks depend on", list each design
+choice that a check needs, with that check.
 
 1. **Use-case walkthrough.** Write each core use case as a call chain through the walls,
    one `Caller → Callee.Verb` per line. This makes the direction of every call visible.

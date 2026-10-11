@@ -62,17 +62,22 @@ whole list with this procedure. Then commit to it:
 Each question has:
 - a **label** of one or two words, at most 12 characters (e.g. `Tone`, `Audience`);
 - the **question**, one sentence ending in `?`, in the user's own terms;
-- **2-4 options**. Each option is a short label (1-5 words) and one sentence. The
-  sentence says what the option does, why it fits this request, and **ends on its cost
-  or trade-off**. Every option gets that sentence, including options on the first
-  question;
+- **2-4 options**. Each option is a short label (1-5 words) and three short sentences,
+  in this order:
+  1. **What:** what the option is or does ("It talks the way climbers do, with high
+     energy.");
+  2. **Why:** why it fits this request ("It fits because this is a climbing gym.");
+  3. **Cost:** its cost or trade-off ("It can read as try-hard to a quieter crowd.").
+
+  Write them as plain sentences, without the labels. Keep each sentence to about 12
+  words. Every option gets all three, including options on the first question;
 - at most **one recommended option**, listed first. List the rest from most to least
   likely to fit.
 
 **Recommend only on evidence.** Recommend an option only when something the user said
-points to it. Name that thing in the option's sentence ("since this is a climbing gym").
-If nothing the user said favours any option, recommend nothing. This is typical for the
-first question on a terse request. Never recommend two.
+points to it. Name that thing in the option's why sentence ("It fits because this is a
+climbing gym."). If nothing the user said favours any option, recommend nothing. This is
+typical for the first question on a terse request. Never recommend two.
 
 ## Step 3: Ask it
 
@@ -81,7 +86,7 @@ it: one question per call.
 - `header`: the label.
 - `question`: the question, followed by ` (N of T)`.
 - `options`: the 2-4 options, the recommended one first with ` (Recommended)` at the end
-  of its label; each `description` is the option's sentence.
+  of its label; each `description` is the option's three sentences.
 - `multiSelect`: false, unless the question really is "pick any that apply".
 - `preview`: only for visual choices (a layout, sample text, a code shape), as a short
   mockup per option.
@@ -96,11 +101,12 @@ Exactly this layout:
 **Question 1 of 3 · Tone**
 What tone should the welcome email have?
 
-- **A · Stoked (recommended)**: matches how climbers talk to each other, since this is
-  a climbing gym; it can read as try-hard to a quieter crowd.
-- **B · Warm**: friendly and personal, a safe fit for a mixed membership; it carries
+- **A · Stoked (recommended)**: It talks the way climbers do, with high energy. It fits
+  because this is a climbing gym. It can read as try-hard to a quieter crowd.
+- **B · Warm**: It is friendly and personal. It suits a mixed membership. It carries
   less energy.
-- **C · Plain**: facts first and quickest to read; it can feel like a receipt.
+- **C · Plain**: It puts the facts first and is the quickest to read. It suits members
+  who only want the details. It can feel like a receipt.
 
 Reply A, B or C, optionally with a note (e.g. `B, keep it short`).
 ````
@@ -144,8 +150,8 @@ Then ask for the go-ahead:
 - **Picker:** one question with header `Confirm`, question `Go with these answers?`,
   and options `Go` ("start with these answers") and `Change one` ("tell me which answer
   to change"). Recommend neither: nothing the user said picks between them.
-- **Fallback:** one sentence: *"Going with these. Say `wait` if anything's wrong,
-  otherwise I'll start."*
+- **Fallback:** one line, in these words: *"Going with these. If anything is wrong, say
+  `wait`. Otherwise I'll start."*
 
 Once the user confirms, say what that means in one short paragraph ("So I'll write X,
 with Y, skipping Z"). Then begin. If the user changes an answer, update that echo line.
@@ -191,5 +197,5 @@ are more than 7 questions, offer `/squiz` in one sentence. Do the same when the 
 need a side-by-side comparison bigger than a short preview. Don't switch on your own. An
 example offer:
 
-> "This one's easier to pick if you can see the layouts side by side. Want a full Squiz
-> for just the visual decisions? Otherwise I'll keep going here."
+> "If you can see the layouts side by side, this one is easier to pick. Want a full
+> Squiz for just the visual decisions? Otherwise I'll keep going here."

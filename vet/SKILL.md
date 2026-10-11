@@ -3,18 +3,16 @@ name: vet
 description: >
   Writes and runs an eval for another skill and scores it on two axes. Quality: how
   well its output meets a rubric drawn from the skill itself. Stability: how little its
-  output changes between runs. Reads the target SKILL.md to extract its expected output
-  structure and a rubric. Writes varied test prompts with scripted user replies for
-  interactive skills. Runs a sample of them many times each in isolated git worktrees
-  via a Workflow. A rubric judge grades every run. Similarity judges classify and tally
-  each rubric item by how much it changed across repeats and, for structure items,
-  across prompts. It records the grade after each wave of runs, so you can watch it
-  settle. Asks which models to use before each eval. Each agent role (run, grade,
-  compare, cross) can take its own model, effort and batching, via presets or overrides,
-  to trade cost against focus. Saves the suite to evals/<skill>/ so later runs are
-  comparable. Use when the user says "/vet" or asks to "eval a skill". Use it when the
-  user asks to "test this skill", "score my skill", or "how consistent is this skill".
-  Also use it to check a skill before trusting it.
+  output changes between runs. Reads the target SKILL.md for its output structure and a
+  rubric. Writes varied test prompts, with scripted replies for interactive skills. Runs
+  each sampled prompt many times in isolated git worktrees via a Workflow. Judges grade
+  every run and tally how much each rubric item changed across repeats and, for
+  structure items, across prompts. It records the grade after each wave, so you can
+  watch the grade settle. Asks which models to use before each eval. Each agent role
+  (run, grade, compare, cross) takes its own model, effort and batching. Saves the suite
+  to evals/<skill>/ so later runs are comparable. Use when the user says "/vet" or asks
+  to "eval a skill" or "test this skill". Also use it for "score my skill" and "how
+  consistent is this skill", and to check a skill before trusting it.
 ---
 
 # Vet: Skill Evaluator
@@ -78,7 +76,7 @@ evals/<skill>/
   runs/<runId>/
     outputs/P01-r01.md …      one capture per run: transcript + files the run wrote
                               (copied here from each run's worktree after the run)
-    results.json              scores and every judgment    (references/results.schema.json)
+    results.json              scores and every judgement    (references/results.schema.json)
     report.md                 the human report             (references/report-template.md)
 ```
 
@@ -276,7 +274,7 @@ After the last wave:
 - **Cross.** For structure items, a cross-prompt judge compares the first two usable
   runs of each prompt, ignoring content and comparing only shape.
 - **Tally.** The script counts each item's groups itself, e.g. `7 / 3 of 10`, and
-  flags any judgment whose groups don't place every run exactly once.
+  flags any judgement whose groups don't place every run exactly once.
 - **Score (step 5).** Plain arithmetic in the script, with no judge involved. See
   Scoring.
 
@@ -292,7 +290,7 @@ The scores leave out these runs and list them under `excluded`:
 - runs whose grader died or skipped them;
 - runs whose capture is missing or not verbatim.
 
-Missing similarity judgments (the judge died or skipped an item) go under `lostJudges`.
+Missing similarity judgements (the judge died or skipped an item) go under `lostJudges`.
 The scores never count either kind as a pass or a fail.
 
 ## Phase 5: Report
@@ -407,11 +405,11 @@ check.
 - **Quality** = 100 × Σ(weight × verdict value) ÷ Σ(weight), over every applicable
   (run, item) pair in the usable runs.
 - **Stability** = 100 × Σ(weight × class value) ÷ Σ(weight), over every similarity
-  judgment. Each prompt's repeats count as one scope per item, and cross-prompt counts
+  judgement. Each prompt's repeats count as one scope per item, and cross-prompt counts
   as one more scope for structure items.
 - **Overall** = √(quality × stability). Grades: A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, F below.
 - **Confidence** is `low` when fewer than 80% of runs were usable.
-- **Tallies** don't enter the score. Each judgment also carries the group sizes the
+- **Tallies** don't enter the score. Each judgement also carries the group sizes the
   script counted (`7 / 3 of 10`) and `agreement`, the share of runs in the largest
   group. The report shows them next to the class so you can see how a drift splits.
 
@@ -453,7 +451,7 @@ Judges on a different model or batch setting score differently.
 ```
 
 There is no suite yet, so `vet` reads `quiz/SKILL.md` and writes the structure (one
-card per turn, a `[✓]` echo, a final resolved view). It writes a 10-item rubric, e.g.
+question per turn, a `✓` echo line, a final resolved view). It writes a 10-item rubric, e.g.
 R3 "exactly one option marked (recommended)" and R8 "questions asked are the ones
 whose answers change the work". It writes 10 prompts from a terse one-liner to a
 seven-decision project, each with scripted letter replies. You review and reply `go`.

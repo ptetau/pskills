@@ -7,7 +7,9 @@ tables, headings, and diagrams, because names and code must stay exact.
 
 Reports:
   - average words per sentence (aim for 15 or fewer)
-  - every sentence over 25 words (aim for none), with its line number
+  - every sentence over its limit (aim for none), with its line number. An instruction
+    has 20 words at most, and any other sentence 25. An instruction starts with a
+    command verb, such as "Run" or "Use".
   - Flesch-Kincaid grade level of the prose (aim for 7 or lower)
   - technical words used in the prose but not explained in a "Words used here" list
 
@@ -34,9 +36,18 @@ JARGON = [
     "immutable", "immutability", "invariant", "invariants", "jitter", "latency",
     "mutation", "orchestration", "orchestrate", "orthogonal", "orthogonality",
     "payload", "polymorphism", "postcondition", "precondition", "primitive",
-    "primitives", "semantics", "serialization", "synchronous", "throughput",
-    "topology", "transactional", "volatile", "volatility",
+    "primitives", "semantics", "serialisation", "serialization", "synchronous",
+    "throughput", "topology", "transactional", "volatile", "volatility",
 ]
+
+SENTENCE_LIMIT = 25      # words in a description
+INSTRUCTION_LIMIT = 20   # words in an instruction
+# Command verbs. A sentence that starts with one is an instruction. The list is the same
+# as in pdlc's check_writing.py.
+COMMANDS = {"run", "use", "write", "read", "set", "add", "check", "give", "keep", "make",
+            "put", "start", "stop", "tell", "take", "list", "commit", "ask", "copy",
+            "create", "delete", "don't", "fix", "follow", "never", "pick", "remove",
+            "replace", "skip", "switch", "wait"}
 
 FENCE = re.compile(r"^(`{3,})[^\n]*\n.*?^\1`*[ \t]*$", re.M | re.S)   # a ```` fence may hold ``` lines
 
@@ -94,6 +105,12 @@ def sentences_of(prose, line_of=None):
     return out
 
 
+def limit_of(words):
+    """The word limit for a sentence: INSTRUCTION_LIMIT if it starts with a command verb."""
+    first = words[0].lower().replace("’", "'")
+    return INSTRUCTION_LIMIT if first in COMMANDS else SENTENCE_LIMIT
+
+
 def syllables(word):
     w = word.lower().strip("'’-")
     if len(w) <= 3:
@@ -127,16 +144,20 @@ def check(text):
     avg = len(words) / len(sents)
     syl = sum(syllables(w) for w in words) / len(words)
     grade = 0.39 * avg + 11.8 * syl - 15.59
-    long = [(line, len(ws), s) for s, ws, line in sents if len(ws) > 25]
+    long = [(line, len(ws), limit_of(ws), s) for s, ws, line in sents if len(ws) > limit_of(ws)]
     stats.update({"avg_words_per_sentence": round(avg, 1), "grade": round(grade, 1),
                   "long_sentences": len(long),
-                  "long": [{"line": line, "words": n, "text": s} for line, n, s in long]})
+                  "long": [{"line": line, "words": n, "limit": limit,
+                            "instruction": limit == INSTRUCTION_LIMIT, "text": s}
+                           for line, n, limit, s in long]})
     if avg > 15:
         warnings.append("average sentence is %.1f words; aim for 15 or fewer" % avg)
     if grade > 7:
         warnings.append("reading grade is %.1f; aim for 7 or lower (shorter sentences, shorter words)" % grade)
-    for line, n, s in long:
-        warnings.append("line %s: long sentence (%d words): %s" % (line, n, s[:140] + ("…" if len(s) > 140 else "")))
+    for line, n, limit, s in long:
+        kind = "instruction" if limit == INSTRUCTION_LIMIT else "sentence"
+        warnings.append("line %s: long %s (%d words; the limit is %d): %s"
+                        % (line, kind, n, limit, s[:140] + ("…" if len(s) > 140 else "")))
 
     terms, has_list = glossary_terms(text)
     used = sorted({j for j in JARGON if re.search(r"\b%s\b" % re.escape(j), prose, re.I)})
@@ -165,7 +186,8 @@ def main(argv=None):
         return
     if stats.get("sentences"):
         print("plain English: %(sentences)d sentences · %(avg_words_per_sentence)s words each on average · "
-              "grade %(grade)s · %(long_sentences)d over 25 words" % stats)
+              "grade %(grade)s · %(long_sentences)d over the limit (20 words for an instruction, "
+              "25 for any other sentence)" % stats)
     for w in warnings:
         print("WARN    " + w)
     print("READS PLAINLY" if not warnings else "REWRITE THE FLAGGED PARTS")

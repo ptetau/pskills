@@ -52,7 +52,7 @@ person. Each container lists the components it holds. Arrows show who calls whom
 
 ### Decisions added by this spec
 
-Each of these was open in the design, so this spec decides it. Check these first.
+The design leaves each of these open, so this spec decides it. Check these first.
 
 - Storage is one Postgres database. If wrong: only the ResourceAccess parts change.
 - A message's key is `eventId:recipientId:channel`, and the app keeps the key for 30
@@ -358,7 +358,7 @@ every part may call them.
 
 ```ts
 // POST /events  body: IncomingEvent  →  202 { accepted: number }
-// errors: application/problem+json with a `code` member; status from the error catalog
+// errors: application/problem+json with a `code` member; status from the error catalogue
 export interface EventsApi {
   receive(event: IncomingEvent): Promise<Result<{ accepted: number }>>;
 }

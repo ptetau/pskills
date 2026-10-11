@@ -47,7 +47,7 @@ One line per technical word this document uses, explained in plain words (see
 | ID | Feature (as the user would say it) | Core use case? |
 |----|--------------------------------------|----------------|
 | F1 | <...> | yes |
-| F2 | <...> | no — variation of F1 |
+| F2 | <...> | no — a variation of F1 (<its name>) |
 
 Core use cases (the few that carry the essence of the system; everything else is a
 variation of them):
@@ -132,8 +132,8 @@ state-machine table, or config>. Why: <reason>.
 | <Render> | Transform | <fills a template for a locale> | Envelope → Envelope | F1, F3, V3 |
 
 State machines (if any). Give each a row above with Kind `State machine`. Draw it under
-its name. Draw only the legal transitions: the system refuses anything not drawn. Mark
-terminal states, if there are any.
+its name. Draw only the legal transitions: the system refuses anything not drawn. If
+there are terminal states, mark them.
 
 ```
 <Machine>:
@@ -147,8 +147,8 @@ Every feature, now and plausible future, written as a composition of existing br
 
 | Feature | Composition | New bricks needed |
 |---------|-------------|-------------------|
-| F1 | `<Input> → <Transform> → <Transport>` | 0 |
-| future: <V1 happens> | `<same, one brick swapped>` | 1 (inside <component>) |
+| F1 (<feature, in a few words>) | `<Input> → <Transform> → <Transport>` | 0 |
+| future: <the change> (V1) | `<same, one brick swapped>` | 1 (inside <component>) |
 
 ## 7. Validation: proof the design holds
 
@@ -163,33 +163,34 @@ UC1 <name>: <who calls>, known by <how>
   <Noun>Manager   → <Noun>Access.<Verb>
 ```
 
-Result: <pass, or which rule broke and how the walls changed>
+Result: <pass, or the rule that breaks and why the design accepts it>
 
 **Change simulation** (each volatility happening; target is one existing component touched):
 
 | Volatility | Components that must change | Result |
 |------------|-----------------------------|--------|
-| V1 | <Component> | pass |
+| V1: <the change> | <Component> | pass |
 
 A new ResourceAccess for a genuinely new resource is not a leak. Nor is a Client change
 for a new human step. Note either one in the Result column.
 
 **Independence check:** <for each brick whose requirement could change a lot, what else
-would change; anything other than "nothing" and how it was fixed>
+would change. If the answer is not "nothing", say why the design accepts it>
 
-**Rule audit:** <call rules, naming, sizing, smells found and how they were fixed>
+**Rule audit:** <call rules, naming, sizing, and smells: what each check finds, and why
+the design accepts any smell that remains>
 
-**Trace audit:** <any component without a V-id, any brick without an F-id or V-id, and
-what happened to it>
+**Trace audit:** <pass: every component has a V-id, and every brick an F-id or V-id.
+Anything that has neither is on the cut list>
 
 **Measured coupling (subsystem mode):** <component pairs from volatility.py above 30%
 that a wall now separates, and why the design removes that coupling>
 
-**Cut list:** <walls or bricks considered and removed because nothing traced to them>
+**Cut list:** <walls or bricks the design leaves out, because nothing traces to them>
 
-**Revisions during validation:** <each failed check, the change made, and the re-run
-result, e.g. "V3 touched RenderingEngine and PracticeApp; moved template choice into
-RenderingEngine; re-run passes"> <!-- writing: ok -->
+**Choices the checks depend on:** <each design choice that a check needs in order to pass,
+with that check. For example: "RenderingEngine chooses the template, so V3 (message
+content) changes one component (change simulation).">
 
 ## 8. Seams and migration: how it joins the existing system (subsystem mode)
 

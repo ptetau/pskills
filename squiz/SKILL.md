@@ -61,7 +61,7 @@ The `squiz` binary comes from `go install` of `<this-skill>/go-renderer`. It rea
 
 The doc has a sticky **`copy json`** button at the bottom. Tell the user:
 
-> "Click `copy json` at the bottom, paste it back here, and I'll continue."
+> "Click `copy json` at the bottom. Then paste it back here, and I'll continue."
 
 When the user pastes it, parse it (see "Export JSON shape" below). The payload includes `source.file` (absolute path to the rendered HTML) and per-decision `anchor` (`#squiz-<id>`). If needed, use these to navigate back to context. Restate your updated understanding in plain prose. Ask about any *new* gaps as plain chat follow-ups (do NOT render a second squiz). Then start the work.
 
@@ -193,7 +193,7 @@ Optional toggles: `data-scanlines="on"` for CRT character (best with `phosphor`/
       "choice": {
         "id":      "jumpin",
         "name":    "Name one habit, go",
-        "summary": "Single text field. No setup. Customize later."
+        "summary": "Single text field. No setup. Customise later."
       },
       "notes": "Use a placeholder hint that rotates each launch."
     }
