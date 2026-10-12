@@ -393,4 +393,19 @@ Fixes (Opus):
           merge check checks for one "(assumed)" form. Templates are tighter, with a new
           proposal template.
         107 unit tests pass (10 need the GIF tools). Not yet tried in a build.
+
+[2026-10-12] Confirmation round (harness at 6957acd): pocket-cli and polls-api
+- Result: nothing merged in either app. Probes on main: pocket-cli 0 of 14,
+  polls-api 4 of 20. The final round had pocket-cli at 83% and polls-api at 56%.
+- Why each ship stopped: the first change of the first intent used up its rounds.
+  - The tests review now names a wrong version for each check. Each review round found
+    new gaps, so the tests stage failed three times in both apps.
+  - The merge check rejects any assumption marker other than plain "(assumed)". Haiku
+    wrote "(assumed limit)" and "(assumed: reason)".
+  - The merge-a-request-whole rule held the first change, because the other changes of
+    the intent had no branch yet. That is the rule working as designed.
+- Other signs: the first intent split into four changes (pocket-cli) and five changes
+  (polls-api). One plan put a change before the change it depends on. Review follow-ups
+  became intents that wait for approval (four in pocket-cli), as designed.
+- Not reviewed by Sonnet: main held no new work in either app.
 ```
