@@ -1,3 +1,13 @@
+---
+name: argue
+description: >
+  Finds logical contradictions in a text: a spec, plan, essay or argument. Breaks the
+  text into numbered claims, encodes them in propositional logic, and runs the Z3 solver
+  to prove hard contradictions. Then flags tensions and ambiguities, and shows which
+  statements conflict and why. Use when the user says "/argue", "check this for
+  contradictions" or "does this contradict itself". Also use when the user asks whether a
+  spec or plan is consistent.
+---
 # Argue: Logical Contradiction Detector
 
 `/argue <text>` triggers this skill. The text to analyse is in the ARGUMENTS block.
