@@ -168,8 +168,8 @@ Write N prompts (default 10), P01, P02, …. Each prompt is what a user types af
 - **Suitable.** Each prompt is in the scope of the skill. This is not a trigger test.
 - **Varied.** Spread the prompts across axes, and record the `axis` of each prompt. The
   axes are typical, minimal or terse, rich or long input, ambiguous, unusual domain, and
-  edge-but-valid. An edge-but-valid prompt is at the limits of the skill, for example a
-  request that needs exactly one question, or a request near a stated cap.
+  edge-but-valid. An edge-but-valid prompt is at the limits of the skill. Examples are a
+  request that needs exactly one question, and a request near a stated cap.
 - **Self-contained.** Put any text that the skill needs in the prompt. Run worktrees can
   start from the default branch of the repo, not from your current checkout. Thus,
   refer only to files that are committed on that branch. Do not use a network,
@@ -224,7 +224,7 @@ setting comes from `evals/agents.json`, or is `session`.
 
 Put the answers into the agent roles for this run. Offer one time to save the answers to
 `evals/agents.json` as the default of the repo. Record the meaning of `session` in the
-results: when you know the model name of the session, set `config.sessionModel` to that
+results as follows. When you know the model name of the session, set `config.sessionModel` to that
 name. Scores from runs with different models are not comparable.
 
 ## Phase 4: Run and judge
@@ -239,7 +239,7 @@ name. Scores from runs with different models are not comparable.
    4. Apply the answers from Phase 3b.
 
    Check the result against `references/agents.schema.json`. On a re-run that skips the
-   review gate, say these items in one line before the runs start: the preset, the
+   review gate, write one line before the runs start. In the line, give the preset, the
    models, the overrides in effect, and the agent estimate.
 3. **Make the run folder.** `runId` is `date -u +%Y%m%dT%H%M%SZ`. Create
    `evals/<skill>/runs/<runId>/outputs/`. Record the output of `git worktree list`, so
@@ -299,17 +299,19 @@ occur:
   The script keeps the groups. If a judge does not place a run, the script offers the
   run again in the next wave.
 - **Settle.** After all the prompts finish the wave, the script records the running
-  quality, stability, and overall grade. The script also logs one line, for example
-  `wave 3/5 (6 of 10 runs per prompt): quality 86.1 · stability 71.0 · overall 78.2 (C) ·
-  moved +0.8 · settled`. See "Settling".
+  quality, stability, and overall grade. The script also logs one line, for example:
+
+  `wave 3/5 (6 of 10 runs per prompt): quality 86.1 · stability 71.0 · overall 78.2 (C) · moved +0.8 · settled`
+
+  See "Settling".
 
 After the last wave, these steps occur:
 
 - **Cross.** For structure items, a cross-prompt judge compares the first two usable
   runs of each prompt. The judge ignores the content and compares only the shape.
-- **Tally.** The script itself counts the groups of each item, for example `7 / 3 of
-  10`. The script flags each judgement whose groups do not place each run exactly one
-  time.
+- **Tally.** The script itself counts the groups of each item, for example
+  `7 / 3 of 10`. The script flags each judgement whose groups do not place each run
+  exactly one time.
 - **Score (step 5).** The script calculates the scores with plain arithmetic. No judge
   takes part. See "Scoring".
 
@@ -453,7 +455,7 @@ cross-prompt check.
   cross-prompt check counts as one more scope for structure items.
 - **Overall** = √(quality × stability). Grades: A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, F below.
 - **Confidence** is `low` when fewer than 80% of runs are usable.
-- **Tallies** do not change the score. Each judgement also carries the group sizes that
+- **Tallies** are not part of the score. Each judgement also carries the group sizes that
   the script counted (`7 / 3 of 10`), and `agreement`, the share of runs in the largest
   group. The report shows these values next to the class, so that you can see how a
   drift splits.

@@ -66,7 +66,7 @@ If the user gives no path, find the plan automatically. Glob `plans/*.plan.md` a
 project root. The glob is not recursive, so the glob excludes `plans/completed/`.
 
 - If exactly one file matches, use that file.
-- If several files match, list the files. Then ask the user which file to use.
+- If more than one file matches, list the files. Then ask the user which file to use.
 - If no file matches, tell the user to run `/quiz-plan` first. Then stop.
 
 ---
@@ -125,7 +125,7 @@ Recommend on evidence, as /quiz does:
 
 - Recommend A when you are on the default branch of the repository, or when the plan has
   more than one step.
-- Recommend B when the current branch already has a name for this plan.
+- Recommend B when the name of the current branch already refers to this plan.
 - In all other conditions, do not recommend an option.
 
 In the picker, put `(Recommended)` at the end of the label of the recommended option. In
@@ -135,7 +135,7 @@ options A and B as a bulleted list, then `Reply A or B, or type a branch name.`
 Apply the answer:
 
 - **A, or a typed branch name:** Run `git checkout -b <name>` from the current base. For
-  A, use `<branch>` as the name. Before you switch, record the base branch
+  A, use `<branch>` as the name. Before you change the branch, record the base branch
   (`git rev-parse --abbrev-ref HEAD`). The finish step (ON COMPLETION) needs the base
   branch. If the plan header already names a branch, use that name as `<branch>`.
 - **B:** Stay on the current branch.
@@ -143,11 +143,10 @@ Apply the answer:
   two options to do.
 
 By default, each step runs in place, inline, in the main thread. The exception is
-automatic. A run of not-done steps that
-share a `Parallel group` tag goes to concurrent agents, each agent in its own worktree.
-See "PARALLEL GROUP DISPATCH" below. Parallel groups are a property of the plan
-(`/quiz-plan` sets them), not a runtime toggle. Thus, the setup question does not include
-parallel groups.
+automatic. A run of not-done steps that share a `Parallel group` tag goes to concurrent
+agents, each agent in its own worktree. See "PARALLEL GROUP DISPATCH" below. Parallel
+groups are a property of the plan (`/quiz-plan` sets them), not a runtime toggle. Thus,
+the setup question does not include parallel groups.
 
 Tell the user the selected option in one line. Set the plan header **Status** to
 `In progress` (from `Draft` or `Agreed`). Then start at the first unfinished step.
@@ -183,19 +182,19 @@ asserts. If you cannot, do not continue.
   cause of the failure must be correct: an assertion or a missing symbol. A syntax error
   or an incorrect command is not a correct cause.
 - If the test passes immediately, the test is incorrect, or the behaviour already exists.
-  Stop and assess the problem again. Do not write implementation until then.
+  Stop and examine the problem again. Do not write implementation until then.
 
 **Gate:** The test runs and fails for the expected cause. Quote the failure. Do not write
 implementation until this condition is true.
 
 ### Stage 3 — Green (make the test pass)
 
-- Write the **minimum** implementation that makes the failing test pass. Do not add extra
-  features or polish. `Out of scope here` stays out.
+- Write the **minimum** implementation that makes the failing test pass. Do not add
+  features or polish that the test does not need. `Out of scope here` stays out.
 - Run the test command. The new test **and all the tests that passed before** must be
   green.
-- If an unexpected earlier test fails, that failure is the Boundaries trigger "a test you
-  didn't expect fails". Stop and ask.
+- If a test that existed before fails unexpectedly, that failure is the Boundaries
+  trigger "a test you didn't expect fails". Stop and ask.
 
 **Gate:** The full test command is green. Do not refactor until this condition is true.
 
@@ -222,8 +221,8 @@ refactor changes only code that is in scope for this step.
 - If a criterion is not met, go back to the applicable earlier stage. Do not commit a step
   that fails its own review.
 
-**Gate:** You proved that each `Done when` clause is true. The blast radius is inside
-"May modify".
+**Gate:** You proved that each `Done when` clause is true. All the changed files (the
+blast radius) are inside "May modify".
 
 ### Stage 6 — Commit
 
@@ -265,7 +264,7 @@ state.
   the user. Give the step name, the commit SHA, and the criteria that the step meets.
   Then **stop, and wait for review** before you start the next step. GATED means that a
   person looks at the work before the plan continues. That pause is the purpose of the
-  gate. Do not skip the pause as overhead.
+  gate, not overhead. Do not skip the pause.
 - If the gate of the step is **AUTO**, report a status of one line. Then continue to the
   next step immediately, with no pause.
 - The Boundaries "Stop and ask" triggers stop the execution for each gate type, as
@@ -276,8 +275,8 @@ state.
 
 ## PARALLEL GROUP DISPATCH (when the plan declares one)
 
-Before you run the next not-done step through the loop above, examine the `Parallel
-group` field of the step:
+Before you run the next not-done step through the loop above, examine the
+`Parallel group` field of the step:
 
 - If the value is `none`, run the step exactly as the loop above tells you. This section
   does not apply.
@@ -285,8 +284,8 @@ group` field of the step:
   use the single-step loop for these steps. Run this section for all the steps of the
   group at the same time.
 
-**PG-1: Find the group.** Take the contiguous run of not-done steps that share the same
-`Parallel group` id. Start at the resume point. Each step in the run is AUTO, because
+**PG-1: Find the group.** The group is the contiguous run of not-done steps that share
+the same `Parallel group` id, from the resume point. Each step in the run is AUTO, because
 GATED steps do not carry a group id (see [[quiz-plan]]). Thus, no pause for review occurs
 inside a group.
 
@@ -305,11 +304,11 @@ tool is available in this session, use the Workflow tool:
 - Stop each agent before Stage 6: no commit, and no edit to the plan file. PG-4 (merge in
   step order) gives the reason.
 
-A Workflow script has no access of its own to the filesystem or to git. The only job of
-the script is to start the subagents for the steps and to collect their receipts. Workflow
-makes the worktrees. Your main thread does the other git work through Bash after the group
-returns. The main thread reads the diffs and merges the diffs back. The workflow script
-does not do this git work.
+A Workflow script has no access of its own to the filesystem or to git. The script only
+starts the subagents for the steps and collects their receipts. Workflow makes the
+worktrees. Your main thread does the other git work through Bash after the group returns.
+The main thread reads the diffs and merges the diffs back. The workflow script does not
+do this git work.
 
 If the Workflow tool is not available in this session, use manual dispatch instead:
 
@@ -341,11 +340,11 @@ subagent. For each step, in ascending step number:
 - Commit with the same Conventional Commits format as Stage 6 of a single step.
 - Remove the worktree, and delete its branch.
 - **If the diff of a step conflicts with an earlier step in this merge**, the `Touches`
-  sets were not really disjoint. Do the Stage 1-5 loop of that one step again,
-  sequentially, on the current plan branch. Do this retry exactly one time, silently. Log
-  the retry in the "Surprises" line of the Progress log entry of that step, but do not
-  stop to ask. If the retry fails or conflicts again, that is the Boundaries trigger "two
-  failed attempts". Stop and ask.
+  sets were not disjoint. Do the Stage 1-5 loop of that one step again, sequentially, on
+  the current plan branch. Do this retry exactly one time, silently. Log the retry in the
+  "Surprises" line of the Progress log entry of that step, but do not stop to ask. If the
+  retry fails or conflicts again, that is the Boundaries trigger "two failed attempts".
+  Stop and ask.
 
 **PG-5: Report and continue.** Report one status line for each step in the group. Then
 continue to the next step or group, with no pause, because each grouped step is AUTO.
@@ -390,7 +389,7 @@ gh pr create --fill   # title from plan Intent; body = Intent + step summary + p
 If `gh` is missing, push the branch only. Then give the user the compare URL.
 
 Do not merge or push until the user explicitly selects an option. At the end, report the
-final commit or the PR URL.
+last commit or the PR URL.
 
 ---
 
@@ -403,8 +402,9 @@ final commit or the PR URL.
    same commit.
 3. **The plan is law.** Intent and Boundaries have priority over your judgement. If there
    is a conflict, stop and ask. Do not resolve the conflict yourself.
-4. **Two failed attempts mean that the plan is wrong**, not that you must try harder. Stop
-   and tell the user about the problem (from the Boundaries rule of the plan).
+4. **Two failed attempts mean that the plan is incorrect**, not that you must try
+   harder. Stop and tell the user about the problem (from the Boundaries rule of the
+   plan).
 5. **Examine, do not assume.** Before you write calls, read the real API and source
    definitions, and the conventions that the plan cites. Run commands to confirm each
    gate. Do not mark a gate as passed from memory.
@@ -412,7 +412,7 @@ final commit or the PR URL.
    GATED step. AUTO steps report a status of one line and continue with no pause. (On
    2026-07-07, an edit removed the GATED pause, and a correction on the same day put the
    pause back. The GATED pause is the intended behaviour.)
-7. **Parallel groups still land one commit for each step, composed by the main thread.**
+7. **Parallel groups still make one commit for each step, composed by the main thread.**
    Concurrent dispatch changes *who* runs Stages 1-5 (a new agent in its own worktree for
    each step) and *when* the stages run (at the same time). Concurrent dispatch does not
    change the commit discipline. A grouped subagent does not edit the plan file. Only the

@@ -19,7 +19,7 @@ description: >
 
 ## Purpose
 
-Squiz has the same intent as [[clarify-with-docs]]. Squiz gets all the clarifying
+Squiz has the same intent as [[clarify-with-docs]]. Squiz collects all the clarifying
 questions at the start. Then Squiz shows the questions in one rich, interactive document,
 which the user fills in at their own pace.
 
@@ -51,7 +51,7 @@ user, each question, and each file that this skill writes.
 - **`/clarify-with-docs`**: the same document pattern, but without a style. Use
   `/clarify-with-docs` when you do not want the retro style.
 - **`/squiz`** (this skill): use `/squiz` when the visual identity is important, or when
-  mini-wireframe previews help the user compare the options. Also use `/squiz` when the
+  mini-wireframe previews help to show the options. Also use `/squiz` when the
   user explicitly asks for "squiz".
 
 ## The flow (3 phases, 1 binary)
@@ -77,15 +77,15 @@ user, each question, and each file that this skill writes.
    ```
 
 No other step is necessary. You install the `squiz` binary with `go install` of
-`<this-skill>/go-renderer`. The binary reads the JSON, and selects a theme for the repo
+`<this-skill>/go-renderer`. The binary reads the JSON and selects a theme for the repo
 (automatic, in sequence, and saved). Then the binary writes `<name>.html` next to the
 JSON. If you do not add a flag, the binary does **not** open the HTML automatically.
 
 **When you tell the user the path, always give a clickable `file://` URL.** In most
 terminals, a bare Windows path such as `C:\Users\…\foo.html` is not clickable. The URL
 `file:///C:/Users/.../foo.html` is clickable. The POSIX form is `file:///home/u/foo.html`.
-Use `--open` only if the user asked for an automatic browser launch. Also then, print the
-URL.
+Use `--open` only if the user asked for an automatic browser launch. Even then, also print
+the URL.
 
 **Default file location:** Write `squiz.json`, or a named variant such as
 `squiz-onboarding.json`, **next to the work that the squiz is about**. This location is
@@ -362,9 +362,9 @@ The agent does no more work for accessibility.
    accent, one label of ≤6 characters, and one relationship line. If there are more, the
    eye cannot read the picture.
 
-   Use one accent colour, in one position only. If two items have the accent, the two items
-   do not show as accented. Keep about 30-40% of the viewBox empty. Put the parts off-centre,
-   because a centred drawing looks decorative and an off-centre drawing looks
+   Use one accent colour, in one position only. If two items have the accent, the two
+   items do not show as accented. Keep about 30-40% of the viewBox empty. Put the parts
+   off-centre, because a centred drawing looks decorative and an off-centre drawing looks
    informative.
 
    **Authoring checklist.** Do these checks before you decide on each art form:
@@ -391,7 +391,8 @@ The agent does no more work for accessibility.
      grid.
 
    If you want to use one library token, complete this sentence: "the picture I want to
-   draw IS this exact icon, alone, with no label." If you cannot say that sentence, compose.
+   draw IS this exact icon, alone, with no label." If you cannot say that sentence,
+   compose.
 
    **Anti-patterns (do not do these):**
    - Two options in a chooser have the same `art`. If sibling options have the same icon,
@@ -420,8 +421,8 @@ The agent does no more work for accessibility.
 
     You must justify the pick in one sentence, for example "The $5-VPS constraint (OVR-3)
     excludes k8s, so the choice is systemd or Docker, and systemd has one fewer moving
-    part". If you cannot, do not add the recommendation. Give a maximum of one
-    recommendation for each squiz/item.
+    part". If you cannot justify the pick in one sentence, do not add the recommendation.
+    Give a maximum of one recommendation for each squiz/item.
 
 ## Files in this skill
 
