@@ -224,6 +224,9 @@ cache) or B3 (remove the cache)?"
 
 ### Skills, agent definitions, and prompts
 
+- If a skill gives an exact output format, the format has priority over these
+  guidelines. For example, a skill can tell an agent to write one sentence for each
+  option. Then the agent writes one sentence, also when the sentence has two topics.
 - Write each step in the imperative. Write one instruction in each sentence.
 - Put the condition first: "If the suite exists, load the suite."
 - Give numbers to the steps of a procedure.

@@ -13,7 +13,8 @@ or in quotes (STE rules 8.5 and 8.6).
 Each finding has a rule tag:
   length        an instruction has more than 20 words (5.1), or a descriptive sentence
                 has more than 25 words (6.3)
-  paragraph     a paragraph has more than six sentences (6.6)
+  paragraph     a paragraph has more than six sentences (6.6). The description in the
+                frontmatter of a skill is metadata, so this rule does not apply to it
   semicolon     a semicolon in prose (8.1)
   contraction   "don't", "it's", and other contractions (4.2)
   latin         "e.g.", "i.e.", "etc.", and other Latin abbreviations (GR-6)
@@ -210,7 +211,7 @@ def prose_map(text):
             emit("", lineno)
         s = re.sub(r"^[-*+]\s+(\[[ xX]\]\s+)?|^\d+\.\s+|^[A-Za-z]\.\s+", "", s)
         # a bold label at the start ("**Verify:**") is a label, one word (STE 8.6): keep only a marker
-        s = re.sub(r"^(\*\*|__)[^*_\n]{1,40}?:?\1:?\s+(?=\S)", "LABEL: ", s)
+        s = re.sub(r"^(\*\*|__)[^*_\n]{1,40}?(?::\1|\1:)\s+(?=\S)", "LABEL: ", s)
         s = re.sub(r"<[^>]+>", "", s)
         s = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", s)
         s = re.sub(r"(\*\*|__)(.+?)\1", r"\2", s)
@@ -365,8 +366,10 @@ def check(text, dictionary=None, max_grade=9.0):
     body, desc, desc_line = frontmatter_description(text)
     prose, line_of = prose_map(body)
     paras = paragraphs_of(prose, line_of)
+    desc_para = None
     if desc:
-        paras.insert(0, [(s, desc_line) for s in re.split(r"(?<=[.!?])\s+(?=[A-Z\"'(])", desc)])
+        desc_para = [(s, desc_line) for s in re.split(r"(?<=[.!?])\s+(?=[A-Z\"'(])", desc)]
+        paras.insert(0, desc_para)
     findings = []
 
     def add(rule, line, msg, sent=""):
@@ -376,7 +379,7 @@ def check(text, dictionary=None, max_grade=9.0):
     sents_all = []
     for para in paras:
         counted = [(s, l) for s, l in para if len(words_of(for_count(s))) >= 3]
-        if len(counted) > 6:
+        if len(counted) > 6 and para is not desc_para:   # a skill description is metadata, not a paragraph
             add("paragraph", para[0][1], "%d sentences in one paragraph; write six or fewer (6.6)" % len(counted),
                 para[0][0])
         for i, (sent, line) in enumerate(para):
