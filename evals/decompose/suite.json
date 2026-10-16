@@ -2,29 +2,29 @@
   "skill": "decompose",
   "skillPath": "decompose/SKILL.md",
   "skillSha256": "778d1feb19a313f0e1277949a38f2ab99eb7fd97f131ae4e31995ea1c0d523e8",
-  "createdAt": "2026-10-16T20:47:40Z",
+  "createdAt": "2026-10-16T20:48:24Z",
   "structure": {
     "summary": "Mostly one reply. First, the skill can ask a few questions that change the design, one in each message as quiz cards. Or the skill states its assumptions and goes on. Then the skill writes one file, `<name>.design.md`, at the project root. The reply ends with a DECOMPOSE summary in a code block and an offer of next steps.",
     "elements": [
       {
         "id": "S1",
-        "description": "The design file `<name>.design.md` at the project root, or where the user asks. The file starts with a header (Mode, Status, Date, Scope). Then the file has ten numbered sections in the order of the template. Sections 1 to 5 are Frame, Features and use cases, Volatility register, Walls, and Bricks. Sections 6 to 10 are Feature assembly, Validation, Seams and migration, Risks and open questions, and Next steps. A section with nothing to give keeps its number and one line, for example \"Not applicable: inception\". In subsystem mode, section 8 gives the attach point, the translation at the seam, and the migration steps."
+        "description": "The design file `<name>.design.md` is at the project root, or where the user asks, and starts with a header (Mode, Status, Date, Scope). Then the file has ten numbered sections in the order of the template. Sections 1 to 5 are Frame, Features and use cases, Volatility register, Walls, and Bricks. Sections 6 to 10 are Feature assembly, Validation, Seams and migration, Risks and open questions, and Next steps. A section with nothing to give keeps its number and one line, for example \"Not applicable: inception\". In subsystem mode, section 8 gives the attach point, the translation at the seam, and the migration steps."
       },
       {
         "id": "S2",
-        "description": "Sections 1 and 2. Section 1 gives the problem, the users, the nature of the business, the constraints, and the assumptions. Each assumption has \"If wrong: ...\". Section 1 also gives a Mermaid `C4Context` system context diagram with a title and a `Key:` line. Section 1 ends with a \"Words used here\" list. Section 2 gives a feature table with the IDs F1, F2, ... and a core-use-case column. Then section 2 gives the core use cases UC1, UC2, ... (usually two or three, not more than six)."
+        "description": "Section 1 gives the problem, the users, the nature of the business, the constraints, and the assumptions. Each assumption has \"If wrong: ...\". Section 1 also gives a Mermaid `C4Context` system context diagram with a title and a `Key:` line. Section 1 ends with a \"Words used here\" list. Section 2 gives a feature table with an F-number for each feature and a core-use-case column. Then section 2 gives the core use cases, each with a UC-number (usually two or three, not more than six)."
       },
       {
         "id": "S3",
-        "description": "Section 3 gives a volatility register table with the IDs V1, V2, and so on. The columns are what changes, axis, evidence, likelihood, and contained by. Then a second table gives the rejected candidates. Each rejected candidate has a reason: variable, nature of the business, or speculative."
+        "description": "Section 3 gives a volatility register table with a V-number for each volatility. The columns are what changes, axis, evidence, likelihood, and contained by. Then a second table gives the rejected candidates. Each rejected candidate has a reason: variable, nature of the business, or speculative."
       },
       {
         "id": "S4",
-        "description": "Sections 4 and 5. Section 4 gives a components table with the columns component, type, encapsulates, API (business verbs), and `May call`. A design with more than three parts that is not a small system also gets a C4-style component flowchart. The flowchart has one band for each layer, a title, and a `Key:` line. Section 5 gives each shared contract with its fields and invariants, and the composition medium with a reason. Then section 5 gives one brick table for each component (brick, kind, one job, in and out, serves). Each state machine shows its legal transitions and its terminal states."
+        "description": "Section 4 gives a components table with the columns component, type, encapsulates, API (business verbs), and `May call`. A design with more than three parts that is not a small system also gets a C4-style component flowchart. The flowchart has one band for each layer, a title, and a `Key:` line. Section 5 gives each shared contract with its fields and invariants, and the composition medium with a reason. Then section 5 gives one brick table for each component (brick, kind, one job, in and out, serves). Each state machine shows its legal transitions and its terminal states."
       },
       {
         "id": "S5",
-        "description": "Sections 6 and 7. Section 6 is a feature-assembly table that writes each current feature as a composition of bricks. Then section 6 gives two or three plausible future features, each with the number of new bricks and their place. Section 7 gives one call chain for each core use case, with one `Caller → Callee.Verb` on each line. Each chain starts with who calls and how the system knows them. Then section 7 gives a change-simulation table with each volatility at least one time. Then section 7 gives the independence check, rule audit, trace audit, cut list, and revisions. A small system has one Manager, not more than one Engine, and not more than one ResourceAccess. For a small system, section 7 is one table with one row for each check, and \"n/a\" where a check has nothing to test. In subsystem mode, section 7 also gives the measured coupling."
+        "description": "Section 6 is a feature-assembly table that writes each current feature as a composition of bricks. Then section 6 gives two or three plausible future features, each with the number of new bricks and their place. Section 7 gives a call chain for each core use case, one `Caller → Callee.Verb` on each line, from the caller and how the system knows them. Then section 7 gives a change-simulation row for each volatility, the independence check, rule audit, trace audit, cut list, and revisions. For a small system (one Manager, at most one Engine, at most one ResourceAccess), section 7 is one table with one row for each check, and \"n/a\" where a check has nothing to test. In subsystem mode, section 7 also gives the measured coupling."
       },
       {
         "id": "S6",
