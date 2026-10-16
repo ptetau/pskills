@@ -30,6 +30,7 @@ Each finding has a rule tag:
                 or "This", or the words "the former" or "the latter" (local references)
   id            an ID such as "B2" or "#6" with no description in the same sentence
                 (described IDs)
+  spelling      an American spelling; the guidelines use New Zealand English (1.14)
   glossary      a technical word that the "Words used here" list does not give
   grade         the reading grade is more than --max-grade (Flesch-Kincaid)
 
@@ -120,6 +121,23 @@ template templates checker linter suite suites rubric rubrics eval evals workflo
 workflows worktree worktrees frontmatter repo repository repositories markdown
 """.split())
 
+# American spellings and their New Zealand English form (STE 1.14, as the guidelines set it).
+NZ_SPELLING = {
+    "behavior": "behaviour", "behaviors": "behaviours", "behavioral": "behavioural",
+    "color": "colour", "colors": "colours", "colored": "coloured", "favor": "favour",
+    "favorite": "favourite", "honor": "honour", "labor": "labour", "neighbor": "neighbour",
+    "center": "centre", "centered": "centred", "catalog": "catalogue", "catalogs": "catalogues",
+    "dialog": "dialogue", "defense": "defence", "offense": "offence", "gray": "grey",
+    "judgment": "judgement", "judgments": "judgements", "fulfill": "fulfil", "enroll": "enrol",
+    "canceled": "cancelled", "canceling": "cancelling", "labeled": "labelled",
+    "labeling": "labelling", "modeled": "modelled", "modeling": "modelling",
+    "traveled": "travelled", "signaled": "signalled", "totaled": "totalled",
+    "analyze": "analyse", "analyzed": "analysed", "analyzes": "analyses", "analyzing": "analysing",
+    "license": "licence (noun) or license (verb)", "practice": "practice (noun) or practise (verb)",
+}
+IZE_EXCEPT = {"size", "sizes", "sized", "seize", "seized", "prize", "prizes", "capsize", "resize",
+              "resized", "resizes", "downsize", "oversize", "oversized", "baize", "maize"}
+IZE = re.compile(r"\b([a-z]{3,}?)(iz)(e|es|ed|ing|ation|ations|er|ers)\b", re.I)
 LATIN = re.compile(r"\b(e\.\s?g\.|i\.\s?e\.|etc\.|cf\.|viz\.|et al\.|vs\.|n\.\s?b\.)", re.I)
 CONTRACTION = re.compile(r"\b(\w+n['’]t|\w+['’](?:re|ve|ll|d|m)|(?:it|that|there|what|here|let|who|where|he|she)['’]s)\b", re.I)
 ING_ADJECTIVES = set("""missing existing remaining pending following outstanding interesting misleading
@@ -387,6 +405,15 @@ def check(text, dictionary=None, max_grade=9.0):
                     if rx in (PROGRESSIVE, GERUND_CLAUSE) and m.group(2).lower() in ING_ADJECTIVES:
                         continue
                     add("tense", line, "'%s': %s" % (m.group(0), why), raw)
+            for w in words_of(nocode):
+                lw = w.lower()
+                if lw in NZ_SPELLING and lw not in ("license", "practice"):
+                    add("spelling", line, "'%s'; write '%s' (1.14, New Zealand English)" % (w, NZ_SPELLING[lw]), raw)
+                elif lw not in IZE_EXCEPT:
+                    z = IZE.fullmatch(lw)
+                    if z:
+                        add("spelling", line, "'%s'; write '%s' (1.14, New Zealand English)"
+                            % (w, z.group(1) + "is" + z.group(3)), raw)
             for m in PASSIVE_BY.finditer(nocode):
                 add("passive", line, "'%s': passive with a known agent; make the agent the subject (3.6)" % m.group(0), raw)
             for m in PASSIVE_MODAL.finditer(nocode):

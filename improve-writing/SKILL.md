@@ -4,7 +4,7 @@ description: >
   Rewrites a text so that it obeys the writing guidelines: ASD-STE100 Simplified Technical
   English, the local-references rule, and the described-IDs rule. Works on skills, agent
   prompts, specs, plans, reports, and web pages, and keeps the meaning, the code, and
-  quoted text. For a skill, records each behavior and makes sure that the rewrite keeps it.
+  quoted text. For a skill, records each behaviour and makes sure that the rewrite keeps it.
   Then runs /vet on the two versions to find a loss of effectiveness. Use
   when the user says "/improve-writing" or asks to "improve the writing", "rewrite this in
   STE", or "apply the writing guidelines". Also use to "make this plain English", or to
@@ -23,8 +23,8 @@ This skill writes a text again so that the text obeys the writing guidelines in
 - The described-IDs rule: each ID has a short description in the same sentence.
 
 A rewrite must not change what the text does. For a document, the facts must stay the
-same. For a skill or a prompt, the behavior must stay the same. Thus, this skill records
-the behaviors before the rewrite and examines them after the rewrite. For a skill, the
+same. For a skill or a prompt, the behaviour must stay the same. Thus, this skill records
+the behaviours before the rewrite and examines them after the rewrite. For a skill, the
 skill also runs `/vet` on the two versions and compares the scores.
 
 ## Usage
@@ -66,7 +66,7 @@ These items change:
 1. Find each file. For a skill folder, use `SKILL.md` and each Markdown file in the
    folder. Do not change scripts. Code comments are outside the scope of this skill.
 2. Put each file in one of two groups:
-   - Behavior text: a skill, an agent definition, a system prompt, or a template that
+   - Behaviour text: a skill, an agent definition, a system prompt, or a template that
      gives instructions to an agent.
    - Documents: all other text.
 3. Find the STE dictionary. Use `--dictionary`, or the `STE100_DICTIONARY` environment
@@ -75,7 +75,7 @@ These items change:
    words against the STE dictionary.
 4. Make sure that the files are committed. The committed version is the baseline.
 
-## Phase 1: Record the baseline (behavior text only)
+## Phase 1: Record the baseline (behaviour text only)
 
 1. **Copy the baseline.** Copy the skill folder at the last commit to a temporary folder.
    Keep the name of the folder:
@@ -84,8 +84,8 @@ These items change:
    mkdir -p "$TMP/baseline" && git archive HEAD <skill> | tar -x -C "$TMP/baseline"
    ```
 
-2. **Write the behavior inventory.** Read the full skill, and each file that the skill
-   refers to. Then write a list of each item that controls the behavior:
+2. **Write the behaviour inventory.** Read the full skill, and each file that the skill
+   refers to. Then write a list of each item that controls the behaviour:
    - When to use the skill, and the trigger phrases.
    - Each argument and its default.
    - Each step, in its order.
@@ -112,7 +112,7 @@ These items change:
    rules for instructions (STE section 5) or for descriptive text (STE section 6).
 3. Write the section again with the guidelines. The section "What changes and what
    stays" gives the primary changes.
-4. Do not add a behavior, and do not remove a behavior. Do not add new rules or new
+4. Do not add a behaviour, and do not remove a behaviour. Do not add new rules or new
    examples.
 5. If a sentence has two possible meanings, do not select one. Ask the user which meaning
    is correct, and record the question in the report.
@@ -124,7 +124,7 @@ These items change:
 1. **Lint.** Run the linter on each file. Correct each finding. If a finding is incorrect,
    record the reason, for example "a technical noun of the subject". Run the linter again.
    Stop when the linter shows only findings with a recorded reason.
-2. **Behavior inventory.** For each item in `inventory.md`, find the text in the rewrite
+2. **Behaviour inventory.** For each item in `inventory.md`, find the text in the rewrite
    that keeps the item. Mark each item "kept", "changed", or "lost". Correct each changed
    or lost item. For a skill, give this check to a different agent if you can. An agent
    that did not write the rewrite finds more losses.
@@ -171,7 +171,7 @@ compare the two results.
    `/vet` on the rewrite again.
 
 `/vet` cannot run a skill that starts its own Workflow, for example `/probe` and `/vet`.
-For such a skill, the behavior inventory is the only check. Write this limit in the
+For such a skill, the behaviour inventory is the only check. Write this limit in the
 report.
 
 ## Phase 5: Report
@@ -212,8 +212,8 @@ Do not commit. The user examines the change first.
 /improve-writing quiz
 ```
 
-The skill copies `quiz` at the last commit, and records 34 behaviors in `inventory.md`.
+The skill copies `quiz` at the last commit, and records 34 behaviours in `inventory.md`.
 Then the skill writes `quiz/SKILL.md` again. The linter shows 46 findings before the
-rewrite and 0 after the rewrite. The inventory check shows that each of the 34 behaviors
+rewrite and 0 after the rewrite. The inventory check shows that each of the 34 behaviours
 is kept. `/vet` runs on the two versions with the saved suite: the baseline overall score
 is 82.1, and the rewrite overall score is 83.0. The compare script shows "NO REGRESSION".

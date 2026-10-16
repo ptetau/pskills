@@ -25,7 +25,7 @@ These items are not prose. Do not change them to obey the rules:
 - Error codes, field names, and values.
 - Quoted text. For example, the words of a user, or the trigger phrases in the description
   of a skill.
-- The names of products, organizations, and published works.
+- The names of products, organisations, and published works.
 
 ## Part 1: STE rules
 
@@ -50,7 +50,10 @@ Part 4 tells you how to get the dictionary and how to use it.
 - **1.12, 1.13** Technical verbs are the actions in your subject. In software, "commit",
   "merge", "deploy", "parse", and "click" are technical verbs. Do not use a technical verb
   as a noun. Write "merge the branch", not "do a merge of the branch".
-- **1.14** Use American English spelling, unless the project uses a different standard.
+- **1.14** Use New Zealand English spelling, for example "behaviour", "colour", and
+  "organise". STE uses American English unless your own rules give a different standard.
+  These guidelines give New Zealand English. Do not change the spelling of code, field
+  names, or quoted text.
 
 ### Multi-word nouns (STE section 2)
 

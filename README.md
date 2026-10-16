@@ -279,9 +279,9 @@ the linter shows no findings, or only findings with a recorded reason.
 A rewrite can change what a skill does. Thus, for a skill or a prompt, the skill does
 these steps:
 
-1. It records each behavior of the old version in a list, the behavior inventory.
+1. It records each behaviour of the old version in a list, the behaviour inventory.
 2. It writes the text again.
-3. It makes sure that the rewrite keeps each behavior in the inventory.
+3. It makes sure that the rewrite keeps each behaviour in the inventory.
 4. It runs `/vet` on the old version and on the new version, with the same suite and
    the same models.
 5. It compares the two results with `compare_vet.py`. The script shows "REGRESSION" if
