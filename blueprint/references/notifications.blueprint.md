@@ -5,10 +5,11 @@
 
 ## 1. Header & Boundary Box: what gets built, and what doesn't
 
-**System:** tells people when something happens in another system. It sends email, SMS,
-or Slack messages, in each person's language, on the channel and at the time they choose.
+**System:** tells persons when something occurs in a different system. The system sends
+email, SMS, or Slack messages. Each message goes in the language of the person, on the
+channel and at the time that the person selects.
 **Target mode:** one app in TypeScript on Node.js 20, with a Postgres database
-*(assumed)*. A timer inside the app wakes it every minute.
+*(assumed)*. A timer in the app wakes the app each minute.
 
 ```mermaid
 C4Container
@@ -27,48 +28,50 @@ C4Container
   UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 ```
 
-Key: the blue boxes run inside our system; grey boxes are other systems; the figure is a
-person. Each container lists the components it holds. Arrows show who calls whom, and how.
+Key: the blue boxes run in our system. The grey boxes are other systems. The figure is a
+person. Each container names the components that it holds. The arrows show who calls
+whom, and how.
 
 ### In scope
 
 - A welcome email when someone signs up.
 - A password-reset code by SMS.
-- A daily email that sums up what happened (the digest).
+- A daily email with a summary of what occurred (the digest).
 - Alerts for the operations team, posted to Slack.
-- Each person picks the channel they prefer.
-- Quiet hours: nothing that can wait is sent at night.
-- If sending fails, try again.
-- Messages in each person's language.
+- Each person selects the channel that they prefer.
+- Quiet hours: at night, the app does not send a message that can wait.
+- If the app cannot send a message, the app tries again.
+- Messages in the language of each person.
 
 ### Out of scope (non-goals)
 
-- New channels (WhatsApp, webhooks), opting out, "send a text if the email isn't read",
-  and moving recipient data to another system. The design leaves room for each one.
-  Don't build them now.
+- New channels (WhatsApp, webhooks), an opt-out, "send a text if the email isn't read",
+  and a move of the recipient data to a different system. The design has room for each
+  of these items. Do not build these items now.
 - Marketing campaigns, A/B tests, and analytics.
-- A template editor. Templates ship as files inside `RenderingEngine`.
-- Fax, and anything else the design ruled out.
+- A template editor. The templates ship as files in `RenderingEngine`.
+- Fax, and all other items that the design rejected.
 
 ### Decisions added by this spec
 
-Each of these was open in the design, so this spec decides it. Check these first.
+The design left each decision below open, so this spec makes each decision. Review these
+decisions first.
 
 - Storage is one Postgres database. If wrong: only the ResourceAccess parts change.
-- A message is known by `eventId:recipientId:channel`, kept for 30 days. If wrong:
-  `OutboxAccess.claim` changes.
-- Urgent events are `password.reset` and `alert.*`. Everything else can wait. If wrong:
-  one table in `RoutingEngine` changes.
-- Quiet hours are 22:00 to 07:00 in the person's own time zone, unless they pick others.
-  If wrong: one default changes.
-- Try sending up to 5 times. Wait 30 s, then longer each time, up to 1 h, plus a random
-  part. If wrong: three numbers in `NotificationManager` change.
-- If a message isn't written in the person's language, use English (`en`). If wrong: one
-  default in `RenderingEngine` changes.
-- The digest goes out at 08:00 in each person's time zone. If wrong: one number in
-  `Scheduler` changes.
-- Calls to vendors give up after 10 s. Change this once we know how fast the vendors
-  really are. If wrong: one number per channel in `DeliveryAccess` changes.
+- Each message has the key `eventId:recipientId:channel`. The app keeps each key for 30
+  days. If wrong: `OutboxAccess.claim` changes.
+- The urgent events are `password.reset` and `alert.*`. All other events can wait. If
+  wrong: one table in `RoutingEngine` changes.
+- Quiet hours are 22:00 to 07:00 in the time zone of the person, unless the person selects
+  different hours. If wrong: one default changes.
+- Try to send a maximum of 5 times. Wait 30 s, then wait longer each time, up to 1 h,
+  plus a random part. If wrong: three numbers in `NotificationManager` change.
+- If a message has no text in the language of the person, use English (`en`). If wrong:
+  one default in `RenderingEngine` changes.
+- The app sends the digest at 08:00 in the time zone of each person. If wrong: one number
+  in `Scheduler` changes.
+- A call to a vendor stops after 10 s. Change this limit when we know how fast the
+  vendors are. If wrong: one number for each channel in `DeliveryAccess` changes.
 - Times are ISO 8601 strings in UTC. If wrong: the `Instant` type changes.
 - Each product system proves who it is with its own API key. If wrong: only `EventsApi`
   changes.
@@ -76,54 +79,59 @@ Each of these was open in the design, so this spec decides it. Check these first
 
 ### Words used here
 
-- **Client, Manager, Engine, ResourceAccess**: the four kinds of part. A Client takes
-  requests in. A Manager runs the steps of a task in order. An Engine applies rules. A
-  ResourceAccess part talks to storage or an outside service.
-- **Envelope**: the record that carries one message through the steps.
-- **Outbox**: the table that remembers every message and how far it has got.
+- **Client, Manager, Engine, ResourceAccess**: the four types of part. A Client receives
+  requests. A Manager runs the steps of a task in order. An Engine applies rules. A
+  ResourceAccess part connects to storage or to an external service.
+- **Envelope**: the record that holds one message while the message goes through the
+  steps.
+- **Outbox**: the table that keeps each message and its current state.
 - **Invariant**: a rule that must always be true.
-- **Idempotent, idempotency**: safe to do twice; the second time changes nothing.
-- **Atomic, atomically**: all or nothing. Nothing is left half done.
-- **Compare-and-set**: change a value only if it is still what you expect. If someone
-  changed it first, refuse.
-- **Backoff**: waiting a little longer after each failed try.
-- **Jitter**: a random extra wait, so many tries don't all happen at once.
+- **Idempotent, idempotency**: safe to do two times. The second time changes nothing.
+- **Atomic, atomically**: all or nothing. Nothing stays half done.
+- **Compare-and-set**: change a value only if the value is the one that you expect. If
+  someone changed the value first, refuse the change.
+- **Backoff**: a wait that becomes a little longer after each failed try.
+- **Jitter**: a random extra wait, so that many tries do not all occur at the same time.
 - **Deterministic**: always gives the same answer for the same input.
 - **Precondition**: something that must be true before a step can run.
-- **Postcondition**: something a step promises is true when it finishes.
+- **Postcondition**: something that a step promises is true when the step finishes.
 - **Payload**: the data sent with a request.
-- **Latency**: how long something takes to answer.
-- **Orchestration**: running the steps of a task in the right order.
-- **Encapsulates**: keeps a likely change inside one part, so the rest doesn't notice.
+- **Latency**: the time that something takes to answer.
+- **Orchestration**: the work to run the steps of a task in the correct order.
+- **Encapsulates**: keeps a likely change in one part, so that the other parts do not
+  notice the change.
 
 ## 2. System Invariants: rules that must always hold
 
-1. **Each message is sent at most once.** A message is known by
-   `eventId:recipientId:channel` *(assumed)*. If the same event comes in again, the app
-   returns the first result and sends nothing new. If it comes back with different data,
-   it is refused. Enforced by `OutboxAccess.claim`, in the same database transaction that
-   saves the message. Violation: `IDEMPOTENCY_CONFLICT`.
-2. **Nothing that can wait is sent during quiet hours.** The message is held, then sent
-   when quiet hours end. Enforced by `RoutingEngine.route`, which answers "wait until
-   then". Reason: `QUIET_HOURS_DEFERRED`.
-3. **Every message reaches a channel the person allows, or is refused.** It is never
-   quietly dropped. Enforced by `RoutingEngine.route`. Violation: `NO_REACHABLE_CHANNEL`.
-4. **A delivery only moves forward.** Once it is `delivered` or `dead`, it never changes.
-   Enforced by `OutboxAccess`'s lifecycle verbs (`startAttempt`, `failAttempt`,
-   `scheduleRetry`, `giveUp`, `confirmDelivery`). Each one is a compare-and-set on the
-   current state. Violation: `INVALID_TRANSITION`.
-5. **Tries are limited.** After 5 failed tries *(assumed)*, a delivery is marked `dead`
-   and reported. It is never tried again. Enforced by `NotificationManager`, using the
-   delivery state machine. Outcome: `RETRIES_EXHAUSTED`.
-6. **No message goes out without its text.** Rendering either makes the whole message,
-   falling back to English, or fails. Enforced by `RenderingEngine.render`. Violation:
-   `TEMPLATE_NOT_FOUND`.
+1. **Each message is sent at most one time.** The key of a message is
+   `eventId:recipientId:channel` *(assumed)*. If the same event comes again, the app
+   returns the first result and sends nothing new. If the event comes again with
+   different data, the app refuses the event. Enforced by `OutboxAccess.claim`, in the
+   same database transaction that saves the message. Violation: `IDEMPOTENCY_CONFLICT`.
+2. **Nothing that can wait is sent during quiet hours.** The app holds a message that can
+   wait, and sends the message when quiet hours end. Enforced by `RoutingEngine.route`,
+   which answers "wait until then". Reason: `QUIET_HOURS_DEFERRED`.
+3. **Each message goes to a channel that the person lets the app use, or the app refuses
+   the message.** The app does not quietly drop a message. Enforced by
+   `RoutingEngine.route`. Violation: `NO_REACHABLE_CHANNEL`.
+4. **A delivery only moves forward.** After a delivery is `delivered` or `dead`, the
+   delivery does not change again. Enforced by `OutboxAccess`'s lifecycle verbs
+   (`startAttempt`, `failAttempt`, `scheduleRetry`, `giveUp`, `confirmDelivery`). Each
+   verb is a compare-and-set on the current state. Violation: `INVALID_TRANSITION`.
+5. **Tries are limited.** After 5 failed tries *(assumed)*, the app marks the delivery
+   `dead` and reports the delivery. The app does not try the delivery again. Enforced by
+   `NotificationManager`, which uses the delivery state machine. Outcome:
+   `RETRIES_EXHAUSTED`.
+6. **No message goes out without its text.** Rendering makes the full message, or
+   rendering fails. Rendering can use English as a fallback. Enforced by
+   `RenderingEngine.render`. Violation: `TEMPLATE_NOT_FOUND`.
 
 ## 3. Core Domain Data Contracts: the exact shape of the data
 
-How the types work. Each kind of ID has its own type, so one can't be passed as another.
-Times are ISO 8601 strings in UTC *(assumed)*. A `?` marks a field that may be missing.
-Errors come back as values; they are never thrown from one part to another.
+**How the types work:** each kind of ID has its own type, so that the code cannot use one
+kind of ID in place of a different kind. Times are ISO 8601 strings in UTC *(assumed)*. A
+`?` marks a field that can be missing. Errors come back as values. One part does not
+throw an error to a different part.
 
 ```ts
 // Identifiers
@@ -219,13 +227,13 @@ export type Result<T> = { ok: true; value: T } | { ok: false; error: ErrorCode; 
 
 ### Error catalog
 
-Whose fault is it? If the caller broke a precondition, it's the caller's fault (a 4xx
-status). If our code broke a promise, it's ours (a 5xx status). Over HTTP, errors use RFC
-9457 problem details, with the code in a `code` field.
+The Fault column shows whose fault each error is. If the caller broke a precondition, the
+caller is at fault (a 4xx status). If our code broke a promise, we are at fault (a 5xx
+status). Over HTTP, errors use RFC 9457 problem details, with the code in a `code` field.
 
 | Code | Meaning | Fault | HTTP | Retry helps? |
 |------|---------|-------|------|--------------|
-| `IDEMPOTENCY_CONFLICT` | same event ID replayed with a different payload | caller | 409 | no |
+| `IDEMPOTENCY_CONFLICT` | the same event ID came again with a different payload | caller | 409 | no |
 | `QUIET_HOURS_DEFERRED` | not an error: routing held the message until quiet hours end | — | 202 | — |
 | `NO_REACHABLE_CHANNEL` | no allowed channel has a contact for the recipient | caller | 422 | no, until the recipient's data changes |
 | `INVALID_TRANSITION` | a lifecycle verb was applied to a delivery in the wrong state (a broken precondition, often a lost race) | caller | 409 | no |
@@ -252,9 +260,9 @@ stateDiagram-v2
   dead --> [*]
 ```
 
-Stored by `OutboxAccess`. Each arrow is done by the verb written on it, as a
-compare-and-set. Any move that isn't drawn is refused with `INVALID_TRANSITION`. Final
-states: `delivered` and `dead`.
+`OutboxAccess` stores the delivery status. The verb on each arrow makes that move, as a
+compare-and-set. The app refuses each move that the diagram does not show, with
+`INVALID_TRANSITION`. The final states are `delivered` and `dead`.
 
 ### HeldItemState
 
@@ -265,8 +273,8 @@ stateDiagram-v2
   released --> [*]
 ```
 
-Stored by `OutboxAccess`. `release` moves every item that is due, all in one
-transaction. A released item can't be held again: `INVALID_TRANSITION`.
+`OutboxAccess` stores the state of each held item. `release` moves all items that are
+due, in one transaction. The app cannot hold a released item again: `INVALID_TRANSITION`.
 
 ## 5. Module Boundaries & Interface Signatures: the parts and how to call them
 
@@ -291,8 +299,9 @@ tests/
 
 ### Component diagram
 
-Every part of the app, one layer per band, and who calls whom. Each arrow is a call the
-design allows; the labels are the verbs used.
+The diagram shows each part of the app, and who calls whom. Each band holds one layer.
+Each arrow is a call that the design lets a part make. The label on each arrow is the
+verb that the call uses.
 
 ```mermaid
 ---
@@ -340,10 +349,11 @@ flowchart TB
   class db store
 ```
 
-Key: light blue, a component in the app; dark blue, the database; grey, another system.
-Bands run top to bottom: Clients, Managers, Engines, ResourceAccess. Arrows are calls, and
-their labels are the verbs used. Utilities (logging, secrets) are left out: every part may
-call them.
+Key: a light blue box is a component in the app. A dark blue box is the database. A grey
+box is a different system. The bands go from top to bottom: Clients, Managers, Engines,
+ResourceAccess. The arrows are calls, and the label on each arrow is the verb that the
+call uses. The diagram does not show the Utilities (logging, secrets), because each part
+can call the Utilities.
 
 ### Entry points (Clients)
 
@@ -352,7 +362,8 @@ call them.
 - **Purpose:** receives events that other systems post over HTTP.
 - **Encapsulates:** which systems send events, and how.
 - **Constraints:** each product system proves who it is with its own API key *(assumed)*.
-  Validates and forwards only; no routing or rendering. Calls one Manager.
+  EventsApi only validates and forwards events, and does no routing or rendering.
+  EventsApi calls one Manager.
 - **May call:** `NotificationManager`, infrastructure.
 
 ```ts
@@ -363,15 +374,16 @@ export interface EventsApi {
 }
 ```
 
-- **Failure & retry:** returns 202 once the event's deliveries are claimed; a replay of the
-  same event returns 202 with the same count. Callers may retry on timeout or 5xx.
+- **Failure & retry:** returns 202 after the app claims the deliveries of the event. A
+  replay of the same event returns 202 with the same count. Callers can retry on a
+  timeout or a 5xx status.
 - **Internals:** `OnEvent(type)`, which parses the request body into an `IncomingEvent`.
 
 #### Scheduler
 
-- **Purpose:** fires the digest release every morning, and wakes due retries.
+- **Purpose:** fires the digest release each morning, and wakes the retries that are due.
 - **Encapsulates:** when things run.
-- **Constraints:** a timer only; calls one Manager per tick.
+- **Constraints:** a timer only. Scheduler calls one Manager on each tick.
 - **May call:** `NotificationManager`.
 
 ```ts
@@ -380,17 +392,17 @@ export interface Scheduler {
 }
 ```
 
-- **Failure & retry:** a failed tick is logged and the next tick tries again; the Manager's
-  methods are idempotent, so overlapping ticks are safe.
-- **Internals:** `OnSchedule(cron)`: the digest release at 08:00 local time *(assumed)*, and
-  a one-minute tick for due retries.
+- **Failure & retry:** the app logs a failed tick, and the next tick tries again. The
+  methods of the Manager are idempotent, so ticks that overlap are safe.
+- **Internals:** `OnSchedule(cron)`: the digest release at 08:00 local time *(assumed)*,
+  and a tick each minute for the retries that are due.
 
 #### AdminPortal
 
-- **Purpose:** lets people choose their channel and quiet hours.
+- **Purpose:** lets persons select their channel and quiet hours.
 - **Encapsulates:** the preferences UI.
-- **Constraints:** staff sign in with the company's sign-in *(assumed)*. Calls one Manager
-  per action.
+- **Constraints:** staff sign in with the company's sign-in *(assumed)*. AdminPortal calls
+  one Manager for each action.
 - **May call:** `NotificationManager`.
 
 ```ts
@@ -400,8 +412,8 @@ export interface AdminPortal {
 }
 ```
 
-- **Failure & retry:** validation errors return 400; storage errors return 503 and are safe
-  to retry.
+- **Failure & retry:** validation errors return 400. Storage errors return 503, and are
+  safe to retry.
 
 ### Orchestration (Managers)
 
@@ -409,7 +421,7 @@ export interface AdminPortal {
 
 - **Purpose:** runs the notification flows and the delivery lifecycle.
 - **Encapsulates:** the delivery flows: immediate, digest, and later escalation.
-- **Constraints:** orchestration only; every business rule lives in an Engine.
+- **Constraints:** orchestration only. Each business rule is in an Engine.
 - **May call:** `RoutingEngine`, `RenderingEngine`, `RecipientsAccess`, `DeliveryAccess`,
   `OutboxAccess`, infrastructure.
 
@@ -425,34 +437,39 @@ export interface NotificationManager {
 - **Flow of `notify`:**
   1. `RoutingEngine.recipientsFor(event)`, then `RecipientsAccess.find(ids)`.
   2. `RoutingEngine.route(event, recipients, now)` gives deliver, defer, or reject.
-  3. On reject, return `NO_REACHABLE_CHANNEL`.
-  4. For each envelope, `OutboxAccess.claim(key, envelope)`. An existing key with the same
-     payload is skipped; a different payload returns `IDEMPOTENCY_CONFLICT`.
-  5. On defer, or for a digest event, `OutboxAccess.hold(key, releaseAt)` and stop.
+  3. If the decision is reject, return `NO_REACHABLE_CHANNEL`.
+  4. For each envelope, call `OutboxAccess.claim(key, envelope)`. If the key exists with
+     the same payload, skip the envelope. If the key exists with a different payload,
+     `claim` returns `IDEMPOTENCY_CONFLICT`.
+  5. If the decision is defer, or if the event is a digest event, call
+     `OutboxAccess.hold(key, releaseAt)` and stop.
   6. `RenderingEngine.render(envelope)`.
-  7. `OutboxAccess.startAttempt`, then `DeliveryAccess.deliver`; then
+  7. `OutboxAccess.startAttempt`, then `DeliveryAccess.deliver`. Then
      `OutboxAccess.confirmDelivery`, or `OutboxAccess.failAttempt` and the retry policy
      (`scheduleRetry` or `giveUp`).
-- **Flow of `sendDue`:** `OutboxAccess.release(now)` for held items, then steps 6–7 for each;
-  then `OutboxAccess.dueRetries(now)` and steps 6–7 for each.
+- **Flow of `sendDue`:** `OutboxAccess.release(now)` for the held items, then steps 6–7
+  for each item. Then `OutboxAccess.dueRetries(now)`, and steps 6–7 for each retry.
 - **Flow of `setPreferences`:** `RecipientsAccess.chooseChannel`, then
   `RecipientsAccess.setQuietHours`.
-- **Failure & retry:** `PROVIDER_UNAVAILABLE` is retryable: attempt `n` waits a random time
-  up to `min(1 h, 30 s × 2^n)`. `PROVIDER_REJECTED` is final. After 5 attempts the
-  delivery becomes `dead` with `RETRIES_EXHAUSTED` and is logged. Two workers racing on
-  one delivery are resolved by the compare-and-set in `OutboxAccess.startAttempt`; the
-  loser gets `INVALID_TRANSITION` and moves on.
-- **Internals:** the `Delivery` state machine (section 4) and one flow per use case.
+- **Failure & retry:** `PROVIDER_UNAVAILABLE` is retryable: attempt `n` waits a random
+  time up to `min(1 h, 30 s × 2^n)`. `PROVIDER_REJECTED` is final. After 5 attempts, the
+  delivery becomes `dead` with `RETRIES_EXHAUSTED`, and NotificationManager logs the
+  delivery. If two workers race on one delivery, the compare-and-set in
+  `OutboxAccess.startAttempt` selects the winner. The worker that loses gets
+  `INVALID_TRANSITION` and moves to its next task.
+- **Internals:** the `Delivery` state machine (section 4), and one flow for each use case.
 
 ### Business rules (Engines)
 
 #### RoutingEngine
 
 - **Purpose:** decides who gets a message, on which channel, and when.
-- **Encapsulates:** preferences, quiet hours, and regional rules, which differ by customer.
+- **Encapsulates:** preferences, quiet hours, and regional rules. These three items are
+  different for each customer.
 - **Constraints:** pure and in-memory: no network, storage, clock, or randomness. The
-  current time and recipient data are passed in.
-- **May call:** infrastructure only. The Manager passes recipients in, as in the design.
+  caller gives RoutingEngine the current time and the recipient data.
+- **May call:** infrastructure only. As in the design, the Manager gives the recipients
+  to RoutingEngine.
 
 ```ts
 export interface RoutingEngine {
@@ -461,18 +478,19 @@ export interface RoutingEngine {
 }
 ```
 
-- **Failure & retry:** deterministic; returns `NO_REACHABLE_CHANNEL` as a value; never
-  retried.
-- **Internals:** policies applied in order: `Expand` (event to recipients), `Prefer`
-  (channel), `QuietHours` (hold what can wait). Only `password.reset` and `alert.*` are
-  urgent *(assumed)*. Quiet hours default to 22:00 to 07:00 in the person's own time zone
-  *(assumed)*.
+- **Failure & retry:** deterministic. RoutingEngine returns `NO_REACHABLE_CHANNEL` as a
+  value. No caller retries RoutingEngine.
+- **Internals:** the policies that RoutingEngine applies, in this order: `Expand` (event
+  to recipients), `Prefer` (channel), `QuietHours` (hold what can wait). Only
+  `password.reset` and `alert.*` are urgent *(assumed)*. The default quiet hours are 22:00
+  to 07:00 in the time zone of the person *(assumed)*.
 
 #### RenderingEngine
 
-- **Purpose:** turns an envelope and a template into the message text.
+- **Purpose:** makes the message text from an envelope and a template.
 - **Encapsulates:** message content, templates, and languages.
-- **Constraints:** pure; templates are loaded once at startup from `templates/`.
+- **Constraints:** pure. RenderingEngine loads the templates from `templates/` one time,
+  at startup.
 - **May call:** infrastructure.
 
 ```ts
@@ -481,15 +499,17 @@ export interface RenderingEngine {
 }
 ```
 
-- **Failure & retry:** falls back to English when the recipient's language is missing
-  *(assumed)*; `TEMPLATE_NOT_FOUND` when the template itself is missing. Never retried.
+- **Failure & retry:** uses English when the language of the recipient is missing
+  *(assumed)*. If the template itself is missing, RenderingEngine returns
+  `TEMPLATE_NOT_FOUND`. No caller retries RenderingEngine.
 
 ### Resource access (ResourceAccess)
 
 #### RecipientsAccess
 
 - **Purpose:** reads and updates recipient profiles and preferences.
-- **Encapsulates:** where recipient data lives (the system's own database now, a CRM later).
+- **Encapsulates:** where the system keeps the recipient data (its own database now, a
+  CRM later).
 - **Constraints:** the only code that touches recipient storage.
 - **May call:** storage, infrastructure.
 
@@ -501,15 +521,16 @@ export interface RecipientsAccess {
 }
 ```
 
-- **Failure & retry:** 2 s timeout; storage errors are retried twice with jitter, then
-  returned as `PROVIDER_UNAVAILABLE`.
+- **Failure & retry:** a 2 s timeout. RecipientsAccess retries a storage error two times,
+  with jitter. After the two retries, RecipientsAccess returns the error as
+  `PROVIDER_UNAVAILABLE`.
 
 #### DeliveryAccess
 
-- **Purpose:** hands a rendered message to the right vendor.
-- **Encapsulates:** which channels exist and which vendor delivers each.
-- **Constraints:** the only code that touches email, SMS, or Slack vendors; no business
-  decisions.
+- **Purpose:** gives a rendered message to the correct vendor.
+- **Encapsulates:** which channels exist, and which vendor delivers each channel.
+- **Constraints:** the only code that touches email, SMS, or Slack vendors. DeliveryAccess
+  makes no business decisions.
 - **May call:** vendor APIs, secrets, infrastructure.
 
 ```ts
@@ -518,18 +539,20 @@ export interface DeliveryAccess {
 }
 ```
 
-- **Failure & retry:** 10 s timeout per call *(assumed)*. Timeouts, 408, 429, and 5xx become
-  `PROVIDER_UNAVAILABLE`, other 4xx become `PROVIDER_REJECTED`. A `Retry-After` from the
-  vendor is passed back so the Manager can honor it. It never retries itself; the Manager
-  owns retries, so retries happen at one layer only. The idempotency key is sent to vendors that accept one.
-- **Internals:** one transport per channel: `Email`, `Sms`, `Slack`.
+- **Failure & retry:** a 10 s timeout for each call *(assumed)*. Timeouts, 408, 429, and
+  5xx become `PROVIDER_UNAVAILABLE`, and other 4xx statuses become `PROVIDER_REJECTED`.
+  DeliveryAccess returns the `Retry-After` of the vendor to the Manager, so that the
+  Manager can honour the `Retry-After` value. DeliveryAccess does not retry by itself.
+  The Manager owns the retries, so retries occur at one layer only. DeliveryAccess sends
+  the idempotency key to each vendor that accepts one.
+- **Internals:** one transport for each channel: `Email`, `Sms`, `Slack`.
 
 #### OutboxAccess
 
-- **Purpose:** keeps every delivery's state, and the held digest items.
-- **Encapsulates:** how delivery state is stored.
-- **Constraints:** the only code that touches the outbox tables; enforces idempotency and
-  forward-only transitions atomically.
+- **Purpose:** keeps the state of each delivery, and the held digest items.
+- **Encapsulates:** how the app stores the delivery state.
+- **Constraints:** the only code that touches the outbox tables. OutboxAccess enforces
+  idempotency and forward-only transitions atomically.
 - **May call:** storage, infrastructure.
 
 ```ts
@@ -546,10 +569,11 @@ export interface OutboxAccess {
 }
 ```
 
-- **Failure & retry:** `claim` inserts with a unique key; on conflict it compares payloads
-  and returns the existing record or `IDEMPOTENCY_CONFLICT`. Each lifecycle verb updates
-  only where the current state is the one its arrow starts from, otherwise
-  `INVALID_TRANSITION`. Storage errors are retried twice with jitter.
+- **Failure & retry:** `claim` inserts the record with a unique key. If the key exists,
+  `claim` compares the payloads, and returns the existing record or
+  `IDEMPOTENCY_CONFLICT`. Each lifecycle verb updates a delivery only if the delivery is
+  in the state where the arrow of that verb starts. If not, the verb returns
+  `INVALID_TRANSITION`. OutboxAccess retries storage errors two times, with jitter.
 
 ## 6. Agent Verification Suite: tests that say when it's done
 
@@ -606,5 +630,5 @@ Feature: Notifications are delivered once, on the right channel, at the right ti
 
 **Verify:** `npm test -- tests/features`
 
-**Done when:** every scenario above passes (they fail before the work starts), and every
-existing test still passes.
+**Done when:** each scenario above passes (the scenarios fail before the work starts), and
+each existing test continues to pass.
