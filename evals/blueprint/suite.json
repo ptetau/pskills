@@ -4,19 +4,19 @@
   "skillSha256": "6157d001c41958d38f9b580109ad17a34cc328563d91124c98c6c96bddbd4029",
   "createdAt": "2026-10-16T20:46:39Z",
   "structure": {
-    "summary": "Mostly one pass: the skill asks first only for a missing language or when the request would change the design, and it puts any open questions to the user at the end. The output is one file, `<name>.blueprint.md`, with six numbered sections in a fixed order, then a fixed summary block in chat with next steps.",
+    "summary": "The skill works mostly in one pass, and asks first only for a missing language or for a request that changes the design. The output is one `<name>.blueprint.md` file with six numbered sections in a fixed order, then a summary block in chat.",
     "elements": [
       {
         "id": "S1",
-        "description": "Turn rule: no question before the work when the user names the language. If the user names no language and no host codebase sets one, the skill asks once and offers TypeScript as the default. If the request needs a new component or verb, the skill does not add it. It asks, or tells the user to run /decompose first. Open `[NEEDS CLARIFICATION: ...]` questions (at most three) go to the user after the draft."
+        "description": "Turn rule: no question before the work when the user names the language. If the user names no language and no host codebase sets one, the skill asks once and offers TypeScript as the default. If the request needs a new component or verb, the skill does not add it. The skill asks, or tells the user to run /decompose first. Open `[NEEDS CLARIFICATION: ...]` questions (at most three) go to the user after the draft."
       },
       {
         "id": "S2",
-        "description": "One file, `<name>.blueprint.md`, beside the design document when the design is a file. The file starts with `# {System}: Agent System Design Document` and a line that gives the source design, the language and the status. Then come six `## N.` sections in this order: 1 Header and boundary box, 2 System invariants, 3 Core data contracts, 4 State machines, 5 Module boundaries and interface signatures, 6 Verification suite."
+        "description": "One file, `<name>.blueprint.md`, beside the design document when the design is a file. The file starts with `# {System}: Agent System Design Document` and a line that gives the source design, the language and the status. Then come six `## N.` sections in a fixed order. The order is header and boundary box, system invariants, core data contracts, state machines, module boundaries and interface signatures, and verification suite."
       },
       {
         "id": "S3",
-        "description": "Section 1: a System line and a Target mode line, a C4 container diagram (or one line that says everything runs in one container), then the lists In scope, Out of scope (non-goals), Decisions carried from the design, Decisions added by this spec (one line each, with 'If wrong:'), and Words used here."
+        "description": "Section 1 starts with a System line, a Target mode line, and a C4 container diagram (or one line that says everything runs in one container). Then come these lists: In scope, Out of scope (non-goals), Decisions carried from the design, Decisions added by this spec (one line each, with 'If wrong:'), and Words used here."
       },
       {
         "id": "S4",
@@ -24,7 +24,7 @@
       },
       {
         "id": "S5",
-        "description": "Section 3: a conventions list (IDs, money, time, optional fields), typed code blocks in the one chosen language (distinct ID types, unions for states, `...Status` or `...State` lifecycle types, an `ErrorCode` union, a result type), and an error catalog table. The catalog has one row for each code: meaning, fault, HTTP status (only with an HTTP boundary), and whether a retry helps."
+        "description": "Section 3: a conventions list (IDs, money, time, optional fields) and typed code blocks in the one chosen language. The code has distinct ID types, unions for states, `...Status` or `...State` lifecycle types, an `ErrorCode` union and a result type. An error catalogue table follows, with one row for each code. The columns give the code's meaning, the fault, the HTTP status (only with an HTTP boundary), and whether a retry helps."
       },
       {
         "id": "S6",
@@ -32,15 +32,15 @@
       },
       {
         "id": "S7",
-        "description": "Section 5: a module map (a directory tree), a C4 component diagram when there are more than three parts, and groups headed Entry points (Clients), Orchestration (Managers), Business rules (Engines) and Resource access (ResourceAccess). Each component has a `#### ComponentName` subsection with Purpose, Encapsulates, Constraints, May call, a typed signature block with the error codes of each method, a Flow for each public Manager method, Failure & retry, and Internals when the design lists bricks."
+        "description": "Section 5 starts with a module map (a directory tree) and, with more than three parts, a C4 component diagram. Group headings follow: Entry points (Clients), Orchestration (Managers), Business rules (Engines) and Resource access (ResourceAccess). Each component has a `#### ComponentName` subsection. The subsection gives Purpose, Encapsulates, Constraints, `May call`, a typed signature block with the error codes of each method, and Failure & retry. A Manager also gives a Flow for each public method, and a component with bricks in the design gives Internals."
       },
       {
         "id": "S8",
-        "description": "Section 6: one ```gherkin block with 3 to 5 scenarios. Each scenario has Given, When and Then in 3 to 5 steps with concrete values. A Scenario Outline with Examples covers a family of rejections. The section ends with a **Verify:** line that gives the command that runs the suite, and a **Done when:** line."
+        "description": "Section 6: one ```gherkin block with 3 to 5 scenarios. Each scenario uses Given, When and Then in 3 to 5 steps with concrete values. A Scenario Outline with Examples covers a family of rejections. The section ends with a `**Verify:**` line that gives the command for the suite, and a `**Done when:**` line."
       },
       {
         "id": "S9",
-        "description": "Chat ending: a summary block that starts `BLUEPRINT: <name> · <language> · <target mode>` and has the lines SCOPE, INVARIANTS, CONTRACTS, MODULES, SCENARIOS, DECISIONS and CHECK (PASS, DRAFT or FAIL). Then the next steps: review the decisions, /quiz-plan, and /quiz-plan-execute."
+        "description": "Chat ending: a summary block that starts with `BLUEPRINT: <name> · <language> · <target mode>`. The block has the lines SCOPE, INVARIANTS, CONTRACTS, MODULES, SCENARIOS, DECISIONS and CHECK (PASS, DRAFT or FAIL). Then come the next steps: review the decisions, /quiz-plan, and /quiz-plan-execute."
       }
     ]
   },
@@ -50,9 +50,9 @@
       "kind": "structure",
       "structureRef": "S2",
       "weight": 2,
-      "criterion": "The blueprint is one `<name>.blueprint.md` file with the title line, the line for source, language and status, and the six numbered sections in the fixed order. Section 1 holds each part of the boundary box (this item covers the file shape and section 1).",
-      "pass": "The file starts with `# {System}: Agent System Design Document` and a line that gives the source design, the language and the status. Then `## 1.` to `## 6.` come in the order header, invariants, contracts, state machines, modules, verification. Section 1 has a System line, a Target mode line, a C4 container diagram or a one-container line, In scope, Out of scope (non-goals), Decisions carried from the design (or 'none'), Decisions added by this spec, and Words used here. When the run saved the design as a file, the blueprint is beside the design file.",
-      "partial": "The six sections are present and in order, but the title line or the source line is missing, or one part of section 1 is missing or merged into a different part.",
+      "criterion": "The blueprint is one `<name>.blueprint.md` file. The file has the title line, the line for source, language and status, and six numbered sections in the fixed order. Section 1 holds each part of the boundary box (this item covers the file shape and section 1).",
+      "pass": "The file starts with `# {System}: Agent System Design Document` and a line that gives the source design, the language and the status. Then `## 1.` to `## 6.` come in the order header, invariants, contracts, state machines, modules, verification. Section 1 has a System line, a Target mode line, and a C4 container diagram or a one-container line. Section 1 also lists In scope, Out of scope, Decisions carried from the design, Decisions added by this spec, and Words used here. When the run saved the design as a file, the blueprint is beside the design file.",
+      "partial": "The six sections are present and in order, but the title line or the source line is missing. Or one part of section 1 is missing or merged into a different part.",
       "source": "Phase 0 step 3; Phase 1 — Header and boundary box; references/blueprint-template.md"
     },
     {
@@ -60,9 +60,9 @@
       "kind": "structure",
       "structureRef": "S4",
       "weight": 2,
-      "criterion": "Sections 2 and 3 tie each rule to code. Each invariant has a name, one checkable rule, an enforcement point and an error code. Section 3 gives typed code in one language and an error catalog with one row for each code (this item covers sections 2 and 3).",
-      "pass": "Each invariant in section 2 has a bold name (no ID), one sentence that a tester can check, 'Enforced by `Component.method`', and an `UPPER_SNAKE_CASE` code. Section 3 has a conventions list and typed code blocks in the one chosen language, with distinct ID types, unions for states, an `ErrorCode` union and a result type. Money, when the system has money, is an integer in minor units plus a currency code. The error catalog has one row for each code in `ErrorCode`, with meaning, fault and retry. The catalog has an HTTP column only when the system has an HTTP boundary.",
-      "partial": "One invariant has no enforcement point or no code. Or the catalog and the `ErrorCode` union differ by a code. Or an HTTP column appears with no HTTP boundary. Or one convention (distinct IDs, money as an integer, a result type) is missing.",
+      "criterion": "Sections 2 and 3 tie each rule to code. Each invariant has a name, one checkable rule, an enforcement point and an error code. Section 3 gives typed code in one language and an error catalogue with one row for each code (this item covers sections 2 and 3).",
+      "pass": "Each invariant in section 2 has a bold name (no ID), one sentence that a tester can check, 'Enforced by `Component.method`', and an `UPPER_SNAKE_CASE` code. Section 3 has a conventions list and typed code blocks in the one chosen language. The code has distinct ID types, unions for states, an `ErrorCode` union and a result type. Money, when the system has money, is an integer in minor units plus a currency code. The error catalogue has one row for each code in `ErrorCode`, with meaning, fault and retry. The catalogue has an HTTP column only when the system has an HTTP boundary.",
+      "partial": "One invariant has no enforcement point or no code. Or the catalogue and the `ErrorCode` union differ by a code. Or an HTTP column appears with no HTTP boundary. Or one convention (distinct IDs, money as an integer, a result type) is missing.",
       "source": "Phase 2 — Invariants; Phase 3 — Data contracts"
     },
     {
@@ -70,7 +70,7 @@
       "kind": "structure",
       "structureRef": "S6",
       "weight": 2,
-      "criterion": "Section 4 draws each lifecycle. Each `...Status` or `...State` type in section 3, and each state machine in the design, has its own subsection with a state diagram and a line about storage, transitions and the illegal-transition code.",
+      "criterion": "Section 4 draws each lifecycle. Each `...Status` or `...State` type in section 3, and each state machine in the design, has its own subsection. The subsection has a state diagram and a line about storage, transitions and the illegal-transition code.",
       "pass": "Each lifecycle type has a `### {Thing}Status` (or `...State`) subsection with a Mermaid `stateDiagram-v2`. The diagram has a `[*]` start, transitions labelled `event [guard]` and named after the API verbs, and marked terminal states. One line under each diagram names where the state is stored, the method that performs each transition, and the illegal-transition code.",
       "partial": "Each lifecycle has a diagram, but one diagram has no guards or no terminal states. Or the line under a diagram omits the storage, the method or the illegal-transition code.",
       "appliesWhen": "the design or the blueprint has a lifecycle (a status that changes over time)",
@@ -81,9 +81,9 @@
       "kind": "structure",
       "structureRef": "S7",
       "weight": 2,
-      "criterion": "Section 5 gives a module map, a component diagram when there are more than three parts, the named groups, and one subsection for each component with Purpose, Encapsulates, Constraints, May call, typed signatures with error codes, Failure & retry, a Flow for each Manager method, and Internals when the design lists bricks.",
-      "pass": "Section 5 has a directory tree and, with more than three parts, a C4-style component diagram. Group headings such as 'Orchestration (Managers)' hold one `####` subsection for each component, and each subsection has each listed field. Each method in a signature block has typed parameters, a typed return and its error codes. Each public Manager method has a numbered flow with one call on each line.",
-      "partial": "One component has no field from the list (often May call, Internals or the error codes on its methods). Or the module map is missing. Or the component diagram is missing when there are more than three parts.",
+      "criterion": "Section 5 gives a module map, a component diagram when there are more than three parts, the named groups, and one subsection for each component. Each subsection gives each field that the template asks for, with typed signatures and error codes.",
+      "pass": "Section 5 has a directory tree and, with more than three parts, a C4-style component diagram. Group headings such as 'Orchestration (Managers)' hold one `####` subsection for each component. Each subsection gives Purpose, Encapsulates, Constraints, `May call`, a signature block, and Failure & retry. Each method in a signature block shows typed parameters, a typed return and its error codes. Each public Manager method has a numbered flow with one call on each line. Each component with bricks in the design gives Internals.",
+      "partial": "One component has no field from the list (often `May call`, Internals or the error codes on its methods). Or the module map is missing. Or the component diagram is missing when there are more than three parts.",
       "source": "Phase 5 — Module boundaries and signatures"
     },
     {
@@ -91,9 +91,9 @@
       "kind": "structure",
       "structureRef": "S8",
       "weight": 2,
-      "criterion": "Section 6 is one Gherkin block of 3 to 5 scenarios in 3 to 5 steps each, with concrete values, and each invariant's error code is asserted in at least one scenario. The section ends with a Verify command and a Done when line.",
-      "pass": "A ```gherkin block holds 3 to 5 scenarios. Each scenario has Given, When and Then in 3 to 5 steps, with real IDs, amounts and times. Each Then step asserts an outcome that a caller can see, not a database row. Each invariant code from section 2 appears in a Then step or an Examples row. The section ends with '**Verify:**' and a command, then '**Done when:**' with a statement that the scenarios pass and the existing tests still pass.",
-      "partial": "The suite is present, but one invariant code is never asserted. Or one scenario has more than 5 steps or asserts a database row. Or the Verify command or the Done when line is missing.",
+      "criterion": "Section 6 is one Gherkin block of 3 to 5 scenarios, each in 3 to 5 steps with concrete values. At least one scenario asserts the error code of each invariant. The section ends with a `Verify` command and a `Done when` line.",
+      "pass": "A ```gherkin block holds 3 to 5 scenarios. Each scenario uses Given, When and Then in 3 to 5 steps, with real IDs, amounts and times. Each Then step asserts an outcome that a caller can see, not a database row. Each invariant code from section 2 appears in a Then step or an Examples row. The section ends with `**Verify:**` and a command, then `**Done when:**` with a statement that the scenarios pass and the existing tests still pass.",
+      "partial": "The suite is present, but no scenario asserts one of the invariant codes. Or one scenario has more than 5 steps or asserts a database row. Or the `Verify` command or the `Done when` line is missing.",
       "source": "Phase 6 — Verification suite"
     },
     {
@@ -102,7 +102,7 @@
       "structureRef": "S1",
       "weight": 1,
       "criterion": "The conversation obeys the turn rule and the fixed ending. The skill asks before the work only when the language is missing or the request changes the design. The last message gives the summary block and the next steps (this item covers the turn rule and the chat ending).",
-      "pass": "The skill asks before it writes only for a missing language (one time, with TypeScript as the default) or for a request that adds a component or a verb. The last message holds the `BLUEPRINT: <name> · <language> · <target mode>` block with the lines SCOPE, INVARIANTS, CONTRACTS, MODULES, SCENARIOS, DECISIONS and CHECK. The CHECK value agrees with the file: DRAFT only when a `[NEEDS CLARIFICATION]` is open. Then the message offers a review of the decisions, /quiz-plan and /quiz-plan-execute.",
+      "pass": "Before it writes, the skill asks only about a missing language or a request for a new component or verb. The language question comes one time, with TypeScript as the default. The last message holds the `BLUEPRINT:` block. The block has the lines SCOPE, INVARIANTS, CONTRACTS, MODULES, SCENARIOS, DECISIONS and CHECK. The CHECK value agrees with the file: DRAFT only when a `[NEEDS CLARIFICATION]` is open. Then the message offers a review of the decisions, /quiz-plan and /quiz-plan-execute.",
       "partial": "The summary block has no line from the list or a different shape. Or the next steps are missing. Or the skill asks one question that the prompt already answers.",
       "source": "Phase 0 step 1; Phase 7 steps 3 and 4; Inputs: 'Stop and ask, or send the user back to /decompose'"
     },
@@ -111,7 +111,7 @@
       "kind": "behavior",
       "weight": 3,
       "criterion": "The blueprint makes no silent guess. Each detail that the blueprint adds and the design does not state is marked *(assumed)* where a reader first meets the detail. The detail is also listed under Decisions added by this spec with an 'If wrong:' line.",
-      "pass": "Spot checks of added details all pass. The storage engine, the time convention, how callers prove who they are, the idempotency key, retry counts, timeouts and the business thresholds are each marked *(assumed)* one time and listed with 'If wrong:'. The number of marks is close to the number of listed decisions. A threshold that the design gives to an owner shows that owner, for example '(assumed; owner: the studio owner)'.",
+      "pass": "Spot checks of added details all pass. Each added detail is marked *(assumed)* one time and listed with 'If wrong:'. The checked details include the storage engine, the time convention, how callers prove who they are, the idempotency key, retry counts, timeouts and business thresholds. The number of marks is close to the number of listed decisions. A threshold that the design gives to an owner shows that owner, for example '(assumed; owner: the studio owner)'.",
       "partial": "One or two added details have no mark or no list entry. Or several list entries have no 'If wrong:' line.",
       "source": "The core rule: never guess silently; Inputs: Business thresholds"
     },
@@ -119,17 +119,17 @@
       "id": "R8",
       "kind": "behavior",
       "weight": 2,
-      "criterion": "The blueprint keeps the parts of the design as they are. No component or verb is added, removed or renamed, and each flow and each May call line obeys the call rules of the design.",
-      "pass": "Section 5 has exactly the components of the design, with the same names. The methods of each component are exactly the verbs of the design, in the style of the language (`Book` becomes `book` in TypeScript). Contracts, bricks and state machines keep their names from the design. Each flow calls only what its May call line and the design allow. The skill does not build a request for a new verb or component. It asks, or tells the user to run /decompose first.",
-      "partial": "The components match, but one signature has an extra helper method, or one name has a different spelling, or one flow calls a component that the call rules of the design do not allow.",
+      "criterion": "The blueprint keeps the parts of the design as they are. The blueprint adds, removes or renames no component and no verb. Each flow and each `May call` line obeys the call rules of the design.",
+      "pass": "Section 5 has exactly the components of the design, with the same names. The methods of each component are exactly the verbs of the design, in the style of the language (`Book` becomes `book` in TypeScript). Contracts, bricks and state machines keep their names from the design. Each flow calls only what its `May call` line and the design let it call. The skill does not build a request for a new verb or component. The skill asks, or tells the user to run /decompose first.",
+      "partial": "The components match, but one signature has an extra helper method. Or one name has a different spelling. Or one flow calls a component that the call rules of the design do not let it call.",
       "source": "Inputs and how a design maps: 'Names carry over unchanged'; Style: Faithful"
     },
     {
       "id": "R9",
       "kind": "behavior",
       "weight": 1,
-      "criterion": "The prose is plain and has no design IDs. No ID such as V1, F2 or UC3 remains, method terms appear only where the template puts them, and each technical word that the prose uses is in Words used here.",
-      "pass": "No design ID appears outside code. The words Client, Manager, Engine and ResourceAccess, as kinds of part, appear only in the section 5 group headings, the diagram boxes and Words used here. Each technical word in the prose (for example idempotent, atomic, backoff) has a one-line entry in Words used here. Sentences are short, and each section starts with its substance, not an introduction.",
+      "criterion": "The prose is plain and has no design IDs (for example `V1`, `F2` or `UC3`). Method terms appear only where the template puts them. Each technical word that the prose uses is in Words used here.",
+      "pass": "No design ID appears outside code. As kinds of part, the words Client, Manager, Engine and ResourceAccess appear only in three places. The places are the group headings of section 5, the diagram boxes, and Words used here. Each technical word in the prose (for example idempotent, atomic, backoff) has a one-line entry in Words used here. Sentences are short, and each section starts with its substance, not an introduction.",
       "partial": "One design ID remains. Or a few technical words are not in Words used here. Or method terms appear in the prose of one other section.",
       "source": "Style: Plain English, Plain domain terms, Zero fluff"
     },
@@ -137,25 +137,25 @@
       "id": "R10",
       "kind": "outcome",
       "weight": 3,
-      "criterion": "A coding agent with only this document can create the directory tree, the types, each interface and the test harness, and does not need to ask a question.",
-      "pass": "Each type is complete and compiles as written. Each method has typed inputs, a typed output and its error codes. Each flow gives the order of the calls. Each number that the code needs (timeouts, retry counts, how long keys are kept, capacity and time limits) is stated. The Verify command runs the scenarios. A judge who acts as the coding agent finds no question to ask.",
-      "partial": "One or two gaps make the agent guess: a field with no type, a method with no error codes, a vague flow step, a missing number, or a scenario step that no step definition can match.",
+      "criterion": "A coding agent with only this document can create the directory tree, the types, each interface and the test harness without a question.",
+      "pass": "Each type is complete and compiles as written. Each method shows typed inputs, a typed output and its error codes. Each flow gives the order of the calls. Each number that the code must have (timeouts, retry counts, how long keys are kept, capacity and time limits) is stated. The `Verify` command runs the scenarios. A judge who acts as the coding agent finds no question to ask.",
+      "partial": "One or two gaps make the agent guess. Examples are a field with no type, a method with no error codes, a vague flow step, or a missing number. A scenario step that no step definition can match is also a gap.",
       "source": "Purpose; Style: Agent-ready; Phase 7 step 2"
     },
     {
       "id": "R11",
       "kind": "outcome",
       "weight": 3,
-      "criterion": "The invariants and the scenarios state exactly the rules that matter in the domain of this design: the rules that a duplicate request, a retry, a race or an illegal move can break in this system.",
+      "criterion": "The invariants and the scenarios state exactly the rules that matter in the domain of this design. These rules are the ones that a duplicate request, a retry, a race or an illegal move can break in this system.",
       "pass": "Each rule that the design gives as a fact of the business (for example a capacity limit, an exact split of money, or a fixed time limit) is an invariant with its code. Idempotency and immutability are covered where they apply. No invariant only repeats what the types already guarantee. The scenarios test these rules with concrete values at the boundary of each threshold.",
-      "partial": "One business rule from the design is missing or weak. Or one invariant is padding. Or the scenarios test the rules with values far from their boundaries.",
+      "partial": "One business rule from the design is missing or weak. Or one invariant only pads the list. Or the scenarios test the rules with values far from their boundaries.",
       "source": "Phase 2 — Invariants; Phase 6 — Verification suite; map row 'Nature of the business'"
     },
     {
       "id": "R12",
       "kind": "outcome",
       "weight": 3,
-      "criterion": "The user can review each gap of the design in one pass. The Decisions added list holds the details that the design left open, each with a sensible value and a concrete result if wrong, and the list does not decide again what the design already settled.",
+      "criterion": "The user can review each gap of the design in one pass. The 'Decisions added' list holds the details that the design left open. Each decision has a sensible value and a concrete result if wrong. The list does not decide again what the design already settled.",
       "pass": "Each open point that the design raises gets a decision, or a `[NEEDS CLARIFICATION]` (at most three, only where no safe placeholder exists). Each chosen value is the conventional default or a conservative placeholder for this domain. Each 'If wrong:' line names what changes, for example one component or one number. No decision contradicts the design or repeats a fact that the design states.",
       "partial": "The list is mostly sound, but the blueprint ignores one open point from the design. Or one default is unsafe or strange for this domain. Or one decision contradicts the design.",
       "source": "The core rule: never guess silently; Phase 1 — Decisions added by this spec"
@@ -166,7 +166,7 @@
       "id": "P01",
       "prompt": "Here is my design for studio class bookings. It is not in the repo yet, so save it as `studio-bookings.design.md` first, then write the blueprint next to it. Use TypeScript.\n\n----- studio-bookings.design.md -----\n# Design: Studio class bookings\n\n**Mode:** inception · **Status:** reviewed\n**Scope:** members book and cancel mats in yoga classes, and staff check people in at the door. Payments are not in scope.\n\n## 1. Frame\n\n- **Problem:** Members of a yoga studio book a mat in a class from the studio app. They cancel if their plans change. Staff check people in at the door.\n- **Users:** members (the studio app) and front-desk staff (a tablet at the door).\n- **Nature of the business:** a class never holds more people than it has mats. A member holds at most one mat in a class.\n- **Constraints:** two developers, Node.js, one relational database.\n- **Assumptions:** members sign in with the studio app's existing login. If wrong: only BookingApi changes.\n\n## 2. Features and use cases\n\n| ID | Feature | Core use case? |\n|----|---------|----------------|\n| F1 | Book a mat in a class | yes |\n| F2 | Cancel a booking up to 12 hours before the class starts | yes |\n| F3 | Check a member in at the door | no, a variation of F1 |\n| F4 | Each membership allows a set number of classes per week | no, a rule inside F1 |\n\nCore use cases:\n\n- UC1: a member books a mat.\n- UC2: a member cancels a booking.\n\n## 3. Volatility register\n\n| ID | What changes | Likelihood | Contained by |\n|----|--------------|------------|--------------|\n| V1 | Booking rules: the cancel cutoff, the weekly limit for each membership | high | EligibilityEngine |\n| V2 | The booking steps (a waitlist may come later) | medium | BookingManager |\n| V3 | Where bookings are stored | low | BookingsAccess |\n| V4 | How people reach us (the app now, a kiosk later) | medium | BookingApi |\n\n## 4. Walls\n\n| Component | Type | Encapsulates | API (business verbs) | May call |\n|-----------|------|--------------|----------------------|----------|\n| BookingApi | Client | V4 | entry points: `Book`: `POST /classes/{classId}/bookings`; `Cancel`: `DELETE /bookings/{bookingId}`; `CheckIn`: `POST /bookings/{bookingId}/check-in` | BookingManager |\n| BookingManager | Manager | V2 | `Book(memberId, classId)`, `Cancel(memberId, bookingId)`, `CheckIn(bookingId)` | EligibilityEngine, BookingsAccess |\n| EligibilityEngine | Engine | V1 | `CheckBooking(membership, classSession, bookedThisWeek, now)`, `CheckCancel(booking, classSession, now)` | nothing |\n| BookingsAccess | ResourceAccess | V3 | `FindClass(classId)`, `FindBooking(bookingId)`, `CountThisWeek(memberId, weekOf)`, `Reserve(memberId, classId)`, `Release(bookingId)`, `MarkAttended(bookingId)` | the database |\n\n## 5. Bricks\n\nShared contracts:\n\n- `Booking` used by BookingManager, EligibilityEngine, BookingsAccess: id, memberId, classId, status, bookedAt.\n- `ClassSession` used by BookingManager, EligibilityEngine, BookingsAccess: id, title, startsAt, mats, matsTaken.\n\n### EligibilityEngine\n\n| Brick | Kind | Does exactly one thing | Serves |\n|-------|------|------------------------|--------|\n| `WeeklyLimit` | Rule | refuses a booking past the membership's classes per week | F4, V1 |\n| `CancelCutoff` | Rule | refuses a cancel less than 12 hours before the class starts | F2, V1 |\n\n### BookingsAccess\n\n| Brick | Kind | Does exactly one thing | Serves |\n|-------|------|------------------------|--------|\n| `Booking` | State machine | `Booking`: booked → cancelled, booked → attended | F1, F2, F3 |\n\n```\nBooking:\n  booked --Release [before the cutoff]--> cancelled\n  booked --MarkAttended [the class has started]--> attended\n  terminal: cancelled, attended\n```\n\n## 7. Validation\n\n```\nUC1 Book a mat: a member, known by the studio app's login\n  BookingApi      → BookingManager.Book\n  BookingManager  → BookingsAccess.FindClass\n  BookingManager  → BookingsAccess.CountThisWeek\n  BookingManager  → EligibilityEngine.CheckBooking\n  BookingManager  → BookingsAccess.Reserve\nUC2 Cancel a booking: the member who made it\n  BookingApi      → BookingManager.Cancel\n  BookingManager  → BookingsAccess.FindBooking\n  BookingManager  → BookingsAccess.FindClass\n  BookingManager  → EligibilityEngine.CheckCancel\n  BookingManager  → BookingsAccess.Release\n```\n\n**Cut list:** a waitlist (no current feature needs it) and payments (the studio's billing system handles them).\n\n## 9. Risks and open questions\n\n- The weekly limit for each membership. Who decides: the studio owner.\n- Can a member book a class that has already started? Who decides: the studio owner.\n----- end of design -----",
       "axis": "typical",
-      "exercises": "the full process on a /decompose-style design with TypeScript named: the map from design sections, removal of design IDs, a state machine from a brick, two owner thresholds, an HTTP boundary, assumed decisions, and the checker with --design",
+      "exercises": "the full process on a /decompose-style design in TypeScript: design IDs to remove, a state machine brick, owner thresholds, HTTP errors, and the --design check",
       "replies": [
         "You decide. Pick the safe default for anything that is still open, mark it assumed, and finish the blueprint."
       ]
@@ -175,7 +175,7 @@
       "id": "P02",
       "prompt": "I want to give this design to a coding agent. Can you make it buildable? Here is the design.\n\nFlat tab: a tool for shared expenses\n\nFlatmates record what they spend for the flat, and the tool works out who owes whom. It is a command-line tool called `tab`. It runs on one laptop in the kitchen and keeps all its data in one SQLite file. There is no server and there are no accounts. The person who runs a command types their own name.\n\nThe parts, and who calls whom:\n- `TabCli` reads the commands (`tab add`, `tab balance`, `tab settle`, `tab confirm`, `tab discard`) and prints the results. It only parses and prints. It calls only `TabService`.\n- `TabService` runs the steps of each command in order: AddExpense, ShowBalances, ProposeSettlement, ConfirmSettlement, DiscardSettlement. It calls `Splitter` and `LedgerStore`. It holds no rules.\n- `Splitter` holds the money rules: SplitExpense (split an amount evenly, or by weights such as 2:1:1) and PlanSettlement (the fewest payments that bring every balance to zero). It is pure: no file access and no clock.\n- `LedgerStore` is the only code that touches the SQLite file: RecordExpense, LoadBalances, SaveProposal, MarkConfirmed, MarkDiscarded.\n\nRules that never change:\n- The shares of an expense always add up to exactly the amount paid. Leftover cents go to the person who paid.\n- A confirmed settlement never changes. To fix a mistake, add a new expense.\n- Only one settlement can be open (proposed) at a time.\n\nData:\n- An expense: who paid, the amount, a note, the date, and who shares it, each with an optional weight.\n- A settlement: the payments it proposes (from, to, amount) and its status. It starts as proposed. It becomes confirmed when the flat agrees, or discarded.\n\nNot decided yet:\n- What happens if someone runs `tab settle` twice?\n- Which currency? We live in New Zealand.\n- Can someone delete an expense?",
       "axis": "different input and target: a prose design, no language named, a CLI with no HTTP",
-      "exercises": "a non-decompose design: one language question, Go types, money in minor units, an error catalog with no HTTP column, the design's own names kept, and three open points to decide",
+      "exercises": "a prose design: one language question, Go types, money in minor units, no HTTP column, the design's own names, and three open points",
       "replies": [
         "Go, the programming language, please.",
         "You decide. Pick the safe default for anything that is still open, mark it assumed, and finish the blueprint."
@@ -194,7 +194,7 @@
       "id": "P04",
       "prompt": "Use TypeScript. Couriers keep asking for a way to cancel a drop-off, so please also add a `CancelDeposit` endpoint while you are at it. Here is the design.\n\n----- parcel-lockers.design.md -----\n# Design: Parcel lockers\n\nCouriers put parcels in street lockers. The recipient gets a 6-digit code by SMS and has 72 hours to collect the parcel. After 72 hours, the parcel goes back to the sender. After 5 wrong codes in a row, the locker keypad locks for 15 minutes.\n\n## 4. Walls\n\n| Component | Type | API (business verbs) | May call |\n|-----------|------|----------------------|----------|\n| LockerApi | Client | `Deposit`: `POST /deposits` (couriers, with a courier API key); `Collect`: `POST /collections` (the locker keypad) | PickupManager |\n| ExpiryTimer | Client | `Tick`: every 10 minutes | PickupManager |\n| PickupManager | Manager | `Deposit(lockerId, parcelId, phone)`, `Collect(lockerId, code)`, `ExpireOverdue(now)` | CodeEngine, LockerAccess, SmsAccess |\n| CodeEngine | Engine | `IssueCode(random)`, `CheckCode(given, codeHash, failedTries)` | nothing |\n| LockerAccess | ResourceAccess | `Occupy(lockerId, parcelId, codeHash)`, `RecordFailedTry(lockerId)`, `Release(lockerId)`, `ReturnOverdue(before)` | the locker database |\n| SmsAccess | ResourceAccess | `SendCode(phone, code)` | the SMS vendor |\n\n## 5. Bricks\n\nShared contracts:\n\n- `Parcel` used by PickupManager, LockerAccess: id, lockerId, codeHash, depositedAt, status.\n\n### LockerAccess\n\n| Brick | Kind | Does exactly one thing |\n|-------|------|------------------------|\n| `Parcel` | State machine | `Parcel`: waiting → collected, waiting → returned |\n\n```\nParcel:\n  waiting --Release [the right code]--> collected\n  waiting --ReturnOverdue [72 h have passed]--> returned\n  terminal: collected, returned\n```\n----- end of design -----",
       "axis": "edge: the request needs a design change",
-      "exercises": "the faithful rule: a request for a verb that the design does not have, which the skill must not add, plus a lifecycle driven by a timer, injected randomness, a lockout threshold and an SMS vendor",
+      "exercises": "the faithful rule: a request for a new verb to refuse, plus a timer, injected randomness, a lockout and an SMS vendor",
       "replies": [
         "Fair enough. Leave the cancel out and write the blueprint for the design as it is.",
         "You decide. Pick the safe default for anything that is still open, mark it assumed, and finish the blueprint."

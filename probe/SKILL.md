@@ -17,9 +17,9 @@ description: >
 
 ## Purpose
 
-`/probe` is an autonomous exploratory tester. At this time, a person who looks for bugs
-in an unfamiliar app reads the code by hand. Then the person clicks around the app and
-hopes to find a bug by chance. `probe` does these four steps instead:
+`/probe` is an autonomous exploratory tester. At this time, to find bugs in an
+unfamiliar app, a person reads the code by hand. Then the person clicks around and hopes
+for luck. `probe` does these four steps instead:
 
 1. `probe` reads the docs and specs, the commit history, and the code. From these
    sources, `probe` makes an app map and identifies the real user-facing feature flows.
@@ -62,8 +62,8 @@ Do **not** use `/probe` in these conditions:
 
 - There is no way to run or drive the app (a pure static review). For a static review,
   read the code by hand, or use `/code-review`.
-- The user wants only a security audit. Prefer `security-review`. Then, if the user
-  wants broader coverage, you can use `/probe` after `security-review`.
+- The user wants only a security audit. Prefer `security-review`. You can then use
+  `/probe` after `security-review` for broader coverage.
 - To continue the work, the skill must do an action that is more than passive
   observation. `probe` does not do a destructive action to get more coverage, at any
   time. Read the guarantee below.
@@ -90,9 +90,10 @@ A probe agent must **not** do these actions, at any time:
 - Do an action that a human reviewer would not feel safe to run unattended against
   production.
 
-If only a mutating action can exercise a flow, and there is no safe sandbox, the probe
-agent for that cell must stop before the action. The agent records the flow as **"untestable without write access"** in its finding. Then
-the agent continues to its next task. The agent must not do the mutating action.
+If only a mutating action can exercise a flow, and no safe sandbox exists, the probe
+agent for that cell must stop before the action. The agent must record the flow as
+**"untestable without write access"** in its finding. Then the agent continues. The
+agent must not do the mutating action.
 
 This guarantee applies with no exceptions in each phase below, and especially in
 Phase 2.
@@ -120,7 +121,7 @@ app.
    security-sensitive flows. Phase 2 uses these flags to scale the matrix to the budget.
 
 Output of this phase: the text of the app summary, and an ordered `FLOWS` list. Each
-flow in the list can have a risk tag.
+flow in the list can have a tag with a risk level.
 
 ## Phase 2 — Fan-out
 
@@ -203,9 +204,8 @@ Goal: examine each raw finding from Phase 2 again, as an adversary, and drop the
 positives. The [[deep-research]] skill applies the same discipline to unverified claims
 before it cites the claims.
 
-For each raw finding, dispatch an adversarial pass, or reason through the pass yourself.
-Use the budget to select one of the two. The adversarial pass actively tries to **disprove** the
-finding:
+For each raw finding, dispatch (or reason through, budget permitting) an adversarial
+pass. The adversarial pass actively tries to **disprove** the finding:
 
 - Examine the `evidence` again against the `repro` steps.
 - Find if the cause is environmental flakiness, or a misreading of the expected

@@ -28,9 +28,10 @@ builds features by hand.
 
 Two parts are orthogonal when a change to one part does not affect the other part.
 Raymond: "each action changes just one thing without affecting others. There is one and
-only one way to change each property." Hunt and Thomas give the test: *if the requirement
-behind one part changes dramatically, how many parts are affected?* The correct answer is
-one.
+only one way to change each property."
+
+Hunt and Thomas give a test for orthogonality. Ask: *if the requirement behind one part
+changes dramatically, how many parts are affected?* The correct answer is one.
 
 The opposite is a helicopter. In a helicopter, each control affects each other control.
 Thus, one small change makes the full helicopter dip and turn.
@@ -101,9 +102,11 @@ are different, and this difference is correct:
 
 **When the contract itself changes.** The contract is the least changeable item inside a
 wall, because a new shape of the contract changes each brick. This cost is the price of
-composition. Thus, keep the contract small. If the register says that the shape of the
-data will change (split transactions, a new currency field), make the change additive. Add
-new optional fields. Do not rename a field, and do not give a field a new purpose.
+composition. Thus, keep the contract small.
+
+If the register says that the shape of the data will change (split transactions, a new
+currency field), make the change additive. Add new optional fields. Do not rename a field,
+and do not give a field a new purpose.
 
 Write the contract in the design: its fields, the bricks that can set each field, and its
 invariants.
@@ -112,9 +115,11 @@ invariants.
 
 A mechanism tells *how* to do something. A policy tells *what, when, or whether*. Hydra
 (1974) made the separation of the two a core design rule. Thus, one kernel of mechanisms
-could support many policies on top of the kernel. Raymond wrote about X, and he tells why
-the separation is good in general. Policy changes much faster than mechanism. If you
-hard-wire the two together, the policy becomes rigid and the mechanism becomes unstable.
+could support many policies on top of the kernel.
+
+Raymond wrote about X, and he tells why the separation of mechanism and policy is good in
+general. Policy changes much faster than mechanism. If you hard-wire the two together, the
+policy becomes rigid and the mechanism becomes unstable.
 
 In practice, bricks are mechanism. "Which channel for this user", "which discount wins",
 and "how many retries" are policy. Supply each policy as data or as a Policy brick. If a
@@ -166,9 +171,11 @@ Least Power*. The W3C wrote that rule for publication on the Web.
 
 Hadlow's *Configuration Complexity Clock* gives this sequence. Hard-coded values become
 config. Then config becomes a rules engine, and the rules engine becomes a DSL. At the end,
-you are "hard coding everything, except now in a much crappier language." The end state is
-similar to the Inner-Platform Effect (Papadimoulis): a poor copy of the platform that you
-started with. If the wiring needs loops or conditionals, write the wiring in code.
+you are "hard coding everything, except now in a much crappier language."
+
+The end state of Hadlow's clock is similar to the Inner-Platform Effect (Papadimoulis): a
+poor copy of the platform that you started with. If the wiring needs loops or
+conditionals, write the wiring in code.
 
 **User-written rules are different.** Sometimes end users write rules as a feature (the
 categorisation rules of an accountant, the promotions of a marketer). These rules are
@@ -207,11 +214,13 @@ pieces with interfaces that cost more than they hide.
 - **Earn every brick** (the skill's own rule). A Transform, policy, or Store must serve two
   or more current features. Or, the brick must serve one current feature as one of the
   variants that a recorded volatility names (one channel, one kind of discount). If not,
-  keep the logic inline in the composition. Inputs and Transports at the edges are exempt,
-  because each feature needs a way in and a way out. Do not merge bricks to obey this rule.
-  A merged brick with a mode flag is the first smell in the table below. This rule is
-  looser than the rule of three on purpose. At design time, you decide where new code
-  goes. You do not extract duplication that exists.
+  keep the logic inline in the composition.
+  - Inputs and Transports at the edges are exempt, because each feature needs a way in and
+    a way out.
+  - Do not merge bricks to obey this rule. A merged brick with a mode flag is the first
+    smell in the table below.
+  - This rule is looser than the rule of three on purpose. At design time, you decide
+    where new code goes. You do not extract duplication that exists.
 - **Rule of three** (Roberts, through Fowler). Use this rule when you extract a brick from
   existing code, also from host code in subsystem mode. The first time, write the code.
   The second time, duplicate the code. The third time, extract the brick. Two similar
@@ -222,9 +231,9 @@ pieces with interfaces that cost more than they hide.
   extract again.
 - **YAGNI** (Fowler) applies to presumptive features *and* to abstractions that you add for
   future flexibility: "any abstraction that makes it harder to understand the code for
-  current requirements is presumed guilty." The exemption is refactoring: work that makes
-  the code easier to modify. Thus, build bricks for the features of today. Do not build a
-  brick that only a future feature needs.
+  current requirements is presumed guilty." Refactoring is exempt. Refactoring is work
+  that makes the code easier to modify. Thus, build bricks for the features of today. Do
+  not build a brick that only a future feature needs.
 - **Future features are tests, not tasks.** Use a future feature to make sure that the
   design can absorb it. Do not build the future feature.
 - **Watch the public surface.** Hyrum's law: when an API has sufficient users, somebody

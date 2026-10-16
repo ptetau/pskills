@@ -76,9 +76,9 @@ average share of runs in the largest group. Write `-` where a value is not measu
 ## Where it falls short
 
 *(List the items with a passRate under 80, lowest first. For each item, give what the
-item asks, the met/partial/missed counts, and one or two evidence quotes with run labels,
-from `runs[].verdicts`. If no item has a passRate under 80, write "Every item met in at
-least 80% of runs.")*
+item asks and the met/partial/missed counts. Also give one or two evidence quotes with
+run labels, from `runs[].verdicts`. If no item has a passRate under 80, write "Every item
+met in at least 80% of runs.")*
 
 ### R[n] [criterion] — met in [passRate]% of runs
 

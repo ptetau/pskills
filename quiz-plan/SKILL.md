@@ -1,6 +1,6 @@
 ---
 name: quiz-plan
-description: Interactive planning with a quiz. Asks structured questions to get the context. Then writes a full Change Plan document with Intent, Approach, Ground truth, Boundaries, Steps, Verification, and Progress log. Each step declares a `Touches` file footprint and `Depends on` edges, so that [[quiz-plan-execute]] can put independent steps in groups automatically and run each group in parallel. Each step is AUTO by default. A step is GATED (a human checkpoint) only when the user explicitly asks for a checkpoint. Before the skill shows the draft, a red-team pass examines the draft against its own Boundaries, the riskiest assumption, the scope, the correctness of the parallel groups, and a failure premortem. Use for each non-trivial code change that needs a clear plan before the implementation.
+description: Interactive planning with a quiz. Asks structured questions to get the context. Then writes a full Change Plan document with Intent, Approach, Ground truth, Boundaries, Steps, Verification, and Progress log. Each step declares a `Touches` file footprint and `Depends on` edges. The executor [[quiz-plan-execute]] uses these fields to put independent steps in groups automatically, and to run each group in parallel. Each step is AUTO by default. A step is GATED (a human checkpoint) only when the user explicitly asks for a checkpoint. Before the skill shows the draft, a red-team pass examines the draft. The pass uses the Boundaries of the draft, the riskiest assumption, the scope, the correctness of the parallel groups, and a failure premortem. Use for each non-trivial code change that needs a clear plan before the implementation.
 license: MIT license
 metadata:
     skill-author: K-Dense Inc.
@@ -54,8 +54,8 @@ red-team pass on the draft. The red-team pass occurs before you show the plan.
 Interview the user one question at a time, with the question UX of [[quiz]] (see "The
 look" below). When an answer shows an ambiguity, drill deeper. The starter question pool
 below gives your first questions, but the quiz is **not limited to the starter pool**. An
-answer can show assumptions, ambiguities, or unknowns that must have their own follow-up.
-Continue to ask until you can write a complete plan that is not ambiguous.
+answer can show assumptions, ambiguities, or unknowns. Each of these items needs its own
+follow-up. Continue to ask until you can write a complete plan that is not ambiguous.
 
 #### Starter Question Pool
 
@@ -65,52 +65,52 @@ already answers. Ask each question as a quiz question (the same UX as `/quiz`, s
 look" below), **one question in each turn**. Expect to ask follow-up drill questions that
 go deeper (see the next section). Ask the follow-up questions in the same way.
 
-**Q1 · What is the change?** "Give the outcome in one sentence."
+**Q1: What is the change?** "Give the outcome in one sentence."
 Captures: the core change, in plain language. → **Intent**
 
-**Q2 · Why?** "What is wrong now? Which specific problem does the change solve?"
+**Q2: Why?** "What is wrong now? Which specific problem does the change solve?"
 Captures: the concrete pain point. → **Intent**
 
-**Q3 · What files are involved?** "Which files or packages do you expect to touch? If you
+**Q3: What files are involved?** "Which files or packages do you expect to touch? If you
 know the paths, list the paths. If not, tell me the area of the codebase."
 Captures: the file paths and the modules. → **Ground truth → Key files**
 
-**Q4 · What is out of bounds?** "Is there anything that you explicitly do not want to
+**Q4: What is out of bounds?** "Is there anything that you explicitly do not want to
 change? Is there adjacent work that this change must not do?"
 Captures: the scope exclusions. → **Intent → Not doing** and **Boundaries → Must not
 touch**
 
-**Q5 · What can go wrong?** "What is the riskiest part: the part that is most likely to
+**Q5: What can go wrong?** "What is the riskiest part: the part that is most likely to
 break or to surprise you?"
 Captures: the riskiest assumption. → **Boundaries → Riskiest assumption**
 
-**Q6 · Build and test commands?** "Which commands do you use to build, test, and lint? Is
+**Q6: Build and test commands?** "Which commands do you use to build, test, and lint? Is
 a special setup necessary?"
 Captures: the exact commands. → **Ground truth → Build / test / lint**
 
-**Q7 · Any conventions?** "Are there style guides, naming patterns, ADRs, or existing docs
+**Q7: Any conventions?** "Are there style guides, naming patterns, ADRs, or existing docs
 (CLAUDE.md) that I must read?"
 Captures: the conventions and the reference docs. → **Ground truth → Conventions**
 
-**Q8 · How will you confirm the change?** "What will you check to make sure that the
+**Q8: How will you confirm the change?** "What will you check to make sure that the
 change is complete and correct? Which edge cases are there?"
 Captures: the verification criteria. → **Verification and rollback**
 
-**Q9 · Rollback plan?** "If the change fails, how do we undo the change? With a git
+**Q9: Rollback plan?** "If the change fails, how do we undo the change? With a git
 revert, a feature flag, or a DB rollback?"
 Captures: the rollback strategy. → **Verification and rollback → Rollback**
 
-**Q10 · Branch name?** "Which branch does this work go on? I can create the branch if
+**Q10: Branch name?** "Which branch does this work go on? I can create the branch if
 necessary."
 Captures: the branch name. → Document header
 
-**Q11 · Prior art?** "Did we build something with this shape before, here or in a
+**Q11: Prior art?** "Did we build something with this shape before, here or in a
 different place? About how many steps did it take? What broke or surprised us the last
 time?"
 Captures: the closest past change, its approximate number of steps, and the known failure
 modes. → **Ground truth → Prior art** (the answer also seeds the Phase 3 premortem)
 
-**Q12 · More than one way to do this?** *(ask only when 2 or more viable approaches
+**Q12: More than one way to do this?** *(ask only when 2 or more viable approaches
 exist)* "Are there competing approaches? Name the front-runners, so that we select one
 deliberately and not by default the first one that we thought of."
 Captures: the options for the approach, and the reason for the selection. → **Approach**
@@ -166,6 +166,7 @@ Ask each question the way that [[quiz]] asks a question. This applies to the sta
 questions and to the drill follow-ups. If the session has the picker (the
 `AskUserQuestion` tool), use the picker. If not, ask a plain-markdown question. Do not use
 ASCII cards, box-drawing characters, or code blocks around the questions or the echoes.
+
 **Ask one question in each message or picker call, always.** Do not put two questions
 together.
 
@@ -182,9 +183,9 @@ with four differences:
    grows. Each answer can open a follow-up question (see "Drill behaviour" below).
 3. **Open questions** (a sentence, a command, or a file path). Ask an open question in
    plain prose, also when the picker exists. Write a heading `**Question N · Label**`,
-   then the question, then `Reply with <what's needed>.` Use the picker only when there
-   are 2-4 real options, for example a branch name that you can suggest. Do not invent
-   options to fill the picker.
+   then the question. Then write `Reply with <what's needed>.` on the last line. Use the
+   picker only when there are 2-4 real options, for example a branch name that you can
+   suggest. Do not invent options to fill the picker.
 4. **No cap.** /quiz asks about 7 questions, and then offers /squiz. In this skill, the
    drill continues until each item in "Signs that you can stop the drill" is true.
 
@@ -193,7 +194,7 @@ Tag an option `(recommended)` only when a fact from the ground truth, a constrai
 risk points to the option. Name that fact in the sentence of the option. If the options
 are really equal, do not recommend an option.
 
-The example below shows a fallback question. Show the question as markdown, never in a
+The example below shows a fallback question. Show the question as markdown, not in a
 code block:
 
 ````markdown
@@ -407,14 +408,14 @@ Also update the checkbox of each step from `[ ]` to `[x]` when the step is compl
 When you make the steps from the quiz answers, obey these rules:
 
 1. **Step 1 must always test the riskiest assumption**, from Q5 (the riskiest part). This
-   step goes first, because if this step fails, the full plan is not valid. Step 1 never
-   joins a parallel group.
+   step goes first, because if this step fails, the full plan is not valid. Step 1 does
+   not join a parallel group.
 2. Each step must produce a concrete outcome that you can check, for example a passing
    test, a rendered route, or a working command.
 3. **Make each step AUTO by default.** Mark a step **GATED** only when the user explicitly
-   asks for a human checkpoint on that step. The user can name the step. The user can also
-   give a general instruction, for example "gate the risky ones". Then apply the
-   instruction to the steps that match. Do not gate a step by default "to be safe". The
+   asks for a human checkpoint on that step. The user can name the step, or give a general
+   instruction, for example "gate the risky ones". Apply that instruction to the steps
+   that match. Do not gate a step by default "to be safe". The
    default changed because unattended AUTO execution from start to end is now the common
    case, not the exception.
 4. If the change involves both infrastructure and code, divide the steps into logical
@@ -422,7 +423,7 @@ When you make the steps from the quiz answers, obey these rules:
 5. If the change involves a backend and a frontend, put the steps in the order of their
    dependencies. For example, put the backend first if the frontend depends on the
    backend.
-6. Each step must fit in one session. If a step must have 20 file changes, split the step
+6. Each step must fit in one session. If a step needs 20 file changes, split the step
    again.
 7. The last step must always include a run of the build, test, and lint commands from Q6
    (the commands).
@@ -436,10 +437,10 @@ When you make the steps from the quiz answers, obey these rules:
     Two AUTO steps can share a group id (`P1`, `P2`, ...) only if these conditions are
     true:
     - Neither step is the riskiest-assumption step.
-    - Their `Touches` sets are disjoint.
+    - The `Touches` sets of the two steps are disjoint.
     - Neither step depends on the other step, directly or transitively.
 
-    A group must have 2 or more steps. A step with no groupmate gets
+    A group contains 2 or more steps. A step with no groupmate gets
     `Parallel group: none`. If you are not sure that two steps are really independent,
     use `none`, and do not guess a group. A missed parallel opportunity costs time, but a
     wrong group costs a broken merge.
@@ -453,13 +454,15 @@ as one more quiz question. Do not silently patch over the problem, and do not si
 drop the problem.
 
 - **Premortem (the outside-in lens):** assume that it is one month later, and that this
-  plan shipped and *failed*. Work backwards and list the likely causes. The Q11 (prior
-  art) answer is your seed: what broke the last time? For each cause, name the step, the
+  plan shipped and *failed*. Work backwards and list the likely causes. Use the Q11 (prior
+  art) answer as your seed: what broke the last time? For each cause, name the step, the
   boundary, or the Assumption that already defends against the cause. A cause with no
-  defender is a coverage gap. For each gap, add a mitigation step (after Step 1, never in
-  place of Step 1) or a stop-condition. This lens is different from the mechanical checks
-  below. The mechanical checks ask "does a step break a rule?". The premortem asks "what
-  failure is not represented as a step at all?"
+  defender is a coverage gap. For each gap, add a mitigation step (after Step 1, not in
+  place of Step 1) or a stop-condition.
+
+  This lens is different from the mechanical checks below. The mechanical checks ask
+  "does a step break a rule?". The premortem asks "what failure is not represented as a
+  step at all?"
 - **Riskiest assumption:** does Step 1 actually *test* the assumption? The test must be
   falsifiable: the test fails if the assumption is wrong. Or does Step 1 only touch the
   same area?
@@ -602,11 +605,11 @@ and a whitelisted internal-IP route stays 200 for the full test.")*
 
 ## Notes
 
-- This skill uses the **same question UX as [[quiz]]**: the picker if the session has
-  one, plain markdown if not, one question in each turn, and `✓` echoes. The skill does
-  not show all the questions at the same time. There are two differences. The drill is
-  adaptive (no total until the drill is resolved, and no fixed list at the start). There
-  is no cap of about 7 questions.
+- This skill uses the **same question UX as [[quiz]]**. The skill uses the picker if the
+  session has one, and plain markdown if not. The skill asks one question in each turn,
+  and writes `✓` echoes. The skill does not show all the questions at the same time.
+  There are two differences: the drill is adaptive (no total until the drill is resolved,
+  and no fixed list at the start), and there is no cap of about 7 questions.
 - If the user gives minimal answers, keep the plan short. If the user gives detailed
   answers, include all the details.
 - If the user already has a clear idea of the steps, go directly to the step generation.

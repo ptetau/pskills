@@ -36,6 +36,7 @@ CASES = [
     ('Do not write "Don\'t do it, e.g. now". Write "Do it now".', None),
     ("The C4 model has four levels.", None),
     ("- **Verify:** `npm test` runs the suite.", None),
+    ("The validator gives the warning `composition-thin` for a thin page.", None),
     ("Ask a question only if the prompt leaves the dimension open\n**and** the answer would change the work and the plan.", "length"),
     ("The skill keeps the behavior of the old version.", "spelling"),
     ("Organize the files.", "spelling"),

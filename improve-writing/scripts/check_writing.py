@@ -472,7 +472,8 @@ def check(text, dictionary=None, max_grade=9.0):
             add("grade", None, "reading grade %.1f; aim for %.0f or lower (shorter sentences, shorter words)" % (grade, max_grade))
 
     terms, has_list = glossary_terms(text)
-    used = sorted({j for j in JARGON if re.search(r"\b%s\b" % re.escape(j), prose, re.I)})
+    plain_prose = re.sub(r"`[^`]*`", "X", prose)          # a word in inline code is a name, not prose
+    used = sorted({j for j in JARGON if re.search(r"\b%s\b" % re.escape(j), plain_prose, re.I)})
     unexplained = [j for j in used
                    if not any(j == t or j.startswith(t) or t.startswith(j[:6]) or j in t.split() for t in terms)]
     stats["jargon_unexplained"] = unexplained

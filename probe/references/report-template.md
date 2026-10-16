@@ -50,7 +50,7 @@ finding below gives each field of a `finding` object in `findings.schema.json`: 
 - **Verified:** `[verified — true/false, set by the Phase 3 adversarial pass]`
   · **Confidence:** `[confidence — 0..1]`
 
-[description — what was expected vs what actually happened, and why the difference is important]
+[description — what was expected vs what actually happened, and why the finding is important]
 
 **Repro:**
 
