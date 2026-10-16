@@ -2,13 +2,14 @@
 
 **Source design:** `{name}.design.md` · **Language:** {TypeScript | Go | Rust} · **Status:** draft
 
-## 1. Header & Boundary Box: what gets built, and what doesn't
+## 1. Header & Boundary Box: what gets built, and what does not
 
 **System:** {one line: what it does, for whom}
 **Target mode:** {modular monolith | event-driven services | …} in {language}, {runtime}, {storage} *(assumed, if the design did not say)*
 
-A C4 container diagram: what runs, and which components each container holds (see
-`c4.md`). With a single container, say "Everything runs in one container: {name}" instead.
+A C4 container diagram: what runs, and the components that each container holds (see
+`c4.md`). If there is a single container, write "Everything runs in one container: {name}"
+in place of the diagram.
 
 ```mermaid
 C4Container
@@ -24,8 +25,8 @@ C4Container
   Rel(app, ext, "{Does what through}", "{protocol}")
 ```
 
-Key: blue boxes run inside our system; grey boxes are other systems; the figure is a
-person. Each container lists the components it holds.
+Key: blue boxes run inside our system. Grey boxes are other systems. The figure is a
+person. Each container lists the components that it holds.
 
 ### In scope
 
@@ -37,25 +38,27 @@ person. Each container lists the components it holds.
 
 ### Decisions carried from the design
 
-- {the design's own assumption, as stated there}
+- {an assumption of the design, as the design states it}
 
 ### Decisions added by this spec
 
-Each item was open in the design and is decided here. Review these first.
+Each item was open in the design, and this spec decides it. Review these items first.
 
 - {decision}: {chosen value}. If wrong: {what changes}.
 
-Open questions, at most three, also appear inline where they apply:
-`[NEEDS CLARIFICATION: {the specific question}]`. Answer them before an agent builds.
+Open questions (a maximum of three) also appear inline, where they apply:
+`[NEEDS CLARIFICATION: {the specific question}]`. Answer the open questions before an
+agent builds the system.
 
 ### Words used here
 
-One line per technical word this blueprint uses, explained in plain words (see
+Give one line for each technical word that this blueprint uses, in plain words (see
 `writing-guidelines.md`). For example:
 
-- **Invariant**: a rule that must always be true, no matter what happens.
-- **Idempotent**: safe to do twice; the second time changes nothing.
-- **Encapsulates**: keeps a likely change inside one part, so the rest doesn't notice.
+- **Invariant**: a rule that must always be true, in all conditions.
+- **Idempotent**: safe to do two times. The second time changes nothing.
+- **Encapsulates**: keeps a likely change inside one part, so the change does not touch
+  the other parts.
 
 ## 2. System Invariants: rules that must always hold
 
@@ -63,17 +66,17 @@ One line per technical word this blueprint uses, explained in plain words (see
    transaction as {write}}. Violation: `{ERROR_CODE}`.
 2. …
 
-(4–7 invariants for most systems; fewer for a small domain. Never pad. Cover
-idempotency, immutability, and the hard rejections where they apply.)
+(Most systems have 4–7 invariants. A small domain can have fewer. Do not pad the list.
+Cover idempotency, immutability, and the hard rejections, where they apply.)
 
 ## 3. Core Domain Data Contracts: the exact shape of the data
 
 Conventions:
 
-- {IDs are branded strings, so two kinds of ID can't be mixed up.}
+- {IDs are branded strings, so code cannot use one kind of ID in place of another kind.}
 - {Money is a whole number of the smallest unit (cents), plus an ISO 4217 currency code.}
 - {Times are ISO 8601 strings in UTC.}
-- {A `?` marks a field that may be missing.}
+- {A `?` marks a field that can be missing.}
 
 ```ts
 // Identifiers
@@ -96,17 +99,18 @@ export type Result<T> = { ok: true; value: T } | { ok: false; error: ErrorCode; 
 
 ### Error catalog
 
-One row per code in `ErrorCode`. The fault column says who must fix it. It's the caller's
-fault (a 4xx status) when they sent something the method can't accept. It's ours (a 5xx
-status) when our code broke its own promise. Over HTTP, errors use RFC 9457 problem
-details (`application/problem+json`), with the code in a `code` field.
+Give one row for each code in `ErrorCode`. The fault column says who must fix the error.
+The fault is the caller's (a 4xx status) when the caller sent something that the method
+cannot accept. The fault is ours (a 5xx status) when our code broke its own promise. Over
+HTTP, errors use RFC 9457 problem details (`application/problem+json`), with the code in a
+`code` field.
 
 | Code | Meaning | Fault | HTTP | Retry helps? |
 |------|---------|-------|------|--------------|
 | `{ERROR_A}` | {what went wrong} | caller | {409} | no |
 | `{ERROR_B}` | {what went wrong} | supplier | {503} | yes, with backoff |
 
-(No HTTP boundary? Drop the HTTP column.)
+(If there is no HTTP boundary, remove the HTTP column.)
 
 ## 4. State Machines: how things move from one state to the next
 
@@ -119,10 +123,10 @@ stateDiagram-v2
   StateB --> [*]
 ```
 
-Stored by `{Component}`. Each transition is performed by the verb on its arrow, as a
-compare-and-set. Anything not drawn is refused: `{INVALID_TRANSITION}`. Terminal:
-{states, or "none"}. {If the design names this machine differently: "This is the design's
-`{Machine}` machine."}
+Stored by `{Component}`. The verb on each arrow does that transition, as a
+compare-and-set. The system refuses each transition that is not drawn:
+`{INVALID_TRANSITION}`. Terminal: {states, or "none"}. {If the design gives this machine a
+different name: "This is the design's `{Machine}` machine."}
 
 ## 5. Module Boundaries & Interface Signatures: the parts and how to call them
 
@@ -138,8 +142,9 @@ tests/
 
 ### Component diagram
 
-The design's component diagram, redrawn inside its container, with technology added
-(`[Component: Manager, TypeScript]`). Required when there are more than three parts.
+The component diagram of the design, drawn again inside its container, with the
+technology added (`[Component: Manager, TypeScript]`). This diagram is necessary when there
+are more than three parts.
 
 ```mermaid
 ---
@@ -157,7 +162,7 @@ flowchart TB
   m1 -->|Verb| e1
 ```
 
-Key: light blue, a component; arrows are calls, labelled with the verbs used.
+Key: light blue, a component. Each arrow is a call, with the verb as its label.
 
 ### Entry points (Clients)
 
@@ -167,7 +172,7 @@ Key: light blue, a component; arrows are calls, labelled with the verbs used.
 - **Encapsulates:** {who calls, and how}
 - **Constraints:** {how callers prove who they are: a sign-in, an API key, a card and PIN}.
   No business rules.
-- **May call:** {one Manager per use case}
+- **May call:** {one Manager for each use case}
 
 ```ts
 export interface {Name} {
@@ -175,8 +180,9 @@ export interface {Name} {
 }
 ```
 
-- **Failure & retry:** {what the caller sees for each error; whether it may retry}
-- **Internals:** {the design's bricks for this part, in backticks as the design spells them}
+- **Failure & retry:** {what the caller sees for each error, and if the caller can retry}
+- **Internals:** {the bricks of the design for this part, in backticks, with the
+  spelling of the design}
 
 ### Orchestration (Managers)
 
@@ -184,8 +190,9 @@ export interface {Name} {
 
 - **Purpose:** {one line}
 - **Encapsulates:** {the likely change it contains, in plain words}
-- **Constraints:** runs the steps in order; no business rules.
-- **May call:** {Engines, ResourceAccess, Utilities; other Managers only through a queue}
+- **Constraints:** runs the steps in order. No business rules.
+- **May call:** {Engines, ResourceAccess, and Utilities. Other Managers only through a
+  queue.}
 
 ```ts
 export interface {Noun}Manager {
@@ -198,7 +205,8 @@ export interface {Noun}Manager {
   2. `{Access.verb}` …
   3. {Only if the design has one:} queue `{OtherManager.verb}` …
 - **Failure & retry:** {retryable vs final errors, timeouts, idempotency on retry, races}
-- **Internals:** {the design's bricks for this part, in backticks as the design spells them}
+- **Internals:** {the bricks of the design for this part, in backticks, with the
+  spelling of the design}
 
 ### Business rules (Engines)
 
@@ -207,24 +215,25 @@ export interface {Noun}Manager {
 - **Purpose:** …
 - **Encapsulates:** …
 - **Constraints:** pure and in-memory: no network, storage, clock, or randomness. The
-  Manager passes in what it needs.
-- **May call:** {Utilities; a read-only ResourceAccess only if the design records one}
+  Manager passes in what the Engine needs.
+- **May call:** {Utilities. A read-only ResourceAccess, only if the design records one.}
 
 ```ts
 export interface {Activity}Engine { … }
 ```
 
-- **Failure & retry:** deterministic; returns errors as values; never retried.
-- **Internals:** {the design's bricks for this part, in backticks as the design spells them}
+- **Failure & retry:** deterministic. Returns errors as values. No retries.
+- **Internals:** {the bricks of the design for this part, in backticks, with the
+  spelling of the design}
 
 ### Resource access (ResourceAccess)
 
 #### {Noun}Access
 
 - **Purpose:** …
-- **Encapsulates:** {the vendor or storage that may change}
-- **Constraints:** the only code that touches {vendor or storage}; exposes business verbs,
-  never CRUD or vendor types.
+- **Encapsulates:** {the vendor or storage that can change}
+- **Constraints:** the only code that touches {vendor or storage}. Exposes business verbs,
+  not CRUD or vendor types.
 - **May call:** {Resources, Utilities}
 
 ```ts
@@ -232,12 +241,13 @@ export interface {Noun}Access { … }
 ```
 
 - **Failure & retry:** {timeouts, which vendor errors are retried, backoff, idempotency key}
-- **Internals:** {the design's bricks for this part, in backticks as the design spells them}
+- **Internals:** {the bricks of the design for this part, in backticks, with the
+  spelling of the design}
 
 ### Shared infrastructure (Utilities)
 
-Only a Utility this system builds and the design names. Off-the-shelf logging just gets a
-folder in the module map.
+Give only a Utility that this system builds and that the design names. Off-the-shelf
+logging gets only a folder in the module map.
 
 #### {Utility}
 
@@ -250,7 +260,7 @@ export interface {Utility} { … }
 
 - **Failure & retry:** …
 
-## 6. Agent Verification Suite: tests that say when it's done
+## 6. Agent Verification Suite: tests that say when it is done
 
 ```gherkin
 Feature: {capability}
@@ -272,5 +282,5 @@ Feature: {capability}
 
 **Verify:** `{npm test -- tests/features}`
 
-**Done when:** every scenario above passes (they fail before the work starts), and every
-existing test still passes.
+**Done when:** every scenario above passes (the scenarios fail before the work starts),
+and every existing test still passes.

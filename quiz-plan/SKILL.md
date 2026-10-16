@@ -117,8 +117,8 @@ Captures: the options for the approach, and the reason for the selection. → **
 
 > Q11 (prior art) and Q12 (other approaches) are **appended** at the end. Thus, Q1 to Q10
 > (the first ten questions) keep their numbers, and the template mapping below stays
-> stable. Q12 (other approaches) is conditional: skip Q12 when only one sensible approach
-> exists.
+> stable. Q12 (other approaches) is conditional: skip this question when only one
+> sensible approach exists.
 
 #### Adaptive Follow-up Drill (the key mechanic)
 
@@ -203,7 +203,7 @@ Where does the rate-limit middleware live?
 
 - **A · internal/api/middleware/ (recommended)**: sits next to the existing logging
   middleware, so reviewers recognise the pattern and no new package is necessary, but it
-  ties the limiter to the conventions of that folder.
+  ties the limiter to that folder's conventions.
 - **B · a new top-level package**: for example `pkg/ratelimit/`, which is good if the
   limiter becomes a reusable module, but it adds an import path for a first version.
 - **C · not sure**: I will read the code and tell you what I find before I select a
@@ -315,14 +315,14 @@ You are an agent that executes this plan. Assume that you have no memory of earl
 - **Conventions:** [from Q7 (the conventions)]
 - **Prior art:** [from Q11 (prior art): the closest past change, its approximate number of steps, and what broke the last time. This item helps to set the scope, and it seeds the Phase 3 premortem. "None known" is a valid answer.]
 
-**Verification rule:** before you call a function, an API, or a library feature that is not listed above, read its actual definition in the source or in the installed package. Do not write a call from your memory of what the API "probably" looks like. If you cannot find the definition, stop and ask.
+**Verification rule:** before you call a function, an API, or a library feature that is not listed above, find its actual definition. Read the definition in the source or in the installed package. Do not write a call from your memory of what the API "probably" looks like. If you cannot find the definition, stop and ask.
 
 ## Boundaries
 
 - **May modify:** [inferred from Q3 (the files) and Q4 (out of bounds)]
 - **Must not touch:** [from Q4 (out of bounds)]
-- **Stop and ask when:** a test you didn't expect fails, a change is necessary outside "may modify", the instructions of a step are ambiguous, or you tried the same fix two times without success. Two failed attempts mean that the plan is wrong, not that you must try harder.
-- **Assumptions (re-check every step):** [the novel things that this plan takes as true. If one of these things is false, the plan is not valid. For example: "the ORM emits one query per row", or "the feature flag defaults off in prod". These items are different from the Verification rule above (read the APIs, do not guess). They are also different from the single Riskiest assumption below (which drives Step 1). If the execution shows that an item here is false, stop and ask. Do not add a workaround.]
+- **Stop and ask when:** a test you didn't expect fails, a change is necessary outside "may modify", or the instructions of a step are ambiguous. Also stop and ask when you tried the same fix two times without success. Two failed attempts mean that the plan is wrong, not that you must try harder.
+- **Assumptions (re-check every step):** [the novel things that this plan takes as true. If one of these things is false, the plan is not valid. For example: "the ORM emits one query per row", or "the feature flag defaults off in prod". These items are different from the Verification rule above (read the APIs, do not guess), and from the single Riskiest assumption below (which drives Step 1). If the execution shows that an item here is false, stop and ask. Do not add a workaround.]
 
 **Riskiest assumption:** [from Q5 (the riskiest part)]. Step [1] tests this assumption, so step [1] comes first.
 
@@ -355,8 +355,8 @@ wrong, the grouping does the wrong thing, and nothing shows the error.
 [Add more steps as necessary...]
 
 **Parallel group assignment rule:** two steps can share a group only if their `Touches` sets
-are disjoint **and** neither step is in the (transitive) `Depends on` chain of the other
-step. The step that tests the **Riskiest assumption** does not join a group. That step
+are disjoint **and** neither step is in the (transitive) `Depends on` chain of the
+other. The step that tests the **Riskiest assumption** does not join a group. That step
 always runs alone, first. A step marked **GATED** also does not join a group. An explicit
 human checkpoint runs alone, so that the pause point stays predictable. Thus, each group
 contains only AUTO steps.
@@ -548,8 +548,8 @@ questions show as options that the user clicks.
 > Where does the rate-limit middleware live?
 >
 > - **A · internal/api/middleware/ (recommended)**: sits next to the existing logging
->   middleware, so reviewers recognise the pattern, but it ties the limiter to the
->   conventions of that folder.
+>   middleware, so reviewers recognise the pattern, but it ties the limiter to that
+>   folder's conventions.
 > - **B · a new package**: for example `pkg/ratelimit/`, which you can use again later,
 >   but it adds an import path for a first version.
 > - **C · not sure**: I will read the code and tell you what I find, but this costs one
@@ -570,7 +570,7 @@ commands, and the branch.)*
 > - ✓ 3/8 Location → internal/api/middleware/ (note: there's already a logging-middleware pattern there)
 > - ✓ 4/8 Limit → configurable (note: env var, default 100/min)
 > - ✓ 5/8 Must-not → auth middleware, private/internal routes
-> - ✓ 6/8 Verify → integration test: the 101st rapid request gets 429
+> - ✓ 6/8 Check → integration test: the 101st rapid request gets 429
 > - ✓ 7/8 Commands → `go build ./...` and `go test ./...`
 > - ✓ 8/8 Branch → feature/rate-limiting
 

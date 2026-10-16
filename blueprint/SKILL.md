@@ -1,19 +1,18 @@
 ---
 name: blueprint
 description: >
-  Turns a system design (a /decompose design document, or any architecture doc) into
-  an Agent System Design Document. This document is a spec that a person can skim, and
-  that a coding agent can implement with no guesses. Its six sections are scope boundaries, enforceable
-  invariants with error codes, strongly typed data contracts, explicit state machines,
-  module boundaries, and a Gherkin verification suite. Each module boundary gives typed
-  method signatures and failure and retry semantics. Decides each detail that the design
-  leaves open one time, marks it as assumed, and lists it for review. Removes methodology
-  jargon and IDs. Then checks the result with a bundled checker, and writes a blueprint
-  document. Use when the user says "/blueprint", or asks to turn a design into a spec.
-  Also use when the user asks to make a design agent-ready or implementable. Also use
-  when the user asks to write the types, interfaces, contracts, or acceptance tests for a
-  design, or wants the next step after /decompose.
----
+  Turns a system design (a /decompose design document, or any architecture doc) into an
+  Agent System Design Document. This document is a spec that a person can skim, and that a
+  coding agent can implement with no guesses. Its six sections are scope boundaries,
+  enforceable invariants with error codes, strongly typed data contracts, explicit state
+  machines, module boundaries, and a Gherkin verification suite. Each module boundary
+  gives typed method signatures and failure and retry semantics. Decides each detail that
+  the design leaves open one time, marks it as assumed, and lists it for review. Removes
+  methodology jargon and IDs. Then checks the result with a bundled checker, and writes a
+  blueprint document. Use when the user says "/blueprint", or asks to turn a design into a
+  spec. Also use when the user asks to make a design agent-ready or implementable. Also
+  use when the user asks to write the types, interfaces, contracts, or acceptance tests
+  for a design, or wants the next step after /decompose. ---
 
 # Blueprint: from design to buildable spec
 
@@ -21,8 +20,8 @@ description: >
 
 A design document tells *why* the system has its shape. A coding agent must know *exactly
 what* to build. The agent needs the types, error codes, state transitions, method
-signatures, and the tests that show when the work is done. If an agent gets only the design, the agent invents
-those details, and the details are different each time.
+signatures, and the tests that show when the work is done. If an agent gets only the
+design, the agent invents those details, and the details are different each time.
 
 `/blueprint` writes an **Agent System Design Document** (a blueprint) from a design. The
 blueprint has six sections:
@@ -181,8 +180,8 @@ Write the rules that must be true in all conditions. These rules are the invaria
 design by contract, made concrete. The format asks for 4–7 invariants, and this number
 suits most systems. A small domain can have fewer invariants.
 
-Do not pad the list with a rule that the types already guarantee. Also do not pad the list with a rule that only a
-caller with a bug can break. Find the invariants in these places:
+Do not pad the list with a rule that the types already guarantee. Also do not pad the list
+with a rule that only a caller with a bug can break. Find the invariants in these places:
 
 - The nature of the business.
 - The rules of the Engines.
@@ -249,9 +248,12 @@ boundary, errors travel as RFC 9457 problem details, with the code in a `code` m
 
 Draw each lifecycle. Each `...Status` or `...State` type in section 3 gets a state machine.
 Each state machine brick in the design also gets a state machine, with all of its states.
+
 Give the state machine the heading `### {Machine}Status`. Or, under a different heading,
-write "the design's `{Machine}` machine". The `--design` option checks the two forms. Use
-a Mermaid `stateDiagram-v2` (or ASCII when Mermaid does not render), and obey these rules:
+write "the design's `{Machine}` machine". The `--design` option checks the two forms.
+
+Use a Mermaid `stateDiagram-v2` (or ASCII when Mermaid does not render), and obey these
+rules:
 
 - Use `[*]` for the start. Mark the terminal states, if there are any.
 - Draw only the legal transitions. The system refuses each transition that is not drawn.

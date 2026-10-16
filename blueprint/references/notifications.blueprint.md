@@ -54,7 +54,7 @@ whom, and how.
 
 ### Decisions added by this spec
 
-The design left each decision below open, so this spec makes each decision. Review these
+The design left each decision below open, so this spec makes each decision. Examine these
 decisions first.
 
 - Storage is one Postgres database. If wrong: only the ResourceAccess parts change.
@@ -455,7 +455,7 @@ export interface NotificationManager {
   time up to `min(1 h, 30 s × 2^n)`. `PROVIDER_REJECTED` is final. After 5 attempts, the
   delivery becomes `dead` with `RETRIES_EXHAUSTED`, and NotificationManager logs the
   delivery. If two workers race on one delivery, the compare-and-set in
-  `OutboxAccess.startAttempt` selects the winner. The worker that loses gets
+  `OutboxAccess.startAttempt` selects the winner. The other worker gets
   `INVALID_TRANSITION` and moves to its next task.
 - **Internals:** the `Delivery` state machine (section 4), and one flow for each use case.
 
@@ -463,7 +463,7 @@ export interface NotificationManager {
 
 #### RoutingEngine
 
-- **Purpose:** decides who gets a message, on which channel, and when.
+- **Purpose:** selects who gets a message, on which channel, and when.
 - **Encapsulates:** preferences, quiet hours, and regional rules. These three items are
   different for each customer.
 - **Constraints:** pure and in-memory: no network, storage, clock, or randomness. The

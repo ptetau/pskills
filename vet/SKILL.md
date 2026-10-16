@@ -30,8 +30,8 @@ the same input gives much the same output each time. `/vet` measures the two thi
   repeated runs of the same prompt. Stability also includes the structure across
   different prompts.
 - **Overall (0-100):** √(quality × stability). A skill that is reliably incorrect gets a
-  low score. A skill that is correct but irregular also gets a low score. Thus, one axis cannot
-  hide the other axis.
+  low score. A skill that is correct but irregular also gets a low score. Thus, one axis
+  cannot hide the other axis.
 
 The pipeline has these steps, in this order:
 
@@ -108,7 +108,7 @@ stay comparable over time.
 3. **Fingerprint the skill:** get the `sha256sum` of the SKILL.md of the skill.
 4. **Check for a saved suite** at `evals/<skill>/suite.json`. If the suite exists and
    there is no `--regen`, load the suite. Then go directly to Phase 3b (models). If the
-   `skillSha256` of the suite is different from the hash of today, say so in one line.
+   `skillSha256` of the suite is different from the hash of step 3, say so in one line.
    Then continue. The suite still works, and the same suite keeps the scores comparable.
    `--regen` builds the suite again, but it also starts a new baseline.
 
@@ -165,7 +165,7 @@ Rules for the rubric:
 Write N prompts (default 10), P01, P02, …. Each prompt is what a user types after
 `/<skill>`:
 
-- **Suitable.** Each prompt is in the scope of the skill. This is not a trigger test.
+- **Suitable.** Each prompt is in the scope of the skill. The eval is not a trigger test.
 - **Varied.** Spread the prompts across axes, and record the `axis` of each prompt. The
   axes are typical, minimal or terse, rich or long input, ambiguous, unusual domain, and
   edge-but-valid. An edge-but-valid prompt is at the limits of the skill. Examples are a
@@ -176,10 +176,10 @@ Write N prompts (default 10), P01, P02, …. Each prompt is what a user types af
   connectors, or secrets, unless the skill exists to use them.
 - **`exercises`:** one line that tells which parts of the skill the prompt tests.
 - **`replies`** (interactive skills): the answers that a plausible user gives to this
-  prompt, in the reply format of the skill. Give sufficient replies to get to the end: the
-  usual number of turns, plus a final "yes, go". Each repeat uses the same list in the
-  same order. Thus, make each reply meaningful for any question that it answers: option
-  letters, "yes", "go ahead".
+  prompt, in the reply format of the skill. Give sufficient replies to get to the end:
+  the usual number of turns, plus a final "yes, go". Each repeat uses the same list in
+  the same order. Thus, make each reply meaningful for any question that it answers:
+  option letters, "yes", "go ahead".
 
   When the list has no more replies, the run agents pick the recommended option. If no
   option is recommended, the run agents reply "you decide". For skills that do not ask
@@ -208,8 +208,8 @@ rubric. Do not skip the model question in Phase 3b.
 
 ## Phase 3b: Models (every run)
 
-The model has the biggest effect on the result of an eval. Thus, ask which models to use before each
-run, for a new suite and for a saved suite. Skip the question only when the
+The model has the biggest effect on the result of an eval. Thus, ask which models to use
+before each run, for a new suite and for a saved suite. Skip the question only when the
 `--agent role.model=…` flags of this invocation name a model for all four roles.
 
 Ask two questions in one message. Mark the current setting as the default. The current
@@ -224,8 +224,9 @@ setting comes from `evals/agents.json`, or is `session`.
 
 Put the answers into the agent roles for this run. Offer one time to save the answers to
 `evals/agents.json` as the default of the repo. Record the meaning of `session` in the
-results as follows. When you know the model name of the session, set `config.sessionModel` to that
-name. Scores from runs with different models are not comparable.
+results as follows. When you know the model name of the session, set
+`config.sessionModel` to that name. Scores from runs with different models are not
+comparable.
 
 ## Phase 4: Run and judge
 
@@ -288,7 +289,8 @@ occur:
   partial, missed, or n/a. The judge gives a verbatim quote as evidence. When the judge
   is not sure between two verdicts, the judge picks the lower verdict. With
   `grade.batch: run`, each run gets its own judge when the run finishes. With `prompt`
-  (the default), one judge grades the runs of the wave, and grades each run independently.
+  (the default), one judge grades the runs of the wave, and grades each run
+  independently.
 - **Compare (step 4).** For each rubric item, a similarity judge puts each new run into
   one of the groups so far, or opens a new group. The judge compares the new run with
   one example run from each group. Then the judge classifies the item across all runs
@@ -384,7 +386,7 @@ agent does.
 | `compare` | Judges the similarity across the repeats of a prompt | `item`: one judge for each (prompt, item) in each wave · `prompt`: one judge for each prompt in each wave · `merged`: the grade judge of each prompt also compares |
 | `cross` | Compares the structure across prompts | `item`: one judge for each structure item · `all`: one judge |
 
-The presets set the batching. The agent counts in this table are maximums for
+The presets set the batching. The agent counts in the next table are maximums for
 3 prompts × 10 runs, 10 rubric items, and 3 structure items. The table gives the counts
 for waves of 2 (the default), and for one wave (`--wave 10`, judged one time at the end):
 
@@ -429,8 +431,8 @@ stability in `trajectory` is within-prompt only. The final score also includes t
 cross-prompt check.
 
 - **Settled** means that the overall score moved by 2 points or less in each of the last
-  2 waves, and kept the same letter. With waves of 2 over 10 runs, the earliest wave
-  that can settle is wave 3, at 6 runs per prompt.
+  2 waves, and kept the same letter. With waves of 2 over 10 runs, the grade can settle
+  first at wave 3, at 6 runs per prompt.
 - **Not settled** at the end means that more runs will probably still move the grade.
   Say so, and suggest a re-run with more `--runs`.
 - **`--stop-when-settled`** starts no new wave after the grade settles. This flag saves
@@ -455,10 +457,10 @@ cross-prompt check.
   cross-prompt check counts as one more scope for structure items.
 - **Overall** = √(quality × stability). Grades: A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, F below.
 - **Confidence** is `low` when fewer than 80% of runs are usable.
-- **Tallies** are not part of the score. Each judgement also contains the group sizes that
-  the script counted (`7 / 3 of 10`), and `agreement`, the share of runs in the largest
-  group. The report shows these values next to the class, so that you can see how a
-  drift splits.
+- **Tallies** are not part of the score. Each judgement also contains the group sizes
+  that the script counted (`7 / 3 of 10`), and `agreement`, the share of runs in the
+  largest group. The report shows these values next to the class, so that you can see
+  how a drift splits.
 
 Scores are comparable only between runs with these same items:
 
@@ -493,9 +495,9 @@ Judges on a different model or with a different batch setting give different sco
   runs, the skill gets the same reply to different questions. The eval correctly shows
   this result as drift.
 - The run agents use the scripted replies in order, whatever the skill asks. A spare
-  letter reply can become the answer to a confirmation question. Thus, keep each reply list to the
-  questions that you are sure of. Let the recommended-option fallback cover the other
-  questions.
+  letter reply can become the answer to a confirmation question. Thus, keep each reply
+  list to the questions that you are sure of. Let the recommended-option fallback cover
+  the other questions.
 
 ## Example
 
@@ -503,12 +505,12 @@ Judges on a different model or with a different batch setting give different sco
 /vet quiz
 ```
 
-No suite exists for `quiz`. Thus, `vet` reads `quiz/SKILL.md` and writes the structure (one
-card per turn, a `[✓]` echo, a final resolved view). Then `vet` writes a 10-item rubric.
-Two examples are R3 "exactly one option marked (recommended)" and R8 "questions asked
-are the ones whose answers change the work". Then `vet` writes 10 prompts, from a terse
-one-liner to a seven-decision project, each with scripted letter replies. You review the
-suite and reply `go`.
+No suite exists for `quiz`. Thus, `vet` reads `quiz/SKILL.md` and writes the structure
+(one card per turn, a `[✓]` echo, a final resolved view). Then `vet` writes a 10-item
+rubric. Two examples are R3 "exactly one option marked (recommended)" and R8 "questions
+asked are the ones whose answers change the work". Then `vet` writes 10 prompts, from a
+terse one-liner to a seven-decision project, each with scripted letter replies. You
+review the suite and reply `go`.
 
 After thirty runs, `evals/quiz/runs/20260927T101500Z/report.md` shows quality 88,
 stability 74, and overall 80.7 (B). The report flags R5 (the question order), which

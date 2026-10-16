@@ -9,11 +9,12 @@
 **Models:** skill runs on `[config.agents.run.model, with config.sessionModel if "session"]` ·
 judges on `[config.agents.grade.model, …]`
 **Agents:** preset `[config.agents.preset]` · waves of [config.wave] · [each role whose
-effort or batch is different from the preset default, for example "grade effort low", or "no overrides"]
+effort or batch is different from the preset default, for example "grade effort low",
+or "no overrides"]
 
 *(If `skillSha256` is different from the hash in the suite, add one line: "SKILL.md
-changed after this suite was written. The rubric can be out of date. `/vet [skill] --regen`
-builds the suite again.")*
+changed after this suite was written. The rubric can be out of date.
+`/vet [skill] --regen` builds the suite again.")*
 
 ---
 
@@ -40,8 +41,8 @@ scores, which add the cross-prompt check.)*
 | 1 | [runsPerPrompt] | [quality] | [stability] | [overall] ([grade]) | [moved] |
 
 [One sentence: "Settled at wave N (M runs per prompt)" or "Not settled: the grade still
-moved by X points at the last wave, so more runs will help." If
-`settle.stopWhenSettled` stopped the eval early, tell how many runs the early stop saved.]
+moved by X points at the last wave, so more runs will help." If `settle.stopWhenSettled`
+stopped the eval early, tell how many runs the early stop saved.]
 
 ## Verdict
 
