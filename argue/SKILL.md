@@ -9,6 +9,11 @@ in propositional logic, runs Z3 as the deterministic oracle for hard contradicti
 then uses reasoning to flag tensions and ambiguities. Produces annotated output showing
 exactly which statements conflict and why.
 
+## Writing
+
+Write all text to `references/writing-guidelines.md`. This includes the replies to the
+user, each question, and each file that this skill writes.
+
 ## Execution steps
 
 ### 1. Extract claims

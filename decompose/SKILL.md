@@ -343,8 +343,9 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
    - No layer diagram, and no justifying being below Löwy's sizes: those are warnings for
      large systems.
    - Empty sections keep their number in one line ("Not applicable: inception").
-2. Check it reads plainly: `python <skill-dir>/scripts/readability.py <name>.design.md`.
-   Rewrite the flagged sentences, and add any unexplained word to "Words used here".
+2. Examine the writing: `python <skill-dir>/scripts/check_writing.py <name>.design.md --max-grade 7`.
+   Write the flagged sentences again. Add each word that the linter shows as not explained
+   to "Words used here".
    Check every diagram renders: `mmdc` if it is installed, or paste it into
    <https://mermaid.live>. Give each one a title naming its type and a `Key:` line under it.
 3. Show a compact summary in chat, in a code block:
@@ -370,10 +371,11 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
 
 ## Rules
 
-- **Plain English.** Write the design for a bright 10-year-old: short sentences, common
-  words, and every technical word explained once in a "Words used here" list in §1.
-  Names, code, and numbers stay exact. See `references/plain-language.md`, and run
-  `scripts/readability.py` on the finished document.
+- **Writing.** Write all text to `references/writing-guidelines.md`: the replies to the
+  user and the design document. Write the design for a bright 10-year-old, at a reading
+  grade of 7 or lower. Give each technical word one time in a "Words used here" list in §1.
+  Names, code, and numbers stay the same. Run `scripts/check_writing.py` on the finished
+  document.
 - **Evidence over taste.** Every volatility cites evidence: the user's words, the roadmap,
   or git history. Every component traces to a volatility; every brick to a feature or a
   volatility.
@@ -404,10 +406,11 @@ design doc. Fix and re-run until they pass, or record why a failure is accepted.
 - `references/sources.md` — where each idea comes from, with links.
 - `references/c4.md` — the C4 diagrams: which level each skill draws, the notation rules,
   and Mermaid examples that render. Shared with `/blueprint`.
-- `references/plain-language.md` — how to write the design in plain English; shared with
-  `/blueprint`.
-- `scripts/readability.py` — checks the finished design reads plainly: sentence length,
-  reading grade, unexplained technical words. Shared with `/blueprint`.
+- `references/writing-guidelines.md` — the writing guidelines for all text: ASD-STE100
+  Simplified Technical English and two more rules. Shared with each skill.
+- `scripts/check_writing.py` — the linter for the writing guidelines: sentence length,
+  verb forms, pronouns that refer back, IDs with no description, and the reading grade.
+  Shared with `/blueprint` and `/improve-writing`.
 - `scripts/volatility.py` — measures component volatility, change coupling, and hotspots
   from git history. Standard library only.
 

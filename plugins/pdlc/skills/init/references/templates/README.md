@@ -17,7 +17,8 @@ This folder holds pdlc's state for this project. Every pdlc skill reads this fil
 8. These files are the truth. Boards and dashboards only show them.
 9. Every commit carries trace trailers (see `specs/design/DES-pdlc-commit-trailers.md`).
    Commits that only touch `pdlc/` need no `Req`.
-10. Write plainly (see `specs/design/DES-writing-style.md`).
+10. Write all text to the rules in `specs/design/DES-writing-style.md`: specs, intents,
+    change specs, handoffs, commit messages, and replies to the user.
 
 ## Layout
 

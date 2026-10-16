@@ -23,6 +23,11 @@ Same intent as [[clarify-with-docs]] — gather every clarifying question up fro
 
 Use it for high-stakes clarification where the visual identity *is* part of the message: a UX/UI brief, a product spec, a design system call, anything where the user benefits from seeing wireframe previews of their options.
 
+## Writing
+
+Write all text to `references/writing-guidelines.md`. This includes the replies to the
+user, each question, and each file that this skill writes.
+
 ## When to use this vs. siblings
 
 - **`/quiz`** (inline chat twin) — quick rounds, one question per turn in chat. Use when the user wants speed or is on mobile.

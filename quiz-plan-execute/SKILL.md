@@ -34,6 +34,11 @@ the same `Parallel group` tag, those run concurrently instead — one agent per 
 isolated in its own git worktree — then get merged back onto the plan branch in declared
 step order, still one commit per step. See "PARALLEL GROUP DISPATCH" below.
 
+## Writing
+
+Write all text to `references/writing-guidelines.md`. This includes the replies to the
+user, each question, and each file that this skill writes.
+
 ## When to Use This Skill
 
 Use when:

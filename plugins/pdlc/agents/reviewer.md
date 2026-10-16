@@ -31,3 +31,7 @@ Notes:
 
 Write "Problems: none" when there are none. Fail only for real problems against your
 remit. Reply with one line: the result and the number of problems.
+
+Write your reply, and each spec, comment, or message that you write, to the rules in
+`pdlc/specs/design/DES-writing-style.md`. If that file does not exist yet, write short
+sentences in the active voice, and give each ID a short description.

@@ -37,7 +37,7 @@ people. Arrows show who calls whom. (See `c4.md`.)
 ### Words used here
 
 One line per technical word this document uses, explained in plain words (see
-`plain-language.md`). For example:
+`writing-guidelines.md`). For example:
 
 - **Volatility**: how likely something is to change.
 - **Manager**: the part that runs the steps of a task in order.

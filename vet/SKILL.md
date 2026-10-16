@@ -35,6 +35,11 @@ The pipeline: extract structure and rubric → write test prompts → run each
 sampled prompt many times in isolation → grade every run → judge similarity per
 rubric item → score.
 
+## Writing
+
+Write all text to `references/writing-guidelines.md`. This includes the replies to the
+user, each question, and each file that this skill writes.
+
 ## Usage
 
 ```

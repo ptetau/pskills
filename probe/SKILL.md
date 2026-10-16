@@ -33,6 +33,11 @@ schema-forced probes instead of one broad pass, then verify adversarially before
 trusting anything, then synthesize a single cited artifact — here, `repro` +
 `evidence` stand in for citations.
 
+## Writing
+
+Write all text to `references/writing-guidelines.md`. This includes the replies to the
+user, each question, and each file that this skill writes.
+
 ## When to Use This Skill
 
 Use `/probe` when:

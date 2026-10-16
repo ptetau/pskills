@@ -332,11 +332,12 @@ Write 3–5 Gherkin scenarios that a test harness can run.
 
 ## Style
 
-- **Plain English.** Write every sentence for a bright 10-year-old: one idea per sentence,
-  common words, and each technical word explained once in section 1's "Words used here"
-  list. Names, types, error codes, and numbers stay exact. Plain is not vague: "send each
-  message at most once" is as exact as "idempotent delivery". See
-  `references/plain-language.md`; the checker measures it.
+- **Writing.** Write all text to `references/writing-guidelines.md`: the replies to the
+  user and the blueprint. Write each sentence for a bright 10-year-old, at a reading grade
+  of 7 or lower. Give each technical word one time in the "Words used here" list in
+  section 1. Names, types, error codes, and numbers stay the same. Plain text is not
+  vague: "send each message at most one time" is as accurate as "idempotent delivery".
+  The checker examines the writing.
 - **Size it to the system.** A small system gets a short blueprint: fewer invariants, no
   HTTP column without HTTP, one line where a paragraph isn't needed. Say each thing once:
   the signature block gives the types, so prose adds only what types can't (order,
@@ -364,10 +365,11 @@ Write 3–5 Gherkin scenarios that a test harness can run.
 - `references/sources.md`: the sources behind the conventions.
 - `references/c4.md`: the C4 diagrams: which level each skill draws, the notation rules,
   and Mermaid examples that render. Shared with `/decompose`.
-- `references/plain-language.md`: how to write it in plain English; shared with
-  `/decompose`.
-- `scripts/check_blueprint.py`: the checker. Standard library only. It also runs
-  `scripts/readability.py`, which ships alongside it (and with `/decompose`).
+- `references/writing-guidelines.md`: the writing guidelines for all text: ASD-STE100
+  Simplified Technical English and two more rules. Shared with each skill.
+- `scripts/check_blueprint.py`: the checker. Standard library only. The checker also runs
+  `scripts/check_writing.py`, the linter for the writing guidelines. The linter is shared
+  with `/decompose` and `/improve-writing`.
 
 ## Example
 

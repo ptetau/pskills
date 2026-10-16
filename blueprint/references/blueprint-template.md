@@ -51,7 +51,7 @@ Open questions, at most three, also appear inline where they apply:
 ### Words used here
 
 One line per technical word this blueprint uses, explained in plain words (see
-`plain-language.md`). For example:
+`writing-guidelines.md`). For example:
 
 - **Invariant**: a rule that must always be true, no matter what happens.
 - **Idempotent**: safe to do twice; the second time changes nothing.

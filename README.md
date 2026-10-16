@@ -1,12 +1,20 @@
 # pskills
 
-A collection of Claude Code skills. Install any skill by copying its directory into
-`~/.claude/skills/` — Claude Code picks them up automatically.
+A collection of Claude Code skills. To install a skill, copy its folder into
+`~/.claude/skills/`. Claude Code finds the skill automatically.
+
+All text in this repository obeys `WRITING-GUIDELINES.md`: ASD-STE100 Simplified Technical
+English, and two more rules. A pronoun refers only to a noun in the same paragraph, and
+each ID has a short description. Each skill has a copy of the guidelines in
+`references/writing-guidelines.md`. The skills use the guidelines for their replies and
+for each file that they write. See "Writing guidelines" below.
 
 ```
 ~/.claude/skills/
   argue/
     SKILL.md
+    references/
+      writing-guidelines.md
   blueprint/
     SKILL.md
     references/
@@ -14,11 +22,11 @@ A collection of Claude Code skills. Install any skill by copying its directory i
       c4.md
       conventions.md
       notifications.blueprint.md
-      plain-language.md
       sources.md
+      writing-guidelines.md
     scripts/
       check_blueprint.py
-      readability.py
+      check_writing.py
   decompose/
     SKILL.md
     references/
@@ -27,34 +35,88 @@ A collection of Claude Code skills. Install any skill by copying its directory i
       c4.md
       design-template.md
       examples.md
-      plain-language.md
       sources.md
       walls.md
+      writing-guidelines.md
     scripts/
-      readability.py
+      check_writing.py
       volatility.py
+  improve-writing/
+    SKILL.md
+    references/
+      writing-guidelines.md
+    scripts/
+      check_writing.py
+      compare_vet.py
+      test_check_writing.py
   probe/
     SKILL.md
     references/
       findings.schema.json
       report-template.md
+      writing-guidelines.md
   quiz/
     SKILL.md
+    references/
+      writing-guidelines.md
   quiz-plan/
     SKILL.md
+    references/
+      writing-guidelines.md
   quiz-plan-execute/
     SKILL.md
+    references/
+      writing-guidelines.md
   squiz/
     SKILL.md
+    references/
+      writing-guidelines.md
   vet/
     SKILL.md
     references/
-      vet.workflow.js
       agents.schema.json
-      suite.schema.json
-      results.schema.json
       report-template.md
+      results.schema.json
+      suite.schema.json
+      vet.workflow.js
+      writing-guidelines.md
 ```
+
+---
+
+## Writing guidelines
+
+`WRITING-GUIDELINES.md` is the standard for all text in this repository. It is also the
+standard for all text that the skills write. It has three parts:
+
+1. The 53 rules of ASD-STE100 Simplified Technical English, Issue 9, in short form.
+2. The local-references rule. A pronoun or a short noun refers only to a noun in the same
+   paragraph. A new paragraph, list item, or reply starts with the full noun.
+3. The described-IDs rule. Each ID has a short description in the same sentence. A
+   question with alternatives gives the description of each alternative.
+
+The STE standard and its dictionary are free from <https://www.asd-ste100.org>. ASD does
+not let other persons distribute them, so this repository has only a short form of the
+rules. To examine words against the dictionary, give the linter your copy:
+
+```
+python3 improve-writing/scripts/check_writing.py FILE.md --dictionary ASD-STE100.pdf
+```
+
+**Change the guidelines.** Edit only `WRITING-GUIDELINES.md`. Then run
+`python3 scripts/sync_shared.py`. The script copies the guidelines into each skill. It
+also writes the `pdlc` design spec `DES-writing-style.md`, which holds the same rules.
+
+**Make the guidelines your default writing style.** To make Claude Code use the guidelines
+in all your projects, copy the file and import it in your personal `CLAUDE.md`:
+
+```
+cp WRITING-GUIDELINES.md ~/.claude/WRITING-GUIDELINES.md
+echo '@~/.claude/WRITING-GUIDELINES.md' >> ~/.claude/CLAUDE.md
+```
+
+For a tool that reads `AGENTS.md`, copy the "Writing" section of the `AGENTS.md` file of
+this repository into your personal `AGENTS.md`.
 
 ---
 
@@ -143,10 +205,10 @@ C4 component diagram (who calls whom), and the checker confirms both match the t
 Hand the blueprint to `/quiz-plan` for a change plan, then `/quiz-plan-execute`, which uses
 the Gherkin scenarios as its failing tests.
 
-**Both skills write in plain English**, for a bright 10-year-old: short sentences, common
-words, and every technical word explained in a "Words used here" list. Names, types, and
-error codes stay exact. `readability.py` (shipped with both) measures sentence length and
-reading grade, and lists unexplained technical words.
+**The two skills obey the writing guidelines** and write for a bright 10-year-old, at a
+reading grade of 7 or lower. Each technical word is in a "Words used here" list. Names,
+types, and error codes stay the same. `check_writing.py` (in the two skills) is the linter
+for the guidelines.
 
 ---
 
@@ -199,6 +261,42 @@ VERDICT       ready
 
 Hand the design to `/argue` to check it for contradictions, to `/blueprint` to make it
 agent-ready, or to `/quiz-plan` to turn it into a change plan.
+
+---
+
+## `/improve-writing` — Rewrite Text to the Writing Guidelines
+
+Writes a file or a skill again, so that the text obeys `WRITING-GUIDELINES.md`. The
+meaning, the facts, the code, and quoted text stay the same.
+
+```
+/improve-writing <path> [<path> …] [--no-eval] [--dictionary PATH]
+```
+
+For a document, the skill writes the text again and runs the linter. The skill stops when
+the linter shows no findings, or only findings with a recorded reason.
+
+A rewrite can change what a skill does. Thus, for a skill or a prompt, the skill does
+these steps:
+
+1. It records each behavior of the old version in a list, the behavior inventory.
+2. It writes the text again.
+3. It makes sure that the rewrite keeps each behavior in the inventory.
+4. It runs `/vet` on the old version and on the new version, with the same suite and
+   the same models.
+5. It compares the two results with `compare_vet.py`. The script shows "REGRESSION" if
+   the overall score falls more than 5 points. It also shows "REGRESSION" if a weight-3
+   rubric item falls more than 20 points, or if fewer runs are usable.
+
+**Output (excerpt)**
+
+```
+| File          | Findings before | Findings after | Inventory     | Baseline | Rewrite | Result        |
+|---------------|-----------------|----------------|---------------|----------|---------|---------------|
+| quiz/SKILL.md | 46              | 0              | 34 of 34 kept | 82.1     | 83.0    | NO REGRESSION |
+```
+
+The skill does not commit. You examine the change first.
 
 ---
 

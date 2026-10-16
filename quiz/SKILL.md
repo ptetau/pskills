@@ -34,6 +34,11 @@ Use `/squiz` instead when:
 
 When in doubt, use `/quiz`. The user can always say "give me the full squiz".
 
+## Writing
+
+Write all text to `references/writing-guidelines.md`. This includes the replies to the
+user, each question, and each file that this skill writes.
+
 ## Step 1: Plan the questions before asking any
 
 The same request should get the same questions. Before the first question, build the

@@ -42,5 +42,6 @@ ResourceAccess when the design records it (Löwy).
 | Simon Brown, "Modular monolith" — <https://simonbrown.je/modular-monolith/> | Well-defined components in a monolith are a stepping stone to microservices: choosing containers is a separate decision |
 | Mermaid, C4 diagrams — <https://mermaid.js.org/syntax/c4.html> | C4Context and C4Container syntax (experimental; no automatic layout; no legend), so component diagrams are drawn as C4-style flowcharts |
 | GitHub, creating diagrams — <https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams> | Mermaid renders in GitHub Markdown |
-| Kincaid, Fishburne, Rogers and Chissom, "Derivation of New Readability Formulas" (1975) — <https://stars.library.ucf.edu/istlibrary/56/> | The Flesch–Kincaid grade level that `readability.py` reports |
+| Kincaid, Fishburne, Rogers and Chissom, "Derivation of New Readability Formulas" (1975) — <https://stars.library.ucf.edu/istlibrary/56/> | The Flesch–Kincaid grade level that `check_writing.py` reports |
+| ASD-STE100 Simplified Technical English, Issue 9 (ASD, 2025) — <https://www.asd-ste100.org> | The writing rules in `writing-guidelines.md`: sentence length, verb forms, one instruction in each sentence, vertical lists, and the pronoun rules |
 

@@ -14,6 +14,11 @@ This skill runs a conversational interview (quiz) to surface every assumption, a
 
 The output is a `.plan.md` file containing the structured template from taste (Intent, Ground truth, Boundaries, gated Steps, Verification and rollback) plus a **live progress tracker** that humans can read at a glance to see how far along the plan is.
 
+## Writing
+
+Write all text to `references/writing-guidelines.md`. This includes the replies to the
+user, each question, and each file that this skill writes.
+
 ## When to Use This Skill
 
 Use this skill when:

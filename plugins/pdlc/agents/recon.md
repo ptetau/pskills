@@ -68,3 +68,7 @@ should do.
 Describe behaviour a user or caller can see, not how the code produces it. Write "saving
 replaces the whole list", not "save calls write_text". Requirements that pin the
 implementation block every future change to it.
+
+Write your reply, and each spec, comment, or message that you write, to the rules in
+`pdlc/specs/design/DES-writing-style.md`. If that file does not exist yet, write short
+sentences in the active voice, and give each ID a short description.

@@ -37,3 +37,7 @@ your reply and the skill deletes it.
 
 Don't run the checks; the skill that started you does that. Reply with the checks you
 wrote, one line each: file, check name, requirement.
+
+Write your reply, and each spec, comment, or message that you write, to the rules in
+`pdlc/specs/design/DES-writing-style.md`. If that file does not exist yet, write short
+sentences in the active voice, and give each ID a short description.
