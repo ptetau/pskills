@@ -111,9 +111,9 @@ decisions first.
 2. **Nothing that can wait is sent during quiet hours.** The app holds a message that can
    wait, and sends the message when quiet hours end. Enforced by `RoutingEngine.route`,
    which answers "wait until then". Reason: `QUIET_HOURS_DEFERRED`.
-3. **Each message goes to a channel that the person lets the app use, or the app refuses
-   the message.** The app does not quietly drop a message. Enforced by
-   `RoutingEngine.route`. Violation: `NO_REACHABLE_CHANNEL`.
+3. **Each message goes to a channel that the person accepts, or the app refuses the message.**
+   The app does not quietly drop a message. Enforced by `RoutingEngine.route`. Violation:
+   `NO_REACHABLE_CHANNEL`.
 4. **A delivery only moves forward.** After a delivery is `delivered` or `dead`, the
    delivery does not change again. Enforced by `OutboxAccess`'s lifecycle verbs
    (`startAttempt`, `failAttempt`, `scheduleRetry`, `giveUp`, `confirmDelivery`). Each

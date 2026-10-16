@@ -24,7 +24,7 @@ hopes to find a bug by chance. `probe` does these four steps instead:
 1. `probe` reads the docs and specs, the commit history, and the code. From these
    sources, `probe` makes an app map and identifies the real user-facing feature flows.
 2. `probe` starts a **flow × dimension** matrix of probe agents (a fan-out), with one
-   agent for each (flow, dimension) cell. Each agent first examines the relevant code
+   agent for each (flow, dimension) cell. Each agent first examines the related code
    statically. Then the agent drives the running app live to show that a hypothesis is
    true or false. All the work is **read-only**.
 3. `probe` examines each raw finding again, as an adversary, and drops the false
@@ -56,7 +56,7 @@ Use `/probe` in these conditions:
   application.
 - The user wants a breadth-first bug hunt across many feature flows and quality
   dimensions (functional, robustness, security, perf, a11y, ux). The user does not want
-  a deep examination of one known issue.
+  to examine one known issue deeply.
 
 Do **not** use `/probe` in these conditions:
 
@@ -64,9 +64,9 @@ Do **not** use `/probe` in these conditions:
   read the code by hand, or use `/code-review`.
 - The user wants only a security audit. Prefer `security-review`. Then, if the user
   wants broader coverage, you can use `/probe` after `security-review`.
-- To make progress, the skill must do an action that is more than passive observation.
-  `probe` does not give non-destructiveness in exchange for coverage, at any time. Read
-  the guarantee below.
+- To continue the work, the skill must do an action that is more than passive
+  observation. `probe` does not do a destructive action to get more coverage, at any
+  time. Read the guarantee below.
 
 ## The Read-Only Guarantee
 
@@ -90,7 +90,7 @@ A probe agent must **not** do these actions, at any time:
 - Do an action that a human reviewer would not feel safe to run unattended against
   production.
 
-If only a mutating action can exercise a flow, and no safe sandbox exists, the probe
+If only a mutating action can exercise a flow, and there is no safe sandbox, the probe
 agent for that cell must stop before the action. The agent records the flow as **"untestable without write access"** in its finding. Then
 the agent continues to its next task. The agent must not do the mutating action.
 
@@ -103,13 +103,13 @@ Goal: make an app map and a list of real user-facing feature flows before you pr
 app.
 
 1. **Read docs/specs.** Read the README, CONTRIBUTING, `docs/`, ADRs, OpenAPI/GraphQL
-   specs, and each `.plan.md` file. Also read any other text that states the intended
+   specs, and each `.plan.md` file. Also read any other text that gives the intended
    behaviour.
 2. **Read commit history.** Read `git log --oneline -50` and the recent diffs. Find the
    parts that change actively (a higher bug risk), and the parts that are stable.
 3. **Read code modules.** Read the entry points, routes/controllers, pages/components,
-   and data models. Read enough to know the structure of the app and the systems that
-   the app connects to.
+   and data models. Read sufficient code to know the structure of the app and the
+   systems that the app connects to.
 4. **Synthesise an app map.** Write a short summary of the structure: the architecture,
    the key modules, and the external dependencies. This summary becomes the App Summary
    of the report.
@@ -134,7 +134,7 @@ There are six quality dimensions: `functional`, `robustness`, `security`, `perf`
 `a11y`, and `ux`. These six values are the same as the `dimension` enum in
 `references/findings.schema.json`.
 
-A direct test proved this shape (see the plan's step 1 fan-out proof). This skill uses
+A test run proved this shape (see the plan's step 1 fan-out proof). This skill uses
 only this fan-out shape:
 
 ```js
@@ -169,7 +169,7 @@ return { findings }
 Each `probePrompt(cell)` tells its agent to do these steps, in this order:
 
 1. **Statically map** the code that relates to `cell.flow`. Use `cell.dimension` as the
-   lens. Then form a concrete hypothesis about where the code of the flow could break.
+   lens. Then make a concrete hypothesis about where the code of the flow could break.
 2. **Live-drive the running app**, read-only, to show that the hypothesis is true or
    false. For UI flows, navigate and read. For APIs, use safe `GET` calls and other read
    calls. For a CLI, use read-only invocations.
@@ -180,14 +180,14 @@ Each `probePrompt(cell)` tells its agent to do these steps, in this order:
 The read-only guarantee applies to each of these agents.
 
 **Budget-scaled fleet.** Before you build `CELLS`, use `budget.remaining()` (and
-`budget.total`) to decide the size of the matrix:
+`budget.total`) to select the size of the matrix:
 
 - For a small budget, run the `functional` and `security` dimensions on each flow. For
   low-risk flows, drop `perf`, `a11y`, and `ux`.
-- For a generous budget, run the full matrix on each flow.
+- For a large budget, run the full matrix on each flow.
 
-If you need a follow-up wave after the fan-out, read `budget.remaining()` again before
-you spend more. For example, a follow-up wave can probe again a cell that an agent
+If a follow-up wave is necessary after the fan-out, read `budget.remaining()` again
+before you spend more. For example, a follow-up wave can probe again a cell that an agent
 returned as low-confidence.
 
 The Workflow runtime automatically limits the number of agents that run at the same
@@ -204,7 +204,7 @@ positives. The [[deep-research]] skill applies the same discipline to unverified
 before it cites the claims.
 
 For each raw finding, dispatch an adversarial pass, or reason through the pass yourself.
-Let the budget decide which. The adversarial pass actively tries to **disprove** the
+Use the budget to select one of the two. The adversarial pass actively tries to **disprove** the
 finding:
 
 - Examine the `evidence` again against the `repro` steps.

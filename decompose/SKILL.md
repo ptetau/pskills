@@ -389,8 +389,8 @@ pass. As an alternative, record why you accept a failure.
    count.) Each brick traces to a feature or a volatility. Put each item that traces to
    neither on the cut list.
 7. **Subsystem mode: measured coupling.** Find each component pair above the coupling
-   threshold in the volatility report. For each pair, say whether the design puts a wall
-   between the two components, and why the coupling will fall. Name the metric to check
+   threshold in the volatility report. For each pair, say if the design puts a wall between
+   the two components, and why the coupling will fall. Name the metric to check
    again after the change ships.
 
 ## Phase 6 — Write the design document

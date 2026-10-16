@@ -158,7 +158,7 @@ NO_THAT = re.compile(r"\b(make sure|makes sure)\s+(?!that\b|of\b|to\b)(the|a|an|
 START_PRONOUN = re.compile(r"^(?:It|Its|They|Them|Their|He|She|His|Her)\b|^(?:This|That|These|Those)\b(?=\s*(?:[.,;:)!?]|$|\s+(?:is|are|was|were|will|can|must|means|makes|gives|shows|lets|keeps|also|does|did|has|had|happens|works|needs|way)\b))")
 FORMER_LATTER = re.compile(r"\bthe (former|latter)\b", re.I)
 ID_TOKEN = re.compile(r"(?<![\w#/.-])((?:[A-Z]{1,4}-?\d{1,3}[a-z]?)|#\d+)(?![\w-])")
-ID_EXEMPT = set("""C4 H1 H2 H3 H4 H5 H6 S3 EC2 ES5 ES6 ES2020 IPV4 IPV6 IPv4 IPv6 SHA1 SHA256 MD5
+ID_EXEMPT = set("""C4 Z3 H1 H2 H3 H4 H5 H6 S3 EC2 ES5 ES6 ES2020 IPV4 IPV6 IPv4 IPv6 SHA1 SHA256 MD5
 UTF8 UTF-8 HTTP2 OAUTH2 OAuth2 X509 B2B B2C P2P MP3 MP4 A4 A3 L1 L2 L3 CO2 G7 G20 Q1 Q2 Q3 Q4
 W3C K8S ISO8601 PEP8 GPT4 MS1 HS256 RS256 ES256 AES256 ARM64 X64 X86 RFC9110 RFC9457""".split())
 IMPERATIVE = set("""add apply ask avoid build call change check choose close commit compare confirm copy count

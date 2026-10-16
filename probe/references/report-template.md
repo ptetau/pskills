@@ -76,7 +76,7 @@ finding below gives each field of a `finding` object in `findings.schema.json`: 
 
 *(same shape)*
 
-*(If a tier has no findings, write "None found at this severity." Do not leave the tier empty.)*
+*(If a tier has no findings, write "None found at this severity." Do not keep the tier empty.)*
 
 ---
 
