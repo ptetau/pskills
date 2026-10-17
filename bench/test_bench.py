@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import run_bench  # noqa: E402
+import run_experiment  # noqa: E402
 
 REFERENCE_CLI = '''
 import sys
@@ -274,6 +275,63 @@ class SeedTest(unittest.TestCase):
         folder = project / "pdlc" / "changes" / "CH-0001-top-option" / "review"
         for remit, mark in marks.items():
             self.assertIn(mark, (folder / remit / "packet.md").read_text(), remit)
+
+
+class ExperimentSpecTest(unittest.TestCase):
+    def write(self, **fields):
+        spec = {"id": "r3-test", "hypothesis": "a hypothesis", "lever": "a lever",
+                "edits": [{"file": "agents/reviewer.md", "find": "tools: Read, Write", "replace": "tools: Read, Write, Glob"}]}
+        spec.update(fields)
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        path = folder / "spec.json"
+        path.write_text(run_bench.json.dumps(spec))
+        return path
+
+    def test_a_good_spec_gets_its_defaults(self):
+        spec = run_experiment.load_spec(self.write())
+        self.assertEqual((spec["runs"], spec["seeds"], spec["target"]), (6, False, None))
+        self.assertEqual(spec["baseline"], "bench/baseline.json")
+
+    def test_a_bad_spec_names_each_problem(self):
+        with self.assertRaises(run_experiment.SpecError) as caught:
+            run_experiment.load_spec(self.write(id="Bad Id", edits=[]))
+        self.assertIn('"id"', str(caught.exception))
+        self.assertIn('"edits"', str(caught.exception))
+
+    def test_an_edit_that_changes_nothing_is_refused(self):
+        edits = [{"file": "agents/reviewer.md", "find": "x", "replace": "x"}]
+        with self.assertRaises(run_experiment.SpecError):
+            run_experiment.load_spec(self.write(edits=edits))
+
+    def test_edits_apply_to_a_copy_and_not_to_the_plugin(self):
+        spec = run_experiment.load_spec(self.write())
+        scratch = run_experiment.apply_edits(spec)
+        self.addCleanup(shutil.rmtree, scratch.parent, True)
+        self.assertIn("tools: Read, Write, Glob", (scratch / "agents" / "reviewer.md").read_text())
+        self.assertNotIn("Glob", (run_experiment.PLUGIN / "agents" / "reviewer.md").read_text().split("---")[1])
+
+    def test_a_find_text_that_is_not_there_is_refused(self):
+        edits = [{"file": "agents/reviewer.md", "find": "no such text anywhere", "replace": "y"}]
+        spec = run_experiment.load_spec(self.write(edits=edits))
+        with self.assertRaises(run_experiment.SpecError) as caught:
+            run_experiment.apply_edits(spec)
+        self.assertIn("0 times", str(caught.exception))
+
+    def test_a_find_text_that_occurs_twice_is_refused(self):
+        edits = [{"file": "agents/reviewer.md", "find": "the", "replace": "y"}]
+        spec = run_experiment.load_spec(self.write(edits=edits))
+        with self.assertRaises(run_experiment.SpecError):
+            run_experiment.apply_edits(spec)
+
+    def test_check_reports_new_writing_findings(self):
+        long_sentence = " ".join(["word"] * 40) + "."
+        edits = [{"file": "skills/verify/SKILL.md", "find": "# pdlc verify\n", "replace": "# pdlc verify\n\n" + long_sentence + "\n"}]
+        spec = run_experiment.load_spec(self.write(edits=edits))
+        scratch, report, diff = run_experiment.check(spec, run_tests=False)
+        self.addCleanup(shutil.rmtree, scratch.parent, True)
+        self.assertIn("NEW FINDINGS", report)
+        self.assertIn("+" + long_sentence, diff)
 
 
 if __name__ == "__main__":
