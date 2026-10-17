@@ -1,0 +1,206 @@
+{
+ "label": "baseline-6",
+ "plugin_commit": "",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 120,
+     "cache_write": 225435,
+     "cache_read": 3060047,
+     "output": 35502
+    },
+    "cost_usd": 1.3574,
+    "duration_s": 833.4,
+    "turns": 42,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 9,
+    "models": {
+     "claude-sonnet-5-5": 1.3574
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 22944,
+      "cache_read": 146194,
+      "output": 65
+     },
+     "cost_usd": 0.1248,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 17.3
+    },
+    "intake": {
+     "tokens": {
+      "input": 26,
+      "cache_write": 43627,
+      "cache_read": 725684,
+      "output": 209
+     },
+     "cost_usd": 0.3142,
+     "messages": 13,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10370,
+        "cache_read": 29169,
+        "output": 46
+       },
+       "cost_usd": 0.0331,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 21.8
+      }
+     },
+     "wall_s": 368.8
+    },
+    "tests": {
+     "tokens": {
+      "input": 26,
+      "cache_write": 33569,
+      "cache_read": 659422,
+      "output": 172
+     },
+     "cost_usd": 0.2353,
+     "messages": 13,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 5302,
+        "cache_read": 21892,
+        "output": 27
+       },
+       "cost_usd": 0.0184,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 19.6
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 20453,
+        "cache_read": 28784,
+        "output": 46
+       },
+       "cost_usd": 0.0589,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 18.8
+      }
+     },
+     "wall_s": 311.6
+    },
+    "build": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 11492,
+      "cache_read": 409968,
+      "output": 164
+     },
+     "cost_usd": 0.1219,
+     "messages": 8,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 7190,
+        "cache_read": 37025,
+        "output": 64
+       },
+       "cost_usd": 0.0267,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 14.4
+      }
+     },
+     "wall_s": 58.7
+    },
+    "show": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 7083,
+      "cache_read": 494484,
+      "output": 127
+     },
+     "cost_usd": 0.1319,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 30.3
+    },
+    "verify": {
+     "tokens": {
+      "input": 34,
+      "cache_write": 106720,
+      "cache_read": 624295,
+      "output": 719
+     },
+     "cost_usd": 0.4292,
+     "messages": 17,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 24,
+        "cache_write": 93773,
+        "cache_read": 81812,
+        "output": 123
+       },
+       "cost_usd": 0.2586,
+       "messages": 12,
+       "calls": 5,
+       "wall_s": 52.4
+      }
+     },
+     "wall_s": 45.2
+    }
+   },
+   "waiting": {
+    "messages": 1,
+    "cost_usd": 0.0171
+   },
+   "wall_s": 835.1,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-top-option"
+    ],
+    "changes": [
+     "CH-0001-top-option"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-top-option": [
+      "ok   CH-0001"
+     ]
+    },
+    "change_status": {
+     "CH-0001-top-option": {
+      "pdlc/CH-0001-top-option": "?"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 1,
+    "proposed": true,
+    "tip": "pdlc/CH-0001-top-option",
+    "unit": {
+     "ok": true,
+     "ran": 26
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-83m_npx6/app"
+  }
+ ]
+}

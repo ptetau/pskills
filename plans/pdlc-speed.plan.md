@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** Round 1 was reverted. Round 2 is kept. Round 3 is open.
+**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Round 3 is open.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -70,8 +70,9 @@ Today's results are in `bench/baseline.json`. An edit keeps them when all of the
 - **SAME OR BETTER**: nothing got worse, the cost fell by at least 5%, and the chance that
   the fall is luck is 10% or less. Keep the edit.
 
-The chance of luck comes from an exact permutation test of the costs of the runs. It needs
-at least three runs of the baseline and three of the candidate to reach 5%.
+The chance of luck comes from an exact permutation test of the costs of the runs. Without
+`--target`, the gate asks for at least five runs on each side, and six are better. With fewer
+runs it prints NEED MORE RUNS, because a few runs can mislead (see round 2).
 
 A whole run varies a lot. Three runs of today's pdlc cost $1.78, $1.87, and $2.49, because
 the number of review rounds changes. For an edit that aims at one agent, run the gate with
@@ -154,21 +155,31 @@ Learned: in 4 of the 5 runs, the specification review failed the first verify ro
           each run pays for a second round of reviews. In one run the writing findings did
           not converge, and pdlc stopped. This is round 2.
 
-[2026-10-17] Round 2: check the writing before verify
-Edit: step 3 of `skills/verify/SKILL.md` now runs the writing check on the README, the
-          specs, and the change spec before it makes the packets. The stage fixes each real
-          finding first. In the baseline runs, the check ran only after a failed review.
-Result: four runs cost $1.43, $1.60, $1.57 and $1.53 (mean $1.53, 25% less than the
-          baseline mean of $2.05). The runs took 312 seconds on average, against 468. All
-          four finished, and each needed one verify round. The baseline runs needed 2, 2
-          and 1. All 8 probes pass in each run, and the project's checks pass. Reviewers
-          on Sonnet catch 5 of 5 planted defects, and they raise no false alarm.
-Gate: SAME OR BETTER. The chance that the fall is luck is 3%.
-Limits: the benchmark has one intent. A style problem that only a reviewer finds still
-          costs a round. The runs differ in how many turns only wait for a background
-          agent: 1 to 9 turns, $0.015 to $0.15.
-Next: the state after round 2 is the new reference (`bench/results/r2/result.json`). The
-          levers left are: start agents in the foreground, so that the main session does
-          not poll; the context that the main session carries into verify; and a cheaper
-          reviewer, with the new check that a run must finish.
+[2026-10-17] Round 2: check the writing before verify (reverted)
+Edit: step 3 of `skills/verify/SKILL.md` ran the writing check on the README, the specs, and
+          the change spec before it made the packets. The baseline runs ran the check only
+          after a failed review.
+Result: the first four runs cost $1.43 to $1.60. That is 25% less than three baseline runs,
+          with a 3% chance of luck. Three runs on the final wording cost $1.69, $1.71 and
+          $2.49. Then three more baseline runs and three more runs of the edit settled it:
+          the baseline mean is $1.88 over six runs, and the six runs of the final wording
+          cost $2.07 (10% more). The chance that this is luck is 69%.
+Gate: NO GAIN. The edit is reverted. The first four runs were luck, and three baseline
+          runs were too few.
+Fixed: the gate now says NEED MORE RUNS when a side has fewer than five runs. The probes
+          now require the form that the intent shows (`--top N FILE`). One run accepted
+          only that form, and the old probes failed it for an option that the intent does
+          not ask for.
+Learned from 16 runs:
+          - A run with no extra review round costs $1.36 to $1.71. The cost follows the
+            number of agent calls (correlation 0.95). Runs with 9 agent calls cost $1.36
+            to $1.71, and runs with 14 to 24 calls cost $2.49 to $3.37. An extra round
+            comes from the tests review, the specification review, or the quality review,
+            and no one cause stands out.
+          - Turns that only wait for a background agent cost $0.17 on average, which is 9%
+            of a run. One run spent $0.75 (38%) on 41 such turns.
+Next: round 3 starts agents in the foreground, so that the main session does not poll. It
+          aims at the waiting turns, which are measured directly and do not depend on the
+          review rounds. The gate needs a way to judge the waiting cost, and it needs six
+          runs on each side.
 ```

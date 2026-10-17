@@ -109,12 +109,17 @@ def result(costs, probes=True, units=True, seeds=None, wall=100.0):
 
 class GateTest(unittest.TestCase):
     def test_a_clear_saving_with_the_same_results_is_kept(self):
-        verdict = run_bench.gate(result([2.0, 2.1, 2.2]), result([1.2, 1.3, 1.1]))
+        verdict = run_bench.gate(result([2.0, 2.1, 2.2, 2.0, 2.1]), result([1.2, 1.3, 1.1, 1.2, 1.3]))
         self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+        self.assertLess(verdict["p"], 0.01)
+
+    def test_a_saving_in_few_runs_is_not_kept_yet(self):
+        verdict = run_bench.gate(result([2.0, 2.1, 2.2]), result([1.2, 1.3, 1.1]))
+        self.assertTrue(verdict["verdict"].startswith("NEED MORE RUNS"))
         self.assertAlmostEqual(verdict["p"], 0.05)
 
     def test_a_saving_inside_the_noise_is_no_gain(self):
-        verdict = run_bench.gate(result([2.0, 2.6, 1.8]), result([2.1, 2.2, 1.9]))
+        verdict = run_bench.gate(result([2.0, 2.6, 1.8, 2.2, 2.0]), result([2.1, 2.2, 1.9, 2.4, 2.0]))
         self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
 
     def test_two_runs_each_are_too_few_to_show_a_saving(self):

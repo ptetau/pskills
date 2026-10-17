@@ -567,7 +567,7 @@ def agent_stats(result, label):
             "calls_per_run": calls / len(result["runs"]) if result["runs"] else 0.0}
 
 
-def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha=0.10):
+def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha=0.10, min_runs=5):
     """Decide if an edit stays. Effectiveness must not fall. Cost must fall by more than the noise.
 
     Without a target, the gate asks if the candidate runs cost clearly less than the baseline runs.
@@ -618,6 +618,7 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
     else:
         change = run_change
         needed = min_gain
+        few = min(len(base["costs"]), len(cand["costs"])) < min_runs
         chance = permutation_p(base["costs"], cand["costs"])
         p_value = chance
         if chance > alpha:
@@ -628,6 +629,10 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
     if worse:
         verdict = "REGRESSION -> revert"
         reasons = worse
+    elif not target and few and change <= -needed:
+        verdict = "NEED MORE RUNS -> do not keep yet"
+        reasons = ["the fall looks like %.0f%%, but %d runs are too few. Run at least %d on each side. Four runs that looked 25%% cheaper came back at +10%% with six more." % (
+            -run_change * 100, min(len(base["costs"]), len(cand["costs"])), min_runs)]
     elif change <= -needed:
         verdict = "SAME OR BETTER -> keep"
         reasons = [gain_text]
@@ -640,7 +645,7 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
 
 def command_gate(args):
     result = gate(json.loads(Path(args.baseline).read_text()), json.loads(Path(args.candidate).read_text()),
-                  args.min_gain, args.speed_limit, args.target)
+                  args.min_gain, args.speed_limit, args.target, min_runs=args.min_runs)
     base, cand = result["baseline"], result["candidate"]
     print("baseline   cost $%.2f  time %4.0fs  runs %d  noise %2.0f%%" % (base["cost_usd"], base["duration_s"], base["runs"], base["noise"] * 100))
     print("candidate  cost $%.2f  time %4.0fs  runs %d  noise %2.0f%%" % (cand["cost_usd"], cand["duration_s"], cand["runs"], cand["noise"] * 100))
@@ -659,7 +664,7 @@ def command_gate(args):
     print("verdict    " + result["verdict"])
     for reason in result["reasons"]:
         print("           " + reason)
-    return 0 if result["verdict"].startswith("SAME") else 1
+    return 0 if result["verdict"].startswith("SAME") else 1  # NEED MORE RUNS also exits 1
 
 
 def command_recheck(args):
@@ -886,6 +891,7 @@ def main(argv=None):
     g.add_argument("candidate")
     g.add_argument("--min-gain", type=float, default=0.05)
     g.add_argument("--speed-limit", type=float, default=1.5)
+    g.add_argument("--min-runs", type=int, default=5, help="runs needed on each side to keep an edit by whole-run cost")
     g.add_argument("--target", help="an agent that the edit aims at, for example pdlc:reviewer")
     args = parser.parse_args(argv)
     if args.command == "e2e":

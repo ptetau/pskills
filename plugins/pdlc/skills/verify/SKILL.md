@@ -37,17 +37,11 @@ Do these steps through the checks port:
 
 1. Get the remits from "Reviews" in `pdlc/config.md`. Do not include `tests`, because the
    tests stage already reviewed the checks, and its result stays.
-2. Run the writing check on the text of the change, before you make the packets:
-   `python3 pdlc/bin/check_writing.py --since <base> README.md pdlc/specs pdlc/changes/CH-xxxx/change.md`.
-   The `<base>` is the `Base:` of the change. The specification reviewer fails the change
-   for each finding of this check. Fix each real finding now. Commit the fix with the
-   message "Update CH-xxxx: <what>", and the trailers `Intent` and `Change`. In `<what>`,
-   say what you fixed. For a false alarm, end the line with `<!-- writing: ok -->`.
-3. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`.
-4. Start one fresh `pdlc:reviewer` agent for each remit, all at the same time. Give each
+2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`.
+3. Start one fresh `pdlc:reviewer` agent for each remit, all at the same time. Give each
    reviewer only the path of its own packet. Do not tell a reviewer what a different
    reviewer found.
-5. Wait for all the reviewers. Each reviewer writes `review/<remit>/result.md`.
+4. Wait for all the reviewers. Each reviewer writes `review/<remit>/result.md`.
 
 ## 4. New behaviour
 
