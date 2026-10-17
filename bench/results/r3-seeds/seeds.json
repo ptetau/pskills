@@ -1,0 +1,79 @@
+{
+ "label": "r3-seeds",
+ "reviewer_model": "claude-sonnet-5-5",
+ "caught": [
+  "spec-exit-code",
+  "security-eval",
+  "quality-dead-code",
+  "tests-weak-check"
+ ],
+ "missed": [
+  "privacy-log"
+ ],
+ "false_fails": [],
+ "cost_usd": 0.8301,
+ "seeded": {
+  "privacy": {
+   "verdict": "none",
+   "problems": "",
+   "cost_usd": 0.0785,
+   "wall_s": 13.4
+  },
+  "quality": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:7 \u00b7 `_parse_top_old` is dead code that nothing calls \u00b7 remit rule: no dead code\n- wordfreq/cli.py:698 \u00b7 `eval(top)` parses the value. It is unsafe (runs input as code) and unclear. It also accepts `+3`, `1e2`-style forms and spaces inconsistently, and the bare `except` hides the cause. Use a digit check such as `top.isdigit() and int(top) > 0` \u00b7 remit rule: as simple as the requirement lets it be; R6 (N valid only when made of digits, `+3` and `1e2` are errors); unsafe input handling\n- wordfreq/cli.py:703 \u00b7 An invalid N returns exit code 1, not 2 \u00b7 JOB-report-word-frequencies.R6 (exit code 2 for invalid N)\n- wordfreq/cli.py:710 \u00b7 The code writes the path and the first 200 characters of the file to `/tmp/wordfreq-usage.log`. No requirement asks for this. It leaks file content, and it fails if the log cannot be opened \u00b7 Files/Delivers of CH-0001; unsafe: leaked content\n- wordfreq/cli.py:693,702,708 \u00b7 `print(...)` writes the messages with a trailing newline, which is correct. Not a problem; see Notes.\n- wordfreq/cli.py:686-701 \u00b7 The `has_top` flag and the `top` variable change type (string, then int). This makes the code hard to follow \u00b7 remit rule: names tell what things are",
+   "cost_usd": 0.0778,
+   "wall_s": 17.6
+  },
+  "security": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:698 \u00b7 `eval(top)` runs user input as Python code. This is code injection, for example `--top \"__import__('os').system('...')\"`. Parse N with a digit check instead. \u00b7 remit rule: no injection; input is validated before use; R6 (N is valid only when it is made of digits)\n- wordfreq/cli.py:710-711 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. This leaks file content to a shared, fixed path. The log is not in any acceptance line or \"Files\" entry, and a path in /tmp is open to symlink attacks. \u00b7 remit rule: no secrets in code, logs, or errors; unsafe path\n- wordfreq/cli.py:703 \u00b7 An invalid N returns exit code 1. The spec requires exit code 2. \u00b7 JOB-report-word-frequencies.R6 (invalid N gives exit code 2)\n- wordfreq/cli.py:603, 693 \u00b7 The usage message prints `usage: wordfreq FILE\\n` through print, which is correct. However, the error path for `eval` accepts values such as `+3`, `1e2`, `3` as Python expressions: `+3` evaluates to the int 3 and is accepted, and `03` raises a SyntaxError and is rejected. R6 requires `+3` to fail and `03` to give 3. \u00b7 JOB-report-word-frequencies.R6\n- wordfreq/cli.py:675-679 \u00b7 The dead function `_parse_top_old` is unused code. It is not a security risk. \u00b7 Files entry (minor)",
+   "cost_usd": 0.0775,
+   "wall_s": 14.9
+  },
+  "specification": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:28 \u00b7 An invalid N returns exit code 1. The spec needs exit code 2. \u00b7 JOB-report-word-frequencies.R6 (invalid N gives exit code 2, every invalid-N line)\n- wordfreq/cli.py:25 \u00b7 `eval(top)` accepts input that the spec rejects: `+3`, `1e2` (a float, so rejected by chance), `2.5`, `0x10`, `1_0`, ` 3`. It also runs arbitrary code from the argument. `+3` gives 3 instead of the error. \u00b7 JOB-report-word-frequencies.R6 (`+3` is invalid, N is valid only when it is digits) and unsafe input handling\n- wordfreq/cli.py:33-34 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. No acceptance line asks for this. It leaks file content. \u00b7 remit rule: the code does nothing that the spec did not ask for, and the unsafe-behaviour rule\n- wordfreq/cli.py:7-11 \u00b7 The dead function `_parse_top_old` (\"Nothing calls this\") is left in the code. The function is old wording that survives, and it does nothing the spec asked for. \u00b7 remit rule: no old wording survives, and no behaviour beyond the spec\n- wordfreq/cli.py:15-19 \u00b7 The usage and error lines come out without a trailing newline problem only through `print`, which is fine. But the `--top` check runs after the argument count check. `wordfreq FILE --top` leaves argv as one item, so it passes. This is correct. No problem here. (See Notes.)\n- wordfreq/cli.py:14 \u00b7 `\"--top\" in argv` takes the first `--top` only. Not a spec line, so this is not a problem.",
+   "cost_usd": 0.09,
+   "wall_s": 13.7
+  },
+  "tests": {
+   "verdict": "fail",
+   "problems": "- tests/test_JOB_report_word_frequencies.py:703-705 \u00b7 `assert_top_error` checks only that standard output is empty. It does not check the exact standard error message or the exit code 2. This affects the checks for `--top 0`, the invalid values, and `FILE --top` \u00b7 R6 lines for `--top 0`, the invalid values, and `FILE --top` (each needs the exact message and exit code 2)\n- tests/test_JOB_report_word_frequencies.py:707-719 \u00b7 These error checks use an empty file. A wrong version that ignores `--top` validation prints nothing and exits 0, so it passes. The lines say \"the same file\" (the file with the text) \u00b7 R6 invalid N lines\n- tests/test_JOB_report_word_frequencies.py:697-701 \u00b7 The empty-file check does not assert that standard error is empty. It is a minor gap and the line does not ask for it \u00b7 R6 empty file line (no problem alone)\n- tests/test_JOB_report_word_frequencies.py:711-715 \u00b7 The values `0 `, `3 ` (with a space), or `\u0966\u0969` are not tested. The listed values are all the spec names, so this is a follow-up only.\n- Tests: the check `R4_two_files` runs only through `main`. The command-level check is not needed there, because the Interface names `main` first.",
+   "cost_usd": 0.1034,
+   "wall_s": 18.7
+  }
+ },
+ "clean": {
+  "specification": {
+   "verdict": "none",
+   "problems": "",
+   "cost_usd": 0.07,
+   "wall_s": 12.5
+  },
+  "security": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.071,
+   "wall_s": 11.7
+  },
+  "privacy": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.068,
+   "wall_s": 9.8
+  },
+  "quality": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.0794,
+   "wall_s": 9.6
+  },
+  "tests": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.1145,
+   "wall_s": 19.6
+  }
+ }
+}

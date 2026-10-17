@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Round 3 is open.
+**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Round 3 is kept. Round 4 is open.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -26,6 +26,20 @@ Patrick Te Tau chose these on the `/quiz-visual` page on 17 October 2026.
 
 Round 2 used a sixth lever, fewer failed review rounds, which is not in this list. The
 data showed that a second round of verify costs more than any change to a single stage.
+
+## Who does what
+
+A stronger model plans the experiments, and cheaper models make the changes and run them.
+
+- **Planner:** a Fable agent. It reads the plan, the harness, and every result. It writes an
+  experiment spec for each experiment, and a task for each harness change, in
+  `bench/experiments/<round>/`. It does not run anything.
+- **Executors:** Haiku agents. One builds a harness task from its exact description. Another
+  runs `bench/run_experiment.py check`, `start`, and `wait` on a spec, and reports the output
+  word for word.
+- **Orchestrator:** the main session. It checks the plan, the diff of each harness task, and
+  the saved results before it accepts a report. It applies a kept edit with
+  `bench/run_experiment.py apply`.
 
 ## What we measure
 
@@ -182,4 +196,29 @@ Next: round 3 starts agents in the foreground, so that the main session does not
           aims at the waiting turns, which are measured directly and do not depend on the
           review rounds. The gate needs a way to judge the waiting cost, and it needs six
           runs on each side.
+
+[2026-10-17] Round 3: start agents in the foreground (kept)
+Plan: a Fable agent planned two experiments (`bench/experiments/round3/`). Haiku agents built
+          the harness tasks and ran the experiment. I checked the plan, the code, and the
+          saved results myself.
+Edit: the README and the tests, build, intake, and verify skills say to start each agent with
+          `run_in_background: false`, and not to wait with a sleep, a loop, a monitor, or a
+          notification. The README already said "run it in the foreground", and the model
+          mostly ignored it.
+Result: six runs of the edit had no waiting turn. The baseline runs had 3 to 41, with a mean of
+          11.8 turns and $0.24 a run. All six finished, and all 8 probes pass. A whole run
+          cost $1.62 against $1.88 (14% less, with a 9% chance of luck), and took 335 s
+          against 483 s (31% less).
+Gate: waiting target, SAME OR BETTER. The whole-run saving matches the waiting cost that the
+          edit removed.
+Limits: the verify rounds were 3, 1, 1, 1, 2, 2 against 2, 2, 1, 1, 1, 1 in the baseline, so
+          the whole-run test alone is borderline. The number of review rounds is the noise to
+          beat.
+Two mistakes of mine, fixed on the way: the first start of the experiment failed because the
+          background runner got a relative spec path, and `wait` kept saying RUNNING. A test of
+          `apply` failed in a commit that I pushed, and the next commit fixed it.
+Next: round 4. The planner's second experiment, lean review packets, is not run. It would save
+          about $0.06 a run (3%), and it costs about $12 to test. The other levers left are the
+          context that the main session carries into verify, and the reviewer that does not write
+          its `result.md` (the main session writes some of those files itself).
 ```
