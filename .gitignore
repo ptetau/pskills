@@ -3,3 +3,7 @@ __pycache__/
 
 # Workflow worktrees (created by /vet runs)
 .claude/worktrees/
+
+# pdlc benchmark: raw event streams and per-run files stay local
+bench/results/*/*.stream.jsonl
+bench/results/*/run*.json
