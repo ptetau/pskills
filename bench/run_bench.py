@@ -646,8 +646,10 @@ def command_gate(args):
         print("%s  each call $%.3f -> $%.3f, %.1f calls a run, so about $%.2f (%.0f%%) less in a run" % (
             detail["target"], detail["per_call_before"], detail["per_call_after"], detail["calls_per_run"],
             detail["expected_run_saving"], detail["expected_run_saving_share"] * 100))
-    if base["seeds_caught"] is not None:
-        print("defects    %d vs %d caught" % (len(base["seeds_caught"]), len(cand["seeds_caught"] or [])))
+    if base["seeds_caught"] is not None and cand["seeds_caught"] is not None:
+        print("defects    %d vs %d caught" % (len(base["seeds_caught"]), len(cand["seeds_caught"])))
+    elif base["seeds_caught"] is not None:
+        print("defects    not measured for the candidate")
     print("verdict    " + result["verdict"])
     for reason in result["reasons"]:
         print("           " + reason)

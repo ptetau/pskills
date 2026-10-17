@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** Round 1 was reverted. Round 2 is in progress.
+**Owner:** Patrick Te Tau · **Status:** Round 1 was reverted. Round 2 is kept. Round 3 is open.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -23,6 +23,9 @@ Patrick Te Tau chose these on the `/quiz-visual` page on 17 October 2026.
 | Levers | Cheaper models, shorter prompts, review by risk, context pack, more in parallel |
 | Test bed | A small fixture app |
 | How far | The loop, and one round of it |
+
+Round 2 used a sixth lever, fewer failed review rounds, which is not in this list. The
+data showed that a second round of verify costs more than any change to a single stage.
 
 ## What we measure
 
@@ -150,4 +153,22 @@ Learned: in 4 of the 5 runs, the specification review failed the first verify ro
           imperative in a description. No stage runs the writing check before verify, so
           each run pays for a second round of reviews. In one run the writing findings did
           not converge, and pdlc stopped. This is round 2.
+
+[2026-10-17] Round 2: check the writing before verify
+Edit: step 3 of `skills/verify/SKILL.md` now runs the writing check on the README, the
+          specs, and the change spec before it makes the packets. The stage fixes each real
+          finding first. In the baseline runs, the check ran only after a failed review.
+Result: four runs cost $1.43, $1.60, $1.57 and $1.53 (mean $1.53, 25% less than the
+          baseline mean of $2.05). The runs took 312 seconds on average, against 468. All
+          four finished, and each needed one verify round. The baseline runs needed 2, 2
+          and 1. All 8 probes pass in each run, and the project's checks pass. Reviewers
+          on Sonnet catch 5 of 5 planted defects, and they raise no false alarm.
+Gate: SAME OR BETTER. The chance that the fall is luck is 3%.
+Limits: the benchmark has one intent. A style problem that only a reviewer finds still
+          costs a round. The runs differ in how many turns only wait for a background
+          agent: 1 to 9 turns, $0.015 to $0.15.
+Next: the state after round 2 is the new reference (`bench/results/r2/result.json`). The
+          levers left are: start agents in the foreground, so that the main session does
+          not poll; the context that the main session carries into verify; and a cheaper
+          reviewer, with the new check that a run must finish.
 ```

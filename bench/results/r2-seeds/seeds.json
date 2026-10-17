@@ -1,0 +1,78 @@
+{
+ "label": "r2-seeds",
+ "reviewer_model": "claude-sonnet-5-5",
+ "caught": [
+  "spec-exit-code",
+  "security-eval",
+  "privacy-log",
+  "quality-dead-code",
+  "tests-weak-check"
+ ],
+ "missed": [],
+ "false_fails": [],
+ "cost_usd": 0.821,
+ "seeded": {
+  "privacy": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:711-712 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. This logs file content, which can hold personal data. It is also an unexpected place, and it is world-readable and never removed. No acceptance line asks for it. \u00b7 Privacy remit: do not log personal data, send it to an unexpected place, or keep it longer than necessary. Also outside the \"Files\" scope of R6.",
+   "cost_usd": 0.0715,
+   "wall_s": 12.5
+  },
+  "quality": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:5-10 \u00b7 `_parse_top_old` is dead code. Nothing calls it. \u00b7 remit rule: no dead code\n- wordfreq/cli.py:23-27 \u00b7 `eval(top)` parses user input. It runs arbitrary code. It also accepts `+3`, `1e2`-style or other values wrongly (for example `0x10`, `1_0`, ` 3`), and `True` passes as int. The spec says N is valid only when it is made of digits and above zero. \u00b7 JOB-report-word-frequencies.R6 (valid N) and remit rule: as simple as the requirement lets it be\n- wordfreq/cli.py:28 \u00b7 An invalid N returns exit code 1. The spec requires 2. \u00b7 JOB-report-word-frequencies.R6 (invalid N exits with code 2)\n- wordfreq/cli.py:31-32 \u00b7 The code writes the file path and the first 200 characters of the text to `/tmp/wordfreq-usage.log`. The spec does not ask for it. It leaks file content and is unsafe. It also breaks the \"Files\" scope of the change and the code that handles the file errors. \u00b7 CH-0001 Delivers and Files; unsafe leak of file content\n- wordfreq/cli.py:3 \u00b7 `print(..., file=stderr)` writes `usage: wordfreq FILE\\n` correctly, but `--top` as the last argument with no value uses `\"\"` and then fails through `eval(\"\")`. The path works only by accident of the `except` branch. The check needs a clear explicit parse. \u00b7 remit rule: error handling is clear and simple",
+   "cost_usd": 0.0778,
+   "wall_s": 17.3
+  },
+  "security": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:698 \u00b7 `eval(top)` runs user input as code, so a crafted `--top` value runs arbitrary commands. It also accepts values that R6 must reject (for example `1e2` gives a float, and `+3` evaluates to 3, which is valid input here). \u00b7 remit rule \"no injection\"; R6 (`+3` must give the error)\n- wordfreq/cli.py:703 \u00b7 An invalid N returns exit code 1, not 2. \u00b7 R6 acceptance lines (invalid N gives exit code 2)\n- wordfreq/cli.py:710-711 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. This leaks file content to a shared, fixed path, and no acceptance line asks for it. It is also unsafe on a shared system (symlink or world-readable file). \u00b7 remit rule \"no secrets in code, logs, or errors\"\n- wordfreq/cli.py:693 \u00b7 The usage line is printed with `print`, which gives `usage: wordfreq FILE\\n`. This is correct. No problem here.\n- wordfreq/cli.py:698 \u00b7 The `--top` check is accurate in order (before the file is read), but because `eval` runs first, `--top` values such as `__import__('os').system(...)` run before any check. \u00b7 remit rule \"validates input before it uses it\"",
+   "cost_usd": 0.0759,
+   "wall_s": 14.2
+  },
+  "specification": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:24-26 \u00b7 An invalid N returns exit code 1. The spec requires exit code 2. \u00b7 JOB-report-word-frequencies.R6 (the lines for `0`, `-1`, `2.5`, `abc`, `1e2`, `+3`, the empty string, and a missing N)\n- wordfreq/cli.py:21 \u00b7 `eval(top)` reads N. `+3` evaluates to 3 and the code accepts it, but the spec requires an error. `03` raises a syntax error, so the code reports an error, but the spec requires 3 words. \u00b7 JOB-report-word-frequencies.R6 (the `03` and `+3` lines). `eval` on input from the command line is also unsafe, because it runs any Python expression.\n- wordfreq/cli.py:33-34 \u00b7 The code writes the path and the first 200 characters of the file to `/tmp/wordfreq-usage.log`. No requirement asks for this. It leaks file content to a shared path. \u00b7 Remit rule: the code does nothing that the spec did not ask for. Unsafe path and leak of data.\n- wordfreq/cli.py:7-11 \u00b7 `_parse_top_old` is dead code. Its docstring says \"The old way\", and nothing calls it. The wording is stale and describes behaviour that is not current. \u00b7 Remit rule: no old wording survives. The code comments must follow the writing rules.\n- wordfreq/cli.py:12-31 \u00b7 The `--top` check comes after the argument-count check. This is acceptable for the spec. The code also never checks whether `--top` appears twice. The spec does not cover that case, so it is not a problem.",
+   "cost_usd": 0.0888,
+   "wall_s": 22.2
+  },
+  "tests": {
+   "verdict": "fail",
+   "problems": "- tests/test_JOB_report_word_frequencies.py:703 \u00b7 `assert_top_error` checks only that standard output is empty. It does not check the message or the exit code. The zero check, the invalid-value check (`-1`, `2.5`, `abc`, `1e2`, `+3`, empty string) and the missing-value check prove neither line \u00b7 JOB-report-word-frequencies.R6 lines for `--top 0`, the invalid N values, and `FILE --top` (the error is exactly `error: --top needs a whole number greater than zero\\n`, exit code 2)\n- tests/test_JOB_report_word_frequencies.py:697 \u00b7 The empty-file check does not read standard error. A wrong version that writes to standard error passes \u00b7 JOB-report-word-frequencies.R6 line for an empty file (this line names only standard output and the exit code, so this is a minor point)",
+   "cost_usd": 0.1049,
+   "wall_s": 19.2
+  }
+ },
+ "clean": {
+  "specification": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.075,
+   "wall_s": 14.6
+  },
+  "security": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.0711,
+   "wall_s": 12.1
+  },
+  "privacy": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.067,
+   "wall_s": 9.0
+  },
+  "quality": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.0727,
+   "wall_s": 13.8
+  },
+  "tests": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.1163,
+   "wall_s": 28.5
+  }
+ }
+}
