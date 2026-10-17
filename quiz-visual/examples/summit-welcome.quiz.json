@@ -1,0 +1,147 @@
+{
+  "title": "Summit Welcome Email",
+  "task": "A welcome email for new members of Summit Climbing Gym",
+  "intro": "Five choices shape the email. Each option shows the result, so you can pick what you see.",
+  "questions": [
+    {
+      "id": "tone",
+      "label": "Tone",
+      "question": "What tone suits the welcome email?",
+      "evidence": "You said this is a climbing gym.",
+      "options": [
+        {
+          "id": "stoked", "label": "Stoked", "recommended": true,
+          "text": "A stoked voice sounds like climbers talk to each other and fits a gym, but it can read as try-hard to a quiet member.",
+          "preview": {"kind": "sample", "frame": "email", "from": "Summit Climbing", "title": "You're in. Let's send it.",
+            "body": ["Welcome to the crew! Chalk up, grab a pair of shoes, and come play on the wall.", "Your first climb is on us."],
+            "action": "Book your first climb"}
+        },
+        {
+          "id": "warm", "label": "Warm",
+          "text": "A warm voice is friendly and personal and suits a mixed membership, but it has less energy.",
+          "preview": {"kind": "sample", "frame": "email", "from": "Summit Climbing", "title": "Welcome to Summit",
+            "body": ["We are glad that you joined us. Take your time, ask anyone for help, and enjoy your first visit.", "We will look after you."],
+            "action": "Plan your first visit"}
+        },
+        {
+          "id": "plain", "label": "Plain",
+          "text": "A plain voice gives the facts first and reads fastest, but it can feel like a receipt.",
+          "preview": {"kind": "sample", "frame": "email", "from": "Summit Climbing", "title": "Your membership is active",
+            "body": ["Your membership is active from today. The gym is open 6am to 10pm every day.", "Bring a towel and a water bottle."],
+            "action": "See the timetable"}
+        }
+      ]
+    },
+    {
+      "id": "layout",
+      "label": "Layout",
+      "question": "Which layout suits the email?",
+      "options": [
+        {
+          "id": "hero-cards", "label": "Hero and cards",
+          "text": "A big photo opens the email, then three cards lead to the next steps, but it needs good photos.",
+          "preview": {"kind": "wireframe", "frame": "email", "caption": "Photo, then three cards",
+            "rows": ["header", {"type": "hero", "label": "Photo"}, {"grid": 3, "item": "card"}, "button", "footer"]}
+        },
+        {
+          "id": "one-column", "label": "One column",
+          "text": "Short text runs down one column to a single button, which is simple, but it shows no photos.",
+          "preview": {"kind": "wireframe", "frame": "email", "caption": "Text, then one button",
+            "rows": ["header", "text", "text", "button", "footer"]}
+        },
+        {
+          "id": "split", "label": "Photo beside text",
+          "text": "A photo sits beside the welcome text, so the email feels personal, but it breaks on narrow phones.",
+          "preview": {"kind": "wireframe", "frame": "email", "caption": "Photo and text side by side",
+            "rows": ["header", {"cols": ["image", "text"], "ratio": [1, 1.2]}, "list", "button", "footer"]}
+        }
+      ]
+    },
+    {
+      "id": "palette",
+      "label": "Colours",
+      "question": "Which colours suit the email?",
+      "options": [
+        {
+          "id": "chalk-flame", "label": "Chalk and flame",
+          "text": "A light page with a hot orange button looks lively in a bright gym, but orange on white is hard to read at small sizes.",
+          "preview": {"kind": "swatch", "sample": "Welcome to Summit", "action": "Book now",
+            "colors": [{"name": "Chalk", "value": "#f6f4ef", "role": "bg"}, {"name": "Rock", "value": "#1f2430", "role": "ink"}, {"name": "Flame", "value": "#e4572e", "role": "accent"}]}
+        },
+        {
+          "id": "granite", "label": "Granite night",
+          "text": "A dark page with a green accent feels bold and modern, but some mail apps change dark colours.",
+          "preview": {"kind": "swatch", "sample": "Welcome to Summit", "action": "Book now",
+            "colors": [{"name": "Granite", "value": "#1e232c", "role": "bg"}, {"name": "Frost", "value": "#f1f3f7", "role": "ink"}, {"name": "Moss", "value": "#7bd389", "role": "accent"}]}
+        },
+        {
+          "id": "sky-rope", "label": "Sky and rope",
+          "text": "Soft blues feel calm and clear on every screen, but the email looks like many other emails.",
+          "preview": {"kind": "swatch", "sample": "Welcome to Summit", "action": "Book now",
+            "colors": [{"name": "Sky", "value": "#eaf3fb", "role": "bg"}, {"name": "Deep", "value": "#12263a", "role": "ink"}, {"name": "Rope", "value": "#2f80ed", "role": "accent"}]}
+        }
+      ]
+    },
+    {
+      "id": "booking",
+      "label": "Booking",
+      "question": "How do new members book their first class?",
+      "options": [
+        {
+          "id": "pick-day", "label": "Pick a day",
+          "text": "The member picks a day inside the email, which is the fastest path, but many mail apps block this.",
+          "preview": {"kind": "demo", "alt": "A row of day buttons. Clicking a day books the class.", "height": 200,
+            "html": "<div class=\"w\"><b>Book your intro class</b><div class=\"days\"><button>Mon</button><button>Wed</button><button>Fri</button><button>Sat</button></div><p id=\"m\">Pick a day.</p></div>",
+            "css": ".w{display:grid;gap:10px;text-align:center}.days{display:flex;gap:6px;justify-content:center}.days button{border:1.5px solid #1b2030;background:#fff;border-radius:8px;padding:8px 11px;cursor:pointer}.days button.on{background:#ffd84a}#m{margin:0;color:#4a5262}",
+            "js": "var b=document.querySelectorAll('.days button'),m=document.getElementById('m');b.forEach(function(x){x.onclick=function(){b.forEach(function(y){y.className=''});x.className='on';m.textContent='Booked for '+x.textContent+' at 6pm. See you at the wall.'}})"}
+        },
+        {
+          "id": "one-button", "label": "One button",
+          "text": "One button opens a short booking page, so every mail app works, but the member leaves the email.",
+          "preview": {"kind": "demo", "alt": "A single button. Clicking it shows the booking page that opens next.", "height": 200,
+            "html": "<div class=\"w\"><button id=\"go\">Book my intro class</button><p id=\"m\"></p></div>",
+            "css": ".w{display:grid;gap:12px;text-align:center}#go{background:#1b2030;color:#fff;border:0;border-radius:999px;padding:11px 18px;font-weight:600;cursor:pointer}#m{margin:0;color:#4a5262;border:1.5px dashed #9aa0ad;border-radius:8px;padding:10px;display:none}#m.show{display:block}",
+            "js": "document.getElementById('go').onclick=function(){var m=document.getElementById('m');m.textContent='Booking page opens: choose a day and a time.';m.className='show'}"}
+        },
+        {
+          "id": "reply", "label": "Reply to book",
+          "text": "The member replies to the email and staff book the class, which feels personal, but it adds staff work.",
+          "preview": {"kind": "flow", "caption": "Staff handle each booking",
+            "steps": [{"label": "Member replies", "who": "user"}, {"label": "Staff read it", "who": "staff", "emphasis": true}, {"label": "Staff book", "who": "staff", "emphasis": true}, {"label": "Reply sent", "who": "system"}]}
+        }
+      ]
+    },
+    {
+      "id": "extras",
+      "label": "Extras",
+      "multi": true,
+      "question": "Which extras does the email need?",
+      "options": [
+        {
+          "id": "hours", "label": "Opening hours",
+          "text": "Members see when to come, and the hours rarely change, but hours add length.",
+          "preview": {"kind": "html", "alt": "A small table of opening hours.", "height": 170,
+            "html": "<table><tr><td>Mon to Fri</td><td>6am to 10pm</td></tr><tr><td>Sat, Sun</td><td>8am to 8pm</td></tr></table>",
+            "css": "table{border-collapse:collapse;width:100%}td{padding:8px 6px;border-bottom:1px solid #cfd2d9}td+td{text-align:right;font-weight:600}"}
+        },
+        {
+          "id": "map", "label": "Map",
+          "text": "A map helps a first visit, but it needs a picture file that some mail apps block.",
+          "preview": {"kind": "svg", "alt": "A simple map with streets and a pin on the gym.",
+            "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 240 150\"><rect width=\"240\" height=\"150\" fill=\"#e8efe6\"/><path d=\"M0 95h240M70 0v150M170 0v150\" stroke=\"#fff\" stroke-width=\"12\"/><path d=\"M0 30h240\" stroke=\"#fff\" stroke-width=\"6\"/><path d=\"M120 48c-14 0-24 10-24 23 0 17 24 38 24 38s24-21 24-38c0-13-10-23-24-23z\" fill=\"#e4572e\"/><circle cx=\"120\" cy=\"71\" r=\"8\" fill=\"#fff\"/></svg>"}
+        },
+        {
+          "id": "timetable", "label": "Class timetable",
+          "text": "The week shows which classes suit a beginner, but the timetable changes often.",
+          "preview": {"kind": "wireframe", "frame": "none", "caption": "A week of classes",
+            "rows": ["tabs", {"grid": 4, "item": "card", "count": 8}]}
+        },
+        {
+          "id": "gear", "label": "Gear prices",
+          "text": "Members know the cost of hire before they arrive, but the prices go out of date.",
+          "preview": {"kind": "code", "language": "text", "code": "Shoes ........ $6\nHarness ...... $5\nChalk bag .... $3\nFull kit ..... $12"}
+        }
+      ]
+    }
+  ]
+}

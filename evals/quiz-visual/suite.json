@@ -1,0 +1,181 @@
+{
+  "skill": "quiz-visual",
+  "skillPath": "quiz-visual/SKILL.md",
+  "skillSha256": "07a97e9d0463c16601e8e6c05a76e0dc4d79e03a1578925c9dd63fc9cde455d1",
+  "createdAt": "2026-10-17T08:46:01Z",
+  "structure": {
+    "summary": "Multi-turn. The skill plans a fixed list of questions, writes them as a spec file `<name>.quiz.json`, renders `<name>.quiz.html` with `scripts/render_quiz.py`, and runs `scripts/check_quiz.py` until it shows PASS with 0 writing warnings. It then tells the user the path of the page and waits. Eval runs have no Artifact tool, so only the file path applies. After the user pastes the answers JSON, the skill shows one echo line per question, one paragraph on what the answers mean, and starts the work.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "Spec file `<name>.quiz.json` in the working directory: a `title` of 2 to 5 words, an `intro`, and 3 to 10 questions. Each question has an `id`, a `label` of 12 characters or fewer, a `question` that ends with `?`, and 2 to 5 options. Each option has an `id`, a `label`, a one-sentence `text`, and a `preview` with a `kind`. A recommended option sets `recommended` and the question sets `evidence`."
+      },
+      {
+        "id": "S2",
+        "description": "Page file `<name>.quiz.html`, made by running `render_quiz.py` on the spec (the transcript shows the command), and `check_quiz.py` run on the spec and the page, with a final `PASS` and `0 writing warnings`."
+      },
+      {
+        "id": "S3",
+        "description": "Hand-off message: the path of the page, and two sentences on how to answer (answer, press Copy answers, paste the result into the chat). It does not ask the questions again in the chat, and it does not claim to have published a live page."
+      },
+      {
+        "id": "S4",
+        "description": "After the answers: one line per question in an exact form (`✓ N/T Label → Choice`, optionally with `(note: …)`, a list of choices for a multi-choice question, `(you decided: recommended)`, or `(you decided: first option)`), then one short paragraph on what the answers mean, then the work."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "The spec file is valid and complete: 3 to 10 questions, 2 to 5 options each, a preview and a one-sentence text on every option.",
+      "pass": "The file `<name>.quiz.json` exists in the working directory and passes `render_quiz.py` with no errors. It has 3 to 10 questions. Each question has a label of 12 characters or fewer and a question that ends with `?`. Each option has a label of 1 to 5 words, a text of one sentence, and a preview with a known kind.",
+      "partial": "The file exists and renders, but one question or option breaks a limit of the format, or one option has no real preview.",
+      "source": "Step 3: Write the spec; references/spec.md"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "The page comes from the renderer, and the checker passes with no writing warning.",
+      "pass": "The transcript shows `render_quiz.py` run on the spec and `check_quiz.py` run on the spec and the page. The last check shows `PASS` and `0 writing warnings`. The agent fixed each ERROR and WARN in the spec, not in the HTML.",
+      "partial": "The page exists, but the agent did not run the checker, or it ended on warnings that it did not fix.",
+      "source": "Step 4: Render and check"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 1,
+      "criterion": "The hand-off gives the path of the page and how to answer, and then the agent waits.",
+      "pass": "The message names the path of the page file and tells the user how to answer in two sentences or fewer. It does not repeat the questions in the chat, and it does not say that a live page is published. The agent stops and waits for the answers.",
+      "partial": "The path is given, but the message repeats the questions, or claims a live page, or goes on to do the work before the answers.",
+      "source": "Step 5: Give the page to the user"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "After the answers, one echo line per question in the exact form, then one paragraph on what the answers mean, then the work.",
+      "pass": "Each question has one line in the exact form. A note, a deferral, and a multi-choice answer use their own forms. One short paragraph follows. The agent asks for no second confirmation and starts the work.",
+      "partial": "The echoes are present, but one has a wrong form, or the paragraph is missing, or the agent asks for a second confirmation.",
+      "appliesWhen": "the user pastes the answers",
+      "source": "Step 6: Read the answers"
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 3,
+      "criterion": "The previews show the difference between the options. The kind fits the difference, the options of one question share a kind, and the content is real.",
+      "pass": "For each question, the preview kind fits what the options differ in (`sample` for words, `wireframe` for layout, `swatch` for colour, `flow` for order, `code` for data shape, `demo` for behaviour). The options of one question use the same kind. The previews hold real words, colours, and names of this work, with no filler. A `demo` appears only where behaviour is the difference.",
+      "partial": "Most previews fit, but one question uses a kind that cannot show the difference, or mixes kinds across its options, or has filler content.",
+      "source": "Step 2: Choose a preview for each option; references/preview-kinds.md"
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "An option is recommended only on evidence from the words of the user.",
+      "pass": "No question has more than one recommended option. Each recommended option has an `evidence` that quotes or paraphrases something the user said. A question with nothing to go on has no recommendation.",
+      "partial": "A recommendation has weak evidence, or a question with nothing to go on recommends an option anyway.",
+      "source": "Step 1: Recommend only on evidence"
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The questions are the ones that change the work, most important first, with none that the request already answers.",
+      "pass": "Each question changes the work. No question asks again for a fact that the request states. The most important question comes first. The list has 10 questions or fewer.",
+      "partial": "Most questions are useful, but one asks for a stated fact, or is filler, or is clearly out of order.",
+      "source": "Step 1: Plan the questions"
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "Each option text is one sentence that gives what the option offers and then its cost, and it does not repeat what the preview shows.",
+      "pass": "Each option text is one sentence of 25 words or fewer, in the form of what it gives and then its cost after \"but\". It adds the cost, and does not describe the preview again.",
+      "partial": "Some option texts have two sentences, or skip the cost, or only describe what the preview shows.",
+      "source": "Step 3: Write the spec"
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "The agent does not ask the questions in the chat, and it does not claim to publish a live page when it has no Artifact tool.",
+      "pass": "The questions appear only on the page. The agent says nothing about a published page or a link when the session has no Artifact tool.",
+      "partial": "The agent repeats one question in the chat, or mentions a live page that does not exist.",
+      "source": "Step 5: Give the page to the user; What not to do"
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "A user can choose between the options by looking at them: the options are distinct, realistic for this request, and each shows what it claims.",
+      "pass": "In every question, the options are clearly different when a reader looks at the previews. Each option is a plausible choice for this request. The preview matches the option label and text. A reader needs no extra explanation to choose.",
+      "partial": "One question has options that look nearly the same, or one preview does not match its label.",
+      "source": "Purpose; Step 2"
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The work after the answers reflects each answer, each note, and each deferral.",
+      "pass": "The delivered work follows every chosen option and every note. A question that the user left to the agent follows the stated rule: the recommended option, or the first option when nothing was recommended. Nothing that the user chose is dropped or contradicted.",
+      "partial": "One answer, note, or deferral is missing from the work or is softened.",
+      "appliesWhen": "the user pastes the answers and the agent begins the work",
+      "source": "Step 6: Read the answers"
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 2,
+      "criterion": "The words that the agent wrote follow the writing guidelines: short sentences, plain words, and a noun at the start of each text.",
+      "pass": "The intro, the questions, the option texts, and the replies in the chat use short sentences and plain words. A text does not start with a pronoun that refers to an earlier text. The checker found no writing warning.",
+      "partial": "One or two texts break a rule of the guidelines, for example a long sentence or a text that starts with \"It\".",
+      "source": "Writing; references/writing-guidelines.md"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical",
+      "prompt": "/quiz-visual a landing page for my bakery, Crumb & Co. We sell sourdough and pastries in Ponsonby, and most of our customers walk past the shop.",
+      "exercises": "the core path on a visual task: layout, tone, colour, and photo style questions, with wireframe, sample, and swatch previews, evidence from the words of the user, and a recommendation that cites the walk-past customers",
+      "replies": [
+        "I opened the page. I picked the first option of each question, except the second question, where I picked the last option. I wrote the note \"keep it short\" on the first question and pressed You decide on the last question. Here is the answers JSON from Copy answers."
+      ]
+    },
+    {
+      "id": "P02",
+      "axis": "behaviour-heavy",
+      "prompt": "/quiz-visual the sign-up flow of a habit-tracking app for busy parents. Mobile first.",
+      "exercises": "options that differ in behaviour and order: flow and demo previews, a wireframe of the first screen, and a multi-choice question",
+      "replies": [
+        "I opened the page. I answered every question. On the multi-choice question I picked two options. I left the first question to you with You decide. Here is the answers JSON."
+      ]
+    },
+    {
+      "id": "P03",
+      "axis": "technical shape",
+      "prompt": "/quiz-visual the REST API of a library catalogue. Members search books, reserve a copy, and see their loans.",
+      "exercises": "options that differ in the shape of data and the order of calls: code previews for responses, flow previews for the reserve step, and no filler content",
+      "replies": [
+        "I opened the page. I picked the second option of each question and wrote no notes. Here is the answers JSON."
+      ]
+    },
+    {
+      "id": "P04",
+      "axis": "rich input",
+      "prompt": "/quiz-visual a pricing page for my developer-tools startup. We sell to engineering managers at mid-size companies. The plans are Free, Team (12 dollars a seat), and Enterprise (custom). Our brand colours are navy and orange. I want it to feel calm and serious, not salesy.",
+      "exercises": "no question about the audience, the brand colours, or the plan names, because the request states them; recommendations that cite \"calm and serious\"; previews that use the real plan names and colours",
+      "replies": [
+        "I opened the page. I picked the recommended option wherever there was one, and the first option elsewhere. I wrote the note \"show the seat price first\" on the first question. Here is the answers JSON."
+      ]
+    }
+  ]
+}
