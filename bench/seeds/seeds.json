@@ -1,0 +1,44 @@
+{
+  "branch": "pdlc/CH-0001-top-option",
+  "change": "CH-0001",
+  "control_remits": ["specification", "security", "privacy", "quality", "tests"],
+  "edits": [
+    {
+      "file": "wordfreq/cli.py",
+      "find": "        if not (top.isascii() and top.isdigit() and int(top) > 0):\n            print(\"error: --top needs a whole number greater than zero\", file=stderr)\n            return 2\n        top = int(top)\n",
+      "replace": "        try:\n            top = eval(top)\n        except Exception:\n            top = 0\n        if not isinstance(top, int) or top <= 0:\n            print(\"error: --top needs a whole number greater than zero\", file=stderr)\n            return 1\n"
+    },
+    {
+      "file": "wordfreq/cli.py",
+      "find": "\n\ndef main(argv=None, stdout=None, stderr=None):\n",
+      "replace": "\n\ndef _parse_top_old(value):\n    \"\"\"The old way to read --top. Nothing calls this.\"\"\"\n    if value.isdigit() and int(value) > 0:\n        return int(value)\n    return None\n\n\ndef main(argv=None, stdout=None, stderr=None):\n"
+    },
+    {
+      "file": "wordfreq/cli.py",
+      "find": "    for word, count in count_words(text)[:top]:\n",
+      "replace": "    with open(\"/tmp/wordfreq-usage.log\", \"a\", encoding=\"utf-8\") as log:\n        log.write(path + \": \" + text[:200] + \"\\n\")\n    for word, count in count_words(text)[:top]:\n"
+    },
+    {
+      "file": "tests/test_JOB_report_word_frequencies.py",
+      "find": "        code, out, err = run_main(argv)\n        self.assertEqual(err, TOP_ERROR, argv)\n        self.assertEqual(out, \"\", argv)\n        self.assertEqual(code, 2, argv)\n",
+      "replace": "        code, out, err = run_main(argv)\n        self.assertEqual(out, \"\", argv)\n"
+    }
+  ],
+  "seeds": [
+    {"id": "spec-exit-code", "remit": "specification",
+     "what": "the --top error exits with code 1, and the spec says 2",
+     "patterns": ["exit code", "return(s|ed)? 1", "code (is )?1\\b", "\\b1\\b.{0,60}\\b2\\b"]},
+    {"id": "security-eval", "remit": "security",
+     "what": "the value of --top goes into eval",
+     "patterns": ["eval"]},
+    {"id": "privacy-log", "remit": "privacy",
+     "what": "the command writes the path and the first 200 characters of the file to a log",
+     "patterns": ["\\blogs?\\b", "/tmp", "wordfreq-usage"]},
+    {"id": "quality-dead-code", "remit": "quality",
+     "what": "a function that nothing calls",
+     "patterns": ["dead", "unused", "never called", "nothing calls", "not called", "_parse_top_old"]},
+    {"id": "tests-weak-check", "remit": "tests",
+     "what": "the helper of the error checks no longer checks the message or the exit code",
+     "patterns": ["assert_top_error", "standard error", "stderr", "exit code", "error message"]}
+  ]
+}

@@ -1,0 +1,233 @@
+diff --git a/pdlc/changes/CH-0001-top-option/change.md b/pdlc/changes/CH-0001-top-option/change.md
+new file mode 100644
+index 0000000..a299d71
+--- /dev/null
++++ b/pdlc/changes/CH-0001-top-option/change.md
+@@ -0,0 +1,87 @@
++# CH-0001 · Top option
++
++Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: planned · Ticket: none · Branch: none · Base: main
++Tests-Locked: none
++
++## Delivers
++
++The wordfreq command accepts `--top N` and then prints only the N most common words. An invalid N gives the stated error and exit code 2.
++
++## Requirements
++
++### JOB-report-word-frequencies.R4 · Wrong number of arguments prints usage
++
++- Given no arguments, when the user runs `wordfreq`, then standard error is exactly `usage: wordfreq FILE\n`, standard output is empty, and the exit code is 2.
++- Given two files, when the user runs `wordfreq a.txt b.txt`, then standard error is exactly `usage: wordfreq FILE\n`, standard output is empty, and the exit code is 2.
++- Given only the option, when the user runs `wordfreq --top 3`, then standard error is exactly `usage: wordfreq FILE\n`, standard output is empty, and the exit code is 2.
++
++### JOB-report-word-frequencies.R6 · Print only the top N words
++
++- Given a file with the text `the cat and the hat and the bat`, when the user runs `wordfreq --top 2 FILE`, then standard output is exactly `the 3\nand 2\n`, standard error is empty, and the exit code is 0.
++- Given the same file, when the user runs `wordfreq FILE --top 1`, then standard output is exactly `the 3\n` and the exit code is 0.
++- Given the same file, when the user runs `wordfreq --top 4 FILE`, then standard output is exactly `the 3\nand 2\nbat 1\ncat 1\n`.
++- Given the same file, when the user runs `wordfreq --top 5 FILE`, then standard output is exactly `the 3\nand 2\nbat 1\ncat 1\nhat 1\n`.
++- Given the same file, when the user runs `wordfreq --top 99 FILE`, then standard output is exactly `the 3\nand 2\nbat 1\ncat 1\nhat 1\n` and the exit code is 0.
++- Given the same file, when the user runs `wordfreq --top 03 FILE`, then standard output is exactly `the 3\nand 2\nbat 1\n`.
++- Given an empty file, when the user runs `wordfreq --top 3 FILE`, then standard output is empty and the exit code is 0.
++- Given the same file, when the user runs `wordfreq --top 0 FILE`, then standard error is exactly `error: --top needs a whole number greater than zero\n`, standard output is empty, and the exit code is 2.
++- Given the same file, when the user runs `wordfreq --top N FILE` with N as `-1`, `2.5`, `abc`, `1e2`, `+3`, or an empty string, then standard error is exactly `error: --top needs a whole number greater than zero\n`, standard output is empty, and the exit code is 2.
++- Given the same file, when the user runs `wordfreq FILE --top`, then standard error is exactly `error: --top needs a whole number greater than zero\n`, standard output is empty, and the exit code is 2.
++- Given the path `/no/such/file.txt` does not exist, when the user runs `wordfreq --top 0 /no/such/file.txt`, then standard error is exactly `error: --top needs a whole number greater than zero\n` and the exit code is 2.
++- Given the path `/no/such/file.txt` does not exist, when the user runs `wordfreq --top 2 /no/such/file.txt`, then standard error is exactly `error: cannot read /no/such/file.txt\n` and the exit code is 2.
++
++## Relies on
++
++- CAP-word-counting (used, not changed)
++- DES-errors (conventions to follow)
++- DES-writing-style (conventions to follow)
++- DES-pdlc-check-tagging (conventions to follow)
++
++## Interface
++
++- `main(argv: list[str] = None, stdout=None, stderr=None) -> int` in `wordfreq/cli.py`
++  - argv is the list of arguments without the program name. It holds one FILE and an optional `--top N`, in any order.
++  - stdout and stderr are text streams. The return value is the exit code.
++  - errors: none have a code in `DES-errors`. The checks expect the exact message and the exit code 2.
++- The command `python3 -m wordfreq [--top N] FILE` in `wordfreq/__main__.py`. The process exit code is the return value of `main`.
++
++### Test seams
++
++none
++
++## Files
++
++- wordfreq/cli.py
++- README.md
++
++## Check files
++
++- tests/test_JOB_report_word_frequencies.py
++
++## Steps
++
++### Step 1 · Argument count with the option · [ ]
++
++- Requirement: JOB-report-word-frequencies.R4
++- Check: `test_JOB_report_word_frequencies_R4_…` in `tests/test_JOB_report_word_frequencies.py`
++- Done when: the check passes
++
++### Step 2 · Print only the top N words · [ ]
++
++- Requirement: JOB-report-word-frequencies.R6
++- Check: `test_JOB_report_word_frequencies_R6_…` in `tests/test_JOB_report_word_frequencies.py`
++- Done when: the checks pass
++
++### Step 3 · README · [ ]
++
++- Requirement: JOB-report-word-frequencies.R6
++- Check: manual check
++- Done when: the README tells what `--top N` does and shows an example. The README shows the error and the exit code 2 for an invalid N. The README still says how to run the app and the checks with `python3 -m unittest discover -s tests`.
++
++## Manual checks
++
++none
++
++## Progress log
++
++- 2026-10-17: One job change, because the intent changes only the job. The capability does not change. The usage line stays as it is.
+diff --git a/pdlc/inbox/IN-0001-top-words.md b/pdlc/inbox/IN-0001-top-words.md
+new file mode 100644
+index 0000000..d8e21fa
+--- /dev/null
++++ b/pdlc/inbox/IN-0001-top-words.md
+@@ -0,0 +1,57 @@
++# IN-0001 · Top words option
++
++Status: ready · Ticket: none · Branch: none · Added: 2026-10-17
++
++## What and why
++
++Add a --top N option to wordfreq. With it, the command prints only the N most common words. If N is not a whole number greater than zero, print `error: --top needs a whole number greater than zero` to standard error and exit with code 2.
++
++## Requirements
++
++- JOB-report-word-frequencies.R4: changed
++- JOB-report-word-frequencies.R6: added
++
++## Changes
++
++- CH-0001 · Top option
++
++## Notes
++
++- JOB-report-word-frequencies.R4: was "exactly one argument", now "exactly one FILE, after the --top option is removed"
++- JOB-report-word-frequencies.R6: where can --top stand → before or after FILE (assumed)
++- JOB-report-word-frequencies.R6: which values are valid → only digits, with a value above zero, so `03` is 3 (assumed)
++- JOB-report-word-frequencies.R6: N above the number of distinct words → print all words (assumed)
++- JOB-report-word-frequencies.R6: --top with no value → same error as an invalid N (assumed)
++- JOB-report-word-frequencies.R6: invalid N and unreadable file together → the --top error wins (assumed)
++- JOB-report-word-frequencies.R6: usage line → stays `usage: wordfreq FILE` (assumed)
++- README: "Each line has a word, a space, and the count." → JOB-report-word-frequencies.R6 (add the --top option)
++
++## Handoff
++
++### Handoff · IN-0001 · change → tests
++
++Time: 2026-10-17T11:39:58+00:00
++
++#### Done
++
++Planned one change, CH-0001 (top option). It covers R4 and R6 of the job.
++
++#### Decided on defaults
++
++none
++
++#### Open
++
++- none
++
++#### Look here
++
++- pdlc/changes/CH-0001-top-option/change.md
++
++#### Don't redo
++
++- Intake, ready, and the plan.
++
++#### Next: do this first
++
++Run tests for CH-0001. The existing tests/test_cli.py stays as it is. The new check file is tests/test_JOB_report_word_frequencies.py.
+diff --git a/pdlc/specs/jobs/JOB-report-word-frequencies.md b/pdlc/specs/jobs/JOB-report-word-frequencies.md
+index bfb252b..7bc458f 100644
+--- a/pdlc/specs/jobs/JOB-report-word-frequencies.md
++++ b/pdlc/specs/jobs/JOB-report-word-frequencies.md
+@@ -1,6 +1,6 @@
+ # JOB-report-word-frequencies · See how often each word appears in a file
+ 
+-Status: stub
++Status: active
+ 
+ ## Who and why
+ 
+@@ -20,4 +20,63 @@ in the file, most common first.
+ 
+ ## Requirements
+ 
+-None written yet.
++### JOB-report-word-frequencies.R1 · Print each word with its count
++
++Status: built · Intents: none · Source: recon
++
++`wordfreq FILE` prints one line for each distinct word in the file. Each line is the word, one space, and the count. The most common word comes first.
++
++- Given a readable file with the text `the cat and the hat and the bat`, when the user runs `python3 -m wordfreq FILE`, then standard output is exactly `the 3\nand 2\nbat 1\ncat 1\nhat 1\n`, standard error is empty, and the exit code is 0.
++
++### JOB-report-word-frequencies.R2 · Empty file prints nothing
++
++Status: built · Intents: none · Source: recon
++
++A file with no words gives no output and exit code 0.
++
++- Given a readable empty file, when the user runs `wordfreq FILE`, then standard output is empty, standard error is empty, and the exit code is 0.
++
++### JOB-report-word-frequencies.R3 · Unreadable file gives an error
++
++Status: built · Intents: none · Source: recon
++
++If the file cannot be read, the command prints one line to standard error and exits with code 2. Standard output stays empty.
++
++- Given the path `/no/such/file.txt` does not exist, when the user runs `wordfreq /no/such/file.txt`, then standard error is exactly `error: cannot read /no/such/file.txt\n`, standard output is empty, and the exit code is 2.
++
++### JOB-report-word-frequencies.R4 · Wrong number of arguments prints usage
++
++Status: ready · Intents: IN-0001
++
++The command needs exactly one FILE, after the `--top` option and its value are removed. With none, or with more than one, it prints a usage line to standard error and exits with code 2.
++
++- Given no arguments, when the user runs `wordfreq`, then standard error is exactly `usage: wordfreq FILE\n`, standard output is empty, and the exit code is 2.
++- Given two files, when the user runs `wordfreq a.txt b.txt`, then standard error is exactly `usage: wordfreq FILE\n`, standard output is empty, and the exit code is 2.
++- Given only the option, when the user runs `wordfreq --top 3`, then standard error is exactly `usage: wordfreq FILE\n`, standard output is empty, and the exit code is 2.
++
++### JOB-report-word-frequencies.R5 · Run as a module
++
++Status: built · Intents: none · Source: recon
++
++`python3 -m wordfreq FILE` runs the command. The process exit code is the code that the command returns.
++
++- Given the project root is the working directory, when the user runs `python3 -m wordfreq notes.txt` on a missing file, then the exit code of the process is 2.
++
++### JOB-report-word-frequencies.R6 · Print only the top N words
++
++Status: ready · Intents: IN-0001
++
++With `--top N`, the command prints only the N most common words, in the same order and format as without the option. The option can stand before or after FILE (assumed). If the file has fewer than N distinct words, the command prints all of them (assumed). N is valid only when it is made of digits and its value is above zero (assumed), so `03` is 3. For any other N, including a missing N, the command prints `error: --top needs a whole number greater than zero` to standard error, prints nothing to standard output, and exits with code 2. This check comes before the file is read (assumed).
++
++- Given a file with the text `the cat and the hat and the bat`, when the user runs `wordfreq --top 2 FILE`, then standard output is exactly `the 3\nand 2\n`, standard error is empty, and the exit code is 0.
++- Given the same file, when the user runs `wordfreq FILE --top 1`, then standard output is exactly `the 3\n` and the exit code is 0.
++- Given the same file, when the user runs `wordfreq --top 4 FILE`, then standard output is exactly `the 3\nand 2\nbat 1\ncat 1\n`.
++- Given the same file, when the user runs `wordfreq --top 5 FILE`, then standard output is exactly `the 3\nand 2\nbat 1\ncat 1\nhat 1\n`.
++- Given the same file, when the user runs `wordfreq --top 99 FILE`, then standard output is exactly `the 3\nand 2\nbat 1\ncat 1\nhat 1\n` and the exit code is 0.
++- Given the same file, when the user runs `wordfreq --top 03 FILE`, then standard output is exactly `the 3\nand 2\nbat 1\n`.
++- Given an empty file, when the user runs `wordfreq --top 3 FILE`, then standard output is empty and the exit code is 0.
++- Given the same file, when the user runs `wordfreq --top 0 FILE`, then standard error is exactly `error: --top needs a whole number greater than zero\n`, standard output is empty, and the exit code is 2.
++- Given the same file, when the user runs `wordfreq --top N FILE` with N as `-1`, `2.5`, `abc`, `1e2`, `+3`, or an empty string, then standard error is exactly `error: --top needs a whole number greater than zero\n`, standard output is empty, and the exit code is 2.
++- Given the same file, when the user runs `wordfreq FILE --top`, then standard error is exactly `error: --top needs a whole number greater than zero\n`, standard output is empty, and the exit code is 2.
++- Given the path `/no/such/file.txt` does not exist, when the user runs `wordfreq --top 0 /no/such/file.txt`, then standard error is exactly `error: --top needs a whole number greater than zero\n` and the exit code is 2.
++- Given the path `/no/such/file.txt` does not exist, when the user runs `wordfreq --top 2 /no/such/file.txt`, then standard error is exactly `error: cannot read /no/such/file.txt\n` and the exit code is 2.

@@ -159,5 +159,52 @@ class ProbeTest(unittest.TestCase):
         self.assertTrue(run_bench.run_unit_checks(self.copy_fixture())["ok"])
 
 
+class SeedTest(unittest.TestCase):
+    spec = run_bench.json.loads((run_bench.SEEDS / "seeds.json").read_text())
+
+    def test_a_result_with_problems_is_read(self):
+        text = "Result: fail\n\nRemit: security\n\nProblems:\n- cli.py:9 · eval of user input · rule\n\nFollow-ups: none\n"
+        parsed = run_bench.parse_result(text)
+        self.assertEqual(parsed["verdict"], "fail")
+        self.assertIn("eval", parsed["problems"])
+        self.assertNotIn("Follow-ups", parsed["problems"])
+
+    def test_a_result_with_no_problems_is_a_pass(self):
+        parsed = run_bench.parse_result("Result: pass\n\nRemit: x\n\nProblems: none\n\nFollow-ups:\n- more\n")
+        self.assertEqual(parsed, {"verdict": "pass", "problems": ""})
+
+    def test_a_defect_is_caught_only_when_the_reviewer_fails_and_names_it(self):
+        results = {
+            "security": {"verdict": "fail", "problems": "- cli.py · eval of the value · rule"},
+            "privacy": {"verdict": "pass", "problems": ""},
+            "quality": {"verdict": "fail", "problems": "- cli.py · a name is unclear · rule"},
+        }
+        caught, missed = run_bench.score_seeds(self.spec, results)
+        self.assertEqual(caught, ["security-eval"])
+        self.assertIn("privacy-log", missed)
+        self.assertIn("quality-dead-code", missed)
+        self.assertIn("tests-weak-check", missed)
+
+    def build(self, seeded):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        return run_bench.build_seed_project(folder / "app", run_bench.DEFAULT_PLUGIN, seeded)
+
+    def test_the_clean_copy_passes_the_probes_and_its_own_checks(self):
+        project = self.build(False)
+        self.assertEqual(run_bench.run_probes(project)["failed"], [])
+        self.assertTrue(run_bench.run_unit_checks(project)["ok"])
+
+    def test_each_planted_defect_is_in_the_packet_of_its_reviewer(self):
+        project = self.build(True)
+        remits = sorted({seed["remit"] for seed in self.spec["seeds"]})
+        run_bench.make_seed_packets(project, remits)
+        marks = {"security": "eval(top)", "privacy": "wordfreq-usage", "quality": "_parse_top_old",
+                 "specification": "return 1", "tests": 'self.assertEqual(out, "", argv)\n\n'}
+        folder = project / "pdlc" / "changes" / "CH-0001-top-option" / "review"
+        for remit, mark in marks.items():
+            self.assertIn(mark, (folder / remit / "packet.md").read_text(), remit)
+
+
 if __name__ == "__main__":
     unittest.main()

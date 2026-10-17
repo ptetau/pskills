@@ -1,0 +1,472 @@
+diff --git a/README.md b/README.md
+index bb74fcc..f785e0b 100644
+--- a/README.md
++++ b/README.md
+@@ -12,6 +12,17 @@ python3 -m wordfreq notes.txt
+ Each line has a word, a space, and the count. Words that appear the same number of times
+ are in alphabetical order. wordfreq ignores case. A word has letters and apostrophes.
+ 
++To print only the N most common words, add `--top N`. N is a whole number greater than
++zero. The option can come before or after the file.
++
++```
++python3 -m wordfreq --top 2 notes.txt
++```
++
++If N is not a whole number greater than zero, wordfreq prints
++`error: --top needs a whole number greater than zero` to standard error and exits with
++code 2.
++
+ If wordfreq cannot read the file, it prints `error: cannot read <path>` to standard error
+ and exits with code 2.
+ 
+diff --git a/pdlc/changes/CH-0001-top-option/change.md b/pdlc/changes/CH-0001-top-option/change.md
+index a299d71..fac2b67 100644
+--- a/pdlc/changes/CH-0001-top-option/change.md
++++ b/pdlc/changes/CH-0001-top-option/change.md
+@@ -1,7 +1,7 @@
+ # CH-0001 · Top option
+ 
+-Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: planned · Ticket: none · Branch: none · Base: main
+-Tests-Locked: none
++Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: in review · Ticket: none · Branch: pdlc/CH-0001-top-option · Base: main
++Tests-Locked: 5b3ed82
+ 
+ ## Delivers
+ 
+@@ -60,19 +60,19 @@ none
+ 
+ ## Steps
+ 
+-### Step 1 · Argument count with the option · [ ]
++### Step 1 · Argument count with the option · [x]
+ 
+ - Requirement: JOB-report-word-frequencies.R4
+ - Check: `test_JOB_report_word_frequencies_R4_…` in `tests/test_JOB_report_word_frequencies.py`
+ - Done when: the check passes
+ 
+-### Step 2 · Print only the top N words · [ ]
++### Step 2 · Print only the top N words · [x]
+ 
+ - Requirement: JOB-report-word-frequencies.R6
+ - Check: `test_JOB_report_word_frequencies_R6_…` in `tests/test_JOB_report_word_frequencies.py`
+ - Done when: the checks pass
+ 
+-### Step 3 · README · [ ]
++### Step 3 · README · [x]
+ 
+ - Requirement: JOB-report-word-frequencies.R6
+ - Check: manual check
+@@ -85,3 +85,6 @@ none
+ ## Progress log
+ 
+ - 2026-10-17: One job change, because the intent changes only the job. The capability does not change. The usage line stays as it is.
++- Red run: the 5 checks of R4 (usage for a wrong argument count) pass, because the behaviour exists. The 14 checks of R6 (print only the top N words) fail, as they must.
++- Built: the 27 checks pass. The builder changed wordfreq/cli.py and README.md only.
++- Verify round 1: the specification review failed for old wording and for the progress log. Fixed both. The security review gave one follow-up, filed as IN-0002 (huge value for --top), which awaits approval.
+diff --git a/pdlc/changes/CH-0001-top-option/empty.txt b/pdlc/changes/CH-0001-top-option/empty.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/pdlc/changes/CH-0001-top-option/handoff.md b/pdlc/changes/CH-0001-top-option/handoff.md
+new file mode 100644
+index 0000000..54ff246
+--- /dev/null
++++ b/pdlc/changes/CH-0001-top-option/handoff.md
+@@ -0,0 +1,33 @@
++# Handoff · CH-0001 · verify → user
++
++Time: 2026-10-17T11:43:42+00:00
++
++## Done
++
++All checks pass (27). All six remits passed. The specification review failed in round 1 for old wording and a progress-log ID, and passed in round 2. The proposal is in proposal.md.
++
++## Decided on defaults
++
++- JOB-report-word-frequencies.R6: where can --top stand → before or after FILE (assumed)
++- JOB-report-word-frequencies.R6: which values are valid → only digits, with a value above zero, so `03` is 3 (assumed)
++- JOB-report-word-frequencies.R6: N above the number of distinct words → print all words (assumed)
++- JOB-report-word-frequencies.R6: --top with no value → same error as an invalid N (assumed)
++- JOB-report-word-frequencies.R6: invalid N and unreadable file together → the --top error wins (assumed)
++- JOB-report-word-frequencies.R6: usage line → stays `usage: wordfreq FILE` (assumed)
++
++## Open
++
++- IN-0002 (huge value for --top) awaits the approval of the user.
++
++## Look here
++
++- pdlc/changes/CH-0001-top-option/proposal.md
++- pdlc/changes/CH-0001-top-option/review.gif
++
++## Don't redo
++
++- The checks, the build, and the reviews.
++
++## Next: do this first
++
++Merge the branch pdlc/CH-0001-top-option into main. No manual checks exist.
+diff --git a/pdlc/changes/CH-0001-top-option/sample.txt b/pdlc/changes/CH-0001-top-option/sample.txt
+new file mode 100644
+index 0000000..73e9f71
+--- /dev/null
++++ b/pdlc/changes/CH-0001-top-option/sample.txt
+@@ -0,0 +1 @@
++the cat and the hat and the bat
+\ No newline at end of file
+diff --git a/pdlc/changes/CH-0001-top-option/visual.json b/pdlc/changes/CH-0001-top-option/visual.json
+new file mode 100644
+index 0000000..4b11213
+--- /dev/null
++++ b/pdlc/changes/CH-0001-top-option/visual.json
+@@ -0,0 +1,90 @@
++{
++  "kind": "terminal",
++  "title": "CH-0001 \u00b7 Top option",
++  "steps": [
++    {
++      "caption": "JOB-report-word-frequencies.R4 \u00b7 no arguments, usage and exit 2",
++      "run": "python3 -m wordfreq  2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R4 \u00b7 two files, usage and exit 2",
++      "run": "python3 -m wordfreq pdlc/changes/CH-0001-top-option/sample.txt pdlc/changes/CH-0001-top-option/empty.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R4 \u00b7 only the option, usage and exit 2",
++      "run": "python3 -m wordfreq --top 3 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 --top 2 prints the top two",
++      "run": "python3 -m wordfreq --top 2 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 option after the file, --top 1",
++      "run": "python3 -m wordfreq pdlc/changes/CH-0001-top-option/sample.txt --top 1 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 --top 4 cuts the tie",
++      "run": "python3 -m wordfreq --top 4 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 --top 5 prints all five",
++      "run": "python3 -m wordfreq --top 5 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 --top 99 prints all five",
++      "run": "python3 -m wordfreq --top 99 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 --top 03 is 3",
++      "run": "python3 -m wordfreq --top 03 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 empty file, no output and exit 0",
++      "run": "python3 -m wordfreq --top 3 pdlc/changes/CH-0001-top-option/empty.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 --top 0 gives the error",
++      "run": "python3 -m wordfreq --top 0 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 invalid N -1 gives the error",
++      "run": "python3 -m wordfreq --top -1 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 invalid N 2.5 gives the error",
++      "run": "python3 -m wordfreq --top 2.5 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 invalid N abc gives the error",
++      "run": "python3 -m wordfreq --top abc pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 invalid N 1e2 gives the error",
++      "run": "python3 -m wordfreq --top 1e2 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 invalid N +3 gives the error",
++      "run": "python3 -m wordfreq --top +3 pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 invalid N '' gives the error",
++      "run": "python3 -m wordfreq --top '' pdlc/changes/CH-0001-top-option/sample.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 --top with no value gives the error",
++      "run": "python3 -m wordfreq pdlc/changes/CH-0001-top-option/sample.txt --top 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 --top 0 with a missing file gives the --top error",
++      "run": "python3 -m wordfreq --top 0 /no/such/file.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "JOB-report-word-frequencies.R6 \u00b7 --top 2 with a missing file gives the read error",
++      "run": "python3 -m wordfreq --top 2 /no/such/file.txt 2>&1; echo \"exit $?\""
++    },
++    {
++      "caption": "All checks pass",
++      "run": "python3 -m unittest discover -s tests 2>&1 | tail -4"
++    }
++  ]
++}
+\ No newline at end of file
+diff --git a/pdlc/inbox/IN-0001-top-words.md b/pdlc/inbox/IN-0001-top-words.md
+index d8e21fa..fa30cf3 100644
+--- a/pdlc/inbox/IN-0001-top-words.md
++++ b/pdlc/inbox/IN-0001-top-words.md
+@@ -1,6 +1,6 @@
+ # IN-0001 · Top words option
+ 
+-Status: ready · Ticket: none · Branch: none · Added: 2026-10-17
++Status: in review · Ticket: none · Branch: none · Added: 2026-10-17
+ 
+ ## What and why
+ 
+diff --git a/pdlc/inbox/IN-0002-huge-top-value.md b/pdlc/inbox/IN-0002-huge-top-value.md
+new file mode 100644
+index 0000000..35dbdb4
+--- /dev/null
++++ b/pdlc/inbox/IN-0002-huge-top-value.md
+@@ -0,0 +1,23 @@
++# IN-0002 · Huge value for --top
++
++Status: new · Ticket: none · Branch: none · Added: 2026-10-17
++
++## What and why
++
++When N of --top has more than 4300 digits, int(top) raises ValueError in Python 3.11 and later. The command ends with a traceback and exit code 1. Decide what the command does for such an N: treat it as valid and print all words, or give the stated error. No acceptance line names this input.
++
++## Requirements
++
++- none yet
++
++## Changes
++
++- none yet
++
++## Notes
++
++- Awaits approval: found reviewing CH-0001 (security)
++
++## Handoff
++
++none yet
+diff --git a/pdlc/specs/jobs/JOB-report-word-frequencies.md b/pdlc/specs/jobs/JOB-report-word-frequencies.md
+index 7bc458f..9cddb56 100644
+--- a/pdlc/specs/jobs/JOB-report-word-frequencies.md
++++ b/pdlc/specs/jobs/JOB-report-word-frequencies.md
+@@ -5,7 +5,7 @@ Status: active
+ ## Who and why
+ 
+ A person at a terminal runs `wordfreq FILE`. They want to see how often each word appears
+-in the file, most common first.
++in the file, most common first. With `--top N`, they see only the N most common words.
+ 
+ ## Relies on
+ 
+@@ -46,7 +46,7 @@ If the file cannot be read, the command prints one line to standard error and ex
+ 
+ ### JOB-report-word-frequencies.R4 · Wrong number of arguments prints usage
+ 
+-Status: ready · Intents: IN-0001
++Status: verified · Intents: IN-0001
+ 
+ The command needs exactly one FILE, after the `--top` option and its value are removed. With none, or with more than one, it prints a usage line to standard error and exits with code 2.
+ 
+@@ -64,7 +64,7 @@ Status: built · Intents: none · Source: recon
+ 
+ ### JOB-report-word-frequencies.R6 · Print only the top N words
+ 
+-Status: ready · Intents: IN-0001
++Status: verified · Intents: IN-0001
+ 
+ With `--top N`, the command prints only the N most common words, in the same order and format as without the option. The option can stand before or after FILE (assumed). If the file has fewer than N distinct words, the command prints all of them (assumed). N is valid only when it is made of digits and its value is above zero (assumed), so `03` is 3. For any other N, including a missing N, the command prints `error: --top needs a whole number greater than zero` to standard error, prints nothing to standard output, and exits with code 2. This check comes before the file is read (assumed).
+ 
+diff --git a/tests/test_JOB_report_word_frequencies.py b/tests/test_JOB_report_word_frequencies.py
+new file mode 100644
+index 0000000..280f47c
+--- /dev/null
++++ b/tests/test_JOB_report_word_frequencies.py
+@@ -0,0 +1,148 @@
++import io
++import os
++import subprocess
++import sys
++import tempfile
++import unittest
++
++from wordfreq.cli import main
++
++ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++USAGE = "usage: wordfreq FILE\n"
++TOP_ERROR = "error: --top needs a whole number greater than zero\n"
++TEXT = "the cat and the hat and the bat"
++
++
++def run_main(argv):
++    out, err = io.StringIO(), io.StringIO()
++    code = main(argv, stdout=out, stderr=err)
++    return code, out.getvalue(), err.getvalue()
++
++
++def run_command(argv):
++    proc = subprocess.run(
++        [sys.executable, "-m", "wordfreq"] + argv,
++        cwd=ROOT,
++        capture_output=True,
++        text=True,
++        timeout=30,
++    )
++    return proc.returncode, proc.stdout, proc.stderr
++
++
++class FileCase(unittest.TestCase):
++    def make_file(self, text):
++        d = tempfile.TemporaryDirectory()
++        self.addCleanup(d.cleanup)
++        path = os.path.join(d.name, "in.txt")
++        with open(path, "w") as f:
++            f.write(text)
++        return path
++
++
++class JOB_report_word_frequencies_R4(FileCase):
++    def assert_usage(self, result):
++        code, out, err = result
++        self.assertEqual(err, USAGE)
++        self.assertEqual(out, "")
++        self.assertEqual(code, 2)
++
++    def test_JOB_report_word_frequencies_R4_no_arguments(self):
++        self.assert_usage(run_main([]))
++
++    def test_JOB_report_word_frequencies_R4_two_files(self):
++        self.assert_usage(run_main(["a.txt", "b.txt"]))
++
++    def test_JOB_report_word_frequencies_R4_only_the_option(self):
++        self.assert_usage(run_main(["--top", "3"]))
++
++    def test_JOB_report_word_frequencies_R4_command_only_the_option(self):
++        self.assert_usage(run_command(["--top", "3"]))
++
++    def test_JOB_report_word_frequencies_R4_command_no_arguments(self):
++        self.assert_usage(run_command([]))
++
++
++class JOB_report_word_frequencies_R6(FileCase):
++    def check_top(self, argv_fn, expected):
++        path = self.make_file(TEXT)
++        code, out, err = run_main(argv_fn(path))
++        self.assertEqual(out, expected)
++        self.assertEqual(err, "")
++        self.assertEqual(code, 0)
++
++    def test_JOB_report_word_frequencies_R6_top_2(self):
++        self.check_top(lambda p: ["--top", "2", p], "the 3\nand 2\n")
++
++    def test_JOB_report_word_frequencies_R6_option_after_file(self):
++        self.check_top(lambda p: [p, "--top", "1"], "the 3\n")
++
++    def test_JOB_report_word_frequencies_R6_top_4_cuts_a_tie(self):
++        self.check_top(lambda p: ["--top", "4", p], "the 3\nand 2\nbat 1\ncat 1\n")
++
++    def test_JOB_report_word_frequencies_R6_top_equals_word_count(self):
++        self.check_top(
++            lambda p: ["--top", "5", p], "the 3\nand 2\nbat 1\ncat 1\nhat 1\n"
++        )
++
++    def test_JOB_report_word_frequencies_R6_top_above_word_count(self):
++        self.check_top(
++            lambda p: ["--top", "99", p], "the 3\nand 2\nbat 1\ncat 1\nhat 1\n"
++        )
++
++    def test_JOB_report_word_frequencies_R6_leading_zero(self):
++        self.check_top(lambda p: ["--top", "03", p], "the 3\nand 2\nbat 1\n")
++
++    def test_JOB_report_word_frequencies_R6_empty_file(self):
++        path = self.make_file("")
++        code, out, err = run_main(["--top", "3", path])
++        self.assertEqual(out, "")
++        self.assertEqual(code, 0)
++
++    def assert_top_error(self, argv):
++        code, out, err = run_main(argv)
++        self.assertEqual(err, TOP_ERROR, argv)
++        self.assertEqual(out, "", argv)
++        self.assertEqual(code, 2, argv)
++
++    def test_JOB_report_word_frequencies_R6_zero_is_an_error(self):
++        path = self.make_file("")
++        self.assert_top_error(["--top", "0", path])
++
++    def test_JOB_report_word_frequencies_R6_invalid_values_are_errors(self):
++        path = self.make_file("")
++        for bad in ["-1", "2.5", "abc", "1e2", "+3", ""]:
++            with self.subTest(n=bad):
++                self.assert_top_error(["--top", bad, path])
++
++    def test_JOB_report_word_frequencies_R6_option_without_value(self):
++        path = self.make_file("")
++        self.assert_top_error([path, "--top"])
++
++    def test_JOB_report_word_frequencies_R6_invalid_top_before_missing_file(self):
++        code, out, err = run_main(["--top", "0", "/no/such/file.txt"])
++        self.assertEqual(err, TOP_ERROR)
++        self.assertEqual(code, 2)
++
++    def test_JOB_report_word_frequencies_R6_valid_top_missing_file(self):
++        code, out, err = run_main(["--top", "2", "/no/such/file.txt"])
++        self.assertEqual(err, "error: cannot read /no/such/file.txt\n")
++        self.assertEqual(code, 2)
++
++    def test_JOB_report_word_frequencies_R6_command_top_2(self):
++        path = self.make_file(TEXT)
++        code, out, err = run_command(["--top", "2", path])
++        self.assertEqual(out, "the 3\nand 2\n")
++        self.assertEqual(err, "")
++        self.assertEqual(code, 0)
++
++    def test_JOB_report_word_frequencies_R6_command_invalid_top_exit_code(self):
++        path = self.make_file(TEXT)
++        code, out, err = run_command(["--top", "0", path])
++        self.assertEqual(err, TOP_ERROR)
++        self.assertEqual(out, "")
++        self.assertEqual(code, 2)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/wordfreq/cli.py b/wordfreq/cli.py
+index e7ea824..79e8a4a 100644
+--- a/wordfreq/cli.py
++++ b/wordfreq/cli.py
+@@ -8,16 +8,27 @@ def main(argv=None, stdout=None, stderr=None):
+     argv = sys.argv[1:] if argv is None else argv
+     stdout = stdout or sys.stdout
+     stderr = stderr or sys.stderr
++    top = None
++    has_top = "--top" in argv
++    if has_top:
++        index = argv.index("--top")
++        top = argv[index + 1] if index + 1 < len(argv) else ""
++        argv = argv[:index] + argv[index + 2:]
+     if len(argv) != 1:
+         print("usage: wordfreq FILE", file=stderr)
+         return 2
+     path = argv[0]
++    if has_top:
++        if not (top.isascii() and top.isdigit() and int(top) > 0):
++            print("error: --top needs a whole number greater than zero", file=stderr)
++            return 2
++        top = int(top)
+     try:
+         with open(path, encoding="utf-8") as handle:
+             text = handle.read()
+     except OSError:
+         print("error: cannot read " + path, file=stderr)
+         return 2
+-    for word, count in count_words(text):
++    for word, count in count_words(text)[:top]:
+         print(word + " " + str(count), file=stdout)
+     return 0

@@ -200,15 +200,59 @@ def add_tokens(total, more):
         total[key] = total.get(key, 0) + value
 
 
+STAGES = ("init", "intake", "ready", "change", "tests", "build", "show", "verify", "ship")
+AGENT_STAGE = {"pdlc:recon": "intake", "pdlc:test-writer": "tests", "pdlc:builder": "build"}
+SKILL_FILE = re.compile(r"skills/(%s)/SKILL\.md" % "|".join(STAGES))
+WAITING_TOOLS = {"ReadNotifications", "Monitor", "TaskOutput"}
+
+
 def stage_name(skill):
     return skill.split(":")[-1] if skill else "ship"
+
+
+def stage_from_call(name, args):
+    """The stage that a top-level tool call starts, or None.
+
+    The Skill tool names its stage. A read of one skill file also starts that stage. A
+    command that reads several skill files at once reads ahead, so it starts no stage.
+    """
+    if name == "Skill":
+        return stage_name(args.get("skill"))
+    if name in ("Agent", "Task"):
+        label = args.get("subagent_type")
+        if label == "pdlc:reviewer":
+            return "tests" if "/review/tests/" in (args.get("prompt") or "") else "verify"
+        return AGENT_STAGE.get(label)
+    text = args.get("file_path") or args.get("command") or ""
+    if "record_gif" in text:
+        return "show"
+    found = set(SKILL_FILE.findall(text))
+    if len(found) == 1 and (name == "Read" or "cat" in text.split()[:1] or text.startswith("cat ")):
+        return found.pop()
+    return None
+
+
+def is_waiting(blocks):
+    """A turn that only waits for a background agent: a notification read, a monitor, a sleep."""
+    calls = [b for b in blocks if b.get("type") == "tool_use"]
+    if not calls:
+        return False
+    for call in calls:
+        command = (call.get("input") or {}).get("command", "")
+        if call["name"] in WAITING_TOOLS:
+            continue
+        if call["name"] == "Bash" and re.match(r"\s*(sleep\b|until\b|while\b)", command):
+            continue
+        return False
+    return True
 
 
 def analyse(items):
     """Split a run into stages. Return totals and one entry per stage.
 
-    A stage starts when the top-level session calls the Skill tool. Messages from an agent
-    that the session started count toward the stage that was active, under the agent's name.
+    A stage starts when the top-level session calls its skill. A message from an agent counts
+    toward the stage of its agent type, under the name of the agent. A reviewer counts toward
+    tests when its packet is for the tests remit, and toward verify otherwise.
     """
     messages = {}
     order = []
@@ -224,32 +268,43 @@ def analyse(items):
         if kind == "result":
             result = event
             continue
+        if kind == "system" and event.get("subtype") in ("task_started", "task_notification"):
+            tool_id = event.get("tool_use_id")
+            if tool_id in agent_span:
+                agent_span[tool_id][1 if event["subtype"] == "task_notification" else 0] = t
+            continue
         if kind == "assistant":
             message = event.get("message", {})
             parent = event.get("parent_tool_use_id")
-            for block in message.get("content", []):
+            blocks = message.get("content", [])
+            for block in blocks:
                 if block.get("type") != "tool_use":
                     continue
                 name, args = block.get("name"), block.get("input") or {}
-                if parent is None and name == "Skill":
-                    stage = stage_name(args.get("skill"))
-                    stage_start.setdefault(stage, t)
-                    stage_end[stage] = t
+                if parent is None:
+                    started = stage_from_call(name, args)
+                    if started:
+                        stage = started
+                        stage_start.setdefault(stage, t)
+                        stage_end[stage] = t
                 if name in ("Agent", "Task"):
                     label = args.get("subagent_type") or "general-purpose"
-                    agent_of[block["id"]] = (stage, label)
+                    owner = AGENT_STAGE.get(label)
+                    if label == "pdlc:reviewer":
+                        owner = "tests" if "/review/tests/" in (args.get("prompt") or "") else "verify"
+                    agent_of[block["id"]] = (owner or stage, label)
                     agent_span[block["id"]] = [t, t]
             key = message.get("id") or "m%d" % len(order)
             if key not in messages:
                 order.append(key)
-            messages[key] = {"usage": message.get("usage") or {}, "model": message.get("model"),
-                             "stage": stage, "parent": parent, "t": t}
+            messages[key] = {"usage": message.get("usage") or {}, "model": message.get("model"), "stage": stage,
+                             "parent": parent, "t": t, "waiting": parent is None and is_waiting(blocks)}
             stage_end[stage] = t
         elif kind == "user":
             for block in (event.get("message", {}).get("content") or []):
                 if isinstance(block, dict) and block.get("type") == "tool_result":
                     span = agent_span.get(block.get("tool_use_id"))
-                    if span:
+                    if span and span[1] == span[0]:
                         span[1] = t
     stage_start.setdefault("ship", 0.0)
 
@@ -259,28 +314,32 @@ def analyse(items):
         per_model_weight[entry["model"]] = per_model_weight.get(entry["model"], 0) + message_weight(entry["usage"])
     model_cost = {model: info.get("costUSD", 0.0) for model, info in (result.get("modelUsage") or {}).items()}
 
+    def blank():
+        return {"tokens": {}, "cost_usd": 0.0, "messages": 0, "agents": {}}
+
     stages = {}
+    waiting = {"messages": 0, "cost_usd": 0.0}
     for key in order:
         entry = messages[key]
         label = "session"
         if entry["parent"] in agent_of:
-            stage_of, label = agent_of[entry["parent"]]
-            entry["stage"] = stage_of
-        data = stages.setdefault(entry["stage"], {"tokens": {}, "cost_usd": 0.0, "messages": 0, "agents": {}})
-        share = 0.0
+            entry["stage"], label = agent_of[entry["parent"]]
+        data = stages.setdefault(entry["stage"], blank())
         weight = per_model_weight.get(entry["model"]) or 0
-        if weight:
-            share = model_cost.get(entry["model"], 0.0) * message_weight(entry["usage"]) / weight
+        share = model_cost.get(entry["model"], 0.0) * message_weight(entry["usage"]) / weight if weight else 0.0
         add_tokens(data["tokens"], tokens_of(entry["usage"]))
         data["cost_usd"] += share
         data["messages"] += 1
+        if entry["waiting"]:
+            waiting["messages"] += 1
+            waiting["cost_usd"] += share
         if label != "session":
             agent = data["agents"].setdefault(label, {"tokens": {}, "cost_usd": 0.0, "messages": 0, "calls": 0})
             add_tokens(agent["tokens"], tokens_of(entry["usage"]))
             agent["cost_usd"] += share
             agent["messages"] += 1
-    for tool_id, (stage_of, label) in agent_of.items():
-        data = stages.setdefault(stage_of, {"tokens": {}, "cost_usd": 0.0, "messages": 0, "agents": {}})
+    for tool_id, (owner, label) in agent_of.items():
+        data = stages.setdefault(owner, blank())
         agent = data["agents"].setdefault(label, {"tokens": {}, "cost_usd": 0.0, "messages": 0, "calls": 0})
         agent["calls"] += 1
         start, end = agent_span[tool_id]
@@ -296,6 +355,7 @@ def analyse(items):
         data["cost_usd"] = round(data["cost_usd"], 4)
         for agent in data["agents"].values():
             agent["cost_usd"] = round(agent["cost_usd"], 4)
+    waiting["cost_usd"] = round(waiting["cost_usd"], 4)
 
     totals = {"tokens": {}, "cost_usd": round(result.get("total_cost_usd", 0.0), 4),
               "duration_s": round(result.get("duration_ms", 0) / 1000.0, 1),
@@ -306,7 +366,7 @@ def analyse(items):
         add_tokens(totals["tokens"], {"input": info.get("inputTokens", 0), "cache_write": info.get("cacheCreationInputTokens", 0),
                                       "cache_read": info.get("cacheReadInputTokens", 0), "output": info.get("outputTokens", 0)})
     totals["models"] = {m: round(i.get("costUSD", 0.0), 4) for m, i in (result.get("modelUsage") or {}).items()}
-    return {"totals": totals, "stages": stages}
+    return {"totals": totals, "stages": stages, "waiting": waiting}
 
 
 # ---------------------------------------------------------------- reading the outcome
@@ -447,6 +507,7 @@ def summarise(result):
         "probes_all": all(r["outcome"]["probes"]["passed"] == r["outcome"]["probes"]["total"] for r in runs),
         "units_ok": all(r["outcome"]["unit"]["ok"] for r in runs),
         "seeds_caught": result.get("seeds", {}).get("caught"),
+        "false_fails": result.get("seeds", {}).get("false_fails"),
     }
 
 
@@ -463,6 +524,10 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5):
         missed = sorted(set(base["seeds_caught"]) - set(cand["seeds_caught"]))
         if missed:
             worse.append("planted defects no longer caught: " + ", ".join(missed))
+    if base["false_fails"] is not None and cand["false_fails"] is not None:
+        extra = sorted(set(cand["false_fails"]) - set(base["false_fails"]))
+        if extra:
+            worse.append("clean change now fails review: " + ", ".join(extra))
     change = (cand["cost_usd"] - base["cost_usd"]) / base["cost_usd"] if base["cost_usd"] else 0.0
     needed = max(min_gain, base["noise"], cand["noise"])
     slower = cand["duration_s"] / base["duration_s"] if base["duration_s"] else 1.0
@@ -495,6 +560,137 @@ def command_gate(args):
     return 0 if result["verdict"].startswith("SAME") else 1
 
 
+def command_reanalyse(args):
+    """Read the saved event streams of a result folder again, with the current analysis."""
+    folder = Path(args.folder)
+    summary = json.loads((folder / "e2e.json").read_text())
+    for number, run in enumerate(summary["runs"], 1):
+        stream = folder / ("run%d.stream.jsonl" % number)
+        items = [json.loads(line) for line in stream.read_text().splitlines() if line.strip()]
+        fresh = analyse(items)
+        for key in ("totals", "stages", "waiting"):
+            run[key] = fresh[key]
+        (folder / ("run%d.json" % number)).write_text(json.dumps(run, indent=1))
+    (folder / "e2e.json").write_text(json.dumps(summary, indent=1))
+    print("read %d runs again" % len(summary["runs"]))
+
+
+# ---------------------------------------------------------------- planted defects
+
+SEEDS = HERE / "seeds"
+
+
+def apply_patch(project, patch):
+    done = subprocess.run(["git", "apply", "--whitespace=nowarn", str(patch)], cwd=project, capture_output=True, text=True)
+    if done.returncode:
+        raise RuntimeError("cannot apply %s: %s" % (patch.name, done.stderr.strip()))
+
+
+def build_seed_project(dest, plugin, seeded):
+    """Rebuild the finished change of the first baseline run. With `seeded`, plant the defects."""
+    spec = json.loads((SEEDS / "seeds.json").read_text())
+    project = make_project(dest, plugin)
+    apply_patch(project, SEEDS / "main.patch")
+    git(project, "add", "-A")
+    git(project, "commit", "-q", "-m", "Plan IN-0001: top option")
+    git(project, "switch", "-q", "-c", spec["branch"])
+    apply_patch(project, SEEDS / "change.patch")
+    git(project, "add", "-A")
+    git(project, "commit", "-q", "-m", "Build CH-0001: add the --top option")
+    if seeded:
+        for edit in spec["edits"]:
+            path = project / edit["file"]
+            text = path.read_text()
+            if edit["find"] not in text:
+                raise RuntimeError("seed edit does not match %s" % edit["file"])
+            path.write_text(text.replace(edit["find"], edit["replace"], 1))
+        git(project, "add", "-A")
+        git(project, "commit", "-q", "-m", "Seed: planted defects")
+    return project
+
+
+def make_seed_packets(project, remits):
+    done = subprocess.run([sys.executable, "pdlc/bin/make_packets.py", "CH-0001", *remits], cwd=project,
+                          capture_output=True, text=True)
+    if done.returncode:
+        raise RuntimeError("make_packets failed: " + done.stdout + done.stderr)
+
+
+def agent_model(plugin, name):
+    """The model that an agent file asks for, or the benchmark model when it asks for none."""
+    text = (Path(plugin) / "agents" / (name + ".md")).read_text()
+    head = text.split("---")[1] if text.startswith("---") else ""
+    found = re.search(r"^model:\s*(\S+)", head, re.M)
+    return found.group(1) if found else MODEL
+
+
+def parse_result(text):
+    """Read a reviewer's result.md: the verdict and the text of the problems."""
+    verdict = re.search(r"^Result:\s*(pass|fail)", text, re.M | re.I)
+    problems = re.search(r"^Problems:(.*?)(?=^[A-Z][\w -]*:|\Z)", text, re.M | re.S)
+    body = problems.group(1).strip() if problems else ""
+    return {"verdict": verdict.group(1).lower() if verdict else "none",
+            "problems": "" if body.lower() == "none" else body}
+
+
+def score_seeds(spec, results):
+    """results: remit -> parsed result of the seeded copy. A defect counts as caught when its
+    reviewer fails the change and names the defect."""
+    caught, missed = [], []
+    for seed in spec["seeds"]:
+        found = results.get(seed["remit"], {"verdict": "none", "problems": ""})
+        hit = found["verdict"] == "fail" and any(re.search(p, found["problems"], re.I) for p in seed["patterns"])
+        (caught if hit else missed).append(seed["id"])
+    return caught, missed
+
+
+def run_reviewer(project, remit, plugin, log_dir, model, timeout=900):
+    packet = Path(project) / "pdlc" / "changes" / "CH-0001-top-option" / "review" / remit / "packet.md"
+    prompt = "Review the packet at %s. Project root: %s." % (packet, project)
+    events, wall, err = run_claude(prompt, project, plugin, Path(log_dir) / (remit + ".stream.jsonl"), timeout=timeout,
+                                   budget_usd=3, extra=("--agent", "pdlc:reviewer", "--model", model))
+    result = packet.parent / "result.md"
+    parsed = parse_result(result.read_text()) if result.exists() else {"verdict": "none", "problems": ""}
+    cost = next((i["e"].get("total_cost_usd", 0) for i in events if i["e"].get("type") == "result"), 0)
+    parsed.update({"cost_usd": round(cost, 4), "wall_s": wall})
+    return parsed
+
+
+def command_seeds(args):
+    """Run the reviewers on the finished change with the planted defects, and on a clean copy."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    plugin = Path(args.plugin).resolve()
+    spec = json.loads((SEEDS / "seeds.json").read_text())
+    out_dir = Path(args.out) / args.label
+    out_dir.mkdir(parents=True, exist_ok=True)
+    model = agent_model(plugin, "reviewer")
+    remits = sorted({s["remit"] for s in spec["seeds"]})
+    work = Path(tempfile.mkdtemp(prefix="pdlc-bench-seeds-"))
+    jobs = {}
+    for name, seeded, wanted in (("seeded", True, remits), ("clean", False, spec["control_remits"])):
+        project = build_seed_project(work / name, plugin, seeded)
+        make_seed_packets(project, wanted)
+        (out_dir / name).mkdir(exist_ok=True)
+        for remit in wanted:
+            jobs[(name, remit)] = (project, remit)
+    with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
+        futures = {key: pool.submit(run_reviewer, project, remit, plugin, out_dir / key[0], model, args.timeout)
+                   for key, (project, remit) in jobs.items()}
+        done = {key: future.result() for key, future in futures.items()}
+    seeded = {remit: r for (name, remit), r in done.items() if name == "seeded"}
+    clean = {remit: r for (name, remit), r in done.items() if name == "clean"}
+    caught, missed = score_seeds(spec, seeded)
+    false_fails = sorted(remit for remit, r in clean.items() if r["verdict"] == "fail")
+    cost = round(sum(r["cost_usd"] for r in done.values()), 4)
+    result = {"label": args.label, "reviewer_model": model, "caught": caught, "missed": missed,
+              "false_fails": false_fails, "cost_usd": cost, "seeded": seeded, "clean": clean}
+    (out_dir / "seeds.json").write_text(json.dumps(result, indent=1))
+    print("model %s  caught %d/%d  missed %s  false fails %s  $%.2f" % (
+        model, len(caught), len(spec["seeds"]), missed or "none", false_fails or "none", cost))
+    return result
+
+
 def fmt_tokens(tokens):
     return "in %s  write %s  read %s  out %s" % tuple(
         "%dk" % round(tokens.get(k, 0) / 1000.0) if tokens.get(k, 0) >= 1000 else str(tokens.get(k, 0))
@@ -509,6 +705,9 @@ def command_report(args):
         print("run %d  $%.2f  %ss  turns %s  subagents %s  models %s" % (
             number, totals["cost_usd"], run.get("wall_s"), totals["turns"], totals["subagents"], totals["models"]))
         print("       " + fmt_tokens(totals["tokens"]))
+        waiting = run.get("waiting")
+        if waiting:
+            print("       waiting turns %d  $%.3f" % (waiting["messages"], waiting["cost_usd"]))
         outcome = run["outcome"]
         print("       probes %s/%s  own checks %s (%s tests)  tip %s  dirty %s" % (
             outcome["probes"]["passed"], outcome["probes"]["total"], outcome["unit"]["ok"], outcome["unit"]["ran"],
@@ -530,11 +729,9 @@ def command_freeze(args):
         runs += data["runs"]
         commits.add(data["plugin_commit"])
     baseline = {"label": "baseline", "plugin_commit": ",".join(sorted(commits)), "model": MODEL, "effort": EFFORT, "runs": runs}
-    for extra in ("seeds",):
-        for path in args.results:
-            data = json.loads(Path(path).read_text())
-            if extra in data:
-                baseline[extra] = data[extra]
+    if args.seeds:
+        seeds = json.loads(Path(args.seeds).read_text())
+        baseline["seeds"] = {key: seeds[key] for key in ("reviewer_model", "caught", "missed", "false_fails", "cost_usd")}
     Path(args.out).write_text(json.dumps(baseline, indent=1))
     print("wrote %s with %d runs" % (args.out, len(runs)))
 
@@ -551,11 +748,19 @@ def main(argv=None):
             p.add_argument("--label", required=True)
             p.add_argument("--runs", type=int, default=1)
             p.add_argument("--out", default=str(HERE / "results"))
+    sd = sub.add_parser("seeds")
+    sd.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
+    sd.add_argument("--label", required=True)
+    sd.add_argument("--timeout", type=int, default=900)
+    sd.add_argument("--out", default=str(HERE / "results"))
+    a = sub.add_parser("reanalyse")
+    a.add_argument("folder")
     r = sub.add_parser("report")
     r.add_argument("result")
     f = sub.add_parser("freeze")
     f.add_argument("results", nargs="+")
     f.add_argument("--out", default=str(HERE / "baseline.json"))
+    f.add_argument("--seeds", help="a seeds.json file to add to the result")
     g = sub.add_parser("gate")
     g.add_argument("baseline")
     g.add_argument("candidate")
@@ -567,6 +772,12 @@ def main(argv=None):
         return 0
     if args.command == "init-fixture":
         command_init_fixture(args)
+        return 0
+    if args.command == "seeds":
+        command_seeds(args)
+        return 0
+    if args.command == "reanalyse":
+        command_reanalyse(args)
         return 0
     if args.command == "report":
         command_report(args)
