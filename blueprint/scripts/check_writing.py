@@ -32,7 +32,9 @@ Each finding has a rule tag:
   id            an ID such as "B2" or "#6" with no description in the same sentence
                 (described IDs)
   spelling      an American spelling; the guidelines use New Zealand English (1.14)
-  glossary      a technical word that the "Words used here" list does not give
+  glossary      a technical word that the "Words used here" list does not give. This
+                applies when the file has such a list, or with --require-glossary (use the
+                option for a design or a spec; a guide or a skill needs no list)
   grade         the reading grade is more than --max-grade (Flesch-Kincaid)
 
 Usage:
@@ -40,6 +42,7 @@ Usage:
   python check_writing.py FILE.md --dictionary ASD-STE100.pdf   # or a text file of it
   python check_writing.py FILE.md --json
   python check_writing.py FILE.md --strict                       # exit 1 on findings
+  python check_writing.py DESIGN.md --require-glossary --max-grade 7   # a design or a spec
 
 The STE dictionary is free from https://www.asd-ste100.org. ASD does not let other
 persons distribute the dictionary, so this script does not contain it. You can also set
@@ -207,6 +210,9 @@ def prose_map(text):
         if not s or s.startswith(("#", "|", ">", "<")) or re.match(r"^[-=*_]{3,}$", s):
             emit("", lineno)
             continue
+        if re.fullmatch(r"(\*\*|__)[^*_\n]{1,80}(\1:?|:\1)", s):     # a bold label alone on a line is a heading
+            emit("", lineno)
+            continue
         if re.match(r"^([-*+]|\d+\.|[A-Za-z]\.)\s+", s):
             emit("", lineno)
         s = re.sub(r"^[-*+]\s+(\[[ xX]\]\s+)?|^\d+\.\s+|^[A-Za-z]\.\s+", "", s)
@@ -361,7 +367,7 @@ def described(sent, m):
     return False
 
 
-def check(text, dictionary=None, max_grade=9.0):
+def check(text, dictionary=None, max_grade=9.0, require_glossary=False):
     """(warnings, stats). warnings are strings; stats['findings'] holds the full records."""
     body, desc, desc_line = frontmatter_description(text)
     prose, line_of = prose_map(body)
@@ -449,7 +455,8 @@ def check(text, dictionary=None, max_grade=9.0):
                 add("reference", line, "starts with a pronoun that refers back; write the full noun (local references)", raw)
             for m in FORMER_LATTER.finditer(nocode):
                 add("reference", line, "'%s' makes the reader look back; write the noun (local references)" % m.group(0), raw)
-            plain = re.sub(r"\"[^\"]*\"|“[^”]*”", "Q", re.sub(r"`([^`]*)`", r"\1", raw))
+            unwrap = lambda m: "X" if (m.group(1).startswith("-") or " " in m.group(1)) else m.group(1)   # a command example
+            plain = re.sub(r"\"[^\"]*\"|“[^”]*”", "Q", re.sub(r"`([^`]*)`", unwrap, raw))
             for m in ID_TOKEN.finditer(plain):
                 tok = m.group(1)
                 if tok in ID_EXEMPT or tok.upper() in ID_EXEMPT:
@@ -477,7 +484,7 @@ def check(text, dictionary=None, max_grade=9.0):
     unexplained = [j for j in used
                    if not any(j == t or j.startswith(t) or t.startswith(j[:6]) or j in t.split() for t in terms)]
     stats["jargon_unexplained"] = unexplained
-    if unexplained:
+    if unexplained and (has_list or require_glossary):
         where = "its 'Words used here' list" if has_list else "a 'Words used here' list (none found)"
         add("glossary", None, "technical words not explained in %s: %s" % (where, ", ".join(unexplained)))
 
@@ -498,6 +505,8 @@ def main(argv=None):
                    help="your copy of the ASD-STE100 standard (PDF, or a text file of the PDF)")
     p.add_argument("--max-grade", type=float, default=9.0, help="warn above this reading grade (default 9)")
     p.add_argument("--only", help="comma-separated rule tags to report, for example length,id")
+    p.add_argument("--require-glossary", action="store_true",
+                   help="also warn when the file has no 'Words used here' list (for a design or a spec)")
     p.add_argument("--json", action="store_true")
     p.add_argument("--strict", action="store_true", help="exit 1 if there are findings")
     opts = p.parse_args(argv)
@@ -508,7 +517,7 @@ def main(argv=None):
     total, results = 0, {}
     for path in opts.files:
         with open(path, encoding="utf-8") as f:
-            warnings, stats = check(f.read(), dictionary, opts.max_grade)
+            warnings, stats = check(f.read(), dictionary, opts.max_grade, opts.require_glossary)
         if only:
             stats["findings"] = [x for x in stats["findings"] if x["rule"] in only]
         results[path] = stats

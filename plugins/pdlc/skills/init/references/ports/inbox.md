@@ -1,24 +1,27 @@
 # Port: inbox
 
-Where intents come in and where their status is kept.
+The inbox port receives intents, and keeps the status of each intent.
 
 ## Operations
 
-- **list**: return every intent's ID, name and status.
-- **read**: given an ID, return the intent's full text.
-- **add**: given a name and a short "what and why", create an intent with status `new` and
-  return its ID.
-- **set status**: given an ID and a status, record it. Allowed statuses: new, specifying,
-  ready, building, in review, done, paused, cancelled.
-- **write**: given an ID, save updated requirements, changes or notes.
+- **list**: return the ID, name, and status of each intent.
+- **read**: the input is an ID. Return the full text of that intent.
+- **add**: the input is a name and a short "what and why". Create an intent with the
+  status `new`. Return the ID of the intent.
+- **set status**: the input is an ID and a status. Record that status. The allowed
+  statuses are: new, specifying, ready, building, in review, done, paused, cancelled.
+- **write**: the input is an ID. Save the updated requirements, changes, or notes of that
+  intent.
 
 ## Success
 
-An intent added can be read back with the same text. A status set is the status listed.
+When the port adds an intent, **read** returns the same text for that intent. When the
+port sets a status, **list** shows that status.
 
 ## Conformance check
 
 1. Add an intent called "conformance test".
-2. List intents. It appears with status `new`.
-3. Set its status to `cancelled`. List again. It shows `cancelled`.
-4. Read it. The text matches what was added.
+2. List the intents. The intent appears with the status `new`.
+3. Set the status of the intent to `cancelled`. List the intents again. The intent shows
+   `cancelled`.
+4. Read the intent. The text is the same as the added text.

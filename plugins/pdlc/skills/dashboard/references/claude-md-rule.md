@@ -1,16 +1,21 @@
 ## Live dashboard
 
-For any work in progress (anything with more than one step):
+For all work in progress (work with more than one step), do these steps:
 
-1. Before starting, have the dashboard-builder agent set up `.dashboard/index.html`. Tell
-   me the path once, so I can double-click it.
-2. After every step, have dashboard-builder update it. Give it the whole picture: every
-   task and its status, questions waiting for me with their default action, the latest
-   deliverables, and anything stuck. Take times from the real clock (`date -Iseconds`).
-   Never guess them. Run it in the background so the work doesn't wait.
-3. When you need a decision from me, don't stop. Add it to the questions list with the
-   default action, and keep going with that default. If I answer later, switch to my
-   answer and tell me what changed.
-4. If dashboard-builder replies `STYLE NEEDED`, ask me the style question in chat as well,
-   and pass my answer back to it.
-5. Keep `.dashboard/` out of git by adding it to `.git/info/exclude`.
+1. Before you start, use the dashboard-builder agent to prepare `.dashboard/index.html`.
+   Tell me the path one time, so that I can double-click the file.
+2. After each step, use dashboard-builder to update the page. Give dashboard-builder the
+   full state:
+   - Each task and its status.
+   - The questions for me, with their default action.
+   - The latest deliverables.
+   - Anything that is stuck.
+
+   Take each time from the real clock (`date -Iseconds`). Do not guess a time. Run
+   dashboard-builder in the background, so that the work does not wait.
+3. When you need a decision from me, do not stop. Add the question to the questions list,
+   with the default action. Then continue with that default. If I answer later, change to
+   my answer, and tell me what changed.
+4. If dashboard-builder replies `STYLE NEEDED`, also ask me the style question in the
+   chat. Then give my answer to dashboard-builder.
+5. To keep `.dashboard/` out of git, add `.dashboard/` to `.git/info/exclude`.

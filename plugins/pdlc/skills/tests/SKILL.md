@@ -1,78 +1,88 @@
 ---
 name: tests
 description: >
-  Writes and locks a pdlc change's checks before any app code. The pdlc:test-writer agent
-  writes them from the spec alone; every new check must fail; they are committed and
-  locked; then an independent reviewer judges the checks against the spec. Use when the
-  user says "/pdlc:tests", or a change is planned and ready for its checks.
+  Writes and locks the checks of a pdlc change before any app code. The pdlc:test-writer
+  agent writes the checks from the spec only. Each new check must fail. Then the skill
+  commits and locks the checks, and an independent reviewer judges the checks against the
+  spec. Use when the user says "/pdlc:tests", or when a change is planned and ready for its
+  checks.
 ---
 
 # pdlc tests
 
-Checks come first, from the spec, written by someone who never sees the code.
+The checks come first. A test writer that does not see the code writes the checks from
+the spec.
 
-Read `pdlc/README.md` first and follow it. Start with its "Before any work" step.
+Read `pdlc/README.md` first and obey it. Start with its "Before any work" step.
 
 ## 1. Pick the change and start its branch
 
-- Use the change the user named. Otherwise take the first change, in the intent's order,
-  with status `planned`.
-- If the change already has a branch (it was sent back here from build or verify), switch
-  to that branch instead of starting one, keep its `Base:`, and go to step 2 with the
-  reason it was sent back. Leave its status as it is until step 6.
-- Its base is the branch of the change before it in the intent's list, or `main` for the
-  first. The change before it doesn't need to be merged: changes stack.
-- Start the branch through the delivery port, from the base. Write `Branch:` and `Base:`
-  into the change spec header. Set the change to `testing` and the intent to `building`.
-- Read the intent's "Handoff", or the change's `handoff.md` if it has one.
+- Use the change that the user named. If the user did not name a change, use the first
+  `planned` change, in the order of the intent.
+- If the change already has a branch, `/pdlc:build` or `/pdlc:verify` sent the change
+  back to this skill. In this condition, do these steps:
+  - Switch to that branch. Do not start a new branch.
+  - Keep its `Base:`.
+  - Go to step 2 with the reason that the change came back.
+  - Do not change the status of the change until step 6.
+- The base of the change is the branch of the previous change in the list of the intent.
+  For the first change, the base is `main`. It is not necessary to merge the previous
+  change first, because changes stack.
+- Start the branch from the base, through the delivery port. Write `Branch:` and `Base:`
+  in the header of the change spec. Set the change to `testing`, and set the intent to
+  `building`.
+- If the change has a `handoff.md`, read that file. If not, read the "Handoff" of the
+  intent.
 
 ## 2. Write the checks
 
-Start the `pdlc:test-writer` agent. Give it the change spec's path and nothing else. It
-writes the checks listed under "Check files".
+Start the `pdlc:test-writer` agent. Give the agent the path of the change spec and nothing
+else. The agent writes the checks that the change spec lists under "Check files".
 
-The test writer can't delete files. If it says a check file served only a `(retire)`
-requirement, delete that file yourself with `git rm` before the lock.
+The test writer cannot delete files. If the test writer says that a check file served
+only a `(retire)` requirement, delete that file yourself. Use `git rm` before the lock.
 
-If it says the "Interface" is missing something, add it to the change spec yourself (you
-can see the code), then start the test writer again.
+If the test writer says that the "Interface" is missing something, add that item to the
+change spec yourself (you can see the code). Then start the test writer again.
 
 ## 3. Red
 
-Run each requirement's checks through the checks port.
+Run the checks of each requirement through the checks port.
 
-- For new behaviour, every check must fail. A check that passes already proves nothing:
-  send it back to the test writer with the reason.
-- For behaviour that already exists (a requirement only reworded), a pass is fine. Note it
-  in the progress log.
-- A check that errors because the interface doesn't exist yet counts as failing, as long
-  as the error is about the missing interface and not a mistake in the check.
-- When the change was sent back from build or verify, app code already exists, so a fixed
-  check may pass. That is fine; note each result in the progress log.
+- For new behaviour, each check must fail. A check that already passes proves nothing.
+  Send that check back to the test writer with the reason.
+- For behaviour that already exists (only the words of the requirement changed), a pass
+  is correct. Record the pass in the progress log.
+- A check that gives an error because the interface does not exist yet counts as failing.
+  But the error must be about the missing interface, not about a mistake in the check.
+- If `/pdlc:build` or `/pdlc:verify` sent the change back, app code already exists. Thus,
+  a corrected check can pass. A pass is correct here. Record each result in the progress
+  log.
 
 ## 4. Lock
 
-1. Commit the check files with the message "Tests CH-xxxx", with `Intent`, `Change` and
-   `Req` trailers.
-2. Write that commit's hash into the change spec on its own line under the header:
-   `Tests-Locked: <hash>`. On a re-lock, replace the old line.
-3. Commit the change spec ("Lock tests CH-xxxx", trailers `Intent` and `Change`).
+1. Commit the check files with the message "Tests CH-xxxx" and the trailers `Intent`,
+   `Change`, and `Req`.
+2. Write the hash of that commit in the change spec, on its own line under the header:
+   `Tests-Locked: <hash>`. If you lock the tests again, replace the old line.
+3. Commit the change spec with the message "Lock tests CH-xxxx" and the trailers `Intent`
+   and `Change`.
 
-From now on, only the test writer may change these files, and only through this skill.
-Doing so makes a new lock, which replaces the old `Tests-Locked:` line.
+After the lock, only the test writer can change these files, and only through this skill.
+Each such change makes a new lock, which replaces the old `Tests-Locked:` line.
 
 ## 5. Review the checks
 
 1. Run `python3 pdlc/bin/make_packets.py CH-xxxx tests`.
-2. Start a fresh `pdlc:reviewer` agent with the path of
+2. Start a fresh `pdlc:reviewer` agent. Give the agent the path of
    `pdlc/changes/CH-xxxx-…/review/tests/packet.md` and nothing else.
-3. If its `result.md` says fail, send the problems to the test writer, then run red,
-   lock and review again. After two failed rounds, stop and ask the user.
+3. If the `result.md` of the reviewer says fail, send the problems to the test writer.
+   Then do red, lock, and review again. After two failed rounds, stop and ask the user.
 
 ## 6. Finish
 
 - Set the change to `building`.
-- Write `handoff.md` for build: the checks and what each proves, the lock, and anything the
-  builder must know.
-- Commit ("Tests reviewed CH-xxxx", trailers `Intent` and `Change`).
-- Tell the tracker port. Tell the user `/pdlc:build` is next.
+- Write `handoff.md` for `/pdlc:build`: the checks and what each check proves, the lock,
+  and anything that the builder must know.
+- Commit with the message "Tests reviewed CH-xxxx" and the trailers `Intent` and `Change`.
+- Tell the tracker port. Tell the user that `/pdlc:build` is next.

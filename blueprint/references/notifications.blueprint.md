@@ -6,8 +6,8 @@
 ## 1. Header & Boundary Box: what gets built, and what doesn't
 
 **System:** tells persons when something occurs in a different system. The system sends
-email, SMS, or Slack messages. Each message goes in the language of the person, on the
-channel and at the time that the person selects.
+email, SMS, or Slack messages. Each message is in the language of the person, and goes on
+the channel and at the time that the person selects.
 **Target mode:** one app in TypeScript on Node.js 20, with a Postgres database
 *(assumed)*. A timer in the app wakes the app each minute.
 
@@ -60,8 +60,8 @@ decisions first.
 - Storage is one Postgres database. If wrong: only the ResourceAccess parts change.
 - Each message has the key `eventId:recipientId:channel`. The app keeps each key for 30
   days. If wrong: `OutboxAccess.claim` changes.
-- The urgent events are `password.reset` and `alert.*`. All other events can wait. If
-  wrong: one table in `RoutingEngine` changes.
+- The urgent events are `password.reset` and `alert.*`. All other events can wait.
+  If wrong: one table in `RoutingEngine` changes.
 - Quiet hours are 22:00 to 07:00 in the time zone of the person, unless the person selects
   different hours. If wrong: one default changes.
 - Try to send a maximum of 5 times. Wait 30 s, then wait longer each time, up to 1 h,
@@ -438,9 +438,8 @@ export interface NotificationManager {
   1. `RoutingEngine.recipientsFor(event)`, then `RecipientsAccess.find(ids)`.
   2. `RoutingEngine.route(event, recipients, now)` gives deliver, defer, or reject.
   3. If the decision is reject, return `NO_REACHABLE_CHANNEL`.
-  4. For each envelope, call `OutboxAccess.claim(key, envelope)`. If the key exists with
-     the same payload, skip the envelope. If the key exists with a different payload,
-     `claim` returns `IDEMPOTENCY_CONFLICT`.
+  4. For each envelope, `OutboxAccess.claim(key, envelope)`. An existing key with the same
+     payload is skipped. A different payload returns `IDEMPOTENCY_CONFLICT`.
   5. If the decision is defer, or if the event is a digest event, call
      `OutboxAccess.hold(key, releaseAt)` and stop.
   6. `RenderingEngine.render(envelope)`.

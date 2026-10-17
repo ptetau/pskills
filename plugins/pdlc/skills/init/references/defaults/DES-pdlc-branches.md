@@ -4,13 +4,13 @@ Status: agreed · Default: yes · Ask at init: yes
 
 ## Question
 
-How should branches for changes be named?
+How do you want to name the branches for changes?
 
 - A · pdlc/<change>-<name> (recommended): for example `pdlc/CH-0031-email-templates`.
-  Easy to spot, and sorts pdlc work together.
-- B · your own pattern: tell pdlc the pattern your team already uses.
+  These names are easy to see, and they sort the pdlc work together.
+- B · your own pattern: tell pdlc the pattern that your team already uses.
 
 ## Rule
 
-Branches are named `pdlc/<change ID>-<short name>`, for example
+The name of each change branch is `pdlc/<change ID>-<short name>`, for example
 `pdlc/CH-0031-email-templates`.

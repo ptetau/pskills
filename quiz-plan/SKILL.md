@@ -54,7 +54,7 @@ red-team pass on the draft. The red-team pass occurs before you show the plan.
 Interview the user one question at a time, with the question UX of [[quiz]] (see "The
 look" below). When an answer shows an ambiguity, drill deeper. The starter question pool
 below gives your first questions, but the quiz is **not limited to the starter pool**. An
-answer can show assumptions, ambiguities, or unknowns. Each of these items needs its own
+answer can show assumptions, ambiguities, or unknowns. Each of these items gets its own
 follow-up. Continue to ask until you can write a complete plan that is not ambiguous.
 
 #### Starter Question Pool
@@ -62,8 +62,8 @@ follow-up. Continue to ask until you can write a complete plan that is not ambig
 The questions below are your opening questions. The list is a pool to select from, **not
 a script to recite in order**. Skip each question that the opening statement of the user
 already answers. Ask each question as a quiz question (the same UX as `/quiz`, see "The
-look" below), **one question in each turn**. Expect to ask follow-up drill questions that
-go deeper (see the next section). Ask the follow-up questions in the same way.
+look" below), **one question in each turn**. You will also ask follow-up drill questions
+that go deeper (see the next section). Ask the follow-up questions in the same way.
 
 **Q1: What is the change?** "Give the outcome in one sentence."
 Captures: the core change, in plain language. → **Intent**
@@ -112,17 +112,17 @@ modes. → **Ground truth → Prior art** (the answer also seeds the Phase 3 pre
 
 **Q12: More than one way to do this?** *(ask only when 2 or more viable approaches
 exist)* "Are there competing approaches? Name the front-runners, so that we select one
-deliberately and not by default the first one that we thought of."
+deliberately and do not simply use the first idea that we had."
 Captures: the options for the approach, and the reason for the selection. → **Approach**
 
-> Q11 (prior art) and Q12 (other approaches) are **appended** at the end. Thus, Q1 to Q10
-> (the first ten questions) keep their numbers, and the template mapping below stays
-> stable. Q12 (other approaches) is conditional: skip this question when only one
-> sensible approach exists.
+> Q11 (prior art) and Q12 (other approaches) are **appended**. Thus, Q1 to Q10 (the first
+> ten questions) keep their numbers, and the template mapping below stays stable. Q12
+> (other approaches) is conditional: skip this question when only one sensible approach
+> exists.
 
 #### Adaptive Follow-up Drill (the key mechanic)
 
-After each answer, **examine whether the answer shows an ambiguity or a hidden
+After each answer, **examine if the answer shows an ambiguity or a hidden
 assumption.** If the answer shows one, continue to drill with follow-up questions. Some
 examples:
 
@@ -140,16 +140,15 @@ examples:
 - **If the user says "I'm not sure about X"** → "I will read the current code to find the
   answer." Then explore the codebase and report what you find.
 
-**Signs that you must continue to ask:**
+**Signs you need to keep asking:**
 
 - The answer contains words like "probably", "mostly", "should", "I think", or "not sure".
 - The answer gives an outcome, but not the mechanism.
 - The answer covers the happy path, but not the edge cases.
-- The answer assumes something about the codebase that you did not confirm yet.
-- You, the agent, cannot yet see the exact files and the exact changes that are
-  necessary.
+- The answer assumes something about the codebase that you did not confirm.
+- You, the agent, cannot see the exact files and the exact changes that are necessary.
 
-**Signs that you can stop the drill:**
+**Signs you're done asking:**
 
 - Each answer is concrete and not ambiguous.
 - You can say exactly which files change and how they change, at the level of the
@@ -180,19 +179,20 @@ with four differences:
    `✓ N Label → Choice`. In the resolved view, number the questions `N/T` when you know
    the total.
 2. **No fixed list.** Step 1 of /quiz makes a fixed list, but in this skill the list
-   grows. Each answer can open a follow-up question (see "Drill behaviour" below).
+   becomes longer. Each answer can open a follow-up question (see "Drill behaviour"
+   below).
 3. **Open questions** (a sentence, a command, or a file path). Ask an open question in
-   plain prose, also when the picker exists. Write a heading `**Question N · Label**`,
-   then the question. Then write `Reply with <what's needed>.` on the last line. Use the
-   picker only when there are 2-4 real options, for example a branch name that you can
-   suggest. Do not invent options to fill the picker.
-4. **No cap.** /quiz asks about 7 questions, and then offers /squiz. In this skill, the
-   drill continues until each item in "Signs that you can stop the drill" is true.
+   plain prose, also when the session has the picker. Write a heading
+   `**Question N · Label**`, then the question. Then write `Reply with <what's needed>.`
+   on the last line. Use the picker only when there are 2-4 real options, for example a
+   branch name that you can suggest. Do not invent options to fill the picker.
+4. **No cap.** /quiz stops at about 7 questions, and then offers /squiz. In this skill, the
+   drill continues until each item in "Signs you're done asking" is true.
 
 **Recommendations** follow the rule of /quiz, and the codebase also counts as evidence.
 Tag an option `(recommended)` only when a fact from the ground truth, a constraint, or a
 risk points to the option. Name that fact in the sentence of the option. If the options
-are really equal, do not recommend an option.
+are equally good, do not recommend an option.
 
 The example below shows a fallback question. Show the question as markdown, not in a
 code block:
@@ -238,7 +238,7 @@ list:
 Then ask the user to confirm. The confirmation is the gate to Phase 2:
 
 - **Picker:** ask one `Confirm` question with the options `Write the plan` and
-  `Change one`. Do not recommend either option.
+  `Change one`. Do not recommend an option.
 - **Fallback:** write one sentence:
   *"Does this look correct? I will write the plan unless you say `wait`."*
 
@@ -256,10 +256,10 @@ difference is the numbering: each echo is `✓ N Label → Choice` until you kno
    think", ask the next question about that point.
 3. Do not argue about the scope. Record what the user says. The Boundaries section will
    flag the risk.
-4. **Drill until the answers are clear** (see "Signs that you can stop the drill"). Show
+4. **Drill until the answers are clear** (see "Signs you're done asking"). Show
    the resolved view only when no questions remain.
 5. If the user changes an earlier answer in the resolved view, update your notes. Then
-   examine whether the change opens a new question. If it opens one, ask one more
+   examine if the change opens a new question. If it opens one, ask one more
    question. Do not ask all the questions again.
 
 ### Phase 2: Write the Plan
@@ -336,7 +336,7 @@ human explicitly asked for a checkpoint on that step.
 Each step also declares a **Touches** footprint and **Depends on** edges. These fields are
 not decoration. [[quiz-plan-execute]] diffs these fields to decide which not-done steps can
 run as a **parallel group** (concurrent agents, one for each step). If the fields are
-wrong, the grouping does the wrong thing, and nothing shows the error.
+incorrect, the grouping does the wrong thing, and nothing shows the error.
 
 [Make the steps for the change. Make each step so concrete that two different readers make the same change.]
 
@@ -345,12 +345,12 @@ wrong, the grouping does the wrong thing, and nothing shows the error.
 - **Do:** [precise instructions]
 - **Done when:** [falsifiable criteria]
 - **Out of scope here:** [tempting adjacent work to exclude]
-- **Touches:** [the files or globs that this step actually edits. Do not include the plan file.
-  Stage 6 of each step touches the plan file, so the grouping comparisons exclude the plan
-  file on purpose.]
-- **Depends on:** [the numbers of the steps that the correctness of this step relies on, also
-  when the `Touches` sets do not overlap. For example, "Step 2" if this step reads a config
-  flag that Step 2 adds. Write `none` if the step is really independent.]
+- **Touches:** [the files or globs that this step actually edits. Do not include the plan
+  file. Stage 6 of each step touches the plan file, so the grouping comparisons exclude
+  the plan file on purpose.]
+- **Depends on:** [the numbers of the steps that the correctness of this step relies on,
+  also when the `Touches` sets do not overlap. For example, "Step 2" if this step reads a
+  config flag that Step 2 adds. Write `none` if the step is really independent.]
 
 [Add more steps as necessary...]
 
@@ -397,7 +397,7 @@ divisible by 12, round to the nearest character. Examples:
 - 4/4 steps completed → `████████████ 4/4 (100%)`
 
 When you execute a step and log the step in the Progress log, **also update the tracker in
-the header.** The tracker is for humans. A person who opens the `.plan.md` file must see
+the header.** The tracker is for humans. Thus, a person who opens the `.plan.md` file sees
 immediately how much of the work is complete.
 
 Also update the checkbox of each step from `[ ]` to `[x]` when the step is complete.
@@ -410,16 +410,15 @@ When you make the steps from the quiz answers, obey these rules:
 1. **Step 1 must always test the riskiest assumption**, from Q5 (the riskiest part). This
    step goes first, because if this step fails, the full plan is not valid. Step 1 does
    not join a parallel group.
-2. Each step must produce a concrete outcome that you can check, for example a passing
+2. Each step must give a concrete outcome that you can check, for example a passing
    test, a rendered route, or a working command.
-3. **Make each step AUTO by default.** Mark a step **GATED** only when the user explicitly
+3. **Default every step to AUTO.** Mark a step **GATED** only when the user explicitly
    asks for a human checkpoint on that step. The user can name the step, or give a general
    instruction, for example "gate the risky ones". Apply that instruction to the steps
-   that match. Do not gate a step by default "to be safe". The
-   default changed because unattended AUTO execution from start to end is now the common
-   case, not the exception.
-4. If the change involves both infrastructure and code, divide the steps into logical
-   phases: infrastructure first, then code.
+   that match. Do not gate a step by default "to be safe". The default changed because
+   unattended AUTO execution from start to end is now the common case, not the exception.
+4. If the change involves infrastructure and code, divide the steps into logical phases:
+   infrastructure first, then code.
 5. If the change involves a backend and a frontend, put the steps in the order of their
    dependencies. For example, put the backend first if the frontend depends on the
    backend.
@@ -430,28 +429,28 @@ When you make the steps from the quiz answers, obey these rules:
 8. **Tracker maintenance is part of each step.** When a step is complete, the agent must
    also update the progress bar and checkboxes in the plan file header.
 9. **Select the approach before the steps.** If Q12 (other approaches) found 2 or more
-   viable approaches, select one deliberately. Record the selection in the **Approach**
-   section, and why the alternatives lost. Then make steps only for the selected
+   viable approaches, select one deliberately. In the **Approach** section, record the
+   selection and why the alternatives lost. Then make steps only for the selected
    approach. Do not leave the fork unresolved in the steps.
 10. **Give `Touches` and `Depends on` to each step, then calculate the parallel groups.**
     Two AUTO steps can share a group id (`P1`, `P2`, ...) only if these conditions are
     true:
-    - Neither step is the riskiest-assumption step.
+    - The riskiest-assumption step is not one of the two steps.
     - The `Touches` sets of the two steps are disjoint.
-    - Neither step depends on the other step, directly or transitively.
+    - The two steps do not depend on each other, directly or transitively.
 
-    A group contains 2 or more steps. A step with no groupmate gets
-    `Parallel group: none`. If you are not sure that two steps are really independent,
-    use `none`, and do not guess a group. A missed parallel opportunity costs time, but a
-    wrong group costs a broken merge.
+    A group contains 2 or more steps. A step with no groupmate gets `Parallel group: none`.
+    If you are not sure that two steps are independent, use `none`, and do not guess a
+    group. A missed parallel opportunity costs time, but an incorrect group costs a broken
+    merge.
 
 ### Phase 3: Red-team the Draft
 
 Before you show the plan to the user, attack your own draft. You wrote the draft, so now
 try to break the draft. Do each check below. If the quiz answers or the codebase can
 resolve a problem, correct the problem. If you cannot resolve a problem, keep the problem
-as one more quiz question. Do not silently patch over the problem, and do not silently
-drop the problem.
+as one more quiz question. Do not hide the problem with a silent patch, and do not
+silently drop the problem.
 
 - **Premortem (the outside-in lens):** assume that it is one month later, and that this
   plan shipped and *failed*. Work backwards and list the likely causes. Use the Q11 (prior
@@ -464,20 +463,20 @@ drop the problem.
   "does a step break a rule?". The premortem asks "what failure is not represented as a
   step at all?"
 - **Riskiest assumption:** does Step 1 actually *test* the assumption? The test must be
-  falsifiable: the test fails if the assumption is wrong. Or does Step 1 only touch the
+  falsifiable: the test fails if the assumption is incorrect. Or does Step 1 only touch the
   same area?
-- **Boundaries:** does the `Do` of a step reach outside `May modify`? Does a step conflict
+- **Boundaries:** does the `Do` of a step go outside `May modify`? Does a step conflict
   with `Must not touch`?
 - **Done when:** can you check each criterion with a command or a test? Or is the
   criterion vague ("works correctly", "handles it properly")? Write each vague criterion
   again in concrete terms.
 - **Coverage gaps:** do the quiz answers imply work that no step covers? Examples are a
-  migration, a doc update that the conventions from Q7 (the conventions) make necessary,
-  or a config change for the existing deployments.
+  migration, a doc update that Q7 (the conventions) makes necessary, or a config change
+  for the existing deployments.
 - **Ordering:** does a step depend on an output or a state that a *later* step creates?
 - **Scope creep:** does the `Do` of a step include work that Q4 (out of bounds) explicitly
   excluded?
-- **Rollback reachability:** the "Failing looks like" signals of Verification can trigger
+- **Rollback reachability:** the "Failing looks like" signals of Verification can occur
   in the middle of the plan, not only at the end. At that point, can you still execute the
   Rollback from Q9 (the rollback)?
 - **Parallel groups:** for each declared group, are the `Touches` sets *actually*
@@ -490,8 +489,8 @@ drop the problem.
 
 The plan moves to `Draft`, and you show the plan, only when this pass is clean. When you
 show the plan, add one line that says that the red-team pass ran. The line names each
-problem that the pass found and corrected, or says "no issues found". This line must be
-visible, because the red-team pass is not a silent internal step.
+problem that the pass found and corrected, or says "no issues found". The user must see
+this line, because the red-team pass is not a silent internal step.
 
 #### Output
 
@@ -508,7 +507,7 @@ If the user says yes, give the plan to [[quiz-plan-execute]]: run
 for each step, and it can create a new branch. Steps that share a `Parallel group` run
 concurrently, with one agent for each step, and each agent in its own worktree. If the
 user says no, the plan file stays on the disk for later use. The user can run
-`/quiz-plan-execute` on the plan file at any time.
+`/quiz-plan-execute` on the plan file later.
 
 ## Example
 
@@ -618,10 +617,10 @@ and a whitelisted internal-IP route stays 200 for the full test.")*
   stays with the branch.
 - **Robustness additions** (Approach, Prior art, Assumptions, and the premortem lens in
   Phase 3) come from evidence-backed planning practice. The practices are a deliberate
-  selection of the approach (multi-plan beats first-draft), the outside view (anchor the
-  scope to the closest past change), and Klein's premortem. The premortem imagines that
+  selection of the approach (multi-plan beats first-draft), the outside view (set the
+  scope from the closest past change), and Klein's premortem. The premortem imagines that
   the failure already occurred, and so finds about 30% more failure causes than "what
-  might go wrong". By design, each addition has a different job. The premortem is
+  might go wrong". By design, the additions do not overlap. The premortem is
   **folded into the Phase 3 red-team** as one lens, not a separate section. The premortem
   looks for failures that no step represents, and the other checks look for rule
   violations.
@@ -636,4 +635,4 @@ and a whitelisted internal-IP route stays 200 for the full test.")*
   list the plan file. Stage 6 of each step writes to the plan file. Thus, if `Touches`
   included the plan file, each step would look dependent on each other step. If you are
   not sure about a dependency that file overlap alone does not show, write the dependency
-  in `Depends on`. Do not leave the group assignment to a guess.
+  in `Depends on`. Do not guess the group assignment.

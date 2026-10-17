@@ -667,7 +667,7 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
         warnings.append("filler phrasing found; lead with substance")
     plain = {}
     if check_writing is not None:
-        rw, plain = check_writing.check(text, max_grade=7.0)
+        rw, plain = check_writing.check(text, max_grade=7.0, require_glossary=True)
         warnings += ["writing: " + w for w in rw]
 
     stats = {"reading_grade": plain.get("grade"),

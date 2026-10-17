@@ -1,10 +1,10 @@
-# Installing pdlc
+# Install pdlc
 
-pdlc is a Claude Code plugin. It works in any project that uses git, whatever the language,
-framework or kind of system.
+pdlc is a Claude Code plugin. pdlc works in each project that uses git, for all
+languages, frameworks, and types of system.
 
-> pdlc is new. See `OUTLINE.md` for the design and `plans/build-pdlc-v1.plan.md` at the
-> repo root for build progress.
+> pdlc is new. For the design, see `OUTLINE.md`. For the build progress, see
+> `plans/build-pdlc-v1.plan.md` at the root of the repository.
 
 ## What you need
 
@@ -13,13 +13,14 @@ framework or kind of system.
 
 ## 1. Add the marketplace
 
-This repository is a plugin marketplace called `pskills`. In Claude Code, run:
+This repository is a plugin marketplace with the name `pskills`. In Claude Code, run this
+command:
 
 ```
 /plugin marketplace add ptetau/pskills
 ```
 
-Or from a terminal:
+Or, from a terminal, run this command:
 
 ```
 claude plugin marketplace add ptetau/pskills
@@ -27,107 +28,126 @@ claude plugin marketplace add ptetau/pskills
 
 ## 2. Install the plugin
 
-Pick a scope:
+Select a scope:
 
-- **project**: for everyone who works on this project. The setting is saved in the project's
-  `.claude/settings.json`, which you commit.
-- **user**: just for you, in every project.
+- **project**: for each person who works on this project. The project's
+  `.claude/settings.json` file keeps the setting, and you commit that file.
+- **user**: only for you, in each of your projects.
 
 ```
 claude plugin install pdlc@pskills --scope project
 ```
 
-Check it worked:
+To make sure that the installation worked, run this command:
 
 ```
 claude plugin list
 ```
 
-You should see `pdlc@pskills` marked enabled.
+The list shows `pdlc@pskills`, marked enabled.
 
-## 3. Set up your project
+## 3. Prepare your project
 
-Open Claude Code in your project and run:
+Open Claude Code in your project. Then run this command:
 
 ```
 /pdlc:init
 ```
 
-Init creates a `pdlc/` folder in your project. If you already have code, it maps it first and
-asks you to confirm what it found. Then it asks you about a few defaults, one at a time.
-Reply `skip` to accept the recommended answer.
+Init creates a `pdlc/` folder in your project. If your project already has code, init
+first makes a map of the code and asks you to confirm what it found. Then init asks you
+about some defaults, one at a time. To accept the recommended answer, reply `skip`.
 
-When init finishes, the quickest start is:
+When init is complete, the quickest start is this command:
 
 ```
 /pdlc:ship <what you want, in your own words>
 ```
 
-It runs every stage below on recommended answers, stacks the changes, and stops only when
-it needs you. Or go a stage at a time:
+`/pdlc:ship` runs all the stages below with the recommended answers, and stacks the
+changes. `/pdlc:ship` stops only when it needs you. Or, do one stage at a time:
 
 ```
-/pdlc:intake <what you want>   turn it into spec changes
-/pdlc:ready        clear up anything vague, check for contradictions
-/pdlc:change       split it into changes, one job or capability each
-/pdlc:tests        a test writer writes the checks from the spec; they're locked
+/pdlc:intake <what you want>   change your words into spec changes
+/pdlc:ready        make vague items clear, and look for contradictions
+/pdlc:change       divide the work into changes, one job or capability each
+/pdlc:tests        a test writer writes the checks from the spec, then pdlc locks them
 /pdlc:build        a builder writes code until the locked checks pass
-/pdlc:show         record the change working as a GIF
-/pdlc:verify       run checks and independent reviews, then propose the merge
+/pdlc:show         record a GIF of the change as it works
+/pdlc:verify       run the checks and the independent reviews, then propose the merge
 ```
 
-The visual review needs Node. `show` installs its tools (Playwright, gifenc, pngjs) into
-`pdlc/.tools/` the first time.
+The visual review needs Node. The first time that `show` runs, `show` installs its tools
+(Playwright, gifenc, pngjs) into `pdlc/.tools/`.
 
-Add `defaults` to any of them to take the recommended answer instead of being asked.
+You can add `defaults` to each of these commands. Then the command uses the recommended
+answer, and does not ask you.
 
-## Showing work on a board
+## Show work on a board
 
-pdlc can show intents and changes as cards on a GitHub project or in Linear. In
-`pdlc/config.md`, set `tracker:` to `tracker-github-projects` or `tracker-linear`, fill in
-"Tracker settings" as the adapter file in `pdlc/adapters/` describes, and run:
+pdlc can show intents and changes as cards on a GitHub project or in Linear. To show the
+cards, do these steps:
 
-```
-/pdlc:board dry-run    see what would change
-/pdlc:board            create and move the cards
-```
+1. In `pdlc/config.md`, set `tracker:` to `tracker-github-projects` or `tracker-linear`.
+2. Complete "Tracker settings" as the adapter file in `pdlc/adapters/` tells you.
+3. Run these commands:
 
-The session needs access to the board: the `gh` CLI for GitHub projects, or a Linear
-connection for Linear.
+   ```
+   /pdlc:board dry-run    show what will change
+   /pdlc:board            create and move the cards
+   ```
+
+The session needs access to the board. For GitHub projects, the session needs the
+`gh` CLI. For Linear, the session needs a Linear connection.
 
 ## Optional: live dashboard
 
-pdlc can install a helper agent, `dashboard-builder`, that keeps one web page showing tasks
-and their status, questions waiting for you with the default action, the latest
-deliverables, and anything stuck. It refreshes every 10 seconds; open
-`.dashboard/index.html` with a double-click. The first time, it asks what style you like.
+pdlc can install a helper agent, `dashboard-builder`. The agent keeps one web page that
+shows these items:
 
-`/pdlc:init` offers it, or run `/pdlc:dashboard` any time. It asks before installing,
-because it adds files to `~/.claude/agents/` and a rule to `~/.claude/CLAUDE.md`.
+- The tasks and their status.
+- The questions that wait for you, with the default action.
+- The latest deliverables.
+- Each item that is stuck.
 
-## Enforcing the merge check
+The page refreshes every 10 seconds. To open the page, double-click
+`.dashboard/index.html`. The first time, the agent asks you which style you like.
 
-pdlc runs its merge check before proposing a merge, but git itself doesn't know about it.
-To make sure nothing unverified reaches main, have your CI run this on every pull request
-and make it a required check:
+`/pdlc:init` offers the dashboard. You can also run `/pdlc:dashboard` at any time. Before
+pdlc installs the dashboard, pdlc asks you, because the dashboard adds files to
+`~/.claude/agents/` and a rule to `~/.claude/CLAUDE.md`.
+
+## Enforce the merge check
+
+pdlc runs its merge check before it proposes a merge. But git itself does not know about
+the merge check. To make sure that nothing unverified gets to main, make your CI run this
+command on each pull request:
 
 ```
 python3 pdlc/bin/check_merge.py
 ```
 
-It finds the change whose branch is being merged (from `GITHUB_HEAD_REF` in GitHub Actions,
-or the current git branch) and fails if any requirement that change touches isn't
-`verified`. If no change uses the branch, it checks every change marked `in review`.
+Then make this command a required check.
 
-## Checking the guard
+The script finds the change whose branch the pull request merges. The script gets the
+branch from `GITHUB_HEAD_REF` in GitHub Actions, or from the current git branch. If a
+requirement that the change touches is not `verified`, the script fails. If no change uses
+the branch, the script examines each change with the status `in review`.
 
-pdlc's plugin includes a guard that keeps its agents in their lanes: the test writer can't
-read app code, the builder can't change checks, and each reviewer sees only its packet. To
-see every decision it makes, start Claude Code with `PDLC_GUARD_LOG=/tmp/pdlc-guard.log`.
+## Examine the guard
 
-## Sharing with your team
+The pdlc plugin includes a guard that keeps each agent to its own role:
 
-With the project scope, `.claude/settings.json` ends up like this:
+- The test writer cannot read app code.
+- The builder cannot change checks.
+- Each reviewer sees only its packet.
+
+To see each decision of the guard, start Claude Code with
+`PDLC_GUARD_LOG=/tmp/pdlc-guard.log`.
+
+## Share pdlc with your team
+
+When you install with the project scope, `.claude/settings.json` contains this text:
 
 ```json
 {
@@ -142,43 +162,43 @@ With the project scope, `.claude/settings.json` ends up like this:
 }
 ```
 
-Commit it. Each teammate then runs this once:
+Commit this file. Then each teammate runs this command one time:
 
 ```
 claude plugin install pdlc@pskills --scope project
 ```
 
-## Updating and removing
+## Update and remove the plugin
 
 ```
 claude plugin update pdlc@pskills
 claude plugin uninstall pdlc@pskills
 ```
 
-Uninstalling leaves your project's `pdlc/` folder alone. Your specs, intents and change
-specs stay in git.
+When you uninstall the plugin, your project's `pdlc/` folder does not change. Your specs,
+intents, and change specs stay in git.
 
-## Trying a local copy
+## Try a local copy
 
-To try pdlc from a checkout without installing it:
+To try pdlc from a checkout, and not install it, run this command:
 
 ```
 claude --plugin-dir ./plugins/pdlc
 ```
 
-To check the plugin files are valid:
+To make sure that the plugin files are valid, run this command:
 
 ```
 claude plugin validate ./plugins/pdlc
 ```
 
-## Using pdlc on this repository
+## Use pdlc on this repository
 
-pdlc can manage changes to `pskills` itself, including changes to pdlc. See "pdlc on
-itself" in `OUTLINE.md`. The short version:
+pdlc can manage changes to `pskills` itself, and also changes to pdlc. For the full
+text, see "pdlc on itself" in `OUTLINE.md`. The short version is:
 
 1. Install the released pdlc from the marketplace, not from your working copy.
-2. Run `/pdlc:init` at the root of `pskills`. Its state goes in `pdlc/` at the root, next to
-   `plugins/pdlc/`, which is the plugin's source.
-3. Changes to `plugins/pdlc/` are built by the installed version. The new version only
-   takes effect after it merges and you run `claude plugin update pdlc@pskills`.
+2. Run `/pdlc:init` at the root of `pskills`. pdlc keeps its state in `pdlc/` at the
+   root, next to `plugins/pdlc/`. `plugins/pdlc/` is the source of the plugin.
+3. The installed version builds the changes to `plugins/pdlc/`. The new version starts to
+   work only after the change merges and you run `claude plugin update pdlc@pskills`.

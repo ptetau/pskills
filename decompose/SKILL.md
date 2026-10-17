@@ -96,7 +96,7 @@ the smells. This section gives the primary ideas.
   | Client | who calls, and how: UI, API, scheduler, other systems | `AdminPortal` |
   | Manager | the volatile *sequence* of a family of related use cases (a workflow) | `EnrollmentManager` |
   | Engine | a volatile *activity*: a business rule, a calculation, or an algorithm | `PricingEngine` |
-  | ResourceAccess | volatile *access* to a resource, shown as business verbs, not CRUD | `MembersAccess` |
+  | ResourceAccess | volatile *access* to a resource, exposed as business verbs, not CRUD | `MembersAccess` |
   | Resource | the actual store or external system | database, vendor API |
   | Utility | infrastructure that any component can use | logging, security, pub/sub |
 
@@ -149,7 +149,7 @@ the smells. This section gives the primary ideas.
 | Client | Inputs from the outside world (endpoints, UI, timers, event subscriptions), plus presentation. |
 | Manager | The wiring: flows that call Engines and ResourceAccess, plus State machines. The Manager decides each transition. When the state must outlive one flow, a ResourceAccess stores the state. The verbs of that ResourceAccess guard each transition when they write it (compare-and-set). A Manager can own Inputs that subscribe to events. Flows are code by default. Löwy stores flows as data, and a workflow tool runs them, in two cases: the flows differ by kind of item, customer, or locale, or the flows run long across sessions and devices. The skill adds a third case: flows that change faster than you can deploy. |
 | Engine | Transforms and policies behind one stable API. A new rule is a new brick or new data, not a new call path. An Engine is pure by default: the Manager passes in the data that the Engine needs. If an Engine must read, the Engine calls ResourceAccess (Löwy allows this), and the design says so. |
-| ResourceAccess | Stores, Transports, and Inputs that pull from vendors, behind business verbs. Vendor details and storage details never cross the API of the ResourceAccess. |
+| ResourceAccess | Stores, Transports, and Inputs that pull from vendors, behind business verbs. Vendor details and storage details do not cross the API of the ResourceAccess. |
 | Utility | Stable mechanisms that all components share. |
 
 Three rules connect the two ideas:
@@ -225,8 +225,8 @@ Goal: separate the essence from the variations.
 2. Group the variations. "Welcome email", "reset SMS", and "Slack alert" are one core use
    case ("notify someone about an event") with different parameters.
 3. Mark the **core use cases**: the few use cases that express what the system is for.
-   Löwy says that there are typically two or three, and seldom more than six. Each other
-   use case must be a variation of the core use cases.
+   Löwy says that there are typically two or three, and seldom more than six. Expect each
+   other use case to be a variation of a core use case.
 4. Write the **nature of the business**: what stays true for the life of the system. Do
    not put a wall around these things.
 
@@ -276,8 +276,8 @@ Goal: the components, their types, their APIs, and the call graph.
 3. **Draw the call graph** by layer, and make sure that each call obeys the call rules. If
    a call breaks a rule, move the responsibility. Do not add an exception. Draw the call
    graph as a C4 component diagram, with one band for each layer. Put the diagram inside
-   the boundary of the system. (The choice of containers belongs to `/blueprint`.) If there are three
-   parts or fewer, do not draw the diagram. See `references/c4.md`.
+   the boundary of the system. (The choice of containers belongs to `/blueprint`.) If
+   there are three parts or fewer, do not draw the diagram. See `references/c4.md`.
 4. **Examine the size and the shape.** Löwy gives these heuristics. A system has about
    ten components, as an order of magnitude. Even a large system commonly has these
    numbers:
@@ -286,8 +286,8 @@ Goal: the components, their types, their APIs, and the call graph.
    - Three to eight ResourceAccess and Resources.
    - About six Utilities.
 
-   Eight Managers means a feature-based decomposition. Volatility must decrease from the
-   top layer to the bottom layer. Apply the expendability test to each Manager (see
+   Eight Managers means a feature-based decomposition. In a good design, volatility
+   decreases from the top layer to the bottom layer. Apply the expendability test to each Manager (see
    `references/walls.md`). These heuristics are smell checks, not targets. When the
    design is outside them, write the reason.
 5. **Place the cross-cutting concerns** (audit, authorisation, tenancy). Also place each
@@ -368,7 +368,7 @@ pass. As an alternative, record why you accept a failure.
    Record either. If two or more existing components change for any other reason, the
    wall leaks.
 3. **Feature assembly.** Write each current feature as wiring over the brick catalogue.
-   The wiring has no logic, other than to select bricks and pass parameters. This step
+   Put no logic in the wiring, other than to select bricks and pass parameters. This step
    makes sure that the catalogue is complete. Then do the real test:
    - Take two or three plausible future features from the register. Include the extras
      that you proposed in Phase 0.
@@ -389,8 +389,8 @@ pass. As an alternative, record why you accept a failure.
    count.) Each brick traces to a feature or a volatility. Put each item that traces to
    neither on the cut list.
 7. **Subsystem mode: measured coupling.** Find each component pair above the coupling
-   threshold in the volatility report. For each pair, say if the design puts a wall between
-   the two components, and why the coupling will fall. Name the metric to check
+   threshold in the volatility report. For each pair, say if the design puts a wall
+   between the two components, and why the coupling will fall. Name the metric to check
    again after the change ships.
 
 ## Phase 6 — Write the design document
@@ -405,7 +405,7 @@ pass. As an alternative, record why you accept a failure.
    - Do not draw a layer diagram. Do not give a reason for sizes below Löwy's sizes,
      because those sizes are warnings for large systems.
    - Each empty section keeps its number, in one line ("Not applicable: inception").
-2. Examine the writing: `python <skill-dir>/scripts/check_writing.py <name>.design.md --max-grade 7`.
+2. Examine the writing: `python <skill-dir>/scripts/check_writing.py <name>.design.md --max-grade 7 --require-glossary`.
    Write the flagged sentences again. Add each word that the linter shows as not explained
    to "Words used here".
    Make sure that each diagram renders. Use `mmdc` if it is installed, or paste the
@@ -460,17 +460,17 @@ pass. As an alternative, record why you accept a failure.
 
 ## References
 
-- `references/walls.md`: volatility-based decomposition in full. It gives how to find
+- `references/walls.md`: volatility-based decomposition in full. Topics: how to find
   volatilities, the component types, the call rules, naming, sizing, and smells.
-- `references/bricks.md`: orthogonal primitives in full. It gives the brick kinds, the
+- `references/bricks.md`: orthogonal primitives in full. Topics: the brick kinds, the
   shared contract, composition, the orthogonality tests, guardrails, and smells.
-- `references/brownfield.md`: subsystem mode. It gives how to measure volatility, how to
+- `references/brownfield.md`: subsystem mode. Topics: how to measure volatility, how to
   read the report, how to map the host, seams, anti-corruption layers, and migration.
 - `references/design-template.md`: the shape of `<name>.design.md`.
 - `references/examples.md`: a worked inception example (notifications), and a worked
   subsystem example (promotions in an existing shop).
 - `references/sources.md`: where each idea comes from, with links.
-- `references/c4.md`: the C4 diagrams. It gives the level that each skill draws, the
+- `references/c4.md`: the C4 diagrams. Topics: the level that each skill draws, the
   notation rules, and Mermaid examples that render. Shared with `/blueprint`.
 - `references/writing-guidelines.md`: the writing guidelines for all text. They are
   ASD-STE100 Simplified Technical English, and two more rules. Shared with each skill.

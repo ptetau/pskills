@@ -6,13 +6,14 @@ description: >
   coding agent can implement with no guesses. Its six sections are scope boundaries,
   enforceable invariants with error codes, strongly typed data contracts, explicit state
   machines, module boundaries, and a Gherkin verification suite. Each module boundary
-  gives typed method signatures and failure and retry semantics. Decides each detail that
-  the design leaves open one time, marks it as assumed, and lists it for review. Removes
+  gives typed method signatures and failure and retry semantics. Decides one time each
+  detail that the design leaves open, marks it as assumed, and lists it for review. Removes
   methodology jargon and IDs. Then checks the result with a bundled checker, and writes a
   blueprint document. Use when the user says "/blueprint", or asks to turn a design into a
   spec. Also use when the user asks to make a design agent-ready or implementable. Also
   use when the user asks to write the types, interfaces, contracts, or acceptance tests
-  for a design, or wants the next step after /decompose. ---
+  for a design, or wants the next step after /decompose.
+---
 
 # Blueprint: from design to buildable spec
 
@@ -58,9 +59,9 @@ Use `/blueprint` in these conditions:
 Do **not** use `/blueprint` in these conditions:
 
 - There is no design yet. Run [[decompose]] first. If the user insists, work from the text
-  that the user gave, and expect many more assumed decisions.
-- The user wants a step-by-step change plan. A change plan is the job of [[quiz-plan]],
-  which can take the blueprint as input.
+  that the user gave. Expect many more assumed decisions.
+- The user wants a step-by-step change plan. [[quiz-plan]] makes change plans, and can
+  take the blueprint as input.
 
 ## The core rule: never guess silently
 
@@ -77,14 +78,15 @@ each such detail, do these steps:
 2. Mark the detail *(assumed)* one time, at the place where a reader first meets it. The
    checker compares the number of marks with the number of listed decisions.
 3. List the detail in section 1, under **Decisions added by this spec**. Add one line that
-   tells what changes if the decision is wrong.
+   tells what changes if the decision is incorrect.
 
-A person reviews that list one time. After the review, nothing in the blueprint is a
-guess.
+A person reviews the list of added decisions one time. After the review, nothing in the
+blueprint is a guess.
 
-A few questions cannot get a default, because a wrong guess is expensive. Mark each such
-question inline as `[NEEDS CLARIFICATION: the specific question]`. Mark a maximum of three
-questions. Select them by impact, in this order (the rule of GitHub spec-kit):
+A few questions cannot get a default, because an incorrect guess is expensive. Mark each
+such question inline as `[NEEDS CLARIFICATION: the specific question]`. Mark a maximum of
+three questions. Select the questions by impact, in this order (the rule of GitHub
+spec-kit):
 
 1. Scope.
 2. Security, privacy, and legal compliance.
@@ -144,7 +146,7 @@ expiry"): select a conservative placeholder. Mark the placeholder *(assumed; own
 Legal)*, and list it. Use a `[NEEDS CLARIFICATION]` only when no placeholder is safe to
 build against.
 
-Use the same method for a design in a different format. Find the scope, rules, data,
+A design in a different format works in the same way. Find the scope, rules, data,
 lifecycles, components, and behaviours, and translate each one.
 
 ## Phase 0 — Choose the target
@@ -168,8 +170,8 @@ lifecycles, components, and behaviours, and translate each one.
 - **Out of scope (non-goals)**: rejected candidates, future changes that are only tests of
   the design, and any other work that a reasonable agent can wander into.
 - **Decisions carried from the design**: the assumptions of the design, without changes.
-- **Decisions added by this spec**: each *(assumed)* detail, on one line each. Keep the
-  two lists separate. Then the new list is short enough to review.
+- **Decisions added by this spec**: each *(assumed)* detail, with one line for each
+  detail. Keep the two lists separate. Then the new list is short enough to review.
 - **Words used here**: each technical word that the blueprint uses, with a plain
   explanation in one line.
 - A link to the source design.
@@ -198,8 +200,8 @@ Each invariant gives these items:
   `UPPER_SNAKE_CASE`.
 
 Give each invariant a name. Do not give the invariants ID numbers. The style rule of the
-format does not permit cryptic IDs. A name such as **Each message is delivered at most
-once** is its own reference.
+format does not let a blueprint use cryptic IDs. A name such as **Each message is
+delivered at most once** is its own reference.
 
 Cover these topics, where they apply:
 
@@ -236,8 +238,8 @@ for each code. Each row gives these items:
 
 - The meaning of the code.
 - Whose fault the error is.
-- The HTTP status. Give this column only when the system has an HTTP boundary. If there is
-  no HTTP boundary, remove the column.
+- The HTTP status. Give the HTTP column only when the system has an HTTP boundary. If
+  there is no HTTP boundary, remove the column.
 - Whether a retry can help.
 
 Design by contract decides the fault. A broken precondition is the fault of the caller (a
@@ -362,7 +364,7 @@ Write 3–5 Gherkin scenarios that a test harness can run.
    - A scenario exercises the code of each invariant.
    - No scenario uses an undefined code.
    - Section 6 ends with a "Verify" line that gives a command.
-   - No design IDs remain (for example, `V1` or `F2`).
+   - The blueprint has no design IDs (for example, `V1` or `F2`).
    - No `[NEEDS CLARIFICATION]` stays open. Use `--draft` while questions are still open.
 
    The C4 checks make sure of these items:
@@ -384,8 +386,8 @@ Write 3–5 Gherkin scenarios that a test harness can run.
    labels that overlap or that are cut off (`references/c4.md`). With `--compile`, the
    checker type-checks the TypeScript blocks when `tsc` is installed.
 2. Read the blueprint again as the coding agent. For each section, ask: can you write the
-   code or the test with no questions? Each question that you would ask is a missing
-   decision. Add the decision to *Decisions added*, or ask the user.
+   code or the test with no questions? Each question that you have is a missing decision.
+   Add the decision to *Decisions added*, or ask the user.
 3. Show a summary in chat:
 
    ```
@@ -419,8 +421,8 @@ Write 3–5 Gherkin scenarios that a test harness can run.
   thing one time. The signature block gives the types, so the prose adds only what the
   types cannot give (order, failure, why). Point to an invariant in section 2. Do not
   write the invariant again in section 5.
-- **Zero fluff.** Start each section with its substance. Do not write introductions. Do
-  not write summaries of the text that comes next.
+- **Zero fluff.** Start each section with its primary point. Do not write introductions.
+  Do not write summaries of the text that comes next.
 - **Plain domain terms.** Do not use design IDs (`V1`, `F2`, `UC3`). Use the methodology
   terms (Client, Manager, Engine, ResourceAccess, Utility) only where the template puts
   them. These places are the group headings of section 5, the component type in diagram
@@ -430,7 +432,7 @@ Write 3–5 Gherkin scenarios that a test harness can run.
 - **Agent-ready.** An agent with no other context can create the directory tree, the type
   definitions, and the test harness from this document alone.
 - **Faithful.** Do not change the components or the call rules of the design. If the
-  design is wrong, say so and stop. Do not quietly design the system again in the
+  design is incorrect, say so and stop. Do not quietly design the system again in the
   blueprint.
 
 ## References

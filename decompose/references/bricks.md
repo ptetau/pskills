@@ -21,8 +21,8 @@ SICP gives the three things that each such system must have:
 3. **A means of abstraction**: a way to give a name to a combination, and to use the
    combination as a part.
 
-This skill reads SICP as follows: a design that does not have one of the three things
-builds features by hand.
+This skill reads SICP as follows: a design that does not have all three things builds
+features by hand.
 
 ## What "orthogonal" means
 
@@ -101,8 +101,8 @@ are different, and this difference is correct:
 | State machine | (state, event) → (next state, commands to run) |
 
 **When the contract itself changes.** The contract is the least changeable item inside a
-wall, because a new shape of the contract changes each brick. This cost is the price of
-composition. Thus, keep the contract small.
+wall, because a new shape of the contract changes each brick. That effect on each brick is
+the price of composition. Thus, keep the contract small.
 
 If the register says that the shape of the data will change (split transactions, a new
 currency field), make the change additive. Add new optional fields. Do not rename a field,
@@ -114,8 +114,8 @@ invariants.
 ## Mechanism and policy
 
 A mechanism tells *how* to do something. A policy tells *what, when, or whether*. Hydra
-(1974) made the separation of the two a core design rule. Thus, one kernel of mechanisms
-could support many policies on top of the kernel.
+(1974) made the separation of the two a core design rule. With this rule, one kernel of
+mechanisms could support many policies on top of the kernel.
 
 Raymond wrote about X, and he tells why the separation of mechanism and policy is good in
 general. Policy changes much faster than mechanism. If you hard-wire the two together, the
@@ -155,7 +155,7 @@ brick has an `if customer == …` inside it, a policy is trapped in a mechanism.
    - A split would duplicate code.
 6. **Write each feature as wiring**: `Input → Transform → … → Transport`. If you cannot
    write a feature this way, the feature needs a new brick (give the reason for the
-   brick). Or, the feature shows a wrong wall.
+   brick). Or, the feature shows an incorrect wall.
 
 ## Choosing the composition medium
 
@@ -215,12 +215,12 @@ pieces with interfaces that cost more than they hide.
   or more current features. Or, the brick must serve one current feature as one of the
   variants that a recorded volatility names (one channel, one kind of discount). If not,
   keep the logic inline in the composition.
-  - Inputs and Transports at the edges are exempt, because each feature needs a way in and
-    a way out.
-  - Do not merge bricks to obey this rule. A merged brick with a mode flag is the first
-    smell in the table below.
-  - This rule is looser than the rule of three on purpose. At design time, you decide
-    where new code goes. You do not extract duplication that exists.
+  - Inputs and Transports at the edges are exempt from the earn-every-brick rule, because
+    each feature needs a way in and a way out.
+  - Do not merge bricks to obey the earn-every-brick rule. A merged brick with a mode flag
+    is the first smell in the table below.
+  - The earn-every-brick rule is looser than the rule of three on purpose. At design time,
+    you decide where new code goes. You do not extract duplication that exists.
 - **Rule of three** (Roberts, through Fowler). Use this rule when you extract a brick from
   existing code, also from host code in subsystem mode. The first time, write the code.
   The second time, duplicate the code. The third time, extract the brick. Two similar
@@ -232,7 +232,7 @@ pieces with interfaces that cost more than they hide.
 - **YAGNI** (Fowler) applies to presumptive features *and* to abstractions that you add for
   future flexibility: "any abstraction that makes it harder to understand the code for
   current requirements is presumed guilty." Refactoring is exempt. Refactoring is work
-  that makes the code easier to modify. Thus, build bricks for the features of today. Do
+  that makes the code easier to change. Thus, build bricks for the features of today. Do
   not build a brick that only a future feature needs.
 - **Future features are tests, not tasks.** Use a future feature to make sure that the
   design can absorb it. Do not build the future feature.
@@ -244,7 +244,7 @@ pieces with interfaces that cost more than they hide.
 
 | Smell | What it means | Fix |
 |-------|---------------|-----|
-| A `mode`, `type`, or `kind` flag that switches between different behaviours | Two or more bricks in one | Split the brick. (A parameter that the same behaviour uses, for example a predicate or a threshold, is correct.) |
+| A `mode`, `type`, or `kind` flag that switches between different behaviours | Two or more bricks in one | Split the brick. (A parameter that the same behaviour uses, for example a predicate or a threshold, is permitted.) |
 | Many tiny bricks, each with an interface almost as large as its body | Classitis (Ousterhout) | Merge pieces that share information or that always change together |
 | A brick named after a feature (`SendWelcomeEmail`) | Feature code that looks like a brick | Split it into general bricks (`Render`, `Send`) plus wiring |
 | A brick that calls a different brick directly to give it work | *When* and *where* are tangled with *what* | Put the hand-off in the wiring or on a Transport |

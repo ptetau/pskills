@@ -1,26 +1,31 @@
 # Port: review
 
-Independent reviews of one change: one reviewer per remit, each seeing only its packet.
+The review port gives independent reviews of one change. Each remit has one reviewer, and
+each reviewer sees only its packet.
 
 ## Operations
 
-- **review**: given a change and a list of remits, build one packet per remit and have a
-  separate, fresh reviewer judge each. Return each remit's result: pass or fail, and its
-  problems. Each result is saved as `review/<remit>/result.md` in the change folder.
+- **review**: the input is a change and a list of remits. Build one packet for each remit.
+  Give each packet to a separate, fresh reviewer to judge. Return the result of each
+  remit: pass or fail, and its problems. Each result goes into
+  `review/<remit>/result.md` in the change folder.
 
 ## Remits
 
-Described in `pdlc/reviews/`: tests, specification, security, quality, compliance,
-privacy. The project may edit them and chooses which run in `pdlc/config.md`.
+The remits are tests, specification, security, quality, compliance, and privacy. Each
+remit has a description in `pdlc/reviews/`. The project can edit the remits. In
+`pdlc/config.md`, the project selects which remits run.
 
-The tests packet holds the spec and the checks, never the code. Every other packet holds
-the spec and the code, never the checks.
+The tests packet holds the spec and the checks, but not the code. Each other packet holds
+the spec and the code, but not the checks.
 
 ## Success
 
-A change with a problem in one remit fails that remit, whatever the others say.
+If a change has a problem in one remit, the change fails that remit. The change fails
+that remit also when the other remits pass.
 
 ## Conformance check
 
-1. Take a change that lists one app file. Make a diff that also edits a second file.
-2. Review it with the specification remit. It fails and names the second file.
+1. Use a change that lists one app file. Make a diff that also edits a second file.
+2. Review the change with the specification remit. The remit fails, and its result gives
+   the name of the second file.

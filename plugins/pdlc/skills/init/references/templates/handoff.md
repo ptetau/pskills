@@ -4,28 +4,29 @@ Time: YYYY-MM-DDTHH:MM:SS±HH:MM (from the real clock)
 
 ## Done
 
-What this stage did, in a few lines.
+Write what this stage did, in a few lines.
 
 ## Decided on defaults
 
-Questions answered with the recommended answer, so the user can change them.
+List the questions that got the recommended answer, so that the user can change the
+answers.
 
 - none
 
 ## Open
 
-Anything unfinished, unclear or failing.
+List each item that is unfinished, unclear, or failing.
 
 - none
 
 ## Look here
 
-The files that matter for the next stage.
+List the files that are important for the next stage.
 
 ## Don't redo
 
-Work that is finished and checked. The next stage takes it as given.
+List the work that is finished and checked. The next stage accepts this work as correct.
 
 ## Next: do this first
 
-One or two sentences for the next stage.
+Write one or two sentences for the next stage.

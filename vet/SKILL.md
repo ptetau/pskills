@@ -431,8 +431,8 @@ stability in `trajectory` is within-prompt only. The final score also includes t
 cross-prompt check.
 
 - **Settled** means that the overall score moved by 2 points or less in each of the last
-  2 waves, and kept the same letter. With waves of 2 over 10 runs, the grade can settle
-  first at wave 3, at 6 runs per prompt.
+  2 waves, and kept the same letter. With waves of 2 over 10 runs, the grade cannot settle
+  before wave 3, at 6 runs per prompt.
 - **Not settled** at the end means that more runs will probably still move the grade.
   Say so, and suggest a re-run with more `--runs`.
 - **`--stop-when-settled`** starts no new wave after the grade settles. This flag saves

@@ -1,10 +1,10 @@
 # Subsystem mode: designing inside an established codebase
 
 In a new system, volatility is a judgement. In an existing system, volatility left tracks
-in the git history. Code that changes often shows where the volatility is. Code that
-changes together again and again shows where the current walls leak. This file tells you
-how to measure these signals and how to read them. The file also tells you how to attach a
-new subsystem, and not disturb the host.
+in the git history. Some code changes frequently. Other code changes together again and
+again. Together, these two signals show where the volatility is and where the current
+walls leak. This file tells you how to measure and read these signals, and how to attach a
+new subsystem and not disturb the host.
 
 ## Why history is good evidence
 
@@ -91,7 +91,7 @@ coupling is expected.
 |------|---------|
 | Two files in the same component | Usually cohesion. Correct. |
 | Code and its test | Expected. Correct. |
-| Two components, high degree | One volatility in the two components. Merge the two components, or give the shared volatility its own wall. |
+| Two components, high degree | One volatility in both components. Merge the two components, or give the shared volatility its own wall. |
 | The future area of the new subsystem, and a host hotspot | The subsystem will change together with that hotspot. Put an abstraction between the two. |
 
 **Hotspots** are files that change frequently and are also large. The hotspots show where
@@ -189,7 +189,7 @@ characterisation tests.
 
 ## Step 6 — Plan the migration
 
-Each step must leave the system releasable.
+Each step must keep the system releasable.
 
 **Branch by abstraction** (Hammant, and Fowler) replaces behaviour inside the host:
 
@@ -199,7 +199,7 @@ Each step must leave the system releasable.
 3. Build the new implementation behind the same abstraction. Move the callers to the new
    implementation one at a time, behind a flag. Where you can, compare the old and the
    new implementation side by side.
-4. Delete the old implementation. If the abstraction has no further use, delete the
+4. Delete the old implementation. If the abstraction has no more use, delete the
    abstraction too.
 
 **Strangler fig** (Fowler) grows a new system around an old system. Start with small

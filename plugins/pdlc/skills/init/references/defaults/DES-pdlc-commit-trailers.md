@@ -4,7 +4,7 @@ Status: agreed · Default: yes · Ask at init: no
 
 ## Rule
 
-Every commit made by pdlc ends with these lines, after a blank line:
+Each commit that pdlc makes ends with these lines, after a blank line:
 
 ```
 Intent: IN-0012
@@ -13,16 +13,18 @@ Req: CAP-email.R3
 Ticket: PROJ-88
 ```
 
-`Req` may list several IDs, separated by commas. Leave out `Ticket` if there is none.
+`Req` can list more than one ID, with commas between the IDs. If there is no ticket, omit
+`Ticket`.
 
-A commit that only changes files in `pdlc/` (starting a branch, logging progress, setting
-statuses) needs `Intent` and `Change`, but no `Req`. Every commit that changes anything
-else needs all three.
+A commit that changes only files in `pdlc/` needs `Intent` and `Change`, but not `Req`.
+Examples are a commit that starts a branch, logs progress, or sets statuses. Each commit
+that changes other files needs all three: `Intent`, `Change`, and `Req`.
 
-Keep all trailers in one final block where you can. If other trailers are added (for
-example `Co-Authored-By`), put them in the same block, after pdlc's, so git shows them as
-trailers. What matters for the trace is that the lines are in the message.
+Keep all trailers in one block at the end of the message, when possible. If the commit
+has other trailers (for example `Co-Authored-By`), put them in the same block, after the
+pdlc trailers. Then git shows them as trailers. For the trace, the important point is that
+the lines are in the message.
 
 ## Why
 
-These lines are how any line of code leads back to its requirement and intent.
+These lines connect each line of code to its requirement and its intent.

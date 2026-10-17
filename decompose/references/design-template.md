@@ -106,7 +106,7 @@ flowchart TB
 
 Key: light blue is a part that we build. Dark blue is storage. Grey is another system.
 Arrows are calls, labelled with the verbs that the calls use. The diagram does not show
-Utilities, because every part can call them.
+Utilities, because each part can call them.
 
 | Component | Type | Encapsulates | API (business verbs) | May call |
 |-----------|------|--------------|---------------------------|----------|

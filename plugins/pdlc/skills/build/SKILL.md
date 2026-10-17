@@ -2,50 +2,57 @@
 name: build
 description: >
   Builds one pdlc change whose checks are written and locked. The pdlc:builder agent
-  writes app code until the checks pass; it can't change the checks. Commits with trace
-  trailers and marks requirements built. Use when the user says "/pdlc:build", or a
-  change's tests are locked and reviewed.
+  writes app code until the checks pass. The agent cannot change the checks. The skill
+  commits with trace trailers, and marks the requirements as built. Use when the user says
+  "/pdlc:build", or when the tests of a change are locked and reviewed.
 ---
 
 # pdlc build
 
-Makes a change's locked checks pass, without touching them.
+This skill makes the locked checks of a change pass. The skill does not change the checks.
 
-Read `pdlc/README.md` first and follow it. Start with its "Before any work" step, then read
-the change's `handoff.md`.
+Read `pdlc/README.md` first. Obey the instructions in that file, and start with its
+"Before any work" step. Then read the `handoff.md` of the change.
 
-## 1. Pick the change
+## 1. Select the change
 
-Use the change the user named. Otherwise take the first change, in the intent's order,
-with status `building`. If its change spec has no `Tests-Locked:` line, stop and say
-`/pdlc:tests` comes first. Switch to its branch.
+If the user named a change, use that change. If not, use the first change with the status
+`building`, in the order that the intent gives. If the change spec has no `Tests-Locked:`
+line, tell the user that `/pdlc:tests` comes first. Then stop. Switch to the branch of the
+change.
 
-If the branch it is based on has new commits since this branch started (for example a
-fix after review), merge that branch in first, with the trailers `Intent` and `Change`.
+If the base branch has new commits since this branch started, merge the base branch into
+this branch first. For example, the base branch can have a correction after a review.
+Give the merge the trailers `Intent` and `Change`.
 
 ## 2. Build
 
-Start the `pdlc:builder` agent with the change spec's path. It changes only the app files
-listed under "Files", runs the checks, and reports back.
+Start the `pdlc:builder` agent with the path of the change spec. The builder changes only
+the app files under "Files". Then the builder runs the checks, and sends you a report.
 
-- If it says a check looks wrong, don't change the check. Send the reason to
-  `/pdlc:tests`, which asks the test writer and locks again. Then build again.
-- If it needs a file that isn't listed, ask the user. If they agree, add it to "Files"
-  and start the builder again.
+- If the builder says that a check looks incorrect, do not change the check. Send the
+  reason to `/pdlc:tests`. That skill asks the test writer, and then locks the checks
+  again. Then build again.
+- If the builder needs a file that "Files" does not list, ask the user. If the user
+  agrees, add the file to "Files". Then start the builder again.
 - If the same problem comes back twice, stop and ask the user.
 
-## 3. Check its work
+## 3. Examine the work of the builder
 
-Run all checks through the checks port. Every one must pass. Confirm with
-`git diff --name-only <Tests-Locked hash> -- <check files>` that no check changed.
+Run all checks through the checks port. Each check must pass. To make sure that no check
+changed, run `git diff --name-only <Tests-Locked hash> -- <check files>`.
 
 ## 4. Commit and finish
 
-1. Commit the app files with a message that says what changed, and the trailers `Intent`,
-   `Change`, `Req` (the requirements it serves) and `Ticket` if there is one.
-2. Tick the change's steps, add a line to its progress log, and set each requirement in the
-   change to `built` in its spec file. Remove any requirement marked `(retire)` from its
-   spec, along with code that only served it. (The test writer already removed its checks.)
-3. Write `handoff.md` for show: what was built, how to run it, anything surprising.
-4. Commit ("Built CH-xxxx", trailers `Intent` and `Change`).
-5. Tell the user `/pdlc:show` is next.
+1. Commit the app files. Write a message that tells what changed. Add the trailers
+   `Intent`, `Change`, and `Req` (the requirements that the commit is for). If there is a
+   ticket, also add the trailer `Ticket`.
+2. Tick the steps of the change, and add a line to the progress log of the change. In the
+   spec file of each requirement in the change, set the requirement to `built`. If a
+   requirement has the mark `(retire)`, remove the requirement from its spec. Also remove
+   the code that was only for that requirement. (The test writer removed the checks of
+   that requirement before this step.)
+3. Write `handoff.md` for the show stage. Give what you built, how to run it, and anything
+   that you did not expect.
+4. Commit with the message "Built CH-xxxx" and the trailers `Intent` and `Change`.
+5. Tell the user that `/pdlc:show` is the next step.

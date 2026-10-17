@@ -1,58 +1,72 @@
 ---
 name: dashboard
 description: >
-  Installs pdlc's optional live dashboard: the dashboard-builder agent, which keeps one
-  HTML page showing tasks, questions waiting for the user, deliverables and anything
-  stuck, plus a rule in the user's CLAUDE.md to use it for all work in progress. Only
-  installs after the user says yes. Use when the user says "/pdlc:dashboard", asks for a
-  live dashboard, or says yes to it during pdlc init.
+  Installs the optional live dashboard of pdlc. The dashboard has two parts. The first
+  part is the dashboard-builder agent, which keeps one HTML page with tasks, questions for
+  the user, deliverables, and anything that is stuck. The second part is a rule in the
+  CLAUDE.md of the user. The rule tells each session to use the dashboard for all work in
+  progress. Installs only after the user says yes. Use when the user says
+  "/pdlc:dashboard", asks for a live dashboard, or says yes to the dashboard during pdlc
+  init.
 ---
 
 # pdlc dashboard
 
-Installs the live dashboard for this user. It changes files in the user's home folder,
-outside the project, so always ask first.
+This skill installs the live dashboard for this user. The skill changes files in the home
+folder of the user, outside the project. Thus, always ask the user first.
 
-The files to install are in the `references/` folder next to this file.
+The files to install are in the `references/` folder, next to this file.
 
-## 1. Explain and ask
+## 1. Tell the user and ask
 
-Say this in your own words, briefly:
+Tell the user these facts in a short text, in your own words:
 
-- A helper agent keeps one web page, `.dashboard/index.html`, showing tasks and their
-  status, questions waiting for you with the default action, the latest deliverables, and
-  anything stuck. It refreshes itself every 10 seconds; open it with a double-click.
-- The helper can only touch `.dashboard/` and its own memory. A guard script enforces this.
-- A rule is added to your `~/.claude/CLAUDE.md` so every session uses it for work in
-  progress, and keeps going with the default when it needs your decision.
+- A helper agent keeps one web page, `.dashboard/index.html`. The page shows the tasks and
+  their status, the questions for you with the default action, the latest deliverables,
+  and anything that is stuck. The page refreshes itself every 10 seconds. To open the
+  page, double-click it.
+- The helper can only use `.dashboard/` and its own memory. A guard script makes sure that
+  the helper obeys this limit.
+- The skill adds a rule to your `~/.claude/CLAUDE.md`. With the rule, each session uses
+  the dashboard for work in progress. When a session needs your decision, the session
+  continues with the default.
 
-Ask: "Install the live dashboard?" The default is **no**. Even when run with `defaults`,
-don't install without a clear yes, because this changes files outside the project.
+Ask: "Install the live dashboard?" The default is **no**. Do not install without a clear
+yes, also when the skill runs with `defaults`. The install changes files outside the
+project.
 
 ## 2. Install
 
-Only after a yes:
+Do these steps only after the user says yes:
 
-1. Create `~/.claude/agents/` if it doesn't exist.
-2. Copy `references/dashboard-builder.md` and `references/dashboard-builder-guard.py`
-   there. If either file already exists and is different, show the difference and ask
-   before replacing it.
-3. Add `references/claude-md-rule.md` to the end of `~/.claude/CLAUDE.md`, after a blank
-   line. Create the file if it doesn't exist. If it already has a "## Live dashboard"
-   section, leave it alone and say so.
-4. If this project is a git repository, add `.dashboard/` to `.git/info/exclude` so the
-   dashboard never gets committed.
+1. If there is no `~/.claude/agents/` folder, make that folder.
+2. Copy `references/dashboard-builder.md` and `references/dashboard-builder-guard.py` to
+   `~/.claude/agents/`. If one of the files is there and is different, show the
+   difference. Then ask the user before you replace that file.
+3. If there is no `~/.claude/CLAUDE.md`, make that file. If `~/.claude/CLAUDE.md` has a
+   "## Live dashboard" section, do not change the file. Tell the user that the section is
+   there. If the file has no such section, add `references/claude-md-rule.md` to the end
+   of `~/.claude/CLAUDE.md`, after a blank line.
+4. If this project is a git repository, add `.dashboard/` to `.git/info/exclude`. Then
+   the dashboard does not go into a commit.
 
 ## 3. Finish
 
-- Say what was installed, and where.
-- Say the rule takes effect in the next session, and that the first time, the helper will
-  ask what style they like: dark or light, dense or airy, and one accent color.
-- Say that if a design skill in the agent's `skills:` list isn't installed on this
-  machine, they can remove it from `~/.claude/agents/dashboard-builder.md`.
+- Tell the user what you installed, and where.
+- Tell the user that the rule starts to work in the next session. Also tell the user that
+  the helper asks for their style the first time: dark or light, dense or airy, and one
+  accent colour.
+- Tell the user that they can remove a design skill from the `skills:` list in
+  `~/.claude/agents/dashboard-builder.md`. They can do this when that skill is not
+  installed on this machine.
 
-## To remove it
+## To remove the dashboard
 
-Delete `~/.claude/agents/dashboard-builder.md` and `dashboard-builder-guard.py`, and the
-"## Live dashboard" section from `~/.claude/CLAUDE.md`. Its saved style is in
+Delete these items:
+
+- `~/.claude/agents/dashboard-builder.md`.
+- `dashboard-builder-guard.py`, in the same folder.
+- The "## Live dashboard" section in `~/.claude/CLAUDE.md`.
+
+The dashboard-builder agent keeps its saved style in
 `~/.claude/agent-memory/dashboard-builder/`.

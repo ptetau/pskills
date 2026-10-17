@@ -4,16 +4,16 @@ Status: agreed · Default: yes · Ask at init: no
 
 ## Rule
 
-Every change gets independent reviews, one per remit, each by a fresh reviewer that sees
-only its packet:
+Each change gets independent reviews, one for each remit. A fresh reviewer does each
+review, and sees only its packet:
 
-- **tests**: the spec and the checks, never the code;
-- **specification, security, quality, compliance, privacy**: the spec and the code, never
+- **tests**: the spec and the checks, not the code.
+- **specification, security, quality, compliance, privacy**: the spec and the code, not
   the checks.
 
-What each remit judges is in `pdlc/reviews/`. Which remits run is in `pdlc/config.md`. A
-change passes review only when every remit passes.
+The files in `pdlc/reviews/` tell what each remit judges. `pdlc/config.md` tells which
+remits run. A change passes review only when each remit passes.
 
 ## Why
 
-Reviewers who see only what they judge can't be swayed by how the work was done.
+How the work was done cannot influence a reviewer who sees only what the reviewer judges.
