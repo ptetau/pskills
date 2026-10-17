@@ -385,26 +385,32 @@ PROBES = [
 
 
 def run_probes(project):
-    """Run the intent's acceptance probes against the code in `project` as it is checked out."""
+    """Run the intent's acceptance probes against the code in `project` as it is checked out.
+
+    The intent shows the option before the file (`--top N FILE`), so that form must work. The
+    option after the file is not in the intent. It is counted apart, for information.
+    """
     sample = Path(project) / ".bench-sample.txt"
     sample.write_text(SAMPLE)
-    passed, failed = 0, []
+
+    def good(ordering, code, out, err):
+        try:
+            proc = subprocess.run([sys.executable, "-m", "wordfreq", *ordering], cwd=project,
+                                  capture_output=True, text=True, timeout=20)
+        except subprocess.TimeoutExpired:
+            return False
+        return proc.returncode == code and proc.stdout == out and (err is None or proc.stderr == err)
+
+    passed, failed, trailing_failed = 0, [], []
     for name, args, code, out, err in PROBES:
-        for ordering in ([args + [str(sample)], [str(sample)] + args] if args else [[str(sample)]]):
-            try:
-                proc = subprocess.run([sys.executable, "-m", "wordfreq", *ordering], cwd=project,
-                                      capture_output=True, text=True, timeout=20)
-            except subprocess.TimeoutExpired:
-                failed.append(name + " (timeout)")
-                break
-            good = proc.returncode == code and proc.stdout == out and (err is None or proc.stderr == err)
-            if not good:
-                failed.append(name)
-                break
-        else:
+        if good(args + [str(sample)], code, out, err):
             passed += 1
+        else:
+            failed.append(name)
+        if args and not good([str(sample)] + args, code, out, err):
+            trailing_failed.append(name)
     sample.unlink()
-    return {"passed": passed, "total": len(PROBES), "failed": failed}
+    return {"passed": passed, "total": len(PROBES), "failed": failed, "option_after_file_failed": trailing_failed}
 
 
 def run_unit_checks(project):
@@ -432,6 +438,10 @@ def inspect_project(project):
         merge = subprocess.run([sys.executable, "pdlc/bin/check_merge.py"], cwd=project, capture_output=True, text=True, timeout=120)
         out.setdefault("merge_check", {})[branch] = (merge.stdout + merge.stderr).strip().splitlines()[:3]
     out["change_status"] = status
+    subjects = git(project, "log", "--all", "--format=%s").stdout.splitlines()
+    out["stops"] = [x for x in subjects if x.startswith("Stop ")]
+    out["verify_rounds"] = len([x for x in subjects if x.startswith("Verify CH-")])
+    out["proposed"] = any(x.startswith("Propose CH-") for x in subjects)
     tip = max((b for b in branches if b != "main"), key=lambda b: git(project, "log", "-1", "--format=%ct", b).stdout.strip() or "0", default="main")
     git(project, "checkout", "-q", tip)
     out["tip"] = tip
@@ -494,6 +504,31 @@ def noise(values):
     return (max(values) - min(values)) / mean if mean else 0.0
 
 
+def completed(run):
+    """A run is complete when pdlc proposed the change and the merge check passes on its branch."""
+    checks = run["outcome"].get("merge_check") or {}
+    return bool(checks) and all(lines and lines[0].startswith("ok") for lines in checks.values())
+
+
+def permutation_p(base, cand):
+    """The chance that a candidate this much cheaper arises when the edit changes nothing.
+
+    One-sided, exact: it tries every way to split the runs into a baseline and a candidate.
+    """
+    from itertools import combinations
+
+    pooled = list(base) + list(cand)
+    seen = statistics.mean(base) - statistics.mean(cand)
+    total = better = 0
+    for chosen in combinations(range(len(pooled)), len(cand)):
+        picked = [pooled[i] for i in chosen]
+        rest = [pooled[i] for i in range(len(pooled)) if i not in chosen]
+        total += 1
+        if statistics.mean(rest) - statistics.mean(picked) >= seen - 1e-12:
+            better += 1
+    return better / total
+
+
 def summarise(result):
     """Reduce a result file to the numbers that the gate reads."""
     runs = result["runs"]
@@ -504,6 +539,9 @@ def summarise(result):
         "cost_usd": statistics.mean(costs),
         "duration_s": statistics.mean(durations),
         "noise": noise(costs),
+        "costs": costs,
+        "completed": sum(1 for r in runs if completed(r)),
+        "rounds": [r["outcome"].get("verify_rounds") for r in runs],
         "probes_all": all(r["outcome"]["probes"]["passed"] == r["outcome"]["probes"]["total"] for r in runs),
         "units_ok": all(r["outcome"]["unit"]["ok"] for r in runs),
         "seeds_caught": result.get("seeds", {}).get("caught"),
@@ -529,8 +567,12 @@ def agent_stats(result, label):
             "calls_per_run": calls / len(result["runs"]) if result["runs"] else 0.0}
 
 
-def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None):
+def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha=0.10, min_runs=5):
     """Decide if an edit stays. Effectiveness must not fall. Cost must fall by more than the noise.
+
+    Without a target, the gate asks if the candidate runs cost clearly less than the baseline runs.
+    It uses an exact permutation test, so that the spread between identical runs sets how much
+    evidence it needs.
 
     A whole run varies a lot between identical runs, because the number of review rounds varies.
     For an edit that aims at one agent, `target` names the agent. The gate then judges the cost
@@ -540,6 +582,9 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None):
     base, cand = summarise(baseline), summarise(candidate)
     reasons = []
     worse = []
+    if base["completed"] == base["runs"] and cand["completed"] < cand["runs"]:
+        worse.append("pdlc did not finish in %d of %d runs, and it finished in every baseline run"
+                     % (cand["runs"] - cand["completed"], cand["runs"]))
     if base["probes_all"] and not cand["probes_all"]:
         worse.append("acceptance probes fail")
     if base["units_ok"] and not cand["units_ok"]:
@@ -557,6 +602,7 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None):
     if slower > speed_limit:
         worse.append("%.0f%% slower, limit is %.0f%%" % ((slower - 1) * 100, (speed_limit - 1) * 100))
     detail = {}
+    p_value = None
     if target:
         before, after = agent_stats(baseline, target), agent_stats(candidate, target)
         change = (after["per_call"] - before["per_call"]) / before["per_call"] if before["per_call"] else 0.0
@@ -571,12 +617,22 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None):
         none_text = "each %s call changed %+.0f%%, and a %.0f%% fall was needed" % (target, change * 100, needed * 100)
     else:
         change = run_change
-        needed = max(min_gain, base["noise"], cand["noise"])
-        gain_text = "cost fell %.0f%%, more than the %.0f%% needed" % (-change * 100, needed * 100)
-        none_text = "cost changed %+.0f%%, and a %.0f%% fall was needed" % (change * 100, needed * 100)
+        needed = min_gain
+        few = min(len(base["costs"]), len(cand["costs"])) < min_runs
+        chance = permutation_p(base["costs"], cand["costs"])
+        p_value = chance
+        if chance > alpha:
+            change = 0.0
+        gain_text = "cost fell %.0f%%, and the chance that this is luck is %.0f%%" % (-run_change * 100, chance * 100)
+        none_text = "cost changed %+.0f%%, and the chance that this is luck is %.0f%% (it must be %.0f%% or less)" % (
+            run_change * 100, chance * 100, alpha * 100)
     if worse:
         verdict = "REGRESSION -> revert"
         reasons = worse
+    elif not target and few and change <= -needed:
+        verdict = "NEED MORE RUNS -> do not keep yet"
+        reasons = ["the fall looks like %.0f%%, but %d runs are too few. Run at least %d on each side. Four runs that looked 25%% cheaper came back at +10%% with six more." % (
+            -run_change * 100, min(len(base["costs"]), len(cand["costs"])), min_runs)]
     elif change <= -needed:
         verdict = "SAME OR BETTER -> keep"
         reasons = [gain_text]
@@ -584,27 +640,46 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None):
         verdict = "NO GAIN -> revert"
         reasons = [none_text]
     return {"verdict": verdict, "reasons": reasons, "baseline": base, "candidate": cand, "cost_change": run_change,
-            "target": detail}
+            "target": detail, "p": p_value}
 
 
 def command_gate(args):
     result = gate(json.loads(Path(args.baseline).read_text()), json.loads(Path(args.candidate).read_text()),
-                  args.min_gain, args.speed_limit, args.target)
+                  args.min_gain, args.speed_limit, args.target, min_runs=args.min_runs)
     base, cand = result["baseline"], result["candidate"]
     print("baseline   cost $%.2f  time %4.0fs  runs %d  noise %2.0f%%" % (base["cost_usd"], base["duration_s"], base["runs"], base["noise"] * 100))
     print("candidate  cost $%.2f  time %4.0fs  runs %d  noise %2.0f%%" % (cand["cost_usd"], cand["duration_s"], cand["runs"], cand["noise"] * 100))
+    print("finished   %d of %d vs %d of %d runs   verify rounds %s vs %s" % (
+        base["completed"], base["runs"], cand["completed"], cand["runs"], base["rounds"], cand["rounds"]))
     print("probes     %s vs %s" % (base["probes_all"], cand["probes_all"]))
     detail = result["target"]
     if detail:
         print("%s  each call $%.3f -> $%.3f, %.1f calls a run, so about $%.2f (%.0f%%) less in a run" % (
             detail["target"], detail["per_call_before"], detail["per_call_after"], detail["calls_per_run"],
             detail["expected_run_saving"], detail["expected_run_saving_share"] * 100))
-    if base["seeds_caught"] is not None:
-        print("defects    %d vs %d caught" % (len(base["seeds_caught"]), len(cand["seeds_caught"] or [])))
+    if base["seeds_caught"] is not None and cand["seeds_caught"] is not None:
+        print("defects    %d vs %d caught" % (len(base["seeds_caught"]), len(cand["seeds_caught"])))
+    elif base["seeds_caught"] is not None:
+        print("defects    not measured for the candidate")
     print("verdict    " + result["verdict"])
     for reason in result["reasons"]:
         print("           " + reason)
-    return 0 if result["verdict"].startswith("SAME") else 1
+    return 0 if result["verdict"].startswith("SAME") else 1  # NEED MORE RUNS also exits 1
+
+
+def command_recheck(args):
+    """Read the outcome of each run again from its project folder, with the current checks."""
+    folder = Path(args.folder)
+    summary = json.loads((folder / "e2e.json").read_text())
+    for number, run in enumerate(summary["runs"], 1):
+        project = Path(run["project"])
+        if not project.exists():
+            print("run %d: the project folder is gone, so the outcome stays as it was" % number)
+            continue
+        run["outcome"] = inspect_project(project)
+        (folder / ("run%d.json" % number)).write_text(json.dumps(run, indent=1))
+    (folder / "e2e.json").write_text(json.dumps(summary, indent=1))
+    print("checked %d runs again" % len(summary["runs"]))
 
 
 def command_reanalyse(args):
@@ -800,6 +875,8 @@ def main(argv=None):
     sd.add_argument("--label", required=True)
     sd.add_argument("--timeout", type=int, default=900)
     sd.add_argument("--out", default=str(HERE / "results"))
+    k = sub.add_parser("recheck")
+    k.add_argument("folder")
     a = sub.add_parser("reanalyse")
     a.add_argument("folder")
     r = sub.add_parser("report")
@@ -814,6 +891,7 @@ def main(argv=None):
     g.add_argument("candidate")
     g.add_argument("--min-gain", type=float, default=0.05)
     g.add_argument("--speed-limit", type=float, default=1.5)
+    g.add_argument("--min-runs", type=int, default=5, help="runs needed on each side to keep an edit by whole-run cost")
     g.add_argument("--target", help="an agent that the edit aims at, for example pdlc:reviewer")
     args = parser.parse_args(argv)
     if args.command == "e2e":
@@ -824,6 +902,9 @@ def main(argv=None):
         return 0
     if args.command == "seeds":
         command_seeds(args)
+        return 0
+    if args.command == "recheck":
+        command_recheck(args)
         return 0
     if args.command == "reanalyse":
         command_reanalyse(args)

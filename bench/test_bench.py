@@ -109,12 +109,36 @@ def result(costs, probes=True, units=True, seeds=None, wall=100.0):
 
 class GateTest(unittest.TestCase):
     def test_a_clear_saving_with_the_same_results_is_kept(self):
-        verdict = run_bench.gate(result([2.0, 2.1]), result([1.2, 1.3]))
+        verdict = run_bench.gate(result([2.0, 2.1, 2.2, 2.0, 2.1]), result([1.2, 1.3, 1.1, 1.2, 1.3]))
         self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+        self.assertLess(verdict["p"], 0.01)
+
+    def test_a_saving_in_few_runs_is_not_kept_yet(self):
+        verdict = run_bench.gate(result([2.0, 2.1, 2.2]), result([1.2, 1.3, 1.1]))
+        self.assertTrue(verdict["verdict"].startswith("NEED MORE RUNS"))
+        self.assertAlmostEqual(verdict["p"], 0.05)
 
     def test_a_saving_inside_the_noise_is_no_gain(self):
-        verdict = run_bench.gate(result([2.0, 2.6]), result([2.1, 2.2]))
+        verdict = run_bench.gate(result([2.0, 2.6, 1.8, 2.2, 2.0]), result([2.1, 2.2, 1.9, 2.4, 2.0]))
         self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
+
+    def test_two_runs_each_are_too_few_to_show_a_saving(self):
+        verdict = run_bench.gate(result([2.0, 2.1]), result([1.2, 1.3]))
+        self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
+
+    def test_the_chance_of_luck_is_exact(self):
+        self.assertAlmostEqual(run_bench.permutation_p([3, 3, 3], [1, 1, 1]), 1 / 20)
+        self.assertGreater(run_bench.permutation_p([1, 2, 3], [1, 2, 3]), 0.5)
+
+    def test_a_run_that_did_not_finish_is_a_regression_even_when_cheaper(self):
+        def finished(costs, ok):
+            data = result(costs)
+            for run in data["runs"]:
+                run["outcome"]["merge_check"] = {"pdlc/CH-0001": ["ok   CH-0001" if ok else "FAIL CH-0001"]}
+            return data
+        verdict = run_bench.gate(finished([2.0, 2.1, 2.2], True), finished([1.0, 1.1, 1.2], False))
+        self.assertTrue(verdict["verdict"].startswith("REGRESSION"))
+        self.assertIn("did not finish", verdict["reasons"][0])
 
     def test_a_failed_probe_is_a_regression_even_when_cost_falls(self):
         verdict = run_bench.gate(result([2.0]), result([1.0], probes=False))
@@ -192,6 +216,14 @@ class ProbeTest(unittest.TestCase):
         (app / "wordfreq" / "cli.py").write_text(REFERENCE_CLI)
         outcome = run_bench.run_probes(app)
         self.assertEqual(outcome["failed"], [])
+
+    def test_an_option_that_only_works_before_the_file_still_passes(self):
+        app = self.copy_fixture()
+        source = REFERENCE_CLI.replace('        at = args.index("--top")\n', '        at = args.index("--top")\n        if at != 0:\n            print("usage: wordfreq [--top N] FILE", file=stderr)\n            return 2\n')
+        (app / "wordfreq" / "cli.py").write_text(source)
+        outcome = run_bench.run_probes(app)
+        self.assertEqual(outcome["failed"], [])
+        self.assertEqual(len(outcome["option_after_file_failed"]), 7)
 
     def test_the_project_checks_pass_on_the_fixture(self):
         self.assertTrue(run_bench.run_unit_checks(self.copy_fixture())["ok"])

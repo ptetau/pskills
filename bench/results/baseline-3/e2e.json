@@ -208,6 +208,9 @@
       "pdlc/CH-0001-top-option": "?"
      }
     },
+    "stops": [],
+    "verify_rounds": 1,
+    "proposed": true,
     "tip": "pdlc/CH-0001-top-option",
     "unit": {
      "ok": true,
@@ -216,7 +219,8 @@
     "probes": {
      "passed": 8,
      "total": 8,
-     "failed": []
+     "failed": [],
+     "option_after_file_failed": []
     }
    },
    "stderr": "",
