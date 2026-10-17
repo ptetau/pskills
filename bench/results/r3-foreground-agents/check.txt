@@ -1,0 +1,8 @@
+edits apply: 6
+writing check skills/build/SKILL.md: 0 findings before, 0 after
+writing check skills/init/references/templates/README.md: 2 findings before, 2 after
+writing check skills/intake/SKILL.md: 1 findings before, 1 after
+writing check skills/tests/SKILL.md: 0 findings before, 0 after
+writing check skills/verify/SKILL.md: 1 findings before, 1 after
+plugin tests: OK
+  OK (skipped=10)

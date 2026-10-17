@@ -1,0 +1,41 @@
+{
+ "id": "r3-foreground-agents",
+ "hypothesis": "When each skill names `run_in_background: false`, the main session stops polling for agents, so the waiting turns and their cache reads disappear.",
+ "lever": "more in parallel (agents in the foreground, so the main session does not poll)",
+ "edits": [
+  {
+   "file": "skills/init/references/templates/README.md",
+   "find": "- Run it in the foreground, and wait for its reply. Start agents that work side by side\n  (the reviewers) together, in one message. Do not stop an agent because it is slow.\n",
+   "replace": "- Start it with the Agent tool, with `run_in_background: false`. Then the tool call\n  returns the reply of the agent. Do not wait for an agent with a sleep, a loop, a\n  monitor, or a notification. Start agents that work side by side (the reviewers) in one\n  message, each with `run_in_background: false`. Do not stop an agent because it is slow.\n"
+  },
+  {
+   "file": "skills/tests/SKILL.md",
+   "find": "Start the `pdlc:test-writer` agent. Give the agent the absolute path of the change spec\nand nothing else. The agent writes the checks that the change spec lists under \"Check\nfiles\".\n",
+   "replace": "Start the `pdlc:test-writer` agent with `run_in_background: false`. Give the agent the\nabsolute path of the change spec and nothing else. The agent writes the checks that the\nchange spec lists under \"Check files\".\n"
+  },
+  {
+   "file": "skills/tests/SKILL.md",
+   "find": "2. Start a fresh `pdlc:reviewer` agent. Give the agent the path of\n   `pdlc/changes/CH-xxxx-…/review/tests/packet.md` and nothing else.",
+   "replace": "2. Start a fresh `pdlc:reviewer` agent with `run_in_background: false`. Give the agent the\n   path of `pdlc/changes/CH-xxxx-…/review/tests/packet.md` and nothing else."
+  },
+  {
+   "file": "skills/build/SKILL.md",
+   "find": "Start the `pdlc:builder` agent with the absolute path of the change spec. The builder\nchanges only the app files under \"Files\". Then the builder runs the checks, and sends you a\nreport.",
+   "replace": "Start the `pdlc:builder` agent with `run_in_background: false`. Give the builder the\nabsolute path of the change spec. The builder changes only the app files under \"Files\".\nThen the builder runs the checks, and sends you a report."
+  },
+  {
+   "file": "skills/verify/SKILL.md",
+   "find": "3. Start one fresh `pdlc:reviewer` agent for each remit, all at the same time. Give each\n   reviewer only the path of its own packet. Do not tell a reviewer what a different\n   reviewer found.\n4. Wait for all the reviewers. Each reviewer writes `review/<remit>/result.md`.",
+   "replace": "3. Start one fresh `pdlc:reviewer` agent for each remit, all in one message, each with\n   `run_in_background: false`. Give each reviewer only the path of its own packet. Do not\n   tell a reviewer what a different reviewer found.\n4. The tool calls return when all the reviewers are done. Each reviewer writes\n   `review/<remit>/result.md`."
+  },
+  {
+   "file": "skills/intake/SKILL.md",
+   "find": "If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent. Ask\nrecon for a **deep look** at the code map of that spec. Write the requirements from recon\ninto the spec. These requirements come back as `built`, with `Source: recon`. Set the\nspec to `Status: active`.\n",
+   "replace": "If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent with\n`run_in_background: false`. Ask recon for a **deep look** at the code map of that spec.\nWrite the requirements from recon into the spec. These requirements come back as `built`,\nwith `Source: recon`. Set the spec to `Status: active`.\n"
+  }
+ ],
+ "runs": 6,
+ "seeds": false,
+ "target": "waiting",
+ "baseline": "bench/baseline.json"
+}

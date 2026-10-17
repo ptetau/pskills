@@ -1,0 +1,96 @@
+diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/build/SKILL.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/build/SKILL.md
+--- /home/user/pskills/plugins/pdlc/skills/build/SKILL.md	2026-10-17 08:26:05.380694656 +0000
++++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/build/SKILL.md	2026-10-17 22:49:20.293543077 +0000
+@@ -27,9 +27,9 @@
+ 
+ ## 2. Build
+ 
+-Start the `pdlc:builder` agent with the absolute path of the change spec. The builder
+-changes only the app files under "Files". Then the builder runs the checks, and sends you a
+-report.
++Start the `pdlc:builder` agent with `run_in_background: false`. Give the builder the
++absolute path of the change spec. The builder changes only the app files under "Files".
++Then the builder runs the checks, and sends you a report.
+ 
+ - If the builder says that a check looks incorrect, do not change the check. Send the
+   reason to `/pdlc:tests`. That skill asks the test writer, and then locks the checks
+diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/init/references/templates/README.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/init/references/templates/README.md
+--- /home/user/pskills/plugins/pdlc/skills/init/references/templates/README.md	2026-10-17 08:26:05.388694656 +0000
++++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/init/references/templates/README.md	2026-10-17 22:49:20.292503376 +0000
+@@ -87,8 +87,10 @@
+ Starting an agent:
+ 
+ - Give it absolute paths: the project root, and the full path of each file it needs.
+-- Run it in the foreground, and wait for its reply. Start agents that work side by side
+-  (the reviewers) together, in one message. Do not stop an agent because it is slow.
++- Start it with the Agent tool, with `run_in_background: false`. Then the tool call
++  returns the reply of the agent. Do not wait for an agent with a sleep, a loop, a
++  monitor, or a notification. Start agents that work side by side (the reviewers) in one
++  message, each with `run_in_background: false`. Do not stop an agent because it is slow.
+ - If the guard or a tool blocks an agent, fix the path. Then run the agent once more from
+   the project root. If the agent fails again, that counts as one failure of its stage. A
+   blocked agent is not a reason to stop.
+diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/intake/SKILL.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/intake/SKILL.md
+--- /home/user/pskills/plugins/pdlc/skills/intake/SKILL.md	2026-10-17 08:26:05.392694656 +0000
++++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/intake/SKILL.md	2026-10-17 22:49:20.293813671 +0000
+@@ -59,10 +59,10 @@
+ 
+ ## 3. Deepen stub specs
+ 
+-If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent. Ask
+-recon for a **deep look** at the code map of that spec. Write the requirements from recon
+-into the spec. These requirements come back as `built`, with `Source: recon`. Set the
+-spec to `Status: active`.
++If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent with
++`run_in_background: false`. Ask recon for a **deep look** at the code map of that spec.
++Write the requirements from recon into the spec. These requirements come back as `built`,
++with `Source: recon`. Set the spec to `Status: active`.
+ 
+ ## 4. Write the patches
+ 
+diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/tests/SKILL.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/tests/SKILL.md
+--- /home/user/pskills/plugins/pdlc/skills/tests/SKILL.md	2026-10-17 08:26:05.392694656 +0000
++++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/tests/SKILL.md	2026-10-17 22:49:20.293236294 +0000
+@@ -49,9 +49,9 @@
+ 
+ ## 2. Write the checks
+ 
+-Start the `pdlc:test-writer` agent. Give the agent the absolute path of the change spec
+-and nothing else. The agent writes the checks that the change spec lists under "Check
+-files".
++Start the `pdlc:test-writer` agent with `run_in_background: false`. Give the agent the
++absolute path of the change spec and nothing else. The agent writes the checks that the
++change spec lists under "Check files".
+ 
+ The test writer cannot delete files. If the test writer says that a check file served
+ only a `(retire)` requirement, delete that file yourself. Use `git rm` before the lock.
+@@ -94,8 +94,8 @@
+ merge check refuses a tests review of an older lock.
+ 
+ 1. Run `python3 pdlc/bin/make_packets.py CH-xxxx tests`.
+-2. Start a fresh `pdlc:reviewer` agent. Give the agent the path of
+-   `pdlc/changes/CH-xxxx-…/review/tests/packet.md` and nothing else.
++2. Start a fresh `pdlc:reviewer` agent with `run_in_background: false`. Give the agent the
++   path of `pdlc/changes/CH-xxxx-…/review/tests/packet.md` and nothing else.
+ 3. Commit the packet and the result with the message "Review tests CH-xxxx" and the
+    trailers `Intent` and `Change`. If the `result.md` of the reviewer says fail, send the
+    problems to the test writer. Then do red, lock, and review again. If the review fails a
+diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/verify/SKILL.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/verify/SKILL.md
+--- /home/user/pskills/plugins/pdlc/skills/verify/SKILL.md	2026-10-17 12:43:39.525073912 +0000
++++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/verify/SKILL.md	2026-10-17 22:49:20.293692674 +0000
+@@ -38,10 +38,11 @@
+ 1. Get the remits from "Reviews" in `pdlc/config.md`. Do not include `tests`, because the
+    tests stage already reviewed the checks, and its result stays.
+ 2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`.
+-3. Start one fresh `pdlc:reviewer` agent for each remit, all at the same time. Give each
+-   reviewer only the path of its own packet. Do not tell a reviewer what a different
+-   reviewer found.
+-4. Wait for all the reviewers. Each reviewer writes `review/<remit>/result.md`.
++3. Start one fresh `pdlc:reviewer` agent for each remit, all in one message, each with
++   `run_in_background: false`. Give each reviewer only the path of its own packet. Do not
++   tell a reviewer what a different reviewer found.
++4. The tool calls return when all the reviewers are done. Each reviewer writes
++   `review/<remit>/result.md`.
+ 
+ ## 4. New behaviour
+ 

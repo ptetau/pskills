@@ -1,0 +1,33 @@
+{
+ "id": "r3-lean-packets",
+ "hypothesis": "When the writing rules (DES-writing-style, 3.5k tokens) go only to the specification remit, each other reviewer call costs less, and the reviewers still catch every planted defect.",
+ "lever": "context pack (a smaller packet for the reviewers that do not judge writing)",
+ "edits": [
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "    - every spec it relies on;\n",
+   "replace": "    - every spec it relies on. DES-writing-style goes only to the specification remit,\n      because only that remit judges writing;\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "    spec.append(\"## Specs it relies on\\n\")\n    for spec_id in dict.fromkeys(relies):\n        path = spec_file(root, spec_id)\n        spec.append(\"### %s\\n\\n%s\\n\" % (spec_id, fence(path.read_text()) if path.exists() else \"(not found)\"))\n    spec = \"\\n\".join(spec)\n",
+   "replace": "    spec.append(\"## Specs it relies on\\n\")\n    relied = []\n    for spec_id in dict.fromkeys(relies):\n        path = spec_file(root, spec_id)\n        relied.append((spec_id, \"### %s\\n\\n%s\\n\" % (spec_id, fence(path.read_text()) if path.exists() else \"(not found)\")))\n    # The writing rules go only to the remit that judges writing. The other remits judge code or checks.\n    spec_for = {}\n    for kind in (\"specification\", \"other\"):\n        parts = [text for spec_id, text in relied if kind == \"specification\" or spec_id != \"DES-writing-style\"]\n        spec_for[kind] = \"\\n\".join(spec + parts)\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "               remit_text.strip() + \"\\n\", spec]\n",
+   "replace": "               remit_text.strip() + \"\\n\", spec_for[\"specification\" if remit == \"specification\" else \"other\"]]\n"
+  },
+  {
+   "file": "tests/test_make_packets.py",
+   "find": "            self.assertNotIn(\"Not this one.\", text)\n            self.assertIn(\"Write plainly.\", text)\n",
+   "replace": "            self.assertNotIn(\"Not this one.\", text)\n\n    def test_only_the_specification_packet_has_the_writing_rules(self):\n        make_packets.main([\"x\", \"CH-0001\"], root=self.root)\n        self.assertIn(\"Write plainly.\", self.packet(\"specification\"))\n        self.assertNotIn(\"Write plainly.\", self.packet(\"tests\"))\n        self.assertNotIn(\"Write plainly.\", self.packet(\"security\"))\n"
+  }
+ ],
+ "runs": 6,
+ "seeds": true,
+ "target": "pdlc:reviewer",
+ "baseline": "bench/baseline.json",
+ "gate": {},
+ "budget_usd_per_run": 8
+}
