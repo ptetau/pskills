@@ -180,6 +180,9 @@
       "pdlc/CH-0001-top-option": "?"
      }
     },
+    "stops": [],
+    "verify_rounds": 2,
+    "proposed": true,
     "tip": "pdlc/CH-0001-top-option",
     "unit": {
      "ok": true,
@@ -398,6 +401,9 @@
       "pdlc/CH-0001-top-option": "?"
      }
     },
+    "stops": [],
+    "verify_rounds": 2,
+    "proposed": true,
     "tip": "pdlc/CH-0001-top-option",
     "unit": {
      "ok": true,
@@ -620,6 +626,9 @@
       "pdlc/CH-0001-top-option": "?"
      }
     },
+    "stops": [],
+    "verify_rounds": 1,
+    "proposed": true,
     "tip": "pdlc/CH-0001-top-option",
     "unit": {
      "ok": true,
