@@ -191,7 +191,8 @@
     "probes": {
      "passed": 8,
      "total": 8,
-     "failed": []
+     "failed": [],
+     "option_after_file_failed": []
     }
    },
    "stderr": "",

@@ -385,26 +385,32 @@ PROBES = [
 
 
 def run_probes(project):
-    """Run the intent's acceptance probes against the code in `project` as it is checked out."""
+    """Run the intent's acceptance probes against the code in `project` as it is checked out.
+
+    The intent shows the option before the file (`--top N FILE`), so that form must work. The
+    option after the file is not in the intent. It is counted apart, for information.
+    """
     sample = Path(project) / ".bench-sample.txt"
     sample.write_text(SAMPLE)
-    passed, failed = 0, []
+
+    def good(ordering, code, out, err):
+        try:
+            proc = subprocess.run([sys.executable, "-m", "wordfreq", *ordering], cwd=project,
+                                  capture_output=True, text=True, timeout=20)
+        except subprocess.TimeoutExpired:
+            return False
+        return proc.returncode == code and proc.stdout == out and (err is None or proc.stderr == err)
+
+    passed, failed, trailing_failed = 0, [], []
     for name, args, code, out, err in PROBES:
-        for ordering in ([args + [str(sample)], [str(sample)] + args] if args else [[str(sample)]]):
-            try:
-                proc = subprocess.run([sys.executable, "-m", "wordfreq", *ordering], cwd=project,
-                                      capture_output=True, text=True, timeout=20)
-            except subprocess.TimeoutExpired:
-                failed.append(name + " (timeout)")
-                break
-            good = proc.returncode == code and proc.stdout == out and (err is None or proc.stderr == err)
-            if not good:
-                failed.append(name)
-                break
-        else:
+        if good(args + [str(sample)], code, out, err):
             passed += 1
+        else:
+            failed.append(name)
+        if args and not good([str(sample)] + args, code, out, err):
+            trailing_failed.append(name)
     sample.unlink()
-    return {"passed": passed, "total": len(PROBES), "failed": failed}
+    return {"passed": passed, "total": len(PROBES), "failed": failed, "option_after_file_failed": trailing_failed}
 
 
 def run_unit_checks(project):

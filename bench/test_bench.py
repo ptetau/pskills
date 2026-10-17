@@ -212,6 +212,14 @@ class ProbeTest(unittest.TestCase):
         outcome = run_bench.run_probes(app)
         self.assertEqual(outcome["failed"], [])
 
+    def test_an_option_that_only_works_before_the_file_still_passes(self):
+        app = self.copy_fixture()
+        source = REFERENCE_CLI.replace('        at = args.index("--top")\n', '        at = args.index("--top")\n        if at != 0:\n            print("usage: wordfreq [--top N] FILE", file=stderr)\n            return 2\n')
+        (app / "wordfreq" / "cli.py").write_text(source)
+        outcome = run_bench.run_probes(app)
+        self.assertEqual(outcome["failed"], [])
+        self.assertEqual(len(outcome["option_after_file_failed"]), 7)
+
     def test_the_project_checks_pass_on_the_fixture(self):
         self.assertTrue(run_bench.run_unit_checks(self.copy_fixture())["ok"])
 

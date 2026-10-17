@@ -1,0 +1,206 @@
+{
+ "label": "r2b-2",
+ "plugin_commit": "",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 160,
+     "cache_write": 251545,
+     "cache_read": 5198294,
+     "output": 40952
+    },
+    "cost_usd": 1.7103,
+    "duration_s": 5.0,
+    "turns": 1,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 9,
+    "models": {
+     "claude-sonnet-5-5": 1.7103
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 7414,
+      "cache_read": 67677,
+      "output": 42
+     },
+     "cost_usd": 0.0406,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 8.9
+    },
+    "intake": {
+     "tokens": {
+      "input": 28,
+      "cache_write": 48127,
+      "cache_read": 750443,
+      "output": 200
+     },
+     "cost_usd": 0.3075,
+     "messages": 14,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 9364,
+        "cache_read": 13368,
+        "output": 23
+       },
+       "cost_usd": 0.0245,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 14.2
+      }
+     },
+     "wall_s": 82.5
+    },
+    "tests": {
+     "tokens": {
+      "input": 40,
+      "cache_write": 47081,
+      "cache_read": 1286612,
+      "output": 343
+     },
+     "cost_usd": 0.3732,
+     "messages": 20,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10380,
+        "cache_read": 16322,
+        "output": 35
+       },
+       "cost_usd": 0.0275,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 19.0
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 21499,
+        "cache_read": 4593,
+        "output": 19
+       },
+       "cost_usd": 0.051,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 17.1
+      }
+     },
+     "wall_s": 52.3
+    },
+    "build": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 22047,
+      "cache_read": 606737,
+      "output": 150
+     },
+     "cost_usd": 0.1781,
+     "messages": 10,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 13042,
+        "cache_read": 30156,
+        "output": 63
+       },
+       "cost_usd": 0.0365,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 14.5
+      }
+     },
+     "wall_s": 31.4
+    },
+    "show": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 12328,
+      "cache_read": 750520,
+      "output": 111
+     },
+     "cost_usd": 0.1865,
+     "messages": 7,
+     "agents": {},
+     "wall_s": 35.8
+    },
+    "verify": {
+     "tokens": {
+      "input": 54,
+      "cache_write": 114548,
+      "cache_read": 1736305,
+      "output": 996
+     },
+     "cost_usd": 0.6244,
+     "messages": 27,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 28,
+        "cache_write": 96101,
+        "cache_read": 139479,
+        "output": 172
+       },
+       "cost_usd": 0.251,
+       "messages": 14,
+       "calls": 5,
+       "wall_s": 62.1
+      }
+     },
+     "wall_s": 241.9
+    }
+   },
+   "waiting": {
+    "messages": 10,
+    "cost_usd": 0.2137
+   },
+   "wall_s": 455.8,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-top-option"
+    ],
+    "changes": [
+     "CH-0001-top-option"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-top-option": [
+      "ok   CH-0001"
+     ]
+    },
+    "change_status": {
+     "CH-0001-top-option": {
+      "pdlc/CH-0001-top-option": "?"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 1,
+    "proposed": true,
+    "tip": "pdlc/CH-0001-top-option",
+    "unit": {
+     "ok": true,
+     "ran": 26
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-qirgdk1s/app"
+  }
+ ]
+}
