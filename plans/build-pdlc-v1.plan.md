@@ -11,7 +11,7 @@ You are an agent that executes this plan. Assume that you have no memory of earl
 1. Read Intent, Ground truth, and Boundaries in full (and also Approach).
 2. Read the Progress log to find the current state. Do not do a completed step again. Do not reopen a decision that the log records.
 3. Resume at the first step that is not marked done. Obey the gate of that step. If the step has a `Parallel group` tag that other not-done steps share, those steps run together (see [[quiz-plan-execute]]).
-4. After each step, add an entry to the Progress log. Then, before you continue, examine the step against its done criteria.
+4. After each step, add an entry to the Progress log. Then, before you continue, self-assess the step against its done criteria.
 5. If an action that you plan conflicts with Intent or Boundaries, stop and ask. Do not resolve the conflict yourself.
 
 ## Intent
@@ -67,7 +67,7 @@ borrow the ideas of those skills.
   must pass. The frontmatter must parse as YAML. The merge-check script (step 8) has its
   own tests. To try a local copy, run `claude --plugin-dir ./plugins/pdlc`.
 - **Conventions:** each file is short, plain prose, with short sentences and no jargon.
-  The target size of a skill is one or two screens. If a sentence needs a second read,
+  Try to make a skill fit on one or two screens. If a sentence needs a second read,
   write the sentence again.
 
 **Verification rule:** before you rely on a Claude Code plugin, skill, or agent feature
@@ -122,7 +122,6 @@ means complete the step, log it, then stop and wait for a human review.
     contract tells what goes in, what comes out, and what success looks like. Each
     contract also has a short conformance check.
   - `adapters/`: `inbox-files`, `checks-command`, `review-agent`, and `delivery-github`.
-
   Match the IDs, statuses, and sections in the outline exactly.
 - **Done when:** each document type and port in the outline has a file, and each template
   is shorter than one screen. Each adapter passes the conformance check of its port on
@@ -303,9 +302,9 @@ means complete the step, log it, then stop and wait for a human review.
 
 - **Do:** The remits (tests, specification, security, quality, compliance, privacy) are
   project files. A script builds one packet for each remit. A tests packet gets only the
-  spec and the tests. A code packet gets only the spec and the code. One fresh reviewer
-  reads each packet, and reads only that packet. For the merge check to pass, each
-  configured remit must pass.
+  spec and the tests. A code packet gets only the spec and the code. Each packet has one fresh reviewer,
+  and this reviewer reads only that packet. For the merge check to pass, each configured
+  remit must pass.
 - **Done when:** unit tests cover the packets and the merge check. In a live run, six
   reviews run.
 - **Touches:** `plugins/pdlc/**`
@@ -482,11 +481,12 @@ Proven: the merge check unit tests pass, and they catch a broken version. On pya
         pass, both requirements verified, and gate ok. With no remote, verify stopped and
         gave the branch and the PR body, as the adapter says.
 Surprises: the reviewer caught me when I loosened a rule on the change branch to excuse
-           a finding of the reviewer. That is exactly the behaviour that we want.
+           its own finding. That is exactly the behaviour that we want.
 
 [2026-09-27] Step 9: done
 Changed: conventions/SKILL.md (migrations also for new conventions that the code does
-         not follow), README template (DES-pdlc-* belong to the project after a change)
+         not follow), README template (DES-pdlc-* belong to the project once someone
+         changes them)
 Proven: on pyapp, /pdlc:conventions agreed DES-json-formatting (indent 2, sorted keys).
         The skill found the one writer that does not sort keys (CAP-task-storage). Then
         the skill filed IN-0002 "Migrate CAP-task-storage to DES-json-formatting" as new,

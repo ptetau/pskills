@@ -8,11 +8,11 @@
     "elements": [
       {
         "id": "S1",
-        "description": "Quiz message: exactly one question. Fallback layout: a bold heading `**Question N · Label**` with no total, the question on the next line, then one of two forms. An option question has 2-4 bulleted options `**A · label**: sentence` and the line `Reply A, B or C, optionally with a note.` An open question (a sentence, a command, a path) has no options and ends with `Reply with <what is needed>.` No code block, box drawing or ASCII card. A picker question ends with ` (question N)`."
+        "description": "Quiz message: exactly one question. Fallback layout: a bold heading `**Question N · Label**` with no total, the question on the next line, then one of two forms. An option question has 2-4 bulleted options `**A · label**: sentence` and one closing reply line that names the option letters and says that a note is welcome An open question (a sentence, a command, a path) has no options and ends with `Reply with <what is needed>.` No code block, box drawing or ASCII card. A picker question ends with ` (question N)`."
       },
       {
         "id": "S2",
-        "description": "Echoes and resolved view: after each reply, one echo line `✓ N Label → Choice` (optionally with `(note: …)` or a deferral form) at the top of the message that asks the next question. When the drill ends: a bulleted list of every echo, numbered `N/T`, with no code block, then the go-ahead sentence (\"Does this look right? Say `wait` if anything's wrong, otherwise I'll write the plan.\") or a `Confirm` picker with `Write the plan` and `Change one`. The plan comes only after the go-ahead."
+        "description": "Echoes and resolved view: after each reply, one echo line `✓ N Label → Choice` (optionally with `(note: …)` or a deferral form) at the top of the message that asks the next question. When the drill ends: a bulleted list of every echo, numbered `N/T`, with no code block, then a one-sentence go-ahead that says the plan is written unless the user says `wait`, or a `Confirm` picker with `Write the plan` and `Change one`. The plan comes only after the go-ahead."
       },
       {
         "id": "S3",
@@ -28,7 +28,7 @@
       },
       {
         "id": "S6",
-        "description": "Closing message after the plan is written: the plan path, a one-line summary of each step, one line on what the red-team pass caught (or \"no issues found\"), and the question \"Do you want to start executing this plan?\"."
+        "description": "Closing message after the plan is written: the plan path, a one-line summary of each step, one line on what the red-team pass caught (or \"no issues found\"), and one question that offers to start executing the plan."
       }
     ]
   },
@@ -92,7 +92,7 @@
       "structureRef": "S6",
       "weight": 1,
       "criterion": "After the plan is written, the closing message gives the plan path, one line for each step, one line on what the red-team pass caught, and asks whether to start execution.",
-      "pass": "The closing message has all four parts: the path of the plan file, a one-line summary for each step, one visible line on what the red-team pass caught and fixed (or \"no issues found\"), and the question \"Do you want to start executing this plan?\" (or an equal offer to run `/quiz-plan-execute`). When the line names a fix, the plan shows that fix.",
+      "pass": "The closing message has all four parts: the path of the plan file, a one-line summary for each step, one visible line on what the red-team pass caught and fixed (or \"no issues found\"), and one question that offers to start executing the plan (for example by running `/quiz-plan-execute`). When the line names a fix, the plan shows that fix.",
       "partial": "The closing message lacks one of the four parts, or the red-team line names a fix that the plan does not show.",
       "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
       "source": "Phase 3: Red-team the Draft (last paragraph), Output"

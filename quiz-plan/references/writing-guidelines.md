@@ -78,6 +78,12 @@ Part 4 tells you how to get the dictionary and how to use it.
   the tests, read the log".
 - **3.6** Use the active voice. In descriptive text, you can use the passive voice only
   when you do not know who or what does the action.
+- **Modal verbs (3.2, 3.4).** STE has "must" and "can". It does not have "should" or "may".
+  Keep the strength of the original text:
+  - A rule that always holds: write "must" or "must not".
+  - Advice or a default: write "Try to …" or "Usually, …". Do not write "must".
+  - A permission: write "is permitted to …". Write "can" for an ability.
+  - The word "never": write "Do not …".
 - **3.7** Use a verb to show an action, not a noun. Write "install the package", not "do
   the installation of the package".
 

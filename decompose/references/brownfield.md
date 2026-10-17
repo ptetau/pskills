@@ -69,7 +69,7 @@ days since change.
 |---------|---------|
 | Many commits, many months active, changed recently | Steady volatility. A strong wall candidate. |
 | Many commits in one or two months | A one-off burst (a migration, a launch). Weak evidence. Read the commit messages. |
-| Few commits, a long time since a change | Stable. Do not change this code, also if the code is ugly. Low change means low cost. |
+| Few commits, a long time since a change | Stable. Leave this code alone, even if the code is ugly. Low change means low cost. |
 | Many authors | Coordination cost. Examine the ownership boundary (Conway's law, in Step 7). |
 
 **Change coupling.** The degree is the number of shared commits, divided by the average
@@ -144,7 +144,7 @@ runs. Examples are a dependency-injection binding, a factory, a config value, an
 feature flag.
 
 - Attach the subsystem at a seam with an explicit enabling point.
-- When possible, add new code beside the host, and do not edit hotspots in place. Feathers'
+- Try to add new code beside the host, not to edit hotspots in place. Feathers'
   *sprout* and *wrap* techniques: put new behaviour in a new class or method. Then call
   that class or method from one line in the host.
 - Do not make the new subsystem depend directly on a host hotspot. Make the subsystem
@@ -228,8 +228,8 @@ as a natural place to split a system. The other natural places in that list are 
 domain, regulatory compliance, team location, risk, performance isolation, technology, and
 user personas.
 
-- One team must own each new wall. If two or more teams share a wall, the wall will leak
-  along the team line.
+- Try to have one team own each new wall. If two or more teams share a wall, the wall
+  will leak along the team line.
 - If the measured coupling crosses a team boundary, move the wall. Or, discuss the
   coupling with the persons who own the teams.
 
@@ -249,7 +249,7 @@ python volatility.py --path shop --since 2026-05-01                      # after
 "Three months after the switch-over, the coupling between `cart` and `checkout` is much
 lower than its old 62% (the bar that the skill recommends: out of the report, below the
 30% floor). Changes to promotions touch only `PricingEngine` and `PromotionsAccess`." If
-the numbers do not change, the wall leaks, and you must examine the design again.
+the numbers do not change, the wall leaks, and the design needs another look.
 
 ## Rules for subsystem mode
 
@@ -266,6 +266,6 @@ the numbers do not change, the wall leaks, and you must examine the design again
 6. Keep the system releasable at each step. Delete transitional code on schedule.
 7. Keep volatile new code out of stable old packages. Do not depend directly on host
    hotspots.
-8. Do not change stable code, also if the code is ugly.
+8. Do not change code that is stable and ugly.
 9. Align each wall with one owning team.
 10. Define success as a number that you will measure again.

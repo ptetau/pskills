@@ -40,7 +40,7 @@ whom, and how.
 - Alerts for the operations team, posted to Slack.
 - Each person selects the channel that they prefer.
 - Quiet hours: at night, the app does not send a message that can wait.
-- If the app cannot send a message, the app tries again.
+- If an attempt to send a message fails, the app tries again.
 - Messages in the language of each person.
 
 ### Out of scope (non-goals)
@@ -111,9 +111,9 @@ decisions first.
 2. **Nothing that can wait is sent during quiet hours.** The app holds a message that can
    wait, and sends the message when quiet hours end. Enforced by `RoutingEngine.route`,
    which answers "wait until then". Reason: `QUIET_HOURS_DEFERRED`.
-3. **Each message goes to a channel that the person accepts, or the app refuses the message.**
-   The app does not quietly drop a message. Enforced by `RoutingEngine.route`. Violation:
-   `NO_REACHABLE_CHANNEL`.
+3. **Every message reaches a channel that the person lets the app use, or the app refuses
+   it.** The app does not quietly drop a message. Enforced by `RoutingEngine.route`.
+   Violation: `NO_REACHABLE_CHANNEL`.
 4. **A delivery only moves forward.** After a delivery is `delivered` or `dead`, the
    delivery does not change again. Enforced by `OutboxAccess`'s lifecycle verbs
    (`startAttempt`, `failAttempt`, `scheduleRetry`, `giveUp`, `confirmDelivery`). Each
@@ -122,9 +122,9 @@ decisions first.
    `dead` and reports the delivery. The app does not try the delivery again. Enforced by
    `NotificationManager`, which uses the delivery state machine. Outcome:
    `RETRIES_EXHAUSTED`.
-6. **No message goes out without its text.** Rendering makes the full message, or
-   rendering fails. Rendering can use English as a fallback. Enforced by
-   `RenderingEngine.render`. Violation: `TEMPLATE_NOT_FOUND`.
+6. **No message goes out without its text.** Rendering makes the full message and uses
+   English as the fallback, or rendering fails. Enforced by `RenderingEngine.render`.
+   Violation: `TEMPLATE_NOT_FOUND`.
 
 ## 3. Core Domain Data Contracts: the exact shape of the data
 
@@ -452,10 +452,9 @@ export interface NotificationManager {
   `RecipientsAccess.setQuietHours`.
 - **Failure & retry:** `PROVIDER_UNAVAILABLE` is retryable: attempt `n` waits a random
   time up to `min(1 h, 30 s × 2^n)`. `PROVIDER_REJECTED` is final. After 5 attempts, the
-  delivery becomes `dead` with `RETRIES_EXHAUSTED`, and NotificationManager logs the
-  delivery. If two workers race on one delivery, the compare-and-set in
-  `OutboxAccess.startAttempt` selects the winner. The other worker gets
-  `INVALID_TRANSITION` and moves to its next task.
+  delivery becomes `dead` with `RETRIES_EXHAUSTED`, and the delivery is logged. If two
+  workers race on one delivery, the compare-and-set in `OutboxAccess.startAttempt`
+  selects the winner. The worker that loses gets `INVALID_TRANSITION` and moves on.
 - **Internals:** the `Delivery` state machine (section 4), and one flow for each use case.
 
 ### Business rules (Engines)
@@ -463,8 +462,7 @@ export interface NotificationManager {
 #### RoutingEngine
 
 - **Purpose:** selects who gets a message, on which channel, and when.
-- **Encapsulates:** preferences, quiet hours, and regional rules. These three items are
-  different for each customer.
+- **Encapsulates:** preferences, quiet hours, and regional rules, which differ by customer.
 - **Constraints:** pure and in-memory: no network, storage, clock, or randomness. The
   caller gives RoutingEngine the current time and the recipient data.
 - **May call:** infrastructure only. As in the design, the Manager gives the recipients

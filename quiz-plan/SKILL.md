@@ -1,6 +1,6 @@
 ---
 name: quiz-plan
-description: Interactive planning with a quiz. Asks structured questions to get the context. Then writes a full Change Plan document with Intent, Approach, Ground truth, Boundaries, Steps, Verification, and Progress log. Each step declares a `Touches` file footprint and `Depends on` edges. The executor [[quiz-plan-execute]] uses these fields to put independent steps in groups automatically, and to run each group in parallel. Each step is AUTO by default. A step is GATED (a human checkpoint) only when the user explicitly asks for a checkpoint. Before the skill shows the draft, a red-team pass examines the draft. The pass uses the Boundaries of the draft, the riskiest assumption, the scope, the correctness of the parallel groups, and a failure premortem. Use for each non-trivial code change that needs a clear plan before the implementation.
+description: Interactive quiz-driven planning. Asks structured questions to get the context. Then writes a full Change Plan document with Intent, Approach, Ground truth, Boundaries, Steps, Verification, and Progress log. Each step declares a `Touches` file footprint and `Depends on` edges. The executor [[quiz-plan-execute]] uses these fields to put independent steps in groups automatically, and to run each group in parallel. Each step is AUTO by default. A step is GATED (a human checkpoint) only when the user explicitly asks for a checkpoint. Before the skill shows the draft, a red-team pass tests the draft against its own Boundaries, riskiest assumption, scope, parallel-group correctness, and a failure premortem. Use for any non-trivial code change that needs a clear plan before the implementation.
 license: MIT license
 metadata:
     skill-author: K-Dense Inc.
@@ -65,52 +65,52 @@ already answers. Ask each question as a quiz question (the same UX as `/quiz`, s
 look" below), **one question in each turn**. You will also ask follow-up drill questions
 that go deeper (see the next section). Ask the follow-up questions in the same way.
 
-**Q1: What is the change?** "Give the outcome in one sentence."
+**What is the change?** (Q1) "Describe the outcome in one sentence."
 Captures: the core change, in plain language. → **Intent**
 
-**Q2: Why?** "What is wrong now? Which specific problem does the change solve?"
+**Why?** (Q2) "What is wrong now? Which specific problem does the change solve?"
 Captures: the concrete pain point. → **Intent**
 
-**Q3: What files are involved?** "Which files or packages do you expect to touch? If you
+**What files are involved?** (Q3) "Which files or packages do you expect to touch? If you
 know the paths, list the paths. If not, tell me the area of the codebase."
 Captures: the file paths and the modules. → **Ground truth → Key files**
 
-**Q4: What is out of bounds?** "Is there anything that you explicitly do not want to
+**What is out of bounds?** (Q4) "Is there anything that you explicitly do not want to
 change? Is there adjacent work that this change must not do?"
 Captures: the scope exclusions. → **Intent → Not doing** and **Boundaries → Must not
 touch**
 
-**Q5: What can go wrong?** "What is the riskiest part: the part that is most likely to
+**What could go wrong?** (Q5) "What is the riskiest part: the part that is most likely to
 break or to surprise you?"
 Captures: the riskiest assumption. → **Boundaries → Riskiest assumption**
 
-**Q6: Build and test commands?** "Which commands do you use to build, test, and lint? Is
+**Build and test commands?** (Q6) "Which commands do you use to build, test, and lint? Is
 a special setup necessary?"
 Captures: the exact commands. → **Ground truth → Build / test / lint**
 
-**Q7: Any conventions?** "Are there style guides, naming patterns, ADRs, or existing docs
-(CLAUDE.md) that I must read?"
+**Any conventions?** (Q7) "Are there style guides, naming patterns, ADRs, or existing docs
+(CLAUDE.md) that you recommend that I read?"
 Captures: the conventions and the reference docs. → **Ground truth → Conventions**
 
-**Q8: How will you confirm the change?** "What will you check to make sure that the
+**How will you verify?** (Q8) "What will you check to make sure that the
 change is complete and correct? Which edge cases are there?"
 Captures: the verification criteria. → **Verification and rollback**
 
-**Q9: Rollback plan?** "If the change fails, how do we undo the change? With a git
+**Rollback plan?** (Q9) "If the change fails, how do we undo the change? With a git
 revert, a feature flag, or a DB rollback?"
 Captures: the rollback strategy. → **Verification and rollback → Rollback**
 
-**Q10: Branch name?** "Which branch does this work go on? I can create the branch if
+**Branch name?** (Q10) "Which branch does this work go on? I can create the branch if
 necessary."
 Captures: the branch name. → Document header
 
-**Q11: Prior art?** "Did we build something with this shape before, here or in a
+**Prior art?** (Q11) "Did we build something with this shape before, here or in a
 different place? About how many steps did it take? What broke or surprised us the last
 time?"
 Captures: the closest past change, its approximate number of steps, and the known failure
 modes. → **Ground truth → Prior art** (the answer also seeds the Phase 3 premortem)
 
-**Q12: More than one way to do this?** *(ask only when 2 or more viable approaches
+**More than one way to do this?** (Q12) *(ask only when 2 or more viable approaches
 exist)* "Are there competing approaches? Name the front-runners, so that we select one
 deliberately and do not simply use the first idea that we had."
 Captures: the options for the approach, and the reason for the selection. → **Approach**
@@ -240,7 +240,7 @@ Then ask the user to confirm. The confirmation is the gate to Phase 2:
 - **Picker:** ask one `Confirm` question with the options `Write the plan` and
   `Change one`. Do not recommend an option.
 - **Fallback:** write one sentence:
-  *"Does this look correct? I will write the plan unless you say `wait`."*
+  *"I will write the plan unless you say `wait`."*
 
 ##### Reply parsing (same as /quiz)
 
@@ -278,7 +278,7 @@ Make the name from the answer of the user to Q1 (the change). For example:
 
 #### Template
 
-```markdown
+````markdown
 # Change Plan: [a name from Q1 (the change)]
 
 **Owner:** `[current user from git config, or "you"]` · **Status:** Draft | Agreed | In progress | Done
@@ -321,7 +321,7 @@ You are an agent that executes this plan. Assume that you have no memory of earl
 
 - **May modify:** [inferred from Q3 (the files) and Q4 (out of bounds)]
 - **Must not touch:** [from Q4 (out of bounds)]
-- **Stop and ask when:** a test you didn't expect fails, a change is necessary outside "may modify", or the instructions of a step are ambiguous. Also stop and ask when you tried the same fix two times without success. Two failed attempts mean that the plan is wrong, not that you must try harder.
+- **Stop and ask when:** a test you didn't expect fails, a change is necessary outside "may modify", or the instructions of a step are ambiguous. Also stop and ask when you tried the same fix two times without success. Two failed attempts mean that the plan is wrong, not that more effort is necessary.
 - **Assumptions (re-check every step):** [the novel things that this plan takes as true. If one of these things is false, the plan is not valid. For example: "the ORM emits one query per row", or "the feature flag defaults off in prod". These items are different from the Verification rule above (read the APIs, do not guess), and from the single Riskiest assumption below (which drives Step 1). If the execution shows that an item here is false, stop and ask. Do not add a workaround.]
 
 **Riskiest assumption:** [from Q5 (the riskiest part)]. Step [1] tests this assumption, so step [1] comes first.
@@ -338,7 +338,7 @@ not decoration. [[quiz-plan-execute]] diffs these fields to decide which not-don
 run as a **parallel group** (concurrent agents, one for each step). If the fields are
 incorrect, the grouping does the wrong thing, and nothing shows the error.
 
-[Make the steps for the change. Make each step so concrete that two different readers make the same change.]
+[Make the steps for the change. Try to make each step concrete enough that two different readers produce the same change.]
 
 ### Step 1: [name] · `[ ]` AUTO | GATED · Parallel group: [none | P1, P2, ...]
 
@@ -354,10 +354,10 @@ incorrect, the grouping does the wrong thing, and nothing shows the error.
 
 [Add more steps as necessary...]
 
-**Parallel group assignment rule:** two steps can share a group only if their `Touches` sets
-are disjoint **and** neither step is in the (transitive) `Depends on` chain of the
-other. The step that tests the **Riskiest assumption** does not join a group. That step
-always runs alone, first. A step marked **GATED** also does not join a group. An explicit
+**Parallel group assignment rule:** two steps are permitted to share a group only if
+their `Touches` sets are disjoint **and** neither step depends on the other, directly or
+transitively. The step that tests the **Riskiest assumption** does not join a group. That step
+always runs alone, first. Any step marked **GATED** also does not join a group. An explicit
 human checkpoint runs alone, so that the pause point stays predictable. Thus, each group
 contains only AUTO steps.
 
@@ -400,18 +400,18 @@ When you execute a step and log the step in the Progress log, **also update the 
 the header.** The tracker is for humans. Thus, a person who opens the `.plan.md` file sees
 immediately how much of the work is complete.
 
-Also update the checkbox of each step from `[ ]` to `[x]` when the step is complete.
-```
+Try to also update the checkbox of each step from `[ ]` to `[x]` when the step is complete.
+````
 
 #### Step Generation Guidelines
 
 When you make the steps from the quiz answers, obey these rules:
 
-1. **Step 1 must always test the riskiest assumption**, from Q5 (the riskiest part). This
-   step goes first, because if this step fails, the full plan is not valid. Step 1 does
-   not join a parallel group.
-2. Each step must give a concrete outcome that you can check, for example a passing
-   test, a rendered route, or a working command.
+1. **Always try to make Step 1 test the riskiest assumption**, from Q5 (the riskiest
+   part). This step goes first, because if this step fails, the full plan is not valid.
+   Step 1 does not join a parallel group.
+2. Try to give each step a concrete outcome that you can check. Examples are a passing
+   test, a rendered route, and a working command.
 3. **Default every step to AUTO.** Mark a step **GATED** only when the user explicitly
    asks for a human checkpoint on that step. The user can name the step, or give a general
    instruction, for example "gate the risky ones". Apply that instruction to the steps
@@ -422,10 +422,10 @@ When you make the steps from the quiz answers, obey these rules:
 5. If the change involves a backend and a frontend, put the steps in the order of their
    dependencies. For example, put the backend first if the frontend depends on the
    backend.
-6. Each step must fit in one session. If a step needs 20 file changes, split the step
-   again.
-7. The last step must always include a run of the build, test, and lint commands from Q6
-   (the commands).
+6. Try to make each step fit in one session. If a step needs 20 file changes, split the
+   step again.
+7. Always try to include a run of the build, test, and lint commands from Q6 (the
+   commands) in the last step.
 8. **Tracker maintenance is part of each step.** When a step is complete, the agent must
    also update the progress bar and checkboxes in the plan file header.
 9. **Select the approach before the steps.** If Q12 (other approaches) found 2 or more
@@ -433,7 +433,7 @@ When you make the steps from the quiz answers, obey these rules:
    selection and why the alternatives lost. Then make steps only for the selected
    approach. Do not leave the fork unresolved in the steps.
 10. **Give `Touches` and `Depends on` to each step, then calculate the parallel groups.**
-    Two AUTO steps can share a group id (`P1`, `P2`, ...) only if these conditions are
+    Two AUTO steps share a group id (`P1`, `P2`, ...) only if these conditions are
     true:
     - The riskiest-assumption step is not one of the two steps.
     - The `Touches` sets of the two steps are disjoint.
@@ -462,10 +462,10 @@ silently drop the problem.
   This lens is different from the mechanical checks below. The mechanical checks ask
   "does a step break a rule?". The premortem asks "what failure is not represented as a
   step at all?"
-- **Riskiest assumption:** does Step 1 actually *test* the assumption? The test must be
-  falsifiable: the test fails if the assumption is incorrect. Or does Step 1 only touch the
-  same area?
-- **Boundaries:** does the `Do` of a step go outside `May modify`? Does a step conflict
+- **Riskiest assumption:** does Step 1 actually *test* the assumption with a falsifiable
+  test (the test fails if the assumption is incorrect)? Or does Step 1 only touch the same
+  area?
+- **Boundaries:** does the `Do` of any step go outside `May modify`? Does any step conflict
   with `Must not touch`?
 - **Done when:** can you check each criterion with a command or a test? Or is the
   criterion vague ("works correctly", "handles it properly")? Write each vague criterion
@@ -473,8 +473,8 @@ silently drop the problem.
 - **Coverage gaps:** do the quiz answers imply work that no step covers? Examples are a
   migration, a doc update that Q7 (the conventions) makes necessary, or a config change
   for the existing deployments.
-- **Ordering:** does a step depend on an output or a state that a *later* step creates?
-- **Scope creep:** does the `Do` of a step include work that Q4 (out of bounds) explicitly
+- **Ordering:** does any step depend on an output or a state that a *later* step creates?
+- **Scope creep:** does the `Do` of any step include work that Q4 (out of bounds) explicitly
   excluded?
 - **Rollback reachability:** the "Failing looks like" signals of Verification can occur
   in the middle of the plan, not only at the end. At that point, can you still execute the
@@ -569,18 +569,18 @@ commands, and the branch.)*
 > - ✓ 3/8 Location → internal/api/middleware/ (note: there's already a logging-middleware pattern there)
 > - ✓ 4/8 Limit → configurable (note: env var, default 100/min)
 > - ✓ 5/8 Must-not → auth middleware, private/internal routes
-> - ✓ 6/8 Check → integration test: the 101st rapid request gets 429
+> - ✓ 6/8 Verify → integration test: the 101st rapid request gets 429
 > - ✓ 7/8 Commands → `go build ./...` and `go test ./...`
 > - ✓ 8/8 Branch → feature/rate-limiting
 
-**Agent:** *"Does this look correct? I will write the plan unless you say `wait`."*
+**Agent:** *"I will write the plan unless you say `wait`."*
 **User:** "Looks good."
 
 *(The agent drafts the plan, and then does the red-team pass. The premortem lens finds a
 cause that no step defends against: "the limiter counts requests per replica, so the real
 limit in prod is N×replicas". Thus, the agent adds a new Assumption, "the rate state is
 per instance, not shared", for the executor to re-check. The pass also finds that the
-`Done when` of Step 3 said "routes work correctly". The agent writes that criterion again
+`Done when` of Step 4 said "routes work correctly". The agent writes that criterion again
 as "an integration test sends 101 requests to a public route and gets 429 on the 101st,
 and a whitelisted internal-IP route stays 200 for the full test.")*
 
@@ -593,10 +593,10 @@ and a whitelisted internal-IP route stays 200 for the full test.")*
 > **Progress:** ░░░░░░░░░░░░ 0/5 steps completed (0%)
 
 **Steps:**
-1. `[ ]` Add the rate-limiting library dependency (GATED: make sure that it builds)
-2. `[ ]` Create the middleware with IP extraction and configurable limits (GATED: must whitelist internal IPs)
-3. `[ ]` Connect the middleware to the public routes only, and exclude the auth middleware (GATED)
-4. `[ ]` Add an integration test: 100 rapid requests → 429 on the 101st (GATED)
+1. `[ ]` Add the rate-limiting library, and test whether internal services on a shared IP pool get throttled (AUTO: tests the riskiest assumption)
+2. `[ ]` Create the middleware with IP extraction and configurable limits (AUTO: must whitelist internal IPs)
+3. `[ ]` Connect the middleware to the public routes only, and exclude the auth middleware (AUTO)
+4. `[ ]` Add an integration test: 100 rapid requests → 429 on the 101st (AUTO)
 5. `[ ]` Run the full test suite and lint (AUTO)
 
 *After step 1 is complete, the header changes to:*
@@ -613,8 +613,8 @@ and a whitelisted internal-IP route stays 200 for the full test.")*
   answers, include all the details.
 - If the user already has a clear idea of the steps, go directly to the step generation.
   Capture the steps of the user directly.
-- Commit the plan file to the repository together with the code changes, so that the plan
-  stays with the branch.
+- Try to commit the plan file to the repository together with the code changes. Thus,
+  the plan stays with the branch.
 - **Robustness additions** (Approach, Prior art, Assumptions, and the premortem lens in
   Phase 3) come from evidence-backed planning practice. The practices are a deliberate
   selection of the approach (multi-plan beats first-draft), the outside view (set the

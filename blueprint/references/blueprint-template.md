@@ -180,7 +180,7 @@ export interface {Name} {
 }
 ```
 
-- **Failure & retry:** {what the caller sees for each error, and if the caller can retry}
+- **Failure & retry:** {what the caller sees for each error, and if the caller is permitted to retry}
 - **Internals:** {the bricks of the design for this part, in backticks, with the
   spelling of the design}
 
@@ -232,8 +232,8 @@ export interface {Activity}Engine { … }
 
 - **Purpose:** …
 - **Encapsulates:** {the vendor or storage that can change}
-- **Constraints:** the only code that touches {vendor or storage}. Exposes business verbs,
-  not CRUD or vendor types.
+- **Constraints:** the only code that touches {vendor or storage}. Expose business verbs.
+  Do not expose CRUD or vendor types.
 - **May call:** {Resources, Utilities}
 
 ```ts

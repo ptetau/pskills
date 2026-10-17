@@ -29,7 +29,7 @@ blueprint has six sections:
 
 1. **Header and boundary box**: what the system is, how the system is deployed, what is in
    scope and out of scope, and each decision that the blueprint adds.
-2. **System invariants**: 4–7 enforceable rules. Each rule has its enforcement point and
+2. **System invariants**: 4–7 enforceable rules. Each rule says where it is enforced and
    the error code that it raises.
 3. **Core data contracts**: exact types, not prose.
 4. **State machines**: each lifecycle, with its guards, terminal states, and illegal
@@ -111,7 +111,7 @@ the numbers of `decompose/references/design-template.md`.
 
 | Design section | Goes to | How |
 |----------------|---------|-----|
-| §1 Frame: problem, users, constraints | 1. Header | System, target mode, and scope. Carry the design's assumptions into *Decisions added* |
+| §1 Frame: problem, users, constraints | 1. Header | System, target mode, and scope. Carry the design's assumptions into *Decisions carried from the design* |
 | §1 Nature of the business | 2. Invariants | Each fact that must always be true becomes an enforceable rule |
 | §2 Features and core use cases | 1. In scope, and 5. Flows | Features become scope bullets. Each core use case becomes a flow across the methods of its Manager |
 | §3 Volatility register | 5. "Encapsulates" line | Each component gives, in plain words, the change that it encapsulates ("Contained by" in the register) |
@@ -133,7 +133,7 @@ the numbers of `decompose/references/design-template.md`.
 **Names stay the same.** Components keep their names (`RoutingEngine`). API verbs become
 methods in the style of the language: `Route` becomes `route` in TypeScript, and stays
 `Route` in Go. Contracts keep their names (`Envelope`) and their variants. A narrower or
-wider contract is a design change. A blueprint does not add, remove, or rename a component
+wider contract is a design change. A blueprint must not add, remove, or rename a component
 or a verb, and the `--design` option checks this rule.
 
 **Lifecycles** follow the design. The Manager decides each transition. If the state lives
@@ -180,7 +180,7 @@ lifecycles, components, and behaviours, and translate each one.
 
 Write the rules that must be true in all conditions. These rules are the invariants of
 design by contract, made concrete. The format asks for 4–7 invariants, and this number
-suits most systems. A small domain can have fewer invariants.
+suits most systems. A small domain is permitted to have fewer invariants.
 
 Do not pad the list with a rule that the types already guarantee. Also do not pad the list
 with a rule that only a caller with a bug can break. Find the invariants in these places:
@@ -194,7 +194,7 @@ with a rule that only a caller with a bug can break. Find the invariants in thes
 Each invariant gives these items:
 
 - **The rule**, in one sentence that a tester can check.
-- **The enforcement point**: `Component.method`. If the check must be atomic with a write,
+- **Where it is enforced**: `Component.method`. If the check must be atomic with a write,
   also give the transaction boundary.
 - **The error code** that the system raises when something tries to break the rule, in
   `UPPER_SNAKE_CASE`.
@@ -233,7 +233,7 @@ details are in `references/conventions.md`):
   result or error type that carries the code.
 - Do not use `any`. Do not use an untyped map when you know the shape of the data.
 
-End the section with an **error catalogue**. The error catalogue is a table with one row
+End the section with an **error catalog**. The error catalog is a table with one row
 for each code. Each row gives these items:
 
 - The meaning of the code.
@@ -308,20 +308,21 @@ rules:
      types, and the error codes that each method can return.
    - **Flows** (Managers): the call sequence of each public method, with one call on each
      line. Give the calls to other components, and the calls to the domain module for
-     stable rules. Managers apply rules through calls to the domain module. Managers do
+     stable rules. Managers apply rules through calls to the domain module. Managers must
      not contain the rules. A call to another Manager goes through a queue. Say so on the
      line of the call: "4. Queue `NoticeManager.tellHoldReady(hold)`."
    - **Failure and retry**: which errors are retryable and which are final, the timeouts,
      the backoff, idempotency on retry, and how races resolve. For in-process,
-     synchronous code, one line is sufficient ("In-process. Errors are returned as
-     values. There is nothing to retry.").
+     synchronous code, one line is sufficient ("in-process; errors returned as values;
+     nothing to retry").
    - **Internals**: the bricks of the component from the design, as private modules. Name
      each brick in backticks, with the spelling of the design (`mayBorrow` for
      `MayBorrow` is correct). This item is necessary when the design lists bricks for the
      component. The `--design` option checks this item.
    - The methods of a component are the API verbs of the design, no more and no fewer. A
-     blueprint can add parameters that the design left implicit (an idempotency key). A
-     new verb is a design change. Thus, add a new verb to the design first.
+     blueprint is permitted to add parameters that the design left implicit (an
+     idempotency key). A new verb is a design change. Thus, add a new verb to the design
+     first.
 
 ## Phase 6 — Verification suite
 
@@ -358,7 +359,7 @@ Write 3–5 Gherkin scenarios that a test harness can run.
    The checker examines these items:
    - The structure.
    - The enforcement points and the codes of the invariants.
-   - Each code is in the error catalogue.
+   - Each code is in the error catalog.
    - Each state type has a state machine.
    - Each component has signatures and failure semantics.
    - A scenario exercises the code of each invariant.
@@ -411,11 +412,11 @@ Write 3–5 Gherkin scenarios that a test harness can run.
 ## Style
 
 - **Writing.** Write all text to `references/writing-guidelines.md`: the replies to the
-  user and the blueprint. Write each sentence for a bright 10-year-old, at a reading grade
-  of 7 or lower. Give each technical word one time in the "Words used here" list in
-  section 1. Names, types, error codes, and numbers stay the same. Plain text is not
-  vague: "send each message at most one time" is as accurate as "idempotent delivery".
-  The checker examines the writing.
+  user and the blueprint. Write each sentence for a bright 10-year-old, with
+  one topic and common words. Give each technical word one time in the "Words used here"
+  list in section 1. Names, types, error codes, and numbers stay exact. Plain text is not
+  vague: "send each message at most once" is as exact as "idempotent delivery". The
+  checker examines the writing.
 - **Size it to the system.** A small system gets a short blueprint: fewer invariants, no
   HTTP column without HTTP, and one line where a paragraph is not necessary. Say each
   thing one time. The signature block gives the types, so the prose adds only what the
@@ -463,7 +464,7 @@ TypeScript and a modular monolith, and writes `notifications.blueprint.md`:
 
 - Six invariants: at-most-once delivery, quiet hours, no silent drops, forward-only
   delivery history, bounded retries, no message without content.
-- Nineteen types, including the `Envelope` of the design, and an error catalogue of nine
+- Nineteen types, including the `Envelope` of the design, and an error catalog of nine
   codes.
 - Two state machines, with transitions that have the names of the lifecycle verbs of
   `OutboxAccess`.
@@ -474,5 +475,6 @@ TypeScript and a modular monolith, and writes `notifications.blueprint.md`:
 - Eleven decisions that the design left open, including how callers prove who they are.
   The blueprint marks each decision where it applies, and lists it for review.
 
-The blueprint passes `check_blueprint.py --design notifications.design.md --compile
---render`. The full result is `references/notifications.blueprint.md`.
+The blueprint passes
+`check_blueprint.py --design notifications.design.md --compile --render`. The full result
+is `references/notifications.blueprint.md`.

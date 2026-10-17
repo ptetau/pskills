@@ -86,14 +86,14 @@ A probe agent must **not** do these actions, at any time:
 - Send state-mutating requests (`POST`/`PUT`/`PATCH`/`DELETE`), except to one of these
   targets:
   - A designated sandbox or staging environment.
-  - A scratch or test account that someone created for this purpose.
-- Do an action that a human reviewer would not feel safe to run unattended against
+  - A scratch or test account made for this purpose.
+- Do any action that a human reviewer is not comfortable to run unattended against
   production.
 
 If only a mutating action can exercise a flow, and no safe sandbox exists, the probe
 agent for that cell must stop before the action. The agent must record the flow as
-**"untestable without write access"** in its finding. Then the agent continues. The
-agent must not do the mutating action.
+**"untestable without write access"** in its finding. Then the agent goes to the next
+cell. Even then, the agent must not do the mutating action.
 
 This guarantee applies with no exceptions in each phase below, and especially in
 Phase 2.
@@ -115,8 +115,8 @@ app.
    the key modules, and the external dependencies. This summary becomes the App Summary
    of the report.
 5. **Identify feature flows.** A feature flow is a named, end-to-end user journey, for
-   example "sign up", "checkout", "reset password", or "export report". Each flow must
-   be something that a real user does, not an internal function. Flag the flows that
+   example "sign up", "checkout", "reset password", or "export report". Try to make each
+   flow something that a real user does, not an internal function. Flag the flows that
    have the highest risk: flows that changed recently, complex flows, and
    security-sensitive flows. Phase 2 uses these flags to scale the matrix to the budget.
 
@@ -135,7 +135,7 @@ There are six quality dimensions: `functional`, `robustness`, `security`, `perf`
 `a11y`, and `ux`. These six values are the same as the `dimension` enum in
 `references/findings.schema.json`.
 
-A test run proved this shape (see the plan's step 1 fan-out proof). This skill uses
+This shape was proven directly (see the plan's step 1 fan-out proof). This skill uses
 only this fan-out shape:
 
 ```js
@@ -208,8 +208,8 @@ For each raw finding, dispatch (or reason through, budget permitting) an adversa
 pass. The adversarial pass actively tries to **disprove** the finding:
 
 - Examine the `evidence` again against the `repro` steps.
-- Find if the cause is environmental flakiness, or a misreading of the expected
-  behaviour.
+- Consider environmental flakiness or a misreading of the expected behaviour as a
+  possible cause.
 - If a read-only run of the `repro` is cheap and safe, run the `repro` again.
 
 Then set these fields:

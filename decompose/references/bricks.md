@@ -80,7 +80,7 @@ the bricks pass to each other inside the wall.
   you cannot remove a stage, because the formats of its neighbours do not agree. A shared
   contract prevents this problem. Pipes and Filters (Hohpe and Woolf): add, omit, or
   rearrange filters "without having to change the filters themselves."
-- **No junk, no confusion** (Raymond). The contract must not be able to show a situation
+- **No junk, no confusion** (Raymond). Try to make the contract unable to show a situation
   that cannot exist. Two states that are different in reality must also be different in
   the contract.
 
@@ -149,7 +149,7 @@ brick has an `if customer == …` inside it, a policy is trapped in a mechanism.
 5. **Split each part that does two independent things.** The 2003 vision of AWS for its
    public services: primitives are indivisible, and "if they can be functionally split
    into two they must." Inside a codebase, balance this rule with Ousterhout's warning
-   against *classitis*. Keep pieces together in these conditions:
+   against *classitis*. Keep pieces together if any one of these conditions is true:
    - The pieces share information.
    - A combination of the pieces makes the interface simpler.
    - A split would duplicate code.

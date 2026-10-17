@@ -60,7 +60,7 @@ variation of a core use case:
 
 | ID | What changes | Axis | Evidence | Likelihood | Contained by |
 |----|--------------|------|----------|------------|--------------|
-| V1 | <for example, which channels exist, and which vendor delivers each> | over time / across customers | <interview, roadmap, git hotspot, ticket> | high / med / low | <component, plus each new part that the exceptions of the change simulation allow, for example a new ResourceAccess> |
+| V1 | <for example, which channels exist, and which vendor delivers each> | over time / across customers | <interview, roadmap, git hotspot, ticket> | high / med / low | <component, plus any new part that the exceptions of the change simulation allow, for example a new ResourceAccess> |
 
 **Rejected candidates** (the design considered these candidates, and deliberately put no
 wall around them):
@@ -71,7 +71,7 @@ wall around them):
 | <...> | nature of the business: if this changes, it is a different system |
 | <...> | speculative: no evidence that it will change |
 
-## 4. Walls: the parts, and who can call whom
+## 4. Walls: the parts, and who is permitted to call whom
 
 Draw a C4 component diagram, with one band for each layer (see `c4.md`). If there are
 three parts or fewer, do not draw the diagram, because the table below says the same
@@ -106,13 +106,13 @@ flowchart TB
 
 Key: light blue is a part that we build. Dark blue is storage. Grey is another system.
 Arrows are calls, labelled with the verbs that the calls use. The diagram does not show
-Utilities, because each part can call them.
+Utilities, because each part is permitted to call them.
 
 | Component | Type | Encapsulates | API (business verbs) | May call |
 |-----------|------|--------------|---------------------------|----------|
 | <Client> | Client | V1 (who calls, and how) | entry points: `<Verb>`: `POST /route`, a command, a screen, or a user action (`ClickCell`) | one Manager for each use case |
 | <Noun>Manager | Manager | V2 (workflow order) | `<Verb>(...)` | Engines, Access, Utilities. Other Managers only through a queue |
-| <Utility> | Utility | <what it does, for example who is signed in, and what they can do> | `<Verb>(...)` | nothing |
+| <Utility> | Utility | <what it does, for example who is signed in, and what they are permitted to do> | `<Verb>(...)` | nothing |
 
 For a Client, the API column lists its entry points (routes, commands, screens, or the
 user actions that a UI handles). Thus, the blueprint types the entry points, and does not
@@ -123,7 +123,7 @@ policy). Off-the-shelf logging needs no row.
 
 Shared contracts (one for each wall, or one that the walls on the same flow share):
 
-- `<Name>` used by <components>: <fields, which bricks can set each field, invariants>
+- `<Name>` used by <components>: <fields, which bricks are permitted to set each field, invariants>
 
 How the pieces are joined (the composition medium): <in code, a pipeline definition, a
 state-machine table, or config>. Why: <reason>.

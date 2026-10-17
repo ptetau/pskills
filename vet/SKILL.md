@@ -1,20 +1,18 @@
 ---
 name: vet
 description: >
-  Writes and runs an eval for a different skill. Then scores the skill on two axes:
-  quality (how well its output meets a rubric from the skill itself) and stability (how
-  little its output changes between runs). Reads the target SKILL.md to get the expected
-  output structure and a rubric. Writes varied test prompts, with scripted user replies
-  for interactive skills. Runs a sample of the prompts many times each, in isolated git
-  worktrees, through a Workflow. A rubric judge grades each run. Similarity judges
-  classify and tally each rubric item by how much it changed across repeats, and across
-  prompts for structure items. Runs go in waves, and the script records the grade after
-  each wave, so you can see the grade settle. Asks which models to use before each eval.
-  Each agent role (run, grade, compare, cross) can have its own model, effort, and
-  batching, through presets or overrides, to balance cost against focus. Saves the suite
-  to evals/SKILL-NAME/ so that later runs are comparable. Use when the user says "/vet",
-  or asks to "eval a skill", "test this skill", "score my skill", or "how consistent is
-  this skill". Also use when the user wants to check a skill before they trust it.
+  Writes and runs an eval for another skill. Then scores the skill on two axes: quality
+  (how well its output meets a rubric) and stability (how little its output changes
+  between runs). Reads the target SKILL.md, then writes varied test prompts, with scripted
+  user replies for interactive skills. Runs sampled prompts many times each, in isolated
+  git worktrees, through a Workflow. A rubric judge grades each run. Similarity judges
+  classify how much each rubric item changed across repeats, and across prompts for
+  structure items. Runs go in waves, and the script records the grade after each wave, so
+  you can see it settle. Asks which models to use before each eval. Each agent role (run,
+  grade, compare, cross) can have its own model, effort, and batching. Saves the suite to
+  evals/SKILL-NAME/ so later runs are comparable. Use when the user says "/vet", or asks
+  to "eval a skill", "test this skill", "score my skill", or "how consistent is this
+  skill". Also use when the user wants to check a skill before they trust it.
 ---
 
 # Vet: Skill Evaluator
@@ -154,8 +152,8 @@ Rules for the rubric:
   code first").
 - Write one claim in each item, with no overlaps. If two items always pass or fail
   together, make the two items one item.
-- The items are also the units that the similarity judges compare. Thus, each item must
-  name one aspect of the output that you can align across runs.
+- The items are also the units that the similarity judges compare. Thus, try to make
+  each item name one aspect of the output that you can align across runs.
 - Prevent circularity. A rubric that only restates the claims of the skill passes
   the skill by construction. The outcome items are the counterweight: the outcome items
   ask if the user got what the user needed.
@@ -172,8 +170,8 @@ Write N prompts (default 10), P01, P02, …. Each prompt is what a user types af
   request that needs exactly one question, and a request near a stated cap.
 - **Self-contained.** Put any text that the skill needs in the prompt. Run worktrees can
   start from the default branch of the repo, not from your current checkout. Thus,
-  refer only to files that are committed on that branch. Do not use a network,
-  connectors, or secrets, unless the skill exists to use them.
+  refer only to files that are committed on that branch. Try not to use anything
+  that needs a network, connectors, or secrets, unless the skill exists to use them.
 - **`exercises`:** one line that tells which parts of the skill the prompt tests.
 - **`replies`** (interactive skills): the answers that a plausible user gives to this
   prompt, in the reply format of the skill. Give sufficient replies to get to the end:
@@ -185,7 +183,7 @@ Write N prompts (default 10), P01, P02, …. Each prompt is what a user types af
   option is recommended, the run agents reply "you decide". For skills that do not ask
   questions, keep the list empty.
 - **Order.** Put the most varied prompts first. Runs use the first M prompts. Thus,
-  P01-P03 must already cover three different axes, with typical first.
+  try to make P01-P03 cover three different axes already, with typical first.
 
 ## Phase 3: Review gate (new suite only)
 
@@ -199,7 +197,7 @@ Then show the user these items, in a compact form:
 - The agent roles in effect (the preset and any overrides), and the agent estimate for
   these roles (see "Agent roles").
 
-Ask: "Reply `go`, or tell me what to change (for example `drop R4`, `make P03 harder`,
+Ask: "Reply `go`, or tell me what to change (e.g. `drop R4`, `make P03 harder`,
 `R2 weight 3`)." Apply the edits to `suite.json`, and show only the changed rows. Do not
 start runs until the user says go.
 
@@ -240,8 +238,8 @@ comparable.
    4. Apply the answers from Phase 3b.
 
    Check the result against `references/agents.schema.json`. On a re-run that skips the
-   review gate, write one line before the runs start. In the line, give the preset, the
-   models, the overrides in effect, and the agent estimate.
+   review gate, tell the user in one line before the runs start. In the line, give the
+   preset, the models, the overrides in effect, and the agent estimate.
 3. **Make the run folder.** `runId` is `date -u +%Y%m%dT%H%M%SZ`. Create
    `evals/<skill>/runs/<runId>/outputs/`. Record the output of `git worktree list`, so
    that Phase 5 can find the worktrees that this run creates.
@@ -349,7 +347,7 @@ run or a lost judgement as a pass or as a fail.
    `jsonschema` package of Python), check `results.json` against
    `references/results.schema.json`.
 4. Write `report.md` from `references/report-template.md`. You write only two parts: the
-   verdict and "What to fix". Use only the evidence in the results for the two parts.
+   verdict and "What to fix". Both parts must rest on the evidence in the results.
    Before you suggest fixes, read the captures of the worst items.
 5. Run `git worktree list` again, and compare the output with the list from Phase 4.
    The runtime puts worktrees under `.claude/worktrees/`. Each run keeps its worktree,
@@ -359,7 +357,7 @@ run or a lost judgement as a pass or as a fail.
    the folder to `.gitignore`.
 6. Reply in a few lines. Give these items:
    - The three scores and the grade.
-   - If the grade settled, and when.
+   - Whether the grade settled, and when it settled.
    - The weakest item and the least stable item, in plain words.
    - The path to `report.md`.
 

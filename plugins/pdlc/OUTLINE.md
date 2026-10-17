@@ -59,8 +59,7 @@ These rules are fixed. All other items are defaults that you can change.
 
 1. **All work enters through the inbox.** This rule includes convention migrations and
    new adapters for pdlc itself.
-2. **Specs come before code.** pdlc must specify an intent before it writes a change for
-   that intent.
+2. **Specs come before code.** pdlc must specify an intent before it writes any change.
 3. **One change, one thing.** A change covers exactly one job or one capability, or one
    design spec.
 4. **Jobs use capabilities, but jobs do not edit capabilities.** If a job needs something
@@ -191,7 +190,7 @@ The system can send an email that it builds from a named template and a set of v
 
 ### Change spec (`pdlc/changes/CH-0031-email-templates/change.md`)
 
-The change spec is the only document that the builder must read. The change spec is a
+The change spec is the only document that the builder needs. The change spec is a
 simplified form of the `.plan.md` format that `/quiz-plan` uses.
 
 - **Delivers**: the intent, and the one job or capability that this change covers.
@@ -200,11 +199,11 @@ simplified form of the `.plan.md` format that `/quiz-plan` uses.
 - **Relies on**: the IDs of the other specs that the change uses. For a job change, this
   list includes the capabilities that the job calls. The list always includes the design
   specs that apply.
-- **Interface**: the items that the checks can call. Thus, the test writer does not need
-  the code.
-- **Files**: only the app files that this change can touch. These files come from the
-  code map.
-- **Check files**: the checks. Only the test writer can change these files.
+- **Interface**: the items that the checks are permitted to call. Thus, the test writer
+  does not need the code.
+- **Files**: only the app files that this change is permitted to touch. These files come
+  from the code map.
+- **Check files**: the checks. Only the test writer is permitted to change these files.
 - **Tests-Locked**: the commit that locked the checks.
 - **Steps**: small steps. Each step gives the requirement that it serves and the test that
   proves it.
@@ -532,7 +531,7 @@ pdlc.
   or `JOB-run-lifecycle` for pdlc. Shared parts are capabilities, for example
   `CAP-question-cards` or `CAP-plan-format`. The writing style is a design spec.
 - **This repo's checks.** Frontmatter and JSON must parse. `claude plugin validate` must
-  pass. Each skill gets evals that `claude plugin eval` can run. If a skill has no eval
+  pass. Each skill gets evals that `claude plugin eval` can run. If no eval exists
   yet, the check is a `manual check`.
 - **pdlc manages changes to pdlc.** A change to pdlc is an intent like all other
   intents. For example, "add a Linear tracker adapter" becomes a capability change to

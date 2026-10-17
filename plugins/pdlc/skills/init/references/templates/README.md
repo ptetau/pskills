@@ -11,7 +11,7 @@ This folder holds the pdlc state for this project. Each pdlc skill reads this fi
    own change, before the job change.
 5. The test writer writes the checks before the code, from the spec only. Then the checks
    are locked. A writer of app code must not change the checks.
-6. Reviews are independent. Each remit gets one new reviewer, and each reviewer sees only
+6. Reviews are independent. Each remit gets one fresh reviewer, and each reviewer sees only
    its packet.
 7. A change merges only when its requirements are `verified`, its tests did not change
    after the lock, and each review remit passed. `bin/check_merge.py` checks all three.
@@ -109,10 +109,9 @@ handoff, and "Notes" in the intent. Then the user can change the answer later.
 ## Before any work
 
 First, record the merges. For each change with status `in review`, ask the delivery port
-if the change merged. If the change merged, set the change to `merged`.
-
-A next change is a change whose `Base:` is the branch of the merged change. For each next
-change, do these steps:
+if the change merged. If the change merged, set the change to `merged`. Then find each next
+change of each merged change. A next change is a change whose `Base:` is the branch of the
+merged change. For each merged change and each of its next changes, do these steps:
 
 1. Set the `Base:` of the next change to the base of the merged change.
 2. Commit the new `Base:` on the branch of the next change.

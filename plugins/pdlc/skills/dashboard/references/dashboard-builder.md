@@ -32,8 +32,8 @@ At the start of each run, read `style.md` in your memory folder.
   accent colour.
 - If `style.md` is not there, this is the first run. Build the page with a plain
   fallback style (light, airy, accent #2563eb). Put this question at the top of the
-  questions list: "What style do you like? Select dark or light, dense or airy, and one
-  accent colour. Default: light, airy, blue." End your reply with the line `STYLE NEEDED`.
+  questions list: "What style do you like? Dark or light, dense or airy, and one
+  accent color. Default: light, airy, blue." End your reply with the line `STYLE NEEDED`.
 - When the caller gives you the answer of the user, save the answer to `style.md` in your
   memory folder. Use that style from then on. Do not ask again, unless the user asks to
   change the style.

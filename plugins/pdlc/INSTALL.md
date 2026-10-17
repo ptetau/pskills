@@ -93,7 +93,7 @@ cards, do these steps:
 3. Run these commands:
 
    ```
-   /pdlc:board dry-run    show what will change
+   /pdlc:board dry-run    show the changes, but do not make them
    /pdlc:board            create and move the cards
    ```
 

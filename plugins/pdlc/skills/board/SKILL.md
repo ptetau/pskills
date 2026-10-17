@@ -60,8 +60,8 @@ If the user did not pass `dry-run`, use the tracker port:
 
 ## Rules
 
-- Only write to the board. Do not act on moves that persons make on the board. A later
-  version of pdlc will add that function.
+- Only write to the board. Do not act on moves that persons make on the board. That
+  function comes later.
 - Do not delete a card.
 - If an intent is cancelled, and there is a column for `cancelled`, move the card of the
   intent to that column. If there is no such column, do not move the card.

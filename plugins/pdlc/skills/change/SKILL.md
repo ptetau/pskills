@@ -3,9 +3,9 @@ name: change
 description: >
   Makes one or more change specs from a ready pdlc intent. Each change covers exactly one
   job, one capability, or one design spec. Each change lists the interface that its checks
-  can call, and lists only the files that the change can touch. Capability changes come
-  before the jobs that need them. Use when the user says "/pdlc:change", or wants to plan
-  the work for a ready intent.
+  are permitted to call, and lists only the files that the change is permitted to touch.
+  Capability changes come before the jobs that need them. Use when the user says
+  "/pdlc:change", or wants to plan the work for a ready intent.
 ---
 
 # pdlc change
@@ -22,8 +22,9 @@ Read the intent. If the user did not name an intent, use the oldest intent with 
 `ready`. If the intent is not `ready`, tell the user that `/pdlc:ready` comes first. Then
 stop.
 
-Read every requirement it lists, the specs they sit in, the specs those rely on, and the
-code in their code maps.
+Read every requirement that the intent lists. Then read the specs that hold the
+requirements, and the specs that those specs rely on. Then read the code in their code
+maps.
 
 ## 2. Divide the intent into changes
 
@@ -46,8 +47,8 @@ In that folder, write `change.md` from `pdlc/templates/change.md`.
 - **Relies on:** for a job change, list the capabilities that the job uses, each with the
   mark "used, not changed". Always list the design specs that apply. These include
   `DES-writing-style`, `DES-pdlc-check-tagging`, and `DES-errors`.
-- **Interface:** the items that the checks can call. The test writer does not see the
-  code. Thus, the interface must be sufficient to write each check. Give the function
+- **Interface:** the items that the checks are permitted to call. The test writer does not
+  see the code. Thus, the interface must be sufficient to write each check. Give the function
   names and arguments, the commands and flags, the routes, and the page elements and what
   they show. For each entry, give these items:
   - The file that contains the entry.
@@ -77,7 +78,7 @@ In that folder, write `change.md` from `pdlc/templates/change.md`.
 
 - In the "Changes" section of the intent, list the changes in order.
 - Write the "Handoff" section of the intent for the tests stage. Give the changes, their
-  order, and each fact about the interface that is important for the test writer.
+  order, and anything about the interface that helps the test writer.
 - Commit with the message "Plan IN-xxxx: <names of changes>" and the trailer
   `Intent: IN-xxxx`.
 - Tell the tracker port about each new change.

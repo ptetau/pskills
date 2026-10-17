@@ -7,9 +7,9 @@ Status: agreed · Default: yes · Ask at init: no
 Each change gets independent reviews, one for each remit. A fresh reviewer does each
 review, and sees only its packet:
 
-- **tests**: the spec and the checks, not the code.
-- **specification, security, quality, compliance, privacy**: the spec and the code, not
-  the checks.
+- **tests**: the spec and the checks. Do not give the reviewer the code.
+- **specification, security, quality, compliance, privacy**: the spec and the code.
+  Do not give the reviewer the checks.
 
 The files in `pdlc/reviews/` tell what each remit judges. `pdlc/config.md` tells which
 remits run. A change passes review only when each remit passes.

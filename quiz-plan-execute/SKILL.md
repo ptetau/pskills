@@ -3,9 +3,9 @@ name: quiz-plan-execute
 description: >
   Executes a `.plan.md` that /quiz-plan wrote. Takes each step to completion through a
   strict TDD gate of 6 stages. The stages are (1) understand the acceptance criteria,
-  (2) red (write a failing test), (3) green (write the implementation that makes the test
-  pass), (4) refactor, (5) review against the acceptance criteria, and (6) commit. Each
-  stage must finish before the next stage starts. Each step ends in its own commit. Steps
+  (2) red (write a failing test), (3) green (make the test pass), (4) refactor, (5) review
+  against the acceptance criteria, and (6) commit. Each stage must finish before the next
+  stage starts. Each step ends in its own commit. Steps
   that share a `Parallel group` tag run at the same time, with one agent for each step in
   its own git worktree. The harness's Workflow tool dispatches the agents when the tool is
   available. If not, the skill uses manual worktrees, with a maximum of 4 at the same
@@ -159,7 +159,7 @@ Run this loop for each step, in order. **Each stage must be complete before the 
 stage starts.** If a stage cannot be complete, stop. Then obey the Boundaries "Stop and
 ask" rule of the plan. Do not skip to a later stage.
 
-When you start each stage, tell the user the step and the stage, for example
+As you work through the stages, tell the user the step and the stage, for example
 `Step 2 · Stage 2/6 (red)`.
 
 ### Stage 1 — Understand the acceptance criteria
@@ -203,8 +203,9 @@ implementation until this condition is true.
 The green tests are a safety net. Improve the code, but do not change its behaviour:
 
 - Remove duplication.
-- Obey the conventions that the Ground truth of the plan names. Read the style documents,
-  CLAUDE.md, and the neighbouring code that the Ground truth refers to. Do not guess.
+- Obey the conventions that the Ground truth of the plan names. Read the style documents
+  that the Ground truth refers to. Read also CLAUDE.md and the neighbouring code. Do not
+  guess.
 - Decrease the complexity. Make the names and the code easier to read.
 - After the refactor, run the test command again. The tests must stay green.
 
@@ -356,12 +357,12 @@ continue to the next step or group, with no pause, because each grouped step is 
 When all steps are done (the tracker is at 100%), do these actions:
 
 1. Set the plan header **Status** to `Done`.
-2. Move the plan file into a `completed/` folder in its parent folder. For example,
-   `plans/<name>.plan.md` becomes `plans/completed/<name>.plan.md`.
-3. If `plans/completed/` does not exist, create the folder.
-4. If git tracks the plan file, use `git mv`, so that the history follows the move.
-5. Update the **Plan location** header field of the plan to the new path.
-6. Ask the user:
+2. If `plans/completed/` does not exist, create the folder.
+3. Move the plan file into a `completed/` folder in its parent folder. For example,
+   `plans/<name>.plan.md` becomes `plans/completed/<name>.plan.md`. If git tracks the
+   plan file, use `git mv` for the move, so that the history follows the move.
+4. Update the **Plan location** header field of the plan to the new path.
+5. Ask the user:
 
 ```
 All <N> steps are complete on <branch>. How do you want to finish?
@@ -402,9 +403,8 @@ last commit or the PR URL.
    same commit.
 3. **The plan is law.** Intent and Boundaries have priority over your judgement. If there
    is a conflict, stop and ask. Do not resolve the conflict yourself.
-4. **Two failed attempts mean that the plan is incorrect**, not that you must try
-   harder. Stop and tell the user about the problem (from the Boundaries rule of the
-   plan).
+4. **Two failed attempts mean that the plan is incorrect.** Do not try harder. Stop and
+   tell the user about the problem (from the Boundaries rule of the plan).
 5. **Examine, do not assume.** Before you write calls, read the real API and source
    definitions, and the conventions that the plan cites. Run commands to confirm each
    gate. Do not mark a gate as passed from memory.

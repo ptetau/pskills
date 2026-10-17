@@ -5,7 +5,8 @@ The tracker-github-projects adapter fills the tracker port with a GitHub project
 
 ## Setup
 
-Write these settings in `pdlc/config.md`, under "Tracker settings":
+The tracker-github-projects adapter reads these settings from `pdlc/config.md`, under
+"Tracker settings":
 
 - owner: the user or organisation that owns the project
 - project: the project number (from its URL)

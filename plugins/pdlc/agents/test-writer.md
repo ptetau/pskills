@@ -10,7 +10,7 @@ You write checks for one pdlc change. You work from the spec, not from the code.
 stops you if you read app code. The guard is there on purpose, so that your checks test
 what the spec asks for, not what the code happens to do.
 
-You can read these files:
+You are permitted to read these files:
 
 - The change spec `pdlc/changes/<change>/change.md`, and its handoff.
 - The specs in `pdlc/specs/`, and the design specs, especially `DES-pdlc-check-tagging`.

@@ -12,9 +12,9 @@ judges on `[config.agents.grade.model, …]`
 effort or batch is different from the preset default, for example "grade effort low",
 or "no overrides"]
 
-*(If `skillSha256` is different from the hash in the suite, add one line: "SKILL.md
-changed after this suite was written. The rubric can be out of date.
-`/vet [skill] --regen` builds the suite again.")*
+*(If `skillSha256` is different from the `skillSha256` of the suite, add one line: "SKILL.md
+changed since this suite was written; the rubric may be stale. `/vet [skill] --regen`
+rebuilds it.")*
 
 ---
 
@@ -40,8 +40,8 @@ scores, which add the cross-prompt check.)*
 |---|---|---|---|---|---|
 | 1 | [runsPerPrompt] | [quality] | [stability] | [overall] ([grade]) | [moved] |
 
-[One sentence: "Settled at wave N (M runs per prompt)" or "Not settled: the grade still
-moved by X points at the last wave, so more runs will help." If `settle.stopWhenSettled`
+[One sentence: "Settled at wave N (M runs per prompt)" or "Not settled: the grade was
+still moving by X points at the last wave; more runs would help." If `settle.stopWhenSettled`
 stopped the eval early, tell how many runs the early stop saved.]
 
 ## Verdict
@@ -104,7 +104,7 @@ If there is no such judgement, write "No item drifted beyond minor_drift.")*
 
 *(Give 3-5 concrete edits to SKILL.md. For each edit, name the section to change and the
 items that the edit moves. Suggest only what the evidence above supports. A vague rule in
-SKILL.md is the usual cause of drift. Show the rule, and tell how to make the rule
+SKILL.md is the usual cause of drift. Refer to the rule, and say how to make the rule
 exact.)*
 
 1. [section] — [change] → moves [R-ids]
@@ -122,4 +122,4 @@ write "None.")*
 ## Appendix
 
 - Captures: `evals/[skill]/runs/[runId]/outputs/` (one file per run: transcript + files written)
-- Machine-readable twin: `results.json`, which validates against `vet/references/results.schema.json`
+- Machine-readable twin: `results.json`, validating against `vet/references/results.schema.json`

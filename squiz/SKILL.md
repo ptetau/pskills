@@ -76,10 +76,10 @@ user, each question, and each file that this skill writes.
    squiz <name>.json
    ```
 
-No other step is necessary. You install the `squiz` binary with `go install` of
-`<this-skill>/go-renderer`. The binary reads the JSON and selects a theme for the repo
-(automatic, in sequence, and saved). Then the binary writes `<name>.html` next to the
-JSON. If you do not add a flag, the binary does **not** open the HTML automatically.
+No other step is necessary. The `squiz` binary (installed with `go install` of
+`<this-skill>/go-renderer`) reads the JSON and selects a theme for the repo (automatic,
+in sequence, and saved). Then the binary writes `<name>.html` next to the JSON. If you
+do not add a flag, the binary does **not** open the HTML automatically.
 
 **When you tell the user the path, always give a clickable `file://` URL.** In most
 terminals, a bare Windows path such as `C:\Users\…\foo.html` is not clickable. The URL
@@ -97,7 +97,7 @@ before the run.
 
 The doc has a sticky **`copy json`** button at the bottom. Tell the user:
 
-> "Click `copy json` at the bottom. Then paste the JSON here, and I will continue."
+> "Click `copy json` at the bottom, paste it back here, and I'll continue."
 
 When the user pastes the JSON, do these steps:
 
@@ -406,8 +406,8 @@ The agent does no more work for accessibility.
    to quote, with `{{markers}}` that map to squizzes.
 7. **The `quote` field on a squiz is optional.** Use the `quote` field when you can point
    to a specific spec line that is the reason for the question.
-8. **Self-contained.** The doc must make sense to a user who opens the doc cold, with no
-   earlier context. `SPEC_LEDE` is the one-line summary that does this work.
+8. **Self-contained.** Try to write the doc so that the doc makes sense to a user who
+   opens the doc cold. `SPEC_LEDE` is the one-line summary that does this work.
 9. **Clickable links.** When you give the user the rendered file, write the path as a
    `file://` URL (`file:///C:/Users/.../foo.html` on Windows). A bare path is not
    clickable, but a URL is clickable.
@@ -419,10 +419,10 @@ The agent does no more work for accessibility.
     one option. Do NOT mark all options as recommended. Do not add filler to the
     explanation.
 
-    You must justify the pick in one sentence, for example "The $5-VPS constraint (OVR-3)
-    excludes k8s, so the choice is systemd or Docker, and systemd has one fewer moving
-    part". If you cannot justify the pick in one sentence, do not add the recommendation.
-    Give a maximum of one recommendation for each squiz/item.
+    If you cannot justify the pick in one sentence, the recommendation is not earned, and
+    you leave the recommendation off. An example of a good sentence is "The $5-VPS
+    constraint (OVR-3) excludes k8s, so the choice is systemd or Docker, and systemd has
+    one fewer moving part". Give a maximum of one recommendation for each squiz/item.
 
 ## Files in this skill
 

@@ -59,8 +59,8 @@ List the check files for this change. Only the test writer writes these files.
 
 ## Manual checks
 
-List the acceptance checks that cannot be automated. At merge, the user makes sure that
-these checks pass. If there are no manual checks, write "none".
+List the acceptance checks that cannot be automated. At merge, the user confirms these
+checks. If there are no manual checks, write "none".
 
 ## Progress log
 

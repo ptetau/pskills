@@ -30,7 +30,7 @@ Problems:
 - <file>:<line> · <what is wrong> · <which part of the remit or spec it breaks>
 
 Notes:
-- <anything worth knowing that is not a problem>
+- <anything worth knowing that isn't a problem>
 ```
 
 If there are no problems, write "Problems: none". Give a fail only for real problems

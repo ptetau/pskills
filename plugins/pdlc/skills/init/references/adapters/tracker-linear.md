@@ -4,7 +4,8 @@ The tracker-linear adapter fills the tracker port with Linear.
 
 ## Setup
 
-Write these settings in `pdlc/config.md`, under "Tracker settings":
+The tracker-linear adapter reads these settings from `pdlc/config.md`, under "Tracker
+settings":
 
 - team: the Linear team key, for example `ENG`
 - project: a Linear project name, or `none`

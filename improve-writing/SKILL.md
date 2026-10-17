@@ -44,6 +44,8 @@ skill also runs `/vet` on the two versions and compares the scores.
 These items stay the same. Do not change them:
 
 - The meaning of each sentence, and each fact, number, default, and limit.
+- The strength of each statement. Advice stays advice: "should" does not become "must".
+  A permission stays a permission: "may" does not become "can". A "never" stays a ban.
 - Code, commands, file paths, identifiers, error codes, field names, and values.
 - Quoted text, for example the words of a user or an example of bad text.
 - The name of a skill, and the trigger phrases in its `description`.
@@ -89,7 +91,8 @@ These items change:
    - When to use the skill, and the trigger phrases.
    - Each argument and its default.
    - Each step, in its order.
-   - Each rule: each "must", "do not", "always", and "never".
+   - Each rule, with its strength: each "must", "should", "may", "do not", "always", and
+     "never".
    - Each number, limit, threshold, and default.
    - Each part of the output: sections, files, formats, and the order of turns.
    - Each question that the skill asks, and when it asks the question.

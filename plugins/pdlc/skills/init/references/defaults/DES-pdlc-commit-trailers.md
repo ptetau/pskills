@@ -13,7 +13,7 @@ Req: CAP-email.R3
 Ticket: PROJ-88
 ```
 
-`Req` can list more than one ID, with commas between the IDs. If there is no ticket, omit
+`Req` is permitted to list more than one ID, with commas between the IDs. If there is no ticket, omit
 `Ticket`.
 
 A commit that changes only files in `pdlc/` needs `Intent` and `Change`, but not `Req`.

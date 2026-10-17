@@ -11,7 +11,7 @@ You are an agent that executes this plan. Assume that you have no memory of earl
 1. Read Intent, Ground truth, and Boundaries in full.
 2. Read the Progress log to find the current state. Do not do a completed step again. Do not reopen a decision that the log records.
 3. Resume at the first step that is not marked done. Obey the gate of that step.
-4. After each step, add an entry to the Progress log. Then, before you continue, examine the step against its done criteria.
+4. After each step, add an entry to the Progress log. Then, before you continue, self-assess the step against its done criteria.
 5. If an action that you plan conflicts with Intent or Boundaries, stop and ask. Do not resolve the conflict yourself.
 
 ## Intent
@@ -29,10 +29,9 @@ reviewer must read the code by hand. `probe` will do these five things:
 4. Do an adversarial check of the findings, and drop the false positives.
 5. Write a `.md` report, ranked by severity, and a machine-readable `.json` findings file.
 
-When this plan is done, a person can see the difference. `/probe` exists in
-`C:\dev\pskills\probe\` and in `~/.claude/skills\probe\`, and the skill is
-self-contained. A human who reads `SKILL.md` agrees that the skill will make the pipeline
-above.
+Observably different when done: `/probe` exists in `C:\dev\pskills\probe\` and in
+`~/.claude/skills\probe\`. The skill is self-contained. A human who reads `SKILL.md`
+agrees that the skill will make the pipeline above.
 
 **Not doing:**
 
@@ -74,7 +73,7 @@ the Workflow tool description. Do not write a call from your memory of what the 
 - **May modify:** `C:\dev\pskills\probe\**` (new), `C:\dev\pskills\README.md`, and the
   installed copy in `~/.claude/skills\probe\**`.
 - **Must not touch:** the other skills (`quiz`, `squiz`, `argue`, `quiz-plan`,
-  `quiz-plan-execute`), `.commandcode/`, or an app outside this repo.
+  `quiz-plan-execute`), `.commandcode/`, or any app outside this repo.
 - **Stop and ask when:** a `Workflow` hook that you want to use is not in the tool
   contract, or the instructions of a step are ambiguous. Also stop and ask when the JSON
   schema does not validate, or when you tried the same fix two times without success. Two

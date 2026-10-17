@@ -88,8 +88,8 @@ bugs. The gap is between the stated intent and the observed reality, not only "t
 broken.")*
 
 - `[flow]` / `[dimension]`: [what the docs/spec said] vs [what was actually observed] → see `[F-00N]`
-- *(or:)* "No surprises vs docs/specs — the behaviour of the app matched its documented
-  intent in each part that this run probed."
+- *(or:)* "No surprises vs docs/specs — behaviour matched the app's documented intent
+  everywhere it was probed."
 
 ---
 

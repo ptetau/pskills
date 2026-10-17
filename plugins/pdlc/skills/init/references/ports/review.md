@@ -13,16 +13,16 @@ each reviewer sees only its packet.
 ## Remits
 
 The remits are tests, specification, security, quality, compliance, and privacy. Each
-remit has a description in `pdlc/reviews/`. The project can edit the remits. In
-`pdlc/config.md`, the project selects which remits run.
+remit has a description in `pdlc/reviews/`. The project is permitted to edit the remits.
+In `pdlc/config.md`, the project selects which remits run.
 
 The tests packet holds the spec and the checks, but not the code. Each other packet holds
 the spec and the code, but not the checks.
 
 ## Success
 
-If a change has a problem in one remit, the change fails that remit. The change fails
-that remit also when the other remits pass.
+If a change has a problem in one remit, the change fails that remit. The results of the
+other remits do not change the result for that remit.
 
 ## Conformance check
 

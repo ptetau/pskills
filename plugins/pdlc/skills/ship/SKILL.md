@@ -42,7 +42,8 @@ for each change: tests → build → show → verify → propose
 
 - Changes stack. When a change is proposed, start the tests of the next change
   immediately. Do not wait for merges.
-- After each stage, update the dashboard and the tracker, if the project has them.
+- After each stage, if the project has the dashboard, update the dashboard. If the
+  project has a tracker, update the tracker.
 - Keep a one-line note for each stage, for the final summary.
 
 ## 3. When a stage fails
@@ -61,8 +62,8 @@ for each change: tests → build → show → verify → propose
 3. Three failures of the same stage.
 4. The end: each change is proposed.
 
-For all other questions, take the recommended answer. Record the answer in the handoff
-and in the "Notes" of the intent. When you stop, say why in one sentence. Also say what
+For everything else, take the recommended answer. Record the answer in the handoff and in
+the "Notes" of the intent. When you stop, say why in one sentence. Also say what
 the user must decide.
 
 ## 5. Finish

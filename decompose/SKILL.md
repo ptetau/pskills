@@ -1,19 +1,18 @@
 ---
 name: decompose
 description: >
-  Software design for a new system, or for a new subsystem in an established codebase.
-  Sets the walls with volatility-based decomposition: components go around what is
-  likely to change (Managers for changing workflows, Engines for changing rules,
-  ResourceAccess for changing storage and vendors). Thus, each change lands in one
-  place. Then designs the inside of each wall as a few orthogonal, composable primitives
-  (inputs, transforms, transports, stores, state machines). Thus, you assemble features,
-  and you do not build each feature by hand. In an existing codebase, measures
-  volatility from git history and does not guess. Validates the design in three ways:
-  walks the core use cases, simulates each likely change, and assembles future features.
-  Then writes a design document. Use when the user says "/decompose", or asks to
-  "design", "architect", or "break down" a system or subsystem. Also use when the user
-  asks where service or module boundaries go. Also use when the user wants to turn a
-  feature list into an architecture. Also use when the user wants to add a subsystem
+  Software design for a new system or subsystem inside an established codebase. Sets
+  the walls with volatility-based decomposition: components go around what is likely to
+  change (Managers for changing workflows, Engines for changing rules, ResourceAccess
+  for changing storage and vendors), so each change lands in one place. Then designs
+  the inside of each wall as a few orthogonal, composable primitives (inputs,
+  transforms, transports, stores, state machines), so features are assembled rather
+  than hand-built. In an existing codebase, measures volatility from git history and
+  does not guess. Validates the design: walks the core use cases, simulates each
+  likely change, and assembles future features. Then writes a design document. Use
+  when the user says "/decompose", or asks to design, architect, or "break down" a
+  system or subsystem. Also use when the user asks where service or module boundaries
+  go. Also use to turn a feature list into an architecture, or to add a subsystem
   without a change that ripples everywhere.
 ---
 
@@ -98,18 +97,18 @@ the smells. This section gives the primary ideas.
   | Engine | a volatile *activity*: a business rule, a calculation, or an algorithm | `PricingEngine` |
   | ResourceAccess | volatile *access* to a resource, exposed as business verbs, not CRUD | `MembersAccess` |
   | Resource | the actual store or external system | database, vendor API |
-  | Utility | infrastructure that any component can use | logging, security, pub/sub |
+  | Utility | infrastructure that any component is permitted to use | logging, security, pub/sub |
 
 - **Calls go down. Calls do not go up or sideways.** The call rules are these:
   - Clients → one Manager for each use case → Engines and ResourceAccess.
   - Engines → ResourceAccess.
   - Any component → Utilities.
   - A Manager calls a different Manager only through a queue.
-  - Only Managers publish events. Clients and Managers can subscribe.
+  - Only Managers publish events. Clients and Managers are permitted to subscribe.
 
   The full matrix is in `references/walls.md`.
-- **Features are integration, not implementation** (Löwy). In a good design, a new
-  feature is mostly a new interaction between existing components.
+- **Features are integration, not implementation** (Löwy). Try to make a new feature
+  mostly a new interaction between existing components.
 
 ### Bricks (orthogonal primitives)
 
@@ -147,7 +146,7 @@ the smells. This section gives the primary ideas.
 | Wall | Its bricks |
 |------|------------|
 | Client | Inputs from the outside world (endpoints, UI, timers, event subscriptions), plus presentation. |
-| Manager | The wiring: flows that call Engines and ResourceAccess, plus State machines. The Manager decides each transition. When the state must outlive one flow, a ResourceAccess stores the state. The verbs of that ResourceAccess guard each transition when they write it (compare-and-set). A Manager can own Inputs that subscribe to events. Flows are code by default. Löwy stores flows as data, and a workflow tool runs them, in two cases: the flows differ by kind of item, customer, or locale, or the flows run long across sessions and devices. The skill adds a third case: flows that change faster than you can deploy. |
+| Manager | The wiring: flows that call Engines and ResourceAccess, plus State machines. The Manager decides each transition. When the state must outlive one flow, a ResourceAccess stores the state. The verbs of that ResourceAccess guard each transition when they write it (compare-and-set). A Manager is permitted to own Inputs that subscribe to events. Flows are code by default. Löwy stores flows as data, and a workflow tool runs them, in two cases: the flows differ by kind of item, customer, or locale, or the flows run long across sessions and devices. The skill adds a third case: flows that change faster than you can deploy. |
 | Engine | Transforms and policies behind one stable API. A new rule is a new brick or new data, not a new call path. An Engine is pure by default: the Manager passes in the data that the Engine needs. If an Engine must read, the Engine calls ResourceAccess (Löwy allows this), and the design says so. |
 | ResourceAccess | Stores, Transports, and Inputs that pull from vendors, behind business verbs. Vendor details and storage details do not cross the API of the ResourceAccess. |
 | Utility | Stable mechanisms that all components share. |
@@ -165,9 +164,9 @@ Three rules connect the two ideas:
      module. The domain module has no volatility of its own, and it depends on nothing.
      The domain module is not a component. The domain module is the nature of the
      business, written one time, and it keeps rules out of Managers.
-3. **The API of a wall does not show its wiring.** Callers use business verbs. A verb can
-   have only one brick behind it (`RenderingEngine.Render`). But callers do not see which
-   bricks run, or in what order. Thus, the wiring stays free to change.
+3. **The API of a wall does not show its wiring.** Callers use business verbs. A verb is
+   permitted to have a single brick behind it (`RenderingEngine.Render`). But callers do
+   not see which bricks run, or in what order. Thus, the wiring stays free to change.
 
 ## Two modes
 
@@ -286,10 +285,10 @@ Goal: the components, their types, their APIs, and the call graph.
    - Three to eight ResourceAccess and Resources.
    - About six Utilities.
 
-   Eight Managers means a feature-based decomposition. In a good design, volatility
-   decreases from the top layer to the bottom layer. Apply the expendability test to each Manager (see
-   `references/walls.md`). These heuristics are smell checks, not targets. When the
-   design is outside them, write the reason.
+   Eight Managers means a feature-based decomposition. Try to make volatility
+   decrease from the top layer to the bottom layer. Apply the expendability test to
+   each Manager (see `references/walls.md`). These heuristics are smell checks, not
+   targets. When the design is outside them, write the reason.
 5. **Place the cross-cutting concerns** (audit, authorisation, tenancy). Also place each
    write that must be atomic across resources. `references/walls.md` tells you how.
 6. **Subsystem mode: fit the new walls to the host.** Pick the attach point (the seam).
@@ -310,8 +309,9 @@ smells.
    Transport, a Store, or a State machine.
 3. **Define the shared contract**: the data shape that the bricks of the wall exchange,
    with its fields and invariants. Each wall has one shared contract. Walls that pass
-   data along the same flow can share one. Most bricks are `contract → contract` (a
-   policy can return zero or many). The edges are different:
+   data along the same flow are permitted to share one. Most bricks are
+   `contract → contract` (a policy is permitted to return zero or many). The edges are
+   different:
    - An Input produces the contract.
    - A Transport consumes the contract and returns a receipt.
    - A State machine takes events, and returns the next state plus commands.
@@ -372,13 +372,13 @@ pass. As an alternative, record why you accept a failure.
    makes sure that the catalogue is complete. Then do the real test:
    - Take two or three plausible future features from the register. Include the extras
      that you proposed in Phase 0.
-   - Each future feature must need at most one new brick, inside one component. (A new
-     two-way resource that needs an Input and a Transport counts as one brick.)
+   - Try to make each future feature need at most one new brick, inside one component.
+     (A new two-way resource that needs an Input and a Transport counts as one brick.)
    - Give each future feature in one line: what the feature would add, and where. Do not
      design the feature.
 
-   You can also try a rejected candidate to see its cost. You do not expect a rejected
-   candidate to pass.
+   You are also permitted to try a rejected candidate to see its cost. You do not expect
+   a rejected candidate to pass.
 4. **Independence (orthogonality) check.** For each brick, ask: if the requirement of the
    brick changed a lot, what else would change? Any answer other than "nothing" is a
    hidden dependency.
@@ -396,8 +396,8 @@ pass. As an alternative, record why you accept a failure.
 ## Phase 6 — Write the design document
 
 1. Write `<name>.design.md` at the project root (or where the user asks), from
-   `references/design-template.md`. **Size the document to the problem.** The design of a
-   small system must be shorter than its code. A **small system** (one Manager, and no
+   `references/design-template.md`. **Size the document to the problem.** Try to make the
+   design of a small system shorter than its code. A **small system** (one Manager, and no
    more than one Engine or ResourceAccess) gets a short form:
    - Phase 5 is one table, with one row for each check. Write "n/a" where a check has
      nothing to test (orthogonality with two bricks, expendability for a Manager with

@@ -18,8 +18,8 @@ runs only the checks for one requirement. Init writes this section.
 
 - all: `...`
 - one requirement: `...` (use {req} where the requirement ID goes)
-- check folders: `test/` (the folders for the checks, and only the test writer can change
-  the checks)
+- check folders: `test/` (where the checks live. Only the test writer is permitted to
+  change the checks)
 - ID form in check names: `CAP-email.R3` or `CAP_email_R3` (for runners that do not accept
   `.` or `-` in names)
 

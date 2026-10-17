@@ -47,8 +47,9 @@ A system gets change in only two ways:
 2. **Different customers, at the same time.** What differs between users, tenants,
    regions, or markets today?
 
-A "customer" can be a person or a complete business. Each volatility must be mainly on one
-axis. Löwy calls this assignment a matter of "disproportional probability", not exclusion.
+A "customer" can be a person or a complete business. Try to put each volatility mainly on
+one axis. Löwy calls this assignment a matter of "disproportional probability", not
+exclusion.
 
 If a candidate fits no axis, do not encapsulate the candidate. A component for such a
 candidate usually shows functional decomposition. If you cannot put a candidate mainly on
@@ -234,10 +235,10 @@ These numbers come from Löwy's experience (heuristics, not studies):
   Engine. If your system has three Managers, two Engines is likely your number." Many
   Engines can show functional decomposition.
 - Eight Managers show that the decomposition already failed (it is functional).
-- In a good design, volatility **decreases** as you go down the layers, and reuse
-  **increases**. This skill reads this heuristic as a rule about *APIs*. A
-  ResourceAccess over a volatile vendor changes frequently inside, but its business verbs
-  change only rarely.
+- Try to make volatility **decrease** as you go down the layers, and reuse **increase**.
+  This skill reads this heuristic as a rule about *APIs*. A ResourceAccess over a
+  volatile vendor changes frequently inside. Try to make its business verbs change only
+  rarely.
 - Good architectures are symmetric: similar use cases make similar call patterns.
   Investigate each asymmetry.
 
@@ -259,9 +260,9 @@ outside these checks, write the reason.
 
 **Features are integration, not implementation.** Löwy: "features are always and
 everywhere aspects of integration, not implementation." A podcast does not exist in one
-device. A podcast is what the devices do together. In a good design, a new feature is
-usually a change to a Manager or a new interaction between existing components. A new
-feature is usually not new Engines, ResourceAccess, or Resources.
+device. A podcast is what the devices do together. Usually, a new feature means a change
+to a Manager or a new interaction between existing components, not new Engines,
+ResourceAccess, or Resources.
 
 **Core use cases.** The core use cases express the essence of the business. Separate the
 core use cases from all other use cases (variations, "fluff"). Löwy: typically two or

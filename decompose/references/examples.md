@@ -1,7 +1,7 @@
 # Worked examples
 
-This file gives two short runs of the method. Each run reads the way a design must read:
-in plain English, with each name kept exact. The first run starts from a list of
+This file gives two short runs of the method. Try to write a design the way that each run
+reads: in plain English, with each name kept exact. The first run starts from a list of
 features. The second run adds a new part to a shop that already exists. There, we
 measure what changes, and we do not guess.
 
@@ -25,7 +25,8 @@ measure what changes, and we do not guess.
 **Words used here**
 
 - **Volatility**: how likely something is to change.
-- **Wall**: the edge of a part. A change inside a part must not reach past its wall.
+- **Wall**: the edge of a part. Usually, a change inside a part does not reach past
+  its wall.
 - **Client, Manager, Engine, ResourceAccess**: the four kinds of part. A Client takes
   requests in. A Manager runs the steps of a task in order. An Engine applies rules. A
   ResourceAccess part talks to storage or an outside service.
@@ -54,7 +55,7 @@ people. Arrows show who calls whom.
 **The trap.** The obvious design makes one service for each feature:
 `WelcomeEmailService`, `DigestService`, `SlackAlertService`, `RetryService`. Each of these
 services repeats the same work: pick a channel, write the message, send it, and remember
-it. Then, to add WhatsApp, you must change each of these services.
+it. Then, to add WhatsApp, you change each of these services.
 
 **Core use cases.** The eight features are really three tasks:
 
@@ -82,7 +83,7 @@ Ruled out:
 - *Fax*: no sign that anyone wants it.
 - *Stop telling people things*: that is the nature of the business.
 
-**Walls: the parts, and who can call whom**
+**Walls: the parts, and who is permitted to call whom**
 
 ```mermaid
 ---
@@ -133,8 +134,8 @@ flowchart TB
 Key: light blue is a part that we build, dark blue is storage, and grey is another
 system. Bands run from top to bottom: Clients, Managers, Engines, ResourceAccess. Arrows
 are calls, labelled with the verbs that the calls use. No arrow goes up or sideways. The
-diagram does not show Utilities (logging, secrets, pub/sub), because each part can call
-them.
+diagram does not show Utilities (logging, secrets, pub/sub), because each part is
+permitted to call them.
 
 | Component | Type | API (business verbs) | Calls |
 |-----------|------|----------------------|-------|
@@ -176,8 +177,8 @@ The shared contract is `Envelope`: the record that carries one message through t
   delivery.
 
 Inputs make envelopes. Transforms and policies take one envelope and give one envelope
-back (a policy can give back none or several). Transports send the envelopes out of the
-system. Thus, any Transform can follow any other Transform.
+back (a policy is permitted to give back none or several). Transports send the envelopes
+out of the system. Thus, any Transform can follow any other Transform.
 
 | Component | Bricks | Kind |
 |-----------|--------|------|
@@ -405,7 +406,7 @@ PricingEngine       → PromotionsAccess.ActivePromotions
 
 **Moving over** (each step can ship alone):
 
-1. Record today's totals in tests over real baskets.
+1. Lock today's totals in tests over real baskets.
 2. Put `PricingEngine.quote(basket)` in front of the current sums, unchanged. This step is
    "branch by abstraction".
 3. Send both cart and checkout through `PricingEngine`. After this step, there are no
@@ -422,7 +423,7 @@ PricingEngine       → PromotionsAccess.ActivePromotions
 - Three months after the switch, run `volatility.py` on only those three months
   (`--since <switch date>`). Also run `volatility.py` on the three months before the work
   started (`--since … --until …`).
-- `cart ↔ checkout` must now change together much less than 62%. The bar that the skill
-  suggests is under 30%. Below 30%, the report does not list the pair.
+- Expect `cart ↔ checkout` to change together much less than 62% now. The bar that the
+  skill suggests is under 30%. Below 30%, the report does not list the pair.
 - A longer window would count mostly old commits, and would still show the old number.
-- If the number did not fall, the wall leaks, and you must examine the design again.
+- If the number did not fall, the wall leaks, and the design needs another look.

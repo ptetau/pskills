@@ -68,7 +68,8 @@ Run the checks of each requirement through the checks port.
 3. Commit the change spec with the message "Lock tests CH-xxxx" and the trailers `Intent`
    and `Change`.
 
-After the lock, only the test writer can change these files, and only through this skill.
+After the lock, only the test writer is permitted to change these files, and only through
+this skill.
 Each such change makes a new lock, which replaces the old `Tests-Locked:` line.
 
 ## 5. Review the checks

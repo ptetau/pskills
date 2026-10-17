@@ -26,10 +26,10 @@ want tables to sort and page?"
 ## 2. Give options
 
 Examine the code to find the current method for the subject of the convention. Give two
-or three options. If this project has a real example of an option, give a short example.
-Mark the option that you recommend, and give one line about the reason. Obey "Asking
-questions" in `pdlc/README.md`. With `defaults`, use the recommended option, and do not
-ask the user.
+or three options. For each option, give a short real example from this project, if one
+exists. Mark the option that you recommend, and give one line about the reason. Obey
+"Asking questions" in `pdlc/README.md`. With `defaults`, use the recommended option, and
+do not ask the user.
 
 ## 3. Write the convention
 
@@ -37,9 +37,8 @@ ask the user.
 - **Changed convention:** edit the design spec. If the design spec was a default, set
   `Default: no`.
 
-If an automated check can examine the convention (for example, a lint rule), add
-requirements for the convention. Mark the requirements `proposed`. Then add an intent to
-build the check.
+If a check can examine the convention (for example, a lint rule), add requirements for
+the convention. Mark the requirements `proposed`. Add an intent to build the check.
 
 ## 4. Add the migration intents
 
@@ -57,9 +56,7 @@ when each intent runs.
 
 ## 5. Finish
 
-Commit with the message "Convention DES-<name>".
+Commit with the message "Convention DES-<name>" and, if a different skill sent you here,
+the `Intent` trailer of that skill.
 
-If a different skill sent you here, do these steps:
-
-1. Give the commit the `Intent` trailer of that skill.
-2. After the commit, go back to that skill.
+Then, if a different skill sent you here, go back to that skill.

@@ -224,9 +224,14 @@ Give the output of `/blueprint` to `/quiz-plan` to get a change plan. Then run
 tests.
 
 **`/blueprint` and `/decompose` obey the writing guidelines.** The two skills write for a
-bright 10-year-old, at a reading grade of 7 or lower. Each technical word is in a "Words
-used here" list. Names, types, and error codes stay the same. `check_writing.py` is the
-linter for the guidelines. `/blueprint` and `/decompose` each have a copy of the linter.
+bright 10-year-old, at a reading grade of 7 or lower. The sentences are short, and the
+words are common. Each technical word is in a "Words used here" list. Names, types, and
+error codes stay the same.
+
+`check_writing.py` is the linter for the guidelines. `/blueprint` and `/decompose` each
+have a copy of the linter. The linter measures the sentence length and the reading grade.
+The linter also lists each technical word that has no entry in the "Words used here"
+list.
 
 ---
 
@@ -388,11 +393,14 @@ when something that the user said points to that option.
 > **Question 1 of 3 · Audience**
 > Who is the primary audience for this dashboard?
 >
-> - **A · Engineers**: raw metrics, dense, no fluff; hard for anyone outside the team to read.
-> - **B · Managers**: trends and status rather than raw numbers; hides the detail on-call needs.
-> - **C · Both**: an overview with a drill-down toggle; more to build.
+> - **A · Engineers**: shows raw, dense metrics with no extra text, but it is hard for
+>   anyone outside the team to read.
+> - **B · Managers**: shows trends and status instead of raw numbers, but it hides the
+>   detail that on-call staff need.
+> - **C · Both**: gives an overview with a drill-down toggle, but it takes more work to
+>   build.
 >
-> Reply A, B or C, optionally with a note.
+> Reply A, B, or C. You can add a note, for example `B, keep it short`.
 
 Reply with a letter. You can add a note (`B, include p99 latency`). `/quiz` echoes each
 answer in one line (`✓ 1/3 Audience → Managers`). After the last question, `/quiz` shows
@@ -406,9 +414,9 @@ the resolved list for a final OK before the work starts.
 
 `/quiz-plan` runs an adaptive interview, not a fixed list. The interview finds each
 assumption, ambiguity, and dependency in a proposed change. Then `/quiz-plan` writes a
-structured `<name>.plan.md` at the project root. The plan has these parts: Intent, Ground
-truth, Boundaries, gated Steps, Verification/rollback, and a live progress tracker. Step 1
-always tests the riskiest assumption.
+structured `<name>.plan.md` in the `plans/` folder at the project root. The plan has these
+parts: Intent, Ground truth, Boundaries, gated Steps, Verification/rollback, and a live
+progress tracker. Step 1 always tests the riskiest assumption.
 
 **Example**
 
@@ -419,8 +427,8 @@ always tests the riskiest assumption.
 `/quiz-plan` asks more and more specific questions, for example "configurable or hardcoded
 limit?", "which middleware dir?", and "what must not change?". `/quiz-plan` continues
 until it can see the exact files and changes. Then `/quiz-plan` asks the user to confirm.
-After that, `/quiz-plan` writes `add-api-rate-limiting.plan.md`. The plan has a gate for
-each step (AUTO / GATED), and a 12-character progress bar in the header.
+After that, `/quiz-plan` writes `plans/add-api-rate-limiting.plan.md`. The plan has a gate
+for each step (AUTO / GATED), and a 12-character progress bar in the header.
 
 ---
 
@@ -437,9 +445,8 @@ before the next stage starts:
 5. **Review** the work against the acceptance criteria.
 6. **Commit** — make one commit for each step. Update the plan tracker in the same commit.
 
-At the start, `/quiz-plan-execute` asks about three options: a new branch, a new git
-worktree, and/or a fresh subagent for each step. At the end, `/quiz-plan-execute` offers
-to squash-merge locally or to open a PR.
+At the start, `/quiz-plan-execute` asks one question: whether to make a new branch. At
+the end, `/quiz-plan-execute` offers to squash-merge locally or to open a PR.
 
 **Example**
 
@@ -447,9 +454,9 @@ to squash-merge locally or to open a PR.
 /quiz-plan-execute add-api-rate-limiting.plan.md
 ```
 
-A GATED step pauses for human review. An AUTO step continues. If a step conflicts with the
-Intent or the Boundaries, `/quiz-plan-execute` stops and asks. `/quiz-plan-execute` does
-not resolve the conflict itself.
+A GATED step pauses for human review. An AUTO step continues. If a conflict with the
+Intent or the Boundaries occurs, `/quiz-plan-execute` stops and asks. `/quiz-plan-execute`
+does not resolve the conflict itself.
 
 ---
 
@@ -460,7 +467,7 @@ Intents go into an inbox. Then the intents become job, capability, and design sp
 the specs become small changes, and each change touches one job or one capability.
 
 `pdlc` builds each change test first. An independent reviewer checks the change, and you
-approve the change. You can trace each commit to its requirement and its intent.
+approve the change. Each commit traces back to its requirement and its intent.
 
 `pdlc` fits all types of system. `pdlc` can also manage changes to this repository, and
 changes to `pdlc` itself.
@@ -513,8 +520,12 @@ Claude reads the JSON and starts the implementation.
 The `squiz` binary is necessary for `/squiz`. See
 [squiz releases](https://github.com/squiz-cli/squiz/releases).
 
-Use `/quiz` for small sets of text questions. Use `/squiz` when the decisions are visual
-or many. Also use `/squiz` when a side-by-side view of all options helps the user.
+Usually, use `/quiz` for small sets of text questions. Use `/squiz` in any one of these
+conditions:
+
+- The decisions are visual.
+- There are many decisions.
+- A side-by-side view of all options helps the user.
 
 ---
 

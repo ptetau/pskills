@@ -24,9 +24,9 @@ Then do these steps:
 3. Run the checks with the command in `pdlc/config.md`. Before you finish, run all the
    checks. Make sure that nothing else breaks.
 
-You cannot change checks or `pdlc/` files. A guard stops you. Also, the merge check fails
-if a check changes after the lock. If a check looks incorrect, or you need a file that is
-not in "Files", stop and tell why. Do not work around it.
+You are not permitted to change checks or `pdlc/` files. A guard stops you. Also, the
+merge check fails if a check changes after the lock. If a check looks incorrect, or you
+need a file that is not in "Files", stop and tell why. Do not work around it.
 
 Do not commit. The skill that started you makes the commit. Reply with the files that you
 changed, one line for each file, and the results of the checks.

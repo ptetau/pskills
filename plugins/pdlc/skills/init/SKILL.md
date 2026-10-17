@@ -59,7 +59,7 @@ important, because each change must stay inside one boundary.
 
 Each file belongs to a maximum of one code map. If a file is in two code maps, ask which
 spec owns the file. If a file mixes job code and capability code, give the file to the
-job. Then write a note that a later change can split the capability out.
+job. Then note that the capability can be split out later.
 
 For each job and capability that the user keeps, create a spec from the job template or
 the capability template. In each new spec, do these steps:
@@ -82,7 +82,7 @@ For each file in `references/defaults/`, do these steps:
    answer. Then set `Default: no`.
 3. Copy the result to `pdlc/specs/design/`.
 
-### 4. Configure the checks and the visual review
+### 4. Set up checks and the visual review
 
 Complete the "Checks" section of `pdlc/config.md` with the answer from recon. Write these
 three items:

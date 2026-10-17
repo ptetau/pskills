@@ -59,7 +59,7 @@ Design by contract (Meyer, Eiffel) sorts each failure by fault:
 | Invariant | what must hold for every valid instance, before and after every call | the supplier's | 5xx |
 
 Each invariant in section 2 names its enforcement point and its error code. The error
-catalogue in section 3 gives the fault and the status of each code.
+catalog in section 3 gives the fault and the status of each code.
 
 ## Errors
 
@@ -68,7 +68,7 @@ catalogue in section 3 gives the fault and the status of each code.
 - **Over HTTP, use RFC 9457 problem details** (`application/problem+json`). The `type` URI
   is the primary identifier of the problem type. Put the code in an extension member
   (`code`). Clients must not parse `detail`. A new problem type documents its type URI,
-  title, and HTTP status. The error catalogue records these items.
+  title, and HTTP status. The error catalog records these items.
 
 ## Idempotency
 
@@ -156,10 +156,10 @@ From the Cucumber reference and the guidance of Cucumber:
 ## Open questions
 
 The rule of GitHub spec-kit: mark a maximum of three questions `[NEEDS CLARIFICATION: the
-specific question]`. Select the questions by impact: scope, then security and privacy,
-then user experience, then technical detail. Make an informed decision for each other
-detail. Record each such decision as an assumption. A blueprint with open questions is a
-draft.
+specific question]`. Select the questions by impact: scope, then security, privacy, and
+legal compliance, then user experience, then technical detail. Make an informed decision
+for each other detail. Record each such decision as an assumption. A blueprint with open
+questions is a draft.
 
 ## Definition of done
 

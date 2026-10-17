@@ -3,10 +3,10 @@
 The delivery-github adapter fills the delivery port with git and GitHub pull requests.
 
 - **start**: run `git switch -c <branch> <base>`. Name the branch as
-  `specs/design/DES-pdlc-branches.md` tells you. The default name is
-  `pdlc/<change-id>-<short-name>`. The base is the `Base:` of the change. For the first
-  change, the base is main, and main must be up to date. For each other change, the base
-  is the branch of the change before it.
+  `specs/design/DES-pdlc-branches.md` tells you (by default `pdlc/<change-id>-<short-name>`).
+  The base is the `Base:` of the change. For the first change, the base is main. Update main
+  before you create the branch. For each other change, the base is the branch of the change
+  before it.
 - **commit**: run `git commit`. Put the trailers at the end of the message, after a blank
   line, with one trailer on each line. Put other trailers in the same block, with no
   blank line between them. Make sure that pdlc's trailers show in the output of

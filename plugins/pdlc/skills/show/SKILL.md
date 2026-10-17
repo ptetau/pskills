@@ -25,8 +25,8 @@ The recorder is `pdlc/bin/record_gif.mjs`. The recorder needs Node, `playwright`
 `gifenc`, and `pngjs`.
 
 If the recording (step 4) stops with `missing <name>`, install the packages in
-`pdlc/.tools/`: `npm install --prefix pdlc/.tools playwright gifenc pngjs`. Then, if there
-is no browser, run `npx --prefix pdlc/.tools playwright install chromium`.
+`pdlc/.tools/`: `npm install --prefix pdlc/.tools playwright gifenc pngjs`. Then, if the
+recorder finds no browser, run `npx --prefix pdlc/.tools playwright install chromium`.
 
 Make sure that `pdlc/.tools/` is in `.gitignore`.
 
@@ -49,7 +49,7 @@ Obey the visual port and its adapter in `pdlc/config.md`. Write
 
 Run `node pdlc/bin/record_gif.mjs pdlc/changes/CH-xxxx-…/visual.json pdlc/changes/CH-xxxx-…`.
 
-Then read a few of the frames yourself. If a frame shows an error, an incorrect item, or an
+Then read a few of the frames yourself. If a frame shows an error, incorrect content, or an
 empty screen, correct the script and record again. Do not correct the app in this skill.
 
 ## 5. Finish
