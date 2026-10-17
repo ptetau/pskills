@@ -71,6 +71,22 @@ skills use the writing guidelines for their replies and for each file that they 
     SKILL.md
     references/
       writing-guidelines.md
+  quiz-visual/
+    SKILL.md
+    examples/
+      summit-welcome.quiz.html
+      summit-welcome.quiz.json
+    references/
+      page-template.html
+      preview-kinds.md
+      spec.md
+      writing-guidelines.md
+    scripts/
+      check_quiz.py
+      check_writing.py
+      render_quiz.py
+      test_page_browser.js
+      test_quiz_visual.py
   vet/
     SKILL.md
     references/
@@ -402,7 +418,7 @@ Reply with a letter. You can add a note (`B, include p99 latency`). `/quiz` echo
 answer in one line (`✓ 1/3 Audience → Managers`). After the last question, `/quiz` shows
 the resolved list for a final OK before the work starts.
 
-`/quiz` has a limit of about 7 questions.
+`/quiz` has a limit of about 7 questions. When the options differ in how they look, sound, or work, use `/quiz-visual`.
 
 ---
 
@@ -453,6 +469,42 @@ the end, `/quiz-plan-execute` offers to squash-merge locally or to open a PR.
 A GATED step pauses for human review. An AUTO step continues. If a conflict with the
 Intent or the Boundaries occurs, `/quiz-plan-execute` stops and asks. `/quiz-plan-execute`
 does not resolve the conflict itself.
+
+---
+
+## `/quiz-visual` — Visual Clarifier Page
+
+`/quiz-visual` asks the questions on one HTML page. Each option shows its result, so the
+user picks what they see. The rule is **show, do not tell**. Each kind of difference has its
+own preview:
+
+- A tone is a sample of the real words.
+- A layout is a wireframe.
+- A colour scheme is a palette in use.
+- A flow is a diagram.
+- A behaviour is a small prototype that the user clicks.
+
+**Example**
+
+```
+/quiz-visual a welcome email for new members of my climbing gym
+```
+
+The skill plans a fixed list of questions, writes them as `<name>.quiz.json`, and renders
+`<name>.quiz.html` with `scripts/render_quiz.py`. The checker `scripts/check_quiz.py` makes
+sure that the page is complete and that the words follow the writing guidelines.
+
+The user opens the page in any browser and answers. A sticky list shows the progress. Each
+question has a note field and a **You decide** button. At the end, **Copy answers** puts the
+answers on the clipboard, and the user pastes them into the chat. In the Claude app, the
+skill also publishes the page as an Artifact. The page then has a **Send answers to the
+agent** button, and the skill reads the answers itself.
+
+The page follows the theme of the system, in light and in dark. The page works on a phone.
+A finished example is in `quiz-visual/examples/summit-welcome.quiz.html`.
+
+Usually, use `/quiz` when words answer the question, for example a name or a date. Use
+`/quiz-visual` when the options differ in how they look, sound, or work.
 
 ---
 

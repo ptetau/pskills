@@ -12,6 +12,7 @@ WRITING-GUIDELINES.md                <skill>/references/writing-guidelines.md, f
 improve-writing/scripts/check_writing.py
                                      decompose/scripts/check_writing.py
                                      blueprint/scripts/check_writing.py
+                                     quiz-visual/scripts/check_writing.py
 decompose/references/c4.md           blueprint/references/c4.md
 
 Usage:
@@ -68,7 +69,7 @@ def copies():
         out.append((skill / "references" / "writing-guidelines.md", text))
     out.append((DES, des_text()))
     linter = (ROOT / "improve-writing/scripts/check_writing.py").read_text(encoding="utf-8")
-    for skill in ("decompose", "blueprint"):
+    for skill in ("decompose", "blueprint", "quiz-visual"):
         out.append((ROOT / skill / "scripts" / "check_writing.py", linter))
     c4 = (ROOT / "decompose/references/c4.md").read_text(encoding="utf-8")
     out.append((ROOT / "blueprint/references/c4.md", c4))
