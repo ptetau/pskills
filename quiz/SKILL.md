@@ -7,10 +7,9 @@ description: >
   code blocks. Plans a fixed, ordered list of questions first, so that the same request
   gets the same questions. Gives each recommendation a reason from the words of the user,
   and echoes each answer in one line. Shows the resolved answers for a final OK before
-  the work starts. The inline twin of /squiz, which shows a full visual document. Use
-  when the user says "/quiz", "quiz me", "ask me a few questions", or wants a fast
-  back-and-forth instead of a rendered document. Prefer /quiz over /squiz for about 1-7
-  questions that are mostly text, on mobile, or when speed is important.
+  the work starts. Use when the user says "/quiz", "quiz me", "ask me a few questions",
+  or wants a fast back-and-forth. Best for about 1-7 questions that are mostly text, on
+  mobile, or when speed is important.
 ---
 
 # Quiz: Inline Clarifier
@@ -18,9 +17,8 @@ description: >
 ## Purpose
 
 `/quiz` gets the decisions that are important before the work starts, one question at a
-time. `/quiz` is the inline twin of [[squiz]], and the two skills do the same job. In
-`/quiz`, each question is a native picker that the user clicks, or a short markdown
-question that the user answers with a letter.
+time. In `/quiz`, each question is a native picker that the user clicks, or a short
+markdown question that the user answers with a letter.
 
 Use `/quiz` in these conditions:
 
@@ -28,15 +26,6 @@ Use `/quiz` in these conditions:
 - The user wants a quick back-and-forth, or the user is **on mobile**.
 - The questions are mostly **text** (tone, scope, name), or a visual choice needs only a
   short preview for each option.
-
-Use `/squiz` in these conditions:
-
-- There are 8 or more questions, and the user gets help when all the questions show at
-  the same time.
-- The options need a side-by-side visual comparison that is bigger than a short preview.
-- The user asks for "the doc", "the form", or `/squiz`.
-
-If you are not sure, use `/quiz`. The user can always say "give me the full squiz".
 
 ## Writing
 
@@ -61,8 +50,7 @@ list with this procedure. Then keep to the list.
    already decides. A dimension can hold two independent decisions that both
    change the work. Only then, ask a second question for that dimension.
 3. The list, in that order, is the quiz. Thus, the most important questions come first.
-   Ask a maximum of 7 numbered questions. If more questions remain, offer `/squiz` (see
-   "Escalation to /squiz").
+   Ask a maximum of 7 numbered questions. Drop the questions that come last in the list.
 4. **Commit to the list.** The total number of questions, T, is fixed when you ask the
    first question. After that, do not add, remove, or reorder the numbered questions.
    If an answer causes a new ambiguity, echo the answer first. Then ask one follow-up in
@@ -171,30 +159,6 @@ example "So I will write X, with Y, and without Z". Then start the work. If the 
 changes an answer, update that echo line and show the list again. Do not ask the other
 questions again.
 
-## Internal JSON (for parity with /squiz)
-
-Record the answers in the same shape that `/squiz` exports, so that the two flows can mix.
-Do not show the JSON unless the user asks for "the squiz JSON":
-
-```json
-{
-  "spec": "<short task summary>",
-  "generatedAt": "<ISO timestamp>",
-  "decisions": [
-    {
-      "id": "tone",
-      "question": "What tone should the welcome email have?",
-      "choice": { "id": "stoked", "name": "Stoked", "summary": null },
-      "notes": null
-    }
-  ],
-  "summary": { "total": 3, "resolved": 3, "withNotes": 1 }
-}
-```
-
-For a deferred answer ("you decide", "skip"), record the option that you took, with
-`"notes": "you decided"`. Set `choice` to `null` only when the answer took no option.
-
 ## What not to do
 
 - Do not use ASCII cards, box-drawing characters, or code blocks around questions or
@@ -206,16 +170,3 @@ For a deferred answer ("you decide", "skip"), record the option that you took, w
 - Do not ask the same question two times. If a reply is not clear, ask one time in plain
   prose.
 - Do not run a quiz for one small clarification. Ask the question in a sentence.
-
-## Escalation to /squiz
-
-Picker previews are sufficient for most visual choices, so stay in `/quiz` when you can.
-Offer `/squiz` in one sentence, but do not change to `/squiz` without the agreement of the
-user. Offer `/squiz` in these conditions:
-
-- There are more than 7 questions.
-- The options need a side-by-side comparison that is bigger than a short preview.
-
-For example:
-
-> "Do you want a full Squiz for only the visual decisions, or do I continue here?"

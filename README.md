@@ -71,10 +71,6 @@ skills use the writing guidelines for their replies and for each file that they 
     SKILL.md
     references/
       writing-guidelines.md
-  squiz/
-    SKILL.md
-    references/
-      writing-guidelines.md
   vet/
     SKILL.md
     references/
@@ -406,7 +402,7 @@ Reply with a letter. You can add a note (`B, include p99 latency`). `/quiz` echo
 answer in one line (`✓ 1/3 Audience → Managers`). After the last question, `/quiz` shows
 the resolved list for a final OK before the work starts.
 
-`/quiz` has a limit of about 7 questions. For more questions, escalate to `/squiz`.
+`/quiz` has a limit of about 7 questions.
 
 ---
 
@@ -494,38 +490,6 @@ claude plugin install pdlc@pskills --scope project
 /pdlc:init
 /pdlc:ship let users reset their password by email
 ```
-
----
-
-## `/squiz` — Visual Clarifier Document
-
-`/squiz` is the document-mode twin of `/quiz`. `/squiz` does not ask one question at a
-time. The [squiz](https://github.com/squiz-cli/squiz) Go binary renders a self-contained
-interactive HTML document that shows all decisions at the same time. The document has
-retro Apple //e styling, and mini-wireframe previews for visual options.
-
-The user completes the document at their own pace. Then the user pastes one JSON result
-back.
-
-**Example**
-
-```
-/squiz a mobile onboarding flow for a habit-tracking app
-```
-
-Squiz renders one HTML document that covers each decision (layout, tone, data model,
-progression logic). The user completes each section and pastes the JSON result back. Then
-Claude reads the JSON and starts the implementation.
-
-The `squiz` binary is necessary for `/squiz`. See
-[squiz releases](https://github.com/squiz-cli/squiz/releases).
-
-Usually, use `/quiz` for small sets of text questions. Use `/squiz` in any one of these
-conditions:
-
-- The decisions are visual.
-- There are many decisions.
-- A side-by-side view of all options helps the user.
 
 ---
 
