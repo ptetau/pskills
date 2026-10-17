@@ -88,7 +88,7 @@
       "kind": "behavior",
       "weight": 1,
       "criterion": "The quiz commits to its question list up front: the total T stays the same from the first question to the last and matches the questions asked, and it is no more than about seven.",
-      "pass": "T never changes, equals the number of numbered questions asked, and is at most about seven (or /squiz is offered for more); any follow-up is plain prose, not a new numbered question.",
+      "pass": "T never changes, equals the number of numbered questions asked, and is at most about seven; any follow-up is plain prose, not a new numbered question.",
       "partial": "Within the cap, but T changes mid-quiz, doesn't match the questions asked, or a follow-up is added as a numbered question.",
       "source": "Step 1: Plan the questions before asking any"
     },
@@ -194,7 +194,7 @@
       "id": "P06",
       "axis": "edge: near the cap",
       "prompt": "an outline for the launch plan of our B2B analytics product. Audience, channels, timeline, budget, messaging, success metrics and owner are all undecided.",
-      "exercises": "many open decisions: staying within about seven questions or offering /squiz",
+      "exercises": "many open decisions: staying within about seven questions",
       "replies": [
         "A",
         "B",
@@ -227,7 +227,7 @@
       "id": "P09",
       "axis": "visual decisions",
       "prompt": "the layout for a one-page portfolio site for a freelance illustrator",
-      "exercises": "visual choices: previews in the picker, or text options in the fallback; /squiz offered only if a short preview wouldn't do",
+      "exercises": "visual choices: previews in the picker, or text options in the fallback",
       "replies": [
         "A",
         "B"

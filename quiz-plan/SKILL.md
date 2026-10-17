@@ -186,7 +186,7 @@ with four differences:
    `**Question N · Label**`, then the question. Then write `Reply with <what's needed>.`
    on the last line. Use the picker only when there are 2-4 real options, for example a
    branch name that you can suggest. Do not invent options to fill the picker.
-4. **No cap.** /quiz stops at about 7 questions, and then offers /squiz. In this skill, the
+4. **No cap.** /quiz stops at about 7 questions. In this skill, the
    drill continues until each item in "Signs you're done asking" is true.
 
 **Recommendations** follow the rule of /quiz, and the codebase also counts as evidence.
