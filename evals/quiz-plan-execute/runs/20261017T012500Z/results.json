@@ -1464,5 +1464,5 @@
     }
   ],
   "lostJudges": [],
-  "note": "Three of eight run agents died with an API safeguard error after the session model changed from claude-opus-5-5 to claude-sonnet-5-5 during the run. The grade has low confidence (5 of 8 runs usable)."
+  "note": "Three of eight run agents ended with an API safeguard error (reasoning_extraction flag), so 5 of 8 runs are usable and the grade has low confidence. The session model also changed from claude-opus-5-5 to claude-sonnet-5-5 while this run was in progress. The cause of the safeguard error is not established, because the same error also occurred on opus in a later run."
 }
