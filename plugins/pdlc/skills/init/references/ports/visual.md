@@ -14,9 +14,12 @@ the change as a GIF and frames.
 ## Success
 
 Each acceptance line appears in one or more frames, with its requirement ID in the
-caption. No frame shows an error that the spec did not ask for.
+caption. Each frame shows what its caption says. No frame shows an error that the spec did
+not ask for. The recorder fails a blank frame. The recorder also fails a step that must
+change the screen but does not.
 
 ## Conformance check
 
-1. Script one step for the made-up requirement `CAP-conformance.R1`.
+1. Script one step for the made-up requirement `CAP-conformance.R1`. The step shows the
+   text `conformance`.
 2. Record the step. `review.gif` exists, and `frames/01.png` shows the caption.

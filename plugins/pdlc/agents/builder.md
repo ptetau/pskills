@@ -17,11 +17,18 @@ Read these files first:
 
 Then do these steps:
 
-1. Change only the files under "Files". Keep to the "Interface" that the change spec
-   gives.
+1. Change only the files under "Files". In a file that "Files" lists with parts, change
+   only those parts. Keep to the "Interface" that the change spec gives.
 2. Write the minimum code that makes the checks pass. Then make the code tidy, so that it
-   follows the design specs.
-3. Run the checks with the command in `pdlc/config.md`. Before you finish, run all the
+   follows the design specs. Do every step in the change spec, including a step that has
+   no check, for example updating the README.
+3. Fix every review problem that the handoff lists, even a problem that no check covers.
+   Use the plainest fix inside "Files". The fix must meet the acceptance line, the design
+   spec, or the remit rule that the problem names.
+4. Do not add new behaviour, for example a limit, a guard, or another input check. New
+   behaviour is anything that no acceptance line, design spec, or remit rule asks for. If
+   a fix needs new behaviour, do not add that behaviour, and say so in your reply.
+5. Run the checks with the command in `pdlc/config.md`. Before you finish, run all the
    checks. Make sure that nothing else breaks.
 
 You are not permitted to change checks or `pdlc/` files. A guard stops you. Also, the

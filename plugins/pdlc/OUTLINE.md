@@ -62,9 +62,11 @@ These rules are fixed. All other items are defaults that you can change.
 2. **Specs come before code.** pdlc must specify an intent before it writes any change.
 3. **One change, one thing.** A change covers exactly one job or one capability, or one
    design spec.
-4. **Jobs use capabilities, but jobs do not edit capabilities.** If a job needs something
-   that a capability cannot do yet, that new work becomes a separate, earlier milestone.
-   Capability milestones always come before the job milestone that needs them.
+4. **Jobs use capabilities, but jobs do not edit capabilities.** A job owns its entry
+   points (its routes, commands, and page scripts). A capability holds only the shared
+   logic under those entry points. If a job needs something that a capability cannot do
+   yet, that new work becomes a separate, earlier milestone. Capability milestones always
+   come before the job milestone that needs them.
 5. **Verified before merge.** Each requirement that a change touches must be `verified`
    before the change can merge to main.
 6. **pdlc files are the truth.** Boards and trackers show the state of pdlc. Boards and
@@ -143,8 +145,14 @@ proposed ──► ready ──► built ──► verified
   the change merge.
 
 Spec patches go into the real spec file immediately, with the status `proposed`. There is
-one source of truth. If two intents touch the same requirement, the two intents collide at
-spec time, not at merge time. At spec time, the collision is cheap to correct.
+one source of truth. While earlier changes are not merged, the patches go onto the branch
+of the intent, stacked on top of those changes. Thus, each branch merges in order without
+conflicts.
+
+If two intents touch the same requirement, the two intents collide at spec time, not at
+merge time. At spec time, the collision is cheap to correct. The words of the newer intent
+win over an older requirement or a guess. Only words that have two possible meanings go
+back to the user.
 
 To remove a requirement, a patch marks the requirement `retiring`. When the change that
 removes the code merges, the requirement is deleted from the spec. Git keeps the history.
@@ -170,8 +178,10 @@ prove the requirement.
 ### Job, capability and design specs
 
 - A short summary of the purpose of the spec.
-- **Code map**: the files and folders that this spec owns. pdlc uses the code map to set
-  the scope of changes, not to trace.
+- **Code map**: the files and folders that this spec owns. The code map can also name
+  parts of a file that other specs share. Example:
+  `src/server.py: POST /reset route and handle_reset`. pdlc uses the code map to set the
+  scope of changes, not to trace.
 - **Requirements**. Each requirement has an ID, a status, the intents that shaped it, and
   acceptance checks. The acceptance checks are plain "given / when / then" lines.
 - Job specs also list the capabilities and design specs that they rely on.
@@ -202,7 +212,8 @@ simplified form of the `.plan.md` format that `/quiz-plan` uses.
 - **Interface**: the items that the checks are permitted to call. Thus, the test writer
   does not need the code.
 - **Files**: only the app files that this change is permitted to touch. These files come
-  from the code map.
+  from the code map. The list names a shared file with the parts of this spec, and only
+  those parts change.
 - **Check files**: the checks. Only the test writer is permitted to change these files.
 - **Tests-Locked**: the commit that locked the checks.
 - **Steps**: small steps. Each step gives the requirement that it serves and the test that
@@ -235,8 +246,9 @@ The trace works in the two directions, and pdlc writes each link only one time.
   ```
 
   Thus, `git blame` on a line leads to the commit, then to the requirement, then to the
-  intent, and then to the ticket. Jira and Linear read the `Ticket` key and show the
-  commit on the card.
+  intent, and then to the ticket. The subject of each commit also comes from one list
+  (`Tests CH-0031`, `Verified CH-0031`). A hook examines the subject and the trailers of
+  each new commit. Jira and Linear read the `Ticket` key and show the commit on the card.
 - **No ID comments in source code.** ID comments become incorrect when code moves, and
   nothing examines them.
 
@@ -268,7 +280,13 @@ builds:
   after the checks are locked, before the builder writes code.
 - **specification, security, quality, compliance, privacy**: the spec and the code, but
   not the checks. These reviews run in parallel after the visual review. The
-  specification reviewer also examines the frames of the GIF.
+  specification reviewer also examines the frames of the GIF and the output of
+  `check_writing.py`.
+
+A reviewer fails a change only for what the spec of the change covers, or for unsafe
+code. Anything new that the reviewer wants (another input check, another error) is a
+follow-up for the user. A follow-up is not a reason to make the change bigger. Verify
+files each follow-up as a new intent that waits for your approval.
 
 The project can edit each remit in `pdlc/reviews/`. In `config.md`, the project selects
 which remits run.
@@ -278,6 +296,8 @@ which remits run.
 `show` plays each acceptance line in the real app: in a browser for web apps, and in a
 terminal for CLIs and libraries. Then `show` saves `review.gif` and its frames in the
 change folder. The commit gives the name of the GIF, and the pull request embeds the GIF.
+Each frame must show what its caption claims. The recorder fails a blank frame. The
+recorder also fails a step that must change the screen but does not.
 
 ### The gate
 
@@ -295,6 +315,10 @@ the first three:
    - The change follows the design specs.
    - Each commit has its trace trailers.
 3. **You approve the merge.** You use your time for judgement, not for checklists.
+
+The changes of an intent merge together, with the bottom of the stack first. A change can
+merge only when each change of its intent is ready too. Thus, main does not get half a
+stack.
 
 If a requirement that the change touches is not `verified`, the delivery adapter blocks
 the merge. A small check script does the same in CI. Thus, the rule also applies outside
@@ -410,12 +434,23 @@ In an existing codebase, `init` runs **recon** before all other steps. Recon is 
 and read-only. Recon tries to find "just enough", and does not make a full survey.
 
 1. **Thin map of everything.** Recon lists these items:
-   - The likely capabilities, from modules, services, and dependencies.
-   - The likely jobs, from routes, screens, and commands.
+   - The likely capabilities, from modules, services, and dependencies. A capability holds
+     the shared logic under the jobs: storage, outside services, and the plumbing that
+     every job uses.
+   - The likely jobs, from routes, screens, and commands. Each route, screen, or command
+     belongs to the job that it serves.
    - The test and build commands.
    - The conventions that recon can see, for example lint configs and repeated patterns.
 
    Each item becomes a stub spec, with a code map and no requirements yet.
+
+   Recon maps a file that holds the handlers of several jobs, and shared plumbing, by
+   parts. Each job names its own parts, and the capability takes the rest. A change edits
+   only its own parts.
+
+   We map by parts, and we do not move code into per-job files, for two reasons. A move is
+   a diff that nobody asked for. Also, if the change of one job moves the handlers of other
+   jobs, the change leaves its scope.
 2. **You confirm the map.** pdlc shows the list. pdlc asks you to merge, split, or rename
    each item that looks wrong. The boundaries of capabilities and jobs are important,
    because each change must stay inside one capability or one job.

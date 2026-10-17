@@ -127,12 +127,20 @@ command on each pull request:
 python3 pdlc/bin/check_merge.py
 ```
 
-Then make this command a required check.
+Then make this command a check that must pass before a merge.
 
 The script finds the change whose branch the pull request merges. The script gets the
-branch from `GITHUB_HEAD_REF` in GitHub Actions, or from the current git branch. If a
-requirement that the change touches is not `verified`, the script fails. If no change uses
-the branch, the script examines each change with the status `in review`.
+branch from `GITHUB_HEAD_REF` in GitHub Actions, or from the current git branch. The
+script fails if one of these conditions is true:
+
+- A requirement that the change touches is not `verified`.
+- The branch cannot merge into `main` without conflicts. The script tests this only when
+  the checkout holds `main`.
+- Another change of the same intent is not ready to merge with this change.
+
+Fetch `main` and each branch, so that the script can see them. In GitHub Actions, set
+`fetch-depth: 0`. If no change uses the branch, the script examines each change with the
+status `in review`.
 
 ## Examine the guard
 
@@ -144,6 +152,11 @@ The pdlc plugin includes a guard that keeps each agent to its own role:
 
 To see each decision of the guard, start Claude Code with
 `PDLC_GUARD_LOG=/tmp/pdlc-guard.log`.
+
+The plugin also includes a second hook. The hook examines the subject and the trailers of
+each new commit on a pdlc branch against `DES-pdlc-commit-trailers`. The hook does not
+block a commit. The hook tells you what to correct with `git commit --amend`, while the
+commit is still the newest commit. The hook ignores other branches.
 
 ## Share pdlc with your team
 

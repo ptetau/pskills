@@ -14,14 +14,16 @@ Each port has one adapter. The name of an adapter is a file in `pdlc/adapters/`.
 ## Checks
 
 This section gives the command that runs the checks of this project, and the command that
-runs only the checks for one requirement. Init writes this section.
+runs only the checks for one requirement. Init writes this section. A project with no
+checks yet keeps its checks in `tests/`.
 
 - all: `...`
 - one requirement: `...` (use {req} where the requirement ID goes)
-- check folders: `test/` (where the checks live. Only the test writer is permitted to
+- check folders: `tests/` (where the checks live. Only the test writer is permitted to
   change the checks)
-- ID form in check names: `CAP-email.R3` or `CAP_email_R3` (for runners that do not accept
-  `.` or `-` in names)
+- ID form in check names: `dotted` (`CAP-email.R3`) or `underscored` (`CAP_email_R3`). Use
+  `underscored` for runners that do not accept `.` or `-` in names. Write only one of the
+  two words.
 
 ## Reviews
 

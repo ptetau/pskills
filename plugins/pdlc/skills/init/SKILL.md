@@ -57,9 +57,17 @@ what recon found, as two short lists: capabilities and jobs. Give the code map o
 item. Ask if the user wants to merge, split, or rename an item. These boundaries are
 important, because each change must stay inside one boundary.
 
-Each file belongs to a maximum of one code map. If a file is in two code maps, ask which
-spec owns the file. If a file mixes job code and capability code, give the file to the
-job. Then note that the capability can be split out later.
+Map the code as "Code maps" in `pdlc/README.md` says. Each entry point belongs to the
+job that it serves. An entry point is a route, a request handler, a command, a page
+script, or an event handler. Capabilities hold only the shared logic under the jobs:
+storage, outside services, and the plumbing that every job uses.
+
+Map a file that holds parts of several specs by parts. Each job names its own parts. The
+capability lists the file with `: the rest`. Each file, or part, belongs to a maximum of
+one code map. Leave the README out of every map.
+
+Recon can list "Unsure" items. Do not put an "Unsure" item into a spec. Put each one in
+your summary at the end.
 
 For each job and capability that the user keeps, create a spec from the job template or
 the capability template. In each new spec, do these steps:
@@ -80,18 +88,21 @@ For each file in `references/defaults/`, do these steps:
    to take the recommendation.
 2. If the user selects a different option, write the rule again to agree with the
    answer. Then set `Default: no`.
-3. Copy the result to `pdlc/specs/design/`.
+3. Copy the result to `pdlc/specs/design/`. Do not copy its `## Question` section.
 
 ### 4. Set up checks and the visual review
 
 Complete the "Checks" section of `pdlc/config.md` with the answer from recon. Write these
-three items:
+four items:
 
 - The command that runs all checks.
 - The command that runs only the checks of one requirement.
-- The check folders.
+- The check folders. If the project has no check folders yet, write `tests/`.
+- The one ID form.
 
-Ask the user to make sure that the three items are correct.
+Ask the user to make sure that the four items are correct. In `config.md`, replace each
+placeholder, each example, and each "(or …)" hint with the value that you chose, or with
+`none`.
 
 Set the visual adapter:
 
@@ -99,7 +110,10 @@ Set the visual adapter:
   `start` and `url` values from recon.
 - If the project does not serve pages, set `visual-terminal`.
 
-Add `pdlc/.tools/` to the `.gitignore` file of the project.
+Add `pdlc/.tools/` to the `.gitignore` file of the project. Also add the folders that the
+language and the tools of the project write when checks run. Examples are `__pycache__/`
+for Python and `node_modules/` for Node. If the project has no code yet, its first change
+adds those folders.
 
 If the project has no way to run checks yet, tell the user. Recommend that the first
 intent adds a way to run checks.
@@ -128,5 +142,7 @@ page shows tasks, the questions that wait for the user, deliverables, and each s
 ### 7. Finish
 
 1. Commit the new `pdlc/` folder and no other changes. Use the message "Set up pdlc".
+   Commit on `main` (the default branch of the project). Do not start a branch for this
+   commit. The records of pdlc live on `main`, and each later stage looks for them there.
 2. Tell the user how to start. `/pdlc:ship <what you want>` runs all the stages. The user
    can also run one stage at a time, and start with `/pdlc:intake`.

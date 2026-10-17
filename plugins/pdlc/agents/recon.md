@@ -28,11 +28,15 @@ You will get a request for one of two things.
 Look at the layout, the primary modules, the entry points, the dependencies, the docs, and
 the recent git history. Do not read everything. Then report these items:
 
-1. **Capabilities.** For each capability: a short lowercase name, one sentence about
-   what it does, and the files or folders that it owns.
-2. **Jobs.** For each job: a short lowercase name, who does the job, and one sentence
-   about what they want to get done. Also give the files or folders that the job owns,
-   and the capabilities that the job uses.
+1. **Capabilities.** Give only the shared logic under the jobs. This logic is storage,
+   outside services, and the plumbing that every job uses. The plumbing includes starting
+   the server, routing, reading a request, and writing a reply. For each capability: a
+   short lowercase name, one sentence about what it offers to jobs, and what it owns.
+2. **Jobs.** Assign each entry point to the job that it serves. Assign its line in any
+   routing table to the same job. An entry point is a route, a request handler, a
+   command, a page script, or an event handler. For each job: a short lowercase name, who
+   does the job, and one sentence about what they want to get done. Also give what the
+   job owns (at least its entry points), and the capabilities that the job uses.
 3. **Checks.** How the project runs checks today. Give the command that runs all checks,
    and how to run only the checks whose name contains some text. Also give the folders
    that hold the checks. If there are no checks, say "none found".
@@ -42,15 +46,21 @@ the recent git history. Do not read everything. Then report these items:
    configs). List each place where two patterns do the same job.
 6. **Unsure.** Each item that you could not decide.
 
-Each file belongs to a maximum of one job or capability. If a file mixes job code and
-capability code, give the file to the job, and say so under "Unsure".
+Each file, or part of a file, belongs to one job or capability. If one file holds parts of
+more than one job or capability, name each part in this form:
+
+- A job: `src/server.py: POST /reset route and handle_reset`.
+- The capability that holds the plumbing: `src/server.py: the rest`.
+
+Do not include the README in any map.
 
 Keep each item to one or two lines.
 
 ## A deep look at one area
 
-You will get one job or capability and its code map. Read that
-code carefully. Write what the code does today as requirements:
+You will get one job or capability and its code map. A code map entry that names parts of
+a file covers only those parts. Read that code carefully. Write what the code does today
+as requirements:
 
 ```
 ### CAP-name.R1 · Short title
@@ -70,6 +80,13 @@ Write the behaviour that a user or a caller can see, not how the code makes that
 behaviour. For example, write "saving replaces the whole list", not "save calls
 write_text". A requirement that pins the implementation blocks each future change to the
 implementation.
+
+- For a job, write what its user sees through its entry points: the replies, the output,
+  and the pages.
+- For a capability, write only what it offers to jobs. This includes a call and what the
+  call returns, a stored record, and a shared shape of a reply or an error.
+- Do not restate the behaviour of one job in a capability. That behaviour belongs to the
+  job.
 
 Write your reply, and each spec, comment, or message that you write, to the rules in
 `pdlc/specs/design/DES-writing-style.md`. If that file does not exist yet, write short

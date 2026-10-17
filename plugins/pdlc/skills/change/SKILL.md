@@ -20,7 +20,7 @@ Read `pdlc/README.md` first. Obey the instructions in that file, and start with 
 
 Read the intent. If the user did not name an intent, use the oldest intent with the status
 `ready`. If the intent is not `ready`, tell the user that `/pdlc:ready` comes first. Then
-stop.
+stop. If the intent has a `Branch:`, switch to that branch. Commit on that branch.
 
 Read every requirement that the intent lists. Then read the specs that hold the
 requirements, and the specs that those specs rely on. Then read the code in their code
@@ -42,8 +42,9 @@ In that folder, write `change.md` from `pdlc/templates/change.md`.
 - **Header:** the intent, the one spec that the change covers as `Scope`,
   `Status: planned`, the ticket of the intent, `Branch: none`, and `Base: main`. The tests
   skill sets the real base when it starts the branch.
-- **Requirements:** copy the heading and the acceptance checks of each requirement. If a
-  requirement is `retiring`, add ` (retire)` to its heading.
+- **Requirements:** copy the heading and the acceptance lines of each requirement, in
+  number order. Copy nothing else. If a requirement is `retiring`, add ` (retire)` to its
+  heading.
 - **Relies on:** for a job change, list the capabilities that the job uses, each with the
   mark "used, not changed". Always list the design specs that apply. These include
   `DES-writing-style`, `DES-pdlc-check-tagging`, and `DES-errors`.
@@ -55,24 +56,58 @@ In that folder, write `change.md` from `pdlc/templates/change.md`.
   - What goes in and what comes out, with types if the language has types.
   - Each error that the entry can give, by its code in `DES-errors`.
 
-  Under "Test seams", tell how a check controls the clock, randomness, and external
-  vendors or stores. If the checks need no seams, write "none". Select the new names here.
-  Use the style of the existing code, and mark each new name *(assumed)*.
+  If the "when" part of an acceptance line is something that the user does (a click, a
+  command, or a request), list that surface. Then the checks drive that surface, and not
+  only a helper below the surface. Select the new names here. Use the style of the existing
+  code, and mark each new name `(assumed)`.
+- **Test seams:** how a check controls what an acceptance line depends on. A seam can
+  control the clock (for any line that depends on the current date or time), randomness,
+  and external vendors or stores. Give each seam at the outermost interface that the checks
+  call. Then a check of the user's surface can reach the seam. For a command, the seam is
+  an environment variable or a flag, and the README names the seam. Do not give a seam only
+  as an argument deep inside the code.
+
+  The check runner can be unable to drive the user's surface itself. For example, the
+  surface is a page, and the runner has no browser. Then the seam is a stand-in. Do these
+  steps:
+  1. Load the real page and its script into a stub page. The stub page has the same
+     element IDs and standard properties.
+  2. Stub only the network.
+  3. Act as the user, and read what shows.
+
+  Write "none" only if no acceptance line needs a seam.
 - **Files:** only the app files that this change needs. Start from the code map of the
-  spec. A job change must not list files from the code map of a capability.
+  spec. List a shared file with the parts of this spec, as the code map names them. The
+  change edits only those parts (see "Code maps" in `pdlc/README.md`). A job change must
+  not list the files or the parts of a capability.
+
+  A capability map can hold an entry point of a job. Then move the entry point to the job
+  map, as a part. Write a note about the move in the "Notes" of the intent. Then continue
+  to plan. Do not stop for this.
+
+  A job change always lists the README of the project. Another change lists the README if
+  the change alters what the README tells a user. If `.gitignore` lacks the folders that
+  the checks will write, list `.gitignore` too.
 - **Check files:** the check files that this change adds or changes. These files are in
-  the check folders that `pdlc/config.md` gives.
+  the check folders that `pdlc/config.md` gives. Name a new check file after the spec, as
+  `DES-pdlc-check-tagging` says.
 - **Steps:** usually one step for each requirement. Each step gives its requirement, the
   check that proves the requirement (with the requirement ID in its name), and "Done
   when". A `(retire)` requirement gets no check. The step for a `(retire)` requirement
   removes the code and the checks that were only for that requirement.
-- **Manual checks:** each acceptance check that you cannot automate, or "none". Sometimes
-  you can automate a check, but no check runner of the project can get to the check. For
-  example, the check examines page behaviour, and the project has no browser checks. In
-  that condition, do these steps:
-  1. Add an intent through the inbox port to add such a runner. If the inbox has such an
-     intent, do not add a second one.
-  2. Say so in the handoff.
+
+  If "Files" lists the README, add a last step for the README. In that step, "Done when"
+  gives all of these conditions:
+  - The README tells what this change adds.
+  - The README no longer shows anything that the change removes or changes. This includes
+    each `README:` line in the "Notes" of the intent for these requirements.
+  - The README names any seam that a user can set.
+  - The README says how to run the app and the checks, with the "all" command from
+    `pdlc/config.md`.
+- **Manual checks:** only what no check can see, such as how a page looks, or "none".
+  Write one line for each manual check, in the form of the template. The "Check" of its
+  step says `manual check`. A missing runner or tool is not a reason for a manual check.
+  It is also not a reason to stop. Use a stand-in seam instead.
 
 ## 4. Finish
 

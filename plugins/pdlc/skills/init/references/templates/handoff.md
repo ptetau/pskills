@@ -1,6 +1,12 @@
-# Handoff · CH-0000 · build → show
+# Handoff · <IN- or CH-ID> · <this stage> → <next stage>
 
-Time: YYYY-MM-DDTHH:MM:SS±HH:MM (from the real clock)
+Time: <the output of `date -Iseconds`; never typed by hand>
+
+The title is one of these, and nothing else: `intake → ready`, `ready → change`,
+`change → tests`, `tests → build`, `build → show` or `show → verify`. After a failed
+round, the title is `verify → tests` or `verify → build`. Once verify proposes the change,
+the title is `verify → user`. When a stage stops, the title is `<this stage> → user`. Keep
+every section below, in this order. Write "none" under one with nothing in it.
 
 ## Done
 
@@ -8,8 +14,10 @@ Write what this stage did, in a few lines.
 
 ## Decided on defaults
 
-List the questions that got the recommended answer, so that the user can change the
-answers.
+List each `(assumed)` decision that this stage wrote, so that the user can change the
+decisions. Write one line for each decision, in the form of the "Notes" section of the
+intent: `<requirement>: <question> → <answer> (assumed)`. Write "none" only if this stage
+wrote no such decision.
 
 - none
 

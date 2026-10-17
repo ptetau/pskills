@@ -5,13 +5,20 @@ Usage:
   python3 pdlc/bin/make_packets.py CH-0001            every remit in pdlc/config.md
   python3 pdlc/bin/make_packets.py CH-0001 tests      one remit
 
-Each packet is pdlc/changes/<change>/review/<remit>/packet.md and holds:
+Each packet is pdlc/changes/<change>/review/<remit>/packet.md. Writing a packet removes
+that remit's old result.md, so a result is always about the packet next to it. A packet
+holds:
   - the remit, from pdlc/reviews/<remit>.md;
-  - the spec: the change spec, the full text of each requirement it lists, and every spec
-    it relies on;
+  - the spec:
+    - the change spec;
+    - the title and summary of the spec it covers (everything above its requirements);
+    - the full text of each requirement it lists;
+    - every spec it relies on;
   - the material: for the tests remit, the check files and nothing else; for every other
-    remit, the changed app files and nothing else. The specification packet also points to
-    the visual review frames.
+    remit, the changed app files and nothing else.
+The specification packet also holds the writing check and points to the visual review
+frames. The writing check is the output of check_writing.py for the lines this change
+wrote in its .md files: README, docs, specs and the change spec.
 
 Run it from the project root, on the change's branch.
 """
@@ -22,6 +29,7 @@ from pathlib import Path
 
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
+WRITING_CHECK = Path(__file__).parent / "check_writing.py"
 
 
 def section(text, title):
@@ -55,6 +63,14 @@ def requirement_text(root, req_id):
     return match.group(0).strip() if match else "(%s is not in its spec)" % req_id
 
 
+def spec_head(root, spec_id):
+    """A spec's title, summary and code map: everything above its '## Requirements'."""
+    path = spec_file(root, spec_id)
+    if not path.exists():
+        return "(%s not found)" % spec_id
+    return re.split(r"^## Requirements\b", path.read_text(), maxsplit=1, flags=re.M)[0].strip()
+
+
 def fence(text):
     return "````\n" + text.rstrip() + "\n````"
 
@@ -69,6 +85,17 @@ def material(root, base, files, title):
         body = path.read_text(errors="replace") if path.exists() else "(deleted)"
         parts.append("### %s\n\n%s\n" % (name, fence(body)))
     return "\n".join(parts)
+
+
+def writing_check(root, base, files):
+    """The packet section with the writing check of the lines this change wrote."""
+    title = "## Writing check\n\n"
+    if not files:
+        return title + "No text files changed.\n"
+    done = subprocess.run([sys.executable, str(WRITING_CHECK), "--since", base, *files],
+                          cwd=root, capture_output=True, text=True)
+    return title + ("`pdlc/bin/check_writing.py --since %s` on %s:\n\n%s\n"
+                    % (base, ", ".join(files), fence(done.stdout + done.stderr)))
 
 
 def main(argv, root=Path(".")):
@@ -94,10 +121,17 @@ def main(argv, root=Path(".")):
     changed = [f for f in listed.stdout.splitlines() if f]
     tests = [f for f in changed if f in checks]
     code = [f for f in changed if f not in checks and not f.startswith("pdlc/")]
+    change_spec = (folder / "change.md").relative_to(root).as_posix()
+    text_files = [f for f in changed if f.endswith(".md") and (root / f).exists()
+                  and (not f.startswith("pdlc/") or f.startswith("pdlc/specs/") or f == change_spec)]
 
     reqs = re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)", section(change, "Requirements"), re.M)
     relies = re.findall(r"\b((?:JOB|CAP|DES)-[a-z0-9-]+)\b", section(change, "Relies on"))
-    spec = ["## The change spec\n", fence(change), "\n## The requirements, in full\n"]
+    scope = re.search(r"Scope:\s*((?:JOB|CAP|DES)-[a-z0-9-]+)", change)
+    spec = ["## The change spec\n", fence(change)]
+    if scope:
+        spec += ["\n## The spec it covers: title and summary\n", fence(spec_head(root, scope.group(1)))]
+    spec.append("\n## The requirements, in full\n")
     spec += [requirement_text(root, r) + "\n" for r in reqs]
     spec.append("## Specs it relies on\n")
     for spec_id in dict.fromkeys(relies):
@@ -117,12 +151,17 @@ def main(argv, root=Path(".")):
             out.append(material(root, base, tests, "The checks"))
         else:
             out.append(material(root, base, code, "The code"))
+        if remit == "specification":
+            out.append(writing_check(root, base, text_files))
         if remit == "specification" and frames:
             out.append("## Visual review frames\n\nRead each frame to see the change working:\n")
             out += ["- %s" % f.relative_to(root).as_posix() for f in frames]
         target = folder / "review" / remit
         target.mkdir(parents=True, exist_ok=True)
         (target / "packet.md").write_text("\n".join(out) + "\n")
+        stale = target / "result.md"
+        if stale.exists():
+            stale.unlink()
         print("wrote %s" % (target / "packet.md").relative_to(root).as_posix())
     return 0
 

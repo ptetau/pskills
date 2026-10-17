@@ -19,7 +19,35 @@ You cannot read anything else, and you do not need anything else. Do not guess a
 is not in the packet. If something that you need is missing, report the missing item as a
 problem.
 
-Judge only against your remit. Then write `result.md` in the same folder as the packet:
+Judge only against your remit, and only what the spec of this change covers. Each of
+these is a problem:
+
+- The material breaks an acceptance line, a design spec in the packet, or a "Files" entry
+  of the change.
+- The material breaks a rule in your remit, in what this change wrote.
+- The material does something unsafe. Examples are an unsafe command, query, path, or
+  page built from input, a leaked secret, and a skipped access check.
+
+New behaviour is behaviour that no acceptance line, design spec, or remit rule asks for.
+Do not treat new behaviour as a problem. This applies even when the new behaviour is a
+good idea, or when it makes the code safer. Examples of new behaviour are:
+
+- Checking an input that no acceptance line names.
+- A new error or a new code.
+- A limit or a size cap.
+- A guard.
+- Another status.
+
+The same applies to each finding whose only fix is new behaviour. Put the finding under
+"Follow-ups": what to add, and why. This change builds nothing for a follow-up. The
+`/pdlc:verify` skill files each follow-up as a new intent for the user to approve. Do not
+fail the result for a follow-up.
+
+What an acceptance line does ask for is always in scope. A line that is not met is a
+problem, not a follow-up. For the tests remit, a line that is not fully proved where the
+line says is also a problem, not a follow-up.
+
+Then write `result.md` in the same folder as the packet:
 
 ```
 Result: pass | fail
@@ -27,14 +55,22 @@ Result: pass | fail
 Remit: <remit>
 
 Problems:
-- <file>:<line> · <what is wrong> · <which part of the remit or spec it breaks>
+- <file>:<line> · <what is wrong> · <the acceptance line, design spec or remit rule>
+
+Wrong versions:
+- <check> · <a plausible wrong version of the code> · fails | passes
+
+Follow-ups:
+- <new behaviour the spec doesn't ask for, and why a new intent could add it>
 
 Notes:
-- <anything worth knowing that isn't a problem>
+- <anything else worth knowing>
 ```
 
-If there are no problems, write "Problems: none". Give a fail only for real problems
-against your remit. Reply with one line: the result and the number of problems.
+Write the "Wrong versions" heading for the tests remit only. For any other remit, do not
+write it. If a heading has nothing under it, write "none" under the heading. For example,
+if there are no problems, write "Problems: none". Write the result "fail" if, and only
+if, "Problems" has an entry. Reply with one line: the result and the number of problems.
 
 Write your reply, and each spec, comment, or message that you write, to the rules in
 `pdlc/specs/design/DES-writing-style.md`. If that file does not exist yet, write short

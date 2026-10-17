@@ -1,6 +1,6 @@
 # IN-0000 · Short name
 
-Status: new · Ticket: none · Added: YYYY-MM-DD
+Status: new · Ticket: none · Branch: none · Added: YYYY-MM-DD
 
 ## What and why
 
@@ -23,7 +23,12 @@ intent, in order.
 
 ## Notes
 
-This section holds the decisions and answers from ready, with the newest last.
+This section holds the decisions and answers from intake, ready, and change, with the
+newest last. Write one line for each entry, in one of these forms:
+
+- `<requirement>: <question> → <answer> (assumed)`
+- `<ID>: was "<old>", now "<new>"`
+- `README: "<old line>" → <requirement>`
 
 ## Handoff
 

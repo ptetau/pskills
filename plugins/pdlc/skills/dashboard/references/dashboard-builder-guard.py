@@ -2,7 +2,8 @@
 """Keeps dashboard-builder inside .dashboard/ and its own memory folder.
 
 Claude Code runs this before each Read, Write, Edit or Glob the agent makes. It gets the
-tool call as JSON on stdin. Exit 0 allows the call; exit 2 blocks it and tells the agent why.
+tool call as JSON on stdin. Exit 0 allows the call. Exit 2 blocks the call and tells the
+agent why.
 """
 import json
 import os

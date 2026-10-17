@@ -29,9 +29,33 @@ For each acceptance line under "Requirements", do these steps:
    - An error code that an acceptance line expects, but that the Interface does not list.
    - A test seam that you need (the clock, randomness, a vendor), but that the Interface
      does not list.
-4. For a failure, make the check expect the exact error code, not only
-   "something went wrong". A check that passes for any error also passes for a typo.
-5. Make sure that the check fails if the behaviour is incorrect.
+4. Drive the surface that the line names. A check of a helper alone does not prove a line
+   about the surface above the helper.
+   - If the line says that the person clicks, make the check click and read what the page
+     shows. If there is a stand-in seam, make the check click through that seam.
+   - If the line depends on the current date or time, make the check set the clock. Use
+     the seam at that same surface. For a command, this seam is its environment variable
+     or flag.
+   - Do not use the real clock. Do not set the time on a helper below the surface.
+   - If the Interface gives no such seam, stop and say so.
+5. For a failure, make the check expect the exact error code, not only "something went
+   wrong". A check that passes for any error also passes for a typo. If the caller cannot
+   see the code, make the check expect the exact message and status instead. See
+   `DES-errors` (the error codes of the project).
+6. Make sure that the check fails if the behaviour is incorrect, and passes if the
+   behaviour is correct. A fake that stands in for something real (a page, a server, a
+   file) must use the names and the behaviour of the real thing. For example, a fake page
+   element has the standard properties of a page element. Pick values that a plausible
+   wrong version gets wrong:
+   - For order, sorting, rounding, or case, use examples that only the right rule fits.
+     Use items that are not already in order or in alphabetical order. Use values that
+     round differently each way.
+   - For each limit, use the value exactly at the edge and the value one past the edge.
+     Do not use only a value near the edge.
+   - For a rule about every member of a class, use one member and one value just outside
+     the class.
+7. Give a time limit to anything that waits (a reply, a process, a timer). Then an
+   incorrect app fails the check and does not hang the run.
 
 A requirement that is marked `(retire)` gets no check. Remove each existing check that
 only proved that requirement. You cannot delete files. If a check file served only that
