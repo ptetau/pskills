@@ -1,0 +1,1667 @@
+{
+  "skill": "quiz",
+  "skillSha256": "c6949f3f28619b0de8155f2ec5a86bf38d3a234b59d36b7014adb566d0eaa51d",
+  "suiteSha256": "3317adc779eb2797b94728a22cb2ffb3632f732f42e41ba227524632f71bfcf1",
+  "runId": "20261016T204141Z",
+  "generatedAt": "2026-10-17T00:56:15Z",
+  "config": {
+    "prompts": [
+      "P01",
+      "P02"
+    ],
+    "runs": 4,
+    "wave": 4,
+    "maxTurns": 12,
+    "crossPerPrompt": 2,
+    "agents": {
+      "preset": "minimal",
+      "run": {
+        "model": "session",
+        "effort": "session"
+      },
+      "grade": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "prompt"
+      },
+      "compare": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "merged"
+      },
+      "cross": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "all"
+      }
+    },
+    "agentEstimate": 11,
+    "sessionModel": "claude-opus-5-5"
+  },
+  "scores": {
+    "quality": 98,
+    "stability": 64.2,
+    "overall": 79.3,
+    "grade": "C",
+    "confidence": "normal",
+    "usableRuns": 8,
+    "totalRuns": 8
+  },
+  "settle": {
+    "settled": false,
+    "settledAt": null,
+    "delta": 2,
+    "patience": 2,
+    "stopWhenSettled": false,
+    "wavesRun": 1
+  },
+  "trajectory": [
+    {
+      "wave": 1,
+      "runsPerPrompt": 4,
+      "usable": 8,
+      "quality": 98,
+      "stability": 62.5,
+      "overall": 78.3,
+      "grade": "C",
+      "moved": null
+    }
+  ],
+  "qualitySpread": {
+    "min": 96,
+    "median": 98,
+    "max": 100
+  },
+  "items": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "Every question uses the fallback layout: a bold `**Question N of T · Label**` heading, the question, 2-4 options as a bulleted `**X · label**: sentence` list, and one `Reply …` hint line, with no code block or box drawing.",
+      "passRate": 100,
+      "stabilityWithin": 90,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": 90,
+      "classCross": "equivalent"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "Each option has one sentence saying what it does and why it fits this request, ending on its cost or trade-off.",
+      "passRate": 81.3,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 87.5,
+      "stabilityCross": 90,
+      "classCross": "equivalent"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The rhythm holds: each answer gets a one-line echo in one of the exact forms, at the top of the message that carries the next question.",
+      "passRate": 93.8,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "After the last answer the skill shows a bulleted list with one echo line per question and asks for confirmation in one sentence; once confirmed, it says what it will do in one short paragraph before doing the work.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "No assistant message contains more than one question.",
+      "passRate": 100,
+      "stabilityWithin": 90,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "A question marks at most one option `(recommended)`, lists it first, and only when something the user said points to it, which its sentence names; with nothing to go on, no option is marked.",
+      "passRate": 100,
+      "stabilityWithin": 42.5,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "major_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "The quiz commits to its question list up front: the total T stays the same from the first question to the last and matches the questions asked, and it is no more than about seven.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each echo records what the user actually replied, in the matching exact form: the choice, any note, `(you decided: recommended)` or `(you decided: first option)` for a deferral, `(from: \"…\")` for words matched to an option.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "No question, echo or resolved list is wrapped in a code block or drawn with box-drawing characters, and no emojis appear outside sample content.",
+      "passRate": 100,
+      "stabilityWithin": 90,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The questions asked are the ones whose answers would materially change the work for this request, most load-bearing first, and none re-asks something the prompt already settled.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each question's options are realistic, distinct choices for this request, and any recommendation fits what the user said.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The paragraph before the work and the work itself reflect every resolved answer and note, so the user gets what they chose.",
+      "passRate": 100,
+      "stabilityWithin": 42.5,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "major_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": null,
+      "classCross": null
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "usableRuns": 4,
+      "quality": 97,
+      "stability": 66
+    },
+    {
+      "id": "P02",
+      "usableRuns": 4,
+      "quality": 99,
+      "stability": 59
+    }
+  ],
+  "runs": [
+    {
+      "label": "P01#1",
+      "prompt": "P01",
+      "repeat": 1,
+      "capture": "evals/quiz/runs/20261016T204141Z/outputs/P01-r01.md",
+      "status": "completed",
+      "note": "",
+      "quality": 100,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 4 · Tone**"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "**B · Stoked**: talks the way climbers talk to each other, which matches a climbing gym, but it can read as try-hard to people who are new to climbing."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "✓ 2/4 Length → Short and scannable (note: mention the free intro belay class)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "I will start with these answers unless you say `wait` to change one."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "**Question 3 of 4 · Focus**"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "**A · Getting started (recommended)**: leads with the first visit and the free intro belay class, since you asked me to mention that class"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "**Question 4 of 4 · Next step**"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "✓ 2/4 Length → Short and scannable (note: mention the free intro belay class)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "- ✓ 1/4 Tone → Stoked"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "**Question 1 of 4 · Tone**"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**A · Book the belay class (recommended)**: gives one clear action, since you want the email to mention the free intro belay class"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "So I will write a short, stoked welcome email that leads with the first visit and the free intro belay class."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P01#2",
+      "prompt": "P01",
+      "repeat": 2,
+      "capture": "evals/quiz/runs/20261016T204141Z/outputs/P01-r02.md",
+      "status": "completed",
+      "note": "No AskUserQuestion tool in the session, so the skill used its plain-markdown fallback. The 5-question quiz used up the 2 scripted replies, so Length, Focus, Next step and the confirmation got fallback answers.",
+      "quality": 96,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 5 · Audience**"
+        },
+        {
+          "id": "R2",
+          "verdict": "partial",
+          "evidence": "**B · Medium**: about 300 words that also cover gear rental, etiquette, and opening hours, but fewer people read to the end."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "✓ 3/5 Length → Short and scannable (you decided: first option)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "I will start with these answers unless you say `wait` to change one."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "**Question 5 of 5 · Next step**"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "**A · Warm (recommended)**: friendly and encouraging, which suits new members who are mostly beginners"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "**Question 5 of 5 · Next step**"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "✓ 3/5 Length → Short and scannable (you decided: first option)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "- ✓ 1/5 Audience → Mostly beginners"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "**Question 1 of 5 · Audience**"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**A · Warm (recommended)**: friendly and encouraging, which suits new members who are mostly beginners, but it has less energy than climber talk."
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "So I will write a short, warm welcome email for new members who are mostly beginners."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P01#3",
+      "prompt": "P01",
+      "repeat": 3,
+      "capture": "evals/quiz/runs/20261016T204141Z/outputs/P01-r03.md",
+      "status": "completed",
+      "note": "No AskUserQuestion tool in the session, so the skill used its plain-markdown fallback. Questions 3 and 4 and the final confirmation used fallback replies.",
+      "quality": 96,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 4 · Tone**"
+        },
+        {
+          "id": "R2",
+          "verdict": "partial",
+          "evidence": "**B · Medium**: covers the first visit, the gym rules, and the community in full paragraphs, but a reader needs a few minutes for the email."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "✓ 3/4 Focus → First visit"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "I will start with these answers unless you say `wait` to change one."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "**Question 3 of 4 · Focus**"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "**A · First visit (recommended)**: starts with check-in, rental gear, and the free intro belay class that you want to mention"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "**Question 4 of 4 · Next step**"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "✓ 2/4 Length → Short and scannable (note: mention the free intro belay class)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "- ✓ 1/4 Tone → Stoked"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "**Question 1 of 4 · Tone**"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**A · Book the belay class (recommended)**: asks each new member to book the free intro belay class, since you want to mention the class"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "So I will write a short, stoked welcome email that starts with the first visit."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P01#4",
+      "prompt": "P01",
+      "repeat": 4,
+      "capture": "evals/quiz/runs/20261016T204141Z/outputs/P01-r04.md",
+      "status": "completed",
+      "note": "",
+      "quality": 96,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 4 · Tone**"
+        },
+        {
+          "id": "R2",
+          "verdict": "partial",
+          "evidence": "**B · Medium**: approximately 300 words in short sections for the first visit, the gym, and the community, but fewer new members read to the end."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "✓ 3/4 Focus → First visit"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "I will start with these answers unless you say `wait` to change one."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "**Question 3 of 4 · Focus**"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "**A · First visit (recommended)**: puts the steps for the first visit and the free intro belay class at the top, since you asked to mention that class"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "**Question 4 of 4 · Next step**"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "✓ 2/4 Length → Short and scannable (note: mention the free intro belay class)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "- ✓ 1/4 Tone → Stoked"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "**Question 1 of 4 · Tone**"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**A · Book the intro class (recommended)**: ends with one button to book the free intro belay class, since you asked to mention that class"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "So I will write a short, stoked welcome email that puts the first visit at the top."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#1",
+      "prompt": "P02",
+      "repeat": 1,
+      "capture": "evals/quiz/runs/20261016T204141Z/outputs/P02-r01.md",
+      "status": "completed",
+      "note": "",
+      "quality": 100,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 4 · Purpose**"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "fits a poster, a banner, or a badge and is easy to remember, but it has little room for detail."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "✓ 2/4 Tone → Bold (you decided: recommended)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "I will start with these answers unless you say `wait` to change one."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "**Question 3 of 4 · Length**"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "**A · Bold (recommended)**: uses short, strong words that make people want to come, since the tagline is for an event or launch"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "**Question 4 of 4 · Focus**"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "✓ 3/4 Length → Two to four words (you decided: first option)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "- ✓ 4/4 Focus → The experience (you decided: first option)"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "What is the tagline for?"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**C · The people**: shows who will be there, which suits a conference or a community event, but it is a weak fit for a show."
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "**Top pick: Be there. Feel everything.**"
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#2",
+      "prompt": "P02",
+      "repeat": 2,
+      "capture": "evals/quiz/runs/20261016T204141Z/outputs/P02-r02.md",
+      "status": "completed",
+      "note": "",
+      "quality": 100,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 4 · Purpose**"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "uses a pun or a twist that people repeat to their friends, but a joke can fail or hide the message."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "✓ 2/4 Tone → Energetic (you decided: recommended)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "I will start with these answers unless you say `wait` to change one."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "**Question 3 of 4 · Length**"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "**A · Energetic (recommended)**: uses short, active words to make people act, since you picked an event or campaign"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "**Question 4 of 4 · Focus**"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "✓ 3/4 Length → Two to four words (you decided: first option)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "- ✓ 4/4 Focus → The experience (you decided: first option)"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "What is the tagline for?"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**D · The cause**: puts the reason for the event first, which suits a fundraiser or an awareness campaign, but the tagline has less fun."
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "**Top pick: Feel it live.**"
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#3",
+      "prompt": "P02",
+      "repeat": 3,
+      "capture": "evals/quiz/runs/20261016T204141Z/outputs/P02-r03.md",
+      "status": "completed",
+      "note": "",
+      "quality": 96,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 5 of 5 · Output**"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "five taglines with different angles, so that you can compare them and select one, but you must make the final choice."
+        },
+        {
+          "id": "R3",
+          "verdict": "partial",
+          "evidence": "Here are your five answers:"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "I will start with these answers unless you say `wait` to change one."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "**Question 4 of 5 · Focus**"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "absent"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "**Question 5 of 5 · Output**"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "✓ 2/5 Tone → Confident (you decided: first option)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "- ✓ 5/5 Output → A shortlist of five (you decided: first option)"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "How many taglines do you want?"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**C · What makes you different**: gives the one thing that only you bring, so that people remember you, but the claim must be true and specific."
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "1. **[Role] who turns [hard thing] into [simple result].**"
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#4",
+      "prompt": "P02",
+      "repeat": 4,
+      "capture": "evals/quiz/runs/20261016T204141Z/outputs/P02-r04.md",
+      "status": "completed",
+      "note": "",
+      "quality": 100,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 4 · Purpose**"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "a play on words that people remember and share, but a joke can miss, and a joke works best when it uses the name."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "✓ 2/4 Tone → Bold (you decided: recommended)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "I will start with these answers unless you say `wait` to change one."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "**Question 3 of 4 · Length**"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "**A · Bold (recommended)**: short, loud words that push people to act before the date, since this is for an event or campaign"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "**Question 4 of 4 · Focus**"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "✓ 4/4 Focus → The feeling (you decided: first option)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "- ✓ 3/4 Length → Two to four words (you decided: first option)"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "What is the tagline for?"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**B · The cause**: shows why the event or campaign matters, a strong fit for a fundraiser, but it can sound heavy in so few words."
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "**Top pick: \"Louder together.\"**"
+        }
+      ],
+      "excluded": null
+    }
+  ],
+  "similarity": [
+    {
+      "scope": "P01",
+      "item": "R1",
+      "class": "equivalent",
+      "reason": "All four runs use the same fallback layout on every question. Only the option wording, the question count (5 vs 4), the option count (r01 Q2 has two) and the hint examples differ.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Bold Question N of T heading, question line, bulleted A/B/C options in the X · label: sentence form, one Reply hint line, nothing fenced or boxed"
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R2",
+      "class": "minor_drift",
+      "reason": "Every run ends each option on a cost. P01#1 also gives a benefit on every option. P01#2, P01#3 and P01#4 have one or more Length or Perks options that skip the why.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Every option sentence gives what it does, a benefit or fit, then ends on a cost"
+        },
+        {
+          "runs": [
+            "P01#2",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Option sentences end on a cost, but some (the Medium or Full length options, Perks) give only what plus cost with no stated why"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R3",
+      "class": "minor_drift",
+      "reason": "The rhythm is the same in all runs. Only P01#1 adds a lead-in line before the resolved list. P01#2 also uses the deferral echo form because of its reply.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Each next message opens with the exact-form echo line; the resolved list opens the final message directly"
+        },
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Echo lines open each question message, but the final message opens with a lead-in line (Here are your answers:) before the list"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R4",
+      "class": "minor_drift",
+      "reason": "All runs show a bulleted list, one confirmation sentence and a short paragraph before the work. P01#1 differs in a lead-in line and a rule separator.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Bulleted echo list opens the message, then the one-sentence 'I will start ... unless you say wait', then a short 'So I will write...' paragraph and the work"
+        },
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Same ending, but the list is preceded by 'Here are your answers:' and the work is set off with a horizontal rule"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R5",
+      "class": "equivalent",
+      "reason": "No message in any run stacks questions. Only the question count differs, 5 in P01#2 and 4 in the others.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Every message asks at most one numbered question"
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R6",
+      "class": "minor_drift",
+      "reason": "All recommendations are listed first and tied to the user's words. P01#2 also recommends on Tone, citing the beginners answer, which the other runs do not have.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "No recommendation on Tone or Length; first-listed recommendation on Focus and Next step, each tied to the user's note about the free intro belay class"
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "No recommendation on Audience or Length; recommendations on Tone (tied to the beginners answer), Focus and Next step"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R7",
+      "class": "minor_drift",
+      "reason": "Every run fixes T up front and keeps it. The total differs: P01#2 plans five questions and the other three plan four.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Commits to T=4 and holds it through 4 numbered questions"
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Commits to T=5 and holds it through 5 numbered questions"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R8",
+      "class": "minor_drift",
+      "reason": "All echoes match their replies. P01#2 also had a deferral reply and echoed it with the correct form, which the other runs never needed.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Echoes use only the pick form and the note form, matching the replies"
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Echoes use the pick form, the note form and the deferral (you decided: first option) form"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R9",
+      "class": "equivalent",
+      "reason": "All runs are plain markdown. The only extra marks are a horizontal rule and an arrow inside the sample email.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Plain markdown throughout: no code fences, box drawing or decorative emoji in questions, echoes or the resolved list"
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R10",
+      "class": "minor_drift",
+      "reason": "Three runs ask the same four questions in the same order. P01#2 adds an Audience question at the front and keeps the other four in the same order.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Four questions in this order: Tone, Length, Focus, Next step"
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Five questions in this order: Audience (climbing experience), Tone, Length, Focus, Next step"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R11",
+      "class": "minor_drift",
+      "reason": "Options are realistic and distinct in every run. Details differ: P01#1 offers two Length options, P01#3 has different Next step options, and P01#2 adds the Audience question and a Tone recommendation.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Tone Warm/Stoked/Plain with no recommendation; Length short vs fuller; Focus Getting started or First visit vs Community vs basics; Next step Book class vs another step, with recommendations tied to the class note"
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Audience Mixed/Beginners/Experienced; Tone with Warm recommended for beginners; Length; Focus; Next step, with recommendations tied to beginners and the class note"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R12",
+      "class": "minor_drift",
+      "reason": "Every run carries all its answers and the class note into the paragraph and the email. The delivered email differs with the answers, warm and beginner-aimed in P01#2 and stoked in the other three.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Paragraph and short stoked email reflecting Stoked, Short, first-visit focus, intro belay class mention and a book-the-class ask"
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Paragraph and short warm email for mostly beginners, reflecting short length, first-visit focus, intro belay class mention and a book-the-class ask"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R1",
+      "class": "equivalent",
+      "reason": "All four runs use the same fallback layout on every question; only the option wording, the example in the Reply line and T (4 or 5) differ.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Fallback layout: bold 'Question N of T · Label' heading, question line, 2-4 bulleted '**X · label**: sentence' options, closing 'Reply ...' line, no fences."
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R2",
+      "class": "minor_drift",
+      "reason": "Every option ends on a trade-off, but the sentence style and the option sets differ; for example #3 and #4 open several options with noun phrases ('a short hook that fits...') while #1 and #2 open with verbs.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Each option carries what it does, why it fits, and ends on a cost or trade-off after 'but'."
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R3",
+      "class": "minor_drift",
+      "reason": "The echo rhythm is the same, but #3 puts a lead-in sentence ahead of the resolved echo list while the others start the message with the list.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "Each echo opens the next-question message, and the final message opens straight with the bulleted echo list."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Echoes open the next-question messages, but the final message opens with the lead-in 'Here are your five answers:' before the echo list."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R4",
+      "class": "minor_drift",
+      "reason": "Same ending shape in all runs; #3 adds a lead-in line and a fifth bullet because it asked an extra question.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "Four-bullet echo list opening the message, the fixed 'I will start with these answers unless you say `wait`' sentence, then an implication paragraph and the work."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Five-bullet echo list with a lead-in line, the same one-sentence ask, then an implication paragraph and the work."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R5",
+      "class": "equivalent",
+      "reason": "Every run asks exactly one numbered question per message and the closing messages ask none.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "One numbered question per assistant message throughout."
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R6",
+      "class": "major_drift",
+      "reason": "Three runs recommend a tone on Q2 from the event choice, while #3 recommends nothing anywhere, so the presence of a recommendation differs.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "No recommendation on Q1; Q2 tone has one first-listed '(recommended)' option (Bold or Energetic) justified by the event or campaign pick."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "No option marked '(recommended)' on any question."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R7",
+      "class": "minor_drift",
+      "reason": "Each run keeps its own T fixed and matched to the questions asked, but #3 plans five questions where the others plan four.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "T = 4 (Purpose, Tone, Length, Focus), fixed throughout."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "T = 5 (Purpose, Tone, Length, Focus, Output), fixed throughout."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R8",
+      "class": "minor_drift",
+      "reason": "All echoes match their replies in the correct form; the Q2 marker differs only because #3 had no recommended option.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "Q1 plain choice echo; Q2 deferral echoed '(you decided: recommended)'; later deferrals '(you decided: first option)'."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Q1 plain choice echo; every deferral echoed '(you decided: first option)' because nothing was recommended."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R9",
+      "class": "equivalent",
+      "reason": "All four runs keep questions, echoes and the resolved list as plain markdown.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Plain markdown throughout: no fences, box drawing or decorative emoji."
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R10",
+      "class": "minor_drift",
+      "reason": "The same four dimensions in the same order appear in every run; #3 adds an Output question and its Q1 answer meant a different purpose.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "Four questions: Purpose, Tone, Length, Focus (event or campaign path)."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Five questions: Purpose, Tone, Length, Focus, Output (profile path, includes how many taglines)."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R11",
+      "class": "minor_drift",
+      "reason": "Options are realistic and distinct in every run, but their sets differ in detail; #3 serves a personal-profile purpose with no recommendation, and #2 and #4 vary the Q4 options.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "Event or campaign options: tone set led by a recommended Bold or Energetic, length, and an event-focused Focus question."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Personal-profile options: Confident, Warm, Witty, Plain with no recommendation, profile-focused length and Focus, plus Output."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R12",
+      "class": "major_drift",
+      "reason": "Three runs deliver finished event taglines, while #3 delivers five fill-in templates for a personal profile, so the work differs materially.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "Implication paragraph, then a top-pick event tagline plus alternatives of two to four words, asking for the event name."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Implication paragraph, then five profile tagline templates with bracketed slots and a product-designer example, asking for role and audience."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R1",
+      "class": "equivalent",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "Every question has a bold `**Question N of T · Label**` heading, a question line, 2-4 bulleted `**X · label**: sentence` options, and a closing `Reply …` line with an example note. Nothing is fenced or boxed, and no picker call appears."
+        }
+      ],
+      "reason": "All four runs use the same fallback layout on every question. Only the content and the example in the reply line differ.",
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R2",
+      "class": "equivalent",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "Each option is one sentence in the form 'what it does, often why it fits, but cost/trade-off', and the cost clause always comes last."
+        }
+      ],
+      "reason": "All runs use the same sentence shape on every option, the first question included. Some options tie the fit to the request with 'since…' and a few, such as 'Medium', give only a what and a cost. That is a difference in wording, not in approach.",
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R3",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "Each answer is echoed as `✓ N/T Label → Choice`, with `(note: …)`, `(you decided: recommended)` or `(you decided: first option)` where it applies. The echo opens the message that carries the next question. The last echo opens the resolved list, which starts directly with the bullets."
+        },
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Same echo forms and placement for answers 1 to 3. The message with the resolved list opens with the lead-in line 'Here are your answers:', so the final echo (4/4) does not open that message."
+        }
+      ],
+      "reason": "The echo mechanics are the same in every run. P01#1 puts a lead-in sentence before the resolved list, so the last echo does not sit at the top of its message.",
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R4",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "The resolved view is a bulleted list of every question's echo line in order, followed by the one sentence 'I will start with these answers unless you say `wait` to change one.' After confirmation, a three-sentence 'So I will…' paragraph comes before the work, and the work follows directly."
+        },
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "The same bulleted list, one-sentence confirmation and 'So I will…' paragraph. It adds a lead-in line 'Here are your answers:' before the list and puts a `---` rule between the paragraph and the deliverable."
+        }
+      ],
+      "reason": "Every run has the full resolved list, the one-sentence ask and the paragraph before the work. P01#1 adds a lead-in line and a horizontal rule that the other runs do not have.",
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    }
+  ],
+  "excluded": [],
+  "lostJudges": []
+}

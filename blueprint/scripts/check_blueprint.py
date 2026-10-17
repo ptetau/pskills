@@ -12,23 +12,23 @@ Errors (exit code 1):
   - section 2 has no invariants, or an invariant lacks an error code or an enforcement
     point ("Enforced by `Component.method`"), or names a component or method that
     section 5 doesn't have
-  - section 3 has no typed code block or no error catalogue table, or the catalogue and
-    the quoted codes in the contracts disagree
+  - section 3 has no typed code block or no error catalog table, or the catalog and the
+    quoted codes in the contracts disagree
   - a code used anywhere (invariants, section 5 prose, comments, and strings, scenarios)
-    is missing from the error catalogue
+    is missing from the error catalog
   - a Status/State type from section 3 has no '### Type' state machine with a diagram
   - a component in section 5 lacks a purpose, a signature block, or failure and retry
     semantics
   - section 6 has fewer than 3 scenarios, a scenario lacks Given/When/Then, an
     invariant's code is never asserted (in a Then step or an Examples row), or there is
-    no "Done when" / "Verify" line with a command
+    no "Done when" / "Verify" line
+    with a command
   - design IDs (V1, F2, UC3, FR-1, SC-1, INV-1) remain outside code blocks
   - a flow calls a component its kind may not call (walls.md call rules), or one its
     "May call" line doesn't list
-  - section 5 has no C4 component diagram, or the diagram leaves out a component, shows
-    one section 5 doesn't define, or draws a call the call rules forbid
-  - section 1 has neither a C4 container diagram placing every component nor a line
-    saying there is one container
+  - section 5 has no C4 component diagram, or it leaves out a component, shows one section 5
+    doesn't define, or draws a call the call rules forbid; section 1 has neither a C4
+    container diagram placing every component nor a line saying there is one container
   - with --render: a Mermaid diagram does not render (needs mmdc)
   - with --design: a Client, Manager, Engine, or ResourceAccess in the design's walls has
     no section 5 subsection; section 5 has a component the design doesn't; a design API
@@ -39,18 +39,16 @@ Errors (exit code 1):
 
 Not checked: whether a contract's fields or variants match the design's.
 
-Warnings:
-  - plain-English problems (see readability.py: long sentences, a reading grade above 7,
-    technical words missing from the "Words used here" list)
-  - more than 7 invariants, more than 5 scenarios, more than 5 steps in a scenario, or a
-    Background over 4 steps
-  - a Then step that asserts storage
-  - money typed as a bare number, or `any` in TypeScript
-  - a component without "May call"
-  - a Manager calling a Manager on a flow line that doesn't say the call is queued
-  - fewer *(assumed)* marks than decisions added (or more than listed)
-  - a design utility that section 5 doesn't mention
-  - filler phrasing
+Warnings: writing problems (see check_writing.py and references/writing-guidelines.md: long
+sentences, semicolons, contractions, passive and complex verbs, pronouns that refer back,
+IDs with no description, a reading grade above 7, technical words missing from the "Words
+used here" list), more than 7 invariants,
+more than 5
+scenarios, more than 5 steps in a scenario, a Background over 4 steps, a Then step that
+asserts storage, money typed as a bare number, `any` in TypeScript, a component without
+"May call", a Manager calling a Manager on a flow line that doesn't say it is queued,
+fewer *(assumed)* marks than decisions added (or more than listed), a design utility not
+mentioned in section 5, filler phrasing.
 
 Usage:
   python check_blueprint.py notifications.blueprint.md
@@ -70,9 +68,9 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
-    import readability  # ships alongside this script
+    import check_writing  # ships alongside this script
 except ImportError:  # pragma: no cover
-    readability = None
+    check_writing = None
 
 SECTIONS = [
     (1, r"boundary|scope"),
@@ -518,7 +516,7 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
             errors.append("section 2, invariant %d: no enforcement point ('Enforced by `Component.method`')" % n)
         invariant_codes.update(codes)
 
-    # --- 3. contracts and error catalogue
+    # --- 3. contracts and error catalog
     typed = code_blocks(s3, TYPED_LANGS)
     if not typed:
         errors.append("section 3: no typed code block (```ts, ```go, or ```rust)")
@@ -535,14 +533,14 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
             first = line.strip().strip("|").split("|")[0]
             catalog.update(ERROR_CODE.findall(first))
     if not catalog:
-        errors.append("section 3: no error catalogue (a table with one `CODE` per row: meaning, fault, "
+        errors.append("section 3: no error catalog (a table with one `CODE` per row: meaning, fault, "
                       "HTTP status, retryable)")
     typed_codes = set(QUOTED_CODE.findall(contract_code))
     if catalog and typed_codes:
         for c in sorted(typed_codes - catalog):
-            errors.append("section 3: `%s` is in the contract types but not in the error catalogue" % c)
+            errors.append("section 3: `%s` is in the contract types but not in the error catalog" % c)
         for c in sorted(catalog - typed_codes):
-            errors.append("section 3: `%s` is in the error catalogue but not in the contract types" % c)
+            errors.append("section 3: `%s` is in the error catalog but not in the contract types" % c)
 
     # --- 4. state machines
     if not (re.search(r"stateDiagram", s4) or re.search(r"──\[|──►|-->|->", s4)):
@@ -659,7 +657,7 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
         used = {"section 2": invariant_codes, "section 5": s5_codes, "section 6": mentioned}
         for where, codes in used.items():
             for c in sorted(codes - catalog):
-                errors.append("%s: `%s` is not in the error catalogue" % (where, c))
+                errors.append("%s: `%s` is not in the error catalog" % (where, c))
 
     # --- global
     for i, line in enumerate(prose.split("\n"), 1):
@@ -667,12 +665,12 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
             errors.append("line %d: cryptic design ID '%s'; use the domain term" % (i, m.group(0)))
     if FILLER.search(prose):
         warnings.append("filler phrasing found; lead with substance")
-    if readability is not None:
-        rw, rs = readability.check(text)
-        warnings += ["plain English: " + w for w in rw]
-        plain = rs
+    plain = {}
+    if check_writing is not None:
+        rw, plain = check_writing.check(text, max_grade=7.0, require_glossary=True)
+        warnings += ["writing: " + w for w in rw]
 
-    stats = {"reading_grade": plain.get("grade") if readability is not None else None,
+    stats = {"reading_grade": plain.get("grade"),
              "invariants": len(items), "error_codes": sorted(catalog), "state_types": state_types,
              "components": len(components), "scenarios": len(scenarios), "assumed": assumed,
              "decisions": decisions, "carried": carried,

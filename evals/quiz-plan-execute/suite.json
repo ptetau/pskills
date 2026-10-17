@@ -1,0 +1,197 @@
+{
+  "skill": "quiz-plan-execute",
+  "skillPath": "quiz-plan-execute/SKILL.md",
+  "skillSha256": "2daf720c8ccce0952c7dacb822d73cb64c8112026e5c20b02fadd219d861a25b",
+  "createdAt": "2026-10-16T20:47:01Z",
+  "structure": {
+    "summary": "Multi-turn: setup asks one question (the branch, in the plain-markdown fallback because eval runs have no picker), plus a request to clarify any Done-when clause that is not falsifiable. Then each step goes through six announced stages and ends in one commit that also updates the plan file, a GATED step ends the turn for review, and after the last step the run closes out the plan, asks how to finish, and reports the final commit.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "Setup: one question about the branch, before any code change. In the fallback it has the heading `**Question 1 of 1 · Branch**`, the question `Create a new branch for <plan-name> (<N> steps)?`, option A (yes, with the branch name) and option B (no, use the current branch) as a bulleted list with one what, why and cost sentence each, and the line `Reply A or B, or type a branch name.` It has no code block and no ASCII card. After the reply, one line confirms the choice."
+      },
+      {
+        "id": "S2",
+        "description": "Progress lines for each step in the form `Step N · Stage K/6 (name)`, through the six stages in order: understand, red, green, refactor, review, commit."
+      },
+      {
+        "id": "S3",
+        "description": "One commit for each step. The subject is `<type>(<scope>): <step name>` (Conventional Commits). The body has one line on what changed and why. The last line is `Plan: <plan-file> · Step <n>`."
+      },
+      {
+        "id": "S4",
+        "description": "The plan file as a tracker. The header Status changes to `In progress` when the work starts. In the commit of each step, the checkbox of the step changes to `[x]`, the header shows a 12-character `█`/`░` bar with the `X/N (P%)` count, and the Progress log gets a new entry: `[date] Step <n>: done`, then the lines Changed, Decided and Surprises."
+      },
+      {
+        "id": "S5",
+        "description": "After each step: for an AUTO step, a one-line status, and the next step starts in the same turn. For a GATED step, a report with the step name, the commit hash and the criteria met, then the turn ends to wait for review."
+      },
+      {
+        "id": "S6",
+        "description": "Completion: Status `Done`, the plan file moved to `plans/completed/<name>.plan.md` with its Plan location updated, then a finish question with two numbered options (1, squash-merge locally, and 2, open a PR). After the reply, a final message with the final commit or the PR URL."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "Setup asks the branch question in the plain-markdown fallback layout before any code change, and confirms the answer in one line.",
+      "pass": "Apart from a request to clarify a vague Done-when clause, the branch question is the only question before the first step. The branch question has the heading `**Question 1 of 1 · Branch**`, the question `Create a new branch for <plan-name> (<N> steps)?` with the correct step count, option A (yes, with the branch name) and option B (no, use the current branch) as a bulleted list with one what, why and cost sentence each, and the line `Reply A or B, or type a branch name.` It has no code block and no ASCII card. After the reply, one line confirms the choice. (If the capture records a picker call instead, the header is `Branch` and the call has the same two options.)",
+      "partial": "The branch question is asked and confirmed, but the heading, the step count, an option sentence or the reply line is missing or different, the question is in a code block, or a second setup question is asked.",
+      "source": "S-3. Ask the one setup question: new branch?"
+    },
+    {
+      "id": "R2",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "Option A is the only option marked as recommended, because each test plan has more than one step and the current branch is not named for the plan.",
+      "pass": "Option A has the recommended marker (`(recommended)` in the fallback, or `(Recommended)` at the end of a picker label). Option B has no marker.",
+      "partial": "Option A is recommended, but the marker has a different form or position, or the stated reason contradicts the rule.",
+      "source": "S-3: Recommend on evidence"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "The run announces each step stage by stage in the form `Step N · Stage K/6 (name)`, through all six stages in order.",
+      "pass": "For every executed step, the transcript shows announcements for stages 1 to 6 in order (understand, red, green, refactor, review, commit), each in the `Step N · Stage K/6 (name)` form.",
+      "partial": "The stages are announced, but one stage is missing or out of order in a step, or the form is different (for example, no `K/6` count).",
+      "source": "THE PER-STEP LOOP: Announce the step and stage as you go"
+    },
+    {
+      "id": "R4",
+      "kind": "behavior",
+      "weight": 3,
+      "criterion": "In each step, the run writes and runs the test before any implementation code, and quotes a failure that has the expected cause.",
+      "pass": "In every executed step, the red stage writes only the test, runs the test command of the plan, and quotes a failure from an assertion or a missing symbol. The implementation changes only after that quote.",
+      "partial": "Red comes first in most steps, but in one step the failure is not quoted, the failure comes from a syntax error or a wrong command, or some implementation is written together with the test.",
+      "source": "Stage 2 — Red; Rules recap 1"
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each later gate rests on a command that the transcript shows: the test command of the plan, verbatim, passes after green and again after refactor, and the review runs `git diff --stat`.",
+      "pass": "For every executed step, the transcript shows the exact test command from Ground truth passing after the implementation and after the refactor, and a review that examines each Done-when clause and runs `git diff --stat` before the commit. When the plan names a lint command, the lint command runs before the commit.",
+      "partial": "Most gates have a command, but one gate is claimed without a run, a command differs from the plan, or the review or the lint run is missing in one step.",
+      "source": "Stages 3 to 6; Rules recap 5: Verify, don't assume"
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "Each step lands as exactly one commit with a Conventional Commits subject that names the step, a body line that says why, and the line `Plan: <plan-file> · Step <n>`.",
+      "pass": "The transcript or the files show one new commit for each executed step. Each commit has a subject `<type>(<scope>): <step name>`, a one-line reason in the body, and the `Plan: … · Step <n>` line.",
+      "partial": "There is one commit for each step, but one subject, body or `Plan:` line is missing or in a different form. (Two steps in one commit, or a step without a commit, is a miss.)",
+      "source": "Stage 6 — Commit; Rules recap 2"
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "The plan file records the progress: Status `In progress` at the start, and in the commit of each step a ticked checkbox, a correct 12-character bar with its count, and a Progress log entry.",
+      "pass": "The diff of the plan file shows Status changed to `In progress`. For each step it shows `[ ]` changed to `[x]`, a correct 12-character `█`/`░` bar and `X/N (P%)` count (for example `██████░░░░░░` with 1/2 and 50%), and a new entry with the date, `Step <n>: done`, and the lines Changed, Decided and Surprises. Each update is in the commit of its step.",
+      "partial": "The tracker is updated, but a bar length or a percentage is wrong, a log line is missing, or one update is not in the commit of its step.",
+      "source": "Stage 6: Update the plan file before committing; S-3: set the plan header Status"
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 2,
+      "criterion": "After each step, the run obeys the gate flag: an AUTO step gets a one-line status and the next step starts without a pause, and a GATED step gets a report and the turn ends for review.",
+      "pass": "Each AUTO step ends with a one-line status and no wait. Each GATED step ends the assistant turn with the step name, the commit hash and the criteria met, and the next step starts only after the user replies.",
+      "partial": "The run obeys the flag, but the report for a GATED step does not give the commit hash or the criteria, or an AUTO step ends with more than a short status. (A GATED step without a pause, or an AUTO step that waits for the user, is a miss.)",
+      "source": "After the step; Rules recap 6"
+    },
+    {
+      "id": "R9",
+      "kind": "structure",
+      "structureRef": "S6",
+      "weight": 2,
+      "criterion": "After the last step, the run closes out the plan, asks the finish question with its two numbered options, does only what the user chose, and reports the final commit.",
+      "pass": "The plan header shows `Done` and 100%. The plan file moves to `plans/completed/<name>.plan.md` (with `git mv`, committed or staged) and its Plan location changes to the new path. The finish question offers 1 (squash-merge locally) and 2 (open a PR). After the reply, the run does not merge, push or delete a branch that the user did not choose, and the last message gives the final commit hash.",
+      "partial": "The close-out and the question are there, but one part is missing: the Status, the move, the Plan location, an option, or the final commit hash. (A merge, push or branch deletion that the user did not choose is a miss.)",
+      "appliesWhen": "the run completes every step of the plan",
+      "source": "ON COMPLETION — squash-merge or PR"
+    },
+    {
+      "id": "R10",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "When the plan cannot be followed as written, the run stops and asks the user, and does not settle the matter alone.",
+      "pass": "The run names the problem (for example, a Done-when clause that is not falsifiable, a test that fails unexpectedly, or a change needed outside May modify) and asks before it writes code for the affected step. Then it uses the answer of the user. It does not invent a criterion or work around a boundary.",
+      "partial": "The run names the problem but continues before the answer, or asks only after it wrote code for the affected step.",
+      "appliesWhen": "the plan has a step whose Done-when clause is not falsifiable, or a Stop-and-ask trigger from the Boundaries of the plan occurs during the run",
+      "source": "S-2: falsifiable Done when; Boundaries Stop and ask; Rules recap 3 and 4"
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The code that the run leaves does what the Done-when clause of each executed step asks, and the full test command of the plan passes at the end.",
+      "pass": "For every executed step, the files show tests that check each Done-when clause with the same inputs and the same expected values, and code that meets them. The last run of the test command in the transcript passes.",
+      "partial": "The tests pass, but one clause has no test or a weaker test, or one behaviour is missing or different from the clause.",
+      "source": "Stage 5 — Review against acceptance criteria; Overview"
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The changes are the remaining work of the plan and nothing more: no step that the plan marks done is done again, and nothing outside the plan changes.",
+      "pass": "Only files in May modify change, apart from the plan file. No feature from Out of scope here or Not doing is built. A step that the plan or its Progress log marks done is not redone, and work starts at the first step that is not done.",
+      "partial": "One small change goes past the plan, for example an extra helper or option, or a file outside May modify, or part of a done step is written again.",
+      "source": "Boundaries; S-2: Progress log; Stage 3: Out of scope here stays out"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical",
+      "prompt": "plans/add-slugify.plan.md\n\nThat plan file is not in the repository yet. Before you start, save the plan below to that path exactly as written, and commit it alone with the message \"docs: add slugify plan\". Then execute the plan.\n\n```markdown\n# Change Plan: Add a slugify helper\n\n**Owner:** `you` · **Status:** Agreed\n**Branch:** `feat/slugify` · **Plan location:** `plans/add-slugify.plan.md`\n**Progress:** ░░░░░░░░░░░░ 0/2 steps completed (0%)\n\n## Intent\n\nBlog post titles need URL-safe slugs. After this change, `textutils/slug.py` has a tested `slugify` function.\n\n**Not doing:** Unicode transliteration. A command-line interface.\n\n## Ground truth\n\n- **Key files:** `textutils/slug.py` (new), `textutils/test_slug.py` (new)\n- **Build / test / lint:** Test: `python3 -m unittest discover -s textutils -v`. There is no build command and no lint command.\n- **Conventions:** Python 3 standard library only. Each public function has type hints and a one-line docstring.\n\n## Boundaries\n\n- **May modify:** `textutils/` and this plan file.\n- **Must not touch:** any other file.\n- **Stop and ask when:** a test you did not expect fails, a change is needed outside \"May modify\", the instructions of a step are ambiguous, or you tried the same fix two times without success. Two failed attempts mean that the plan is wrong.\n\n## Steps\n\n### Step 1: Basic slugify · `[ ]` AUTO · Parallel group: none\n\n- **Do:** Add `slugify(text: str) -> str` to `textutils/slug.py`. Make the text lowercase, replace each run of characters that are not ASCII letters or digits with one hyphen, and remove the hyphens at the start and at the end.\n- **Done when:** `slugify(\"Hello, World!\") == \"hello-world\"` and `slugify(\"  a  b \") == \"a-b\"`, and a unit test asserts both.\n- **Out of scope here:** length limits.\n- **Touches:** `textutils/slug.py`, `textutils/test_slug.py`\n- **Depends on:** none\n\n### Step 2: Maximum length · `[ ]` AUTO · Parallel group: none\n\n- **Do:** Add an optional parameter `max_length: int | None = None`. When it is set, cut the slug to at most `max_length` characters, then remove a hyphen at the end.\n- **Done when:** `slugify(\"Hello big world\", max_length=9) == \"hello-big\"` and `slugify(\"Hello big world\", max_length=6) == \"hello\"`, and a unit test asserts both.\n- **Out of scope here:** cuts only at word boundaries.\n- **Touches:** `textutils/slug.py`, `textutils/test_slug.py`\n- **Depends on:** Step 1\n\n## Verification and rollback\n\n- **Human verifies by:** running the test command.\n- **Rollback:** revert the step commits.\n\n## Progress log\n\nNo entries yet.\n```",
+      "exercises": "The branch question and its recommendation, the six-stage loop on two AUTO steps, one commit per step with the tracker updated, and the close-out with a declined finish.",
+      "replies": [
+        "B",
+        "Neither for now. Keep the step commits on this branch. I will review them first."
+      ]
+    },
+    {
+      "id": "P02",
+      "axis": "human gate and lint command",
+      "prompt": "plans/parse-duration.plan.md\n\nThat plan file is not in the repository yet. Before you start, save the plan below to that path exactly as written, and commit it alone with the message \"docs: add parse-duration plan\". Then execute the plan.\n\n```markdown\n# Change Plan: Parse duration strings\n\n**Owner:** `you` · **Status:** Agreed\n**Branch:** `feat/parse-duration` · **Plan location:** `plans/parse-duration.plan.md`\n**Progress:** ░░░░░░░░░░░░ 0/2 steps completed (0%)\n\n## Intent\n\nOur config files give timeouts as strings such as \"1h30m\". After this change, `durations/duration.py` converts such a string to a number of seconds.\n\n**Not doing:** days or weeks. Decimal values such as \"1.5h\". Negative durations.\n\n## Ground truth\n\n- **Key files:** `durations/duration.py` (new), `durations/test_duration.py` (new)\n- **Build / test / lint:** Test: `python3 -m unittest discover -s durations -v`. Lint: `python3 -m compileall -q durations`. There is no build command.\n- **Conventions:** Python 3 standard library only. Each public function has type hints and a one-line docstring. Compile each regular expression one time, at module level.\n\n## Boundaries\n\n- **May modify:** `durations/` and this plan file.\n- **Must not touch:** any other file.\n- **Stop and ask when:** a test you did not expect fails, a change is needed outside \"May modify\", the instructions of a step are ambiguous, or you tried the same fix two times without success. Two failed attempts mean that the plan is wrong.\n\n## Steps\n\n### Step 1: Parse valid durations · `[ ]` GATED · Parallel group: none\n\n- **Do:** Add `parse_duration(text: str) -> int` to `durations/duration.py`. The text has one or more parts of the form `<digits><unit>`. The units are `h`, `m` and `s`, in that order, and each unit occurs one time at most. Return the total number of seconds.\n- **Done when:** `parse_duration(\"1h30m\") == 5400`, `parse_duration(\"45s\") == 45` and `parse_duration(\"1h2m3s\") == 3723`, and a unit test asserts all three.\n- **Out of scope here:** errors for bad input. Step 2 adds them.\n- **Touches:** `durations/duration.py`, `durations/test_duration.py`\n- **Depends on:** none\n- **Why GATED:** I want to read the parser before the error handling goes in.\n\n### Step 2: Reject bad input · `[ ]` AUTO · Parallel group: none\n\n- **Do:** Make `parse_duration` raise `ValueError` for text that is not a valid duration. The message is `invalid duration: ` followed by `repr(text)`.\n- **Done when:** `parse_duration(\"\")`, `parse_duration(\"90\")`, `parse_duration(\"1x\")` and `parse_duration(\"30m1h\")` each raise `ValueError`, the message for `\"1x\"` is exactly `invalid duration: '1x'`, and unit tests assert this.\n- **Out of scope here:** suggestions for how to correct the input.\n- **Touches:** `durations/duration.py`, `durations/test_duration.py`\n- **Depends on:** Step 1\n\n## Verification and rollback\n\n- **Human verifies by:** running the test command and the lint command.\n- **Rollback:** revert the step commits.\n\n## Progress log\n\nNo entries yet.\n```",
+      "exercises": "The pause for review after a GATED step, the lint command before each commit, and a Done-when clause that names an exact error message.",
+      "replies": [
+        "B",
+        "Looks good. Continue with step 2.",
+        "Neither for now. Keep the step commits on this branch. I will review them first."
+      ]
+    },
+    {
+      "id": "P03",
+      "axis": "resume mid-plan, rich input",
+      "prompt": "plans/parse-env-files.plan.md\n\nStep 1 of this plan is done, but its files are not in the repository yet. Before you start, save the three files below exactly as written, and commit them together with the message \"feat(envfile): key and value pairs\". Then execute the rest of the plan.\n\n### plans/parse-env-files.plan.md\n\n```markdown\n# Change Plan: Parse .env files\n\n**Owner:** `you` · **Status:** In progress\n**Branch:** `feat/envfile` · **Plan location:** `plans/parse-env-files.plan.md`\n**Progress:** ████░░░░░░░░ 1/3 steps completed (33%)\n\n## Intent\n\nOur deploy scripts read `.env` files with ad hoc string splits. After this change, `dotenv_tools/envfile.py` gives one tested parser.\n\n**Not doing:** variable expansion such as `${HOME}`. Values on more than one line. Code that writes `.env` files.\n\n## Ground truth\n\n- **Key files:** `dotenv_tools/envfile.py`, `dotenv_tools/test_envfile.py`\n- **Build / test / lint:** Test: `python3 -m unittest discover -s dotenv_tools -v`. There is no build command and no lint command.\n- **Conventions:** Python 3 standard library only. Keep `parse_env` as one public function in `envfile.py`. Put no helpers in a different module.\n\n## Boundaries\n\n- **May modify:** `dotenv_tools/` and this plan file.\n- **Must not touch:** any other file.\n- **Stop and ask when:** a test you did not expect fails, a change is needed outside \"May modify\", the instructions of a step are ambiguous, or you tried the same fix two times without success. Two failed attempts mean that the plan is wrong.\n\n## Steps\n\n### Step 1: Key and value pairs · `[x]` AUTO · Parallel group: none\n\n- **Do:** Add `parse_env(text: str) -> dict[str, str]`. Split each line that is not blank at the first `=`, and remove the spaces around the key and the value.\n- **Done when:** `parse_env(\"A=1\\n\\nB = two\\n\") == {\"A\": \"1\", \"B\": \"two\"}`, and a unit test asserts it.\n- **Out of scope here:** comments and quotes.\n- **Touches:** `dotenv_tools/envfile.py`, `dotenv_tools/test_envfile.py`\n- **Depends on:** none\n\n### Step 2: Comments and quotes · `[ ]` AUTO · Parallel group: none\n\n- **Do:** Skip each line whose first character that is not a space is `#`. When a value starts and ends with the same quote character (`'` or `\"`), remove those two quote characters.\n- **Done when:** `parse_env(\"# note\\nA='x y'\\nB=\\\"z\\\"\\n\") == {\"A\": \"x y\", \"B\": \"z\"}` and `parse_env(\"  # indented\\nC=3\") == {\"C\": \"3\"}`, and a unit test asserts both.\n- **Out of scope here:** escape sequences in quotes. Comments at the end of a line.\n- **Touches:** `dotenv_tools/envfile.py`, `dotenv_tools/test_envfile.py`\n- **Depends on:** Step 1\n\n### Step 3: Clear errors · `[ ]` AUTO · Parallel group: none\n\n- **Do:** When a line that is not blank and not a comment has no `=`, raise `ValueError` with the message `line <n>: expected KEY=VALUE`. `<n>` is the line number, counted from 1.\n- **Done when:** `parse_env(\"A=1\\nBROKEN\")` raises `ValueError` with the message `line 2: expected KEY=VALUE`, and a unit test asserts the exact message.\n- **Out of scope here:** a list of all bad lines in one error.\n- **Touches:** `dotenv_tools/envfile.py`, `dotenv_tools/test_envfile.py`\n- **Depends on:** Step 2\n\n## Verification and rollback\n\n- **Human verifies by:** running the test command.\n- **Rollback:** revert the step commits.\n\n## Progress log\n\n[2026-10-14] Step 1: done\nChanged: dotenv_tools/envfile.py, dotenv_tools/test_envfile.py\nDecided: split at the first \"=\" only, so that a value can contain \"=\".\nSurprises: none\n```\n\n### dotenv_tools/envfile.py\n\n```python\n\"\"\"Parse the text of a .env file.\"\"\"\n\n\ndef parse_env(text: str) -> dict[str, str]:\n    \"\"\"Return the KEY=VALUE pairs in text. Skip blank lines.\"\"\"\n    result: dict[str, str] = {}\n    for line in text.splitlines():\n        line = line.strip()\n        if not line:\n            continue\n        key, value = line.split(\"=\", 1)\n        result[key.strip()] = value.strip()\n    return result\n```\n\n### dotenv_tools/test_envfile.py\n\n```python\nimport unittest\n\nfrom envfile import parse_env\n\n\nclass ParseEnvTest(unittest.TestCase):\n    def test_pairs_and_blank_lines(self):\n        self.assertEqual(parse_env(\"A=1\\n\\nB = two\\n\"), {\"A\": \"1\", \"B\": \"two\"})\n\n\nif __name__ == \"__main__\":\n    unittest.main()\n```",
+      "exercises": "Resume from the Progress log at step 2 without a redo of step 1, tracker counts from 1/3 to 3/3, and a red test in step 3 that must assert the exact message because the old code already raises ValueError.",
+      "replies": [
+        "B",
+        "Neither for now. Keep the step commits on this branch. I will review them first."
+      ]
+    },
+    {
+      "id": "P04",
+      "axis": "edge-but-valid: a Done-when that is not falsifiable",
+      "prompt": "plans/text-tables.plan.md\n\nThat plan file is not in the repository yet. Before you start, save the plan below to that path exactly as written, and commit it alone with the message \"docs: add text-tables plan\". Then execute the plan.\n\n```markdown\n# Change Plan: Plain-text tables\n\n**Owner:** `you` · **Status:** Agreed\n**Branch:** `feat/text-tables` · **Plan location:** `plans/text-tables.plan.md`\n**Progress:** ░░░░░░░░░░░░ 0/2 steps completed (0%)\n\n## Intent\n\nOur report scripts print rows as ragged text. After this change, `tablefmt/table.py` prints aligned plain-text tables.\n\n**Not doing:** borders. Colours. Right alignment of numbers.\n\n## Ground truth\n\n- **Key files:** `tablefmt/table.py` (new), `tablefmt/test_table.py` (new)\n- **Build / test / lint:** Test: `python3 -m unittest discover -s tablefmt -v`. There is no build command and no lint command.\n- **Conventions:** Python 3 standard library only. Each public function has type hints and a one-line docstring.\n\n## Boundaries\n\n- **May modify:** `tablefmt/` and this plan file.\n- **Must not touch:** any other file.\n- **Stop and ask when:** a test you did not expect fails, a change is needed outside \"May modify\", the instructions of a step are ambiguous, or you tried the same fix two times without success. Two failed attempts mean that the plan is wrong.\n\n## Steps\n\n### Step 1: Aligned columns · `[ ]` AUTO · Parallel group: none\n\n- **Do:** Add `format_table(rows: list[list[str]]) -> str` to `tablefmt/table.py`. Pad each cell on the right to the width of the widest cell in its column. Put two spaces between columns and no spaces at the end of a line. Join the lines with a newline.\n- **Done when:** `format_table([[\"a\", \"bb\"], [\"ccc\", \"d\"]]) == \"a    bb\\nccc  d\"`, and a unit test asserts it.\n- **Out of scope here:** header rows.\n- **Touches:** `tablefmt/table.py`, `tablefmt/test_table.py`\n- **Depends on:** none\n\n### Step 2: Header row · `[ ]` AUTO · Parallel group: none\n\n- **Do:** Add an optional `header` parameter that shows column names above the rows.\n- **Done when:** the header looks tidy.\n- **Out of scope here:** sorting.\n- **Touches:** `tablefmt/table.py`, `tablefmt/test_table.py`\n- **Depends on:** Step 1\n\n## Verification and rollback\n\n- **Human verifies by:** running the test command.\n- **Rollback:** revert the step commits.\n\n## Progress log\n\nNo entries yet.\n```",
+      "exercises": "The stop-and-ask rule for a vague Done-when clause, then a red test built from the criterion that the user gives.",
+      "replies": [
+        "Step 2 is done when format_table([[\"x\", \"y\"]], header=[\"Name\", \"Qty\"]) == \"Name  Qty\\n----  ---\\nx     y\", and a unit test asserts it. The header counts toward the width of each column, and the line under the header has one hyphen for each character of the column width.",
+        "B",
+        "Neither for now. Keep the step commits on this branch. I will review them first."
+      ]
+    }
+  ]
+}

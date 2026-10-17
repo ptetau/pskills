@@ -11,15 +11,15 @@ main...HEAD). If there is no main, it checks every .md file under the current fo
 With --since, it reports only the lines committed since that branch.
 
 It checks four rules of DES-writing-style (the writing rules):
-  - sentence length (rule 1): a sentence of more than 25 words, or an instruction of
+  - sentence length: a sentence of more than 25 words, or an instruction of
     more than 20. An instruction starts with a command verb, such as "Run" or "Use".
-  - NZ spelling (rule 2): common US forms, such as "organize", "color", "center" and
+  - NZ spelling: common US forms, such as "organize", "color", "center" and
     "gray". It gives the NZ form to write.
-  - ID alone (rule 5): a pdlc ID (IN-0001, CAP-email, CAP-email.R3) or a bare
+  - ID alone: a pdlc ID (IN-0001, CAP-email, CAP-email.R3) or a bare
     requirement number (R3) with no name next to it. A name is next to it when the
     sentence goes on with "(", " · ", ":", a dash and words, or a quoted name. A name
     is also next to it when the ID is in brackets after the name.
-  - conversation (rule 6): phrases that tell how the text came about, such as "as you
+  - conversation: phrases that tell how the text came about, such as "as you
     asked", "I've" or "last round". "Here is" counts only at the start of a sentence.
 
 It doesn't read fenced code blocks, inline code, URLs, HTML comments, or front matter
@@ -29,7 +29,7 @@ rule reads it. These may hold an ID alone: a heading, a table row, a field line 
 <!-- writing: ok --> is a deliberate exception: the check reports nothing on it.
 
 Reviewers judge what a script can't judge well: clear references to nouns, concrete
-examples, being concise, the active voice, and the rest of rule 1.
+examples, being concise, the active voice, and the other sentence rules.
 
 Output: one line per finding, "<file>:<line> · <rule> · <what is wrong> · <suggestion>",
 then the count. Exit code 1 means it found something.

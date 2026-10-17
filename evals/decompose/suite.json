@@ -1,0 +1,194 @@
+{
+  "skill": "decompose",
+  "skillPath": "decompose/SKILL.md",
+  "skillSha256": "778d1feb19a313f0e1277949a38f2ab99eb7fd97f131ae4e31995ea1c0d523e8",
+  "createdAt": "2026-10-16T20:48:24Z",
+  "structure": {
+    "summary": "Mostly one reply. First, the skill can ask a few questions that change the design, one in each message as quiz cards. Or the skill states its assumptions and goes on. Then the skill writes one file, `<name>.design.md`, at the project root. The reply ends with a DECOMPOSE summary in a code block and an offer of next steps.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The design file `<name>.design.md` is at the project root, or where the user asks, and starts with a header (Mode, Status, Date, Scope). Then the file has ten numbered sections in the order of the template. Sections 1 to 5 are Frame, Features and use cases, Volatility register, Walls, and Bricks. Sections 6 to 10 are Feature assembly, Validation, Seams and migration, Risks and open questions, and Next steps. A section with nothing to give keeps its number and one line, for example \"Not applicable: inception\". In subsystem mode, section 8 gives the attach point, the translation at the seam, and the migration steps."
+      },
+      {
+        "id": "S2",
+        "description": "Section 1 gives the problem, the users, the nature of the business, the constraints, and the assumptions. Each assumption has \"If wrong: ...\". Section 1 also gives a Mermaid `C4Context` system context diagram with a title and a `Key:` line. Section 1 ends with a \"Words used here\" list. Section 2 gives a feature table with an F-number for each feature and a core-use-case column. Then section 2 gives the core use cases, each with a UC-number (usually two or three, not more than six)."
+      },
+      {
+        "id": "S3",
+        "description": "Section 3 gives a volatility register table with a V-number for each volatility. The columns are what changes, axis, evidence, likelihood, and contained by. Then a second table gives the rejected candidates. Each rejected candidate has a reason: variable, nature of the business, or speculative."
+      },
+      {
+        "id": "S4",
+        "description": "Section 4 gives a components table with the columns component, type, encapsulates, API (business verbs), and `May call`. A design with more than three parts that is not a small system also gets a C4-style component flowchart. The flowchart has one band for each layer, a title, and a `Key:` line. Section 5 gives each shared contract with its fields and invariants, and the composition medium with a reason. Then section 5 gives one brick table for each component (brick, kind, one job, in and out, serves). Each state machine shows its legal transitions and its terminal states."
+      },
+      {
+        "id": "S5",
+        "description": "Section 6 is a feature-assembly table that writes each current feature as a composition of bricks. Then section 6 gives two or three plausible future features, each with the number of new bricks and their place. Section 7 gives a call chain for each core use case, one `Caller → Callee.Verb` on each line, from the caller and how the system knows them. Then section 7 gives a change-simulation row for each volatility, the independence check, rule audit, trace audit, cut list, and revisions. For a small system (one Manager, at most one Engine, at most one ResourceAccess), section 7 is one table with one row for each check, and \"n/a\" where a check has nothing to test. In subsystem mode, section 7 also gives the measured coupling."
+      },
+      {
+        "id": "S6",
+        "description": "In chat, after the file, the reply gives the summary in a code block. The block starts with the line `DECOMPOSE: <name> · <mode>`. Then the block has the rows VOLATILITIES, WALLS, BRICKS, USE CASES, CHANGE SIM, FEATURES, ASSUMPTIONS, and VERDICT, in that order. After the block, the reply offers next steps and names `/argue`, `/blueprint`, and `/quiz-plan`."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "The skill writes one design file, `<name>.design.md`, at the project root. The file has the header and the ten numbered sections in the order of the template.",
+      "pass": "A `*.design.md` file is in the root of the repository. The file has the header (Mode, Status, Date, Scope). The file has sections 1 to 10 with the headings of the template, in order. A section with nothing to give keeps its number and one line, for example \"Not applicable: inception\". In subsystem mode, section 8 gives the attach point, the translation at the seam, and the migration steps.",
+      "partial": "The file exists, but one part is wrong. For example, a section is missing, merged, renumbered, or out of order. Other examples are an incomplete header, or an empty section 8 in subsystem mode. No design file is a miss.",
+      "source": "Phase 6 step 1; references/design-template.md"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 1,
+      "criterion": "Sections 1 and 2 frame the problem in the form of the template.",
+      "pass": "Section 1 gives the problem, users, nature of the business, constraints, and assumptions. Each assumption says what changes if the assumption is wrong. The `C4Context` diagram has a title that names its type, and a `Key:` line comes after the diagram. A \"Words used here\" list gives the meaning of the technical words in the document. Section 2 gives F-numbered features with a core-use-case column. Section 2 also gives one to six UC-numbered core use cases.",
+      "partial": "One or two parts are missing or malformed. For example, the diagram has no `Key:` line, or the assumptions have no \"If wrong\". Other examples are no glossary, or more than six core use cases.",
+      "source": "Phase 0 Output; Phase 1; design-template.md sections 1 and 2; references/c4.md notation rules 1 and 2"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "Section 3 records each volatility as a V-numbered row with its axis, evidence, likelihood, and component. Section 3 also lists the rejected candidates, each with a reason.",
+      "pass": "Every V row fills all five columns. The evidence cites the words of the user, the roadmap, or the git history, not only taste. A separate table gives at least one rejected candidate. Each rejected candidate has a reason: variable, nature of the business, or speculative.",
+      "partial": "The register exists, but some rows have no evidence or no component. Or the rejected candidates are missing or have no reasons.",
+      "source": "Phase 2 steps 3 and 4; Rules: \"Evidence over taste\""
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "Sections 4 and 5 give the walls and the bricks in the form of the template.",
+      "pass": "The components table gives the type, encapsulates (with V-numbers), API, and `May call` for each component. A design with more than three parts that is not a small system has a layered component flowchart with a title and a `Key:` line. A small system has no layer diagram. Section 5 names each shared contract with its fields and invariants, and gives the composition medium with a reason. Section 5 also gives a brick table (kind, one job, in and out, serves) for each component with bricks. Each state machine shows its legal transitions and its terminal states.",
+      "partial": "Most parts are present, but one is missing or wrong. For example, the contract has no fields, or the composition medium is missing. Other examples are a brick table with no Serves column, a missing diagram, or a layer diagram in a small system.",
+      "source": "Phase 3 steps 2 and 3; Phase 4 steps 3 and 6; Phase 6 step 1; design-template.md sections 4 and 5"
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 2,
+      "criterion": "Sections 6 and 7 record the proof. Section 6 assembles the current and future features. Section 7 gives the checks in the long form, or in the short form for a small system.",
+      "pass": "Section 6 writes each current feature as a composition with a count of new bricks. Section 6 then adds two or three future features, each with a count and a place. Section 7 gives a call chain for each core use case. Each chain starts with who calls and how the system knows them, and has one `Caller → Callee.Verb` on each line. Section 7 also gives a change-simulation row for each volatility, the independence check, rule audit, trace audit, and cut list. In subsystem mode, section 7 adds the measured coupling, and a small system can use one table with \"n/a\" where nothing is tested.",
+      "partial": "The proof is there but incomplete. For example, a current feature or a volatility has no row, or an audit is missing. Other examples are call chains that do not start with the caller, or the long form for a small system.",
+      "source": "Phase 5 steps 1 to 7; Phase 6 step 1 (short form for a small system)"
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S6",
+      "weight": 1,
+      "criterion": "After the file, the chat reply gives the DECOMPOSE summary in a code block in the stated form. Then the reply offers next steps.",
+      "pass": "A fenced code block starts with `DECOMPOSE: <name> · <mode>`. The block has the rows VOLATILITIES, WALLS, BRICKS, USE CASES, CHANGE SIM, FEATURES, ASSUMPTIONS, and VERDICT, in that order. The counts agree with the design file. After the block, the reply offers `/argue`, `/blueprint`, and `/quiz-plan`.",
+      "partial": "The summary is present, but one part is wrong. For example, a row is missing or renamed, or the block is not fenced. Other examples are a count that does not agree with the file, or missing next steps.",
+      "source": "Phase 6 steps 3 and 4"
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Before the design, the skill asks only questions whose answers change the design. The skill asks one question in each message, and asks nothing that the prompt answers. If the skill asks nothing, the skill states its assumptions and goes on.",
+      "pass": "The skill asks no question and states its assumptions. Or each question is alone in its message and is not answered in the prompt. Each question is about who uses the system, what is likely to change, or what must not change.",
+      "partial": "One question is filler, or asks for a fact that the prompt gives. Two or more questions in one message, or a questionnaire, is a miss.",
+      "source": "Phase 0 step 3"
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The names and the API verbs come from the business. Each component has the name of the volatility that it hides. Each ResourceAccess API uses business verbs, not CRUD and not the API of a vendor.",
+      "pass": "No component has the name of a feature, a screen, a report, or a technology. Managers, Engines, and ResourceAccess have two-part PascalCase names with the type as the suffix. Only Engines have a gerund prefix. ResourceAccess verbs are business verbs, for example `Deliver` or `ReserveSlot`. The verbs are not `Insert`, `Update`, `Save`, a generic `Record`, or a call of a vendor.",
+      "partial": "One component name or one API verb breaks these rules.",
+      "source": "Phase 3 steps 1 and 2; Rules: \"Never name a component after a feature\" and \"APIs speak business verbs\""
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each call in the walls table and in the call chains obeys the call rules. Calls go down the layers.",
+      "pass": "A Client calls one Manager for each use case, and does not call an Engine or a ResourceAccess. Managers call Engines and ResourceAccess. Engines call only ResourceAccess, or nothing. ResourceAccess calls only Resources. No Engine calls an Engine, no ResourceAccess calls a ResourceAccess, and no part calls up. A Manager calls a different Manager only through a queue, and all parts can call Utilities.",
+      "partial": "One call in the final design breaks a rule. Two or more broken calls is a miss.",
+      "source": "The ideas, distilled: \"Calls go down, never up or sideways\"; references/walls.md Call rules; Phase 5 step 1"
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each change that this user names or plainly implies is contained. The change is in the register and is behind one component. Thus, when the change comes, the user edits one part.",
+      "pass": "Each change in the prompt is a V row, or a rejection with a sound reason. Examples of a change are a vendor switch, a new site that differs, or a new channel. The change simulation for each V row names one existing component, or an exception from Phase 5 step 2 (a new ResourceAccess for a new resource, or a new Client for a new caller). The named component is the one whose API or bricks hold the change. No bricks or verbs of a different component name the thing that changes, for example a vendor name outside its ResourceAccess.",
+      "partial": "One named change is missing. Or the simulation of a change touches two existing components, and the design does not call it a leak. Or the result says pass, but the components or bricks show that the change gets to a second part.",
+      "source": "Purpose (Walls and Proof); Phase 2; Phase 5 step 2"
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The design is the right size for this problem. No part exists only for a change that nobody named or for a future feature. A small problem gets a small design.",
+      "pass": "Each component traces to a volatility. A Client traces to who calls, and a ResourceAccess over the system's own storage traces to the storage. Each brick traces to a current feature or a recorded volatility. Future features appear only as one-line tests. A small system, such as the booking page of one club, gets about one Manager, not more than one Engine, and few bricks. A larger system does not put two named changes behind one part.",
+      "partial": "One part or brick is speculative, or exists only for a future feature. Or a small problem gets Managers, Engines, or brick layers that it does not need.",
+      "source": "Rules: \"Don't build for imagined futures\"; Earn every brick; Phase 5 step 6; Phase 6 step 1 (\"Size the document to the problem\")"
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The requirements of the user stay in the design. Each feature and constraint in the prompt is present and obeyed. The skill adds no feature without a mark that the feature is an assumption.",
+      "pass": "Each feature in the prompt has an F row and a place in a component. Each feature is built in the feature assembly or in a call chain. The stated constraints shape the design, and the design does not contradict them. Examples of constraints are team size, platform, vendors, and rules such as no overlap. Each feature that the skill proposed has the mark of an assumption. Extras are listed as future features, and the design does not build them.",
+      "partial": "One feature or constraint is dropped, changed, or contradicted. Or the skill designs one added feature without a mark that the feature is an assumption.",
+      "source": "Phase 0 step 2; Phase 5 step 3"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical",
+      "prompt": "a system for our chain of four bike-repair shops. Features: customers book a repair slot online; staff check the bike in and write a quote; the customer approves the quote from a link that we send by SMS or email; mechanics see a job board for their own shop; staff order parts from our two suppliers (one has an API, the other only takes orders by email); customers get a text when the bike is ready; customers pay by card through Stripe when they collect the bike; the owners get a monthly report of jobs and revenue for each shop. The owners tell us that suppliers come and go, that a fifth shop opens next year with its own opening hours and labour rates, and that they may move from Stripe to Square. Three developers will build it.",
+      "exercises": "Inception mode on a typical feature list. Named vendors and differences between shops give evidence. The monthly report is a trap for a part with a feature name. The prompt also tests the long-form validation and the summary block.",
+      "replies": [
+        "Take your recommendation. State anything else as an assumption and go on.",
+        "Yes, go ahead."
+      ]
+    },
+    {
+      "id": "P02",
+      "axis": "small system (edge: the short form)",
+      "prompt": "a booking page for our village hall. Members sign in, pick a free one-hour slot between 8am and 10pm, and book it. Two bookings can never overlap. A member can cancel their own booking. The caretaker sees the bookings for the next 7 days to plan the cleaning. We have about 60 members. Two volunteers will build it over a few weekends and run it on one small server.",
+      "exercises": "A small system. The skill must keep the design small: about one Manager and no extra Engines. The store keeps the no-overlap rule. The design omits the layer diagram and uses the one-table short form of the validation.",
+      "replies": [
+        "Take your recommendation. State anything else as an assumption and go on.",
+        "Yes, go ahead."
+      ]
+    },
+    {
+      "id": "P03",
+      "axis": "subsystem mode (host is this repository)",
+      "prompt": "a subsystem for this repository: an answer history for the question cards that the quiz, squiz, quiz-plan and quiz-plan-execute skills show. When a user answers a card, the skill saves the question, the options and the choice to a local file. In a later session, a card that asks the same question marks the earlier choice as the recommended option. A user can switch the history off, and then the four skills must work exactly as they do today. The host is the folders quiz/, squiz/, quiz-plan/ and quiz-plan-execute/ in this repository.",
+      "exercises": "Subsystem mode. The skill measures volatility from the git history of this repository with volatility.py. The host is a set of skill files. The prompt tests the seam, the translation at the seam, the migration steps, and the measured-coupling check.",
+      "replies": [
+        "Take your recommendation. State anything else as an assumption and go on.",
+        "Yes, go ahead."
+      ]
+    },
+    {
+      "id": "P04",
+      "axis": "minimal input, unusual domain",
+      "prompt": "an app for our beekeeping club to log hive inspections",
+      "exercises": "A one-line request. The skill proposes the smallest feature set and marks the proposed features as assumptions. Extras become future tests. Volatilities that rest on the skill's own proposals are weak evidence. The skill asks only where the answer changes the design.",
+      "replies": [
+        "Members inspect their own hives and log each visit on a phone at the hive. The club committee reads the logs. Take your recommendation for anything else.",
+        "Take your recommendation.",
+        "Yes, go ahead."
+      ]
+    }
+  ]
+}

@@ -10,36 +10,46 @@ description: >
 ---
 # Argue: Logical Contradiction Detector
 
-`/argue <text>` triggers this skill. The text to analyse is in the ARGUMENTS block.
+The user starts this skill with `/argue <text>`. The text to analyse is in the ARGUMENTS
+block.
 
 ## What this skill does
 
-The skill breaks a text (spec, essay, plan, argument) into discrete logical claims. It
-encodes the claims in propositional logic and runs Z3 as the deterministic oracle for hard
-contradictions. Then it uses reasoning to flag tensions and ambiguities. It produces
-annotated output that shows exactly which statements conflict and why.
+`/argue` breaks a text (a spec, an essay, a plan, or an argument) into discrete logical
+claims. Then the skill encodes the claims in propositional logic. The skill runs Z3 (a
+logic solver) as the oracle for hard contradictions. Z3 always gives the same result for
+the same formulas. Then the skill uses reasoning to find tensions and ambiguities. The
+annotated output shows exactly which statements conflict, and why they conflict.
+
+## Writing
+
+Write all text to `references/writing-guidelines.md`. This includes the replies to the
+user, each question, and each file that this skill writes.
 
 ## Execution steps
 
 ### 1. Extract claims
 
-Read the text. Identify every discrete logical claim: a statement that asserts something
-to be true, required, forbidden, implied, or conditional. Ignore pure background context
-that makes no assertions.
+Read the text. Identify each discrete logical claim in the text. A claim is a statement
+that asserts that something is true, necessary, forbidden, implied, or conditional.
+Ignore pure background context that makes no assertions.
 
-Number claims C1, C2, … Cn. Keep each claim to one clause. Split multi-claim sentences.
-Write each claim in plain English. If the original wording is ambiguous, don't copy it.
+Give the claims the numbers C1, C2, … Cn. Write each claim as one clause. If a sentence
+has more than one claim, divide the sentence into its claims. Write each claim in plain
+English. If the original wording is ambiguous, do not use the original wording.
 
-If the text has no claims (pure narrative, no assertions), say so. Then stop.
+If the text has no claims (pure narrative, no assertions), tell the user that the text
+has no claims. Then stop.
 
-### 2. Assign propositional variables and encode relationships
+### 2. Give each claim a propositional variable, and encode the relationships
 
-For each claim, assign a short, meaningful snake_case Boolean name. Examples:
+Give each claim a short snake_case Boolean name. The name must show the meaning of the
+claim. For example:
 - "requests complete in under 100ms"  → `fast_requests`
 - "validation pipeline takes 150ms+"  → `validation_slow`
 
-Then identify the logical relationships between claims. Encode each relationship as a
-formula:
+Then identify the logical relationships between the claims. Use this table to encode
+each relationship as a formula:
 
 | Relationship                  | Formula                       |
 |-------------------------------|-------------------------------|
@@ -50,15 +60,15 @@ formula:
 | "At least one of X or Y"      | Or(X, Y)                      |
 | "X if and only if Y"          | X == Y                        |
 
-Encode only the relationships that the text clearly states or directly implies. If in
-doubt, leave a claim as a standalone Bool. A standalone Bool contributes to tension and
-ambiguity detection, not to Z3 contradictions.
+Encode only the relationships that the text clearly states or directly implies. If you
+are not sure about a relationship, keep the claim as a standalone Bool. A standalone Bool
+helps you find tensions and ambiguities, but not Z3 contradictions.
 
 ### 3. Write and run the Z3 Python script
 
 Write the script to `_argue_check.py` in the current working directory.
 
-Use this template. Fill in the variables and constraints sections:
+Use this template. Complete the variables section and the constraints section:
 
 ```python
 import json, sys
@@ -104,8 +114,8 @@ Run the script:
 python _argue_check.py
 ```
 
-If the output is `{"error": "z3_not_installed"}`, run `pip install z3-solver`. Then run the
-script again.
+If the output is `{"error": "z3_not_installed"}`, run `pip install z3-solver`. Then run
+the script again.
 
 Parse the JSON. If `sat` is false, `contradictions` lists the UNSAT core citations.
 
@@ -114,23 +124,25 @@ After you parse the result, delete `_argue_check.py`.
 ### 4. Identify tensions and ambiguities (reasoning, not Z3)
 
 **Tensions** — claim pairs that are each individually satisfiable but work against each
-other in practice. Signs to look for:
-- Goals that pull in opposite directions ("minimize cost" vs "maximize reliability")
-- Constraints that together leave near-zero slack (e.g., two deadlines for the same resource)
-- Sequential dependencies that create bottlenecks even without a logical contradiction
+other in practice. Look for these signs:
+- Goals that pull in opposite directions ("minimize cost" and "maximize reliability").
+- Constraints that together leave near-zero slack (for example, two deadlines for the
+  same resource).
+- Sequential dependencies that cause bottlenecks, also when there is no logical
+  contradiction.
 
-**Ambiguities** — individual claims so underspecified that one possible interpretation
-contradicts another claim. Signs to look for:
-- Undefined thresholds: "fast", "reasonable", "minimal", "most"
-- Unclear scope: "all users" vs "authenticated users"
-- Conditionals with unstated conditions
+**Ambiguities** — a single claim that is so underspecified that one possible
+interpretation of the claim contradicts a different claim. Look for these signs:
+- Undefined thresholds: "fast", "reasonable", "minimal", "most".
+- Unclear scope: "all users" or "authenticated users".
+- Conditional claims that do not give their conditions.
 
 ### 5. Format the output
 
-Render this layout in a fenced code block so it stays monospace:
+Render this layout in a fenced code block, so that the layout stays monospace:
 
 ```
-ARGUE: <short title — 3-6 words describing the text>
+ARGUE: <short title for the text — 3-6 words>
 ══════════════════════════════════════════════════════════
 
 CLAIMS
@@ -139,8 +151,8 @@ CLAIMS
   ...
 
 ANNOTATED TEXT
-  <original text reproduced verbatim, with [Cn] tags inserted
-   immediately after each identified claim in the source text>
+  <the original text, word for word, with a [Cn] tag immediately
+   after each claim that you identified in the source text>
 
 ──────────────────────────────────────────────────────────
 CONTRADICTIONS  (proven UNSAT by Z3)
@@ -154,28 +166,29 @@ TENSIONS  (logically consistent but conflicting in practice)
 
   ~~ C2 × C5  <one-line explanation>
 
-  none        (if no tensions found)
+  none        (if you found no tensions)
 
 AMBIGUITIES  (underspecified — could mask contradictions)
 
   ?? [C4]  <what is ambiguous and why it matters here>
 
-  none        (if no ambiguities found)
+  none        (if you found no ambiguities)
 
 ──────────────────────────────────────────────────────────
 VERDICT   <N> contradiction(s)  ·  <N> tension(s)  ·  <N> ambiguity(ies)
 ```
 
-After the code block, add one plain-prose sentence that summarises the most critical
-finding. If all three sections are none, write "No issues found".
+After the code block, write one sentence of plain prose that summarises the most critical
+finding. If all three sections are `none`, write "No issues found".
 
 ## Rules
 
-- Always run Z3. For the CONTRADICTIONS section, never skip the solver and rely on
-  reasoning alone. Z3 is the deterministic authority; your reasoning is not.
-- Don't force propositional relationships that the text doesn't clearly state. An honest
-  "none" in CONTRADICTIONS is better than a fabricated UNSAT.
-- If the text is very long (50+ claims), warn the user that the encoding may be partial
-  and cover only the most salient claims.
-- Keep the annotated text faithful. Reproduce the original verbatim, and add only [Cn]
-  tags.
+- Always run Z3. Do not skip the solver. Do not use only your reasoning for the
+  CONTRADICTIONS section. Z3 is the authority and always gives the same result. Your
+  reasoning is not the authority.
+- Do not force propositional relationships that the text does not clearly state. An
+  honest "none" in CONTRADICTIONS is better than a fabricated UNSAT.
+- For a very long text (50+ claims), warn the user that the encoding can be partial and
+  covers only the most important claims.
+- Keep the annotated text faithful to the original. Copy the original text word for
+  word. Add only the [Cn] tags.

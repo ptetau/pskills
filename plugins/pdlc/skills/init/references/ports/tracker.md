@@ -1,24 +1,28 @@
 # Port: tracker
 
-Shows pdlc's state on a board. pdlc is the truth. The board only shows it.
+The tracker port shows the state of pdlc on a board. The pdlc files are the truth. The
+board only shows that state.
 
 ## Operations
 
-- **show intent**: given an intent's ID, name, status and links, create or update its card
-  in the column for that status. Return the card key.
-- **show change**: given a change's ID, name, status, intent and links, create or update its
-  sub-card under the intent's card.
+- **show intent**: the input is the ID, name, status, and links of an intent. Create or
+  update the card of the intent in the column for that status. Return the card key.
+- **show change**: the input is the ID, name, status, intent, and links of a change.
+  Create or update the sub-card of the change under the card of the intent.
 
-The column for each status comes from "Board columns" in `pdlc/config.md`.
+The "Board columns" section of `pdlc/config.md` gives the column for each status.
 
 ## Success
 
-Showing the same intent twice updates one card. It never makes two.
+If the port shows the same intent two times, the port updates one card, and does not make
+a second card.
 
 ## Conformance check
 
-1. Show a test intent with status `new`. A card appears in the `new` column.
-2. Show it again with status `ready`. The same card moves to the `ready` column.
+1. Show a test intent with the status `new`. A card appears in the `new` column.
+2. Show the test intent again with the status `ready`. The same card moves to the `ready`
+   column.
 3. Remove the card.
 
-v1 only writes to the board. Acting on moves made on the board comes later.
+In v1, the port only writes to the board. A later version will also act on moves on the
+board.

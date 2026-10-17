@@ -6,11 +6,12 @@ Status: agreed · Default: yes · Ask at init: no
 
 - Intents: `IN-` and four digits, for example `IN-0012`.
 - Changes: `CH-` and four digits, for example `CH-0031`.
-- Specs: `JOB-`, `CAP-` or `DES-` and a short lowercase name with dashes, for example
+- Specs: `JOB-`, `CAP-`, or `DES-`, and a short lowercase name with dashes, for example
   `CAP-email`.
-- Requirements: the spec ID, a dot, `R` and a number, for example `CAP-email.R3`.
-- Never change or reuse an ID.
+- Requirements: the spec ID, a dot, `R`, and a number, for example `CAP-email.R3`.
+- Do not change an ID. Do not use an ID a second time.
 
 ## Why
 
-Short, stable IDs let `grep` find every link: in files, commits and check names.
+Short, stable IDs make each link easy to find with grep, in files, commits, and check
+names.

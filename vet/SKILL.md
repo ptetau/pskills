@@ -1,41 +1,49 @@
 ---
 name: vet
 description: >
-  Writes and runs an eval for another skill and scores it on two axes. Quality: how
-  well its output meets a rubric drawn from the skill itself. Stability: how little its
-  output changes between runs. Reads the target SKILL.md for its output structure and a
-  rubric. Writes varied test prompts, with scripted replies for interactive skills. Runs
-  each sampled prompt many times in isolated git worktrees via a Workflow. Judges grade
-  every run and tally how much each rubric item changed across repeats and, for
-  structure items, across prompts. It records the grade after each wave, so you can
-  watch the grade settle. Asks which models to use before each eval. Each agent role
-  (run, grade, compare, cross) takes its own model, effort and batching. Saves the suite
-  to evals/<skill>/ so later runs are comparable. Use when the user says "/vet" or asks
-  to "eval a skill" or "test this skill". Also use it for "score my skill" and "how
-  consistent is this skill", and to check a skill before trusting it.
+  Writes and runs an eval for another skill. Then scores the skill on two axes: quality
+  (how well its output meets a rubric) and stability (how little its output changes
+  between runs). Reads the target SKILL.md, then writes varied test prompts, with scripted
+  user replies for interactive skills. Runs sampled prompts many times each, in isolated
+  git worktrees, through a Workflow. A rubric judge grades each run. Similarity judges
+  classify how much each rubric item changed across repeats, and across prompts for
+  structure items. Runs go in waves, and the script records the grade after each wave, so
+  you can see it settle. Asks which models to use before each eval. Each agent role (run,
+  grade, compare, cross) can have its own model, effort, and batching. Saves the suite to
+  evals/SKILL-NAME/ so later runs are comparable. Use when the user says "/vet", or asks
+  to "eval a skill", "test this skill", "score my skill", or "how consistent is this
+  skill". Also use when the user wants to check a skill before they trust it.
 ---
 
 # Vet: Skill Evaluator
 
 ## Purpose
 
-A good skill does two things. Its output meets the promises in its own SKILL.md, and
-the same input gives much the same output every time. `/vet` measures both:
+A good skill does two things. Its output keeps the promises in its own SKILL.md. Also,
+the same input gives much the same output each time. `/vet` measures the two things:
 
-- **Quality (0-100):** the weighted share of the rubric met, across every run.
-- **Stability (0-100):** how similar the outputs are, rubric item by rubric item,
-  across repeated runs of the same prompt, plus structure across different prompts.
-- **Overall (0-100):** √(quality × stability). A skill that is reliably wrong scores
-  low, and so does one that is right but erratic. Neither axis can hide the other.
+- **Quality (0-100):** the weighted share of the rubric that the output meets, across
+  all runs.
+- **Stability (0-100):** how similar the outputs are, rubric item by rubric item, across
+  repeated runs of the same prompt. Stability also includes the structure across
+  different prompts.
+- **Overall (0-100):** √(quality × stability). A skill that is reliably incorrect gets a
+  low score. A skill that is correct but irregular also gets a low score. Thus, one axis
+  cannot hide the other axis.
 
-The pipeline, in order:
+The pipeline has these steps, in this order:
 
-- extract structure and rubric;
-- write test prompts;
-- run each sampled prompt many times in isolation;
-- grade every run;
-- judge similarity per rubric item;
-- score.
+1. Get the structure and the rubric from the SKILL.md.
+2. Write the test prompts.
+3. Run each sampled prompt many times, in isolation.
+4. Grade each run.
+5. Judge the similarity of each rubric item.
+6. Calculate the scores.
+
+## Writing
+
+Write all text to `references/writing-guidelines.md`. This includes the replies to the
+user, each question, and each file that this skill writes.
 
 ## Usage
 
@@ -47,25 +55,25 @@ The pipeline, in order:
 
 | Argument | Default | Meaning |
 |---|---|---|
-| `<skill>` | required | Skill name, or a path to its folder or SKILL.md |
-| `--prompts N` | 10 | Test prompts to write when creating a suite |
-| `--sample M` | 3 | Prompts to run this time (the first M in the suite) |
-| `--runs R` | 10 | Repeats of each sampled prompt; at least 2 |
-| `--use` | none | Run these prompt ids instead of the first M |
-| `--regen` | off | Rebuild the suite even if one exists |
-| `--wave W` | 2 | Repeats per prompt per wave; the grade is updated after each wave. `--wave R` judges once at the end |
-| `--stop-when-settled` | off | Start no new wave once the grade has settled; see Settling |
-| `--preset` | `lean` | How much work each judge takes on; see Agent roles |
-| `--agent role.key=value` | none | Override one role setting for this run, e.g. `--agent grade.model=<model>`; repeatable |
+| `<skill>` | necessary | The skill name, or a path to its folder or to its SKILL.md |
+| `--prompts N` | 10 | The number of test prompts to write for a new suite |
+| `--sample M` | 3 | The number of prompts to run this time (the first M in the suite) |
+| `--runs R` | 10 | The number of repeats of each sampled prompt. The minimum is 2. |
+| `--use` | none | Run these prompt IDs instead of the first M |
+| `--regen` | off | Build the suite again, also if a suite exists |
+| `--wave W` | 2 | The number of repeats of each prompt in each wave. The grade updates after each wave. `--wave R` judges one time, at the end. |
+| `--stop-when-settled` | off | Start no new wave after the grade settles. See "Settling". |
+| `--preset` | `lean` | How much work each judge does. See "Agent roles". |
+| `--agent role.key=value` | none | Override one role setting for this run, for example `--agent grade.model=<model>`. You can use this flag more than one time. |
 
-With the defaults (3 prompts × 10 runs in waves of 2, `lean`) and a 10-item rubric, a
-run spawns up to 61 agents:
+A run with the defaults (3 prompts × 10 runs in waves of 2, `lean`) and a 10-item rubric
+starts a maximum of 61 agents:
 
-- 30 runs;
-- 15 rubric judges and 15 similarity judges (one of each per prompt per wave);
+- 30 runs.
+- 15 rubric judges and 15 similarity judges: one of each for each prompt in each wave.
 - 1 cross-prompt judge.
 
-To trade cost against focus, see Agent roles and Settling.
+To balance the cost against the focus, see "Agent roles" and "Settling".
 
 ## Files
 
@@ -76,150 +84,167 @@ evals/<skill>/
   runs/<runId>/
     outputs/P01-r01.md …      one capture per run: transcript + files the run wrote
                               (copied here from each run's worktree after the run)
-    results.json              scores and every judgement    (references/results.schema.json)
+    results.json              scores and every judgment    (references/results.schema.json)
     report.md                 the human report             (references/report-template.md)
 ```
 
-`evals/` sits at the root of the git repo you run `/vet` from, beside the skill
-folders rather than inside them. So a skill folder stays clean to copy into
-`~/.claude/skills/`. Commit `suite.json`: re-runs reuse it, which makes scores
-comparable over time.
+The `evals/` folder is at the root of the git repo where you run `/vet`. The folder is
+next to the skill folders, not in a skill folder. Thus, a skill folder stays clean, and
+you can copy the skill folder into `~/.claude/skills/`.
+
+Commit `suite.json`. Each re-run uses the same `suite.json` again, and thus the scores
+stay comparable over time.
 
 ## Phase 0: Resolve
 
-1. **Find the skill.** If the user gave a path, use it. Otherwise try, in order,
-   `./<name>/SKILL.md`, `.claude/skills/<name>/SKILL.md`, `~/.claude/skills/<name>/SKILL.md`.
-   If the skill is missing or more than one matches, stop and ask.
-2. **Find the repo root** with `git rev-parse --show-toplevel`. Worktree isolation
-   needs git. If this isn't a git repo, stop and say so.
-3. **Fingerprint the skill:** `sha256sum` of its SKILL.md.
-4. **Check for a saved suite** at `evals/<skill>/suite.json`. If it exists and there's no
-   `--regen`, load it. Go straight to Phase 3b (Models). If its `skillSha256` differs from
-   today's, say so in one line. Then carry on. The suite still works, and keeping it
-   keeps scores comparable. `--regen` rebuilds it but starts a new baseline.
+1. **Find the skill.** If the user gave a path, use the path. If not, try these paths
+   in this order: `./<name>/SKILL.md`, `.claude/skills/<name>/SKILL.md`,
+   `~/.claude/skills/<name>/SKILL.md`. If the skill is missing, or if more than one path
+   matches, stop and ask.
+2. **Find the repo root** with `git rev-parse --show-toplevel`. The isolated worktrees
+   need git. If this is not a git repo, stop and say so.
+3. **Fingerprint the skill:** get the `sha256sum` of the SKILL.md of the skill.
+4. **Check for a saved suite** at `evals/<skill>/suite.json`. If the suite exists and
+   there is no `--regen`, load the suite. Then go directly to Phase 3b (models). If the
+   `skillSha256` of the suite is different from the hash of step 3, say so in one line.
+   Then continue. The suite still works, and the same suite keeps the scores comparable.
+   `--regen` builds the suite again, but it also starts a new baseline.
 
 ## Phase 1: Structure and rubric (new suite only)
 
-Read the target SKILL.md in full, plus every file it points to (references, templates,
-schemas). Then write two things.
+Read the full target SKILL.md. Also read each file that the SKILL.md refers to
+(references, templates, schemas). Then write two things.
 
-**Structure.** What the output looks like, as SKILL.md specifies it:
-- a one- or two-sentence `summary` with the turn pattern (single reply, or multi-turn
-  and how turns alternate) and the overall shape;
-- `elements` S1, S2, …: each required section, block, format, file, or turn rule, in
-  order. Only what SKILL.md states or plainly implies. Don't invent structure.
+**Structure.** The structure tells what the output looks like, as SKILL.md specifies it:
 
-**Rubric.** 6-12 items, R1, R2, …, each one checkable claim about the output:
+- A `summary` of one or two sentences. The summary gives the turn pattern (a single
+  reply, or multi-turn and how the turns alternate) and the overall shape.
+- The `elements` S1, S2, …: each necessary section, block, format, file, or turn rule,
+  in order. Write only what SKILL.md states or clearly implies. Do not invent structure.
 
-- `kind` is one of:
-  - `structure`: the shape of the output. Each covers one or a few closely related
-    S elements (`structureRef`). Some structure item covers every S element.
-  - `behavior`: a process rule you can see in the output, e.g. "one question per turn"
-    or "marks exactly one option recommended". The skill's "don't" list is a good source.
-  - `outcome`: whether the output does its job for the user who typed this prompt. At
-    least two, weight 3. Write these from the user's side, not the skill's. "The
-    questions asked are the ones whose answers change the work" is an outcome; "asks
-    questions" is not.
-- `pass` and `partial` say concretely what the judge should look for.
+**Rubric.** Write 6-12 items, R1, R2, …. Each item is one checkable claim about the
+output:
+
+- `kind` is one of these values:
+  - `structure`: the shape of the output. Each structure item covers one S element, or
+    a few closely related S elements (`structureRef`). Make sure that a structure item
+    covers each S element.
+  - `behavior`: a process rule that you can see in the output. Examples are "one
+    question per turn" and "marks exactly one option recommended". The "don't" list of
+    the skill is a good source.
+  - `outcome`: an item that examines if the output does its work for the user who typed
+    this prompt. Write a minimum of two outcome items, each with weight 3. Write these
+    items from the side of the user, not from the side of the skill. For example, "The
+    questions asked are the ones whose answers change the work" is an outcome. "asks
+    questions" is not an outcome.
+- `pass` and `partial` tell the judge concretely what to look for.
 - `weight`: 3 = core purpose, 2 = important, 1 = nice to have.
-- `appliesWhen` for rules that only apply sometimes (e.g. "the user adds a note to a
-  reply"). Judges mark the item n/a when the condition is false.
-- `source`: the heading, rule number, or a short quote from SKILL.md it comes from.
+- `appliesWhen`: use this field for rules that apply only sometimes, for example "the
+  user adds a note to a reply". When the condition is false, the judges mark the item
+  n/a.
+- `source`: the heading, the rule number, or a short quote from SKILL.md that the item
+  comes from.
 
 Rules for the rubric:
-- Checkable from the capture alone, meaning the transcript and the files written. Don't
-  grade steps the output can't show ("reads the code first").
-- One claim per item, no overlaps. Two items that always pass or fail together are
-  one item.
-- The items are also the units the similarity judges compare. So each should name one
-  aspect of the output that you can line up across runs.
-- Guard against circularity. A rubric that just restates the skill's own claims will
-  pass the skill by construction. The outcome items are the counterweight: they ask
-  whether the user got what they needed.
+
+- Make each item checkable from the capture alone. The capture is the transcript and the
+  files that the run wrote. Do not grade steps that the output cannot show ("reads the
+  code first").
+- Write one claim in each item, with no overlaps. If two items always pass or fail
+  together, make the two items one item.
+- The items are also the units that the similarity judges compare. Thus, try to make
+  each item name one aspect of the output that you can align across runs.
+- Prevent circularity. A rubric that only restates the claims of the skill passes
+  the skill by construction. The outcome items are the counterweight: the outcome items
+  ask if the user got what the user needed.
 
 ## Phase 2: Test prompts (new suite only)
 
-Write N prompts (default 10), P01, P02, …, each what a user would type after
+Write N prompts (default 10), P01, P02, …. Each prompt is what a user types after
 `/<skill>`:
 
-- **Suitable.** Every prompt is in scope for the skill. This is not a trigger test.
-- **Varied.** Spread them across axes. Record each one's `axis`:
-  - typical;
-  - minimal or terse;
-  - rich or long input;
-  - ambiguous;
-  - unusual domain;
-  - edge-but-valid: right at the skill's own limits, e.g. a request needing exactly one
-    question, or one near a stated cap.
-- **Self-contained.** Put any text the skill needs inline. Run worktrees can start from
-  the repo's default branch rather than your current checkout. So refer only to files
-  committed there. Unless the skill exists to use them, avoid anything needing network,
-  connectors or secrets.
-- **`exercises`:** one line on which parts of the skill the prompt tests.
-- **`replies`** (interactive skills): the answers a plausible user would give to this
-  prompt, in the skill's reply format. Give enough to reach the end: the usual number
-  of turns plus a final "yes, go". Every repeat uses the same list in order. So keep
-  replies meaningful whatever question they land on: option letters, "yes", "go ahead".
-  When the list runs out, run agents pick the recommended option or, if there is none,
-  reply "you decide". For skills that never ask, leave it empty.
-- **Order.** Put the most varied first. Runs use the first M prompts, so P01-P03 should
-  already cover three different axes, typical first.
+- **Suitable.** Each prompt is in the scope of the skill. The eval is not a trigger test.
+- **Varied.** Spread the prompts across axes, and record the `axis` of each prompt. The
+  axes are typical, minimal or terse, rich or long input, ambiguous, unusual domain, and
+  edge-but-valid. An edge-but-valid prompt is at the limits of the skill. Examples are a
+  request that needs exactly one question, and a request near a stated cap.
+- **Self-contained.** Put any text that the skill needs in the prompt. Run worktrees can
+  start from the default branch of the repo, not from your current checkout. Thus,
+  refer only to files that are committed on that branch. Try not to use anything
+  that needs a network, connectors, or secrets, unless the skill exists to use them.
+- **`exercises`:** one line that tells which parts of the skill the prompt tests.
+- **`replies`** (interactive skills): the answers that a plausible user gives to this
+  prompt, in the reply format of the skill. Give sufficient replies to get to the end:
+  the usual number of turns, plus a final "yes, go". Each repeat uses the same list in
+  the same order. Thus, make each reply meaningful for any question that it answers:
+  option letters, "yes", "go ahead".
+
+  When the list has no more replies, the run agents pick the recommended option. If no
+  option is recommended, the run agents reply "you decide". For skills that do not ask
+  questions, keep the list empty.
+- **Order.** Put the most varied prompts first. Runs use the first M prompts. Thus,
+  try to make P01-P03 cover three different axes already, with typical first.
 
 ## Phase 3: Review gate (new suite only)
 
-Write `evals/<skill>/suite.json`. Check it against `references/suite.schema.json`. Then
-show the user, compactly:
+Write `evals/<skill>/suite.json`, and check it against `references/suite.schema.json`.
+Then show the user these items, in a compact form:
 
-- the structure summary and S elements;
-- the rubric as a table: id, kind, weight, criterion, source;
-- the prompts: id, axis, prompt (shortened), number of replies, with the first M
-  marked as this run's sample;
-- the agent roles in effect (preset plus any overrides) and the agent estimate for
-  them (see Agent roles).
+- The structure summary and the S elements.
+- The rubric as a table: id, kind, weight, criterion, source.
+- The prompts: id, axis, prompt (shortened), and number of replies. Mark the first M
+  prompts as the sample of this run.
+- The agent roles in effect (the preset and any overrides), and the agent estimate for
+  these roles (see "Agent roles").
 
 Ask: "Reply `go`, or tell me what to change (e.g. `drop R4`, `make P03 harder`,
-`R2 weight 3`)." Apply edits to `suite.json`. Show the changed rows only. Don't start
-runs until the user says go. A saved suite skips this gate on later runs, since the user
-already reviewed its rubric. Never skip the model question below.
+`R2 weight 3`)." Apply the edits to `suite.json`, and show only the changed rows. Do not
+start runs until the user says go.
+
+On later runs, a saved suite skips this gate, because the user already reviewed its
+rubric. Do not skip the model question in Phase 3b.
 
 ## Phase 3b: Models (every run)
 
-The model is the biggest variable in an eval, so ask which models to use before every
-run, whether the suite is new or saved. Skip the question only when this invocation's
-own `--agent role.model=…` flags name a model for all four roles.
+The model has the biggest effect on the result of an eval. Thus, ask which models to use
+before each run, for a new suite and for a saved suite. Skip the question only when the
+`--agent role.model=…` flags of this invocation name a model for all four roles.
 
-Ask two things, in one message, with the current setting (from `evals/agents.json`, or
-`session`) marked as the default:
-- **The skill's model** (`run.model`): the model whose behaviour you are testing.
-  Unless the user wants to know how the skill does on another model, recommend the
-  session model. That is how the skill normally runs.
+Ask two questions in one message. Mark the current setting as the default. The current
+setting comes from `evals/agents.json`, or is `session`.
+
+- **The skill's model** (`run.model`): the model whose behaviour you test. Recommend the
+  session model, because the skill usually runs on the session model. The exception is
+  when the user wants to know how the skill does on a different model.
 - **The judges' model** (`grade`, `compare`, `cross`): recommend the same model as the
-  runs or stronger. A weaker judge adds its own noise, which lowers stability and
-  blurs the grade.
+  runs, or a stronger model. A weaker judge adds its own noise. This noise lowers the
+  stability and makes the grade less clear.
 
-Put the answers into the agent roles for this run. Offer once to save them to
-`evals/agents.json` as the repo default. Record what `session` means in results: when
-you know the session's model name, set `config.sessionModel` to it. Scores from runs
-with different models are not comparable.
+Put the answers into the agent roles for this run. Offer one time to save the answers to
+`evals/agents.json` as the default of the repo. Record the meaning of `session` in the
+results as follows. When you know the model name of the session, set
+`config.sessionModel` to that name. Scores from runs with different models are not
+comparable.
 
 ## Phase 4: Run and judge
 
-1. **Pick the prompts:** the `--use` ids (stop if any isn't in the suite), else the
-   first M.
-2. **Resolve the agent roles.** Apply these in order:
-   1. `evals/agents.json`, if it exists;
-   2. `--preset`;
-   3. each `--agent role.key=value` (`--agent grade.model=<model>` sets `grade.model`);
-   4. the answers from Phase 3b (Models).
+1. **Pick the prompts.** Use the `--use` IDs. If an ID is not in the suite, stop. If
+   there is no `--use`, use the first M prompts.
+2. **Resolve the agent roles.** Apply the settings in this order:
+   1. Start from `evals/agents.json`, if it exists.
+   2. Apply `--preset`.
+   3. Apply each `--agent role.key=value`. For example, `--agent grade.model=<model>`
+      sets `grade.model`.
+   4. Apply the answers from Phase 3b.
 
    Check the result against `references/agents.schema.json`. On a re-run that skips the
-   review gate, write one line before starting. The line names the preset, models and
-   overrides in effect, and the agent estimate.
+   review gate, tell the user in one line before the runs start. In the line, give the
+   preset, the models, the overrides in effect, and the agent estimate.
 3. **Make the run folder.** `runId` is `date -u +%Y%m%dT%H%M%SZ`. Create
-   `evals/<skill>/runs/<runId>/outputs/`. Note the output of `git worktree list` so
-   Phase 5 (Report) can tell which worktrees this run created.
-4. **Call the Workflow tool.** Set `scriptPath` to `references/vet.workflow.js` in this
-   skill's own directory. Pass `args` as a real JSON object (not a string):
+   `evals/<skill>/runs/<runId>/outputs/`. Record the output of `git worktree list`, so
+   that Phase 5 can find the worktrees that this run creates.
+4. **Call the Workflow tool.** Set `scriptPath` to `references/vet.workflow.js` in the
+   directory of this skill. Set `args` to a real JSON object, not a string:
 
    ```json
    {
@@ -234,115 +259,134 @@ with different models are not comparable.
    }
    ```
 
-   All paths must be absolute: run agents work from inside their own worktrees. The
-   Workflow tool only accepts a `scriptPath` inside the working directory, so it
-   refuses the copy installed under `~/.claude/skills/`. If that happens, read the
-   file. Pass its contents, unchanged, as `script`.
-   **Never edit the script for a run.** The evaluator must vary as little as the
-   skills it scores, so every eval runs the same file.
+   All paths must be absolute, because the run agents work in their own worktrees. The
+   Workflow tool accepts only a `scriptPath` in the working directory. Thus, the tool
+   refuses the copy that is installed under `~/.claude/skills/`. If the tool refuses the
+   path, read the file and give its contents, unchanged, as `script`.
+
+   **Do not edit the script for a run.** The evaluator must vary as little as the skills
+   that it scores. Thus, each eval runs the same file.
 
 What the script does:
 
-Each prompt's repeats run in waves of W (default 2). For each wave:
+The repeats of each prompt run in waves of W (default 2). In each wave, these steps
+occur:
 
-- **Run (step 2).** One agent per (prompt, repeat), each with `isolation: 'worktree'`.
-  It reads the target SKILL.md from the main checkout, so the eval tests uncommitted
-  edits. It follows the skill as if invoked with the prompt and plays the
-  scripted replies whenever the skill waits for the user. It keeps every file inside
-  its worktree, because isolated agents can't write outside it. It writes a verbatim
-  capture (transcript plus any files it created or changed) to
-  `.vet-capture/P01-r03.md` there and reports the absolute path. The skill-facing part
-  of the prompt is identical for every repeat, so differences come from the skill.
-- **Grade (step 3).** A rubric judge gives every new run a verdict on each item: met,
-  partial, missed or n/a. Each verdict has a verbatim quote as evidence. When torn, the
-  judge picks the lower verdict. With `grade.batch: run`, each run gets its own judge as
-  soon as it finishes. With `prompt` (the default), one judge grades the wave's runs,
-  each on its own.
-- **Compare (step 4).** A similarity judge places each new run into the groups built
-  so far for each rubric item, or opens a new group. It compares against one example
-  run per group, then classifies the item across all runs so far: identical,
-  equivalent, minor drift, major drift or contradictory. It judges sameness, not
-  quality. When torn, it picks the less similar option. The script keeps the groups. If
-  a judge fails to place a run, the script offers that run again next wave.
-- **Settle.** Once every prompt has finished the wave, the script records the running
-  quality, stability and overall grade and logs one line, e.g. `wave 3/5 (6 of 10 runs
-  per prompt): quality 86.1 · stability 71.0 · overall 78.2 (C) · moved +0.8 ·
-  settled`. See Settling.
+- **Run (step 2).** One agent runs each (prompt, repeat), with `isolation: 'worktree'`.
+  The agent reads the target SKILL.md from the main checkout, so the eval tests the
+  uncommitted edits. The agent follows the skill as if the user started the skill with
+  the prompt. When the skill waits for the user, the agent gives the scripted replies.
+  The agent keeps each file in its worktree, because an isolated agent cannot write
+  outside its worktree.
 
-After the last wave:
+  The agent writes a verbatim capture to `.vet-capture/P01-r03.md` in its worktree, and
+  reports the absolute path. The capture holds the transcript and each file that the
+  agent created or changed. The skill-facing part of the prompt is the same for each
+  repeat. Thus, the differences come from the skill.
+- **Grade (step 3).** A rubric judge gives each new run a verdict on each item: met,
+  partial, missed, or n/a. The judge gives a verbatim quote as evidence. When the judge
+  is not sure between two verdicts, the judge picks the lower verdict. With
+  `grade.batch: run`, each run gets its own judge when the run finishes. With `prompt`
+  (the default), one judge grades the runs of the wave, and grades each run
+  independently.
+- **Compare (step 4).** For each rubric item, a similarity judge puts each new run into
+  one of the groups so far, or opens a new group. The judge compares the new run with
+  one example run from each group. Then the judge classifies the item across all runs
+  so far: identical, equivalent, minor drift, major drift, or contradictory. The judge
+  judges sameness, not quality. When the judge is not sure, the judge picks the less
+  similar class.
+
+  The script keeps the groups. If a judge does not place a run, the script offers the
+  run again in the next wave.
+- **Settle.** After all the prompts finish the wave, the script records the running
+  quality, stability, and overall grade. The script also logs one line, for example:
+
+  `wave 3/5 (6 of 10 runs per prompt): quality 86.1 · stability 71.0 · overall 78.2 (C) · moved +0.8 · settled`
+
+  See "Settling".
+
+After the last wave, these steps occur:
 
 - **Cross.** For structure items, a cross-prompt judge compares the first two usable
-  runs of each prompt, ignoring content and comparing only shape.
-- **Tally.** The script counts each item's groups itself, e.g. `7 / 3 of 10`, and
-  flags any judgement whose groups don't place every run exactly once.
-- **Score (step 5).** Plain arithmetic in the script, with no judge involved. See
-  Scoring.
+  runs of each prompt. The judge ignores the content and compares only the shape.
+- **Tally.** The script itself counts the groups of each item, for example
+  `7 / 3 of 10`. The script flags each judgement whose groups do not place each run
+  exactly one time.
+- **Score (step 5).** The script calculates the scores with plain arithmetic. No judge
+  takes part. See "Scoring".
 
-It all runs in parallel. Prompts move through their waves independently. The script
-queues each wave's judges ahead of the next wave's runs, so the grade keeps up. The
-Workflow runtime runs up to min(16, CPU cores − 2) agents at once and queues the rest.
-That is 14 on a 16-core machine, but only 2 on a 4-core one. So check `nproc` before
-promising a finish time.
+All these steps run in parallel. Each prompt moves through its waves independently. The
+judges of a wave go into the queue ahead of the runs of the next wave, so that the grade
+stays current. The Workflow runtime runs a maximum of min(16, CPU cores − 2) agents at
+the same time, and puts the other agents in a queue. For example, the runtime runs 14
+agents on a 16-core machine, but only 2 agents on a 4-core machine. Thus, check `nproc`
+before you promise a finish time.
 
-The scores leave out these runs and list them under `excluded`:
+The script omits some runs from the scores, and lists these runs under `excluded`. An
+excluded run has one of these conditions:
 
-- runs whose agent died or never executed the skill (`not_run`);
-- runs whose grader died or skipped them;
-- runs whose capture is missing or not verbatim.
+- The agent died, or the agent did not execute the skill (`not_run`).
+- The grader died, or the grader skipped the run.
+- The capture is missing, or the capture is not verbatim.
 
-Missing similarity judgements (the judge died or skipped an item) go under `lostJudges`.
-The scores never count either kind as a pass or a fail.
+The script lists each missing similarity judgement under `lostJudges`. A judgement is
+missing when the judge died or skipped an item. The script does not count an excluded
+run or a lost judgement as a pass or as a fail.
 
 ## Phase 5: Report
 
-1. Stamp `generatedAt` (`date -u +%Y-%m-%dT%H:%M:%SZ`) and `suiteSha256`
+1. Record `generatedAt` (`date -u +%Y-%m-%dT%H:%M:%SZ`) and `suiteSha256`
    (`sha256sum evals/<skill>/suite.json`).
-2. **Collect the captures.** Each run's capture is in its own worktree, at the path
-   in `runs[].capture`. Copy each one to `outputs/<P01-r03>.md` with a shell loop; don't
-   read them into your context. Then point `runs[].capture` at the copy.
+2. **Collect the captures.** The capture of each run is in the worktree of that run, at
+   the path in `runs[].capture`. Copy each capture to `outputs/<P01-r03>.md` with a
+   shell loop. Do not read the captures into your context. Then point `runs[].capture`
+   at the copy.
 3. Write `results.json` as `{ skill, skillSha256, suiteSha256, runId, generatedAt, ...workflowResult }`.
-   Keep the workflow's return value unchanged apart from the capture paths. Add
-   `config.sessionModel` from Phase 3b (Models). If a validator is to hand (e.g.
-   Python's `jsonschema`), check the file against `references/results.schema.json`.
-4. Write `report.md` from `references/report-template.md`. The verdict and "What to fix"
-   are the only parts you write yourself. Both must rest on the evidence in the results.
-   Before suggesting fixes, read the captures behind the worst items.
-5. Run `git worktree list` again. Compare it with the list from Phase 4 (Run and judge).
-   The runtime puts worktrees under `.claude/worktrees/`, and every run leaves its
-   worktree behind because the worktree holds the capture. Once you have copied the
-   captures, list the new worktrees and offer to remove them. Remove nothing without a
-   yes. If `.claude/worktrees/` isn't in `.gitignore`, suggest adding it.
-6. Reply in a few lines with:
-   - the three scores and grade;
-   - whether and when the grade settled;
-   - the weakest item and the least stable one, in plain words;
-   - the path to `report.md`.
+   Do not change the return value of the workflow, except the capture paths. Add
+   `config.sessionModel` from Phase 3b. If a validator is available (for example, the
+   `jsonschema` package of Python), check `results.json` against
+   `references/results.schema.json`.
+4. Write `report.md` from `references/report-template.md`. You write only two parts: the
+   verdict and "What to fix". Both parts must rest on the evidence in the results.
+   Before you suggest fixes, read the captures of the worst items.
+5. Run `git worktree list` again, and compare the output with the list from Phase 4.
+   The runtime puts worktrees under `.claude/worktrees/`. Each run keeps its worktree,
+   because the worktree holds the capture. After you copy the captures, list the new
+   worktrees and offer to remove them. Do not remove anything without a yes from the
+   user. If `.claude/worktrees/` is not in `.gitignore`, recommend that the user adds
+   the folder to `.gitignore`.
+6. Reply in a few lines. Give these items:
+   - The three scores and the grade.
+   - Whether the grade settled, and when it settled.
+   - The weakest item and the least stable item, in plain words.
+   - The path to `report.md`.
 
-   If there is an earlier run with the same `suiteSha256`, agent roles and
-   models, add the change in each score since then. A run graded under a different
-   suite version is never a baseline.
+   If an earlier run has the same `suiteSha256`, agent roles, and models, also give the
+   change in each score since that run. Do not use a run with a different suite version
+   as a baseline.
 
 ## Agent roles
 
-Four roles do the work. Each role can take its own settings:
+Four roles do the work. Each role can have its own settings:
 
-- `model`: `session` (the default) inherits the session's model; otherwise any model
-  alias or id the harness accepts;
-- `effort`: `low` to `max`, or `session`;
+- `model`: `session` (the default) uses the model of the session. Any other value is a
+  model alias or a model id that the harness accepts.
+- `effort`: a value from `low` to `max`, or `session`.
 - `agentType`: a custom subagent type.
 
-The three judge roles also take `batch`, which sets how much work one agent does.
+The three judge roles also have `batch`. The `batch` setting tells how much work one
+agent does.
 
 | Role | Does | `batch` options |
 |---|---|---|
-| `run` | Executes the skill, one agent per (prompt, repeat) | none |
-| `grade` | Rubric verdicts | `run`: one judge per run · `prompt`: one judge per prompt per wave |
-| `compare` | Similarity across repeats of a prompt | `item`: one judge per (prompt, item) per wave · `prompt`: one judge per prompt per wave · `merged`: the per-prompt grade judge also compares |
-| `cross` | Structure across prompts | `item`: one judge per structure item · `all`: one judge |
+| `run` | Executes the skill, with one agent for each (prompt, repeat) | none |
+| `grade` | Gives the rubric verdicts | `run`: one judge for each run · `prompt`: one judge for each prompt in each wave |
+| `compare` | Judges the similarity across the repeats of a prompt | `item`: one judge for each (prompt, item) in each wave · `prompt`: one judge for each prompt in each wave · `merged`: the grade judge of each prompt also compares |
+| `cross` | Compares the structure across prompts | `item`: one judge for each structure item · `all`: one judge |
 
-Presets set the batching. The agent counts below are upper bounds for 3 prompts × 10
-runs, 10 rubric items and 3 structure items. The table gives them for waves of 2 (the
-default) and for one wave (`--wave 10`, judged once at the end):
+The presets set the batching. The agent counts in the next table are maximums for
+3 prompts × 10 runs, 10 rubric items, and 3 structure items. The table gives the counts
+for waves of 2 (the default), and for one wave (`--wave 10`, judged one time at the end):
 
 | Preset | grade | compare | cross | Agents, waves of 2 | Agents, one wave |
 |---|---|---|---|---|---|
@@ -350,10 +394,10 @@ default) and for one wave (`--wave 10`, judged once at the end):
 | `lean` (default) | prompt | prompt | all | 61 | 37 |
 | `minimal` | prompt | merged | all | 46 | 34 |
 
-Waves add judges. But each judge reads only the new runs plus one example per group, so
-the reading grows far less than the agent count.
+Waves add judges. But each judge reads only the new runs and one example from each
+group. Thus, the quantity of reading increases much less than the agent count.
 
-Set roles for the whole repo in `evals/agents.json`, or for one run with flags:
+Set the roles for all of the repo in `evals/agents.json`, or for one run with flags:
 
 ```json
 { "preset": "lean", "run": { "model": "session" }, "grade": { "model": "<model>", "effort": "low" } }
@@ -363,34 +407,36 @@ Set roles for the whole repo in `evals/agents.json`, or for one run with flags:
 /vet quiz --preset thorough --agent compare.model=<model> --agent cross.effort=low
 ```
 
-Trade-offs to keep in mind:
-- The 30 runs are the measurement and usually the biggest cost. Changing
-  `run.model` changes what you are testing, not just what it costs. Leave it at
-  `session` unless you mean to test the skill on another model.
-- Bigger batches mean fewer agents and fewer reads, but each judge holds more at once.
-  A per-item judge looks at one thing across ten outputs. A per-prompt judge looks at
-  everything, and one dead judge loses that whole prompt's grades or comparisons.
-- `merged` saves the most, but the same judge grades and then compares, so its grades
-  can colour its sense of sameness.
-- Cheaper judge models add judge noise, which shows up as lower stability. If
-  stability drops after a switch, re-run once with `thorough` to check.
+Remember these trade-offs:
+
+- The 30 runs are the measurement, and usually the biggest cost. A change to
+  `run.model` changes what you test, not only the cost. Keep `run.model` at `session`,
+  unless you want to test the skill on a different model.
+- Bigger batches give fewer agents and fewer reads, but each judge holds more at the
+  same time. A per-item judge examines one thing across ten outputs. A per-prompt judge
+  examines everything. If a per-prompt judge dies, the eval has no grades or
+  comparisons for that prompt.
+- `merged` saves the most. But the same judge grades and then compares, so the grades
+  of the judge can colour its sense of sameness.
+- Cheaper judge models add judge noise, and this noise shows as lower stability. If
+  the stability decreases after a switch, re-run one time with `thorough` to check.
 
 ## Settling
 
-The grade settles as runs come in. After each wave, once every prompt has finished it,
-the script records the running quality, stability and overall grade in `trajectory`.
-Stability here is within-prompt only; the final score also includes the cross-prompt
-check.
+The grade settles when more runs complete. After all the prompts finish a wave, the
+script records the running quality, stability, and overall grade in `trajectory`. The
+stability in `trajectory` is within-prompt only. The final score also includes the
+cross-prompt check.
 
-- **Settled** means the overall score moved no more than 2 points in each of the last
-  2 waves and kept the same letter. With waves of 2 over 10 runs, the earliest it can
-  settle is wave 3, at 6 runs per prompt.
-- **Not settled** at the end means more runs would likely still move the grade. Say so,
-  and suggest a re-run with more `--runs`.
-- **`--stop-when-settled`** starts no new wave once the grade has settled, which saves
-  runs on a steady skill. It is off by default, because stopping early can miss rare
-  drift. A skill that drifts once in five runs has about a one-in-four chance of showing
-  no drift in its first six.
+- **Settled** means that the overall score moved by 2 points or less in each of the last
+  2 waves, and kept the same letter. With waves of 2 over 10 runs, the grade cannot settle
+  before wave 3, at 6 runs per prompt.
+- **Not settled** at the end means that more runs will probably still move the grade.
+  Say so, and suggest a re-run with more `--runs`.
+- **`--stop-when-settled`** starts no new wave after the grade settles. This flag saves
+  runs on a stable skill. The flag is off by default, because an early stop can miss
+  rare drift. For example, a skill that drifts one time in five runs has about a
+  one-in-four chance to show no drift in its first six runs.
 
 ## Scoring
 
@@ -399,50 +445,57 @@ check.
 | met | 1 | | identical | 1.0 |
 | partial | 0.5 | | equivalent | 0.9 |
 | missed | 0 | | minor_drift | 0.6 |
-| n/a | left out | | major_drift | 0.25 |
+| n/a | omitted | | major_drift | 0.25 |
 | | | | contradictory | 0 |
 
-- **Quality** = 100 × Σ(weight × verdict value) ÷ Σ(weight), over every applicable
+- **Quality** = 100 × Σ(weight × verdict value) ÷ Σ(weight), over each applicable
   (run, item) pair in the usable runs.
-- **Stability** = 100 × Σ(weight × class value) ÷ Σ(weight), over every similarity
-  judgement. Each prompt's repeats count as one scope per item, and cross-prompt counts
-  as one more scope for structure items.
+- **Stability** = 100 × Σ(weight × class value) ÷ Σ(weight), over each similarity
+  judgement. The repeats of each prompt count as one scope for each item. The
+  cross-prompt check counts as one more scope for structure items.
 - **Overall** = √(quality × stability). Grades: A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, F below.
-- **Confidence** is `low` when fewer than 80% of runs were usable.
-- **Tallies** don't enter the score. Each judgement also carries the group sizes the
-  script counted (`7 / 3 of 10`) and `agreement`, the share of runs in the largest
-  group. The report shows them next to the class so you can see how a drift splits.
+- **Confidence** is `low` when fewer than 80% of runs are usable.
+- **Tallies** are not part of the score. Each judgement also contains the group sizes
+  that the script counted (`7 / 3 of 10`), and `agreement`, the share of runs in the
+  largest group. The report shows these values next to the class, so that you can see
+  how a drift splits.
 
-Scores are comparable only between runs that share all of these:
+Scores are comparable only between runs with these same items:
 
-- the same `suiteSha256`;
-- the same agent roles and models (`config.agents` and `config.sessionModel` in
-  results.json);
-- the same wave size.
+- The same `suiteSha256`.
+- The same agent roles and models (`config.agents` and `config.sessionModel` in
+  results.json).
+- The same wave size.
 
-Judges on a different model or batch setting score differently.
+Judges on a different model or with a different batch setting give different scores.
 
 ## Limits
 
-- Run agents are Workflow subagents told to follow the SKILL.md, not fresh `claude`
-  sessions. They are close to real use but not identical to how the harness loads a
-  skill.
-- Skills that launch their own Workflow (e.g. `/probe`, `/vet`) can't run inside a run
-  agent, because workflows don't nest. Those runs come back `blocked`.
-- Skills that need a running app, a connector, or a binary the environment lacks come
-  back `blocked`. They are still graded, so the report shows what they managed.
-- The harness can relay the user's latest message to every workflow agent. If that
-  message is about the eval ("quit and restart it"), agents may take it as addressed
-  to them. Every agent prompt says the message was for the launching session, which
-  has already acted on it. If many runs still come back `not_run`, the eval is
-  invalid: fix the cause and re-run rather than reporting scores.
-- Judges are models, and their own noise lands in the scores. The "choose the lower
-  one when torn" rules reduce it. Re-running the same suite shows how much remains.
-- Scripted replies keep the user side fixed. A skill whose questions vary between runs
-  will get the same reply to different questions, which shows up, rightly, as drift.
-- Run agents use scripted replies in order, whatever the skill asks. A spare letter
-  reply can land on a confirmation question. So keep reply lists to the questions you
-  are sure of. Let the recommended-option fallback cover the rest.
+- Run agents are Workflow subagents with an instruction to follow the SKILL.md. Run
+  agents are not new `claude` sessions. Thus, a run is close to real use, but not
+  identical to how the harness loads a skill.
+- Skills that start their own Workflow (for example `/probe` and `/vet`) cannot run in a
+  run agent, because workflows do not nest. The runs of these skills report the status
+  `blocked`.
+- Skills that need a running app, a connector, or a binary that the environment does
+  not have also report `blocked`. The judges still grade these runs, so the report shows
+  how much each run completed.
+- The harness can send the latest message of the user to each workflow agent. If that
+  message is about the eval ("quit and restart it"), the agents can think that the
+  message is for them. Each agent prompt says that the message was for the launching
+  session, and that the launching session already acted on the message. If many runs
+  still report `not_run`, the eval is not valid. Correct the cause and re-run the eval.
+  Do not report the scores.
+- Judges are models, and the noise of the judges goes into the scores. The "choose the
+  lower one when torn" rules decrease this noise. A re-run of the same suite shows how
+  much noise stays.
+- Scripted replies keep the user side fixed. If the questions of a skill vary between
+  runs, the skill gets the same reply to different questions. The eval correctly shows
+  this result as drift.
+- The run agents use the scripted replies in order, whatever the skill asks. A spare
+  letter reply can become the answer to a confirmation question. Thus, keep each reply
+  list to the questions that you are sure of. Let the recommended-option fallback cover
+  the other questions.
 
 ## Example
 
@@ -450,12 +503,15 @@ Judges on a different model or batch setting score differently.
 /vet quiz
 ```
 
-There is no suite yet, so `vet` reads `quiz/SKILL.md` and writes the structure (one
-question per turn, a `✓` echo line, a final resolved view). It writes a 10-item rubric, e.g.
-R3 "exactly one option marked (recommended)" and R8 "questions asked are the ones
-whose answers change the work". It writes 10 prompts from a terse one-liner to a
-seven-decision project, each with scripted letter replies. You review and reply `go`.
-Thirty runs later, `evals/quiz/runs/20260927T101500Z/report.md` shows quality 88,
-stability 74, overall 80.7 (B). The report flags R5 (question order), which drifts:
-6 of 10 runs ask about audience first and 4 ask about scope first. It suggests making
-the "most load-bearing first" rule in Flow step 2 concrete.
+No suite exists for `quiz`. Thus, `vet` reads `quiz/SKILL.md` and writes the structure
+(one card per turn, a `[✓]` echo, a final resolved view). Then `vet` writes a 10-item
+rubric. Two examples are R3 "exactly one option marked (recommended)" and R8 "questions
+asked are the ones whose answers change the work". Then `vet` writes 10 prompts, from a
+terse one-liner to a seven-decision project, each with scripted letter replies. You
+review the suite and reply `go`.
+
+After thirty runs, `evals/quiz/runs/20260927T101500Z/report.md` shows quality 88,
+stability 74, and overall 80.7 (B). The report flags R5 (the question order), which
+drifts. Of the 10 runs, 6 ask about the audience first, and 4 ask about the scope first.
+The report suggests a more concrete form of the "most load-bearing first" rule in Flow
+step 2.

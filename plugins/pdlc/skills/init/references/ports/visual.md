@@ -1,22 +1,25 @@
 # Port: visual
 
-Shows a change working, the way a user would meet it, as a GIF and frames.
+The visual port shows a change as it works, as a user sees the change. The port shows
+the change as a GIF and frames.
 
 ## Operations
 
-- **script**: given a change spec, write `visual.json` for `pdlc/bin/record_gif.mjs`: a
-  captioned sequence of steps that performs each acceptance line.
-- **record**: run the recorder. It writes `review.gif` and `frames/` into the change folder.
+- **script**: the input is a change spec. Write `visual.json` for
+  `pdlc/bin/record_gif.mjs`. The file is a captioned sequence of steps that performs each
+  acceptance line.
+- **record**: run the recorder. The recorder writes `review.gif` and `frames/` into the
+  change folder.
 
 ## Success
 
-Every acceptance line appears in at least one frame, with its requirement ID in the
-caption. Each frame shows what its caption claims, and no frame shows an error the spec
-didn't ask for. The recorder fails a blank frame, and a step that should change the
-screen but doesn't.
+Each acceptance line appears in one or more frames, with its requirement ID in the
+caption. Each frame shows what its caption says. No frame shows an error that the spec did
+not ask for. The recorder fails a blank frame. The recorder also fails a step that must
+change the screen but does not.
 
 ## Conformance check
 
-1. Script a single step for a made-up requirement `CAP-conformance.R1` that shows the
+1. Script one step for the made-up requirement `CAP-conformance.R1`. The step shows the
    text `conformance`.
-2. Record it. `review.gif` exists and `frames/01.png` shows the caption.
+2. Record the step. `review.gif` exists, and `frames/01.png` shows the caption.

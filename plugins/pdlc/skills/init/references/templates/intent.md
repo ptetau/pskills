@@ -4,27 +4,33 @@ Status: new · Ticket: none · Branch: none · Added: YYYY-MM-DD
 
 ## What and why
 
-What you want to be true, and why, in your own words. A few sentences is enough.
+Write what you want to be true, and why, in your own words. A few sentences are
+sufficient.
 
 ## Requirements
 
-Intake fills this in. The requirements this intent added or changed.
+Intake writes this section. The section lists the requirements that this intent added or
+changed.
 
 - none yet
 
 ## Changes
 
-The change stage fills this in. The changes that deliver this intent, in order.
+The change stage writes this section. The section lists the changes that deliver this
+intent, in order.
 
 - none yet
 
 ## Notes
 
-Decisions and answers from intake, ready and change, newest last, one line each in these
-forms: `<requirement>: <question> → <answer> (assumed)`, `<ID>: was "<old>", now "<new>"`,
-`README: "<old line>" → <requirement>`.
+This section holds the decisions and answers from intake, ready, and change, with the
+newest last. Write one line for each entry, in one of these forms:
+
+- `<requirement>: <question> → <answer> (assumed)`
+- `<ID>: was "<old>", now "<new>"`
+- `README: "<old line>" → <requirement>`
 
 ## Handoff
 
-Each intent stage (intake, ready, change) writes this for the next one, from the handoff
-template, with its sections as `###` headings. Replace it each time.
+Each intent stage (intake, ready, change) writes this section for the next stage. Use the
+handoff template, with its sections as `###` headings. Replace this section each time.

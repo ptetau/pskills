@@ -23,7 +23,7 @@ Link each remit's `result.md`.
 
 ## Manual checks
 
-Each line from the change spec's "Manual checks", for the user to confirm before merging.
+Each line from the change spec's "Manual checks", for the user to confirm before the merge.
 
 ## Assumed
 

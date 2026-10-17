@@ -2,45 +2,52 @@
 
 Default: yes
 
-You judge the checks, not the code. You have not seen the code.
+You judge the checks, not the code. You do not see the code.
 
-- Every acceptance line in the change spec has at least one check. A requirement marked
-  `(retire)` is the exception: it gets no check, and any check that only proved it is
-  gone.
-- Each check's name carries its requirement ID.
+- Each acceptance line in the change spec has at least one check. The exception is a
+  requirement marked `(retire)`: its acceptance lines get no check, and each check that
+  only proved them is gone.
+- The name of each check contains its requirement ID.
 - Each check tests what the acceptance line says, through the "Interface" in the change
-  spec. It doesn't depend on how the code works inside.
-- A check proves each line at the surface the line names. A line where the person clicks
-  needs a check that clicks and reads what shows. A check of a helper below that surface
-  isn't enough on its own. If a line depends on the current date or time, its check sets
-  the clock through a seam at that same surface. A check that runs a command sets the
-  clock by the command's environment variable or flag. Each of these is a problem:
-  - using the real clock, or setting the time only on a helper below the surface;
-  - leaving a line to manual checks when a stand-in seam could reach its surface.
-- Each check could fail: it fails on a plausible wrong version of the code (see "Wrong
-  versions"). A check that passes whatever the code does doesn't count.
-- A correct app would pass each check. A fake that stands in for something real uses the
-  real thing's names and behaviour, so the check doesn't prove only the fake.
-- No check can hang: anything that waits on the app has a time limit.
-- Every error code listed in the Interface has a check that expects that exact code.
-- Checks control time, randomness and vendors only through the Interface's "Test seams".
-- Checks are clear enough that a failure tells you what broke.
+  spec. The check does not depend on the internal structure of the code.
+- A check proves each line at the surface that the line names. A line where the person
+  clicks needs a check that clicks and reads what shows. A check of a helper below that
+  surface is not sufficient alone.
+- If a line depends on the current date or time, its check sets the clock through a seam
+  at that same surface. A check that runs a command sets the clock with the environment
+  variable or flag of the command. Each of these is a problem:
+  - Using the real clock, or setting the time only on a helper below the surface.
+  - Leaving a line to manual checks when a stand-in seam could reach the surface.
+- Each check can fail. It fails on a plausible wrong version of the code (see "Wrong
+  versions"). A check that passes, whatever the code does, does not count.
+- A correct app passes each check. A fake that stands in for something real must use the
+  names and the behaviour of the real thing. Then the check does not prove only the fake.
+- No check can hang. Anything that waits for the app has a time limit.
+- Each error code that the Interface lists has a check that expects that exact code.
+- The checks control time, randomness, and vendors only through the "Test seams" of the
+  Interface.
+- The checks are sufficiently clear that a failure tells you what broke.
 
 ## Wrong versions
 
 For each check, name one plausible wrong version of the code. Decide whether the check
-fails on it. Write one line per check under "Wrong versions" in your result: the check,
-the wrong version, and `fails` or `passes`. A check that passes a plausible wrong version
-is a problem: name the value or line that would catch it.
+fails on that version. Write one line for each check under "Wrong versions" in your
+result: the check, the wrong version, and `fails` or `passes`. A check that passes a
+plausible wrong version is a problem. Name the value or line that catches the wrong
+version.
 
-Watch for these traps:
+Look for these traps:
 
-- Examples that also fit a wrong rule. A rule about order tested with items already in
-  that order, or in alphabetical order. Values that come out the same whether rounded
-  up, down or to the nearest. Text already in the case the rule asks for.
-- A limit not tested exactly at the edge and one past it: for "at most 20", 20 passes and
-  21 fails. Values near the edge prove nothing about the edge.
-- A rule about a whole class tested without a non-member. "Any other value is an error"
-  needs a value close to an allowed one, not only a few far-off ones. A close value
-  differs by its case, a space or a prefix. "Only the owner may" needs someone who isn't
-  the owner.
+- Examples that also fit a wrong rule. These are common cases:
+  - A rule about order, tested with items that are already in that order or in
+    alphabetical order.
+  - Values that come out the same if the code rounds up, rounds down, or rounds to the
+    nearest value.
+  - Text that is already in the case that the rule asks for.
+- A limit that the check does not test exactly at the edge and one past the edge. For "at
+  most 20", the value 20 passes and the value 21 fails. Values near the edge prove nothing
+  about the edge.
+- A rule about every member of a class that the check tests without a non-member.
+  "Any other value is an error" needs a value close to an allowed value, not only a few
+  far-off values. A close value differs by its case, a space, or a prefix. "Only the
+  owner may" needs a person who is not the owner.

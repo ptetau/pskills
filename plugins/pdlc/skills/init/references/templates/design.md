@@ -4,19 +4,19 @@ Status: agreed · Default: no
 
 ## Rule
 
-The convention, stated plainly. Say what to do, not only what to avoid.
+Write the convention in plain words. Say what to do, not only what not to do.
 
 ## Example
 
-A short example from this project.
+Give a short example from this project.
 
 ## Why
 
-One or two sentences.
+Give the reason in one or two sentences.
 
 ## Requirements
 
-Only if a check can prove the convention. Otherwise leave this section out.
+Write this section only if a check can test the convention. If not, remove this section.
 
 ### DES-name.R1 · Short title
 

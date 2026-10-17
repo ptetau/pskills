@@ -1,127 +1,137 @@
 ---
 name: quiz
 description: >
-  Quick inline clarifier. Asks ONE question at a time before starting work. It uses the
+  Quick inline clarifier. Asks ONE question at a time before the work starts. Uses the
   native picker (the AskUserQuestion tool) when the session has it, and a short
-  plain-markdown question otherwise; never ASCII cards or code blocks. Plans a fixed,
-  ordered question list up front, so the same request gets the same questions. Grounds
-  every recommendation in what the user said, and echoes each answer in one line. Then
-  shows the resolved answers for a final OK before work begins. The inline twin of
-  /squiz (which renders a full visual document). Use when the user says "/quiz", "quiz
-  me", or "ask me a few questions". Use it when the user wants a fast back-and-forth
-  rather than a rendered document. Prefer /quiz over /squiz for about 1-7 mostly textual
-  questions, on mobile, or when speed matters.
+  plain-markdown question when the session does not have it. Does not use ASCII cards or
+  code blocks. Plans a fixed, ordered list of questions first, so that the same request
+  gets the same questions. Gives each recommendation a reason from the words of the user,
+  and echoes each answer in one line. Shows the resolved answers for a final OK before
+  the work starts. The inline twin of /squiz, which shows a full visual document. Use
+  when the user says "/quiz", "quiz me", "ask me a few questions", or wants a fast
+  back-and-forth instead of a rendered document. Prefer /quiz over /squiz for about 1-7
+  questions that are mostly text, on mobile, or when speed is important.
 ---
 
 # Quiz: Inline Clarifier
 
 ## Purpose
 
-`/quiz` gathers the decisions that matter before doing the work, one question at a
-time. It's the inline twin of [[squiz]], with the same job. But each question here is
-either a native picker the user clicks, or a short markdown question the user answers
-with a letter.
+`/quiz` gets the decisions that are important before the work starts, one question at a
+time. `/quiz` is the inline twin of [[squiz]], and the two skills do the same job. In
+`/quiz`, each question is a native picker that the user clicks, or a short markdown
+question that the user answers with a letter.
 
-Use `/quiz` when:
-- there are about **1-7 questions**, asked **one per turn**;
-- the user wants a quick back-and-forth, or is **on mobile**;
-- the questions are mostly **textual** (tone, scope, name), or a short preview per
-  option is enough to show a visual choice.
+Use `/quiz` in these conditions:
 
-Use `/squiz` instead when:
-- there are 8+ questions and seeing them all at once helps;
-- options need side-by-side visual comparison bigger than a short preview;
-- the user asks for "the doc", "the form", or `/squiz`.
+- There are about **1-7 questions**, and you ask **one question in each turn**.
+- The user wants a quick back-and-forth, or the user is **on mobile**.
+- The questions are mostly **text** (tone, scope, name), or a visual choice needs only a
+  short preview for each option.
 
-When in doubt, use `/quiz`. The user can always say "give me the full squiz".
+Use `/squiz` in these conditions:
 
-## Step 1: Plan the questions before asking any
+- There are 8 or more questions, and the user gets help when all the questions show at
+  the same time.
+- The options need a side-by-side visual comparison that is bigger than a short preview.
+- The user asks for "the doc", "the form", or `/squiz`.
 
-The same request should get the same questions. Before the first question, build the
-whole list with this procedure. Then commit to it:
+If you are not sure, use `/quiz`. The user can always say "give me the full squiz".
 
-1. Walk these dimensions, in this order:
-   1. **Purpose and audience**: what it's for and who it's for.
-   2. **Style**: tone for writing, look for design, conventions for code.
-   3. **Scope**: length, size, what's in or out.
-   4. **Focus**: what leads, what matters most.
-   5. **Next step**: the call to action, output format, or where it goes.
-2. For each dimension, ask one question only if the prompt leaves it open **and** the
-   answer would change the work. Skip anything the prompt already settles. A dimension
-   takes a second question only when it holds two independent decisions that both
-   change the work.
-3. The list, in that order, is the quiz. The most load-bearing questions come first by
-   construction. Cap the list at 7. If more remain, offer `/squiz` (see Escalation to
-   /squiz).
-4. **Commit.** The total, T, is fixed once you ask the first question. Don't add, drop
-   or reorder numbered questions after that. If an answer opens a new ambiguity, ask one
-   plain-prose follow-up (not a new numbered question) right after you echo the answer.
+## Writing
+
+Write all text by the rules in `references/writing-guidelines.md`. This includes the
+replies to the user, each question, and each file that this skill writes. The exact
+formats in this skill have priority over the guidelines. For example, each option still
+has one sentence that ends with its cost or trade-off.
+
+## Step 1: Plan the questions before you ask any
+
+The same request must get the same questions. Before the first question, make the full
+list with this procedure. Then keep to the list.
+
+1. Examine these dimensions, in this order:
+   1. **Purpose and audience**: what the work is for, and who the work is for.
+   2. **Style**: the tone for writing, the look for design, and the conventions for code.
+   3. **Scope**: the length, the size, and what is in or out.
+   4. **Focus**: what comes first, and what is most important.
+   5. **Next step**: the call to action, the output format, or where the work goes.
+2. Ask about a dimension only if the prompt leaves the dimension open
+   **and** the answer would change the work. Do not ask about anything that the prompt
+   already decides. A dimension can hold two independent decisions that both
+   change the work. Only then, ask a second question for that dimension.
+3. The list, in that order, is the quiz. Thus, the most important questions come first.
+   Ask a maximum of 7 numbered questions. If more questions remain, offer `/squiz` (see
+   "Escalation to /squiz").
+4. **Commit to the list.** The total number of questions, T, is fixed when you ask the
+   first question. After that, do not add, remove, or reorder the numbered questions.
+   If an answer causes a new ambiguity, echo the answer first. Then ask one follow-up in
+   plain prose. Do not make the follow-up a new numbered question.
 
 ## Step 2: Write each question
 
-Each question has:
-- a **label** of one or two words, at most 12 characters (e.g. `Tone`, `Audience`);
-- the **question**, one sentence ending in `?`, in the user's own terms;
-- **2-4 options**. Each option is a short label (1-5 words) and three short sentences,
-  in this order:
-  1. **What:** what the option is or does ("It talks the way climbers do, with high
-     energy.");
-  2. **Why:** why it fits this request ("It fits because this is a climbing gym.");
-  3. **Cost:** its cost or trade-off ("It can read as try-hard to a quieter crowd.").
+Each question has these parts:
 
-  Write them as plain sentences, without the labels. Keep each sentence to about 12
-  words. Every option gets all three, including options on the first question;
-- at most **one recommended option**, listed first. List the rest from most to least
-  likely to fit.
+- A **label** of one or two words, with a maximum of 12 characters, for example `Tone`
+  or `Audience`.
+- The **question**: one sentence that ends with `?`, in the words of the user.
+- **2-4 options**. Each option has a short label of 1-5 words and one sentence. The
+  sentence tells what the option does and why the option fits this request. The sentence
+  **ends with the cost or the trade-off of the option**. Give this sentence to each
+  option, also to the options of the first question.
+- A maximum of **one recommended option**, which you list first. List the other options
+  from the most likely fit to the least likely fit.
 
-**Recommend only on evidence.** Recommend an option only when something the user said
-points to it. Name that thing in the option's why sentence ("It fits because this is a
-climbing gym."). If nothing the user said favours any option, recommend nothing. This is
-typical for the first question on a terse request. Never recommend two.
+**Recommend only on evidence.** Recommend an option only when the user said something
+that points to the option. Name that thing in the sentence of the option, for example
+"since this is a climbing gym". If nothing that the user said favours an option, do not
+recommend an option. That condition is typical for the first question on a short request.
+Do not recommend two options.
 
-## Step 3: Ask it
+## Step 3: Ask the question
 
-**Picker.** When the session has the `AskUserQuestion` tool, ask each question through
-it: one question per call.
+**Picker.** If the session has the `AskUserQuestion` tool, ask each question with the
+tool. Ask one question in each call:
+
 - `header`: the label.
-- `question`: the question, followed by ` (N of T)`.
-- `options`: the 2-4 options, the recommended one first with ` (Recommended)` at the end
-  of its label; each `description` is the option's three sentences.
+- `question`: the question, then ` (N of T)`.
+- `options`: the 2-4 options. Put the recommended option first, with ` (Recommended)` at
+  the end of its label. The `description` of each option is the sentence of the option.
 - `multiSelect`: false, unless the question really is "pick any that apply".
-- `preview`: only for visual choices (a layout, sample text, a code shape), as a short
-  mockup per option.
+- `preview`: only for visual choices, for example a layout, sample text, or the shape of
+  some code. Give a short mockup for each option.
 
-The user can always choose "Other" and type their own answer.
+The user can always select "Other" and type a different answer.
 
-**Fallback.** When there's no picker, or the user asks for text, write the question as
-plain markdown in the message itself. No code blocks, no box drawing, no emojis.
-Exactly this layout:
+**Fallback.** If there is no picker, or if the user asks for text, write the question as
+plain markdown in the message. Do not use code blocks, box drawing, or emojis. Use
+exactly this layout:
 
 ````markdown
 **Question 1 of 3 · Tone**
 What tone should the welcome email have?
 
-- **A · Stoked (recommended)**: It talks the way climbers do, with high energy. It fits
-  because this is a climbing gym. It can read as try-hard to a quieter crowd.
-- **B · Warm**: It is friendly and personal. It suits a mixed membership. It carries
+- **A · Stoked (recommended)**: matches how climbers talk to each other, since this is
+  a climbing gym, but it can read as try-hard to a quieter crowd.
+- **B · Warm**: friendly and personal, a safe fit for a mixed membership, but it has
   less energy.
-- **C · Plain**: It puts the facts first and is the quickest to read. It suits members
-  who only want the details. It can feel like a receipt.
+- **C · Plain**: gives the facts first and is the quickest to read, but it can feel
+  like a receipt.
 
-Reply A, B or C, optionally with a note (e.g. `B, keep it short`).
+Reply A, B, or C. You can add a note, for example `B, keep it short`.
 ````
 
-(The fence above is only to show the layout. Render it as markdown, never inside a code
-block.) If there's no recommendation, drop `(recommended)` from every option.
+The fence above only shows the layout. Show the question as markdown, not in a code
+block. If there is no recommendation, remove `(recommended)` from each option.
 
-**One question per message, always.** Never stack two questions in one message or one
-picker call.
+**Ask one question in each message, always.** Do not put two questions in one message or
+in one picker call.
 
-## Step 4: Echo each answer, then ask the next
+## Step 4: Echo each answer, then ask the next question
 
 After each answer, write one echo line. Then ask the next question in the same message.
-Echo the option's label without its ` (Recommended)` suffix. Echoes always take one of
-these exact forms:
+In the echo, write the label of the option without its ` (Recommended)` suffix. Each echo
+has one of these exact forms:
 
 | The user… | Echo |
 |---|---|
@@ -132,35 +142,39 @@ these exact forms:
 | wrote words that match an option | `✓ 2/3 Tone → Warm (from: "the friendly one")` |
 | wrote their own answer ("Other") | `✓ 2/3 Tone → dry and funny` |
 
-When you read replies in the fallback, be permissive: `A`, `a`, `Option A`,
-`B, with notes: …`, `B, …`, `B (…)`. If the user answers several at once (`1a 2b 3c`),
-accept them all. Echo each line in order. Then carry on with the first unanswered
-question. If none is left, go straight to Step 5 (Confirm, then start).
+When you read a reply in the fallback, accept many forms, for example `A`, `a`,
+`Option A`, `B, with notes: …`, `B, …`, or `B (…)`. If the user answers several questions in one
+reply (`1a 2b 3c`), accept all the answers. Echo each answer on its own line, in order.
+Then ask the first question that has no answer. If each question has an answer, go to
+Step 5.
 
 ## Step 5: Confirm, then start
 
-After the last answer, list every answer as a bulleted list of echo lines. Use one line
-per question, in order, with no code block around the list:
+After the last answer, show each answer as an echo line in a bulleted list. Give one line
+for each question, in order. Do not put the list in a code block:
 
 - ✓ 1/3 Tone → Stoked
 - ✓ 2/3 Focus → Getting started (note: mention the free intro belay class)
 - ✓ 3/3 Length → Short and scannable
 
-Then ask for the go-ahead:
-- **Picker:** one question with header `Confirm`, question `Go with these answers?`,
-  and options `Go` ("start with these answers") and `Change one` ("tell me which answer
-  to change"). Recommend neither: nothing the user said picks between them.
-- **Fallback:** one line, in these words: *"Going with these. If anything is wrong, say
-  `wait`. Otherwise I'll start."*
+Then ask the user to confirm:
 
-Once the user confirms, say what that means in one short paragraph ("So I'll write X,
-with Y, skipping Z"). Then begin. If the user changes an answer, update that echo line.
-Show the list again; don't re-ask the rest.
+- **Picker:** ask one question with the header `Confirm` and the question
+  `Go with these answers?`. Give two options: `Go` ("start with these answers") and `Change one` ("tell
+  me which answer to change"). Do not recommend an option, because nothing that the user
+  said selects one.
+- **Fallback:** write one sentence: *"I will start with these answers unless you say
+  `wait` to change one."*
+
+When the user confirms, tell the user what the answers mean in one short paragraph, for
+example "So I will write X, with Y, and without Z". Then start the work. If the user
+changes an answer, update that echo line and show the list again. Do not ask the other
+questions again.
 
 ## Internal JSON (for parity with /squiz)
 
-Track answers in the same shape `/squiz` exports, so the two flows mix. Don't show the
-JSON unless the user asks for "the squiz JSON":
+Record the answers in the same shape that `/squiz` exports, so that the two flows can mix.
+Do not show the JSON unless the user asks for "the squiz JSON":
 
 ```json
 {
@@ -178,24 +192,30 @@ JSON unless the user asks for "the squiz JSON":
 }
 ```
 
-A deferred answer ("you decide", "skip") records the option taken, with
-`"notes": "you decided"`. `choice` is `null` only when the answer has no option at all.
+For a deferred answer ("you decide", "skip"), record the option that you took, with
+`"notes": "you decided"`. Set `choice` to `null` only when the answer took no option.
 
 ## What not to do
 
-- No ASCII cards, box-drawing characters, or code blocks around questions or echoes.
-- Don't stack questions: one per message, one per picker call.
-- Don't change the numbered list, or its total, after the first question.
-- Don't recommend without a reason taken from what the user said.
-- Don't ask the same question twice. If a reply was unclear, ask once in plain prose.
-- Don't run a quiz for a single small clarification. Just ask it in a sentence.
+- Do not use ASCII cards, box-drawing characters, or code blocks around questions or
+  echoes.
+- Do not put two questions together. Ask one question in each message and in each picker
+  call.
+- After the first question, do not change the numbered list or its total.
+- Do not recommend an option without a reason from what the user said.
+- Do not ask the same question two times. If a reply is not clear, ask one time in plain
+  prose.
+- Do not run a quiz for one small clarification. Ask the question in a sentence.
 
 ## Escalation to /squiz
 
-Picker previews cover most visual choices, so stay in `/quiz` where you can. If there
-are more than 7 questions, offer `/squiz` in one sentence. Do the same when the options
-need a side-by-side comparison bigger than a short preview. Don't switch on your own. An
-example offer:
+Picker previews are sufficient for most visual choices, so stay in `/quiz` when you can.
+Offer `/squiz` in one sentence, but do not change to `/squiz` without the agreement of the
+user. Offer `/squiz` in these conditions:
 
-> "If you can see the layouts side by side, this one is easier to pick. Want a full
-> Squiz for just the visual decisions? Otherwise I'll keep going here."
+- There are more than 7 questions.
+- The options need a side-by-side comparison that is bigger than a short preview.
+
+For example:
+
+> "Do you want a full Squiz for only the visual decisions, or do I continue here?"

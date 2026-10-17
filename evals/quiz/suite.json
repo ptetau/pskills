@@ -4,15 +4,15 @@
   "skillSha256": "3997cb74f1bdcd14168e117b754cf5dcacd1ff1b99bcb924490e81468c875437",
   "createdAt": "2026-09-27T11:11:06Z",
   "structure": {
-    "summary": "Multi-turn, one question per message. Questions go through the picker where one exists; eval runs have none, so they use the plain-markdown fallback. Each later message opens with a one-line ✓ echo of the last answer, then the next question. After the last answer comes a bulleted list of echoes and a short confirmation request; after confirmation, a short paragraph on what will be done, then the work.",
+    "summary": "Multi-turn, one question per message. Questions go through the picker where one exists; eval runs have none, so they use the plain-markdown fallback. Each later message opens with a one-line ✓ echo of the last answer, then the next question. After the last answer comes a bulleted list of echoes and a one-sentence confirmation request; after confirmation, a short paragraph on what will be done, then the work.",
     "elements": [
       {
         "id": "S1",
-        "description": "Fallback question: a bold heading line `**Question N of T · Label**`, the question on the next line, 2-4 options as a bulleted list of `**X · label**: sentences`, then one reply-hint line starting with `Reply`. No code block, box drawing or emoji."
+        "description": "Fallback question: a bold heading line `**Question N of T · Label**`, the question on the next line, 2-4 options as a bulleted list of `**X · label**: sentence`, then one reply-hint line starting with `Reply`. No code block, box drawing or emoji."
       },
       {
         "id": "S2",
-        "description": "Each option has three short sentences, in order: what it does, why it fits, and its cost or trade-off; at most one option is marked `(recommended)` and it is listed first."
+        "description": "Each option's sentence says what it does and why it fits, and ends on its cost or trade-off; at most one option is marked `(recommended)` and it is listed first."
       },
       {
         "id": "S3",
@@ -20,7 +20,7 @@
       },
       {
         "id": "S4",
-        "description": "After the last answer: a bulleted list with one echo line per question, in order, then a short confirmation request; after confirmation, a short paragraph saying what will be done, then the work."
+        "description": "After the last answer: a bulleted list with one echo line per question, in order, then a one-sentence confirmation request; after confirmation, a short paragraph saying what will be done, then the work."
       }
     ]
   },
@@ -30,8 +30,8 @@
       "kind": "structure",
       "structureRef": "S1",
       "weight": 2,
-      "criterion": "Every question uses the fallback layout: a bold `**Question N of T · Label**` heading, the question, 2-4 options as a bulleted `**X · label**: sentences` list, and one `Reply …` hint line, with no code block or box drawing.",
-      "pass": "Every question has the bold heading with `N of T` and a label, the question line, 2-4 bulleted options in `**X · label**: sentences` form, and a closing `Reply …` line; nothing is fenced or boxed. (If the capture records a picker call instead, its header is at most 12 characters, the question ends with `(N of T)`, and it has 2-4 options with the recommended one first.)",
+      "criterion": "Every question uses the fallback layout: a bold `**Question N of T · Label**` heading, the question, 2-4 options as a bulleted `**X · label**: sentence` list, and one `Reply …` hint line, with no code block or box drawing.",
+      "pass": "Every question has the bold heading with `N of T` and a label, the question line, 2-4 bulleted options in `**X · label**: sentence` form, and a closing `Reply …` line; nothing is fenced or boxed. (If the capture records a picker call instead, its header is at most 12 characters, the question ends with `(N of T)`, and it has 2-4 options with the recommended one first.)",
       "partial": "The layout is mostly right, but in at least one question the heading, counter, option form or reply line is missing or malformed.",
       "source": "Step 3: Ask it (fallback layout)"
     },
@@ -40,9 +40,9 @@
       "kind": "structure",
       "structureRef": "S2",
       "weight": 2,
-      "criterion": "Each option has three short sentences, in order: what it does, why it fits this request, and its cost or trade-off.",
-      "pass": "Every option on every question, the first question included, has short full sentences for what and why, and ends on a sentence naming a concrete cost or trade-off.",
-      "partial": "Some option sentences are fragments or run long, or skip the why or the cost/trade-off.",
+      "criterion": "Each option has one sentence saying what it does and why it fits this request, ending on its cost or trade-off.",
+      "pass": "Every option on every question, the first question included, has a full sentence covering what and why that ends on a concrete cost or trade-off.",
+      "partial": "Some option sentences are fragments, or skip the why or the cost/trade-off.",
       "source": "Step 2: Write each question"
     },
     {
@@ -60,9 +60,9 @@
       "kind": "structure",
       "structureRef": "S4",
       "weight": 2,
-      "criterion": "After the last answer the skill shows a bulleted list with one echo line per question and asks for confirmation in one short line; once confirmed, it says what it will do in one short paragraph before doing the work.",
-      "pass": "The resolved view is a bulleted list with every question's echo line in order, then a short confirmation request; after confirmation a short paragraph precedes the work.",
-      "partial": "The ending is there but incomplete: a question missing from the list, the list fenced or not bulleted, a long or rambling ask, or no paragraph before the work.",
+      "criterion": "After the last answer the skill shows a bulleted list with one echo line per question and asks for confirmation in one sentence; once confirmed, it says what it will do in one short paragraph before doing the work.",
+      "pass": "The resolved view is a bulleted list with every question's echo line in order, then a one-sentence confirmation request; after confirmation a short paragraph precedes the work.",
+      "partial": "The ending is there but incomplete: a question missing from the list, the list fenced or not bulleted, a multi-sentence ask, or no paragraph before the work.",
       "source": "Step 5: Confirm, then start"
     },
     {
@@ -78,7 +78,7 @@
       "id": "R6",
       "kind": "behavior",
       "weight": 2,
-      "criterion": "A question marks at most one option `(recommended)`, lists it first, and only when something the user said points to it, which its why sentence names; with nothing to go on, no option is marked.",
+      "criterion": "A question marks at most one option `(recommended)`, lists it first, and only when something the user said points to it, which its sentence names; with nothing to go on, no option is marked.",
       "pass": "Every recommendation is listed first and names something the user said; questions with nothing to go on (typically the first question on a terse request) have no recommendation.",
       "partial": "Recommendations exist, but at least one reason is generic, one is not listed first, or a question with nothing to go on is tagged anyway.",
       "source": "Step 2: Recommend only on evidence"

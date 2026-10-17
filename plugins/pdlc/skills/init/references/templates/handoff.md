@@ -4,35 +4,37 @@ Time: <the output of `date -Iseconds`; never typed by hand>
 
 The title is one of these, and nothing else: `intake → ready`, `ready → change`,
 `change → tests`, `tests → build`, `build → show` or `show → verify`. After a failed
-round, it is `verify → tests` or `verify → build`. Once verify proposes the change, it is
-`verify → user`. When a stage stops, it is `<this stage> → user`. Keep every section
-below, in this order. Write "none" under one with nothing in it.
+round, the title is `verify → tests` or `verify → build`. Once verify proposes the change,
+the title is `verify → user`. When a stage stops, the title is `<this stage> → user`. Keep
+every section below, in this order. Write "none" under one with nothing in it.
 
 ## Done
 
-What this stage did, in a few lines.
+Write what this stage did, in a few lines.
 
 ## Decided on defaults
 
-Each `(assumed)` this stage wrote, one line each, as in the intent's "Notes":
-`<requirement>: <question> → <answer> (assumed)`. "none" only if this stage wrote none.
+List each `(assumed)` decision that this stage wrote, so that the user can change the
+decisions. Write one line for each decision, in the form of the "Notes" section of the
+intent: `<requirement>: <question> → <answer> (assumed)`. Write "none" only if this stage
+wrote no such decision.
 
 - none
 
 ## Open
 
-Anything unfinished, unclear or failing.
+List each item that is unfinished, unclear, or failing.
 
 - none
 
 ## Look here
 
-The files that matter for the next stage.
+List the files that are important for the next stage.
 
 ## Don't redo
 
-Work that is finished and checked. The next stage takes it as given.
+List the work that is finished and checked. The next stage accepts this work as correct.
 
 ## Next: do this first
 
-One or two sentences for the next stage.
+Write one or two sentences for the next stage.

@@ -1,111 +1,121 @@
 ---
 name: change
 description: >
-  Turns a ready pdlc intent into one or more change specs. Each change covers exactly one
-  job, one capability, or one design spec. Its change spec lists the interface its checks
-  may call and the only files it may touch. Capability changes come before the jobs that
-  need them. Use when the user says "/pdlc:change", or wants to plan the work for a ready
-  intent.
+  Makes one or more change specs from a ready pdlc intent. Each change covers exactly one
+  job, one capability, or one design spec. Each change lists the interface that its checks
+  are permitted to call, and lists only the files that the change is permitted to touch.
+  Capability changes come before the jobs that need them. Use when the user says
+  "/pdlc:change", or wants to plan the work for a ready intent.
 ---
 
 # pdlc change
 
-Splits a ready intent into changes and writes a change spec for each.
+This skill divides a ready intent into changes. Then the skill writes a change spec for
+each change.
 
-Read `pdlc/README.md` first and follow it. Start with its "Before any work" step. Then
-read the intent's "Handoff".
+Read `pdlc/README.md` first. Obey the instructions in that file, and start with its
+"Before any work" step. Then read the "Handoff" section of the intent.
 
-## 1. Gather
+## 1. Collect the information
 
-Read the intent the user named. If the user named none, take the oldest intent with status
-`ready`. If the intent isn't `ready`, stop and say `/pdlc:ready` comes first. If the
-intent has a `Branch:`, switch to that branch. Commit there.
+Read the intent. If the user did not name an intent, use the oldest intent with the status
+`ready`. If the intent is not `ready`, tell the user that `/pdlc:ready` comes first. Then
+stop. If the intent has a `Branch:`, switch to that branch. Commit on that branch.
 
-Read:
+Read every requirement that the intent lists. Then read the specs that hold the
+requirements, and the specs that those specs rely on. Then read the code in their code
+maps.
 
-- every requirement the intent lists;
-- the specs those requirements sit in, and the specs those specs rely on;
-- the code in the code maps of all those specs.
+## 2. Divide the intent into changes
 
-## 2. Split
+Put the requirements into groups by the spec that each requirement is in. Each group is
+one change. A change must not cover two specs.
 
-Group the requirements by the spec they belong to. Each group is one change. A change
-never covers two specs.
-
-Order the changes: design specs first, then capabilities, then jobs. If one capability
-relies on another, put the change for the capability relied on first.
+Put the changes in this order: design specs first, then capabilities, then jobs. If a
+capability relies on a second capability, put the second capability first.
 
 ## 3. Write each change spec
 
-Take the next free change number. Create the folder `pdlc/changes/CH-xxxx-<short-name>/`.
-Write `change.md` in that folder from `pdlc/templates/change.md`.
+Use the next free change number. Make the folder `pdlc/changes/CH-xxxx-<short-name>/`.
+In that folder, write `change.md` from `pdlc/templates/change.md`.
 
-- **Header:** the intent, the one spec it covers as `Scope`, `Status: planned`, the intent's
-  ticket, `Branch: none`, and `Base: main`. The tests skill sets the real base when it
-  starts the branch.
-- **Requirements:** copy each requirement's heading and acceptance lines, in number
-  order, and nothing else. If a requirement is `retiring`, add ` (retire)` to its heading.
-- **Relies on:** for a job change, the capabilities it uses, marked "used, not changed".
-  Always list the design specs that apply, including `DES-writing-style`,
-  `DES-pdlc-check-tagging` and `DES-errors`.
-- **Interface:** what the checks may call. The test writer never sees the code. So the
-  interface must hold enough to write every check: function names and arguments, commands
-  and flags, routes, page elements and what they show. For each entry, give:
-  - the file it lives in;
-  - what goes in and what comes out, with types where the language has them;
-  - every error it can give, by its code in `DES-errors`.
+- **Header:** the intent, the one spec that the change covers as `Scope`,
+  `Status: planned`, the ticket of the intent, `Branch: none`, and `Base: main`. The tests
+  skill sets the real base when it starts the branch.
+- **Requirements:** copy the heading and the acceptance lines of each requirement, in
+  number order. Copy nothing else. If a requirement is `retiring`, add ` (retire)` to its
+  heading.
+- **Relies on:** for a job change, list the capabilities that the job uses, each with the
+  mark "used, not changed". Always list the design specs that apply. These include
+  `DES-writing-style`, `DES-pdlc-check-tagging`, and `DES-errors`.
+- **Interface:** the items that the checks are permitted to call. The test writer does not
+  see the code. Thus, the interface must be sufficient to write each check. Give the function
+  names and arguments, the commands and flags, the routes, and the page elements and what
+  they show. For each entry, give these items:
+  - The file that contains the entry.
+  - What goes in and what comes out, with types if the language has types.
+  - Each error that the entry can give, by its code in `DES-errors`.
 
-  If an acceptance line's "when" is something the user does (clicks, runs a command,
-  sends a request), list that surface. Checks then drive that surface, not only a helper
-  below it. Decide new names here, in the code's existing style. Mark each new name
-  `(assumed)`.
-- **Test seams:** how a check controls what an acceptance line depends on. Seams cover
-  the clock (for any line that depends on the current date or time), randomness, and
-  outside vendors or stores. Give each seam at the outermost interface the checks call.
-  That way, a check of the user's surface can reach the seam. For a command, the seam is an
-  environment variable or a flag, and the README names it. Never give a seam only as an
-  argument deep inside.
+  If the "when" part of an acceptance line is something that the user does (a click, a
+  command, or a request), list that surface. Then the checks drive that surface, and not
+  only a helper below the surface. Select the new names here. Use the style of the existing
+  code, and mark each new name `(assumed)`.
+- **Test seams:** how a check controls what an acceptance line depends on. A seam can
+  control the clock (for any line that depends on the current date or time), randomness,
+  and external vendors or stores. Give each seam at the outermost interface that the checks
+  call. Then a check of the user's surface can reach the seam. For a command, the seam is
+  an environment variable or a flag, and the README names the seam. Do not give a seam only
+  as an argument deep inside the code.
 
-  If the check runner can't drive the user's surface itself (a page, with no browser in
-  the runner), the seam is a stand-in. The stand-in loads the real page and its script
-  into a stub page with the same element ids and standard properties. It stubs only the
-  network. Then it acts as the user and reads what shows. Write "none" only when no line
-  needs a seam.
-- **Files:** only the app files this change needs, from the spec's code map. List a
-  shared file with this spec's parts, as the spec's code map names them. The change edits
-  only those parts (see "Code maps" in `pdlc/README.md`). A job change never lists a
-  capability's files or parts.
+  The check runner can be unable to drive the user's surface itself. For example, the
+  surface is a page, and the runner has no browser. Then the seam is a stand-in. Do these
+  steps:
+  1. Load the real page and its script into a stub page. The stub page has the same
+     element IDs and standard properties.
+  2. Stub only the network.
+  3. Act as the user, and read what shows.
 
-  If a job's entry point sits in a capability's code map, move the entry point to the
-  job's map as a part. Note the move in the intent's "Notes". Then go on planning. Never
-  stop for this.
+  Write "none" only if no acceptance line needs a seam.
+- **Files:** only the app files that this change needs. Start from the code map of the
+  spec. List a shared file with the parts of this spec, as the code map names them. The
+  change edits only those parts (see "Code maps" in `pdlc/README.md`). A job change must
+  not list the files or the parts of a capability.
 
-  A job change always lists the project's README. Another change lists the README if the
-  change alters what the README tells a user. If `.gitignore` lacks the folders the checks
-  will write, list `.gitignore` too.
-- **Check files:** the check files this change adds or changes, inside the check folders
-  in `pdlc/config.md`. Name a new check file after the spec, as `DES-pdlc-check-tagging`
-  says.
-- **Steps:** usually one per requirement. Each step names its requirement, the check that
-  proves it (named with the requirement ID), and "Done when". A `(retire)` requirement
-  gets no check. Its step removes the code and checks that only served it. If "Files"
-  lists a README, add a last step for the README. That step is done when the README:
-  - describes what this change adds;
-  - no longer shows anything the change removes or changes (including each `README:`
-    line in the intent's "Notes" for these requirements);
-  - names any seam a user can set;
-  - says how to run the app and the checks, with the "all" command from `pdlc/config.md`.
-- **Manual checks:** only what no check can see, such as how a page looks, or "none". One
-  line each, in the template's form. Its step's "Check" says `manual check`. A missing
-  runner or tool is never a reason for a manual check, and never a reason to stop. Use a
-  stand-in seam instead.
+  A capability map can hold an entry point of a job. Then move the entry point to the job
+  map, as a part. Write a note about the move in the "Notes" of the intent. Then continue
+  to plan. Do not stop for this.
+
+  A job change always lists the README of the project. Another change lists the README if
+  the change alters what the README tells a user. If `.gitignore` lacks the folders that
+  the checks will write, list `.gitignore` too.
+- **Check files:** the check files that this change adds or changes. These files are in
+  the check folders that `pdlc/config.md` gives. Name a new check file after the spec, as
+  `DES-pdlc-check-tagging` says.
+- **Steps:** usually one step for each requirement. Each step gives its requirement, the
+  check that proves the requirement (with the requirement ID in its name), and "Done
+  when". A `(retire)` requirement gets no check. The step for a `(retire)` requirement
+  removes the code and the checks that were only for that requirement.
+
+  If "Files" lists the README, add a last step for the README. In that step, "Done when"
+  gives all of these conditions:
+  - The README tells what this change adds.
+  - The README no longer shows anything that the change removes or changes. This includes
+    each `README:` line in the "Notes" of the intent for these requirements.
+  - The README names any seam that a user can set.
+  - The README says how to run the app and the checks, with the "all" command from
+    `pdlc/config.md`.
+- **Manual checks:** only what no check can see, such as how a page looks, or "none".
+  Write one line for each manual check, in the form of the template. The "Check" of its
+  step says `manual check`. A missing runner or tool is not a reason for a manual check.
+  It is also not a reason to stop. Use a stand-in seam instead.
 
 ## 4. Finish
 
-- In the intent's "Changes" section, list the changes in order.
-- Write the intent's "Handoff" for the tests stage. Give the changes, their order, and
-  anything about the interface the test writer should know.
+- In the "Changes" section of the intent, list the changes in order.
+- Write the "Handoff" section of the intent for the tests stage. Give the changes, their
+  order, and anything about the interface that helps the test writer.
 - Commit with the message "Plan IN-xxxx: <names of changes>" and the trailer
   `Intent: IN-xxxx`.
 - Tell the tracker port about each new change.
-- Tell the user the changes, in order, and that `/pdlc:tests` is next.
+- Tell the user the changes, in order. Also tell the user that `/pdlc:tests` is the next
+  step.

@@ -6,7 +6,7 @@ Keep these sections, in this order, and add no others.
 
 ## Who and why
 
-Who does this job, and what they are trying to achieve. Two or three sentences.
+Write who does this job, and what they try to achieve. Use two or three sentences.
 
 ## Relies on
 
@@ -15,9 +15,10 @@ Who does this job, and what they are trying to achieve. Two or three sentences.
 
 ## Code map
 
-What this job owns: its entry points (routes or request handlers, commands, page scripts
-or event handlers) and files that serve only it. In a file shared with other specs, name
-this job's parts. See "Code maps" in `pdlc/README.md`. pdlc scopes changes by this map.
+List what this job owns: its entry points, and the files that serve only this job. An entry
+point is a route or request handler, a command, a page script, or an event handler. If a
+file is shared with other specs, name the parts of this job in that file. See "Code maps"
+in `pdlc/README.md`. pdlc uses this list to set the scope of changes.
 
 - path/to/folder/
 - path/to/server.py: POST /reset route and handle_reset
@@ -31,6 +32,6 @@ marks a requirement that recon found in the code. No other requirement has a `So
 
 Status: proposed · Intents: IN-0000
 
-One or two sentences saying what must be true.
+Write one or two sentences that say what must be true.
 
 - Given ..., when ..., then ...
