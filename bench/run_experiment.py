@@ -6,6 +6,7 @@ Commands:
   run_experiment.py start SPEC   start the experiment in the background
   run_experiment.py wait SPEC    wait up to --seconds for the experiment. Run it again until it says DONE.
   run_experiment.py run SPEC     run the experiment in this process
+  run_experiment.py apply SPEC   put the edits of a kept experiment into plugins/pdlc itself
 
 A spec is a JSON file:
   id                 lower-case words with hyphens, for example "r3-foreground-agents"
@@ -223,6 +224,24 @@ def command_run(args):
     return 0
 
 
+def command_apply(args):
+    """Write the edits of a spec into the real plugin. Use it after the gate says to keep the edit."""
+    spec = load_spec(args.spec)
+    for number, edit in enumerate(spec["edits"], 1):
+        path = PLUGIN / edit["file"]
+        if not path.is_file():
+            raise SpecError("edit %d: there is no file %s in the plugin" % (number, edit["file"]))
+        text = path.read_text()
+        if text.count(edit["find"]) != 1:
+            raise SpecError("edit %d: the find text occurs %d times in %s. Is the edit applied already?" % (
+                number, text.count(edit["find"]), edit["file"]))
+    for edit in spec["edits"]:
+        path = PLUGIN / edit["file"]
+        path.write_text(path.read_text().replace(edit["find"], edit["replace"], 1))
+    print("applied %d edits to plugins/pdlc" % len(spec["edits"]))
+    return 0
+
+
 def command_start(args):
     spec = load_spec(args.spec)
     folder = out_dir(spec)
@@ -262,14 +281,15 @@ def command_wait(args):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("check", "start", "run", "wait"):
+    for name in ("check", "start", "run", "wait", "apply"):
         p = sub.add_parser(name)
         p.add_argument("spec")
         if name == "wait":
             p.add_argument("--seconds", type=int, default=540)
     args = parser.parse_args(argv)
     try:
-        return {"check": command_check, "start": command_start, "run": command_run, "wait": command_wait}[args.command](args)
+        return {"check": command_check, "start": command_start, "run": command_run, "wait": command_wait,
+                "apply": command_apply}[args.command](args)
     except SpecError as error:
         print("SPEC ERROR: %s" % error)
         return 2

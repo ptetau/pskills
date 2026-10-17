@@ -1,0 +1,218 @@
+{
+ "label": "r3-foreground-agents-6",
+ "plugin_commit": "",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 148,
+     "cache_write": 363039,
+     "cache_read": 3001489,
+     "output": 52976
+    },
+    "cost_usd": 1.9182,
+    "duration_s": 364.8,
+    "turns": 48,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 15,
+    "models": {
+     "claude-sonnet-5-5": 1.9182
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 37738,
+      "cache_read": 37343,
+      "output": 32
+     },
+     "cost_usd": 0.1785,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 11.0
+    },
+    "intake": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 39244,
+      "cache_read": 319539,
+      "output": 75
+     },
+     "cost_usd": 0.228,
+     "messages": 8,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 12586,
+        "cache_read": 24355,
+        "output": 39
+       },
+       "cost_usd": 0.0413,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 48.0
+      }
+     },
+     "wall_s": 2.7
+    },
+    "change": {
+     "tokens": {
+      "input": 2,
+      "cache_write": 10095,
+      "cache_read": 44029,
+      "output": 6
+     },
+     "cost_usd": 0.0554,
+     "messages": 1,
+     "agents": {},
+     "wall_s": 98.6
+    },
+    "tests": {
+     "tokens": {
+      "input": 24,
+      "cache_write": 37524,
+      "cache_read": 522519,
+      "output": 196
+     },
+     "cost_usd": 0.2428,
+     "messages": 12,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 8877,
+        "cache_read": 36142,
+        "output": 65
+       },
+       "cost_usd": 0.0338,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 22.3
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 18222,
+        "cache_read": 7453,
+        "output": 19
+       },
+       "cost_usd": 0.0531,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 17.2
+      }
+     },
+     "wall_s": 65.3
+    },
+    "build": {
+     "tokens": {
+      "input": 26,
+      "cache_write": 22971,
+      "cache_read": 542308,
+      "output": 155
+     },
+     "cost_usd": 0.2053,
+     "messages": 13,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 16,
+        "cache_write": 12918,
+        "cache_read": 70817,
+        "output": 93
+       },
+       "cost_usd": 0.0533,
+       "messages": 8,
+       "calls": 2,
+       "wall_s": 28.0
+      }
+     },
+     "wall_s": 26.8
+    },
+    "show": {
+     "tokens": {
+      "input": 12,
+      "cache_write": 9327,
+      "cache_read": 575987,
+      "output": 214
+     },
+     "cost_usd": 0.1739,
+     "messages": 6,
+     "agents": {},
+     "wall_s": 25.1
+    },
+    "verify": {
+     "tokens": {
+      "input": 64,
+      "cache_write": 206140,
+      "cache_read": 959764,
+      "output": 1087
+     },
+     "cost_usd": 0.8345,
+     "messages": 32,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 50,
+        "cache_write": 190154,
+        "cache_read": 185951,
+        "output": 289
+       },
+       "cost_usd": 0.5796,
+       "messages": 25,
+       "calls": 10,
+       "wall_s": 112.2
+      }
+     },
+     "wall_s": 133.4
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 367.1,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-wordfreq-top"
+    ],
+    "changes": [
+     "CH-0001-wordfreq-top"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-wordfreq-top": [
+      "ok   CH-0001"
+     ]
+    },
+    "change_status": {
+     "CH-0001-wordfreq-top": {
+      "pdlc/CH-0001-wordfreq-top": "?"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 2,
+    "proposed": true,
+    "tip": "pdlc/CH-0001-wordfreq-top",
+    "unit": {
+     "ok": true,
+     "ran": 29
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-8pzok7pk/app"
+  }
+ ]
+}

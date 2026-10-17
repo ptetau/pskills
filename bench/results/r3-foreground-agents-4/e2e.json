@@ -1,0 +1,206 @@
+{
+ "label": "r3-foreground-agents-4",
+ "plugin_commit": "",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 114,
+     "cache_write": 266074,
+     "cache_read": 2600102,
+     "output": 38562
+    },
+    "cost_usd": 1.4808,
+    "duration_s": 334.2,
+    "turns": 41,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 10,
+    "models": {
+     "claude-sonnet-5-5": 1.4808
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 57843,
+      "cache_read": 119110,
+      "output": 40
+     },
+     "cost_usd": 0.2765,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 20.2
+    },
+    "intake": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 26279,
+      "cache_read": 283233,
+      "output": 76
+     },
+     "cost_usd": 0.1599,
+     "messages": 7,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 9817,
+        "cache_read": 23428,
+        "output": 57
+       },
+       "cost_usd": 0.0322,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 23.5
+      }
+     },
+     "wall_s": 68.6
+    },
+    "tests": {
+     "tokens": {
+      "input": 34,
+      "cache_write": 61628,
+      "cache_read": 716207,
+      "output": 250
+     },
+     "cost_usd": 0.3462,
+     "messages": 17,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 8543,
+        "cache_read": 32678,
+        "output": 64
+       },
+       "cost_usd": 0.0309,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 25.2
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 10,
+        "cache_write": 39594,
+        "cache_read": 36822,
+        "output": 64
+       },
+       "cost_usd": 0.1157,
+       "messages": 5,
+       "calls": 2,
+       "wall_s": 32.8
+      }
+     },
+     "wall_s": 131.7
+    },
+    "build": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 10404,
+      "cache_read": 301399,
+      "output": 83
+     },
+     "cost_usd": 0.1003,
+     "messages": 7,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 6701,
+        "cache_read": 35242,
+        "output": 64
+       },
+       "cost_usd": 0.0265,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 13.4
+      }
+     },
+     "wall_s": 35.7
+    },
+    "show": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 11015,
+      "cache_read": 478016,
+      "output": 96
+     },
+     "cost_usd": 0.1521,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 26.8
+    },
+    "verify": {
+     "tokens": {
+      "input": 34,
+      "cache_write": 98905,
+      "cache_read": 702137,
+      "output": 848
+     },
+     "cost_usd": 0.4459,
+     "messages": 17,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 22,
+        "cache_write": 88226,
+        "cache_read": 56287,
+        "output": 116
+       },
+       "cost_usd": 0.252,
+       "messages": 11,
+       "calls": 5,
+       "wall_s": 46.8
+      }
+     },
+     "wall_s": 50.5
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 337.1,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-top-option"
+    ],
+    "changes": [
+     "CH-0001-top-option"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-top-option": [
+      "ok   CH-0001"
+     ]
+    },
+    "change_status": {
+     "CH-0001-top-option": {
+      "pdlc/CH-0001-top-option": "?"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 1,
+    "proposed": true,
+    "tip": "pdlc/CH-0001-top-option",
+    "unit": {
+     "ok": true,
+     "ran": 28
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-igw6ruc8/app"
+  }
+ ]
+}

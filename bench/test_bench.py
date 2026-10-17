@@ -4,6 +4,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from argparse import Namespace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -414,6 +415,19 @@ class ExperimentSpecTest(unittest.TestCase):
         spec = run_experiment.load_spec(self.write(edits=edits))
         with self.assertRaises(run_experiment.SpecError):
             run_experiment.apply_edits(spec)
+
+    def test_apply_writes_the_edits_once_and_then_refuses(self):
+        plugin = Path(tempfile.mkdtemp()) / "pdlc"
+        self.addCleanup(shutil.rmtree, plugin.parent, True)
+        shutil.copytree(run_experiment.PLUGIN / "agents", plugin / "agents")
+        spec_path = self.write()
+        real = run_experiment.PLUGIN
+        run_experiment.PLUGIN = plugin
+        self.addCleanup(setattr, run_experiment, "PLUGIN", real)
+        run_experiment.command_apply(Namespace(spec=str(spec_path)))
+        self.assertIn("tools: Read, Write, Glob", (plugin / "agents" / "reviewer.md").read_text())
+        with self.assertRaises(run_experiment.SpecError):
+            run_experiment.command_apply(Namespace(spec=str(spec_path)))
 
     def test_the_background_command_uses_an_absolute_spec_path(self):
         command = run_experiment.runner_command("bench/experiments/round3/x.json")

@@ -1,0 +1,7 @@
+run 1: $1.32, 253.4s, probes 8/8
+run 1: $1.60, 319.2s, probes 8/8
+run 1: $1.53, 330.6s, probes 8/8
+run 1: $1.48, 337.1s, probes 8/8
+run 1: $1.92, 367.1s, probes 8/8
+run 1: $1.87, 402.3s, probes 8/8
+wrote /home/user/pskills/bench/results/r3-foreground-agents/result.json with 6 runs

@@ -87,8 +87,10 @@ A guard in the pdlc plugin keeps the roles in these lanes.
 Starting an agent:
 
 - Give it absolute paths: the project root, and the full path of each file it needs.
-- Run it in the foreground, and wait for its reply. Start agents that work side by side
-  (the reviewers) together, in one message. Do not stop an agent because it is slow.
+- Start it with the Agent tool, with `run_in_background: false`. Then the tool call
+  returns the reply of the agent. Do not wait for an agent with a sleep, a loop, a
+  monitor, or a notification. Start agents that work side by side (the reviewers) in one
+  message, each with `run_in_background: false`. Do not stop an agent because it is slow.
 - If the guard or a tool blocks an agent, fix the path. Then run the agent once more from
   the project root. If the agent fails again, that counts as one failure of its stage. A
   blocked agent is not a reason to stop.

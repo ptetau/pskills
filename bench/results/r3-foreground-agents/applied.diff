@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/skills/build/SKILL.md b/skills/build/SKILL.md
 --- a/skills/build/SKILL.md	2026-10-17 08:26:05.380694656 +0000
-+++ b/skills/build/SKILL.md	2026-10-17 23:32:21.206631438 +0000
++++ b/skills/build/SKILL.md	2026-10-17 23:34:25.194461624 +0000
 @@ -27,9 +27,9 @@
  
  ## 2. Build
@@ -16,7 +16,7 @@ diff -ru -x __pycache__ a/skills/build/SKILL.md b/skills/build/SKILL.md
    reason to `/pdlc:tests`. That skill asks the test writer, and then locks the checks
 diff -ru -x __pycache__ a/skills/init/references/templates/README.md b/skills/init/references/templates/README.md
 --- a/skills/init/references/templates/README.md	2026-10-17 08:26:05.388694656 +0000
-+++ b/skills/init/references/templates/README.md	2026-10-17 23:32:21.205896867 +0000
++++ b/skills/init/references/templates/README.md	2026-10-17 23:34:25.193338885 +0000
 @@ -87,8 +87,10 @@
  Starting an agent:
  
@@ -32,7 +32,7 @@ diff -ru -x __pycache__ a/skills/init/references/templates/README.md b/skills/in
    blocked agent is not a reason to stop.
 diff -ru -x __pycache__ a/skills/intake/SKILL.md b/skills/intake/SKILL.md
 --- a/skills/intake/SKILL.md	2026-10-17 08:26:05.392694656 +0000
-+++ b/skills/intake/SKILL.md	2026-10-17 23:32:21.206854825 +0000
++++ b/skills/intake/SKILL.md	2026-10-17 23:34:25.194735831 +0000
 @@ -59,10 +59,10 @@
  
  ## 3. Deepen stub specs
@@ -50,7 +50,7 @@ diff -ru -x __pycache__ a/skills/intake/SKILL.md b/skills/intake/SKILL.md
  
 diff -ru -x __pycache__ a/skills/tests/SKILL.md b/skills/tests/SKILL.md
 --- a/skills/tests/SKILL.md	2026-10-17 08:26:05.392694656 +0000
-+++ b/skills/tests/SKILL.md	2026-10-17 23:32:21.206500028 +0000
++++ b/skills/tests/SKILL.md	2026-10-17 23:34:25.194234928 +0000
 @@ -49,9 +49,9 @@
  
  ## 2. Write the checks
@@ -77,7 +77,7 @@ diff -ru -x __pycache__ a/skills/tests/SKILL.md b/skills/tests/SKILL.md
     problems to the test writer. Then do red, lock, and review again. If the review fails a
 diff -ru -x __pycache__ a/skills/verify/SKILL.md b/skills/verify/SKILL.md
 --- a/skills/verify/SKILL.md	2026-10-17 12:43:39.525073912 +0000
-+++ b/skills/verify/SKILL.md	2026-10-17 23:32:21.206725342 +0000
++++ b/skills/verify/SKILL.md	2026-10-17 23:34:25.194600330 +0000
 @@ -38,10 +38,11 @@
  1. Get the remits from "Reviews" in `pdlc/config.md`. Do not include `tests`, because the
     tests stage already reviewed the checks, and its result stays.
