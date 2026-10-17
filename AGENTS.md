@@ -40,5 +40,6 @@ Run these tests before you commit:
 python3 improve-writing/scripts/test_check_writing.py
 python3 scripts/sync_shared.py --check
 python3 quiz-visual/scripts/test_quiz_visual.py
+python3 bench/test_bench.py
 (cd plugins/pdlc && python3 -m unittest discover -s tests)
 ```
