@@ -136,6 +136,44 @@ class GateTest(unittest.TestCase):
         self.assertAlmostEqual(run_bench.noise([1.0, 3.0]), 1.0)
 
 
+def agent_result(per_call, calls, totals, seeds=None):
+    """A result whose runs each hold `calls` reviewer calls at `per_call` dollars."""
+    runs = []
+    for total in totals:
+        runs.append({"totals": {"cost_usd": total, "duration_s": 100.0}, "wall_s": 100.0,
+                     "stages": {"verify": {"agents": {"pdlc:reviewer": {"cost_usd": per_call * calls, "calls": calls}}}},
+                     "outcome": {"probes": {"passed": 8, "total": 8}, "unit": {"ok": True}}})
+    return {"runs": runs, "seeds": {"caught": seeds} if seeds is not None else {}}
+
+
+class TargetGateTest(unittest.TestCase):
+    def test_a_cheaper_agent_is_kept_even_when_whole_runs_vary_a_lot(self):
+        baseline = agent_result(0.06, 7, [1.8, 2.5, 1.9])
+        candidate = agent_result(0.005, 7, [1.6, 2.2])
+        plain = run_bench.gate(baseline, candidate)
+        aimed = run_bench.gate(baseline, candidate, target="pdlc:reviewer")
+        self.assertTrue(plain["verdict"].startswith("NO GAIN"))
+        self.assertTrue(aimed["verdict"].startswith("SAME OR BETTER"))
+        self.assertAlmostEqual(aimed["target"]["expected_run_saving"], 0.385, places=3)
+
+    def test_a_whole_run_that_costs_much_more_is_a_regression(self):
+        baseline = agent_result(0.06, 7, [1.8, 1.9])
+        candidate = agent_result(0.005, 7, [2.9, 3.1])
+        aimed = run_bench.gate(baseline, candidate, target="pdlc:reviewer")
+        self.assertTrue(aimed["verdict"].startswith("REGRESSION"))
+
+    def test_a_missed_defect_beats_a_cheaper_agent(self):
+        baseline = agent_result(0.06, 7, [1.8, 1.9], seeds=["a", "b"])
+        candidate = agent_result(0.005, 7, [1.0, 1.1], seeds=["a"])
+        aimed = run_bench.gate(baseline, candidate, target="pdlc:reviewer")
+        self.assertTrue(aimed["verdict"].startswith("REGRESSION"))
+
+    def test_the_cost_of_a_call_is_the_cost_over_the_calls(self):
+        stats = run_bench.agent_stats(agent_result(0.06, 7, [1.8, 2.5]), "pdlc:reviewer")
+        self.assertAlmostEqual(stats["per_call"], 0.06)
+        self.assertEqual(stats["calls"], 14)
+
+
 class ProbeTest(unittest.TestCase):
     def copy_fixture(self):
         folder = Path(tempfile.mkdtemp())

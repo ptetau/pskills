@@ -1,0 +1,205 @@
+{
+ "label": "cand-haiku-1",
+ "plugin_commit": "",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 146,
+     "cache_write": 295550,
+     "cache_read": 3179204,
+     "output": 82503
+    },
+    "cost_usd": 1.1269,
+    "duration_s": 340.0,
+    "turns": 29,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 13,
+    "models": {
+     "claude-sonnet-5-5": 1.0791,
+     "claude-haiku-5-5": 0.0478
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 30970,
+      "cache_read": 146005,
+      "output": 45
+     },
+     "cost_usd": 0.1567,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 16.4
+    },
+    "intake": {
+     "tokens": {
+      "input": 24,
+      "cache_write": 23858,
+      "cache_read": 665012,
+      "output": 206
+     },
+     "cost_usd": 0.2287,
+     "messages": 12,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 4294,
+        "cache_read": 13392,
+        "output": 23
+       },
+       "cost_usd": 0.0139,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 17.9
+      }
+     },
+     "wall_s": 72.2
+    },
+    "tests": {
+     "tokens": {
+      "input": 62,
+      "cache_write": 107984,
+      "cache_read": 1132262,
+      "output": 515
+     },
+     "cost_usd": 0.3528,
+     "messages": 31,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 22,
+        "cache_write": 22633,
+        "cache_read": 92079,
+        "output": 180
+       },
+       "cost_usd": 0.0784,
+       "messages": 11,
+       "calls": 3,
+       "wall_s": 41.9
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 70184,
+        "cache_read": 109652,
+        "output": 112
+       },
+       "cost_usd": 0.0202,
+       "messages": 9,
+       "calls": 3,
+       "wall_s": 156.3
+      }
+     },
+     "wall_s": 247.9
+    },
+    "build": {
+     "tokens": {
+      "input": 12,
+      "cache_write": 11325,
+      "cache_read": 310602,
+      "output": 66
+     },
+     "cost_usd": 0.1,
+     "messages": 6,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 6765,
+        "cache_read": 24446,
+        "output": 26
+       },
+       "cost_usd": 0.0225,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 14.3
+      }
+     },
+     "wall_s": 27.9
+    },
+    "show": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 12125,
+      "cache_read": 513241,
+      "output": 81
+     },
+     "cost_usd": 0.1551,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 30.5
+    },
+    "verify": {
+     "tokens": {
+      "input": 30,
+      "cache_write": 109288,
+      "cache_read": 412082,
+      "output": 833
+     },
+     "cost_usd": 0.1336,
+     "messages": 15,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 24,
+        "cache_write": 101917,
+        "cache_read": 75192,
+        "output": 130
+       },
+       "cost_usd": 0.0276,
+       "messages": 12,
+       "calls": 5,
+       "wall_s": 66.4
+      }
+     },
+     "wall_s": 55.7
+    }
+   },
+   "waiting": {
+    "messages": 3,
+    "cost_usd": 0.0468
+   },
+   "wall_s": 453.9,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-top-option"
+    ],
+    "changes": [
+     "CH-0001-top-option"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-top-option": [
+      "FAIL CH-0001",
+      "  - JOB-report-word-frequencies.R3 is built, not verified",
+      "  - JOB-report-word-frequencies.R5 is built, not verified"
+     ]
+    },
+    "change_status": {
+     "CH-0001-top-option": {
+      "pdlc/CH-0001-top-option": "?"
+     }
+    },
+    "tip": "pdlc/CH-0001-top-option",
+    "unit": {
+     "ok": true,
+     "ran": 33
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-kl0_pb7e/app"
+  }
+ ]
+}

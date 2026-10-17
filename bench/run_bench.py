@@ -511,8 +511,32 @@ def summarise(result):
     }
 
 
-def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5):
-    """Decide if an edit stays. Effectiveness must not fall. Cost must fall by more than the noise."""
+def agent_stats(result, label):
+    """Cost and calls of one agent type over all runs of a result, and its cost for each call."""
+    per_run, cost, calls = [], 0.0, 0
+    for run in result["runs"]:
+        run_cost = run_calls = 0
+        for stage in run["stages"].values():
+            agent = stage["agents"].get(label)
+            if agent:
+                run_cost += agent["cost_usd"]
+                run_calls += agent["calls"]
+        cost += run_cost
+        calls += run_calls
+        if run_calls:
+            per_run.append(run_cost / run_calls)
+    return {"cost": cost, "calls": calls, "per_call": cost / calls if calls else 0.0, "per_run": per_run,
+            "calls_per_run": calls / len(result["runs"]) if result["runs"] else 0.0}
+
+
+def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None):
+    """Decide if an edit stays. Effectiveness must not fall. Cost must fall by more than the noise.
+
+    A whole run varies a lot between identical runs, because the number of review rounds varies.
+    For an edit that aims at one agent, `target` names the agent. The gate then judges the cost
+    of each call of that agent, which varies much less, and it shows what that means for a whole
+    run. A whole run must still not cost clearly more than before.
+    """
     base, cand = summarise(baseline), summarise(candidate)
     reasons = []
     worse = []
@@ -528,30 +552,53 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5):
         extra = sorted(set(cand["false_fails"]) - set(base["false_fails"]))
         if extra:
             worse.append("clean change now fails review: " + ", ".join(extra))
-    change = (cand["cost_usd"] - base["cost_usd"]) / base["cost_usd"] if base["cost_usd"] else 0.0
-    needed = max(min_gain, base["noise"], cand["noise"])
+    run_change = (cand["cost_usd"] - base["cost_usd"]) / base["cost_usd"] if base["cost_usd"] else 0.0
     slower = cand["duration_s"] / base["duration_s"] if base["duration_s"] else 1.0
     if slower > speed_limit:
         worse.append("%.0f%% slower, limit is %.0f%%" % ((slower - 1) * 100, (speed_limit - 1) * 100))
+    detail = {}
+    if target:
+        before, after = agent_stats(baseline, target), agent_stats(candidate, target)
+        change = (after["per_call"] - before["per_call"]) / before["per_call"] if before["per_call"] else 0.0
+        needed = max(min_gain, noise(before["per_run"]), noise(after["per_run"]))
+        saved = (before["per_call"] - after["per_call"]) * before["calls_per_run"]
+        detail = {"target": target, "per_call_before": before["per_call"], "per_call_after": after["per_call"],
+                  "calls_per_run": before["calls_per_run"], "expected_run_saving": saved,
+                  "expected_run_saving_share": saved / base["cost_usd"] if base["cost_usd"] else 0.0}
+        if run_change > max(base["noise"], 0.25):
+            worse.append("a whole run costs %.0f%% more" % (run_change * 100))
+        gain_text = "each %s call costs %.0f%% less, more than the %.0f%% needed" % (target, -change * 100, needed * 100)
+        none_text = "each %s call changed %+.0f%%, and a %.0f%% fall was needed" % (target, change * 100, needed * 100)
+    else:
+        change = run_change
+        needed = max(min_gain, base["noise"], cand["noise"])
+        gain_text = "cost fell %.0f%%, more than the %.0f%% needed" % (-change * 100, needed * 100)
+        none_text = "cost changed %+.0f%%, and a %.0f%% fall was needed" % (change * 100, needed * 100)
     if worse:
         verdict = "REGRESSION -> revert"
         reasons = worse
     elif change <= -needed:
         verdict = "SAME OR BETTER -> keep"
-        reasons = ["cost fell %.0f%%, more than the %.0f%% needed" % (-change * 100, needed * 100)]
+        reasons = [gain_text]
     else:
         verdict = "NO GAIN -> revert"
-        reasons = ["cost changed %+.0f%%, and %.0f%% fall was needed" % (change * 100, needed * 100)]
-    return {"verdict": verdict, "reasons": reasons, "baseline": base, "candidate": cand, "cost_change": change}
+        reasons = [none_text]
+    return {"verdict": verdict, "reasons": reasons, "baseline": base, "candidate": cand, "cost_change": run_change,
+            "target": detail}
 
 
 def command_gate(args):
     result = gate(json.loads(Path(args.baseline).read_text()), json.loads(Path(args.candidate).read_text()),
-                  args.min_gain, args.speed_limit)
+                  args.min_gain, args.speed_limit, args.target)
     base, cand = result["baseline"], result["candidate"]
     print("baseline   cost $%.2f  time %4.0fs  runs %d  noise %2.0f%%" % (base["cost_usd"], base["duration_s"], base["runs"], base["noise"] * 100))
     print("candidate  cost $%.2f  time %4.0fs  runs %d  noise %2.0f%%" % (cand["cost_usd"], cand["duration_s"], cand["runs"], cand["noise"] * 100))
     print("probes     %s vs %s" % (base["probes_all"], cand["probes_all"]))
+    detail = result["target"]
+    if detail:
+        print("%s  each call $%.3f -> $%.3f, %.1f calls a run, so about $%.2f (%.0f%%) less in a run" % (
+            detail["target"], detail["per_call_before"], detail["per_call_after"], detail["calls_per_run"],
+            detail["expected_run_saving"], detail["expected_run_saving_share"] * 100))
     if base["seeds_caught"] is not None:
         print("defects    %d vs %d caught" % (len(base["seeds_caught"]), len(cand["seeds_caught"] or [])))
     print("verdict    " + result["verdict"])
@@ -728,7 +775,7 @@ def command_freeze(args):
         data = json.loads(Path(path).read_text())
         runs += data["runs"]
         commits.add(data["plugin_commit"])
-    baseline = {"label": "baseline", "plugin_commit": ",".join(sorted(commits)), "model": MODEL, "effort": EFFORT, "runs": runs}
+    baseline = {"label": args.label, "plugin_commit": ",".join(sorted(commits)), "model": MODEL, "effort": EFFORT, "runs": runs}
     if args.seeds:
         seeds = json.loads(Path(args.seeds).read_text())
         baseline["seeds"] = {key: seeds[key] for key in ("reviewer_model", "caught", "missed", "false_fails", "cost_usd")}
@@ -761,11 +808,13 @@ def main(argv=None):
     f.add_argument("results", nargs="+")
     f.add_argument("--out", default=str(HERE / "baseline.json"))
     f.add_argument("--seeds", help="a seeds.json file to add to the result")
+    f.add_argument("--label", default="baseline")
     g = sub.add_parser("gate")
     g.add_argument("baseline")
     g.add_argument("candidate")
     g.add_argument("--min-gain", type=float, default=0.05)
     g.add_argument("--speed-limit", type=float, default=1.5)
+    g.add_argument("--target", help="an agent that the edit aims at, for example pdlc:reviewer")
     args = parser.parse_args(argv)
     if args.command == "e2e":
         command_e2e(args)

@@ -1,0 +1,226 @@
+{
+ "label": "baseline-3",
+ "plugin_commit": "1ef7d69",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 236,
+     "cache_write": 390849,
+     "cache_read": 6967544,
+     "output": 64815
+    },
+    "cost_usd": 2.4906,
+    "duration_s": 3.9,
+    "turns": 1,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 14,
+    "models": {
+     "claude-sonnet-5-5": 2.4906
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 12273,
+      "cache_read": 67681,
+      "output": 32
+     },
+     "cost_usd": 0.0611,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 9.3
+    },
+    "intake": {
+     "tokens": {
+      "input": 28,
+      "cache_write": 34054,
+      "cache_read": 620247,
+      "output": 275
+     },
+     "cost_usd": 0.24,
+     "messages": 14,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10654,
+        "cache_read": 17194,
+        "output": 56
+       },
+       "cost_usd": 0.0298,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 21.1
+      }
+     },
+     "wall_s": 56.3
+    },
+    "ready": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 3200,
+      "cache_read": 132862,
+      "output": 48
+     },
+     "cost_usd": 0.0387,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 15.7
+    },
+    "change": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 8817,
+      "cache_read": 365114,
+      "output": 72
+     },
+     "cost_usd": 0.1059,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 29.3
+    },
+    "tests": {
+     "tokens": {
+      "input": 64,
+      "cache_write": 101921,
+      "cache_read": 1622039,
+      "output": 422
+     },
+     "cost_usd": 0.6003,
+     "messages": 32,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 20244,
+        "cache_read": 74286,
+        "output": 113
+       },
+       "cost_usd": 0.0647,
+       "messages": 9,
+       "calls": 2,
+       "wall_s": 43.1
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 58619,
+        "cache_read": 22950,
+        "output": 59
+       },
+       "cost_usd": 0.1474,
+       "messages": 6,
+       "calls": 3,
+       "wall_s": 57.0
+      }
+     },
+     "wall_s": 160.6
+    },
+    "build": {
+     "tokens": {
+      "input": 18,
+      "cache_write": 19198,
+      "cache_read": 363977,
+      "output": 131
+     },
+     "cost_usd": 0.1267,
+     "messages": 9,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 13621,
+        "cache_read": 54395,
+        "output": 88
+       },
+       "cost_usd": 0.0445,
+       "messages": 6,
+       "calls": 1,
+       "wall_s": 22.6
+      }
+     },
+     "wall_s": 38.4
+    },
+    "show": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 7290,
+      "cache_read": 549801,
+      "output": 107
+     },
+     "cost_usd": 0.1362,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 31.1
+    },
+    "verify": {
+     "tokens": {
+      "input": 98,
+      "cache_write": 204096,
+      "cache_read": 3245823,
+      "output": 1451
+     },
+     "cost_usd": 1.1817,
+     "messages": 49,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 54,
+        "cache_write": 175643,
+        "cache_read": 408886,
+        "output": 376
+       },
+       "cost_usd": 0.5096,
+       "messages": 27,
+       "calls": 7,
+       "wall_s": 123.6
+      }
+     },
+     "wall_s": 332.8
+    }
+   },
+   "waiting": {
+    "messages": 10,
+    "cost_usd": 0.2071
+   },
+   "wall_s": 675.6,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-top-option"
+    ],
+    "changes": [
+     "CH-0001-top-option"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-top-option": [
+      "ok   CH-0001"
+     ]
+    },
+    "change_status": {
+     "CH-0001-top-option": {
+      "pdlc/CH-0001-top-option": "?"
+     }
+    },
+    "tip": "pdlc/CH-0001-top-option",
+    "unit": {
+     "ok": true,
+     "ran": 26
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-dd8ubmnu/app"
+  }
+ ]
+}

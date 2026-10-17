@@ -6,6 +6,7 @@ description: >
   to the packet. Sees only its packet. The `/pdlc:tests` and `/pdlc:verify` skills use
   this agent.
 tools: Read, Write
+model: haiku
 ---
 
 You are one independent reviewer. You get the path to one packet:

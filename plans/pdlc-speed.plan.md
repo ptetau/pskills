@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** In progress
+**Owner:** Patrick Te Tau · **Status:** Round 1 done and kept. Later rounds are open.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -64,6 +64,12 @@ Today's results are in `bench/baseline.json`. An edit keeps them when all of the
   Revert the edit.
 - **SAME OR BETTER**: nothing got worse and cost fell by more than that. Keep the edit.
 
+A whole run varies a lot. Three runs of today's pdlc cost $1.78, $1.87, and $2.49, because
+the number of review rounds changes. So two runs cannot prove a saving of 20% on a whole
+run. For an edit that aims at one agent, run the gate with `--target <agent>`. The gate then
+compares the cost of each call of that agent, which varies by about 5%. It also prints what
+the saving means for a whole run. A whole run must still not cost clearly more than before.
+
 ## The loop
 
 1. Run the benchmark. The first time, run it twice, to see the noise.
@@ -88,9 +94,35 @@ Today's results are in `bench/baseline.json`. An edit keeps them when all of the
   every effect. More intents and a second app come later.
 - Runs of a model differ from each other. The gate uses the spread that it saw, and it
   does not claim more.
+- The planted defects are five. A reviewer on a smaller model can still miss a subtler
+  defect, so each new defect that pdlc misses in real use joins `bench/seeds/`.
 - The effort of the benchmark is not the effort of every user. A saving in tokens should
   carry over, but the exact percentage will not.
 
 ## Progress log
 
 One entry for each step, newest last.
+
+```
+[2026-10-17] Steps 1 to 5: baseline and round 1
+Baseline: three runs of today's pdlc, on Sonnet 5.5 at medium effort, cost $1.78, $1.87 and
+          $2.49 (mean $2.05). They took 346, 381 and 676 seconds. In each run all 8 probes
+          pass and the project's own checks pass. Reviewers on Sonnet catch 5 of 5 planted
+          defects, and they raise no false alarm on the clean change.
+Where the cost goes: verify costs 43% to 47% of a run, and tests costs 14% to 25%. Reviewer
+          calls cost about $0.06 each, and a run makes 7 to 10 of them: 23% to 27% of the
+          cost. The rest is the main session. It takes about 45 turns, and each turn reads a
+          context that grows from 37k to 125k tokens. Cache reads are about 93% of all tokens.
+          Turns that only wait for a background agent cost 1% to 8%.
+Round 1 edit: the lever "cheaper models". `agents/reviewer.md` gets `model: haiku`.
+Result: two runs cost $1.13 and $1.75 (mean $1.44, 30% less, which is inside the noise of
+          a whole run). Each reviewer call costs $0.006, which is 91% less. A run makes 8.3
+          reviewer calls on average, so the edit saves about $0.47 (23%) in a run. All 8
+          probes pass in both runs. The project's checks pass. Reviewers on Haiku catch 5 of
+          5 planted defects, and they raise no false alarm.
+Gate: for a whole run, NO GAIN (a 30% fall is inside a noise of 43%). Aimed at
+          `pdlc:reviewer`, SAME OR BETTER. The edit stays.
+Next: start agents in the foreground, so that the main session does not poll (1% to 8%);
+          review by risk, because compliance and privacy answer "not applicable" on this
+          fixture; and shrink the context that the main session carries into verify.
+```
