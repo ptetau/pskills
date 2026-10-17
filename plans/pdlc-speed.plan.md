@@ -41,6 +41,13 @@ A stronger model plans the experiments, and cheaper models make the changes and 
   the saved results before it accepts a report. It applies a kept edit with
   `bench/run_experiment.py apply`.
 
+## The two reference files
+
+- `bench/baseline.json` holds six runs of today's pdlc, from before round 1. It is the floor
+  for effectiveness.
+- `bench/reference.json` holds six runs of the state after the last kept round (round 3), with
+  its planted-defect result. The next experiment compares its cost with this file.
+
 ## What we measure
 
 - **Cost** is the dollar cost that `claude -p` reports for one run, at list prices. It
@@ -211,6 +218,10 @@ Result: six runs of the edit had no waiting turn. The baseline runs had 3 to 41,
           against 483 s (31% less).
 Gate: waiting target, SAME OR BETTER. The whole-run saving matches the waiting cost that the
           edit removed.
+Planted defects: reviewers on Sonnet catch 5 of 5, with no false alarm. The first score was 4
+          of 5. The privacy reviewer found the defect but answered in its reply and did not write
+          `result.md`, and the check read only the file. The check now reads the reply when there
+          is no file, as the main session does in a real run. The saved run was scored again.
 Limits: the verify rounds were 3, 1, 1, 1, 2, 2 against 2, 2, 1, 1, 1, 1 in the baseline, so
           the whole-run test alone is borderline. The number of review rounds is the noise to
           beat.

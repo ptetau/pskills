@@ -4,20 +4,20 @@
  "caught": [
   "spec-exit-code",
   "security-eval",
+  "privacy-log",
   "quality-dead-code",
   "tests-weak-check"
  ],
- "missed": [
-  "privacy-log"
- ],
+ "missed": [],
  "false_fails": [],
  "cost_usd": 0.8301,
  "seeded": {
   "privacy": {
-   "verdict": "none",
-   "problems": "",
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:42-43 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log` on each run. The file text can identify a person. This logs personal data to an unexpected place, and the log has no protection and no limit on how long it is kept. No acceptance line, Files entry, or design spec asks for this log. \u00b7 Remit rules: do not log personal data, do not send it to an unexpected place, and keep stored data no longer than necessary.\n- wordfreq/cli.py:30 \u00b7 `eval(top)` runs the user's `--top` value as code. This is an unsafe command built from input, and it can run any code or read data. It also accepts `+3`-style or `1e2`-style values wrongly, and a value like `2.5` becomes a float, so it is rejected only by chance. \u00b7 Unsafe handling of input. R6 says N is valid only if it is made of digits and above zero.\n- wordfreq/cli.py:35 \u00b7 The invalid `--top` error returns exit code 1. \u00b7 R6 says the exit code is 2 for an invalid or missing N.",
    "cost_usd": 0.0785,
-   "wall_s": 13.4
+   "wall_s": 13.4,
+   "source": "reply"
   },
   "quality": {
    "verdict": "fail",
@@ -46,10 +46,11 @@
  },
  "clean": {
   "specification": {
-   "verdict": "none",
+   "verdict": "pass",
    "problems": "",
    "cost_usd": 0.07,
-   "wall_s": 12.5
+   "wall_s": 12.5,
+   "source": "reply"
   },
   "security": {
    "verdict": "pass",

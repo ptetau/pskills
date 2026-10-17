@@ -794,6 +794,14 @@ def parse_result(text):
             "problems": "" if body.lower() == "none" else body}
 
 
+def final_reply(events):
+    """The last message of a session: the text of its result event."""
+    for item in reversed(events):
+        if item["e"].get("type") == "result":
+            return item["e"].get("result") or ""
+    return ""
+
+
 def score_seeds(spec, results):
     """results: remit -> parsed result of the seeded copy. A defect counts as caught when its
     reviewer fails the change and names the defect."""
@@ -811,7 +819,12 @@ def run_reviewer(project, remit, plugin, log_dir, model, timeout=900):
     events, wall, err = run_claude(prompt, project, plugin, Path(log_dir) / (remit + ".stream.jsonl"), timeout=timeout,
                                    budget_usd=3, extra=("--agent", "pdlc:reviewer", "--model", model))
     result = packet.parent / "result.md"
-    parsed = parse_result(result.read_text()) if result.exists() else {"verdict": "none", "problems": ""}
+    if result.exists():
+        parsed = parse_result(result.read_text())
+        parsed["source"] = "file"
+    else:
+        parsed = parse_result(final_reply(events))
+        parsed["source"] = "reply"
     cost = next((i["e"].get("total_cost_usd", 0) for i in events if i["e"].get("type") == "result"), 0)
     parsed.update({"cost_usd": round(cost, 4), "wall_s": wall})
     return parsed
@@ -850,6 +863,27 @@ def command_seeds(args):
     print("model %s  caught %d/%d  missed %s  false fails %s  $%.2f" % (
         model, len(caught), len(spec["seeds"]), missed or "none", false_fails or "none", cost))
     return result
+
+
+def command_rescore_seeds(args):
+    """Read the reviewers' final replies again from the saved streams, and score the seeds again."""
+    folder = HERE / "results" / args.label
+    data = json.loads((folder / "seeds.json").read_text())
+    for kind in ("seeded", "clean"):
+        for remit, entry in data[kind].items():
+            stream = folder / kind / (remit + ".stream.jsonl")
+            if entry["verdict"] != "none" or not stream.exists():
+                continue
+            items = [json.loads(line) for line in stream.read_text().splitlines() if line.strip()]
+            parsed = parse_result(final_reply(items))
+            entry.update(verdict=parsed["verdict"], problems=parsed["problems"], source="reply")
+    spec = json.loads((SEEDS / "seeds.json").read_text())
+    caught, missed = score_seeds(spec, data["seeded"])
+    false_fails = sorted(remit for remit, entry in data["clean"].items() if entry["verdict"] == "fail")
+    data.update(caught=caught, missed=missed, false_fails=false_fails)
+    (folder / "seeds.json").write_text(json.dumps(data, indent=1))
+    print("%s  caught %d/%d  missed %s  false fails %s" % (
+        args.label, len(caught), len(spec["seeds"]), missed or "none", false_fails or "none"))
 
 
 def fmt_tokens(tokens):
@@ -914,6 +948,8 @@ def main(argv=None):
     sd.add_argument("--label", required=True)
     sd.add_argument("--timeout", type=int, default=900)
     sd.add_argument("--out", default=str(HERE / "results"))
+    rs = sub.add_parser("rescore-seeds")
+    rs.add_argument("label")
     k = sub.add_parser("recheck")
     k.add_argument("folder")
     a = sub.add_parser("reanalyse")
@@ -941,6 +977,9 @@ def main(argv=None):
         return 0
     if args.command == "seeds":
         command_seeds(args)
+        return 0
+    if args.command == "rescore-seeds":
+        command_rescore_seeds(args)
         return 0
     if args.command == "recheck":
         command_recheck(args)

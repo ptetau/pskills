@@ -368,6 +368,38 @@ class SeedTest(unittest.TestCase):
         for remit, mark in marks.items():
             self.assertIn(mark, (folder / remit / "packet.md").read_text(), remit)
 
+    def test_the_final_reply_is_the_text_of_the_result_event(self):
+        items = [{"e": {"type": "assistant"}}, {"e": {"type": "result", "result": "Result: pass"}}]
+        self.assertEqual(run_bench.final_reply(items), "Result: pass")
+        self.assertEqual(run_bench.final_reply([]), "")
+
+    def test_a_reviewer_that_answers_in_its_reply_is_still_scored(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        label = folder / "results" / "x"
+        (label / "seeded").mkdir(parents=True)
+        (label / "clean").mkdir()
+        seeds = {"caught": [], "missed": ["privacy-log"], "false_fails": [],
+                 "seeded": {"privacy": {"verdict": "none", "problems": ""}},
+                 "clean": {"specification": {"verdict": "none", "problems": ""}}}
+        (label / "seeds.json").write_text(run_bench.json.dumps(seeds))
+        privacy = {"t": 1, "e": {"type": "result", "result": (
+            "Result: fail\n\nRemit: privacy\n\nProblems:\n"
+            "- cli.py:42 · writes the text of the file to a log in /tmp · remit rule\n\n"
+            "Follow-ups: none\n")}}
+        clean = {"t": 1, "e": {"type": "result", "result": "Result: pass\n\nRemit: specification\n\nProblems: none\n"}}
+        (label / "seeded" / "privacy.stream.jsonl").write_text(run_bench.json.dumps(privacy) + "\n")
+        (label / "clean" / "specification.stream.jsonl").write_text(run_bench.json.dumps(clean) + "\n")
+        original = run_bench.HERE
+        self.addCleanup(setattr, run_bench, "HERE", original)
+        run_bench.HERE = folder
+        run_bench.command_rescore_seeds(Namespace(label="x"))
+        data = run_bench.json.loads((label / "seeds.json").read_text())
+        self.assertEqual(data["seeded"]["privacy"]["verdict"], "fail")
+        self.assertIn("privacy-log", data["caught"])
+        self.assertEqual(data["clean"]["specification"]["verdict"], "pass")
+        self.assertEqual(data["false_fails"], [])
+
 
 class ExperimentSpecTest(unittest.TestCase):
     def write(self, **fields):
