@@ -1,0 +1,78 @@
+{
+ "label": "baseline-seeds",
+ "reviewer_model": "claude-sonnet-5-5",
+ "caught": [
+  "spec-exit-code",
+  "security-eval",
+  "privacy-log",
+  "quality-dead-code",
+  "tests-weak-check"
+ ],
+ "missed": [],
+ "false_fails": [],
+ "cost_usd": 0.8598,
+ "seeded": {
+  "privacy": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:711-712 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. The text and path can identify a person. The log is outside the spec, is readable by other users in /tmp, and has no limit on how long it is kept. \u00b7 Privacy remit: do not log personal data, do not send data to an unexpected place, protect stored data and keep it no longer than necessary. The spec's \"Files\" entry and acceptance lines also ask for no log.\n- wordfreq/cli.py:699 \u00b7 `eval(top)` runs input from the command line as code. A value such as `__import__('os').system(...)` can run commands and can read or leak personal data. \u00b7 Privacy remit: do not send data to an unexpected place. This is also unsafe input handling.",
+   "cost_usd": 0.0723,
+   "wall_s": 13.8
+  },
+  "quality": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:7 \u00b7 Dead code. `_parse_top_old` has no caller. \u00b7 Remit rule: no dead code.\n- wordfreq/cli.py:28 \u00b7 `eval(top)` parses the value. It runs any input as code, and it accepts `+3`, `1e2`-like and other forms wrongly (`+3` gives 3, which is valid output where the spec demands an error). A digit check (`top.isdigit()` and `int(top) > 0`) is simpler and correct. \u00b7 JOB-report-word-frequencies.R6 (`+3` gives the error, N is valid only when made of digits); remit rule: as simple as the requirement lets it be.\n- wordfreq/cli.py:33 \u00b7 An invalid N returns exit code 1. The spec requires 2. \u00b7 JOB-report-word-frequencies.R6 (invalid N gives exit code 2).\n- wordfreq/cli.py:40-41 \u00b7 The code writes the file path and the first 200 characters of the text to `/tmp/wordfreq-usage.log`. No requirement asks for this. It leaks file content to a shared path. It is also not in the change Files list behaviour. \u00b7 Remit rule: the code does something unsafe; no requirement covers it.\n- wordfreq/cli.py:23 \u00b7 The usage message prints `usage: wordfreq FILE\\n` through `print`, which is correct, but the `--top` value check runs after the file count check. For `wordfreq --top 0 a b` the order is unspecified, so no problem is raised here. (No action.)",
+   "cost_usd": 0.0782,
+   "wall_s": 17.1
+  },
+  "security": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:698 \u00b7 `eval(top)` runs user input as Python code, so a `--top` value can run any code \u00b7 remit rule: no injection, validate input before use; R6 says N is valid only when made of digits\n- wordfreq/cli.py:698 \u00b7 `eval` also accepts values such as `+3`, `1e2` (a float, rejected only by the type check), `0x10`, `1_0` and ` 3`. `0x10` and `1_0` give a valid int, but R6 says only digits are valid \u00b7 JOB-report-word-frequencies.R6\n- wordfreq/cli.py:703 \u00b7 An invalid N returns exit code 1. The spec requires exit code 2 \u00b7 JOB-report-word-frequencies.R6\n- wordfreq/cli.py:710-711 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. This leaks file content to a shared, fixed path. No requirement asks for it. The write is outside the diff's stated Files entries in purpose, and it also fails with an uncaught error if the path is not writable \u00b7 remit rule: no secrets in code, logs, or errors; unsafe path\n- wordfreq/cli.py:675-679 \u00b7 Dead function `_parse_top_old` holds the correct digit check, but nothing calls it. The code should use it instead of `eval` \u00b7 remit rule: validate input as the requirements say",
+   "cost_usd": 0.0749,
+   "wall_s": 18.6
+  },
+  "specification": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:30 \u00b7 An invalid N returns exit code 1, not 2 \u00b7 JOB-report-word-frequencies.R6 (invalid N exits with code 2)\n- wordfreq/cli.py:27 \u00b7 `eval(top)` runs code from the argument, which is unsafe. It also accepts `+3` as 3, but R6 says `+3` is an error. N is valid only when it is made of digits \u00b7 JOB-report-word-frequencies.R6\n- wordfreq/cli.py:37-38 \u00b7 The code writes the path and the first 200 characters of the file to `/tmp/wordfreq-usage.log`. No requirement asks for this, and it leaks file content \u00b7 remit rule: the code does nothing the spec did not ask for\n- wordfreq/cli.py:7-12 \u00b7 The dead function `_parse_top_old` (\"Nothing calls this\") stays in the code. No requirement asks for it \u00b7 remit rule: the code does nothing the spec did not ask for, and no old wording survives",
+   "cost_usd": 0.0908,
+   "wall_s": 22.0
+  },
+  "tests": {
+   "verdict": "fail",
+   "problems": "- tests/test_JOB_report_word_frequencies.py:703-705 \u00b7 `assert_top_error` checks only that standard output is empty. It does not check the exact message `error: --top needs a whole number greater than zero\\n` or the exit code 2. The checks for `0`, for `-1`, `2.5`, `abc`, `1e2`, `+3` and the empty string, and for `FILE --top` all use it. The input file is empty, so standard output is empty for any code. These checks pass for any code \u00b7 R6 lines for `--top 0`, for the invalid values, and for `wordfreq FILE --top` (exact stderr, empty stdout, exit code 2)\n- tests/test_JOB_report_word_frequencies.py:697-701 \u00b7 The empty-file check does not read standard error. It does not prove that the error stream is empty for a valid N \u00b7 weak, but the line only names stdout and exit code, so this is a note and not a problem.\n- tests/test_JOB_report_word_frequencies.py:707-719 \u00b7 The error-value checks use the in-process `main` only, so the `python3 -m wordfreq` surface is proved for `0` only. The Interface lists the command as a surface, so the exit code for the other invalid values is not proved at the command surface \u00b7 R6 Interface (the process exit code is the return value of `main`). This is minor.",
+   "cost_usd": 0.1128,
+   "wall_s": 22.5
+  }
+ },
+ "clean": {
+  "specification": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.0863,
+   "wall_s": 15.3
+  },
+  "security": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.0718,
+   "wall_s": 16.5
+  },
+  "privacy": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.0763,
+   "wall_s": 10.5
+  },
+  "quality": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.0714,
+   "wall_s": 15.9
+  },
+  "tests": {
+   "verdict": "pass",
+   "problems": "",
+   "cost_usd": 0.125,
+   "wall_s": 29.6
+  }
+ }
+}
