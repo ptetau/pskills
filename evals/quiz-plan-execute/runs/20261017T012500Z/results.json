@@ -1,0 +1,1468 @@
+{
+  "skill": "quiz-plan-execute",
+  "skillSha256": "2daf720c8ccce0952c7dacb822d73cb64c8112026e5c20b02fadd219d861a25b",
+  "suiteSha256": "9a3457b135a2877abdaeb6e2258a92c466cc4b0e75af785c9e15fcaeefa52d42",
+  "runId": "20261017T012500Z",
+  "generatedAt": "2026-10-17T01:34:18Z",
+  "config": {
+    "prompts": [
+      "P01",
+      "P02"
+    ],
+    "runs": 4,
+    "wave": 4,
+    "maxTurns": 12,
+    "crossPerPrompt": 2,
+    "agents": {
+      "preset": "minimal",
+      "run": {
+        "model": "session",
+        "effort": "session"
+      },
+      "grade": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "prompt"
+      },
+      "compare": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "merged"
+      },
+      "cross": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "all"
+      }
+    },
+    "agentEstimate": 11,
+    "sessionModel": "claude-opus-5-5"
+  },
+  "scores": {
+    "quality": 87.5,
+    "stability": 70.8,
+    "overall": 78.7,
+    "grade": "C",
+    "confidence": "low",
+    "usableRuns": 5,
+    "totalRuns": 8
+  },
+  "settle": {
+    "settled": false,
+    "settledAt": null,
+    "delta": 2,
+    "patience": 2,
+    "stopWhenSettled": false,
+    "wavesRun": 1
+  },
+  "trajectory": [
+    {
+      "wave": 1,
+      "runsPerPrompt": 4,
+      "usable": 5,
+      "quality": 87.5,
+      "stability": 73.8,
+      "overall": 80.4,
+      "grade": "B",
+      "moved": null
+    }
+  ],
+  "qualitySpread": {
+    "min": 85.4,
+    "median": 87.5,
+    "max": 91.7
+  },
+  "items": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "Setup asks the branch question in the plain-markdown fallback layout before any code change, and confirms the answer in one line.",
+      "passRate": 100,
+      "stabilityWithin": 75,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 83.4,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R2",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "Option A is the only option marked as recommended, because each test plan has more than one step and the current branch is not named for the plan.",
+      "passRate": 90,
+      "stabilityWithin": 75,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "equivalent"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The run announces each step stage by stage in the form `Step N · Stage K/6 (name)`, through all six stages in order.",
+      "passRate": 90,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 58.4,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R4",
+      "kind": "behavior",
+      "weight": 3,
+      "criterion": "In each step, the run writes and runs the test before any implementation code, and quotes a failure that has the expected cause.",
+      "passRate": 90,
+      "stabilityWithin": 75,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 83.4,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each later gate rests on a command that the transcript shows: the test command of the plan, verbatim, passes after green and again after refactor, and the review runs `git diff --stat`.",
+      "passRate": 50,
+      "stabilityWithin": 75,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 83.4,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "Each step lands as exactly one commit with a Conventional Commits subject that names the step, a body line that says why, and the line `Plan: <plan-file> · Step <n>`.",
+      "passRate": 80,
+      "stabilityWithin": 75,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The plan file records the progress: Status `In progress` at the start, and in the commit of each step a ticked checkbox, a correct 12-character bar with its count, and a Progress log entry.",
+      "passRate": 90,
+      "stabilityWithin": 90,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": 90,
+      "classCross": "equivalent"
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "After each step, the run obeys the gate flag: an AUTO step gets a one-line status and the next step starts without a pause, and a GATED step gets a report and the turn ends for review.",
+      "passRate": 80,
+      "stabilityWithin": 75,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 83.4,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R9",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "After the last step, the run closes out the plan, asks the finish question with its two numbered options, does only what the user chose, and reports the final commit.",
+      "passRate": 80,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 41.7,
+      "stabilityCross": 25,
+      "classCross": "major_drift"
+    },
+    {
+      "id": "R10",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "When the plan cannot be followed as written, the run stops and asks the user, and does not settle the matter alone.",
+      "passRate": null,
+      "stabilityWithin": null,
+      "classesWithin": {},
+      "agreementWithin": null,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The code that the run leaves does what the Done-when clause of each executed step asks, and the full test command of the plan passes at the end.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 66.7,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The changes are the remaining work of the plan and nothing more: no step that the plan marks done is done again, and nothing outside the plan changes.",
+      "passRate": 100,
+      "stabilityWithin": 90,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "usableRuns": 2,
+      "quality": 86.5,
+      "stability": 77.5
+    },
+    {
+      "id": "P02",
+      "usableRuns": 3,
+      "quality": 88.2,
+      "stability": 70
+    }
+  ],
+  "runs": [
+    {
+      "label": "P01#1",
+      "prompt": "P01",
+      "repeat": 1,
+      "capture": null,
+      "status": null,
+      "note": "",
+      "quality": null,
+      "verdicts": [],
+      "excluded": "run agent died"
+    },
+    {
+      "label": "P01#2",
+      "prompt": "P01",
+      "repeat": 2,
+      "capture": "evals/quiz-plan-execute/runs/20261017T012500Z/outputs/P01-r02.md",
+      "status": "completed",
+      "note": "Both steps ran through the 6 stages and were committed (218ec12, 1768690, 17ef4a4, plus 9a07795 which marks the plan done and moves it, an extra commit the skill does not specify). The gh CLI is missing. In the capture, assistant 1 omits a stray line that mentioned the scripted reply, which was a slip in my live output.",
+      "quality": 85.4,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 1 · Branch**"
+        },
+        {
+          "id": "R2",
+          "verdict": "partial",
+          "evidence": "**A · Yes, use `feat/slugify` (Recommended)**"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "**Step 2 · Stage 6/6 (commit).**"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "ModuleNotFoundError: No module named 'slug'"
+        },
+        {
+          "id": "R5",
+          "verdict": "partial",
+          "evidence": "The full test command is green."
+        },
+        {
+          "id": "R6",
+          "verdict": "partial",
+          "evidence": "- `1768690` feat(textutils): Basic slugify"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "tracker at 1/2 (50%)"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "The step is AUTO, so I go straight to Step 2."
+        },
+        {
+          "id": "R9",
+          "verdict": "partial",
+          "evidence": "All 4 commits stay on `worktree-wf_1ca00d5e-512-2`, and the working tree is clean."
+        },
+        {
+          "id": "R10",
+          "verdict": "n/a",
+          "evidence": "absent"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "self.assertEqual(slugify(\"Hello big world\", max_length=6), \"hello\")"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "Only `textutils/` and the plan file changed, which stays inside \"May modify\"."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P01#3",
+      "prompt": "P01",
+      "repeat": 3,
+      "capture": null,
+      "status": null,
+      "note": "",
+      "quality": null,
+      "verdicts": [],
+      "excluded": "run agent died"
+    },
+    {
+      "label": "P01#4",
+      "prompt": "P01",
+      "repeat": 4,
+      "capture": "evals/quiz-plan-execute/runs/20261017T012500Z/outputs/P01-r04.md",
+      "status": "completed",
+      "note": "Skill ran to the end. Replies were B (use the current branch) and \"Neither for now\" at the finish question. Nothing was merged or pushed. The finish question needed a short note because option B makes base and branch the same, which the skill does not cover.",
+      "quality": 87.5,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 1 · Branch**"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "**A · Yes, use `feat/slugify` (recommended)**"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "**Step 2 · Stage 6/6 (commit)**"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "`ModuleNotFoundError: No module named 'slug'`"
+        },
+        {
+          "id": "R5",
+          "verdict": "partial",
+          "evidence": "Step 1 · Stage 3/6 (green) passes its gate. Both tests pass."
+        },
+        {
+          "id": "R6",
+          "verdict": "partial",
+          "evidence": "- `50ac298` feat(slugify): Basic slugify"
+        },
+        {
+          "id": "R7",
+          "verdict": "partial",
+          "evidence": "Now I update the plan file."
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "Step 1 is AUTO, so I continue to Step 2."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "- `a1d0fe2` docs(slugify): move finished plan to completed"
+        },
+        {
+          "id": "R10",
+          "verdict": "n/a",
+          "evidence": "absent"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "self.assertEqual(slugify(\"Hello big world\", max_length=9), \"hello-big\")"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "Only `textutils/slug.py` and `textutils/test_slug.py` changed."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#1",
+      "prompt": "P02",
+      "repeat": 1,
+      "capture": null,
+      "status": null,
+      "note": "",
+      "quality": null,
+      "verdicts": [],
+      "excluded": "run agent died"
+    },
+    {
+      "label": "P02#2",
+      "prompt": "P02",
+      "repeat": 2,
+      "capture": "evals/quiz-plan-execute/runs/20261017T012500Z/outputs/P02-r02.md",
+      "status": "completed",
+      "note": "Both steps ran with the 6-stage gate and all tests pass. One slip of mine: assistant 3 ends with the scripted user reply \"Neither for now...\" written into my own message by mistake. It is kept verbatim in the capture and then repeated as user 3. The skill does not say whether to commit the plan move to plans/completed/, so I made it a separate commit (b7cf46f). The skill's finish options assume a separate base branch, but the user chose B (stay on the current branch), so I adapted the finish wording.",
+      "quality": 87.5,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 1 · Branch** ... Reply A or B, or type a branch name. ... ✓ 1/1 Branch → No, use the current branch."
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "**A · Yes, use `feat/parse-duration` (recommended)**"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "Step 1 · Stage 6/6 (commit). I run the lint command first. (all 12 announcements in the exact form, in order)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "`ModuleNotFoundError: No module named 'duration'` ... `AssertionError: ValueError not raised`"
+        },
+        {
+          "id": "R5",
+          "verdict": "partial",
+          "evidence": "The test command passes (1 test, OK) and the lint command exits 0. (no `git diff --stat` shown; the review only says 'then check the blast radius')"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "`3a22eab`, `feat(durations): parse valid durations` ; git log body ends 'Plan: plans/parse-duration.plan.md · Step 1'"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "+**Progress:** ██████░░░░░░ 1/2 steps completed (50%) ; Status Agreed -> In progress in the Step 1 commit ; Changed/Decided/Surprises in both log entries"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "This step is GATED, so I am stopping here for your review. ... Step 2 (reject bad input) is committed as `44ef494`. All four bad inputs raise `ValueError`, the message for `\"1x\"` is exactly `invalid duration: '1x'`, and the 3 tests pass."
+        },
+        {
+          "id": "R9",
+          "verdict": "partial",
+          "evidence": "1. Squash locally  — squash the plan's commits into one on this branch."
+        },
+        {
+          "id": "R10",
+          "verdict": "n/a",
+          "evidence": "absent (all Done-when clauses are falsifiable; no Stop-and-ask trigger occurred)"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "self.assertEqual(parse_duration(\"1h2m3s\"), 3723) ; for text in (\"\", \"90\", \"1x\", \"30m1h\") ; \"invalid duration: '1x'\" ; the 3 tests pass"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "The commit touches only `durations/duration.py`, `durations/test_duration.py` and the plan file."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#3",
+      "prompt": "P02",
+      "repeat": 3,
+      "capture": "evals/quiz-plan-execute/runs/20261017T012500Z/outputs/P02-r03.md",
+      "status": "completed",
+      "note": "Nothing blocked. I once wrote the scripted reply \"Looks good. Continue with step 2.\" into my own message text, at the end of the Step 1 report. The capture lists it only as the user reply. The Step 1 and Step 2 commits are 619f9bb and eacbd07. The plan move to plans/completed/ is staged but not committed.",
+      "quality": 91.7,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 1 · Branch** ... Reply A or B, or type a branch name. ... ✓ 1/1 Branch → No, use the current branch (`worktree-wf_1ca00d5e-512-7`)."
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "**A · Yes, use `feat/parse-duration` (recommended)**"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "Step 2 · Stage 6/6 (commit) (all 12 announcements as bare headers, in order, before the work)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "The test fails with `ModuleNotFoundError: No module named 'duration'`. ... The empty string gives `AssertionError: ValueError not raised`."
+        },
+        {
+          "id": "R5",
+          "verdict": "partial",
+          "evidence": "the test command passes (3 tests) and the lint command exits 0. (the test command is never quoted, the review stages are empty, no `git diff --stat`)"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "committed as `619f9bb` ; git log: 'feat(durations): parse valid durations' ... 'Plan: plans/parse-duration.plan.md · Step 1'"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "+**Progress:** ██████░░░░░░ 1/2 steps completed (50%) ; **Status:** In progress in the Step 1 commit ; both log entries have Changed/Decided/Surprises"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "Step 2 (reject bad input) is done and committed as `eacbd07`. It is AUTO, so the run continued without a pause. - **Criteria met:** ... - **Checks:** ... - **Files changed:** ..."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "moved the plan to `plans/completed/parse-duration.plan.md` with `git mv`. That move is staged but not committed. ; 1. Squash-merge locally ... 2. Open a PR ; `77e4cec` (the plan), `619f9bb` (Step 1) and `eacbd07` (Step 2)"
+        },
+        {
+          "id": "R10",
+          "verdict": "n/a",
+          "evidence": "absent (all Done-when clauses are falsifiable; no Stop-and-ask trigger occurred)"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "self.assertEqual(parse_duration(\"1h2m3s\"), 3723) ; for text in (\"\", \"90\", \"1x\", \"30m1h\") ; \"invalid duration: '1x'\" ; 3 tests ran and passed"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "**Files changed:** `durations/duration.py`, `durations/test_duration.py`, and the plan file (progress 2/2, 100%)."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#4",
+      "prompt": "P02",
+      "repeat": 4,
+      "capture": "evals/quiz-plan-execute/runs/20261017T012500Z/outputs/P02-r04.md",
+      "status": "completed",
+      "note": "Run completed. One reply was cut off midway by a safety classifier after the Step 1 commit. I re-checked the repo state and carried on, and I left that harness-level line out of the capture transcript. The worktree has no AGENTS.md or WRITING-GUIDELINES.md, so I read WRITING-GUIDELINES.md from the main checkout. The repo-level tests in AGENTS.md were not run (they do not apply to this plan).",
+      "quality": 85.4,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "**Question 1 of 1 · Branch** ... Reply A or B, or type a branch name. ... Using the current branch `worktree-wf_1ca00d5e-512-8`."
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "**A · Yes, use `feat/parse-duration` (recommended)**"
+        },
+        {
+          "id": "R3",
+          "verdict": "partial",
+          "evidence": "Step 1 (Parse valid durations) · Stage 1/6 (understand). ... Step 1 · Stage 6/6 (commit) finished. (stage 6 announced after the commit was reported; stage 1 line has a different form)"
+        },
+        {
+          "id": "R4",
+          "verdict": "partial",
+          "evidence": "Step 1: The test fails with `ModuleNotFoundError: No module named 'duration'`. Step 2: `parse_duration(\"\")` raises no `ValueError`, and the other three inputs raise `AttributeError` instead of `ValueError`. (Step 2 failure paraphrased, not quoted)"
+        },
+        {
+          "id": "R5",
+          "verdict": "partial",
+          "evidence": "The lint command `python3 -m compileall -q durations` passed. ... the test command passes (1 test, OK). (no `git diff --stat` shown; Step 1 review stage is bare)"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "d7e539b (feat(durations): Parse valid durations) ; git log: 'Plan: plans/parse-duration.plan.md · Step 1'"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "+**Progress:** ██████░░░░░░ 1/2 steps completed (50%) ; **Status:** In progress in the Step 1 commit ; both log entries have Changed/Decided/Surprises"
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "Step 1 is GATED, so I stop here for your review. ... Step 2 (Reject bad input) is done as 29a6c3f (feat(durations): Reject bad input). It is AUTO, so I continue."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "The plan is at `plans/completed/parse-duration.plan.md` with Status Done. ; 1. **Squash-merge locally** ... 2. **Open a PR** ; 360d092 (docs: mark parse-duration plan done)"
+        },
+        {
+          "id": "R10",
+          "verdict": "n/a",
+          "evidence": "absent (all Done-when clauses are falsifiable; no Stop-and-ask trigger occurred)"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "self.assertEqual(parse_duration(\"1h2m3s\"), 3723) ; for text in [\"\", \"90\", \"1x\", \"30m1h\"] ; \"invalid duration: '1x'\" ; The test command passes (3 tests, OK)"
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "The change touches only `durations/duration.py`, `durations/test_duration.py`, and the plan file."
+        }
+      ],
+      "excluded": null
+    }
+  ],
+  "similarity": [
+    {
+      "scope": "P01",
+      "item": "R1",
+      "class": "equivalent",
+      "reason": "Both runs show the same heading, question, two bulleted options and reply line, and both confirm B. Only the option wording and the extra sentences in the confirmation differ.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Plain-markdown branch question with the exact heading, 2-step count, bulleted A and B options and the reply line, then a short confirmation of B."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2
+        ],
+        "agreement": 100,
+        "split": "2 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R2",
+      "class": "minor_drift",
+      "reason": "Both mark only option A as recommended. P01#2 writes `(Recommended)` and P01#4 writes `(recommended)`, which is the fallback form.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Option A marked with a capitalised `(Recommended)`; B unmarked."
+        },
+        {
+          "runs": [
+            "P01#4"
+          ],
+          "description": "Option A marked with a lowercase `(recommended)`; B unmarked."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "1 / 1 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R3",
+      "class": "minor_drift",
+      "reason": "Both announce all six stages in order in the `Step N · Stage K/6 (name)` form. Layout differs: P01#2 uses inline lead-ins, P01#4 uses standalone headings and adds repeated 'passes its gate' lines.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Six stage announcements per step, each a bold inline lead-in that ends in a period and is followed by the stage text in the same paragraph."
+        },
+        {
+          "runs": [
+            "P01#4"
+          ],
+          "description": "Six stage announcements per step, each a standalone bold heading, with the stage label repeated as 'passes its gate' lines."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "1 / 1 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R4",
+      "class": "equivalent",
+      "reason": "Both quote the same two expected failures, a missing module and an unexpected keyword argument. P01#2 uses a code block and P01#4 quotes inline.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Test written first, run, and the expected failure quoted (ModuleNotFoundError in step 1, TypeError in step 2) before any implementation."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2
+        ],
+        "agreement": 100,
+        "split": "2 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R5",
+      "class": "equivalent",
+      "reason": "Both only assert that tests are green after green and refactor, and describe the review in prose. Neither shows the verbatim command or `git diff --stat`.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Green and refactor gates are stated as passing, and review is described in prose, with no command text and no `git diff --stat` shown in the capture."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2
+        ],
+        "agreement": 100,
+        "split": "2 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R6",
+      "class": "minor_drift",
+      "reason": "Both make one feat commit per step with the step name as the subject. The scope differs (`textutils` versus `slugify`) and the close-out commit subjects differ.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "One `feat(<scope>): <step name>` commit per step. The subjects are visible in the capture, but the body and Plan line are not."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2
+        ],
+        "agreement": 100,
+        "split": "2 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R7",
+      "class": "equivalent",
+      "reason": "The final plan files have the same structure: Done, a 12-block bar at 2/2 (100%), and two complete log entries. Only the free-text Decided and Surprises wording differs, and P01#2 also states the 1/2 (50%) tracker.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Status set to In progress, tracker updated before each step commit, final plan has [x] boxes, a full 12-block bar and dated Changed, Decided and Surprises log entries."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2
+        ],
+        "agreement": 100,
+        "split": "2 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R8",
+      "class": "equivalent",
+      "reason": "Both give a one-line status that names the commit and then continue to Step 2 without waiting. P01#2 adds the test and tracker state to its status.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Both steps AUTO: short status line with the commit hash, then straight on to the next step with no pause."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2
+        ],
+        "agreement": 100,
+        "split": "2 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R9",
+      "class": "minor_drift",
+      "reason": "Both move the plan to plans/completed, show a Done 100% header, offer options 1 and 2, and do nothing after 'Neither'. They differ in the finish-question layout and option-1 description, and only P01#4's last message lists the final commit hash.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Close-out commit, then a markdown finish list with filled-in branch and master, nothing done after 'Neither', and a final message without the head commit hash."
+        },
+        {
+          "runs": [
+            "P01#4"
+          ],
+          "description": "Close-out commit, then a code-block finish question with unfilled <base> and <branch> placeholders and an explanatory note, nothing done after 'Neither', and a final message listing all commits including the head hash."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "1 / 1 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R11",
+      "class": "minor_drift",
+      "reason": "Both leave tests for all four Done-when assertions and code that meets them. P01#2 uses a module-level regex constant and 2 test methods; P01#4 uses an inline re.sub and 4 test methods.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "slugify with an optional max_length; tests assert all four Done-when inputs with the exact expected values; the full unittest run passes."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2
+        ],
+        "agreement": 100,
+        "split": "2 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R12",
+      "class": "equivalent",
+      "reason": "Both touch only the two textutils files and the plan file, and neither builds an out-of-scope feature. P01#2 adds a private regex constant as a refactor, which is not an extra feature.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Only textutils/slug.py, textutils/test_slug.py and the plan file change; no out-of-scope feature is built."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2
+        ],
+        "agreement": 100,
+        "split": "2 of 2",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R1",
+      "class": "minor_drift",
+      "reason": "The heading, question, options, markers and reply line match in all three. The confirmation form differs: runs 2 and 3 use a '✓ 1/1 Branch →' echo, run 4 uses plain prose. The preface and the reasons inside the option sentences also differ.",
+      "groups": [
+        {
+          "runs": [
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Fallback branch question in the exact layout; the answer is confirmed with a '✓ 1/1 Branch → ...' echo line"
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Same fallback branch question; the answer is confirmed in plain prose ('Using the current branch ...') with no echo line"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R2",
+      "class": "equivalent",
+      "reason": "The marker and its position are the same in all runs. Only the wording of the reason sentence differs.",
+      "groups": [
+        {
+          "runs": [
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "A is marked '(recommended)' inside the bold label; B has no marker; reason cites the plan having more than one step"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R3",
+      "class": "minor_drift",
+      "reason": "Runs 2 and 3 announce every stage in the exact form and order. Run 4 puts the step name inside the stage 1 line and announces Step 1 stage 6 only after the commit report.",
+      "groups": [
+        {
+          "runs": [
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "All 12 announcements in the exact 'Step N · Stage K/6 (name)' form, each before its stage's work"
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Stages announced in order, but stage 1 uses a variant form with the step name inserted, and stage 6 of step 1 is announced after the commit is reported"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R4",
+      "class": "minor_drift",
+      "reason": "All three do red before green and give an expected cause. Run 4 paraphrases the Step 2 failure instead of quoting it.",
+      "groups": [
+        {
+          "runs": [
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Test written first; failure text quoted verbatim in both steps (ModuleNotFoundError; AssertionError and AttributeError)"
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Test written first; Step 1 failure quoted, Step 2 failure paraphrased by exception type without the error text"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R5",
+      "class": "minor_drift",
+      "reason": "No run shows git diff --stat. Runs 2 and 4 describe the review (Done-when run, blast radius). Run 3 leaves both review stages empty and never quotes the test command.",
+      "groups": [
+        {
+          "runs": [
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "Gates claimed in prose with pass results and lint result; review stage described (Done-when run, blast radius); no git diff --stat shown"
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Gates claimed only as 'green gate holds' and a final checks line; review stages empty; test command never quoted; no git diff --stat"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R6",
+      "class": "equivalent",
+      "reason": "Each step is one commit with the same structure. Only wording and the capitalisation of the step name in the subject differ.",
+      "groups": [
+        {
+          "runs": [
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "One Conventional Commits commit per step, one-line what-and-why body, 'Plan: plans/parse-duration.plan.md · Step n' line"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R7",
+      "class": "equivalent",
+      "reason": "The bars, counts, ticks and Status are the same in all runs. Only the wording of the Decided and Surprises lines differs.",
+      "groups": [
+        {
+          "runs": [
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Status In progress, [x], 12-char bar with count and a dated Progress log entry with Changed/Decided/Surprises, all in each step's commit"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R8",
+      "class": "minor_drift",
+      "reason": "All three pause after Step 1 and do not pause after Step 2. Run 4 gives a one-line AUTO status. Runs 2 and 3 add criteria and check detail, in prose for run 2 and in bullets for run 3.",
+      "groups": [
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "GATED step ends the turn with name, hash and criteria; AUTO step gets a one-line status and continues"
+        },
+        {
+          "runs": [
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "GATED step ends the turn with name, hash and criteria; AUTO step continues but its status carries criteria and checks in several sentences or bullets"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1
+        ],
+        "agreement": 66.7,
+        "split": "2 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R9",
+      "class": "minor_drift",
+      "reason": "All runs set Done, move the plan, ask the two-option question and do nothing after the reply. The close-out is committed in runs 2 and 4 but only staged in run 3. Run 2 rewords option 1.",
+      "groups": [
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Close-out in its own commit; original two options (squash-merge to master, open PR) as a plain numbered list; nothing done after the reply; four commits listed"
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Close-out with git mv left staged and uncommitted; original two options in a code block; nothing done after the reply; last commit hash given"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Close-out in its own commit; option 1 reworded to 'Squash locally' on the same branch; options in a code block; nothing done after the reply; four commits listed"
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1
+        ],
+        "agreement": 33.3,
+        "split": "1 / 1 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R11",
+      "class": "minor_drift",
+      "reason": "All three leave code and tests that cover every Done-when clause with the same inputs and values, and the full suite passes (3 tests OK). The implementation and test layout differ in details.",
+      "groups": [
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Regex with (?=\\d) lookahead, zip over a seconds tuple; one test class with docstrings"
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Regex without lookahead plus an explicit 'not text' check; zip over a seconds tuple; one test class without docstrings"
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Regex with (?=.) lookahead, direct arithmetic; two test classes (one per step)"
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1
+        ],
+        "agreement": 33.3,
+        "split": "1 / 1 / 1 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R12",
+      "class": "equivalent",
+      "reason": "The same three files change in every run and nothing from Not doing or Out of scope is built. Runs 2 and 3 add a small seconds-per-unit constant, which is not a feature.",
+      "groups": [
+        {
+          "runs": [
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Only durations/duration.py, durations/test_duration.py and the plan file change; no out-of-scope feature"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3
+        ],
+        "agreement": 100,
+        "split": "3 of 3",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R1",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Branch question in the exact required layout (heading, question with 2 steps, bulleted A and B, reply line, no code block). The reply is confirmed in a prose sentence: 'Using the current branch, ...', followed by the Status change."
+        },
+        {
+          "runs": [
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Same question layout. The reply is confirmed on a 'checkmark 1/1 Branch -> No, use the current branch' line, followed by the Status change."
+        }
+      ],
+      "reason": "All four ask the same single question with the same heading, option bullets and reply line, and no code block. Only the confirmation form differs: prose in the P01 runs, a '1/1 Branch ->' line in the P02 runs.",
+      "tally": {
+        "counts": [
+          2,
+          2
+        ],
+        "agreement": 50,
+        "split": "2 / 2 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R3",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Bold 'Step N · Stage K/6 (name)' announcements for all six stages in both steps. P01#2 writes them inline with a period and narration after. P01#4 writes them as bold header lines and restates 'Step N · Stage K/6 (name) passes its gate.' in plain text."
+        },
+        {
+          "runs": [
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Plain, unbolded announcements for all six stages in both steps. P02#2 writes them inline at the start of a paragraph. P02#3 writes them on their own lines, with stages 3 and 4 and stages 5 and 6 announced back to back and the narration after."
+        }
+      ],
+      "reason": "Every run announces all six stages in order, in the correct form, for each step. They differ in bold versus plain text, inline versus header-line placement, whether the gate line is repeated, and whether stage lines come back to back with no content.",
+      "tally": {
+        "counts": [
+          2,
+          2
+        ],
+        "agreement": 50,
+        "split": "2 / 2 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R6",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "One commit per step. The subject is 'feat(<scope>): <Step name>' with the plan's capitalization, for example 'feat(textutils): Basic slugify'. Body and Plan lines are not visible."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "One commit per step. The subject is 'feat(durations): <step name>' with the name lowercased, for example 'feat(durations): parse valid durations'. Body and Plan lines are not visible."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "One commit per step, shown by hash only (619f9bb, eacbd07). No subject, body or Plan line is visible."
+        }
+      ],
+      "reason": "Every run makes one commit per step, and the visible subjects share the 'feat(scope): step name' shape. The step name is kept in the plan's case in P01 and lowercased in P02#2, and P02#3 shows no subject. No capture shows a commit body or Plan line, so those parts cannot be compared.",
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R7",
+      "class": "equivalent",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4",
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "Status set to 'In progress' before Step 1. The tracker, checkbox and log are updated before each step commit, and the transcripts say the plan file is in that commit. The final plan shows [x] on both steps, a 12-character full bar '2/2 steps completed (100%)', and log entries '[2026-10-17] Step N: done' with Changed, Decided and Surprises lines."
+        }
+      ],
+      "reason": "All four follow the same tracker flow and end with the same plan structure. Only wording and small formatting differ, for example backticks around file names in the Changed line, and whether the transcript quotes the 1/2 (50%) count. Per-step diffs are not in the captures.",
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R8",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Both steps are AUTO. Step 1 ends with a one-line status (commit hash, plus the tracker count in P01#2) and 'AUTO, so I continue to Step 2' with no pause. Step 2 leads straight into the close-out."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Step 1 is GATED. A report gives the commit hash and the criteria met, plus a description of the parser. The turn ends with 'Reply to continue'. AUTO Step 2 gets a short prose status (hash, criteria, tests, lint) that runs into the close-out."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Step 1 is GATED. A report with labelled bullets (Criteria met, Checks, Files changed, Read first) ends the turn. AUTO Step 2 gets a similar labelled-bullet report and says it continued without a pause."
+        }
+      ],
+      "reason": "All runs pause on GATED steps and continue on AUTO steps. The report shapes differ: one-line status, short prose, or a full labelled-bullet report. P02#3 gives an AUTO step a longer report than the other runs do.",
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R9",
+      "class": "major_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Status Done and 100%, plan moved to plans/completed, and the move committed separately (9a07795). The finish question is plain markdown: 'Finish how?' with bold numbered options 1 and 2. After 'neither' nothing is merged or pushed. The last message does not list the close-out commit hash."
+        },
+        {
+          "runs": [
+            "P01#4",
+            "P02#2"
+          ],
+          "description": "Status Done and 100%, plan moved, and the move committed separately (a1d0fe2, b7cf46f). The finish question is a fenced code-block card with options 1 and 2; P01#4 leaves '<base>' and '<branch>' placeholders in it. The last message lists every commit, including the final one."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Status Done and 100%, plan moved with git mv but left staged and not committed. The finish question is a fenced code-block card with options 1 and 2. The last message lists three commits and says the move is still staged."
+        }
+      ],
+      "reason": "The substance matches: Done at 100%, move to plans/completed, Plan location updated, two numbered options, and no unchosen action. The runs differ in how the close-out lands (a separate commit in three runs, staged only in one), how the finish question is drawn (plain markdown list in one run, code-block card in three), and whether the last message gives the final commit hash.",
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    }
+  ],
+  "excluded": [
+    {
+      "label": "P01#1",
+      "reason": "run agent died"
+    },
+    {
+      "label": "P01#3",
+      "reason": "run agent died"
+    },
+    {
+      "label": "P02#1",
+      "reason": "run agent died"
+    }
+  ],
+  "lostJudges": [],
+  "note": "Three of eight run agents ended with an API safeguard error (reasoning_extraction flag), so 5 of 8 runs are usable and the grade has low confidence. The session model also changed from claude-opus-5-5 to claude-sonnet-5-5 while this run was in progress. The cause of the safeguard error is not established, because the same error also occurred on opus in a later run."
+}

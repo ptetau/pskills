@@ -4,7 +4,7 @@ Status: stub
 
 ## Who and why
 
-Who does this job, and what they are trying to achieve. Two or three sentences.
+Write who does this job, and what they try to achieve. Use two or three sentences.
 
 ## Relies on
 
@@ -13,7 +13,8 @@ Who does this job, and what they are trying to achieve. Two or three sentences.
 
 ## Code map
 
-The files and folders this job owns. Used to scope changes.
+List the files and folders that this job owns. pdlc uses this list to set the scope of
+changes.
 
 - path/to/folder/
 
@@ -23,6 +24,6 @@ The files and folders this job owns. Used to scope changes.
 
 Status: proposed · Intents: IN-0000
 
-One or two sentences saying what must be true.
+Write one or two sentences that say what must be true.
 
 - Given ..., when ..., then ...

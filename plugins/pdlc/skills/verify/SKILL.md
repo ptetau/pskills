@@ -1,66 +1,76 @@
 ---
 name: verify
 description: >
-  Verifies a built and recorded pdlc change. Runs every check, then sends one packet per
-  review remit (specification, security, quality, compliance, privacy) to a fresh,
-  independent reviewer each, in parallel. When all pass, marks requirements verified,
-  runs the merge check and proposes the merge with the GIF. Never merges. Use when the
-  user says "/pdlc:verify", or a change has its visual review.
+  Examines a built and recorded pdlc change before the merge. Runs each check. Then sends
+  one packet for each review remit (specification, security, quality, compliance,
+  privacy) to a different fresh, independent reviewer, all at the same time. When all
+  pass, marks the requirements verified, runs the merge check, and proposes the merge with
+  the GIF. Does not merge. Use when the user says "/pdlc:verify", or when a change has its
+  visual review.
 ---
 
 # pdlc verify
 
-Decides whether a change is good enough to merge, then asks the user to approve it.
+This skill decides if a change is sufficiently good to merge. Then the skill asks the user
+to approve the merge.
 
-Read `pdlc/README.md` first and follow it. Start with its "Before any work" step, then read
-the change's `handoff.md`.
+Read `pdlc/README.md` first and obey it. Start with its "Before any work" step. Then read
+the `handoff.md` of the change.
 
 ## 1. Pick the change
 
-Use the change the user named. Otherwise take the first change with status `building`
-that has a `review.gif`. Switch to its branch.
+Use the change that the user named. If the user did not name a change, use the first
+change with the status `building` that has a `review.gif`. Switch to the branch of that
+change.
 
 ## 2. Run the checks
 
-Through the checks port:
+Do these steps through the checks port:
 
-- For each requirement in the change, run its checks. Each needs at least one, and all
-  must pass. "No checks found" is a failure, except for a `(retire)` requirement.
-- Run all checks. Everything must pass.
-- Confirm no check file changed since `Tests-Locked`.
+- For each requirement in the change, run its checks. Each requirement needs at least one
+  check, and all its checks must pass. "No checks found" is a failure, but not for a
+  `(retire)` requirement.
+- Run all checks. All checks must pass.
+- Make sure that no check file changed since `Tests-Locked`.
 
 ## 3. Independent reviews
 
-1. Take the remits from "Reviews" in `pdlc/config.md`, leaving out `tests` (the tests stage
-   already reviewed the checks; its result stays).
-2. Build their packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`.
-3. Start one fresh `pdlc:reviewer` agent per remit, all at once. Give each only the path of
-   its own packet. Don't tell any reviewer what another found.
-4. Wait for all of them. Each writes `review/<remit>/result.md`.
+1. Get the remits from "Reviews" in `pdlc/config.md`. Do not include `tests`, because the
+   tests stage already reviewed the checks, and its result stays.
+2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`.
+3. Start one fresh `pdlc:reviewer` agent for each remit, all at the same time. Give each
+   reviewer only the path of its own packet. Do not tell a reviewer what a different
+   reviewer found.
+4. Wait for all the reviewers. Each reviewer writes `review/<remit>/result.md`.
 
 ## 4. If anything failed
 
-Collect the failing checks and every problem from the results into the change's
-`handoff.md`, addressed to build (code problems) or tests (check problems). Add a line to
-the progress log, commit, and tell the user which stage is next. Stop here.
+1. Collect the failed checks and each problem from the results in the `handoff.md` of the
+   change. Address each item to the build stage (code problems) or to the tests stage
+   (check problems).
+2. Add a line to the progress log.
+3. Commit these changes.
+4. Tell the user which stage is next. Stop here.
 
 ## 5. If everything passed
 
-1. Set each requirement in the change to `verified` in its spec file, and the change to
+1. In the spec file of each requirement in the change, set the requirement to `verified`.
+   Set the change to `in review`.
+2. Commit the results and the statuses with the message "Verified CH-xxxx" and the
+   trailers `Intent` and `Change`.
+3. Run the gate through the delivery port. The gate must pass. If the gate fails, correct
+   the problems that it names.
+4. Propose the merge through the delivery port, with the base of the change as the
+   target. Put these items in the description:
+   - The GIF, embedded. The delivery adapter tells how.
+   - A table of each requirement, its checks, and their result.
+   - A table of each remit and its result, with a link to each `result.md`.
+   - The lock commit, and each "Manual checks" item that the user must confirm.
+   - Each detail that is marked *(assumed)* in the change spec and its requirements, on
+     one line each. Thus, the user reviews all these details in one place.
+5. If each change for the intent is now `in review` or `merged`, set the intent to
    `in review`.
-2. Commit the results and statuses: "Verified CH-xxxx", trailers `Intent` and `Change`.
-3. Run the gate through the delivery port. It must pass. If it doesn't, fix what it names.
-4. Propose the merge through the delivery port, with the change's base as the target. In
-   the description:
-   - the GIF, embedded (the delivery adapter says how);
-   - a table of each requirement, its checks and their result;
-   - a table of each remit and its result, linking each `result.md`;
-   - the lock commit, and any "Manual checks" for the user to confirm;
-   - every detail marked *(assumed)* in the change spec and its requirements, one line
-     each, so the user reviews them in one place.
-5. If every change for the intent is now `in review` or `merged`, set the intent to
-   `in review`.
-6. Write `handoff.md`: the link, and what the user needs to confirm. Commit it.
+6. Write `handoff.md`: the link, and what the user must confirm. Commit the handoff.
 7. Tell the tracker port. Give the user the link.
 
-Never merge yourself.
+Do not merge the change yourself.

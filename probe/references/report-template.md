@@ -9,9 +9,10 @@
 
 ## App Summary
 
-*(from Phase 1 Understand — docs/specs read, commit history skimmed, code modules
-mapped. 3-6 sentences: what the app is, who it's for, the shape of its architecture,
-and the feature flows derived for this run.)*
+*(Source: Phase 1 Understand. The run read the docs/specs, skimmed the commit history,
+and mapped the code modules. Write 3-6 sentences. Tell what the app is and who the app
+is for. Also give the shape of its architecture and the feature flows that the run
+identified.)*
 
 [one paragraph app summary]
 
@@ -21,8 +22,8 @@ and the feature flows derived for this run.)*
 
 ## Coverage Matrix
 
-*(schema: `coverage.flows` × `coverage.dimensions` — which flow × dimension cells
-were actually probed this run. `x` = probed, `-` = skipped/out of scope.)*
+*(schema: `coverage.flows` × `coverage.dimensions`. The matrix shows the flow × dimension
+cells that this run actually probed. `x` = probed, `-` = skipped/out of scope.)*
 
 | Flow \ Dimension | functional | robustness | security | perf | a11y | ux |
 |---|---|---|---|---|---|---|
@@ -35,10 +36,11 @@ were actually probed this run. `x` = probed, `-` = skipped/out of scope.)*
 
 ## Findings
 
-Ranked by severity (`critical` → `high` → `medium` → `low`, schema: `severity`),
-grouped by dimension within each tier. Each finding below documents every field of
-a `finding` object in `findings.schema.json`: `id`, `flow`, `dimension`, `severity`,
-`title`, `description`, `repro`, `evidence`, `verified`, `confidence`.
+This report ranks the findings by severity (`critical` → `high` → `medium` → `low`,
+schema: `severity`). In each tier, the report groups the findings by dimension. Each
+finding below gives each field of a `finding` object in `findings.schema.json`: `id`,
+`flow`, `dimension`, `severity`, `title`, `description`, `repro`, `evidence`,
+`verified`, `confidence`.
 
 ### Critical
 
@@ -48,7 +50,7 @@ a `finding` object in `findings.schema.json`: `id`, `flow`, `dimension`, `severi
 - **Verified:** `[verified — true/false, set by the Phase 3 adversarial pass]`
   · **Confidence:** `[confidence — 0..1]`
 
-[description — what was expected vs what actually happened, and why it matters]
+[description — what was expected vs what actually happened, and why the finding is important]
 
 **Repro:**
 
@@ -64,7 +66,7 @@ a `finding` object in `findings.schema.json`: `id`, `flow`, `dimension`, `severi
 
 ### High
 
-*(same shape as Critical — one `#### [id] title` block per finding)*
+*(same shape as Critical: one `#### [id] title` block for each finding)*
 
 ### Medium
 
@@ -74,24 +76,25 @@ a `finding` object in `findings.schema.json`: `id`, `flow`, `dimension`, `severi
 
 *(same shape)*
 
-*(If a tier has no findings, write "None found at this severity." instead of leaving it empty.)*
+*(If a tier has no findings, write "None found at this severity." Do not keep the tier empty.)*
 
 ---
 
 ## Surprises vs Docs/Specs
 
-*(Findings where the app's actual behavior contradicts or diverges from what the
-docs/specs in Phase 1 claimed — distinct from ordinary bugs because the gap is
-between stated intent and observed reality, not just "this is broken.")*
+*(Give each finding where the actual behaviour of the app contradicts or diverges from
+the docs/specs of Phase 1. These findings are different from ordinary
+bugs. The gap is between the stated intent and the observed reality, not only "this is
+broken.")*
 
 - `[flow]` / `[dimension]`: [what the docs/spec said] vs [what was actually observed] → see `[F-00N]`
-- *(or:)* "No surprises vs docs/specs — behavior matched the app's documented intent
+- *(or:)* "No surprises vs docs/specs — behaviour matched the app's documented intent
   everywhere it was probed."
 
 ---
 
 ## Appendix: machine-readable findings
 
-The structured twin of this report is `probe-findings.json`, validating against
-`probe/references/findings.schema.json`. Every finding above corresponds 1:1 to an
-entry in that file's `findings` array.
+The structured twin of this report is `probe-findings.json`. This file validates against
+`probe/references/findings.schema.json`. Each finding above corresponds 1:1 to an entry
+in the `findings` array of `probe-findings.json`.

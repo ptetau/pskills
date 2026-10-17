@@ -1,0 +1,207 @@
+{
+  "skill": "quiz-plan",
+  "skillPath": "quiz-plan/SKILL.md",
+  "skillSha256": "edb88175f121d7c657d914a12fa1cc04aab1e63ae7f9e4d02253d29f52d5643f",
+  "createdAt": "2026-10-16T20:47:05Z",
+  "structure": {
+    "summary": "Multi-turn. The quiz asks one question in each message, with no fixed length. Each later message starts with a one-line echo of the last answer, then gives the next question. Eval runs have no picker, so the questions use the plain-markdown fallback. When no questions remain, the skill shows a bulleted list of the echoes and asks for a go-ahead in one sentence. After the go-ahead, the skill writes plans/<name>.plan.md from the Change Plan template, red-teams the plan, and ends with a short message: the path, one line for each step, the red-team result, and an offer to start execution.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "Quiz message: exactly one question. Fallback layout: a bold heading `**Question N · Label**` with no total, the question on the next line, then one of two forms. An option question has 2-4 bulleted options `**A · label**: sentence` and one closing reply line that names the option letters and says that a note is welcome An open question (a sentence, a command, a path) has no options and ends with `Reply with <what is needed>.` No code block, box drawing or ASCII card. A picker question ends with ` (question N)`."
+      },
+      {
+        "id": "S2",
+        "description": "Echoes and resolved view: after each reply, one echo line `✓ N Label → Choice` (optionally with `(note: …)` or a deferral form) at the top of the message that asks the next question. When the drill ends: a bulleted list of every echo, numbered `N/T`, with no code block, then a one-sentence go-ahead that says the plan is written unless the user says `wait`, or a `Confirm` picker with `Write the plan` and `Change one`. The plan comes only after the go-ahead."
+      },
+      {
+        "id": "S3",
+        "description": "Plan file `plans/<kebab-case-name>.plan.md`, with the name taken from the change. Header: `# Change Plan: <name>`, an Owner and Status line (Status: Draft), a Branch and Plan location line, and `**Progress:**` with a 12-character bar of `░`, then `0/N steps completed (0%)`."
+      },
+      {
+        "id": "S4",
+        "description": "Plan sections, in this order: 1. How to use this document (5 numbered rules). 2. Intent (with **Not doing**). 3. Approach (**Chosen** and **Considered**, only when the quiz weighed 2 or more approaches). 4. Ground truth (Key files, Build / test / lint, Conventions, Prior art, then the Verification rule). 5. Boundaries (May modify, Must not touch, Stop and ask when, Assumptions, then the **Riskiest assumption** line). 6. Steps (gate meanings and the parallel group rule). 7. Verification and rollback (Human verifies by, Failing looks like, Rollback, Kill criteria). 8. Progress log (entry format only, no entries)."
+      },
+      {
+        "id": "S5",
+        "description": "Each step: a heading `### Step N: <name> · `[ ]` AUTO|GATED · Parallel group: none|P1…`, then the bullets **Do**, **Done when**, **Out of scope here**, **Touches** and **Depends on**."
+      },
+      {
+        "id": "S6",
+        "description": "Closing message after the plan is written: the plan path, a one-line summary of each step, one line on what the red-team pass caught (or \"no issues found\"), and one question that offers to start executing the plan."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "Each quiz message asks exactly one question in the fallback layout. The heading is `**Question N · Label**` with no total. An option question has 2-4 bulleted `**A · label**: sentence` options and a `Reply A, B…` line. An open question has no options and ends with `Reply with …`.",
+      "pass": "Every quiz message has one question only. Each question has the bold heading with a number and a label but no total, then the question. Option questions have 2-4 bulleted options in `**A · label**: sentence` form and a closing `Reply A, B…` line. At most one option has `(recommended)`, and its sentence names the fact behind it. Open questions have no invented options and end with `Reply with …`. Nothing is in a code block or a box. (If the capture records a picker call, the question ends with ` (question N)` and has 2-4 real options.)",
+      "partial": "Each message has one question, but at least one question has a flaw in the layout. For example, the heading has a total such as `1 of 6`, the reply line is missing, an open question has invented options, or a recommendation names no fact. A message with two numbered questions is a miss.",
+      "source": "The look (same as /quiz), differences 1 and 3, fallback example"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "Each reply gets one `✓ N Label → Choice` echo line at the top of the next question's message. When the drill ends, a bulleted list of all echoes numbered `N/T` and a one-sentence go-ahead come before the plan.",
+      "pass": "Every answered question has one echo line in the form `✓ N Label → Choice` (with `(note: …)` when the user added a note), and that line opens the message with the next question. After the last question, the skill shows a bulleted list with one echo for each question, numbered `N/T` with the correct total, with no code block. Then it asks for the go-ahead in one sentence (or a `Confirm` picker). The skill writes the plan only after the go-ahead.",
+      "partial": "The echoes and the resolved view are present, but one part is wrong. For example, an echo is missing or in a different form, the list leaves out a question or is in a code block, the total is wrong, or the go-ahead is missing.",
+      "source": "The rhythm (between questions), Final resolved view, Reply parsing"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "The plan is at `plans/<kebab-case-name>.plan.md` and its header has the title, the Owner and Status line, the Branch and Plan location line, and a Progress line with a 12-character bar and `0/N steps completed (0%)`.",
+      "pass": "The skill writes one file in a `plans/` folder at the root of the worktree, with a kebab-case name that comes from the change and ends in `.plan.md`. The file starts with `# Change Plan: <name>`. The header gives Owner, Status `Draft`, Branch and Plan location (the path of the file). The Progress line has exactly 12 `░` characters and `0/N steps completed (0%)`, where N is the number of steps in the plan.",
+      "partial": "The file and header exist, but one part is wrong. For example, the file is at the root instead of in `plans/`, the bar does not have 12 characters, N does not agree with the number of steps, or a header field is missing.",
+      "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
+      "source": "Phase 2: File name, Template header, Progress Tracker Maintenance"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "The plan has the template sections in order, each with its sub-fields: How to use this document, Intent, Approach (only when the quiz weighed 2 or more approaches), Ground truth, Boundaries, Steps, Verification and rollback, Progress log.",
+      "pass": "All sections are present in template order. How to use this document has the five rules. Intent has **Not doing**. Ground truth has Key files, Build / test / lint, Conventions, Prior art and the Verification rule. Boundaries has May modify, Must not touch, Stop and ask when, Assumptions and the **Riskiest assumption** line. Verification and rollback has Human verifies by, Failing looks like, Rollback and Kill criteria. Approach, with Chosen and Considered, is present when the quiz weighed 2 or more approaches and absent when it did not. The Progress log gives the entry format but no entries.",
+      "partial": "The sections are mostly there, but one or two sub-fields are missing, two sections are in the wrong order, Approach is present with invented alternatives or absent after the quiz weighed approaches, or the Progress log has entries written ahead.",
+      "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
+      "source": "Phase 2: Template"
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 2,
+      "criterion": "Each step has the heading `### Step N: <name> · `[ ]` AUTO|GATED · Parallel group: …` and the five bullets Do, Done when, Out of scope here, Touches and Depends on.",
+      "pass": "Every step heading has the number, a name, an unchecked `[ ]`, exactly one of AUTO or GATED, and a `Parallel group:` value (`none` or a group id). Every step has all five bullets: Do, Done when, Out of scope here, Touches and Depends on (`none` when the step has no dependency).",
+      "partial": "Most steps have the full format, but one step lacks a bullet, or a heading lacks the checkbox, the gate or the parallel group.",
+      "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
+      "source": "Phase 2: Template, Steps"
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S6",
+      "weight": 1,
+      "criterion": "After the plan is written, the closing message gives the plan path, one line for each step, one line on what the red-team pass caught, and asks whether to start execution.",
+      "pass": "The closing message has all four parts: the path of the plan file, a one-line summary for each step, one visible line on what the red-team pass caught and fixed (or \"no issues found\"), and one question that offers to start executing the plan (for example by running `/quiz-plan-execute`). When the line names a fix, the plan shows that fix.",
+      "partial": "The closing message lacks one of the four parts, or the red-team line names a fix that the plan does not show.",
+      "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
+      "source": "Phase 3: Red-team the Draft (last paragraph), Output"
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Step 1 tests the riskiest assumption: the **Riskiest assumption** line names the assumption and Step 1, and Step 1's Done when fails if the assumption is false.",
+      "pass": "Boundaries names one riskiest assumption that comes from the quiz or the prompt, and says that Step 1 tests it. Step 1 is a check of that assumption (for example, a test or a query whose result shows if the assumption is true), not only work in the same area.",
+      "partial": "Step 1 is about the riskiest assumption, but no result of Step 1 fails when the assumption is false. Or the **Riskiest assumption** line and Step 1 do not agree.",
+      "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
+      "source": "Step Generation Guidelines 1, Phase 3: Riskiest assumption"
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Every step is AUTO, except a step that the user explicitly asked to checkpoint, which is GATED.",
+      "pass": "When the user asked for no checkpoint, all steps are AUTO. When the user asked for a checkpoint on a step, that step is GATED and all other steps are AUTO.",
+      "partial": "The gates mostly follow the rule, but one step is GATED \"to be safe\" without a request, or a requested checkpoint is on a step next to the step that the user named.",
+      "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
+      "source": "Step Generation Guidelines 3: Default every step to AUTO"
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The Touches, Depends on and Parallel group values agree with the group rule.",
+      "pass": "Each group id has 2 or more steps. The steps in a group have disjoint Touches and no direct or transitive dependency on each other, also through a flag, schema or contract in a different file. Step 1 and each GATED step have `Parallel group: none`. No Touches list includes the plan file.",
+      "partial": "One problem: a group with one step, two grouped steps with a dependency that the Touches lists do not show, or the plan file in a Touches list.",
+      "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
+      "source": "Parallel group assignment rule, Step Generation Guidelines 10, Phase 3: Parallel groups"
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The quiz asks the user only for what the plan still needs: no question asks again for a fact that the prompt or an earlier reply gave, and each answer changes the plan.",
+      "pass": "Each question asks for a decision or a fact that the plan uses and that the user had not given. No question asks again for something that the prompt already stated (for example, the commands, the branch, the files or a stated exclusion). When a reply is hedged (\"not sure\", \"I think\"), the skill asks a follow-up or records the point as an explicit assumption. The drill stops when the plan can be written.",
+      "partial": "Most questions are useful, but one question asks again for a stated fact or gives no change to the plan, or a hedged reply gets no follow-up and does not appear as an assumption.",
+      "source": "Starter Question Pool (skip any that the opening statement answered), Signs you need to keep asking, Signs you're done asking"
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The plan records what the user said: each fact in the prompt and each reply appears in the correct section, and no part of the plan contradicts them.",
+      "pass": "Stated exclusions are in Not doing and Must not touch. The exact commands are in Build / test / lint. The branch is in the header. The risk is in the Riskiest assumption or Assumptions. Verification and rollback replies are in Verification and rollback. No step does work that the user excluded.",
+      "partial": "One fact or reply is missing, changed or in the wrong section, but no step does excluded work.",
+      "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
+      "source": "Template field sources (from Q1 to Q12), Phase 3: Scope creep"
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "A coding agent can do each step without a guess: each Do names the files and the change, each Done when is a result that can fail, and together the steps cover all the work that the request implies.",
+      "pass": "Every Do names specific files, functions or commands. Every Done when is a command, test or query result that can fail, not a vague phrase such as \"works correctly\". The steps cover all the work that the code and the replies imply (for example, a caller to update, a data migration or a missing label). The last step runs the build, test and lint commands (or the check that the user gave when there are no such commands).",
+      "partial": "The steps are mostly concrete, but one Done when is vague, one Do does not name its files, or one piece of implied work has no step.",
+      "appliesWhen": "the quiz ends and the user gives the go-ahead (a scripted or fallback reply)",
+      "source": "Template: concrete enough that two different readers would produce the same change, Step Generation Guidelines 2 and 7, Phase 3: Done when, Coverage gaps"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical",
+      "prompt": "add retries with backoff to our HTTP client. Right now one timeout from the payments API fails the whole nightly sync, and someone has to re-run it by hand. Tests run with `pytest -q` and lint with `ruff check .`. Work on the branch `http-retries`. I'll review the plan before anyone starts on it.\n\n```python\n# app/http_client.py\nimport requests\n\nclass HttpClient:\n    def __init__(self, base_url, timeout=10):\n        self.base_url = base_url\n        self.timeout = timeout\n\n    def get(self, path, **params):\n        r = requests.get(self.base_url + path, params=params, timeout=self.timeout)\n        r.raise_for_status()\n        return r.json()\n\n    def post(self, path, payload):\n        r = requests.post(self.base_url + path, json=payload, timeout=self.timeout)\n        r.raise_for_status()\n        return r.json()\n\n# jobs/nightly_sync.py\nfrom app.http_client import HttpClient\n\nclient = HttpClient(\"https://payments.internal\", timeout=5)\n\ndef run():\n    page = 1\n    while rows := client.get(\"/settlements\", page=page):\n        save(rows)\n        page += 1\n\n# jobs/refund_worker.py\nfrom app.http_client import HttpClient\n\nclient = HttpClient(\"https://payments.internal\")\n\ndef refund(order_id, amount):\n    return client.post(\"/refunds\", {\"order\": order_id, \"amount\": amount})\n```",
+      "exercises": "the core drill on an everyday change with inline code: skips the stated commands and branch, asks about scope, risk, approach, verification and rollback, follows up a hedged reply, keeps all steps AUTO, and should notice that a retried refund POST can pay twice",
+      "replies": [
+        "Only retry GETs. Never retry the refund POST: a retry could pay a customer twice.",
+        "I'm not sure which errors the payments API sends for a blip. I think it's 503, but it might be a plain 500.",
+        "Go with your recommendation.",
+        "A unit test that fakes two 503s and then a 200, plus one manual run of the nightly sync against staging.",
+        "Plain git revert. Nothing is stored, so there's nothing to migrate back."
+      ]
+    },
+    {
+      "id": "P02",
+      "axis": "rich input, different stack, explicit gate",
+      "prompt": "turn `orders.status` from free text into a Postgres enum. Typos like 'shiped' and 'canceled' get in today, and the dashboard's per-status counts come out wrong. Allowed values: pending, paid, shipped, cancelled, refunded.\n\nStack: Node 20, TypeScript, Knex migrations in `db/migrations/`. Files I expect to touch: a new migration, `src/orders/types.ts`, `src/orders/repository.ts` and `src/dashboard/counts.ts`. Commands: `npm run build`, `npm test`, `npm run lint`. Migrations run with `npx knex migrate:latest`. Don't change the JSON shape of the public REST API, and don't touch `src/payments/`. Branch: `orders-status-enum`. Rollback is the migration's `down`, which casts the column back to text.\n\nGate the step that runs the migration on staging: I want to check it myself before anything else continues. Everything else can run unattended. I'll review the plan before anyone starts on it.\n\n```ts\n// src/orders/types.ts\nexport type Order = { id: string; status: string; updatedAt: Date };\n\n// src/orders/repository.ts\nexport async function setStatus(db: Knex, id: string, status: string) {\n  await db('orders').where({ id }).update({ status, updated_at: db.fn.now() });\n}\n\nexport async function countByStatus(db: Knex) {\n  return db('orders').select('status').count('* as n').groupBy('status');\n}\n\n// src/dashboard/counts.ts\nconst LABELS: Record<string, string> = {\n  pending: 'Pending', paid: 'Paid', shipped: 'Shipped', cancelled: 'Cancelled',\n};\n```",
+      "exercises": "skipping the many facts the prompt already gives, one GATED step on request with all others AUTO, no Approach section when the user fixed the approach, migration before code, and coverage gaps (rows with typos block the cast, LABELS lacks 'refunded')",
+      "replies": [
+        "Fix the typos we know in the migration: shiped → shipped, canceled → cancelled. Any other unknown value should fail the migration, not be guessed.",
+        "The dashboard counts should match a `SELECT status, count(*) FROM orders GROUP BY status` taken before the migration, with the typo rows folded into their fixed values.",
+        "Nothing like that here that I know of."
+      ]
+    },
+    {
+      "id": "P03",
+      "axis": "minimal",
+      "prompt": "move our Flask app's sessions from signed cookies to Redis. I'll review the plan before anyone starts on it.",
+      "exercises": "a terse request with no code: the drill must find what matters from nothing, record deferrals in the echo forms, and keep the plan short",
+      "replies": [
+        "you decide",
+        "Go with your recommendation.",
+        "you decide"
+      ]
+    },
+    {
+      "id": "P04",
+      "axis": "edge: user gives the steps, real repo files, no test suite",
+      "prompt": "add a required `component` field to /probe findings: the code module that a finding lives in, as a plain string. I already know the steps:\n1. Add `component` to the `finding` object in probe/references/findings.schema.json, and to its `required` list.\n2. Add `component` to the block for each finding in probe/references/report-template.md.\n3. In probe/SKILL.md, tell the Phase 2 probe agents to record it, and tell the Phase 4 report to group findings by it inside each severity tier.\n\nThere's no test suite in this repo, so the check is a careful read of the diff. Branch: `probe-component`. I'll review the plan before anyone starts on it.",
+      "exercises": "capturing the user's own steps directly with few questions, files committed in this repository, Step 1 and the riskiest assumption when the user fixed the order, parallel groups across three files with a logical dependency, and a last step with no build or test commands",
+      "replies": [
+        "Nothing else should change. Leave the other skills alone.",
+        "Go with your recommendation."
+      ]
+    }
+  ]
+}

@@ -2,15 +2,16 @@
 
 Default: yes
 
-You judge the checks, not the code. You have not seen the code.
+You judge the checks, not the code. You do not see the code.
 
-- Every acceptance line in the change spec has at least one check, except under a
-  requirement marked `(retire)`: those get no check, and any check that only proved them
-  is gone.
-- Each check's name carries its requirement ID.
+- Each acceptance line in the change spec has at least one check. The exception is a
+  requirement marked `(retire)`: its acceptance lines get no check, and each check that
+  only proved them is gone.
+- The name of each check contains its requirement ID.
 - Each check tests what the acceptance line says, through the "Interface" in the change
-  spec. It doesn't depend on how the code is written inside.
-- Each check could fail. A check that passes whatever the code does doesn't count.
-- Every error code listed in the Interface has a check that expects that exact code.
-- Checks control time, randomness and vendors only through the Interface's "Test seams".
-- Checks are clear enough that a failure tells you what broke.
+  spec. The check does not depend on the internal structure of the code.
+- Each check can fail. A check that passes, whatever the code does, does not count.
+- Each error code that the Interface lists has a check that expects that exact code.
+- The checks control time, randomness, and vendors only through the "Test seams" of the
+  Interface.
+- The checks are sufficiently clear that a failure tells you what broke.

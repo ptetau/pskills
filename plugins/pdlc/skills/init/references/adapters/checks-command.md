@@ -1,12 +1,15 @@
 # Adapter: checks-command
 
-Fills the checks port with the commands in the "Checks" section of `pdlc/config.md`.
+The checks-command adapter fills the checks port with the commands in the "Checks"
+section of `pdlc/config.md`.
 
-- **run all**: run the "all" command. Exit code 0 is pass.
-- **run for requirement**: run the "one requirement" command with `{req}` replaced by the
-  ID, in the form the project uses (`CAP-email.R3` or `CAP_email_R3`). If it runs no checks, report "no checks found", not pass. Most test runners say how
-  many tests ran; zero means none found.
-- **find**: search the project's check files for the requirement ID, in both forms.
+- **run all**: run the "all" command. Exit code 0 is a pass.
+- **run for requirement**: run the "one requirement" command. Replace `{req}` with the
+  requirement ID, in the form that the project uses (`CAP-email.R3` or `CAP_email_R3`).
+  If the command runs no checks, report "no checks found", not a pass. Most test runners
+  tell how many tests ran. Zero tests means that the runner found no checks.
+- **find**: search the check files of the project for the requirement ID, in the two
+  forms.
 
-If the project has no command for running one requirement's checks, run all checks and
-read the output for names that carry the ID.
+If the project has no command that runs the checks of one requirement, run all the checks.
+Then read the output for the names that carry the ID.

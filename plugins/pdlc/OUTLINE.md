@@ -1,37 +1,47 @@
 # pdlc: outline
 
-pdlc is a development lifecycle harness for AI-driven work. It is a set of skills and agents
-that you drop into any project, new or old, whatever kind of system it is. It turns ideas
-into specs, specs into small changes, and changes into verified code. Every line of code can be traced back to the spec
-it serves and the intent that asked for it.
+pdlc is a development lifecycle harness for AI-driven work. pdlc is a set of skills and
+agents that you add to a project. The project can be new or old, and the project can be
+any type of system. In pdlc, ideas become specs, specs become small changes, and changes
+become verified code. You can trace each line of code back to the spec that it serves, and
+to the intent that asked for it.
 
-This outline is the design. It is written before anything is built, so expect to change it.
+This outline is the design. We wrote the outline before we built anything. Thus, expect
+changes to the outline.
 
 ---
 
 ## 1. The big idea
 
 All work enters through an **inbox**. Each item in the inbox is an **intent**: something
-you want to be true that isn't yet.
+that you want to be true, but that is not true yet.
 
-An intent never goes straight to code. First it becomes a change to the **specs**. There are
-three kinds of spec:
+An intent does not go directly to code. First, the intent becomes a change to the
+**specs**. There are three types of spec:
 
-- **Job specs** describe what a user is trying to get done. One file per job, for example
-  "reset my password" or "pay an invoice".
-- **Capability specs** describe what the system can do, independent of any one job. One file
-  per capability, for example "email" or "persistence".
-- **Design specs** describe how we do things everywhere. These are conventions: how we
-  present a list, how we name files, how we write errors, how we test.
+- **Job specs** tell what a user tries to do. Each job has one file, for example "reset
+  my password" or "pay an invoice".
+- **Capability specs** tell what the system can do, independently of one specific job.
+  Each capability has one file, for example "email" or "persistence".
+- **Design specs** tell how we do things in all parts of the system. Design specs are
+  conventions: how we show a list, how we name files, how we write errors, and how we
+  test.
 
-Once the specs are clear enough to build from, pdlc writes a **change spec**. A change spec
-covers exactly one job or one capability. It lists the requirements it will deliver, the
-other specs it relies on, and the files it needs to touch. Nothing else.
+When the specs are sufficiently clear to build from, pdlc writes a **change spec**. A
+change spec covers exactly one job or one capability. The change spec lists only these
+items:
 
-Its checks are written first, from the spec, by a test writer that never sees the code,
-and then locked. A builder that can't touch the checks writes the code. The change is
-recorded as a GIF, judged by independent reviewers (one per remit, each seeing only its
-packet), and approved by you. Only then can it merge.
+- The requirements that the change will deliver.
+- The other specs that the change relies on.
+- The files that the change must touch.
+
+First, a test writer writes the checks of the change from the spec. The test writer does
+not see the code. Then pdlc locks the checks. A builder writes the code, and the builder
+cannot touch the checks.
+
+When the code is complete, pdlc records the change as a GIF. Independent reviewers
+judge the change: one reviewer for each remit, and each reviewer sees only its packet.
+Then you approve the change. Only after these steps can the change merge.
 
 ```
  intent ─► spec patches ─► ready ─► change specs ─► tests ─► build ─► show ─► verify ─► merge
@@ -45,23 +55,24 @@ packet), and approved by you. Only then can it merge.
 
 ## 2. Core rules
 
-These rules are fixed. Everything else is a default you can change.
+These rules are fixed. All other items are defaults that you can change.
 
-1. **All work enters through the inbox.** That includes convention migrations and new
-   adapters for pdlc itself.
-2. **Specs come before code.** An intent must be specified before any change is written.
+1. **All work enters through the inbox.** This rule includes convention migrations and
+   new adapters for pdlc itself.
+2. **Specs come before code.** pdlc must specify an intent before it writes any change.
 3. **One change, one thing.** A change covers exactly one job or one capability, or one
    design spec.
-4. **Jobs use capabilities; they never edit them.** If a job needs something a capability
-   can't do yet, that becomes its own earlier milestone. Capability milestones always come
-   before the job milestone that needs them.
-5. **Verified before merge.** Every requirement a change touches must be `verified` before
-   the change can merge to main.
-6. **pdlc files are the truth.** Boards and trackers show pdlc's state. They don't own it.
-7. **Everything is traceable.** Code links to requirements, requirements link to intents,
-   intents link to tickets.
-8. **Plain prose everywhere.** Every skill, agent, prompt and spec is short, simple and
-   clear. If a sentence needs rereading, rewrite it.
+4. **Jobs use capabilities, but jobs do not edit capabilities.** If a job needs something
+   that a capability cannot do yet, that new work becomes a separate, earlier milestone.
+   Capability milestones always come before the job milestone that needs them.
+5. **Verified before merge.** Each requirement that a change touches must be `verified`
+   before the change can merge to main.
+6. **pdlc files are the truth.** Boards and trackers show the state of pdlc. Boards and
+   trackers do not own that state.
+7. **Everything is traceable.** Code links to requirements. Requirements link to intents.
+   Intents link to tickets.
+8. **Plain prose everywhere.** Each skill, agent, prompt, and spec is short, simple, and
+   clear. If you must read a sentence two times, write the sentence again.
 
 ---
 
@@ -82,7 +93,8 @@ pdlc/
   changes/              one change spec per milestone
 ```
 
-Everything is markdown. Everything is versioned in git with the code it describes.
+All the files are in markdown. Git keeps the history of the files, together with the code
+that the files are about.
 
 ---
 
@@ -90,7 +102,7 @@ Everything is markdown. Everything is versioned in git with the code it describe
 
 ### IDs
 
-Every item has a short, stable ID. IDs never change once given.
+Each item has a short, stable ID. After an item gets its ID, the ID does not change.
 
 | Thing | ID | Example |
 |---|---|---|
@@ -109,12 +121,13 @@ new ──► specifying ──► ready ──► building ──► in review 
                             paused / cancelled (any time)
 ```
 
-- **new**: in the inbox, not looked at yet.
-- **specifying**: pdlc is writing spec patches and asking you questions.
-- **ready**: every requirement it touches is `ready`. Changes can start.
-- **building**: at least one of its changes is being built.
-- **in review**: all its changes are built and waiting for review or your approval.
-- **done**: all its changes have merged.
+- **new**: the intent is in the inbox, and nobody examined the intent yet.
+- **specifying**: pdlc writes spec patches and asks you questions.
+- **ready**: each requirement that the intent touches is `ready`. Changes can start.
+- **building**: the build of at least one change of the intent is in progress.
+- **in review**: all the changes of the intent are built, and they wait for review or for
+  your approval.
+- **done**: all the changes of the intent are merged.
 
 ### Requirement status
 
@@ -122,84 +135,97 @@ new ──► specifying ──► ready ──► building ──► in review 
 proposed ──► ready ──► built ──► verified
 ```
 
-- **proposed**: written into the spec by intake, not yet checked.
-- **ready**: clear, testable and consistent with the rest of the specs.
+- **proposed**: intake wrote the requirement into the spec. Nobody examined the
+  requirement yet.
+- **ready**: the requirement is clear, testable, and consistent with the other specs.
 - **built**: the change and its checks exist on a branch.
-- **verified**: its checks pass and review passed. Only now can the change merge.
+- **verified**: the checks of the requirement pass, and the review passed. Only now can
+  the change merge.
 
-Spec patches land in the real spec file straight away, with status `proposed`. There is one
-source of truth. If two intents touch the same requirement, they collide at spec time, when
-it is cheap to sort out, not at merge time.
+Spec patches go into the real spec file immediately, with the status `proposed`. There is
+one source of truth. If two intents touch the same requirement, the two intents collide at
+spec time, not at merge time. At spec time, the collision is cheap to correct.
 
-To remove a requirement, a patch marks it `retiring`. It is deleted from the spec when the
-change that removes the code merges. Git keeps the history.
+To remove a requirement, a patch marks the requirement `retiring`. When the change that
+removes the code merges, the requirement is deleted from the spec. Git keeps the history.
 
-Requirements found by recon in existing code start as `built` with `Source: recon`. They
-become `verified` once a change adds checks that prove them.
+When recon finds requirements in existing code, these requirements start as `built`, with
+`Source: recon`. Such a requirement becomes `verified` when a change adds checks that
+prove the requirement.
 
 ---
 
 ## 5. The documents
 
-Each document has a template shipped with `init`. The templates are short.
+`init` supplies a template for each document. The templates are short.
 
 ### Intent (`pdlc/inbox/IN-0012-password-reset.md`)
 
 - What you want and why, in your own words.
-- Status and ticket link.
-- Which requirements it added or changed (filled in by intake).
-- Which changes deliver it, in order (filled in by change).
+- The status, and the link to the ticket.
+- The requirements that the intent added or changed (the `intake` skill writes this
+  list).
+- The changes that deliver the intent, in order (the `change` skill writes this list).
 
 ### Job, capability and design specs
 
-- A short summary of what this is for.
-- **Code map**: the files and folders this spec owns. Used to scope changes, not to trace.
-- **Requirements**, each with an ID, a status, the intents that shaped it, and acceptance
-  checks written as plain "given / when / then" lines.
-- Job specs also list the capabilities and design specs they rely on.
+- A short summary of the purpose of the spec.
+- **Code map**: the files and folders that this spec owns. pdlc uses the code map to set
+  the scope of changes, not to trace.
+- **Requirements**. Each requirement has an ID, a status, the intents that shaped it, and
+  acceptance checks. The acceptance checks are plain "given / when / then" lines.
+- Job specs also list the capabilities and design specs that they rely on.
 
 Example requirement:
 
 ```
 ### CAP-email.R3 · Send an email from a template
 Status: ready · Intents: IN-0012
-The system can send an email built from a named template and a set of values.
-- Given a template "reset" and a user's address, when we send, then one email goes out
-  with the values filled in.
-- Given a missing template, when we send, then we get a clear error and nothing is sent.
+The system can send an email that it builds from a named template and a set of values.
+- Given a template "reset" and the address of a user, when we send, then the system sends
+  one email that contains the values.
+- Given a missing template, when we send, then we get a clear error, and the system sends
+  no email.
 ```
 
 ### Change spec (`pdlc/changes/CH-0031-email-templates/change.md`)
 
-The change spec is the only thing the builder needs to read. It is a simplified form of the
-`.plan.md` format used by `/quiz-plan`.
+The change spec is the only document that the builder needs. The change spec is a
+simplified form of the `.plan.md` format that `/quiz-plan` uses.
 
-- **Delivers**: the intent, and the one job or capability this change covers.
-- **Requirements**: the requirement IDs it will build, with their acceptance checks copied in.
-- **Relies on**: the other specs it uses, by ID. For a job change, the capabilities it calls.
-  Always the design specs that apply.
-- **Interface**: what the checks may call, so the test writer never needs the code.
-- **Files**: only the app files this change may touch, drawn from the code map.
-- **Check files**: the checks, which only the test writer may change.
-- **Tests-Locked**: the commit where the checks were locked.
-- **Steps**: small steps, each naming the requirement it serves and the test that proves it.
-- **Progress log**: what happened, appended as work goes.
+- **Delivers**: the intent, and the one job or capability that this change covers.
+- **Requirements**: the IDs of the requirements that the change will build, with a copy
+  of their acceptance checks.
+- **Relies on**: the IDs of the other specs that the change uses. For a job change, this
+  list includes the capabilities that the job calls. The list always includes the design
+  specs that apply.
+- **Interface**: the items that the checks are permitted to call. Thus, the test writer
+  does not need the code.
+- **Files**: only the app files that this change is permitted to touch. These files come
+  from the code map.
+- **Check files**: the checks. Only the test writer is permitted to change these files.
+- **Tests-Locked**: the commit that locked the checks.
+- **Steps**: small steps. Each step gives the requirement that it serves and the test that
+  proves it.
+- **Progress log**: a record of what happened. New entries go at the end, as the work
+  continues.
 
 ---
 
 ## 6. Traceability
 
-The trace runs both ways, and each link is written down once.
+The trace works in the two directions, and pdlc writes each link only one time.
 
 ```
  ticket ◄──► intent ◄──► requirement ◄──► check ◄──► code
  PROJ-88     IN-0012     CAP-email.R3     check name  commit trailers
 ```
 
-- **Intent → requirements**: the intent file lists them. Each requirement lists its intents.
-- **Requirement → checks**: every check carries the requirement ID in its name or tag, for
-  example a test called `CAP-email.R3 sends from template`.
-- **Code → requirement**: every commit carries trailers:
+- **Intent → requirements**: the intent file lists the requirements. Each requirement
+  lists its intents.
+- **Requirement → checks**: each check carries the requirement ID in its name or in its
+  tag, for example a test with the name `CAP-email.R3 sends from template`.
+- **Code → requirement**: each commit carries trailers:
 
   ```
   Intent: IN-0012
@@ -208,12 +234,14 @@ The trace runs both ways, and each link is written down once.
   Ticket: PROJ-88
   ```
 
-  So `git blame` on any line leads to the commit, then the requirement, then the intent,
-  then the ticket. Jira and Linear pick up the `Ticket` key and show the commit on the card.
-- **No ID comments in source code.** They rot as code moves, and nothing checks them.
+  Thus, `git blame` on a line leads to the commit, then to the requirement, then to the
+  intent, and then to the ticket. Jira and Linear read the `Ticket` key and show the
+  commit on the card.
+- **No ID comments in source code.** ID comments become incorrect when code moves, and
+  nothing examines them.
 
-The `trace` skill answers both directions in plain words: "why does this line exist?" and
-"what did IN-0012 change?"
+The `trace` skill answers questions in the two directions, in plain words: "why does this
+line exist?" and "what did IN-0012 change?"
 
 ---
 
@@ -227,64 +255,70 @@ The `trace` skill answers both directions in plain words: "why does this line ex
 | builder | the spec, app code, the locked checks | app code | changes checks |
 | reviewer (one per remit) | only its packet | its result | sees another packet or result |
 
-A guard in the plugin enforces this for every file tool, by agent. The builder needs a
-shell to run checks, so the merge check is the backstop: it fails if any check changed
-after the lock.
+A guard in the plugin enforces this table for each file tool, by agent. The builder needs
+a shell to run checks. Thus, the merge check is the backstop: the merge check fails if a
+check changed after the lock.
 
 ### Independent reviews
 
-One fresh reviewer per remit, each given one packet built by `make_packets.py`:
+Each remit has one fresh reviewer. Each reviewer gets one packet, which `make_packets.py`
+builds:
 
-- **tests**: the spec and the checks, never the code. Runs right after the checks are
-  locked, before any code is written.
-- **specification, security, quality, compliance, privacy**: the spec and the code, never
-  the checks. They run in parallel after the visual review. The specification reviewer
-  also looks at the GIF's frames.
+- **tests**: the spec and the checks, but not the code. This review runs immediately
+  after the checks are locked, before the builder writes code.
+- **specification, security, quality, compliance, privacy**: the spec and the code, but
+  not the checks. These reviews run in parallel after the visual review. The
+  specification reviewer also examines the frames of the GIF.
 
-The project can edit each remit in `pdlc/reviews/` and choose which run in `config.md`.
+The project can edit each remit in `pdlc/reviews/`. In `config.md`, the project selects
+which remits run.
 
 ### Visual review
 
-`show` plays each acceptance line in the real app (a browser for web apps, a terminal for
-CLIs and libraries) and saves `review.gif` and its frames in the change folder. The commit
-names the GIF, and the pull request embeds it.
+`show` plays each acceptance line in the real app: in a browser for web apps, and in a
+terminal for CLIs and libraries. Then `show` saves `review.gif` and its frames in the
+change folder. The commit gives the name of the GIF, and the pull request embeds the GIF.
 
 ### The gate
 
-A change can merge only when all of these are true, and `check_merge.py` confirms the
-first three:
+A change can merge only when all of these conditions are true. `check_merge.py` confirms
+the first three:
 
 1. **Checks pass.** Each requirement in the change has at least one check tagged with its
-   ID, and those checks pass. Checks are written before the change. A check is usually an
-   automated test, but can be anything that proves the requirement (see section 14).
-2. **Review passes.** A reviewer agent that did not write the code reads the change spec, the
-   diff and the design specs. It checks:
-   - the diff stays inside the change's files and its one job or capability;
-   - each acceptance check is met, and the checks really prove it;
-   - the design specs are followed;
-   - every commit has its trace trailers.
-3. **You approve the merge.** Your time goes on judgment, not checklists.
+   ID, and those checks pass. The checks are written before the change. A check is
+   usually an automated test. But a check can be anything that proves the requirement
+   (see section 14).
+2. **Review passes.** A reviewer agent that did not write the code reads the change spec,
+   the diff, and the design specs. The reviewer agent examines these items:
+   - The diff stays inside the files of the change, and inside its one job or capability.
+   - The change meets each acceptance check, and the checks really prove this.
+   - The change follows the design specs.
+   - Each commit has its trace trailers.
+3. **You approve the merge.** You use your time for judgement, not for checklists.
 
-The delivery adapter blocks the merge if any requirement the change touches is not
-`verified`. A small check script does the same in CI, so the rule holds even outside pdlc.
+If a requirement that the change touches is not `verified`, the delivery adapter blocks
+the merge. A small check script does the same in CI. Thus, the rule also applies outside
+pdlc.
 
-If an acceptance check can't be tested automatically, the change spec marks it
-`manual check`. You confirm it when you approve the merge.
+If you cannot test an acceptance check automatically, the change spec marks that
+acceptance check `manual check`. You confirm the manual check when you approve the merge.
 
-`/probe` can be run as an extra exploratory pass. It is optional in v1.
+You can run `/probe` as an extra exploratory pass. In v1, `/probe` is optional.
 
 ---
 
 ## 8. Ports and adapters
 
-pdlc talks to the outside world only through **ports**.
+pdlc communicates with the outside world only through **ports**.
 
-- A **port** is a job the core needs done. Each port has a short contract in plain prose:
-  what goes in, what comes out, and what counts as success.
-- An **adapter** does that job with one particular tool. It is a short markdown file of
-  instructions.
-- The core skills only ever call ports. They never mention GitHub, pytest or Linear.
-- `config.md` names the adapter for each port. Swapping tools means changing one line.
+- A **port** is a job that the core needs. Each port has a short contract in plain prose:
+  what goes in, what comes out, and what is a success.
+- An **adapter** does the job of a port with one specific tool. An adapter is a short
+  markdown file of instructions.
+- The core skills call only ports. The core skills do not refer to GitHub, pytest, or
+  Linear.
+- `config.md` gives the adapter for each port. To use a different tool, you change one
+  line.
 
 ```
  pdlc skills ──► port contract ──► adapter ──► real tool
@@ -294,159 +328,181 @@ pdlc talks to the outside world only through **ports**.
 
 | Port | Job | Default adapter | Later |
 |---|---|---|---|
-| inbox | list, read and add intents; set their status | markdown files in `pdlc/inbox/` | GitHub Issues, Linear, Jira |
-| checks | run checks; report pass or fail per requirement ID | a command recon finds in the repo | per-stack adapters, `claude plugin eval` |
-| review | independently check a diff against its change spec | the `reviewer` agent | `/code-review`, `/security-review` |
-| delivery | branch, commit, open a PR, block merge until verified | git and GitHub PRs | local git only |
-| tracker | show pdlc's state on a board | none; ships `tracker-github-projects` and `tracker-linear` | Jira |
-| explore | poke at the running app for surprises (optional) | `/probe` | none planned |
+| inbox | list, read, and add intents, and set their status | markdown files in `pdlc/inbox/` | GitHub Issues, Linear, Jira |
+| checks | run checks, and report pass or fail for each requirement ID | a command that recon finds in the repo | per-stack adapters, `claude plugin eval` |
+| review | examine a diff independently against its change spec | the `reviewer` agent | `/code-review`, `/security-review` |
+| delivery | branch, commit, open a PR, and block the merge until verified | git and GitHub PRs | local git only |
+| tracker | show the state of pdlc on a board | none (pdlc supplies `tracker-github-projects` and `tracker-linear`) | Jira |
+| explore | examine the running app for surprises (optional) | `/probe` | none planned |
 
-**Not ports:** the spec files, IDs and statuses. Traceability depends on them being the same
-in every project, so they are core.
+**Not ports:** the spec files, the IDs, and the statuses. Traceability needs these items
+to be the same in each project. Thus, these items are part of the core.
 
 ### How pdlc extends itself
 
-A new adapter is just another intent, for example "add a Linear tracker adapter". pdlc specs
-it as a capability, builds it against the port contract, and verifies it like any other
-change. Each port contract comes with a short conformance check, so every adapter is tested
-the same way.
+A new adapter is only one more intent, for example "add a Linear tracker adapter". The
+spec of the adapter is a capability spec. Then pdlc builds the adapter against the port
+contract, and verifies the adapter as it verifies each other change. Each port contract
+has a short conformance check. Thus, pdlc tests each adapter in the same way.
 
 ---
 
 ## 9. The tracker (boards like Jira and Linear)
 
-pdlc wins. The board shows pdlc's state and never owns it.
+pdlc has priority over the board. The board shows the state of pdlc, but the board does
+not own that state.
 
 ### v1: projection out
 
 - Each intent gets a card. Each change gets a sub-card.
-- When an intent or change moves stage, pdlc moves its card to the matching column.
-  `config.md` maps each pdlc stage to a column name on your board.
+- When an intent or a change goes to a different stage, pdlc moves its card to the
+  matching column. `config.md` maps each pdlc stage to the name of a column on your board.
 - The card links to the intent file and the PR. The intent file stores the card key.
-- Each core skill ends by telling the tracker port about any status it changed. If no
-  tracker adapter is set, this step does nothing.
-- The `board` skill re-syncs everything, in case a card drifted.
+- At its end, each core skill tells the tracker port about each status that the skill
+  changed. If no tracker adapter is set, this step does nothing.
+- The `board` skill re-syncs all intents and changes, in case a card drifted.
 
 ### Later: commands in
 
-Designed now, built later.
+We design this part now, and we build this part later.
 
-- Moving a card to *Start* asks pdlc to begin that change. Moving it to *Paused* or
-  *Cancelled* asks pdlc to stop.
+- When you move a card to *Start*, the move asks pdlc to start that change. When you move
+  a card to *Paused* or *Cancelled*, the move asks pdlc to stop.
 - A new card in the intake column becomes an inbox intent.
-- Board moves are **requests**, not facts. pdlc checks each one. If a card is moved to
-  *Start* but its spec isn't ready, pdlc moves it back and comments with the reason.
-- Nobody can move a card to *Done* from the board. Only verification and your approval can.
-- Card text is treated as input to intake, never as instructions to the agent.
-- A scheduled routine checks the board every few minutes. A webhook adapter can come later.
+- Board moves are **requests**, not facts. pdlc examines each request. If a card goes to
+  *Start* but its spec is not ready, pdlc moves the card back. Then pdlc writes a comment
+  that gives the reason.
+- Nobody can move a card to *Done* from the board. Only verification and your approval can
+  move a card to *Done*.
+- pdlc uses the text of a card as input to intake. pdlc does not use card text as
+  instructions to the agent.
+- A scheduled routine examines the board every few minutes. A webhook adapter can come in
+  a later version.
 
 ---
 
 ## 10. Conventions
 
-pdlc always tries to keep the software consistent. It does this by writing conventions down
-as design specs and agreeing them with you.
+pdlc always tries to keep the software consistent. To do this, pdlc writes conventions as
+design specs, and agrees these design specs with you.
 
-- **Establishing.** When a change needs a convention that doesn't exist yet (for example, the
-  first time we build a table), pdlc stops and asks you with a short quiz. The answer
-  becomes a design spec.
-- **Spotting.** When recon finds two patterns for the same thing, it asks you which one wins.
-- **Changing.** You can change a convention at any time through the `conventions` skill.
-  The change is agreed with you and written to the design spec. Then pdlc files one
-  migration intent per affected job or capability. You choose when each one runs.
-- **Defaults.** pdlc ships its own defaults (ID formats, test tagging, commit trailers,
-  review checklist, board columns, writing style). At `init` it shows each one as a quiz
-  card with the default marked recommended, so `skip` accepts it. Your answers are written
-  into the project as ordinary design specs, marked as defaults. After that, you change
-  them like any other convention.
+- **A new convention.** A change can need a convention that does not exist yet, for
+  example the first time that we build a table. Then pdlc stops and asks you with a short
+  quiz. The answer becomes a design spec.
+- **Two patterns.** When recon finds two patterns for the same thing, recon asks you
+  which pattern wins.
+- **A changed convention.** You can change a convention at any time with the
+  `conventions` skill. You and pdlc agree the change, and pdlc writes the change to the
+  design spec. Then pdlc creates one migration intent for each affected job or
+  capability. You select when each migration intent runs.
+- **Defaults.** pdlc supplies its own defaults: ID formats, test tagging, commit trailers,
+  the review checklist, board columns, and the writing style. At `init`, pdlc shows each
+  default as a quiz card, with the default marked as recommended. Thus, `skip` accepts the
+  default. pdlc writes your answers into the project as ordinary design specs, marked as
+  defaults. After that, you change these design specs as you change all other
+  conventions.
 
 ---
 
-## 11. Working with existing software
+## 11. Existing software
 
-`init` runs **recon** before anything else in an existing codebase. Recon is careful and
-read-only. It aims for "just enough", not a full survey.
+In an existing codebase, `init` runs **recon** before all other steps. Recon is careful
+and read-only. Recon tries to find "just enough", and does not make a full survey.
 
-1. **Thin map of everything.** Recon lists the likely capabilities (from modules, services
-   and dependencies), the likely jobs (from routes, screens and commands), the test and build
-   commands, and the conventions it can see (lint configs, repeated patterns). Each becomes a
-   stub spec with a code map and no requirements yet.
-2. **You confirm the map.** pdlc shows the list and asks you to merge, split or rename
-   anything that looks wrong. The capability and job boundaries matter, because every change
-   must stay inside one.
-3. **Deep only when needed.** When an intent touches a stub spec, intake sends recon to that
-   area to write out its current requirements, marked `Source: recon`. The rest stays thin.
+1. **Thin map of everything.** Recon lists these items:
+   - The likely capabilities, from modules, services, and dependencies.
+   - The likely jobs, from routes, screens, and commands.
+   - The test and build commands.
+   - The conventions that recon can see, for example lint configs and repeated patterns.
+
+   Each item becomes a stub spec, with a code map and no requirements yet.
+2. **You confirm the map.** pdlc shows the list. pdlc asks you to merge, split, or rename
+   each item that looks wrong. The boundaries of capabilities and jobs are important,
+   because each change must stay inside one capability or one job.
+3. **Deep only when needed.** When an intent touches a stub spec, intake sends recon to
+   that area. Recon writes the current requirements of that area, marked
+   `Source: recon`. The other areas stay thin.
 
 ---
 
 ## 12. Skills and agents
 
-pdlc is a Claude Code plugin. Its skills are called as `/pdlc:<name>`.
+pdlc is a Claude Code plugin. You call its skills as `/pdlc:<name>`.
 
 ### Skills
 
 | Skill | What it does |
 |---|---|
-| `init` | Sets pdlc up in a project: folders, templates, recon, default conventions, adapters. |
-| `intake` | Takes an intent from the inbox and writes spec patches with `proposed` requirements. |
-| `ready` | Asks you about anything unclear (like `/quiz`), checks for contradictions (like `/argue`), then marks requirements `ready`. |
-| `change` | Splits a ready intent into milestones, one job or capability each, and writes a change spec for each. |
-| `tests` | Has the test writer write the checks from the spec, confirms they fail, locks them, and has them reviewed. |
-| `build` | Has the builder write app code until the locked checks pass. Marks requirements `built`. |
-| `show` | Records the change working as `review.gif` and frames. |
-| `verify` | Runs every check and the independent code reviews. Marks requirements `verified` and proposes the merge. |
-| `ship` | Runs every stage end to end, stacking changes, on recommended answers. Picks up where it left off. |
-| `conventions` | Establishes or changes a convention with you, and files migration intents. |
-| `board` | Re-syncs every intent and change to the tracker. |
+| `init` | Prepares pdlc in a project: folders, templates, recon, default conventions, and adapters. |
+| `intake` | Takes an intent from the inbox, and writes spec patches with `proposed` requirements. |
+| `ready` | Asks you about each unclear item (like `/quiz`). Looks for contradictions (like `/argue`). Then marks the requirements `ready`. |
+| `change` | Divides a ready intent into milestones, with one job or capability in each milestone. Writes a change spec for each milestone. |
+| `tests` | Tells the test writer to write the checks from the spec. Makes sure that the checks fail. Locks the checks, and gets a review of the checks. |
+| `build` | Tells the builder to write app code until the locked checks pass. Marks the requirements `built`. |
+| `show` | Records the change as it works, as `review.gif` and frames. |
+| `verify` | Runs all the checks and the independent code reviews. Marks the requirements `verified`, and proposes the merge. |
+| `ship` | Runs all the stages from start to end with the recommended answers, and stacks the changes. Continues from the point where it stopped. |
+| `conventions` | Establishes or changes a convention with you, and creates migration intents. |
+| `board` | Re-syncs each intent and each change to the tracker. |
 | `trace` | Answers "why does this code exist?" and "what did this intent change?" |
-| `dashboard` | Optional. Installs a `dashboard-builder` agent and a CLAUDE.md rule for a live status page, after asking. |
+| `dashboard` | Optional. After it asks you, installs a `dashboard-builder` agent and a CLAUDE.md rule for a live status page. |
 
-`ready`, `build` and `verify` are simplified versions of `/quiz` and `/argue`,
-`/quiz-plan-execute`, and `/probe`. They keep the ideas and drop everything pdlc doesn't need.
+`ready`, `build`, and `verify` are simplified versions of `/quiz` and `/argue`,
+`/quiz-plan-execute`, and `/probe`, in that order. These three skills keep the ideas, and
+remove all the parts that pdlc does not need.
 
 ### Agents
 
 | Agent | What it does |
 |---|---|
-| `recon` | Read-only scout. Maps a codebase, or one area of it, into draft specs. |
-| `test-writer` | Writes checks from the spec alone. Never reads app code. |
-| `builder` | Writes app code until the locked checks pass. Never changes checks. |
+| `recon` | Read-only scout. Maps a codebase, or one area of a codebase, into draft specs. |
+| `test-writer` | Writes checks from the spec only. Does not read app code. |
+| `builder` | Writes app code until the locked checks pass. Does not change checks. |
 | `reviewer` | Judges one packet for one remit. Sees nothing else. |
 
 ---
 
 ## 13. A walk through
 
-You drop "let users reset their password" into the inbox as `IN-0012`.
+You put "let users reset their password" into the inbox as `IN-0012`.
 
-1. **intake** sees this needs a new job, `JOB-reset-password`, and a new requirement on
-   `CAP-email` to send from templates. It writes both as `proposed`.
-2. **ready** asks you how long a reset link should last. It checks the new requirements
-   don't contradict `CAP-auth`. Both are marked `ready`.
+1. **intake** sees that this intent needs a new job, `JOB-reset-password`, and a new
+   requirement on `CAP-email` to send from templates. Then **intake** writes the two
+   items as `proposed`.
+2. **ready** asks you how long a reset link stays valid. **ready** also makes sure that
+   the new requirements do not contradict `CAP-auth`. Then **ready** marks the new
+   requirements `ready`.
 3. **change** writes two milestones. `CH-0031` adds templates to `CAP-email`. `CH-0032`
-   builds `JOB-reset-password`, using email without editing it.
-4. **build** works through `CH-0031`, test first. Each commit carries its trailers.
-5. **verify** runs the checks and the reviewer. Both pass, so `CAP-email.R3` is `verified`
-   and a PR opens. You approve and it merges.
-6. The same happens for `CH-0032`. When it merges, `IN-0012` is `done`, and the card on your
-   board moves to Done.
+   builds `JOB-reset-password`, and uses email but does not edit email.
+4. **build** completes `CH-0031` (email templates), test first. Each commit carries its
+   trailers.
+5. **verify** runs the checks and the reviewer. The checks and the review pass. Thus,
+   `CAP-email.R3` (send from a template) is `verified`, and a PR opens. You approve the
+   PR, and the PR merges.
+6. The same steps occur for `CH-0032` (the password reset job). When that change merges,
+   `IN-0012` (the password reset intent) is `done`, and the card on your board moves to
+   Done.
 
 ---
 
 ## 14. Any system
 
-pdlc assumes only two things: the project is in git, and you work in Claude Code. Everything
-else is learned by recon or plugged in through a port.
+pdlc assumes only two things: the project is in git, and you work in Claude Code. Recon
+learns all the other items, or you connect them through a port.
 
-The words stretch to fit:
+These words apply to all types of system:
 
-- A **user** is whoever the system serves. A person clicking a screen, a developer calling an
-  API, an operator running a command, or someone typing a slash command in Claude Code.
-- A **job** is what that user is trying to get done.
-- A **capability** is something the system can do that jobs rely on.
-- A **check** is anything that proves a requirement and gives a pass or fail. Usually an
-  automated test. It can also be a script, a lint rule, an eval run, or a query against real
-  infrastructure. Checks that truly can't be automated are `manual check` items (section 7).
+- A **user** is anyone that the system serves, for example these persons:
+  - A person who clicks on a screen.
+  - A developer who calls an API.
+  - An operator who runs a command.
+  - A person who types a slash command in Claude Code.
+- A **job** is what that user tries to do.
+- A **capability** is something that the system can do, and that jobs rely on.
+- A **check** is anything that proves a requirement and gives a pass or a fail. A check
+  is usually an automated test. A check can also be a script, a lint rule, an eval run, or
+  a query against real infrastructure. If you really cannot automate a check, the check
+  is a `manual check` item (section 7).
 
 | System | A job | A capability | A check |
 |---|---|---|---|
@@ -455,32 +511,35 @@ The words stretch to fit:
 | Infrastructure | "deploy a new service" | networking, secrets | plan check, policy test |
 | Skill collection (this repo) | "clarify a task before starting" | question cards, plan format | `claude plugin eval`, frontmatter check |
 
-Recon learns which of these a project has. The checks port runs whatever the project uses.
-If a project has no way to run checks yet, the first intent `init` suggests is to add one.
+Recon learns which of these items a project has. The checks port runs the type of check
+that the project uses. If a project cannot run checks yet, the first intent that `init`
+suggests is to add a way to run checks.
 
 ## 15. pdlc on itself
 
-pdlc can manage changes to this repository, `pskills`, including changes to pdlc.
+pdlc can manage changes to this repository, `pskills`. These changes include changes to
+pdlc.
 
-- **Two folders, two jobs.** `plugins/pdlc/` is the plugin's source. `pdlc/` at the repo root
-  is pdlc's state for this repo: its inbox, specs and change specs. They never mix.
-- **The installed version does the work.** Changes are always built by the pdlc installed
-  from the marketplace, never by the working copy being changed. A new version only takes
-  effect after it merges and you update the plugin. This stops a half-built change from
-  running itself.
-- **This repo's specs.** Each skill is a job, for example `JOB-clarify-task` for `/quiz` or
-  `JOB-run-lifecycle` for pdlc. Shared parts are capabilities, for example
+- **Two folders, two jobs.** `plugins/pdlc/` is the source of the plugin. `pdlc/` at the
+  root of the repo is the state of pdlc for this repo: its inbox, specs, and change specs.
+  The two folders are always separate.
+- **The installed version does the work.** The pdlc that you installed from the
+  marketplace always builds the changes. The working copy that a change edits does not
+  build changes. A new version starts to work only after it merges and you update the
+  plugin. This rule prevents a half-built change from running itself.
+- **This repo's specs.** Each skill is a job, for example `JOB-clarify-task` for `/quiz`
+  or `JOB-run-lifecycle` for pdlc. Shared parts are capabilities, for example
   `CAP-question-cards` or `CAP-plan-format`. The writing style is a design spec.
-- **This repo's checks.** Frontmatter and JSON must parse, `claude plugin validate` must
-  pass, and each skill gets evals that `claude plugin eval` can run. Where no eval exists
+- **This repo's checks.** Frontmatter and JSON must parse. `claude plugin validate` must
+  pass. Each skill gets evals that `claude plugin eval` can run. If no eval exists
   yet, the check is a `manual check`.
-- **Changing pdlc through pdlc.** A change to pdlc is an intent like any other. For example,
-  "add a Linear tracker adapter" becomes a capability change to pdlc, built and verified by
-  the installed pdlc.
+- **pdlc manages changes to pdlc.** A change to pdlc is an intent like all other
+  intents. For example, "add a Linear tracker adapter" becomes a capability change to
+  pdlc. The installed pdlc builds and verifies that change.
 
 ## 16. Open questions
 
-- Should the CI check script ship in v1, or should the delivery adapter's check be enough to
-  start with?
-- How much of pskills should `init` map at first: every skill, or only the ones the first
-  intent touches?
+- Do we ship the CI check script in v1? Or is the check of the delivery adapter
+  sufficient at the start?
+- How much of pskills does `init` map at first: each skill, or only the skills that the
+  first intent touches?

@@ -1,0 +1,1756 @@
+{
+  "skill": "argue",
+  "skillSha256": "8024d233d559be76a9f88495992c94efc364f213a9d4fdf57739c699f4083855",
+  "suiteSha256": "af4dd21a174d38112009b93d0ed54fe2f55230176b66777ea452804b36a53cd6",
+  "runId": "20261017T010000Z",
+  "generatedAt": "2026-10-17T01:23:46Z",
+  "config": {
+    "prompts": [
+      "P01",
+      "P02"
+    ],
+    "runs": 4,
+    "wave": 4,
+    "maxTurns": 12,
+    "crossPerPrompt": 2,
+    "agents": {
+      "preset": "minimal",
+      "run": {
+        "model": "session",
+        "effort": "session"
+      },
+      "grade": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "prompt"
+      },
+      "compare": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "merged"
+      },
+      "cross": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "all"
+      }
+    },
+    "agentEstimate": 11,
+    "sessionModel": "claude-opus-5-5"
+  },
+  "scores": {
+    "quality": 82.4,
+    "stability": 68.2,
+    "overall": 75,
+    "grade": "C",
+    "confidence": "normal",
+    "usableRuns": 8,
+    "totalRuns": 8
+  },
+  "settle": {
+    "settled": false,
+    "settledAt": null,
+    "delta": 2,
+    "patience": 2,
+    "stopWhenSettled": false,
+    "wavesRun": 1
+  },
+  "trajectory": [
+    {
+      "wave": 1,
+      "runsPerPrompt": 4,
+      "usable": 8,
+      "quality": 82.4,
+      "stability": 70,
+      "overall": 75.9,
+      "grade": "C",
+      "moved": null
+    }
+  ],
+  "qualitySpread": {
+    "min": 76.2,
+    "median": 83.4,
+    "max": 90.5
+  },
+  "items": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The report is one fenced code block. The block starts with an `ARGUE:` header and a ═ rule, and holds all the template sections in order.",
+      "passRate": 100,
+      "stabilityWithin": 80,
+      "classesWithin": {
+        "P01": "identical",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 87.5,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "CLAIMS gives each assertion of the text as a `[Cn]` line, numbered from C1 with no gaps. Each claim is one clause in plain English.",
+      "passRate": 87.5,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 25,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "ANNOTATED TEXT gives the original text word for word. The only addition is a `[Cn]` tag immediately after each claim.",
+      "passRate": 100,
+      "stabilityWithin": 80,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "identical"
+      },
+      "agreementWithin": 87.5,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "weight": 1,
+      "criterion": "Each finding entry has the marker of its section and cites claim IDs. An empty section shows `none`.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 62.5,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "weight": 1,
+      "criterion": "The VERDICT line has the template form, and each count equals the number of entries in its section.",
+      "passRate": 81.3,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 62.5,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "weight": 1,
+      "criterion": "After the code block, one plain-prose sentence gives the most critical finding of the report.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 50,
+      "stabilityCross": 60,
+      "classCross": "minor_drift"
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 3,
+      "criterion": "Z3 runs on an encoding of this text, and CONTRADICTIONS gives exactly what the solver returned.",
+      "passRate": 25,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 50,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "The skill writes the Z3 script to `_argue_check.py` in the working directory, and deletes the script after it reads the result.",
+      "passRate": 50,
+      "stabilityWithin": 100,
+      "classesWithin": {
+        "P01": "identical",
+        "P02": "identical"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R9",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "CONTRADICTIONS gives the user each hard contradiction that follows from the text, and no false alarm.",
+      "passRate": 100,
+      "stabilityWithin": 90,
+      "classesWithin": {
+        "P01": "equivalent",
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The report finds the main practical problems of the text that are not hard contradictions. These are goals that pull against each other, and vague terms or unclear scope that can hide a conflict.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 25,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 2,
+      "criterion": "Each tension and ambiguity entry is specific to this text, is in the correct section and says why it is important. No entry is filler.",
+      "passRate": 75,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P01": "minor_drift",
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 50,
+      "stabilityCross": null,
+      "classCross": null
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "usableRuns": 4,
+      "quality": 78,
+      "stability": 70
+    },
+    {
+      "id": "P02",
+      "usableRuns": 4,
+      "quality": 86.9,
+      "stability": 70
+    }
+  ],
+  "runs": [
+    {
+      "label": "P01#1",
+      "prompt": "P01",
+      "repeat": 1,
+      "capture": "evals/argue/runs/20261017T010000Z/outputs/P01-r01.md",
+      "status": "completed",
+      "note": "Z3 returned UNSAT (C5, C6, C7). WRITING-GUIDELINES.md is missing from the worktree, so the reply follows the AGENTS.md rules from memory. The temporary _argue_check.py was deleted. No other files changed.",
+      "quality": 78.6,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "ARGUE: Jotter offline mode spec"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "[C8]  Leaving the search index unencrypted keeps search fast."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "1. Users can create, edit and delete notes while offline. [C1][C2][C3]"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "!! C5 × C6 × C7  ... logic: C5 ∧ C6 ∧ (C5 ∧ C6 → ¬C7) ∧ C7"
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "VERDICT   1 contradiction(s)  ·  3 tension(s)  ·  5 ambiguity(ies)"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "The spec contradicts itself on the search index: C5 requires encrypting all data on the device, but C7 leaves the on-device index unencrypted."
+        },
+        {
+          "id": "R7",
+          "verdict": "missed",
+          "evidence": "absent (capture holds only the final reply; no script, run or JSON result)"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "## Files None. (no leftover file; the write and delete are not shown)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "!! C5 × C6 × C7"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "~~ C9 × C10  Re-syncing every note every 60 seconds keeps the radio and CPU busy"
+        },
+        {
+          "id": "R11",
+          "verdict": "partial",
+          "evidence": "?? [C9]   \"Minimal\" has no number, so no test can pass or fail it."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P01#2",
+      "prompt": "P01",
+      "repeat": 2,
+      "capture": "evals/argue/runs/20261017T010000Z/outputs/P01-r02.md",
+      "status": "completed",
+      "note": "WRITING-GUIDELINES.md was missing from the worktree, so the closing sentence follows AGENTS.md rules from memory. Z3 proved one contradiction (C5 x C6 x C7). The temporary _argue_check.py was deleted, so there were no changed files.",
+      "quality": 81,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "ARGUE: Jotter offline mode spec"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "[C10] Shared notes are visible to all users."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "1. Users can create, edit and delete notes while offline. [C1] [C2] [C3]"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "!! C5 × C6 × C7  ... logic: C5 = all_data_encrypted, C6 = index_on_device,"
+        },
+        {
+          "id": "R5",
+          "verdict": "partial",
+          "evidence": "VERDICT   1 contradiction  ·  2 tensions  ·  5 ambiguities"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "The spec contradicts itself on the search index: C5 requires all device data to be encrypted, but C7 leaves the index unencrypted, so either encrypt the index or exempt it from C5 in writing."
+        },
+        {
+          "id": "R7",
+          "verdict": "missed",
+          "evidence": "absent (capture holds only the final reply; no script, run or JSON result)"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "## Files None. (no leftover file; the write and delete are not shown)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "!! C5 × C6 × C7"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "~~ C8 × C9   Re-syncing every note every 60 seconds keeps the radio and CPU"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "?? [C8]   \"Minimal\" has no threshold. Under a strict budget, C9 would break it."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P01#3",
+      "prompt": "P01",
+      "repeat": 3,
+      "capture": "evals/argue/runs/20261017T010000Z/outputs/P01-r03.md",
+      "status": "completed",
+      "note": "",
+      "quality": 76.2,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "ARGUE: Jotter offline mode spec"
+        },
+        {
+          "id": "R2",
+          "verdict": "partial",
+          "evidence": "[C1]  Users can create, edit and delete notes while offline."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "1. Users can create, edit and delete notes while offline. [C1]"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "!! C3 × C4 × C5  ... logic: Implies(And(all_data_encrypted, index_on_device),"
+        },
+        {
+          "id": "R5",
+          "verdict": "partial",
+          "evidence": "VERDICT   1 contradiction  ·  3 tension(s)  ·  6 ambiguity(ies)"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "The spec contradicts itself on encryption: C3 requires all on-device data, including the search index (C4), to be encrypted, but C5 leaves the index unencrypted."
+        },
+        {
+          "id": "R7",
+          "verdict": "missed",
+          "evidence": "absent (capture holds only the final reply; no script, run or JSON result)"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "## Files None. (no leftover file; the write and delete are not shown)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "!! C3 × C4 × C5"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "~~ C7 × C8  Re-syncing every note every 60 seconds wakes the radio"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "?? [C6]  \"Fast\" has no target, so no one can test whether encrypting the index would make search too slow."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P01#4",
+      "prompt": "P01",
+      "repeat": 4,
+      "capture": "evals/argue/runs/20261017T010000Z/outputs/P01-r04.md",
+      "status": "completed",
+      "note": "WRITING-GUIDELINES.md is absent from this worktree, so I applied the three rules quoted in AGENTS.md from memory of that text. Z3 was already installed. The temporary _argue_check.py was removed after the run.",
+      "quality": 76.2,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "ARGUE: Jotter offline mode spec"
+        },
+        {
+          "id": "R2",
+          "verdict": "partial",
+          "evidence": "[C7]  The search index is not encrypted, so that search stays fast."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "1. Users can create [C1], edit [C2] and delete [C3] notes while offline."
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "!! C5 × C6 × C7  ... logic: C5: all_data_encrypted, C6: index_on_device,"
+        },
+        {
+          "id": "R5",
+          "verdict": "partial",
+          "evidence": "VERDICT   1 contradiction  ·  3 tensions  ·  6 ambiguities"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "Z3 proves that C5 (encrypt all on-device data), C6 (the search index lives on the device) and C7 (the search index is unencrypted) cannot all hold."
+        },
+        {
+          "id": "R7",
+          "verdict": "missed",
+          "evidence": "absent (capture holds only the final reply; no script, run or JSON result)"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "## Files None. (no leftover file; the write and delete are not shown)"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "!! C5 × C6 × C7"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "~~ C8 × C9   Re-syncing every note every 60 seconds keeps the radio and CPU busy in"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "?? [C7]   \"Search index\" has no stated contents. If it holds note text or terms, it exposes the data that C5 protects."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#1",
+      "prompt": "P02",
+      "repeat": 1,
+      "capture": "evals/argue/runs/20261017T010000Z/outputs/P02-r01.md",
+      "status": "completed",
+      "note": "WRITING-GUIDELINES.md is absent from this worktree, so the reply followed the skill's layout and the short-sentence rule from AGENTS.md. The skill asked nothing, so no scripted replies were used.",
+      "quality": 85.7,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "ARGUE: Phone rule for Hillcrest High"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "[C9]  The rule should start next term."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "The rule should start next term. [C9]"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "~~ C7 × C8"
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "VERDICT   0 contradiction(s)  ·  3 tension(s)  ·  6 ambiguity(ies)"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "Z3 found no hard contradiction, but strict enforcement (C7) and zero added workload (C8) pull against each other"
+        },
+        {
+          "id": "R7",
+          "verdict": "partial",
+          "evidence": "(Z3 returned sat)"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "None."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "none        (Z3 returned sat)"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "~~ C7 × C8  Strict enforcement costs staff time (checking,"
+        },
+        {
+          "id": "R11",
+          "verdict": "partial",
+          "evidence": "read messages at any time, C5 contradicts the messaging"
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#2",
+      "prompt": "P02",
+      "repeat": 2,
+      "capture": "evals/argue/runs/20261017T010000Z/outputs/P02-r02.md",
+      "status": "completed",
+      "note": "",
+      "quality": 85.7,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "ARGUE: School phone ban proposal"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "[C9]  The rule starts next term."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "The rule should start next term. [C9]"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "~~ C7 × C8"
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "VERDICT   0 contradiction(s)  ·  3 tension(s)  ·  6 ambiguity(ies)"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "The most serious finding is that strict enforcement (C7) takes staff time"
+        },
+        {
+          "id": "R7",
+          "verdict": "partial",
+          "evidence": "none        Z3 returned sat."
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "None."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "none        Z3 returned sat."
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "~~ C7 × C8  Strict enforcement means spotting, stopping and"
+        },
+        {
+          "id": "R11",
+          "verdict": "partial",
+          "evidence": "student's phone is the channel, C5 conflicts with"
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#3",
+      "prompt": "P02",
+      "repeat": 3,
+      "capture": "evals/argue/runs/20261017T010000Z/outputs/P02-r03.md",
+      "status": "completed",
+      "note": "WRITING-GUIDELINES.md was absent from this worktree, so the reply followed the AGENTS.md rules from memory. The temporary _argue_check.py was deleted, so no files remain.",
+      "quality": 85.7,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "ARGUE: Hillcrest school phone rule"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "[C9]  The rule should start next term."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "The rule should start next term. [C9]"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "~~ C7 × C8"
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "VERDICT   0 contradiction(s)  ·  3 tension(s)  ·  6 ambiguity(ies)"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "The most critical finding is the tension between C7 (enforce the rule strictly) and C8 (add no teacher workload)"
+        },
+        {
+          "id": "R7",
+          "verdict": "partial",
+          "evidence": "(Z3 returned sat; C1 x C2 x C3 imply C4 without conflict)"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "None."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "(Z3 returned sat; C1 x C2 x C3 imply C4 without conflict)"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "~~ C6 × C7  If teachers can allow phones in some classes, staff must"
+        },
+        {
+          "id": "R11",
+          "verdict": "partial",
+          "evidence": "~~ C8 × C9  A start next term leaves little time to set up the rule"
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#4",
+      "prompt": "P02",
+      "repeat": 4,
+      "capture": "evals/argue/runs/20261017T010000Z/outputs/P02-r04.md",
+      "status": "completed",
+      "note": "",
+      "quality": 90.5,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "ARGUE: Hillcrest school phone ban proposal"
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "[C9]  The rule should start next term."
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "The rule should start next term. [C9]"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "~~ C7 × C8"
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "VERDICT   0 contradiction(s)  ·  3 tension(s)  ·  5 ambiguity(ies)"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "Z3 found no hard contradiction, but C7 asks for strict enforcement while C8 forbids extra teacher work"
+        },
+        {
+          "id": "R7",
+          "verdict": "partial",
+          "evidence": "Z3 found no hard contradiction"
+        },
+        {
+          "id": "R8",
+          "verdict": "partial",
+          "evidence": "None."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "none"
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "~~ C2 × C6  The text says phones distract students, yet it lets"
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "\"Learning activities\" has no limit and no decider."
+        }
+      ],
+      "excluded": null
+    }
+  ],
+  "similarity": [
+    {
+      "scope": "P01",
+      "item": "R1",
+      "class": "identical",
+      "reason": "All four runs use the same header text, rules, section headings and order. Only line wrapping differs (runs 1 and 3 wrap at about 66 columns), which is whitespace.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "One fence: ARGUE header (4-word title), ═ rule, CLAIMS, ANNOTATED TEXT, ─ rule, three finding sections, ─ rule, VERDICT, all in template order"
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R2",
+      "class": "minor_drift",
+      "reason": "Every run extracts the same core assertions. They differ in claim count (9 to 11), in whether create/edit/delete are split, and in how the search-fast rationale is handled. Claim numbering shifts as a result.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "11 claims: create, edit and delete split into three; 'index not encrypted' and 'unencrypted keeps search fast' as two claims"
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "10 claims: create, edit and delete split; the 'keep search fast' rationale dropped"
+        },
+        {
+          "runs": [
+            "P01#3"
+          ],
+          "description": "9 claims: create, edit and delete joined in one claim; the search-fast rationale is a separate claim"
+        },
+        {
+          "runs": [
+            "P01#4"
+          ],
+          "description": "10 claims: create, edit and delete split; the rationale merged into the 'index not encrypted' claim"
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "agreement": 25,
+        "split": "1 / 1 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R3",
+      "class": "minor_drift",
+      "reason": "All four copy the input word for word. Run 4 puts the C1, C2 and C3 tags inline, while runs 1 to 3 put the tags at sentence end. Runs 1 and 3 also wrap lines.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Verbatim text with [Cn] tags placed at the end of each numbered sentence, bunched where one sentence holds several claims"
+        },
+        {
+          "runs": [
+            "P01#4"
+          ],
+          "description": "Verbatim text with tags placed inline after each of create, edit and delete in item 1, and at sentence end elsewhere"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R4",
+      "class": "minor_drift",
+      "reason": "Every entry has its marker, claim IDs and a reason, and the contradiction has a logic line. The logic notation varies (symbolic or Z3-style) and run 4 aligns the logic line differently.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "!!, ~~ and ?? entries with claim IDs and reasons; logic line outdented under the !! line as in the template"
+        },
+        {
+          "runs": [
+            "P01#4"
+          ],
+          "description": "Same entries, but the logic line is aligned with the explanation text instead of outdented"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R5",
+      "class": "minor_drift",
+      "reason": "All four give counts that match their entries. The label wording differs: literal template, pluralised, or mixed.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Literal template labels contradiction(s) / tension(s) / ambiguity(ies)"
+        },
+        {
+          "runs": [
+            "P01#2",
+            "P01#4"
+          ],
+          "description": "Properly pluralised labels, for example '1 contradiction · 3 tensions · 6 ambiguities'"
+        },
+        {
+          "runs": [
+            "P01#3"
+          ],
+          "description": "Mixed labels: 'contradiction' plain, 'tension(s)' and 'ambiguity(ies)' literal"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R6",
+      "class": "minor_drift",
+      "reason": "Every run names the same top finding, the encryption contradiction. Run 2 adds a fix, and run 4 frames it as a Z3 proof that cites all three claims.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#3"
+          ],
+          "description": "One sentence: the spec contradicts itself, one claim requires encrypting all device data and another leaves the index unencrypted"
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Same sentence plus a recommended fix (encrypt the index or exempt it in writing)"
+        },
+        {
+          "runs": [
+            "P01#4"
+          ],
+          "description": "One sentence that says Z3 proves the three claims cannot all hold, naming all three"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R7",
+      "class": "minor_drift",
+      "reason": "No capture shows the Z3 script, run or JSON result. All four report the same three-claim core, with differently written and structured logic lines (variable choice and notation).",
+      "groups": [
+        {
+          "runs": [
+            "P01#2",
+            "P01#3"
+          ],
+          "description": "Contradiction with logic line in Z3-API style (Implies(And(...), ...)) citing the three-claim core; script and result not visible"
+        },
+        {
+          "runs": [
+            "P01#1",
+            "P01#4"
+          ],
+          "description": "Contradiction with logic line in symbolic notation citing the three-claim core; script and result not visible"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          2
+        ],
+        "agreement": 50,
+        "split": "2 / 2 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R8",
+      "class": "identical",
+      "reason": "All four captures show the same final state (no leftover files) and no tool calls.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "No script visible in the transcript; Files section says None and no _argue_check.py remains in the worktree"
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R9",
+      "class": "equivalent",
+      "reason": "All four find the same single three-claim contradiction and no false alarm. Run 3 has different claim numbers (C3 × C4 × C5) because it joined C1.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Exactly one contradiction: all device data encrypted, search index on device, search index not encrypted; no other entries"
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R10",
+      "class": "minor_drift",
+      "reason": "All four cover the same core problems: all-data scope, the 'minimal' threshold, 'every note', 'all users', the 5s start point and battery vs resync. Each adds different extras.",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "3 tensions (battery vs resync, 5s vs resync redundancy, 5s vs battery) and 5 ambiguities including 5s start point and shared-note offline visibility"
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "2 tensions (battery vs resync, 5s vs battery) and 5 ambiguities"
+        },
+        {
+          "runs": [
+            "P01#3"
+          ],
+          "description": "3 tensions (battery vs resync, 5s vs battery, offline queue vs full resync) and 6 ambiguities including 'fast'"
+        },
+        {
+          "runs": [
+            "P01#4"
+          ],
+          "description": "3 tensions (battery vs resync, 5s vs resync redundancy, concurrent offline edits on shared notes) and 6 ambiguities including index contents"
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "agreement": 25,
+        "split": "1 / 1 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P01",
+      "item": "R11",
+      "class": "minor_drift",
+      "reason": "All entries are specific to the text and explain why they matter. Run 2 keeps to the plain battery tensions, while runs 1, 3 and 4 add a more speculative third tension and a thin 'minimal' entry.",
+      "groups": [
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Only the two plain battery tensions; every ambiguity ties its reading to another claim"
+        },
+        {
+          "runs": [
+            "P01#1",
+            "P01#3",
+            "P01#4"
+          ],
+          "description": "Adds a third, more speculative tension (redundancy, offline collision or merge rule) and a 'minimal' ambiguity with no conflicting reading named"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R1",
+      "class": "minor_drift",
+      "reason": "All four have a complete, correctly ordered single block. P02#2 adds an unfenced preface line (header plus counts) before the block; the others do not. Titles differ in wording only.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Reply is one fenced block (ARGUE header, ═ rule, all sections in order) followed by one sentence; nothing before the fence"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Same complete fenced block, but an extra unfenced ARGUE summary line sits before the fence"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R2",
+      "class": "minor_drift",
+      "reason": "All four split the text into the same nine claims in the same order. They differ in how they restate modality (should, must, can), and some wording changes the strength of a claim.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "Nine claims that keep the text's modality (should, must, may, should start)"
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Nine claims; only C1 is changed from 'should not' to 'must not'"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Nine claims; C1 'must not', C5 'can reach', C9 'starts' change the modality"
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Nine claims; C1 is recast as 'The rule bans...', C5 and C6 use 'can' in place of 'must' and 'may'"
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "agreement": 25,
+        "split": "1 / 1 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R3",
+      "class": "identical",
+      "reason": "The text, title and tag positions are the same in all four runs. Only the wrap width differs.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Annotated text is verbatim including the title, with [Cn] after each claim at the same positions"
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R4",
+      "class": "minor_drift",
+      "reason": "Every entry has its marker, claim IDs and reason, and CONTRADICTIONS says none in all runs. They differ in what follows 'none': nothing, a short note, or a logic line.",
+      "groups": [
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "CONTRADICTIONS shows a bare 'none'; ~~ and ?? entries have claim IDs and reasons"
+        },
+        {
+          "runs": [
+            "P02#1",
+            "P02#3"
+          ],
+          "description": "CONTRADICTIONS shows 'none' plus a parenthetical note that Z3 returned sat; ~~ and ?? entries are well formed"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "CONTRADICTIONS shows 'none' plus a note and a logic: line listing the encoding and asserted claims"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R5",
+      "class": "minor_drift",
+      "reason": "The line form is the same in all runs and every count matches its entries. P02#4 has 5 ambiguities against 6 in the others.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "VERDICT 0 contradictions, 3 tensions, 6 ambiguities, counts correct"
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "VERDICT 0 contradictions, 3 tensions, 5 ambiguities, counts correct"
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R6",
+      "class": "minor_drift",
+      "reason": "All four close with one sentence about the C7/C8 tension. P02#1 adds a C6 point and P02#2 adds a 'say who enforces' condition; the openings differ.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#4"
+          ],
+          "description": "One sentence opening 'Z3 found no hard contradiction, but...' that names the C7/C8 enforcement versus workload tension"
+        },
+        {
+          "runs": [
+            "P02#2",
+            "P02#3"
+          ],
+          "description": "One sentence opening 'The most serious/critical finding is...' that names the C7/C8 tension"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          2
+        ],
+        "agreement": 50,
+        "split": "2 / 2 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R7",
+      "class": "minor_drift",
+      "reason": "All four report sat and no contradictions. The captures hold only the final reply, with no script or JSON, so R7 could not be fully verified. The encoding detail shown differs.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#4"
+          ],
+          "description": "Reports Z3 sat and none; no encoding is shown in the capture"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Reports Z3 sat and none with a logic line listing the implication and the asserted claims"
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Reports Z3 sat and none with a note that C1, C2 and C3 imply C4"
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R8",
+      "class": "identical",
+      "reason": "All four captures show the same thing: no script visible and no files left.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Capture shows no script step and 'Files: None'; no leftover file"
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R9",
+      "class": "equivalent",
+      "reason": "All four report no contradictions. Only the notes after 'none' differ.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "CONTRADICTIONS is none; no hard contradiction is claimed"
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R10",
+      "class": "minor_drift",
+      "reason": "All four raise the core problems: C7 against C8, messaging against emergency contact, the vague C6 exception and the C8 workload measure. The third tension differs by run, P02#4 has no C4 ambiguity, and only some runs raise should/must.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "Tensions C7xC8, C6xC7, C1xC5; ambiguities C1, C4, C5, C6, C7, C8"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Tensions C7xC8, C1xC5, C4xC6; ambiguities C1, C4, C5, C6, C7, C8"
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Tensions C7xC8, C6xC7, C8xC9; ambiguities C1, C4, C5, C6, C7, C8"
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Tensions C7xC8, C2xC6, C1xC5; ambiguities C1, C5, C6, C7, C8 (no separate C4 entry)"
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "agreement": 25,
+        "split": "1 / 1 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R11",
+      "class": "minor_drift",
+      "reason": "All entries use the text's facts and sit in sensible sections. The differences are small: whether a tension pair is restated as an ambiguity, and whether one tension (C8xC9 in P02#3) rests on an assumption.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "Specific entries; ?? C5 restates the C1xC5 tension"
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Specific entries; ?? C5 restates the C1xC5 tension and ?? C1 overlaps ?? C6"
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Specific entries with no repeated pair, but the C8xC9 tension is weakly grounded"
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Specific entries in the right sections with little repetition"
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "agreement": 25,
+        "split": "1 / 1 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R1",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P01#2",
+            "P02#1"
+          ],
+          "description": "Output is only the single fenced block: ARGUE title (4-5 words), ═ rule, CLAIMS, ANNOTATED TEXT, ─ rule, CONTRADICTIONS, TENSIONS, AMBIGUITIES, ─ rule, VERDICT, in order."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Same single fenced block in the same section order, but a stray one-line ARGUE summary header sits outside and before the fence."
+        }
+      ],
+      "reason": "All four fenced reports have the same sections, rules and order. Only P02#2 adds an extra pre-fence summary line.",
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R2",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "11 claims, wrapped at about 60 columns. The rationale 'to keep search fast' is split into its own claim (C8)."
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "10 claims on unwrapped long lines. The rationale is folded into the claim that the index is not encrypted."
+        },
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "9 claims, wrapped at about 60 columns. Keeps the source modality ('should not', 'must be able to', 'should start')."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "9 claims, wrapped at about 50 columns. Normalizes modality ('must not', 'can reach', 'starts')."
+        }
+      ],
+      "reason": "Every run uses `[Cn]  <claim>` lines numbered from C1 with no gaps. Claim counts, splitting of rationale clauses, line wrapping and modality wording differ.",
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "agreement": 25,
+        "split": "1 / 1 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R3",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "Verbatim spec text in numbered list form, wrapped at about 70 columns. Tags go at the end of each item, adjacent with no space ([C1][C2][C3], [C7][C8])."
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "Verbatim spec text with each list item on one unwrapped line. Multiple tags are space-separated ([C1] [C2] [C3])."
+        },
+        {
+          "runs": [
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "Verbatim prose paragraph with a tag placed inline after each claim clause, wrapped (about 65 and 55 columns)."
+        }
+      ],
+      "reason": "All runs keep the original text with a [Cn] tag after each claim. They differ in tag spacing (adjacent vs spaced), line-wrap width, and whether two tags share one clause.",
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R4",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "One `!!` entry with C5 × C6 × C7, explanation and a `logic:` line in symbolic notation (∧, →). Three `~~` entries and five `?? [Cn]` entries."
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "One `!!` entry with explanation and a `logic:` line in Z3-style code and prose (Implies(And(...))). Two `~~` entries and five `??` entries."
+        },
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "Empty CONTRADICTIONS shows `none        (Z3 returned sat)`. Three `~~` entries and six `??` entries, no logic line."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Empty CONTRADICTIONS shows `none        Z3 returned sat.` plus a `logic:` line with the asserted formulas. Three `~~` entries and six `??` entries."
+        }
+      ],
+      "reason": "Markers, claim IDs and explanations are consistent. The `logic:` line notation differs, and the empty-section line differs: a parenthetical in P02#1, a trailing period plus a `logic:` line in P02#2.",
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "agreement": 25,
+        "split": "1 / 1 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R5",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1",
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "VERDICT uses the literal template labels `contradiction(s)  ·  tension(s)  ·  ambiguity(ies)`. Counts match the entries."
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "VERDICT uses inflected labels (`1 contradiction  ·  2 tensions  ·  5 ambiguities`). Counts match the entries."
+        }
+      ],
+      "reason": "All counts equal the number of entries. Only P01#2 changes the template labels to singular and plural forms.",
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "cross",
+      "item": "R6",
+      "class": "minor_drift",
+      "groups": [
+        {
+          "runs": [
+            "P01#1"
+          ],
+          "description": "One plain sentence naming the hard contradiction (C5 vs C7)."
+        },
+        {
+          "runs": [
+            "P01#2"
+          ],
+          "description": "One sentence naming the hard contradiction, plus a recommended fix."
+        },
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "One sentence: no hard contradiction, then the main tension (C7 vs C8), with a second finding (C6) added."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "One sentence opening 'The most serious finding is', naming the C7 vs C8 tension and what the proposal needs to say."
+        }
+      ],
+      "reason": "Each run follows the block with exactly one sentence stating the top finding. A contradiction leads where one exists, and a tension leads where none does. The sentence's added detail varies: a fix, a second finding, or a framing phrase.",
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "agreement": 25,
+        "split": "1 / 1 / 1 / 1 of 4",
+        "clean": true
+      }
+    }
+  ],
+  "excluded": [],
+  "lostJudges": []
+}

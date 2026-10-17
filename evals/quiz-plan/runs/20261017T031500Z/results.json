@@ -1,0 +1,999 @@
+{
+  "skill": "quiz-plan",
+  "skillSha256": "c7ce88147559c4ab387fe19d79b6ba22074633387a5e6a2504e49297abde015a",
+  "suiteSha256": "f99348b1fb8ce68e4e53889a6d5949ae70c5c1c3df5133ebd1468fb762eebf4c",
+  "runId": "20261017T031500Z",
+  "generatedAt": "2026-10-17T07:42:27Z",
+  "config": {
+    "prompts": [
+      "P01",
+      "P02"
+    ],
+    "runs": 4,
+    "wave": 4,
+    "maxTurns": 12,
+    "crossPerPrompt": 2,
+    "agents": {
+      "preset": "minimal",
+      "run": {
+        "model": "session",
+        "effort": "session"
+      },
+      "grade": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "prompt"
+      },
+      "compare": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "merged"
+      },
+      "cross": {
+        "model": "sonnet",
+        "effort": "session",
+        "batch": "all"
+      }
+    },
+    "agentEstimate": 11,
+    "sessionModel": "claude-opus-5-5"
+  },
+  "scores": {
+    "quality": 99,
+    "stability": 54.8,
+    "overall": 73.7,
+    "grade": "C",
+    "confidence": "low",
+    "usableRuns": 4,
+    "totalRuns": 8
+  },
+  "settle": {
+    "settled": false,
+    "settledAt": null,
+    "delta": 2,
+    "patience": 2,
+    "stopWhenSettled": false,
+    "wavesRun": 1
+  },
+  "trajectory": [
+    {
+      "wave": 1,
+      "runsPerPrompt": 4,
+      "usable": 4,
+      "quality": 99,
+      "stability": 54.8,
+      "overall": 73.7,
+      "grade": "C",
+      "moved": null
+    }
+  ],
+  "qualitySpread": {
+    "min": 96.2,
+    "median": 100,
+    "max": 100
+  },
+  "items": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "Each quiz message asks exactly one question in the fallback layout. The heading is `**Question N · Label**` with no total. An option question has 2-4 bulleted `**A · label**: sentence` options and a `Reply A, B…` line. An open question has no options and ends with `Reply with …`.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 50,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "Each reply gets one `✓ N Label → Choice` echo line at the top of the next question's message. When the drill ends, a bulleted list of all echoes numbered `N/T` and a one-sentence go-ahead come before the plan.",
+      "passRate": 87.5,
+      "stabilityWithin": 25,
+      "classesWithin": {
+        "P02": "major_drift"
+      },
+      "agreementWithin": 50,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The plan is at `plans/<kebab-case-name>.plan.md` and its header has the title, the Owner and Status line, the Branch and Plan location line, and a Progress line with a 12-character bar and `0/N steps completed (0%)`.",
+      "passRate": 100,
+      "stabilityWithin": 90,
+      "classesWithin": {
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The plan has the template sections in order, each with its sub-fields: How to use this document, Intent, Approach (only when the quiz weighed 2 or more approaches), Ground truth, Boundaries, Steps, Verification and rollback, Progress log.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 50,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "Each step has the heading `### Step N: <name> · `[ ]` AUTO|GATED · Parallel group: …` and the five bullets Do, Done when, Out of scope here, Touches and Depends on.",
+      "passRate": 100,
+      "stabilityWithin": 90,
+      "classesWithin": {
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "weight": 1,
+      "criterion": "After the plan is written, the closing message gives the plan path, one line for each step, one line on what the red-team pass caught, and asks whether to start execution.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Step 1 tests the riskiest assumption: the **Riskiest assumption** line names the assumption and Step 1, and Step 1's Done when fails if the assumption is false.",
+      "passRate": 100,
+      "stabilityWithin": 25,
+      "classesWithin": {
+        "P02": "major_drift"
+      },
+      "agreementWithin": 50,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Every step is AUTO, except a step that the user explicitly asked to checkpoint, which is GATED.",
+      "passRate": 100,
+      "stabilityWithin": 90,
+      "classesWithin": {
+        "P02": "equivalent"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The Touches, Depends on and Parallel group values agree with the group rule.",
+      "passRate": 100,
+      "stabilityWithin": 25,
+      "classesWithin": {
+        "P02": "major_drift"
+      },
+      "agreementWithin": 75,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The quiz asks the user only for what the plan still needs: no question asks again for a fact that the prompt or an earlier reply gave, and each answer changes the plan.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 100,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The plan records what the user said: each fact in the prompt and each reply appears in the correct section, and no part of the plan contradicts them.",
+      "passRate": 100,
+      "stabilityWithin": 60,
+      "classesWithin": {
+        "P02": "minor_drift"
+      },
+      "agreementWithin": 50,
+      "stabilityCross": null,
+      "classCross": null
+    },
+    {
+      "id": "R12",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "A coding agent can do each step without a guess: each Do names the files and the change, each Done when is a result that can fail, and together the steps cover all the work that the request implies.",
+      "passRate": 100,
+      "stabilityWithin": 25,
+      "classesWithin": {
+        "P02": "major_drift"
+      },
+      "agreementWithin": 25,
+      "stabilityCross": null,
+      "classCross": null
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "usableRuns": 0,
+      "quality": null,
+      "stability": null
+    },
+    {
+      "id": "P02",
+      "usableRuns": 4,
+      "quality": 99,
+      "stability": 54.8
+    }
+  ],
+  "runs": [
+    {
+      "label": "P01#1",
+      "prompt": "P01",
+      "repeat": 1,
+      "capture": "evals/quiz-plan/runs/20261017T031500Z/outputs/P01-r01.md",
+      "status": "completed",
+      "note": "",
+      "quality": null,
+      "verdicts": [],
+      "excluded": "grader died"
+    },
+    {
+      "label": "P01#2",
+      "prompt": "P01",
+      "repeat": 2,
+      "capture": "evals/quiz-plan/runs/20261017T031500Z/outputs/P01-r02.md",
+      "status": "completed",
+      "note": "The five scripted replies covered five questions. Q6 (approach) and Q7 (retry budget) came next, so they and the confirmation used three [fallback] replies. The user's app code was only in the prompt, not in the checkout, so the plan says so. The improve-writing linter is not in this repo, so I checked sentence length by hand.",
+      "quality": null,
+      "verdicts": [],
+      "excluded": "grader died"
+    },
+    {
+      "label": "P01#3",
+      "prompt": "P01",
+      "repeat": 3,
+      "capture": "evals/quiz-plan/runs/20261017T031500Z/outputs/P01-r03.md",
+      "status": "completed",
+      "note": "",
+      "quality": null,
+      "verdicts": [],
+      "excluded": "grader died"
+    },
+    {
+      "label": "P01#4",
+      "prompt": "P01",
+      "repeat": 4,
+      "capture": "evals/quiz-plan/runs/20261017T031500Z/outputs/P01-r04.md",
+      "status": "completed",
+      "note": "The user's project files (app/, jobs/) are not in the worktree, so the run used the pasted code only. The session had no AskUserQuestion picker, so every question used the plain-markdown layout. Three replies were [fallback]: two \"A\" picks (approach, backoff) and \"you decide\" at the confirm gate.",
+      "quality": null,
+      "verdicts": [],
+      "excluded": "grader died"
+    },
+    {
+      "label": "P02#1",
+      "prompt": "P02",
+      "repeat": 1,
+      "capture": "evals/quiz-plan/runs/20261017T031500Z/outputs/P02-r01.md",
+      "status": "completed",
+      "note": "The three scripted replies covered unknown values, verification and prior art. The quiz-plan confirm gate needed one fallback reply (\"you decide\"). The pskills worktree does not hold the user's Node project, so the plan could not check the real code. I did not run check_writing.py because improve-writing/scripts is missing from the worktree. I checked sentence length and banned words with a small inline script instead.",
+      "quality": 100,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "Reply A, B, or C. You can add a note."
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "- ✓ 3/3 Prior art → none known (note: \"that I know of\")"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "**Progress:** ░░░░░░░░░░░░ 0/5 steps completed (0%)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "**Kill criteria:** the human abandons the change in two cases."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "### Step 2: Run the migration on staging · `[ ]` GATED · Parallel group: none"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "Red-team pass: ran and corrected five problems"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "Step 1 (write the migration and prove it on a scratch database) tests the assumption, so Step 1 comes first."
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "The human asked for a checkpoint on Step 2 only."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "This plan has no parallel group."
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "Your message already gives the change, the reason, the files, the boundaries, the commands, the rollback, the branch, and the gate."
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**Must not touch:** `src/payments/`. The JSON shape of the public REST API."
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "`npm run build`, `npm test`, and `npm run lint` each exit with code 0."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#2",
+      "prompt": "P02",
+      "repeat": 2,
+      "capture": "evals/quiz-plan/runs/20261017T031500Z/outputs/P02-r02.md",
+      "status": "completed",
+      "note": "Ran to the plan and the closing question \"Do you want to execute this plan now?\" and stopped there, because the user said they would review the plan first. The only fallback reply was \"you decide\" at the \"write the plan unless you say wait\" gate.",
+      "quality": 100,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "Reply A, B, or C. You can add a note."
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "- ✓ 1/3 Bad rows → Fold typos, fail others (from: \"Any other unknown value should fail the migration, not be guessed\")"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "**Progress:** ░░░░░░░░░░░░ 0/6 steps completed (0%)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "- **Kill criteria:** the human abandons the change in these conditions:"
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "### Step 2: Run the migration on staging and compare the counts · `[ ]` GATED · Parallel group: none"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "Red-team pass: it found and corrected five problems."
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "Step 1 tests this assumption, so Step 1 comes first."
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "### Step 2: Run the migration on staging and compare the counts · `[ ]` GATED · Parallel group: none"
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "This plan has no parallel group."
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "I have the change, files, limits, commands, branch, gate, and rollback from your message."
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**Must not touch:** `src/payments/` (reading the folder is permitted), the JSON shape of the public REST API, and any production database."
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "the three commands exit 0, the list holds only files from \"may modify\", and `git diff <start-commit> -- src/payments/` prints nothing."
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#3",
+      "prompt": "P02",
+      "repeat": 3,
+      "capture": "evals/quiz-plan/runs/20261017T031500Z/outputs/P02-r03.md",
+      "status": "completed",
+      "note": "",
+      "quality": 100,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "Reply A (fix the known typos), B (fix close matches), or C (fail on every bad row). You can add a note."
+        },
+        {
+          "id": "R2",
+          "verdict": "met",
+          "evidence": "- ✓ 3/3 Prior art → none known here (note: \"that I know of\")"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "**Progress:** ░░░░░░░░░░░░ 0/5 steps completed (0%)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "- **Kill criteria:** the human abandons this change if any of these conditions is true:"
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "### Step 2: Write the migration · `[ ]` AUTO · Parallel group: P1"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "The red-team pass ran. It found problems that the plan now covers:"
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "Step 1 (check the data and the writers) tests this assumption, so Step 1 comes first."
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "Only Step 4 (run the migration on staging) is GATED, because the user asked for a checkpoint on that step."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "In this plan, only Step 2 (write the migration) and Step 3 (type the status in code) share a group, P1."
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "Your message already covers the change, the files, the limits, the commands, the rollback, and the gate."
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "- **Must not touch:** any file in `src/payments/` (reading is permitted), the JSON shape of the public REST API, and the staging database."
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "the three commands in item 2 exit with code 0"
+        }
+      ],
+      "excluded": null
+    },
+    {
+      "label": "P02#4",
+      "prompt": "P02",
+      "repeat": 4,
+      "capture": "evals/quiz-plan/runs/20261017T031500Z/outputs/P02-r04.md",
+      "status": "completed",
+      "note": "The worktree is the pskills repo with no db/ or src/ folder, so the plan's ground truth comes from the user's pasted excerpts and Step 1 re-reads the real files. The one fallback reply answered the plan-confirmation gate. The run stopped at the skill's final question, \"Do you want to execute this plan now?\", with no reply.",
+      "quality": 96.2,
+      "verdicts": [
+        {
+          "id": "R1",
+          "verdict": "met",
+          "evidence": "Reply A, B, or C. You can add a note."
+        },
+        {
+          "id": "R2",
+          "verdict": "partial",
+          "evidence": "- ✓ 1/11 Change → turn `orders.status` into a Postgres enum with the values pending, paid, shipped, cancelled, and refunded"
+        },
+        {
+          "id": "R3",
+          "verdict": "met",
+          "evidence": "**Progress:** ░░░░░░░░░░░░ 0/8 steps completed (0%)"
+        },
+        {
+          "id": "R4",
+          "verdict": "met",
+          "evidence": "- **Kill criteria:** (a proposal, change it when you review the plan) abandon the change if any of these is true."
+        },
+        {
+          "id": "R5",
+          "verdict": "met",
+          "evidence": "### Step 3: Run the migration on staging and compare the counts · `[ ]` GATED · Parallel group: none"
+        },
+        {
+          "id": "R6",
+          "verdict": "met",
+          "evidence": "The red-team pass ran and corrected five problems."
+        },
+        {
+          "id": "R7",
+          "verdict": "met",
+          "evidence": "Step 1 (the audit) tests this assumption, so Step 1 comes first."
+        },
+        {
+          "id": "R8",
+          "verdict": "met",
+          "evidence": "You asked for one gate: the step that runs the migration in the staging database (Step 3). Every other step is AUTO."
+        },
+        {
+          "id": "R9",
+          "verdict": "met",
+          "evidence": "**Grouping result:** no step joins a group."
+        },
+        {
+          "id": "R10",
+          "verdict": "met",
+          "evidence": "I have eight answers from your message."
+        },
+        {
+          "id": "R11",
+          "verdict": "met",
+          "evidence": "**Must not touch:** `src/payments/` (Step 1 reads it, and no step edits it). The JSON shape of the public REST API."
+        },
+        {
+          "id": "R12",
+          "verdict": "met",
+          "evidence": "the three npm commands exit 0, every changed path is in \"May modify\", the diff of `src/payments/` is empty, and no REST API test changed."
+        }
+      ],
+      "excluded": null
+    }
+  ],
+  "similarity": [
+    {
+      "scope": "P02",
+      "item": "R1",
+      "class": "minor_drift",
+      "reason": "All runs ask one question per message in the correct fallback layout with the same three topics. The verify question is open in two runs and an option question in two. Run 4 numbers its questions 9 to 11 after eight pre-echoes.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#3"
+          ],
+          "description": "Q1 option question (3 options, A recommended), Q2 verify as an open question with a Reply with line, Q3 prior art open; numbered 1-3."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Q1 option question, Q2 verify also as an option question (A recommended), Q3 prior art open; numbered 1-3."
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "First message opens with eight echo lines taken from the prompt, then Question 9 (options, C Not sure), Question 10 (options), Question 11 (open, with a trailing note after Reply with)."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R2",
+      "class": "major_drift",
+      "reason": "Runs 1 to 3 give an N/3 resolved list with only minor layout differences. Run 4 echoes eight prompt facts as answered questions before any reply and shows an N/11 list, which is a materially different resolved view.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#3"
+          ],
+          "description": "Echoes 1 and 2 open the next messages; echo 3 appears only in the N/3 list, plus one short remark, then the one-sentence go-ahead."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Echo 3 shown on its own, then an N/3 list, then a second bulleted list that restates prompt facts, then the go-ahead."
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Eight echoes of prompt facts before any question, echoes 9 and 10 on later messages, an N/11 list, then the go-ahead."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R3",
+      "class": "equivalent",
+      "reason": "The header structure is the same in every run. Only the file name (three variants), the title formatting and N (5, 6, 5, 8) differ, and these follow from the change and the step count.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "File in plans/ with a kebab-case .plan.md name; header with title, Owner and Status Draft, Branch and Plan location, and a 12-character ░ bar with 0/N steps completed (0%)."
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R4",
+      "class": "minor_drift",
+      "reason": "All four have the template sections in order, no Approach and no log entries. They differ in small additions: a tracker appendix in run 3, a glossary section in run 4, and a Stack bullet in run 2.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "Template sections in order with all sub-fields, no Approach, an empty Progress log; run 2 adds a Stack bullet and 'No entries yet.'"
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Same sections, plus the Progress tracker maintenance appendix after the Progress log."
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Same sections, plus a 'Words used here' glossary section before the Progress log and a Kill criteria marked as a proposal."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R5",
+      "class": "equivalent",
+      "reason": "The step format is the same in all runs. Only the step content, the number of steps and the group value (P1 in run 3) differ.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Every step has the heading with [ ], AUTO or GATED and Parallel group, and all five bullets Do, Done when, Out of scope here, Touches, Depends on."
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R6",
+      "class": "minor_drift",
+      "reason": "All four give the path, step lines, a red-team line and the offer to execute. The red-team findings differ, and runs 1, 3 and 4 add extra notes or flags while run 2 does not.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Path, one line per step, a red-team line naming five or six fixes, then extra notes for the user to check, then the offer to execute."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Path, numbered step lines, a red-team paragraph naming five fixes, then the offer to execute, with no extra notes."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R7",
+      "class": "major_drift",
+      "reason": "Runs choose different riskiest assumptions and a different kind of Step 1. Two runs prove the migration on scratch data. Two run a read-only audit of staging and the code.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2"
+          ],
+          "description": "Riskiest assumption is that the in-place enum cast and the unknown-value guard work. Step 1 writes the migration and proves it on a scratch database."
+        },
+        {
+          "runs": [
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Riskiest assumption is that the statuses form a closed set and no other code writes other values. Step 1 is a read-only audit of staging data and writers with a stop condition."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          2
+        ],
+        "agreement": 50,
+        "split": "2 / 2 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R8",
+      "class": "equivalent",
+      "reason": "The same step is gated and everything else is AUTO in every run. Only the position of the gated step differs (Step 2, 2, 4, 3), and it follows from each run's step order.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Only the step that runs the migration on staging is GATED; every other step is AUTO."
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R9",
+      "class": "major_drift",
+      "reason": "Three runs declare no parallel group. Run 3 declares P1 with two steps. All are valid under the rule, but the plans differ in structure and in what the executor will run in parallel.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#4"
+          ],
+          "description": "No parallel groups: every step has Parallel group none and the steps form a dependency chain."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "One group P1 holds the migration step and the code typing step, with disjoint Touches and no dependency between them; Step 1 and the GATED step are none."
+        }
+      ],
+      "tally": {
+        "counts": [
+          3,
+          1
+        ],
+        "agreement": 75,
+        "split": "3 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R10",
+      "class": "minor_drift",
+      "reason": "All runs ask the same three needed questions and skip the stated facts. They differ in question form (open or options), in the alternative options offered, and in run 4's pre-echo of prompt facts.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1",
+            "P02#2",
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Three questions only (bad rows, verification, prior art); nothing from the prompt is asked again; the hedged prior-art reply is recorded as none known with no follow-up."
+        }
+      ],
+      "tally": {
+        "counts": [
+          4
+        ],
+        "agreement": 100,
+        "split": "4 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R11",
+      "class": "minor_drift",
+      "reason": "Every run puts exclusions, commands, branch, verification and rollback in the right sections. The runs differ in whether tests are added to May modify and in the rollback command (down or rollback).",
+      "groups": [
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "Facts in the right sections; May modify limited to the four listed files; rollback by migrate:down; no committed test file."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Facts in the right sections; May modify adds one test file per listed file; rollback by migrate:rollback."
+        },
+        {
+          "runs": [
+            "P02#3",
+            "P02#4"
+          ],
+          "description": "Facts in the right sections; May modify adds test files; rollback by migrate:down with the migration name."
+        }
+      ],
+      "tally": {
+        "counts": [
+          2,
+          1,
+          1
+        ],
+        "agreement": 50,
+        "split": "2 / 1 / 1 of 4",
+        "clean": true
+      }
+    },
+    {
+      "scope": "P02",
+      "item": "R12",
+      "class": "major_drift",
+      "reason": "All plans are concrete, falsifiable and cover the same implied work, and the last step runs build, test and lint. The step breakdown and test strategy differ a lot: 5 to 8 steps, an audit step or not, committed tests or not.",
+      "groups": [
+        {
+          "runs": [
+            "P02#1"
+          ],
+          "description": "Five steps: migration proven by hand on a scratch database, gated staging run, types and repository, labels, final checks; no committed tests."
+        },
+        {
+          "runs": [
+            "P02#2"
+          ],
+          "description": "Six steps: migration with test, gated staging run, then types, repository and labels each with its own test, then final checks."
+        },
+        {
+          "runs": [
+            "P02#3"
+          ],
+          "description": "Five steps: read-only audit, migration with test, one combined code step, gated staging run, final checks."
+        },
+        {
+          "runs": [
+            "P02#4"
+          ],
+          "description": "Eight steps: audit, test-first migration, gated staging run, then separate test-first steps for types, repository, labels, a count test, then final checks."
+        }
+      ],
+      "tally": {
+        "counts": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "agreement": 25,
+        "split": "1 / 1 / 1 / 1 of 4",
+        "clean": true
+      }
+    }
+  ],
+  "excluded": [
+    {
+      "label": "P01#1",
+      "reason": "grader died"
+    },
+    {
+      "label": "P01#2",
+      "reason": "grader died"
+    },
+    {
+      "label": "P01#3",
+      "reason": "grader died"
+    },
+    {
+      "label": "P01#4",
+      "reason": "grader died"
+    }
+  ],
+  "lostJudges": [],
+  "note": "Incomplete. The session limit ended the grading of the four runs of P01, so only the four runs of P02 are scored (4 of 8 usable). Do not compare this result with the baseline until P01 is graded again."
+}

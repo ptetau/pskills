@@ -4,11 +4,12 @@ Status: stub
 
 ## What it is for
 
-What this capability does, independent of any one job. Two or three sentences.
+Write what this capability does, independent of any one job. Use two or three sentences.
 
 ## Code map
 
-The files and folders this capability owns. Used to scope changes.
+List the files and folders that this capability owns. pdlc uses this list to set the
+scope of changes.
 
 - path/to/folder/
 
@@ -18,6 +19,6 @@ The files and folders this capability owns. Used to scope changes.
 
 Status: proposed · Intents: IN-0000
 
-One or two sentences saying what must be true.
+Write one or two sentences that say what must be true.
 
 - Given ..., when ..., then ...

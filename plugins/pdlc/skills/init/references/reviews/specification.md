@@ -2,11 +2,12 @@
 
 Default: yes
 
-You judge whether the code does what the spec says. You have not seen the checks.
+You judge if the code does what the spec says. You do not see the checks.
 
-- Each requirement's acceptance lines are met by the code. For a requirement marked
-  `(retire)`, the code that served it is removed instead.
-- The code does nothing the spec didn't ask for.
+- The code meets the acceptance lines of each requirement. For a requirement marked
+  `(retire)`, the change removes the code that served the requirement instead.
+- The code does nothing that the spec did not ask for.
 - Only the files in "Files" changed, and the change stays in its one scope. A job change
-  never edits a capability.
-- If frames are listed, read them. What they show must match the acceptance lines.
+  must not edit a capability.
+- If the packet lists frames, read the frames. What the frames show must match the
+  acceptance lines.

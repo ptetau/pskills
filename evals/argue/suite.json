@@ -1,0 +1,172 @@
+{
+  "skill": "argue",
+  "skillPath": "argue/SKILL.md",
+  "skillSha256": "8024d233d559be76a9f88495992c94efc364f213a9d4fdf57739c699f4083855",
+  "createdAt": "2026-10-16T20:43:03Z",
+  "structure": {
+    "summary": "Single reply. The skill asks no questions. Before the reply, the skill writes a Z3 script to `_argue_check.py`, runs the script and deletes it. The reply is one fenced code block with the full report: a header, the claims, the annotated text, three finding sections and a verdict line. One plain-prose sentence follows the block.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "One fenced code block holds the full report. The block starts with the line `ARGUE: <short title of 3-6 words>` and a ═ rule. Then come CLAIMS, ANNOTATED TEXT, a ─ rule, CONTRADICTIONS (proven UNSAT by Z3), TENSIONS (logically consistent but conflicting in practice), AMBIGUITIES (underspecified — could mask contradictions), a ─ rule and the VERDICT line, in that order."
+      },
+      {
+        "id": "S2",
+        "description": "CLAIMS: one line for each claim, in the form `[C1]  <claim text>`, numbered C1, C2, … in order. Each claim is one clause in plain English."
+      },
+      {
+        "id": "S3",
+        "description": "ANNOTATED TEXT: the original text, verbatim, with a `[Cn]` tag immediately after each identified claim."
+      },
+      {
+        "id": "S4",
+        "description": "Finding entries: `!! Cx × Cy  <explanation>` with a `logic: <encoding>` line below it for each contradiction, `~~ Cx × Cy  <explanation>` for each tension, and `?? [Cn]  <what is ambiguous and why it matters here>` for each ambiguity. An empty section shows `none`."
+      },
+      {
+        "id": "S5",
+        "description": "The VERDICT line: `VERDICT   <N> contradiction(s)  ·  <N> tension(s)  ·  <N> ambiguity(ies)`."
+      },
+      {
+        "id": "S6",
+        "description": "After the code block: one plain-prose sentence that summarises the most critical finding, or \"No issues found\" when all three finding sections are none."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "The report is one fenced code block. The block starts with an `ARGUE:` header and a ═ rule, and holds all the template sections in order.",
+      "pass": "One fence holds the full report. The header gives a title of 3-6 words, and a ═ rule follows. CLAIMS, ANNOTATED TEXT, a ─ rule, CONTRADICTIONS, TENSIONS, AMBIGUITIES, a ─ rule and VERDICT follow in that order, with the template headings.",
+      "partial": "The report is in a fence and mostly in order. But one section, rule or header part is missing, renamed or out of order. Or the report is split across two or more fences.",
+      "source": "Step 5: Format the output"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "CLAIMS gives each assertion of the text as a `[Cn]` line, numbered from C1 with no gaps. Each claim is one clause in plain English.",
+      "pass": "Every line has the form `[Cn]  <claim>`, and the numbers run from C1 with no gaps. Each claim is one clause. A sentence with two assertions gives two claims. Ambiguous wording is put in plain English. Background that asserts nothing is not a claim. Each clear assertion of the text has a claim.",
+      "partial": "The form is correct. But one or two claims join two assertions, or turn pure background into a claim. Or one clear assertion of the text has no claim.",
+      "source": "Step 1: Extract claims"
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "ANNOTATED TEXT gives the original text word for word. The only addition is a `[Cn]` tag immediately after each claim.",
+      "pass": "Every word of the input is there in the original order, with the title and the background. Only the indent and the line breaks change. Each claim in CLAIMS has its tag immediately after its words in the text.",
+      "partial": "The text is mostly verbatim. But one passage is shorter or in different words, or one tag is missing or far from its claim.",
+      "source": "Step 5 layout. Rules: \"Keep the annotated text faithful\""
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 1,
+      "criterion": "Each finding entry has the marker of its section and cites claim IDs. An empty section shows `none`.",
+      "pass": "Each contradiction has `!!`, the claim IDs joined by ×, a one-line explanation and a `logic:` line. A contradiction can cite more than two claims. Each tension has `~~`, the claim IDs and a one-line explanation. Each ambiguity has `?? [Cn]` and a reason. Each empty section shows `none`.",
+      "partial": "Most entries are correct. But one entry has no claim IDs, no `logic:` line or no explanation. Or an empty section is blank and does not show `none`.",
+      "source": "Step 5: Format the output"
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 1,
+      "criterion": "The VERDICT line has the template form, and each count equals the number of entries in its section.",
+      "pass": "The line reads `VERDICT   <N> contradiction(s)  ·  <N> tension(s)  ·  <N> ambiguity(ies)`. Each N equals the number of `!!`, `~~` or `??` entries above. A section that shows `none` counts 0.",
+      "partial": "The form is correct but one count is wrong. Or the counts are correct but the labels or the separators are different.",
+      "source": "Step 5: Format the output (VERDICT line)"
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S6",
+      "weight": 1,
+      "criterion": "After the code block, one plain-prose sentence gives the most critical finding of the report.",
+      "pass": "Exactly one sentence follows the block. The sentence gives the most critical finding. A hard contradiction comes before a tension or an ambiguity. If all three finding sections show `none`, the sentence is \"No issues found\".",
+      "partial": "A summary follows the block. But the summary has more than one sentence, or more text follows it. Or the sentence gives a smaller finding and not the hard contradiction.",
+      "source": "Step 5: \"add one plain-prose sentence summarising the most critical finding\""
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 3,
+      "criterion": "Z3 runs on an encoding of this text, and CONTRADICTIONS gives exactly what the solver returned.",
+      "pass": "The transcript shows the script with the claim Bools and the constraints that `assert_and_track` tracks. The transcript also shows the run and its JSON result. If the result has `\"sat\": true`, CONTRADICTIONS shows `none`. If the result has `\"sat\": false`, the `!!` entries cite exactly the claims of the UNSAT core. Each `logic:` line agrees with a formula in the script.",
+      "partial": "Z3 runs. But CONTRADICTIONS adds a conflict that the solver did not prove, or omits a claim of the core. Or a `logic:` line does not agree with the script.",
+      "source": "Rules: \"Always run Z3\". Step 3: Write and run the Z3 Python script"
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "The skill writes the Z3 script to `_argue_check.py` in the working directory, and deletes the script after it reads the result.",
+      "pass": "The transcript shows the script written to `_argue_check.py` in the working directory and deleted after the run. The file is not among the files that the run leaves.",
+      "partial": "One part is wrong. The script has a different name or folder, or the script stays in the working directory.",
+      "source": "Step 3: \"Write the script to `_argue_check.py`\" and \"Clean up `_argue_check.py`\""
+    },
+    {
+      "id": "R9",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "CONTRADICTIONS gives the user each hard contradiction that follows from the text, and no false alarm.",
+      "pass": "Each set of claims that cannot all be true is in CONTRADICTIONS with the correct claims. The test uses only what the text states or directly implies. No entry needs a link that the text does not state, for example an assumed cause and effect between two goals. If the text has no hard contradiction, the section shows `none`.",
+      "partial": "The section gives one real contradiction but misses a second, independent one. Or the section adds one forced entry next to the real ones.",
+      "source": "Rules: \"Do not force propositional relationships that aren't clearly stated\""
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The report finds the main practical problems of the text that are not hard contradictions. These are goals that pull against each other, and vague terms or unclear scope that can hide a conflict.",
+      "pass": "Each major problem that a careful reviewer would raise is in TENSIONS or AMBIGUITIES, and cites the correct claims. A problem counts in either section.",
+      "partial": "One major problem is missing. Or the report finds the problem but cites the wrong claims.",
+      "source": "Step 4: Identify tensions and ambiguities"
+    },
+    {
+      "id": "R11",
+      "kind": "outcome",
+      "weight": 2,
+      "criterion": "Each tension and ambiguity entry is specific to this text, is in the correct section and says why it is important. No entry is filler.",
+      "pass": "Each `~~` entry gives two claims that can both be true but pull against each other in practice. Each `??` entry gives the vague word or scope, and the reading that would conflict with a different claim. Each entry uses the facts of this text. No entry is generic, and no entry repeats a different entry or a contradiction.",
+      "partial": "One or two entries are generic or repeat a different entry. Or one or two entries belong in the other section.",
+      "source": "Step 4: Identify tensions and ambiguities (signs to look for)"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical: software spec with one hard contradiction",
+      "prompt": "Spec: offline mode for the Jotter notes app\n\nJotter is a note-taking app for iOS and Android. This spec covers how the app behaves without a network connection.\n\n1. Users can create, edit and delete notes while offline.\n2. When the device is online, each edit syncs to the server within 5 seconds.\n3. All data stored on the device must be encrypted at rest.\n4. The search index is stored on the device.\n5. To keep search fast, the search index is not encrypted.\n6. Background battery use must stay minimal.\n7. While online, the app re-syncs every note in the background every 60 seconds.\n8. Shared notes are visible to all users.",
+      "exercises": "The core path. Claims from a numbered spec with a title and background, one contradiction of three claims (device data encrypted, index on device, index not encrypted) for Z3, a battery tension, and vague terms (minimal, fast, all users).",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "axis": "prose argument in a school-policy domain, no hard contradiction",
+      "prompt": "Proposal to the Hillcrest High School board\n\nStudents should not use their phones for social media, games or messaging between the first bell and the last bell. Phones distract students, and distracted students learn less, so this rule will raise exam results. Parents must still be able to reach their children at any time if there is an emergency. Teachers may let students use phones in class for learning activities. Staff should enforce the rule strictly, but the rule must not add to teachers' workload. The rule should start next term.",
+      "exercises": "An honest `none` when Z3 returns sat. Tensions (strict enforcement against no extra workload) and ambiguities (how parents reach children, what counts as a learning activity) carry the report. Prose sentences with more than one claim.",
+      "replies": []
+    },
+    {
+      "id": "P03",
+      "axis": "rich input: long protocol with two independent contradictions",
+      "prompt": "Protocol summary: Sleep and Memory Pilot Study\n\nBackground: earlier studies suggest that sleep helps the brain consolidate new memories. Our lab has run two similar studies since 2019. This pilot checks whether the effect holds in a general adult sample before we apply for a larger grant.\n\nEligibility\n- The study enrols only adults aged 18 to 65.\n- Participants must not take any medication during the study week.\n- People with a diagnosed sleep disorder are excluded.\n- People who take prescribed sleep medication are included, so that the sample reflects the general population.\n\nProcedure\n- Every participant wears a sleep tracker every night of the study week.\n- Each morning, participants complete a 20-minute memory test on the lab website.\n- Recruitment must finish within two weeks.\n\nData\n- All participant data is anonymised before analysis.\n- The analysis dataset links each tracker record to the participant's name, so that researchers can contact people with unusual results.\n- Raw tracker data is deleted after 30 days.\n\nResources\n- The pilot needs at least 200 participants.\n- The equipment budget covers 50 sleep trackers.",
+      "exercises": "Headed sections and background to skip. Two independent contradictions (no medication against sleep medication, anonymised data against names) and one UNSAT core. A resource tension (200 participants, 50 trackers).",
+      "replies": []
+    },
+    {
+      "id": "P04",
+      "axis": "minimal input: four-sentence chain of conditionals",
+      "prompt": "If the build passes, we deploy tonight. If we deploy tonight, the on-call engineer must be online. The build passed. The on-call engineer will be offline tonight.",
+      "exercises": "A contradiction of four claims that only the solver chain proves. Short verbatim annotation. An honest `none` in TENSIONS and AMBIGUITIES when nothing is there.",
+      "replies": []
+    }
+  ]
+}

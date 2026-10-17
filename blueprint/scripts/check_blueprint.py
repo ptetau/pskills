@@ -39,8 +39,10 @@ Errors (exit code 1):
 
 Not checked: whether a contract's fields or variants match the design's.
 
-Warnings: plain-English problems (see readability.py: long sentences, a reading grade
-above 7, technical words missing from the "Words used here" list), more than 7 invariants,
+Warnings: writing problems (see check_writing.py and references/writing-guidelines.md: long
+sentences, semicolons, contractions, passive and complex verbs, pronouns that refer back,
+IDs with no description, a reading grade above 7, technical words missing from the "Words
+used here" list), more than 7 invariants,
 more than 5
 scenarios, more than 5 steps in a scenario, a Background over 4 steps, a Then step that
 asserts storage, money typed as a bare number, `any` in TypeScript, a component without
@@ -66,9 +68,9 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
-    import readability  # ships alongside this script
+    import check_writing  # ships alongside this script
 except ImportError:  # pragma: no cover
-    readability = None
+    check_writing = None
 
 SECTIONS = [
     (1, r"boundary|scope"),
@@ -663,12 +665,12 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
             errors.append("line %d: cryptic design ID '%s'; use the domain term" % (i, m.group(0)))
     if FILLER.search(prose):
         warnings.append("filler phrasing found; lead with substance")
-    if readability is not None:
-        rw, rs = readability.check(text)
-        warnings += ["plain English: " + w for w in rw]
-        plain = rs
+    plain = {}
+    if check_writing is not None:
+        rw, plain = check_writing.check(text, max_grade=7.0, require_glossary=True)
+        warnings += ["writing: " + w for w in rw]
 
-    stats = {"reading_grade": plain.get("grade") if readability is not None else None,
+    stats = {"reading_grade": plain.get("grade"),
              "invariants": len(items), "error_codes": sorted(catalog), "state_types": state_types,
              "components": len(components), "scenarios": len(scenarios), "assumed": assumed,
              "decisions": decisions, "carried": carried,
