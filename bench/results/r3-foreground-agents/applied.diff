@@ -1,6 +1,6 @@
-diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/build/SKILL.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/build/SKILL.md
---- /home/user/pskills/plugins/pdlc/skills/build/SKILL.md	2026-10-17 08:26:05.380694656 +0000
-+++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/build/SKILL.md	2026-10-17 22:49:20.293543077 +0000
+diff -ru -x __pycache__ a/skills/build/SKILL.md b/skills/build/SKILL.md
+--- a/skills/build/SKILL.md	2026-10-17 08:26:05.380694656 +0000
++++ b/skills/build/SKILL.md	2026-10-17 23:32:21.206631438 +0000
 @@ -27,9 +27,9 @@
  
  ## 2. Build
@@ -14,9 +14,9 @@ diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/build/SKILL.md /t
  
  - If the builder says that a check looks incorrect, do not change the check. Send the
    reason to `/pdlc:tests`. That skill asks the test writer, and then locks the checks
-diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/init/references/templates/README.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/init/references/templates/README.md
---- /home/user/pskills/plugins/pdlc/skills/init/references/templates/README.md	2026-10-17 08:26:05.388694656 +0000
-+++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/init/references/templates/README.md	2026-10-17 22:49:20.292503376 +0000
+diff -ru -x __pycache__ a/skills/init/references/templates/README.md b/skills/init/references/templates/README.md
+--- a/skills/init/references/templates/README.md	2026-10-17 08:26:05.388694656 +0000
++++ b/skills/init/references/templates/README.md	2026-10-17 23:32:21.205896867 +0000
 @@ -87,8 +87,10 @@
  Starting an agent:
  
@@ -30,9 +30,9 @@ diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/init/references/t
  - If the guard or a tool blocks an agent, fix the path. Then run the agent once more from
    the project root. If the agent fails again, that counts as one failure of its stage. A
    blocked agent is not a reason to stop.
-diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/intake/SKILL.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/intake/SKILL.md
---- /home/user/pskills/plugins/pdlc/skills/intake/SKILL.md	2026-10-17 08:26:05.392694656 +0000
-+++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/intake/SKILL.md	2026-10-17 22:49:20.293813671 +0000
+diff -ru -x __pycache__ a/skills/intake/SKILL.md b/skills/intake/SKILL.md
+--- a/skills/intake/SKILL.md	2026-10-17 08:26:05.392694656 +0000
++++ b/skills/intake/SKILL.md	2026-10-17 23:32:21.206854825 +0000
 @@ -59,10 +59,10 @@
  
  ## 3. Deepen stub specs
@@ -48,9 +48,9 @@ diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/intake/SKILL.md /
  
  ## 4. Write the patches
  
-diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/tests/SKILL.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/tests/SKILL.md
---- /home/user/pskills/plugins/pdlc/skills/tests/SKILL.md	2026-10-17 08:26:05.392694656 +0000
-+++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/tests/SKILL.md	2026-10-17 22:49:20.293236294 +0000
+diff -ru -x __pycache__ a/skills/tests/SKILL.md b/skills/tests/SKILL.md
+--- a/skills/tests/SKILL.md	2026-10-17 08:26:05.392694656 +0000
++++ b/skills/tests/SKILL.md	2026-10-17 23:32:21.206500028 +0000
 @@ -49,9 +49,9 @@
  
  ## 2. Write the checks
@@ -75,9 +75,9 @@ diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/tests/SKILL.md /t
  3. Commit the packet and the result with the message "Review tests CH-xxxx" and the
     trailers `Intent` and `Change`. If the `result.md` of the reviewer says fail, send the
     problems to the test writer. Then do red, lock, and review again. If the review fails a
-diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/verify/SKILL.md /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/verify/SKILL.md
---- /home/user/pskills/plugins/pdlc/skills/verify/SKILL.md	2026-10-17 12:43:39.525073912 +0000
-+++ /tmp/pdlc-exp-r3-foreground-agents-9nyjgfal/pdlc/skills/verify/SKILL.md	2026-10-17 22:49:20.293692674 +0000
+diff -ru -x __pycache__ a/skills/verify/SKILL.md b/skills/verify/SKILL.md
+--- a/skills/verify/SKILL.md	2026-10-17 12:43:39.525073912 +0000
++++ b/skills/verify/SKILL.md	2026-10-17 23:32:21.206725342 +0000
 @@ -38,10 +38,11 @@
  1. Get the remits from "Reviews" in `pdlc/config.md`. Do not include `tests`, because the
     tests stage already reviewed the checks, and its result stays.

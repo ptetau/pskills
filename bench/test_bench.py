@@ -1,4 +1,5 @@
 """Tests of the parts of run_bench.py that do not call a model."""
+import os
 import shutil
 import sys
 import tempfile
@@ -413,6 +414,23 @@ class ExperimentSpecTest(unittest.TestCase):
         spec = run_experiment.load_spec(self.write(edits=edits))
         with self.assertRaises(run_experiment.SpecError):
             run_experiment.apply_edits(spec)
+
+    def test_the_background_command_uses_an_absolute_spec_path(self):
+        command = run_experiment.runner_command("bench/experiments/round3/x.json")
+        self.assertTrue(Path(command[-1]).is_absolute())
+        self.assertTrue(command[-1].endswith("bench/experiments/round3/x.json"))
+
+    def test_status_updates_keep_the_process_id(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        run_experiment.write_status(folder, state="starting", pid=123)
+        run_experiment.write_status(folder, state="running")
+        status = run_bench.json.loads((folder / "status.json").read_text())
+        self.assertEqual((status["state"], status["pid"]), ("running", 123))
+
+    def test_a_dead_process_is_not_alive(self):
+        self.assertTrue(run_experiment.process_alive(os.getpid()))
+        self.assertFalse(run_experiment.process_alive(2 ** 22 + 12345))
 
     def test_check_reports_new_writing_findings(self):
         long_sentence = " ".join(["word"] * 40) + "."

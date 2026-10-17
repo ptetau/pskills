@@ -28,6 +28,7 @@ import argparse
 import contextlib
 import io
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -114,6 +115,7 @@ def check(spec, plugin=PLUGIN, run_tests=True):
             lines.append("writing check %s: %d findings before, %d after%s" % (
                 file, before, after, "  <- NEW FINDINGS" if after > before else ""))
     diff = subprocess.run(["diff", "-ru", "-x", "__pycache__", str(plugin), str(scratch)], capture_output=True, text=True).stdout
+    diff = diff.replace(str(plugin), "a").replace(str(scratch), "b")  # stable paths, so the diff does not change between runs
     if run_tests:
         done = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests"], cwd=scratch, capture_output=True, text=True)
         tail = (done.stderr.strip().splitlines() or ["no output"])[-1]
@@ -131,7 +133,24 @@ def out_dir(spec):
 
 
 def write_status(folder, **fields):
-    (folder / "status.json").write_text(json.dumps({**fields, "at": time.strftime("%H:%M:%S")}, indent=1))
+    """Update status.json. It keeps the fields that an earlier call wrote, such as the process id."""
+    path = folder / "status.json"
+    current = json.loads(path.read_text()) if path.exists() else {}
+    path.write_text(json.dumps({**current, **fields, "at": time.strftime("%H:%M:%S")}, indent=1))
+
+
+def process_alive(pid):
+    try:
+        os.kill(pid, 0)
+    except (OSError, TypeError):
+        return False
+    return True
+
+
+def runner_command(spec_path):
+    """The command that runs an experiment in the background. The spec path is absolute, because
+    the runner starts in another folder."""
+    return [sys.executable, str(Path(__file__).resolve()), "run", str(Path(spec_path).resolve())]
 
 
 def command_check(args):
@@ -209,8 +228,7 @@ def command_start(args):
     folder = out_dir(spec)
     (folder / "DONE").unlink(missing_ok=True)
     log = open(folder / "run.log", "w")
-    proc = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "run", args.spec], stdout=log, stderr=subprocess.STDOUT,
-                            start_new_session=True, cwd=str(HERE))
+    proc = subprocess.Popen(runner_command(args.spec), stdout=log, stderr=subprocess.STDOUT, start_new_session=True, cwd=str(HERE))
     write_status(folder, state="starting", pid=proc.pid)
     print("started %s (process %d). Log: %s" % (spec["id"], proc.pid, folder / "run.log"))
     return 0
@@ -228,6 +246,12 @@ def command_wait(args):
                     print("--- " + name)
                     print((folder / name).read_text().rstrip())
             return 0
+        status = json.loads((folder / "status.json").read_text()) if (folder / "status.json").exists() else {}
+        if status.get("pid") and not process_alive(status["pid"]) and not (folder / "DONE").exists():
+            log = folder / "run.log"
+            tail = "\n".join(log.read_text().splitlines()[-12:]) if log.exists() else "no log"
+            print("FAILED: the runner stopped before it finished. The end of %s:\n%s" % (log, tail))
+            return 1
         time.sleep(10)
     done = len([n for n in range(1, spec["runs"] + 1) if (RESULTS / ("%s-%d" % (spec["id"], n)) / "e2e.json").exists()])
     status = json.loads((folder / "status.json").read_text()) if (folder / "status.json").exists() else {}
