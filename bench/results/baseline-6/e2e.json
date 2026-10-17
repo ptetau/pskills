@@ -161,8 +161,8 @@
     }
    },
    "waiting": {
-    "messages": 1,
-    "cost_usd": 0.0171
+    "messages": 5,
+    "cost_usd": 0.1079
    },
    "wall_s": 835.1,
    "outcome": {

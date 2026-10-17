@@ -222,8 +222,8 @@
    "stderr": "",
    "project": "/tmp/pdlc-bench-nj3t1c7t/app",
    "waiting": {
-    "messages": 1,
-    "cost_usd": 0.0254
+    "messages": 3,
+    "cost_usd": 0.0924
    }
   }
  ]

@@ -204,6 +204,9 @@ STAGES = ("init", "intake", "ready", "change", "tests", "build", "show", "verify
 AGENT_STAGE = {"pdlc:recon": "intake", "pdlc:test-writer": "tests", "pdlc:builder": "build"}
 SKILL_FILE = re.compile(r"skills/(%s)/SKILL\.md" % "|".join(STAGES))
 WAITING_TOOLS = {"ReadNotifications", "Monitor", "TaskOutput"}
+WORK_WORDS = ("git commit", "git add", "unittest", "pytest", "npm ", "node ",
+              "record_gif", "make_packets", "check_merge", "record_merges", "sed -i", "<<",
+              "python3 -")
 
 
 def stage_name(skill):
@@ -232,6 +235,12 @@ def stage_from_call(name, args):
     return None
 
 
+def waiting_command(command):
+    """A Bash command that only waits: it sleeps, or loops, and does no work."""
+    waits = re.match(r"\s*(sleep\b|until\b|while\b)", command) or re.search(r"\bsleep\s+\d", command)
+    return bool(waits) and not any(word in command for word in WORK_WORDS)
+
+
 def is_waiting(blocks):
     """A turn that only waits for a background agent: a notification read, a monitor, a sleep."""
     calls = [b for b in blocks if b.get("type") == "tool_use"]
@@ -241,7 +250,7 @@ def is_waiting(blocks):
         command = (call.get("input") or {}).get("command", "")
         if call["name"] in WAITING_TOOLS:
             continue
-        if call["name"] == "Bash" and re.match(r"\s*(sleep\b|until\b|while\b)", command):
+        if call["name"] == "Bash" and waiting_command(command):
             continue
         return False
     return True
@@ -546,6 +555,8 @@ def summarise(result):
         "units_ok": all(r["outcome"]["unit"]["ok"] for r in runs),
         "seeds_caught": result.get("seeds", {}).get("caught"),
         "false_fails": result.get("seeds", {}).get("false_fails"),
+        "waiting": [r.get("waiting", {}).get("cost_usd", 0.0) for r in runs],
+        "waiting_turns": [r.get("waiting", {}).get("messages", 0) for r in runs],
     }
 
 
@@ -603,7 +614,31 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
         worse.append("%.0f%% slower, limit is %.0f%%" % ((slower - 1) * 100, (speed_limit - 1) * 100))
     detail = {}
     p_value = None
-    if target:
+    if target == "waiting":
+        before, after = base["waiting"], cand["waiting"]
+        chance = permutation_p(before, after)
+        p_value = chance
+        saved = statistics.mean(before) - statistics.mean(after)
+        share = saved / base["cost_usd"] if base["cost_usd"] else 0.0
+        few = min(len(before), len(after)) < min_runs
+        detail = {"target": "waiting", "per_run_before": statistics.mean(before),
+                  "per_run_after": statistics.mean(after),
+                  "turns_before": statistics.mean(base["waiting_turns"]),
+                  "turns_after": statistics.mean(cand["waiting_turns"]),
+                  "expected_run_saving": saved, "expected_run_saving_share": share}
+        if run_change > 0 and (run_change > max(base["noise"], 0.25)
+                               or permutation_p(cand["costs"], base["costs"]) <= alpha):
+            worse.append("a whole run costs %.0f%% more, and that is not luck" % (run_change * 100))
+        change = -share
+        needed = min_gain
+        if chance > alpha:
+            change = 0.0
+        gain_text = "waiting turns cost $%.2f -> $%.2f a run (%.1f -> %.1f turns), %.0f%% of a run less, and the chance that this is luck is %.0f%%" % (
+            statistics.mean(before), statistics.mean(after), detail["turns_before"], detail["turns_after"],
+            share * 100, chance * 100)
+        none_text = "waiting turns cost $%.2f -> $%.2f a run, %.0f%% of a run less, and the chance that this is luck is %.0f%% (it must be %.0f%% or less)" % (
+            statistics.mean(before), statistics.mean(after), share * 100, chance * 100, alpha * 100)
+    elif target:
         before, after = agent_stats(baseline, target), agent_stats(candidate, target)
         change = (after["per_call"] - before["per_call"]) / before["per_call"] if before["per_call"] else 0.0
         needed = max(min_gain, noise(before["per_run"]), noise(after["per_run"]))
@@ -629,10 +664,10 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
     if worse:
         verdict = "REGRESSION -> revert"
         reasons = worse
-    elif not target and few and change <= -needed:
+    elif (not target or target == "waiting") and few and change <= -needed:
         verdict = "NEED MORE RUNS -> do not keep yet"
         reasons = ["the fall looks like %.0f%%, but %d runs are too few. Run at least %d on each side. Four runs that looked 25%% cheaper came back at +10%% with six more." % (
-            -run_change * 100, min(len(base["costs"]), len(cand["costs"])), min_runs)]
+            -change * 100, min(len(base["costs"]), len(cand["costs"])), min_runs)]
     elif change <= -needed:
         verdict = "SAME OR BETTER -> keep"
         reasons = [gain_text]
@@ -653,7 +688,11 @@ def command_gate(args):
         base["completed"], base["runs"], cand["completed"], cand["runs"], base["rounds"], cand["rounds"]))
     print("probes     %s vs %s" % (base["probes_all"], cand["probes_all"]))
     detail = result["target"]
-    if detail:
+    if detail and detail["target"] == "waiting":
+        print("waiting    $%.2f -> $%.2f a run, %.1f -> %.1f turns, so about $%.2f (%.0f%%) less in a run" % (
+            detail["per_run_before"], detail["per_run_after"], detail["turns_before"], detail["turns_after"],
+            detail["expected_run_saving"], detail["expected_run_saving_share"] * 100))
+    elif detail:
         print("%s  each call $%.3f -> $%.3f, %.1f calls a run, so about $%.2f (%.0f%%) less in a run" % (
             detail["target"], detail["per_call_before"], detail["per_call_after"], detail["calls_per_run"],
             detail["expected_run_saving"], detail["expected_run_saving_share"] * 100))

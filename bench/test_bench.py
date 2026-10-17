@@ -199,6 +199,96 @@ class TargetGateTest(unittest.TestCase):
         self.assertEqual(stats["calls"], 14)
 
 
+def waiting_result(waits, totals):
+    """A result whose run i spent waits[i] dollars on waiting turns, and totals[i] in all."""
+    data = result(totals)
+    for run, wait in zip(data["runs"], waits):
+        run["waiting"] = {"messages": 10 if wait else 0, "cost_usd": wait}
+    return data
+
+
+BASE_WAITS = [0.08, 0.03, 0.21, 0.19, 0.75, 0.02]
+BASE_TOTALS = [1.78, 1.87, 2.49, 1.78, 1.99, 1.36]
+
+
+class WaitingGateTest(unittest.TestCase):
+    def test_no_waiting_against_a_waiting_baseline_is_kept(self):
+        baseline = waiting_result(BASE_WAITS, BASE_TOTALS)
+        candidate = waiting_result([0.0] * 6, [1.7, 1.8, 2.3, 1.6, 1.3, 1.3])
+        verdict = run_bench.gate(baseline, candidate, target="waiting")
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+        self.assertLess(verdict["p"], 0.01)
+        self.assertAlmostEqual(verdict["target"]["expected_run_saving"], 0.213, places=3)
+
+    def test_the_same_waiting_is_no_gain(self):
+        baseline = waiting_result(BASE_WAITS, BASE_TOTALS)
+        candidate = waiting_result(BASE_WAITS, BASE_TOTALS)
+        verdict = run_bench.gate(baseline, candidate, target="waiting")
+        self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
+
+    def test_no_waiting_but_a_much_dearer_run_is_a_regression(self):
+        baseline = waiting_result(BASE_WAITS, BASE_TOTALS)
+        candidate = waiting_result([0.0] * 6, [t * 1.4 for t in BASE_TOTALS])
+        verdict = run_bench.gate(baseline, candidate, target="waiting")
+        self.assertTrue(verdict["verdict"].startswith("REGRESSION"))
+        self.assertIn("not luck", verdict["reasons"][0])
+
+    def test_no_waiting_and_a_slightly_dearer_run_is_kept(self):
+        baseline = waiting_result(BASE_WAITS, BASE_TOTALS)
+        candidate = waiting_result([0.0] * 6, [t * 1.1 for t in BASE_TOTALS])
+        verdict = run_bench.gate(baseline, candidate, target="waiting")
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+
+    def test_no_waiting_in_three_runs_needs_more_runs(self):
+        baseline = waiting_result(BASE_WAITS[:3], BASE_TOTALS[:3])
+        candidate = waiting_result([0.0] * 3, [1.7, 1.8, 2.3])
+        verdict = run_bench.gate(baseline, candidate, target="waiting")
+        self.assertTrue(verdict["verdict"].startswith("NEED MORE RUNS"))
+
+    def test_a_result_without_waiting_counts_as_zero(self):
+        self.assertEqual(run_bench.summarise(result([2.0]))["waiting"], [0.0])
+
+    def test_a_run_that_did_not_finish_beats_no_waiting(self):
+        def finished(waits, totals, ok):
+            data = waiting_result(waits, totals)
+            for run in data["runs"]:
+                run["outcome"]["merge_check"] = {"pdlc/CH-0001": ["ok   CH-0001" if ok else "FAIL CH-0001"]}
+            return data
+        baseline = finished(BASE_WAITS, BASE_TOTALS, True)
+        candidate = finished([0.0] * 6, [1.0, 1.1, 1.2, 1.0, 1.1, 1.2], False)
+        verdict = run_bench.gate(baseline, candidate, target="waiting")
+        self.assertTrue(verdict["verdict"].startswith("REGRESSION"))
+        self.assertIn("did not finish", verdict["reasons"][0])
+
+
+class WaitingTest(unittest.TestCase):
+    def waiting(self, command):
+        return run_bench.is_waiting([{"type": "tool_use", "name": "Bash", "input": {"command": command}}])
+
+    def test_a_loop_that_greps_and_sleeps_is_waiting(self):
+        self.assertTrue(self.waiting("f=/x/out; for i in $(seq 1 90); do grep -q done $f && break; sleep 3; done"))
+
+    def test_a_loop_that_checks_git_and_then_sleeps_is_waiting(self):
+        self.assertTrue(self.waiting("cd /app; for i in $(seq 1 90); do git diff --quiet -- a.py || break; "
+                                     "sleep 3; done; sleep 40; git status --short"))
+
+    def test_an_until_loop_is_waiting(self):
+        self.assertTrue(self.waiting("until [ -f x ]; do sleep 3; done; echo result"))
+
+    def test_a_sleep_before_a_commit_is_not_waiting(self):
+        self.assertFalse(self.waiting("sleep 2; git add -A && git commit -qm x"))
+
+    def test_a_sleep_after_the_tests_is_not_waiting(self):
+        self.assertFalse(self.waiting("python3 -m unittest discover -s tests; sleep 1"))
+
+    def test_a_status_check_is_not_waiting(self):
+        self.assertFalse(self.waiting("git status --short"))
+
+    def test_a_notification_read_is_waiting_and_a_file_read_is_not(self):
+        self.assertTrue(run_bench.is_waiting([{"type": "tool_use", "name": "ReadNotifications", "input": {}}]))
+        self.assertFalse(run_bench.is_waiting([{"type": "tool_use", "name": "Read", "input": {"file_path": "/x"}}]))
+
+
 class ProbeTest(unittest.TestCase):
     def copy_fixture(self):
         folder = Path(tempfile.mkdtemp())
