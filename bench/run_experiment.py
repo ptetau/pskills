@@ -232,9 +232,10 @@ def command_apply(args):
         if not path.is_file():
             raise SpecError("edit %d: there is no file %s in the plugin" % (number, edit["file"]))
         text = path.read_text()
+        if edit["replace"] in text:
+            raise SpecError("edit %d: the new text is in %s already. The edit is applied already." % (number, edit["file"]))
         if text.count(edit["find"]) != 1:
-            raise SpecError("edit %d: the find text occurs %d times in %s. Is the edit applied already?" % (
-                number, text.count(edit["find"]), edit["file"]))
+            raise SpecError("edit %d: the find text occurs %d times in %s" % (number, text.count(edit["find"]), edit["file"]))
     for edit in spec["edits"]:
         path = PLUGIN / edit["file"]
         path.write_text(path.read_text().replace(edit["find"], edit["replace"], 1))
