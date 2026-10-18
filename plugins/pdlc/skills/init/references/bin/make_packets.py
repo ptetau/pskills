@@ -13,7 +13,8 @@ holds:
     - the change spec;
     - the title and summary of the spec it covers (everything above its requirements);
     - the full text of each requirement it lists;
-    - every spec it relies on;
+    - every spec it relies on. DES-writing-style goes only to the specification remit,
+      because only that remit judges writing;
   - the material: for the tests remit, the check files and nothing else; for every other
     remit, the changed app files and nothing else.
 The specification packet also holds the writing check and points to the visual review
@@ -134,10 +135,15 @@ def main(argv, root=Path(".")):
     spec.append("\n## The requirements, in full\n")
     spec += [requirement_text(root, r) + "\n" for r in reqs]
     spec.append("## Specs it relies on\n")
+    relied = []
     for spec_id in dict.fromkeys(relies):
         path = spec_file(root, spec_id)
-        spec.append("### %s\n\n%s\n" % (spec_id, fence(path.read_text()) if path.exists() else "(not found)"))
-    spec = "\n".join(spec)
+        relied.append((spec_id, "### %s\n\n%s\n" % (spec_id, fence(path.read_text()) if path.exists() else "(not found)")))
+    # The writing rules go only to the remit that judges writing. The other remits judge code or checks.
+    spec_for = {}
+    for kind in ("specification", "other"):
+        parts = [text for spec_id, text in relied if kind == "specification" or spec_id != "DES-writing-style"]
+        spec_for[kind] = "\n".join(spec + parts)
 
     frames = sorted((folder / "frames").glob("*.png")) if (folder / "frames").exists() else []
     chosen = argv[2:] or remits(root)
@@ -146,7 +152,7 @@ def main(argv, root=Path(".")):
         remit_text = remit_file.read_text() if remit_file.exists() else "# Remit: %s\n" % remit
         out = ["# Review packet · %s · %s\n" % (folder.name, remit),
                "Judge only what is in this packet. Write your result next to it, in result.md.\n",
-               remit_text.strip() + "\n", spec]
+               remit_text.strip() + "\n", spec_for["specification" if remit == "specification" else "other"]]
         if remit == "tests":
             out.append(material(root, base, tests, "The checks"))
         else:

@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Round 3 is kept. Round 4 is open.
+**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3 and 4 are kept. Round 5 is open.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -45,8 +45,9 @@ A stronger model plans the experiments, and cheaper models make the changes and 
 
 - `bench/baseline.json` holds six runs of today's pdlc, from before round 1. It is the floor
   for effectiveness.
-- `bench/reference.json` holds six runs of the state after the last kept round (round 3), with
+- `bench/reference.json` holds six runs of the state after the last kept round (round 4), with
   its planted-defect result. The next experiment compares its cost with this file.
+  `bench/reference-after-round-3.json` is the one from before round 4.
 
 ## What we measure
 
@@ -232,4 +233,22 @@ Next: round 4. The planner's second experiment, lean review packets, is not run.
           about $0.06 a run (3%), and it costs about $12 to test. The other levers left are the
           context that the main session carries into verify, and the reviewer that does not write
           its `result.md` (the main session writes some of those files itself).
+
+[2026-10-18] Round 4: the writing rules go only to the specification reviewer (kept)
+Plan: the second experiment of the Fable plan. A Haiku agent built the gate change (H3) and ran
+          the experiment. I checked the diff, the runs, and the numbers myself.
+Edit: `make_packets.py` puts `DES-writing-style` (3.5k tokens) only in the packet of the
+          specification remit, because only that remit judges writing. A test checks this.
+Result: each reviewer call cost $0.054 before and $0.046 after (15% less). All six values of the
+          edit are below all six values of the reference, so the chance of luck is 0.1%. A run
+          makes 7.7 reviewer calls, so the edit saves about $0.06 (4%) in a run. A whole run
+          cost $1.47 against $1.62. All six runs finished, all 8 probes pass, and reviewers on
+          Sonnet catch 5 of 5 planted defects, with no false alarm.
+Gate: agent target (`pdlc:reviewer`), SAME OR BETTER.
+Limits: the other five remits no longer see the writing rules for their own prose. The reviewer
+          agent keeps a two-line fallback, and no planted defect tests writing in those remits.
+          The saving is small, and the whole-run drop is mostly noise.
+Next: the reviewer sometimes answers in its reply and does not write `result.md`, and the main
+          session writes the file; the context that the main session carries into verify; and
+          the 21 frames that the specification reviewer reads (about $0.05 a call).
 ```

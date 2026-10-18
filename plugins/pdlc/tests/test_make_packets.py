@@ -93,7 +93,12 @@ class Packets(unittest.TestCase):
             self.assertIn("Given lang es", text)
             self.assertIn("Says hola.", text)
             self.assertNotIn("Not this one.", text)
-            self.assertIn("Write plainly.", text)
+
+    def test_only_the_specification_packet_has_the_writing_rules(self):
+        make_packets.main(["x", "CH-0001"], root=self.root)
+        self.assertIn("Write plainly.", self.packet("specification"))
+        self.assertNotIn("Write plainly.", self.packet("tests"))
+        self.assertNotIn("Write plainly.", self.packet("security"))
 
     def test_every_packet_has_the_title_and_summary_of_the_spec_it_covers(self):
         make_packets.main(["x", "CH-0001"], root=self.root)

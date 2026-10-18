@@ -27,5 +27,5 @@
  "runs": 6,
  "seeds": true,
  "target": "pdlc:reviewer",
- "baseline": "bench/baseline.json"
+ "baseline": "bench/reference.json"
 }

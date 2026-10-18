@@ -641,15 +641,28 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
     elif target:
         before, after = agent_stats(baseline, target), agent_stats(candidate, target)
         change = (after["per_call"] - before["per_call"]) / before["per_call"] if before["per_call"] else 0.0
-        needed = max(min_gain, noise(before["per_run"]), noise(after["per_run"]))
-        saved = (before["per_call"] - after["per_call"]) * before["calls_per_run"]
-        detail = {"target": target, "per_call_before": before["per_call"], "per_call_after": after["per_call"],
-                  "calls_per_run": before["calls_per_run"], "expected_run_saving": saved,
-                  "expected_run_saving_share": saved / base["cost_usd"] if base["cost_usd"] else 0.0}
-        if run_change > max(base["noise"], 0.25):
-            worse.append("a whole run costs %.0f%% more" % (run_change * 100))
-        gain_text = "each %s call costs %.0f%% less, more than the %.0f%% needed" % (target, -change * 100, needed * 100)
-        none_text = "each %s call changed %+.0f%%, and a %.0f%% fall was needed" % (target, change * 100, needed * 100)
+        if not before["per_run"] or not after["per_run"]:
+            missing = "baseline" if not before["per_run"] else "candidate"
+            change, needed, few, p_value, detail = 0.0, min_gain, False, None, {}
+            gain_text = none_text = "the %s has no %s call, so the cost of a call cannot be judged" % (missing, target)
+        else:
+            chance = permutation_p(before["per_run"], after["per_run"])
+            p_value = chance
+            needed = min_gain
+            few = min(len(before["per_run"]), len(after["per_run"])) < min_runs
+            saved = (before["per_call"] - after["per_call"]) * before["calls_per_run"]
+            detail = {"target": target, "per_call_before": before["per_call"], "per_call_after": after["per_call"],
+                      "calls_per_run": before["calls_per_run"], "expected_run_saving": saved,
+                      "expected_run_saving_share": saved / base["cost_usd"] if base["cost_usd"] else 0.0}
+            if run_change > 0 and (run_change > max(base["noise"], 0.25)
+                                   or permutation_p(cand["costs"], base["costs"]) <= alpha):
+                worse.append("a whole run costs %.0f%% more, and that is not luck" % (run_change * 100))
+            gain_text = "each %s call costs %.0f%% less, and the chance that this is luck is %.0f%%" % (
+                target, -change * 100, chance * 100)
+            none_text = "each %s call changed %+.0f%%, and the chance that this is luck is %.0f%% (it must be %.0f%% or less)" % (
+                target, change * 100, chance * 100, alpha * 100)
+            if chance > alpha:
+                change = 0.0
     else:
         change = run_change
         needed = min_gain
@@ -664,7 +677,7 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
     if worse:
         verdict = "REGRESSION -> revert"
         reasons = worse
-    elif (not target or target == "waiting") and few and change <= -needed:
+    elif few and change <= -needed:
         verdict = "NEED MORE RUNS -> do not keep yet"
         reasons = ["the fall looks like %.0f%%, but %d runs are too few. Run at least %d on each side. Four runs that looked 25%% cheaper came back at +10%% with six more." % (
             -change * 100, min(len(base["costs"]), len(cand["costs"])), min_runs)]
