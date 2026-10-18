@@ -1,4 +1,6 @@
 """Tests of the parts of run_bench.py that do not call a model."""
+import contextlib
+import io
 import os
 import shutil
 import sys
@@ -102,6 +104,54 @@ class AnalyseTest(unittest.TestCase):
     def test_stage_time_runs_to_the_next_stage(self):
         result = run_bench.analyse(self.events())
         self.assertEqual(result["stages"]["intake"]["wall_s"], 9.0)
+
+
+def reviewer_events():
+    """A verify stage that starts two reviewers, security and privacy, in one message."""
+    return [
+        assistant(1, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:verify"})]),
+        assistant(2, "m2", usage(10, 0, 100, 5), [
+            ("a1", "Agent", {"subagent_type": "pdlc:reviewer",
+                             "prompt": "Review /app/pdlc/changes/CH-0001-x/review/security/packet.md"}),
+            ("a2", "Agent", {"subagent_type": "pdlc:reviewer",
+                             "prompt": "Review /app/pdlc/changes/CH-0001-x/review/privacy/packet.md"})]),
+        assistant(3, "m3", usage(20, 0, 50, 40), parent="a1"),
+        assistant(4, "m4", usage(20, 0, 50, 20), parent="a2"),
+        tool_result(5, "a1"),
+        tool_result(6, "a2"),
+        {"t": 10, "e": {"type": "result", "total_cost_usd": 1.0, "duration_ms": 10000, "num_turns": 4,
+                        "is_error": False, "modelUsage": {"m": {"costUSD": 1.0, "inputTokens": 60,
+                        "outputTokens": 70, "cacheReadInputTokens": 200, "cacheCreationInputTokens": 0}},
+                        "subagent_stats": {"spawned": 2}}},
+    ]
+
+
+class RemitSplitTest(unittest.TestCase):
+    def test_a_reviewer_call_is_counted_under_its_remit_too(self):
+        agents = run_bench.analyse(reviewer_events())["stages"]["verify"]["agents"]
+        self.assertEqual(agents["pdlc:reviewer/security"]["calls"], 1)
+        self.assertAlmostEqual(agents["pdlc:reviewer/security"]["cost_usd"], 0.5233, places=4)
+        self.assertEqual(agents["pdlc:reviewer/privacy"]["calls"], 1)
+        self.assertAlmostEqual(agents["pdlc:reviewer/privacy"]["cost_usd"], 0.2907, places=4)
+
+    def test_the_aggregate_reviewer_entry_does_not_change(self):
+        agents = run_bench.analyse(reviewer_events())["stages"]["verify"]["agents"]
+        self.assertEqual(agents["pdlc:reviewer"]["calls"], 2)
+        self.assertEqual(agents["pdlc:reviewer"]["messages"], 2)
+        self.assertAlmostEqual(agents["pdlc:reviewer"]["cost_usd"], 0.8140, places=3)
+
+    def test_agent_stats_reads_one_remit(self):
+        result = {"runs": [run_bench.analyse(reviewer_events())]}
+        stats = run_bench.agent_stats(result, "pdlc:reviewer/privacy")
+        self.assertAlmostEqual(stats["per_call"], 0.2907, places=4)
+        self.assertEqual(stats["calls"], 1)
+
+    def test_a_reviewer_without_a_remit_in_its_prompt_gets_only_the_aggregate(self):
+        events = reviewer_events()
+        events[1]["e"]["message"]["content"][0]["input"]["prompt"] = "Review the packet"
+        agents = run_bench.analyse(events)["stages"]["verify"]["agents"]
+        self.assertNotIn("pdlc:reviewer/security", agents)
+        self.assertEqual(agents["pdlc:reviewer"]["calls"], 2)
 
 
 def result(costs, probes=True, units=True, seeds=None, wall=100.0):
@@ -308,6 +358,93 @@ class WaitingGateTest(unittest.TestCase):
         verdict = run_bench.gate(baseline, candidate, target="waiting")
         self.assertTrue(verdict["verdict"].startswith("REGRESSION"))
         self.assertIn("did not finish", verdict["reasons"][0])
+
+
+def calls_result(counts, per_call, totals, label="pdlc:reviewer/compliance"):
+    """A result whose run i makes counts[i] calls of `label`, at per_call dollars each."""
+    runs = []
+    for count, total in zip(counts, totals):
+        agents = {label: {"cost_usd": per_call * count, "calls": count}} if count else {}
+        runs.append({"totals": {"cost_usd": total, "duration_s": 100.0}, "wall_s": 100.0,
+                     "stages": {"verify": {"agents": agents}},
+                     "outcome": {"probes": {"passed": 8, "total": 8}, "unit": {"ok": True}}})
+    return {"runs": runs}
+
+
+REF_TOTALS = [1.26, 1.41, 1.40, 1.62, 1.46, 1.68]
+REF_COUNTS = [1, 1, 1, 2, 1, 1]
+TARGET = "calls:pdlc:reviewer/compliance"
+
+
+class CallsGateTest(unittest.TestCase):
+    def test_agent_stats_counts_the_calls_of_each_run(self):
+        stats = run_bench.agent_stats(calls_result([1, 0, 2], 0.025, [1.0, 1.0, 1.0]), "pdlc:reviewer/compliance")
+        self.assertEqual(stats["counts"], [1, 0, 2])
+        self.assertEqual(len(stats["per_run"]), 2)
+
+    def test_removing_every_call_is_kept(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0] * 6, 0.025, [1.23, 1.38, 1.37, 1.57, 1.43, 1.65])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+        self.assertAlmostEqual(verdict["p"], 0.00108, places=5)
+        self.assertAlmostEqual(verdict["target"]["expected_run_saving"], 0.0292, places=4)
+        self.assertEqual(verdict["target"]["calls_after"], 0)
+
+    def test_one_run_that_still_calls_is_kept(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0, 0, 0, 0, 0, 1], 0.025, [1.23, 1.38, 1.37, 1.57, 1.43, 1.65])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+        self.assertAlmostEqual(verdict["p"], 0.00649, places=5)
+
+    def test_two_runs_that_still_call_are_kept(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0, 0, 0, 0, 1, 1], 0.025, [1.23, 1.38, 1.37, 1.57, 1.43, 1.65])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+        self.assertAlmostEqual(verdict["p"], 0.02273, places=5)
+
+    def test_the_same_calls_is_no_gain(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
+        self.assertIn("changed from 1.17 to 1.17", verdict["reasons"][0])
+
+    def test_fewer_calls_in_a_much_dearer_run_is_a_regression(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0] * 6, 0.025, [t * 1.4 for t in REF_TOTALS])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("REGRESSION"))
+        self.assertIn("not luck", verdict["reasons"][0])
+
+    def test_fewer_calls_in_three_runs_needs_more_runs(self):
+        baseline = calls_result([1, 1, 1], 0.025, [1.3, 1.4, 1.5])
+        candidate = calls_result([0, 0, 0], 0.025, [1.2, 1.3, 1.4])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("NEED MORE RUNS"))
+        self.assertAlmostEqual(verdict["p"], 0.05)
+
+    def test_a_baseline_without_the_calls_is_no_gain(self):
+        baseline = calls_result([0] * 6, 0.025, REF_TOTALS)
+        candidate = calls_result([0] * 6, 0.025, REF_TOTALS)
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
+
+    def test_the_gate_prints_the_calls_line(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0] * 6, 0.025, [1.23, 1.38, 1.37, 1.57, 1.43, 1.65])
+        (folder / "baseline.json").write_text(run_bench.json.dumps(baseline))
+        (folder / "candidate.json").write_text(run_bench.json.dumps(candidate))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            run_bench.command_gate(Namespace(baseline=str(folder / "baseline.json"),
+                                             candidate=str(folder / "candidate.json"),
+                                             min_gain=0.05, speed_limit=1.5, target=TARGET, min_runs=5))
+        self.assertIn("1.17 -> 0.00 calls a run at $0.025 each", out.getvalue())
 
 
 class WaitingTest(unittest.TestCase):

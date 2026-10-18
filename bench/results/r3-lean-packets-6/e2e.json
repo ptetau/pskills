@@ -117,6 +117,18 @@
        "messages": 6,
        "calls": 2,
        "wall_s": 32.6
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 26943,
+        "cache_read": 50551,
+        "output": 79
+       },
+       "cost_usd": 0.0831,
+       "messages": 6,
+       "calls": 2,
+       "wall_s": 32.6
       }
      },
      "wall_s": 106.0
@@ -179,6 +191,66 @@
        "messages": 19,
        "calls": 6,
        "wall_s": 74.7
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10033,
+        "cache_read": 19922,
+        "output": 47
+       },
+       "cost_usd": 0.0314,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 5.4
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 58852,
+        "cache_read": 166793,
+        "output": 156
+       },
+       "cost_usd": 0.1932,
+       "messages": 10,
+       "calls": 2,
+       "wall_s": 49.3
+      },
+      "pdlc:reviewer/compliance": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 9564,
+        "cache_read": 7453,
+        "output": 33
+       },
+       "cost_usd": 0.0273,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 4.7
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 9581,
+        "cache_read": 7451,
+        "output": 19
+       },
+       "cost_usd": 0.0272,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 8.9
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 9569,
+        "cache_read": 7452,
+        "output": 19
+       },
+       "cost_usd": 0.0272,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 6.4
       }
      },
      "wall_s": 103.4

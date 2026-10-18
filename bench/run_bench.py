@@ -269,6 +269,7 @@ def analyse(items):
     stage_start = {}
     stage_end = {}
     agent_of = {}
+    agent_remit = {}
     agent_span = {}
     result = {}
     for item in items:
@@ -302,6 +303,9 @@ def analyse(items):
                     if label == "pdlc:reviewer":
                         owner = "tests" if "/review/tests/" in (args.get("prompt") or "") else "verify"
                     agent_of[block["id"]] = (owner or stage, label)
+                    remit = re.search(r"/review/([a-z]+)/", args.get("prompt") or "")
+                    if label == "pdlc:reviewer" and remit:
+                        agent_remit[block["id"]] = label + "/" + remit.group(1)
                     agent_span[block["id"]] = [t, t]
             key = message.get("id") or "m%d" % len(order)
             if key not in messages:
@@ -347,12 +351,23 @@ def analyse(items):
             add_tokens(agent["tokens"], tokens_of(entry["usage"]))
             agent["cost_usd"] += share
             agent["messages"] += 1
+            sub = agent_remit.get(entry["parent"])
+            if sub:
+                part = data["agents"].setdefault(sub, {"tokens": {}, "cost_usd": 0.0, "messages": 0, "calls": 0})
+                add_tokens(part["tokens"], tokens_of(entry["usage"]))
+                part["cost_usd"] += share
+                part["messages"] += 1
     for tool_id, (owner, label) in agent_of.items():
         data = stages.setdefault(owner, blank())
         agent = data["agents"].setdefault(label, {"tokens": {}, "cost_usd": 0.0, "messages": 0, "calls": 0})
         agent["calls"] += 1
         start, end = agent_span[tool_id]
         agent["wall_s"] = round(agent.get("wall_s", 0) + (end - start), 1)
+        sub = agent_remit.get(tool_id)
+        if sub:
+            part = data["agents"].setdefault(sub, {"tokens": {}, "cost_usd": 0.0, "messages": 0, "calls": 0})
+            part["calls"] += 1
+            part["wall_s"] = round(part.get("wall_s", 0) + (end - start), 1)
 
     names = sorted(stage_start, key=stage_start.get)
     for index, name in enumerate(names):
@@ -562,7 +577,7 @@ def summarise(result):
 
 def agent_stats(result, label):
     """Cost and calls of one agent type over all runs of a result, and its cost for each call."""
-    per_run, cost, calls = [], 0.0, 0
+    per_run, counts, cost, calls = [], [], 0.0, 0
     for run in result["runs"]:
         run_cost = run_calls = 0
         for stage in run["stages"].values():
@@ -572,10 +587,11 @@ def agent_stats(result, label):
                 run_calls += agent["calls"]
         cost += run_cost
         calls += run_calls
+        counts.append(run_calls)
         if run_calls:
             per_run.append(run_cost / run_calls)
     return {"cost": cost, "calls": calls, "per_call": cost / calls if calls else 0.0, "per_run": per_run,
-            "calls_per_run": calls / len(result["runs"]) if result["runs"] else 0.0}
+            "counts": counts, "calls_per_run": calls / len(result["runs"]) if result["runs"] else 0.0}
 
 
 def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha=0.10, min_runs=5):
@@ -638,6 +654,29 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
             share * 100, chance * 100)
         none_text = "waiting turns cost $%.2f -> $%.2f a run, %.0f%% of a run less, and the chance that this is luck is %.0f%% (it must be %.0f%% or less)" % (
             statistics.mean(before), statistics.mean(after), share * 100, chance * 100, alpha * 100)
+    elif target and target.startswith("calls:"):
+        name = target[len("calls:"):]
+        before, after = agent_stats(baseline, name), agent_stats(candidate, name)
+        counts_before, counts_after = before["counts"], after["counts"]
+        mean_before, mean_after = statistics.mean(counts_before), statistics.mean(counts_after)
+        change = (mean_after - mean_before) / mean_before if mean_before else 0.0
+        chance = permutation_p(counts_before, counts_after)
+        p_value = chance
+        needed = min_gain
+        few = min(len(counts_before), len(counts_after)) < min_runs
+        saved = before["per_call"] * (mean_before - mean_after)
+        detail = {"target": target, "calls_before": mean_before, "calls_after": mean_after,
+                  "per_call_before": before["per_call"], "expected_run_saving": saved,
+                  "expected_run_saving_share": saved / base["cost_usd"] if base["cost_usd"] else 0.0}
+        if run_change > 0 and (run_change > max(base["noise"], 0.25)
+                               or permutation_p(cand["costs"], base["costs"]) <= alpha):
+            worse.append("a whole run costs %.0f%% more, and that is not luck" % (run_change * 100))
+        gain_text = "%s calls fell from %.2f to %.2f a run (%.0f%% fewer), and the chance that this is luck is %.0f%%" % (
+            name, mean_before, mean_after, -change * 100, chance * 100)
+        none_text = "%s calls changed from %.2f to %.2f a run (%+.0f%%), and the chance that this is luck is %.0f%% (it must be %.0f%% or less)" % (
+            name, mean_before, mean_after, change * 100, chance * 100, alpha * 100)
+        if chance > alpha:
+            change = 0.0
     elif target:
         before, after = agent_stats(baseline, target), agent_stats(candidate, target)
         change = (after["per_call"] - before["per_call"]) / before["per_call"] if before["per_call"] else 0.0
@@ -705,6 +744,11 @@ def command_gate(args):
         print("waiting    $%.2f -> $%.2f a run, %.1f -> %.1f turns, so about $%.2f (%.0f%%) less in a run" % (
             detail["per_run_before"], detail["per_run_after"], detail["turns_before"], detail["turns_after"],
             detail["expected_run_saving"], detail["expected_run_saving_share"] * 100))
+    elif detail and detail["target"].startswith("calls:"):
+        print("%s  %.2f -> %.2f calls a run at $%.3f each, so about $%.2f (%.0f%%) less in a run" % (
+            detail["target"], detail["calls_before"], detail["calls_after"],
+            detail["per_call_before"], detail["expected_run_saving"],
+            detail["expected_run_saving_share"] * 100))
     elif detail:
         print("%s  each call $%.3f -> $%.3f, %.1f calls a run, so about $%.2f (%.0f%%) less in a run" % (
             detail["target"], detail["per_call_before"], detail["per_call_after"], detail["calls_per_run"],
