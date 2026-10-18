@@ -225,6 +225,23 @@ class TargetGateTest(unittest.TestCase):
         aimed = run_bench.gate(baseline, candidate, target="pdlc:reviewer")
         self.assertTrue(aimed["verdict"].startswith("NEED MORE RUNS"))
 
+    def test_a_candidate_without_the_agent_is_no_gain(self):
+        baseline = agent_result(0.06, 7, [1.8, 2.5, 1.9, 2.0, 2.1])
+        candidate = agent_result(0.005, 7, [1.6, 2.2, 1.7, 1.9, 2.0])
+        for run in candidate["runs"]:
+            run["stages"]["verify"]["agents"] = {}
+        aimed = run_bench.gate(baseline, candidate, target="pdlc:reviewer")
+        self.assertTrue(aimed["verdict"].startswith("NO GAIN"))
+        self.assertIn("no pdlc:reviewer call", aimed["reasons"][0])
+
+    def test_a_missed_defect_beats_a_candidate_without_the_agent(self):
+        baseline = agent_result(0.06, 7, [1.8, 2.5, 1.9, 2.0, 2.1], seeds=["a", "b"])
+        candidate = agent_result(0.005, 7, [1.6, 2.2, 1.7, 1.9, 2.0], seeds=["a"])
+        for run in candidate["runs"]:
+            run["stages"]["verify"]["agents"] = {}
+        aimed = run_bench.gate(baseline, candidate, target="pdlc:reviewer")
+        self.assertTrue(aimed["verdict"].startswith("REGRESSION"))
+
     def test_the_cost_of_a_call_is_the_cost_over_the_calls(self):
         stats = run_bench.agent_stats(agent_result(0.06, 7, [1.8, 2.5]), "pdlc:reviewer")
         self.assertAlmostEqual(stats["per_call"], 0.06)
