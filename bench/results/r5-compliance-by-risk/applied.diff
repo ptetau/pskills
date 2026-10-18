@@ -1,0 +1,106 @@
+diff -ru -x __pycache__ a/skills/init/references/bin/make_packets.py b/skills/init/references/bin/make_packets.py
+--- a/skills/init/references/bin/make_packets.py	2026-10-18 01:29:40.051222225 +0000
++++ b/skills/init/references/bin/make_packets.py	2026-10-18 02:09:34.149628174 +0000
+@@ -17,6 +17,9 @@
+       because only that remit judges writing;
+   - the material: for the tests remit, the check files and nothing else; for every other
+     remit, the changed app files and nothing else.
++The compliance remit gets a result in place of a packet when its remit file still says
++"Rules: none listed yet." and the change touches no dependency file. Then the script
++writes result.md with "Result: pass" and the reason, and no reviewer is needed.
+ The specification packet also holds the writing check and points to the visual review
+ frames. The writing check is the output of check_writing.py for the lines this change
+ wrote in its .md files: README, docs, specs and the change spec.
+@@ -31,6 +34,13 @@
+ DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
+ KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
+ WRITING_CHECK = Path(__file__).parent / "check_writing.py"
++# Files that declare dependencies. When a project lists no compliance rules, a change that
++# touches none of these files has nothing for the compliance remit to judge.
++DEPENDENCY_FILES = re.compile(
++    r"(^|/)(requirements[^/]*\.txt|pyproject\.toml|setup\.py|setup\.cfg|Pipfile(\.lock)?|"
++    r"package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml|go\.(mod|sum)|Cargo\.(toml|lock)|"
++    r"Gemfile(\.lock)?|pom\.xml|build\.gradle(\.kts)?|composer\.(json|lock)|[^/]*\.csproj)$")
++NO_RULES = "Rules: none listed yet."
+ 
+ 
+ def section(text, title):
+@@ -51,6 +61,11 @@
+     return [r.strip() for r in line.group(1).split(",") if r.strip() and r.strip() != "none"]
+ 
+ 
++def compliance_applies(remit_text, changed):
++    """False when the project lists no compliance rules and no dependency file changed."""
++    return NO_RULES not in remit_text or any(DEPENDENCY_FILES.search(f) for f in changed)
++
++
+ def spec_file(root, spec_id):
+     return root / "pdlc" / "specs" / KINDS[spec_id.split("-", 1)[0]] / (spec_id + ".md")
+ 
+@@ -150,6 +165,17 @@
+     for remit in chosen:
+         remit_file = root / "pdlc" / "reviews" / (remit + ".md")
+         remit_text = remit_file.read_text() if remit_file.exists() else "# Remit: %s\n" % remit
++        if remit == "compliance" and not compliance_applies(remit_text, changed):
++            target = folder / "review" / remit
++            target.mkdir(parents=True, exist_ok=True)
++            (target / "packet.md").unlink(missing_ok=True)
++            (target / "result.md").write_text(
++                "Result: pass\n\nRemit: compliance\n\nProblems: none\n\nFollow-ups: none\n\nNotes:\n"
++                "- Not applicable. The project lists no compliance rules, and the change touches no\n"
++                "  dependency file. make_packets.py wrote this result, so no reviewer is needed.\n")
++            print("wrote %s (compliance does not apply: no rules and no dependency file. Start no reviewer for it.)"
++                  % (target / "result.md").relative_to(root).as_posix())
++            continue
+         out = ["# Review packet · %s · %s\n" % (folder.name, remit),
+                "Judge only what is in this packet. Write your result next to it, in result.md.\n",
+                remit_text.strip() + "\n", spec_for["specification" if remit == "specification" else "other"]]
+diff -ru -x __pycache__ a/skills/verify/SKILL.md b/skills/verify/SKILL.md
+--- a/skills/verify/SKILL.md	2026-10-17 23:42:19.147499610 +0000
++++ b/skills/verify/SKILL.md	2026-10-18 02:09:34.149735212 +0000
+@@ -37,10 +37,12 @@
+ 
+ 1. Get the remits from "Reviews" in `pdlc/config.md`. Do not include `tests`, because the
+    tests stage already reviewed the checks, and its result stays.
+-2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`.
+-3. Start one fresh `pdlc:reviewer` agent for each remit, all in one message, each with
+-   `run_in_background: false`. Give each reviewer only the path of its own packet. Do not
+-   tell a reviewer what a different reviewer found.
++2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`. For a
++   remit that does not apply, the script writes `result.md` itself and says so. Start no
++   reviewer for that remit.
++3. Start one fresh `pdlc:reviewer` agent for each remit that got a packet, all in one
++   message, each with `run_in_background: false`. Give each reviewer only the path of its
++   own packet. Do not tell a reviewer what a different reviewer found.
+ 4. The tool calls return when all the reviewers are done. Each reviewer writes
+    `review/<remit>/result.md`.
+ 
+diff -ru -x __pycache__ a/tests/test_make_packets.py b/tests/test_make_packets.py
+--- a/tests/test_make_packets.py	2026-10-18 01:29:40.051749605 +0000
++++ b/tests/test_make_packets.py	2026-10-18 02:09:34.149841186 +0000
+@@ -148,6 +148,25 @@
+         self.assertNotIn("behaviour", text)
+         self.assertNotIn("centre", text)
+ 
++    def test_compliance_gets_a_pass_result_and_no_packet_when_it_does_not_apply(self):
++        (self.root / "pdlc/reviews/compliance.md").write_text("# Remit: compliance\n\n- Rules: none listed yet.\n")
++        make_packets.main(["x", "CH-0001", "compliance"], root=self.root)
++        folder = self.folder / "review/compliance"
++        self.assertFalse((folder / "packet.md").exists())
++        self.assertIn("Result: pass", (folder / "result.md").read_text())
++
++    def test_compliance_gets_a_packet_when_a_dependency_file_changed(self):
++        (self.root / "pdlc/reviews/compliance.md").write_text("# Remit: compliance\n\n- Rules: none listed yet.\n")
++        (self.root / "requirements.txt").write_text("requests==2.32.0\n")
++        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "dependency")
++        make_packets.main(["x", "CH-0001", "compliance"], root=self.root)
++        self.assertIn("requests==2.32.0", self.packet("compliance"))
++
++    def test_compliance_gets_a_packet_when_the_project_lists_rules(self):
++        (self.root / "pdlc/reviews/compliance.md").write_text("# Remit: compliance\n\n- Rules: keep a record of each processing activity.\n")
++        make_packets.main(["x", "CH-0001", "compliance"], root=self.root)
++        self.assertIn("# Remit: compliance", self.packet("compliance"))
++
+     def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):
+         change = self.folder / "change.md"
+         change.write_text(change.read_text().replace("Base: main", "Base: no-such-branch"))

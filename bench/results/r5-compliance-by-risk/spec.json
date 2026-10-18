@@ -1,0 +1,43 @@
+{
+ "id": "r5-compliance-by-risk",
+ "hypothesis": "When make_packets.py writes the compliance result itself for a project that lists no compliance rules and a change that touches no dependency file, each verify round makes one reviewer call fewer, and nothing else changes.",
+ "lever": "review by risk (the compliance remit runs only when it has something to judge)",
+ "edits": [
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "  - the material: for the tests remit, the check files and nothing else; for every other\n    remit, the changed app files and nothing else.\n",
+   "replace": "  - the material: for the tests remit, the check files and nothing else; for every other\n    remit, the changed app files and nothing else.\nThe compliance remit gets a result in place of a packet when its remit file still says\n\"Rules: none listed yet.\" and the change touches no dependency file. Then the script\nwrites result.md with \"Result: pass\" and the reason, and no reviewer is needed.\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "WRITING_CHECK = Path(__file__).parent / \"check_writing.py\"\n",
+   "replace": "WRITING_CHECK = Path(__file__).parent / \"check_writing.py\"\n# Files that declare dependencies. When a project lists no compliance rules, a change that\n# touches none of these files has nothing for the compliance remit to judge.\nDEPENDENCY_FILES = re.compile(\n    r\"(^|/)(requirements[^/]*\\.txt|pyproject\\.toml|setup\\.py|setup\\.cfg|Pipfile(\\.lock)?|\"\n    r\"package(-lock)?\\.json|yarn\\.lock|pnpm-lock\\.yaml|go\\.(mod|sum)|Cargo\\.(toml|lock)|\"\n    r\"Gemfile(\\.lock)?|pom\\.xml|build\\.gradle(\\.kts)?|composer\\.(json|lock)|[^/]*\\.csproj)$\")\nNO_RULES = \"Rules: none listed yet.\"\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "def spec_file(root, spec_id):\n",
+   "replace": "def compliance_applies(remit_text, changed):\n    \"\"\"False when the project lists no compliance rules and no dependency file changed.\"\"\"\n    return NO_RULES not in remit_text or any(DEPENDENCY_FILES.search(f) for f in changed)\n\n\ndef spec_file(root, spec_id):\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "        remit_file = root / \"pdlc\" / \"reviews\" / (remit + \".md\")\n        remit_text = remit_file.read_text() if remit_file.exists() else \"# Remit: %s\\n\" % remit\n",
+   "replace": "        remit_file = root / \"pdlc\" / \"reviews\" / (remit + \".md\")\n        remit_text = remit_file.read_text() if remit_file.exists() else \"# Remit: %s\\n\" % remit\n        if remit == \"compliance\" and not compliance_applies(remit_text, changed):\n            target = folder / \"review\" / remit\n            target.mkdir(parents=True, exist_ok=True)\n            (target / \"packet.md\").unlink(missing_ok=True)\n            (target / \"result.md\").write_text(\n                \"Result: pass\\n\\nRemit: compliance\\n\\nProblems: none\\n\\nFollow-ups: none\\n\\nNotes:\\n\"\n                \"- Not applicable. The project lists no compliance rules, and the change touches no\\n\"\n                \"  dependency file. make_packets.py wrote this result, so no reviewer is needed.\\n\")\n            print(\"wrote %s (compliance does not apply: no rules and no dependency file. Start no reviewer for it.)\"\n                  % (target / \"result.md\").relative_to(root).as_posix())\n            continue\n"
+  },
+  {
+   "file": "skills/verify/SKILL.md",
+   "find": "2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> \u2026`.\n3. Start one fresh `pdlc:reviewer` agent for each remit, all in one message, each with\n   `run_in_background: false`. Give each reviewer only the path of its own packet. Do not\n   tell a reviewer what a different reviewer found.\n",
+   "replace": "2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> \u2026`. For a\n   remit that does not apply, the script writes `result.md` itself and says so. Start no\n   reviewer for that remit.\n3. Start one fresh `pdlc:reviewer` agent for each remit that got a packet, all in one\n   message, each with `run_in_background: false`. Give each reviewer only the path of its\n   own packet. Do not tell a reviewer what a different reviewer found.\n"
+  },
+  {
+   "file": "tests/test_make_packets.py",
+   "find": "    def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):\n",
+   "replace": "    def test_compliance_gets_a_pass_result_and_no_packet_when_it_does_not_apply(self):\n        (self.root / \"pdlc/reviews/compliance.md\").write_text(\"# Remit: compliance\\n\\n- Rules: none listed yet.\\n\")\n        make_packets.main([\"x\", \"CH-0001\", \"compliance\"], root=self.root)\n        folder = self.folder / \"review/compliance\"\n        self.assertFalse((folder / \"packet.md\").exists())\n        self.assertIn(\"Result: pass\", (folder / \"result.md\").read_text())\n\n    def test_compliance_gets_a_packet_when_a_dependency_file_changed(self):\n        (self.root / \"pdlc/reviews/compliance.md\").write_text(\"# Remit: compliance\\n\\n- Rules: none listed yet.\\n\")\n        (self.root / \"requirements.txt\").write_text(\"requests==2.32.0\\n\")\n        git(self.root, \"add\", \"-A\"); git(self.root, \"commit\", \"-qm\", \"dependency\")\n        make_packets.main([\"x\", \"CH-0001\", \"compliance\"], root=self.root)\n        self.assertIn(\"requests==2.32.0\", self.packet(\"compliance\"))\n\n    def test_compliance_gets_a_packet_when_the_project_lists_rules(self):\n        (self.root / \"pdlc/reviews/compliance.md\").write_text(\"# Remit: compliance\\n\\n- Rules: keep a record of each processing activity.\\n\")\n        make_packets.main([\"x\", \"CH-0001\", \"compliance\"], root=self.root)\n        self.assertIn(\"# Remit: compliance\", self.packet(\"compliance\"))\n\n    def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):\n"
+  }
+ ],
+ "runs": 6,
+ "seeds": false,
+ "target": "calls:pdlc:reviewer/compliance",
+ "baseline": "bench/reference.json",
+ "gate": {},
+ "budget_usd_per_run": 8
+}

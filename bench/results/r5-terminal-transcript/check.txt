@@ -1,0 +1,4 @@
+edits apply: 9
+writing check skills/init/references/reviews/specification.md: 0 findings before, 0 after
+plugin tests: OK
+  OK (skipped=11)
