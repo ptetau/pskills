@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3, 4, 5, and 6 are kept.
+**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3, 4, 5, 6, and 7 are kept.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -45,12 +45,13 @@ A stronger model plans the experiments, and cheaper models make the changes and 
 
 - `bench/baseline.json` holds six runs of today's pdlc, from before round 1. It is the floor
   for effectiveness.
-- `bench/reference.json` holds six runs of the state after the last kept round (round 6), with
+- `bench/reference.json` holds six runs of the state after the last kept round (round 7), with
   its planted-defect result. The next experiment compares its cost with this file.
-  `bench/reference-after-round-5.json`, `bench/reference-after-round-4.json`, and
-  `bench/reference-after-round-3.json` are the earlier ones.
-- `bench/sections/<stage>.json` holds six replays of one stage, from before round 6. An
-  experiment that names a stage compares its cost with this file.
+  `bench/reference-after-round-6.json`, `-5`, `-4`, and `-3` are the earlier ones.
+- `bench/sections/<stage>.json` holds replays of one stage. The files for tests (12 replays),
+  intake, and ready are from after round 6. The others are from before round 6, so each needs
+  a new baseline before an experiment uses it. `bench/sections/<stage>-before-round-6.json`
+  keeps the old files for those three stages.
 
 ## What we measure
 
@@ -337,4 +338,43 @@ Limits: the stage baselines in `bench/sections/` are from before round 6. Each s
 Next: the verify and tests stages are still 60% of a run. Smaller packets do not help, because
           a reviewer call costs mostly its start-up and the frames. The turns of the main
           session are the lever that is left.
+[2026-10-18] Round 7: fewer failed review rounds (four edits kept)
+Plan: a second review round costs $0.17 more in verify, and $0.26 more in a run. I read the
+          failing results of 19 repeat runs. The specification reviewer caused 41 of 57
+          problems. Of 27 writing problems that cite a line, the free writing check had already
+          printed 24. A Fable agent planned one harness task and five experiments
+          (`bench/experiments/round7/`). Haiku agents built and ran them.
+Harness: H6 counts the writing findings that a stage or a run leaves. `--target writing` gates
+          on the count. `recheck` reads a stage folder again.
+Kept: s7-commit-writing-hook. The commit hook runs the writing check on the specs, intents, and
+          change specs that a commit wrote, and reports each set of findings once for a parent
+          commit. Tests stage, 12 runs against 12: findings fell from 2.2 to 0.0 a run (0%
+          chance of luck), and the stage costs $0.41 against $0.40. The hook reported at most 3
+          times in a run.
+Kept: s7-intake-spec-text. Findings fell from 1.7 to 0.0 (9% chance of luck). The summary names
+          the new option in 6 of 6 whole runs. It did so in 0 of 12 in round 6.
+Kept: s7-ready-line-length. Findings fell from 1.8 to 0.0 (3% chance of luck). The stage costs
+          $0.23 against $0.21, which the gate calls noise.
+Kept on its guards: s7-test-writer-wrong-versions. The gate says NO GAIN, because a replay
+          cannot show the effect. All six runs finished, and the checks failed first.
+Reverted: s7-progress-log-form. Findings fell from 2.2 to 0.3, but 2 of 12 runs skipped the
+          commit "Tests reviewed". Both mixed up the tracker step with that commit. Only 2 of
+          54 tests replays ever did that. The hook covers the same findings.
+Whole runs (6 against the round 6 reference): all six finished, all 8 probes pass, the
+          project's checks pass, and the reviewers catch 5 of 5 planted defects with no false
+          alarm. Writing findings fell from 2.7 to 0.0 a run (9% chance of luck). Two runs of
+          six still needed a second round, as in the reference. Specification reviewer calls
+          fell from 1.50 to 1.33 a run (50% chance of luck). A run costs $1.48 against $1.32
+          (12% more, and an 89% chance of luck, because the noise is 56%).
+Not shown: no saving. Six whole runs cannot show fewer repeats. The gate says NO GAIN, as the
+          plan expected. The run cost is noise in both directions. The reference is now the
+          round 7 runs ($1.48), so a later saving is measured against the state as it is.
+Left over in the two repeat runs: one run failed on a sentence of 27 words in the app README,
+          which the builder writes and the hook skips. One run went back to tests, because
+          the merge check found two checks that pass a wrong version. The test writer edit
+          did not stop it, and the tests reviewer made 1.67 calls a run against 1.33.
+Next: extend the hook to the README and the other `.md` files outside `pdlc/` that a commit
+          wrote. Then measure weak checks directly, in the tests stage, and not through the
+          whole runs. Each stage now needs a new baseline first (about $13 for the other
+          four).
 ```

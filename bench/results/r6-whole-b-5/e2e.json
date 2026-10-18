@@ -260,6 +260,15 @@
     "verify_rounds": 1,
     "proposed": true,
     "tip": "pdlc/CH-0001-top-option",
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    },
     "unit": {
      "ok": true,
      "ran": 26

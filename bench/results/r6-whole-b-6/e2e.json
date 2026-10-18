@@ -272,6 +272,22 @@
     "verify_rounds": 1,
     "proposed": true,
     "tip": "pdlc/CH-0001-top-option",
+    "writing": {
+     "count": 6,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:19 \u00b7 sentence length \u00b7 27 words, starting \"Given a file with the\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/changes/CH-0001-top-option/change.md:25 \u00b7 sentence length \u00b7 27 words, starting \"Given the file \"the cat\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/changes/CH-0001-top-option/change.md:27 \u00b7 sentence length \u00b7 30 words, starting \"Given the same file, when\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:80 \u00b7 sentence length \u00b7 27 words, starting \"Given a file with the\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:86 \u00b7 sentence length \u00b7 27 words, starting \"Given the file \"the cat\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:88 \u00b7 sentence length \u00b7 30 words, starting \"Given the same file, when\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    },
     "unit": {
      "ok": true,
      "ran": 25

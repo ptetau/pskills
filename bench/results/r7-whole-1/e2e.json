@@ -1,0 +1,299 @@
+{
+ "label": "r7-whole-1",
+ "plugin_commit": "a9cb57b",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 116,
+     "cache_write": 172115,
+     "cache_read": 2442407,
+     "output": 35536
+    },
+    "cost_usd": 1.138,
+    "duration_s": 268.3,
+    "turns": 51,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 8,
+    "models": {
+     "claude-sonnet-5-5": 1.138
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 12565,
+      "cache_read": 67679,
+      "output": 32
+     },
+     "cost_usd": 0.0702,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 10.4
+    },
+    "intake": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 17520,
+      "cache_read": 259208,
+      "output": 100
+     },
+     "cost_usd": 0.1278,
+     "messages": 8,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 4094,
+        "cache_read": 22270,
+        "output": 36
+       },
+       "cost_usd": 0.0165,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 13.6
+      }
+     },
+     "wall_s": 46.1
+    },
+    "ready": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 4517,
+      "cache_read": 114058,
+      "output": 47
+     },
+     "cost_usd": 0.0453,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 12.1
+    },
+    "change": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 4215,
+      "cache_read": 123603,
+      "output": 23
+     },
+     "cost_usd": 0.0458,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 11.8
+    },
+    "tests": {
+     "tokens": {
+      "input": 28,
+      "cache_write": 40927,
+      "cache_read": 494966,
+      "output": 214
+     },
+     "cost_usd": 0.2434,
+     "messages": 14,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 12854,
+        "cache_read": 61956,
+        "output": 86
+       },
+       "cost_usd": 0.0497,
+       "messages": 6,
+       "calls": 1,
+       "wall_s": 34.0
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 15447,
+        "cache_read": 7443,
+        "output": 19
+       },
+       "cost_usd": 0.0441,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 15.7
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 15447,
+        "cache_read": 7443,
+        "output": 19
+       },
+       "cost_usd": 0.0441,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 15.7
+      }
+     },
+     "wall_s": 77.3
+    },
+    "build": {
+     "tokens": {
+      "input": 18,
+      "cache_write": 13915,
+      "cache_read": 301170,
+      "output": 155
+     },
+     "cost_usd": 0.1139,
+     "messages": 9,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 8936,
+        "cache_read": 63081,
+        "output": 80
+       },
+       "cost_usd": 0.0392,
+       "messages": 6,
+       "calls": 1,
+       "wall_s": 18.5
+      }
+     },
+     "wall_s": 31.8
+    },
+    "show": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 6607,
+      "cache_read": 340363,
+      "output": 37
+     },
+     "cost_usd": 0.1038,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 25.8
+    },
+    "verify": {
+     "tokens": {
+      "input": 34,
+      "cache_write": 71849,
+      "cache_read": 741360,
+      "output": 707
+     },
+     "cost_usd": 0.3879,
+     "messages": 17,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 58894,
+        "cache_read": 72076,
+        "output": 96
+       },
+       "cost_usd": 0.178,
+       "messages": 10,
+       "calls": 4,
+       "wall_s": 41.4
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 8710,
+        "cache_read": 7444,
+        "output": 23
+       },
+       "cost_usd": 0.0257,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 5.2
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 8679,
+        "cache_read": 7442,
+        "output": 19
+       },
+       "cost_usd": 0.0256,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 9.2
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 8667,
+        "cache_read": 7443,
+        "output": 19
+       },
+       "cost_usd": 0.0256,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 5.3
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 32838,
+        "cache_read": 49747,
+        "output": 35
+       },
+       "cost_usd": 0.1011,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 21.7
+      }
+     },
+     "wall_s": 51.5
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 269.7,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-top-option"
+    ],
+    "changes": [
+     "CH-0001-top-option"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-top-option": [
+      "ok   CH-0001"
+     ]
+    },
+    "change_status": {
+     "CH-0001-top-option": {
+      "pdlc/CH-0001-top-option": "?"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 1,
+    "proposed": true,
+    "tip": "pdlc/CH-0001-top-option",
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 42
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-y4hup3oc/app"
+  }
+ ]
+}

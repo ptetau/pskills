@@ -272,6 +272,21 @@
     "verify_rounds": 2,
     "proposed": true,
     "tip": "pdlc/CH-0001-top-option",
+    "writing": {
+     "count": 5,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:79 \u00b7 sentence length \u00b7 31 words, starting \"Done when: the README tells\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/changes/CH-0001-top-option/change.md:87 \u00b7 ID alone \u00b7 \"IN-0001\" has no name next to it \u00b7 write \"IN-0001 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:87 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:87 \u00b7 ID alone \u00b7 \"R6\" has no name next to it \u00b7 write \"R6 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:27 \u00b7 ID alone \u00b7 \"R6\" has no name next to it \u00b7 write \"R6 (<short name>)\""
+     ]
+    },
     "unit": {
      "ok": true,
      "ran": 26

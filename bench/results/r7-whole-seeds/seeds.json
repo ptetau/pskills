@@ -1,0 +1,88 @@
+{
+ "label": "r7-whole-seeds",
+ "reviewer_model": "claude-sonnet-5-5",
+ "caught": [
+  "spec-exit-code",
+  "security-eval",
+  "privacy-log",
+  "quality-dead-code",
+  "tests-weak-check"
+ ],
+ "missed": [],
+ "false_fails": [],
+ "cost_usd": 0.6245,
+ "seeded": {
+  "privacy": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:421-422 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. The file text can hold personal data, and the log is world-readable and never expires. The spec does not ask for this log. \u00b7 privacy remit: do not log personal data; keep data no longer than necessary; collect only what is needed\n- wordfreq/cli.py:419 \u00b7 The error message prints the user's path. The spec asks for this message, so it is not a problem. (Listed only to show it was checked; no action.)",
+   "source": "file",
+   "cost_usd": 0.0584,
+   "wall_s": 11.9
+  },
+  "quality": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:7 \u00b7 `_parse_top_old` is dead code; nothing calls it \u00b7 remit rule: no dead code\n- wordfreq/cli.py:22 \u00b7 `eval(top)` parses user input. It is unsafe and runs arbitrary code. It also accepts `+3`, `1e2`-style forms and `True`, which R6 says are invalid. A plain check with `isdigit()` and `int()` is simpler and meets R6 \u00b7 JOB-report-word-frequencies.R6, remit rule: as simple as the requirement lets it be\n- wordfreq/cli.py:27 \u00b7 An invalid N returns exit code 1. R6 requires exit code 2 \u00b7 JOB-report-word-frequencies.R6\n- wordfreq/cli.py:34 \u00b7 The code writes the path and the first 200 characters of the file to `/tmp/wordfreq-usage.log`. No requirement asks for this. It leaks file content to a shared path and is unsafe. It also adds an unhandled error if the log cannot be opened \u00b7 Files/requirements, remit rule: unsafe behaviour\n- wordfreq/cli.py:17 \u00b7 Error messages and usage use `print(...)`, which matches the spec. The `top`/`has_top` pair reuses one name for a string and then an int, which makes the code hard to read. Use separate names (for example `top_text` and `top`) \u00b7 remit rule: names tell what things are",
+   "source": "file",
+   "cost_usd": 0.0538,
+   "wall_s": 15.3
+  },
+  "security": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:408 \u00b7 `eval(top)` runs user input as code (arbitrary code execution). It also accepts `1e2`-style or `+3` values and `1+1`, so it does not validate as R6 says \u00b7 remit rule: validate input before use, no injection; JOB-report-word-frequencies.R6 (N is valid only when made of digits)\n- wordfreq/cli.py:420-421 \u00b7 The code writes the file path and the first 200 characters of the file's text to `/tmp/wordfreq-usage.log`. This leaks file content to a shared, fixed path, and no requirement asks for it. It is also not in a log the spec names, and it can raise an uncaught error that breaks the exit code \u00b7 remit rule: no secrets in code, logs, or errors; JOB-report-word-frequencies.R6 (stdout and exit code 0)\n- wordfreq/cli.py:413 \u00b7 An invalid N returns exit code 1, not 2 \u00b7 JOB-report-word-frequencies.R6 (exit code 2 for invalid N)\n- wordfreq/cli.py:313 \u00b7 The usage message is printed as `usage: wordfreq FILE` with a print newline. This matches `\\n`, so it is fine. (No problem.)\n- wordfreq/cli.py:385-389 \u00b7 `_parse_top_old` is dead code. The file's own comment says nothing calls it. The safe parser sits unused while `eval` is used \u00b7 remit rule: safe input validation",
+   "source": "file",
+   "cost_usd": 0.0545,
+   "wall_s": 17.9
+  },
+  "specification": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:28 \u00b7 Invalid N returns exit code 1, not 2 \u00b7 JOB-report-word-frequencies.R6 (invalid N gives exit code 2)\n- wordfreq/cli.py:25-28 \u00b7 `eval(top)` accepts `+3`, `1e2`-style and other expressions. `+3` evals to 3 and is accepted, but R6 requires an error. `1e2` gives a float, which is rejected, but `eval` also runs arbitrary code from input and accepts `03`-like forms inconsistently (`03` is a syntax error and gives 0, so R6 `--top 03` fails). \u00b7 JOB-report-word-frequencies.R6 (`+3` is an error, `03` is 3), and unsafe input handling\n- wordfreq/cli.py:33-34 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. The spec does not ask for this, and it leaks file content \u00b7 remit rule \"The code does nothing that the spec did not ask for\", and unsafe behaviour\n- wordfreq/cli.py:7-11 \u00b7 The dead function `_parse_top_old` is not used and is not asked for. Its comment (\"The old way\") is also old wording \u00b7 remit rule \"The code does nothing that the spec did not ask for\"\n- wordfreq/cli.py:15,25,37 \u00b7 The usage message is printed as `usage: wordfreq FILE` and the error messages go through `print`, so the newline is present. This is correct. But for `wordfreq FILE --top` the value is \"\" and the path then goes to the error. This works. No problem here.\n- change.md Progress log \u00b7 The log says \"Fixed both\" for old wording, but the code still has the old-way function. The claim does not match the material \u00b7 remit rule \"No old wording survives\"",
+   "source": "file",
+   "cost_usd": 0.0795,
+   "wall_s": 20.8
+  },
+  "tests": {
+   "verdict": "fail",
+   "problems": "- tests/test_JOB_report_word_frequencies.py:564-566 \u00b7 `assert_top_error` checks only that stdout is empty. It never checks the exact stderr message or exit code 2. \u00b7 R6 lines for `--top 0`, the invalid values (`-1`, `2.5`, `abc`, `1e2`, `+3`, empty string) and `FILE --top` (stderr exactly the message, exit code 2)\n- tests/test_JOB_report_word_frequencies.py:569,573,579 \u00b7 The error checks use an empty file, not the file with the text. A version that skips the validation prints nothing for an empty file, so stdout stays empty and the check passes. \u00b7 R6 invalid-N lines (\"the same file\")\n- tests/test_JOB_report_word_frequencies.py:558-562 \u00b7 The empty-file check does not assert that stderr is empty. This is a minor gap; the line asks only for empty stdout and exit code 0, so it is not a problem on its own.\n- tests/test_JOB_report_word_frequencies.py:578-580 \u00b7 `FILE --top` is checked only through the weak helper. A version that treats a missing N as \"no limit\" prints nothing on the empty file and passes. \u00b7 R6 line for `FILE --top`",
+   "source": "file",
+   "cost_usd": 0.0788,
+   "wall_s": 20.9
+  }
+ },
+ "clean": {
+  "specification": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0758,
+   "wall_s": 17.8
+  },
+  "security": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.049,
+   "wall_s": 14.7
+  },
+  "privacy": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0449,
+   "wall_s": 12.6
+  },
+  "quality": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0462,
+   "wall_s": 13.1
+  },
+  "tests": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0836,
+   "wall_s": 25.5
+  }
+ }
+}
