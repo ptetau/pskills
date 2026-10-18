@@ -1,0 +1,31 @@
+{
+ "id": "s6-readme-short-forms",
+ "hypothesis": "When the README gives the writing rules and the commit trailers in short form, and the handoff and proposal templates ask for a description next to each ID, the main session reads the 14k-character writing rules less often and fixes fewer writing findings, so a stage spends fewer turns.",
+ "lever": "shorter prompts (a short form in place of a full read, and a first draft that passes the writing check)",
+ "edits": [
+  {
+   "file": "skills/init/references/templates/README.md",
+   "find": "9. Each commit has a subject and trace trailers (see\n   `specs/design/DES-pdlc-commit-trailers.md`). A hook checks each new commit on a pdlc\n   branch. Fix what the hook names at once, with `git commit --amend`.\n",
+   "replace": "9. Each commit has a subject and trace trailers (see\n   `specs/design/DES-pdlc-commit-trailers.md`). The trailers come after a blank line, one\n   on each line. Write `Intent: IN-xxxx` first. On the branch of a change, add\n   `Change: CH-xxxx`. When the commit changes code, checks, or the README, add\n   `Req: <IDs>`. The skill of each stage gives the subject. A hook checks each new commit\n   on a pdlc branch. Fix what the hook names at once, with `git commit --amend`.\n"
+  },
+  {
+   "file": "skills/init/references/templates/README.md",
+   "find": "10. Write all text to the rules in `specs/design/DES-writing-style.md`. This includes\n    specs, intents, change specs, handoffs, commit messages, pull requests, review\n    results, code comments, and replies to the user.\n",
+   "replace": "10. Write all text to the rules in `specs/design/DES-writing-style.md`. This includes\n    specs, intents, change specs, handoffs, commit messages, pull requests, review\n    results, code comments, and replies to the user. The rules in short: write sentences\n    of 25 words or fewer (20 in an instruction), in the active voice, with one topic in\n    each sentence. Write \"must\" or \"can\", not \"should\". Do not use a semicolon. Give\n    each ID a short description in the same sentence, as in `R5 (usage line)`. Read the\n    full rules before you write or change a spec or an intent. For a handoff, a proposal,\n    a commit message, or a reply, the short form is sufficient.\n    `bin/check_writing.py <file>` finds the breaks that a script can find.\n"
+  },
+  {
+   "file": "skills/init/references/templates/handoff.md",
+   "find": "## Done\n\nWrite what this stage did, in a few lines.\n",
+   "replace": "## Done\n\nWrite what this stage did, in a few lines. Give each requirement, intent, or change a\nshort description next to its ID, as in `R5 (usage line)` or `CH-0001 (top option)`.\nKeep each sentence at 25 words or fewer.\n"
+  },
+  {
+   "file": "skills/init/references/templates/proposal.md",
+   "find": "The GIF, embedded as the delivery adapter says, and how many acceptance lines it shows\nout of how many.\n",
+   "replace": "The GIF, embedded as the delivery adapter says, and how many acceptance lines it shows\nout of how many. Give each requirement a short description next to its ID, as in\n`R5 (usage line)`. Keep each sentence at 25 words or fewer.\n"
+  }
+ ],
+ "runs": 6,
+ "stage": "show",
+ "seeds": false,
+ "target": null
+}

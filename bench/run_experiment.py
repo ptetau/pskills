@@ -15,6 +15,8 @@ A spec is a JSON file:
   edits              a list of {"file", "find", "replace"}. A file is a path inside plugins/pdlc.
                      Each "find" text must occur exactly once in its file.
   runs               how many end-to-end runs (default 6)
+  stage              optional: replay only this pdlc stage from the snapshot in bench/sections,
+                     for example "verify". The default baseline is then bench/sections/<stage>.json
   seeds              true to also run the planted-defect check (use it when reviewers can change)
   target             an agent for the gate's agent mode, or null for whole-run cost
   baseline           the result file to compare with (default bench/baseline.json)
@@ -23,7 +25,7 @@ A spec is a JSON file:
 
 The results go to bench/results/<id>/: spec.json, applied.diff, check.txt, result.json, gate.txt,
 gate.json, status.json, and DONE when the experiment has finished. Each run is in
-bench/results/<id>-<n>/.
+bench/results/<id>-<n>/, or all runs of a stage replay are in bench/results/<id>-stage/.
 """
 import argparse
 import contextlib
@@ -75,7 +77,10 @@ def load_spec(path):
     spec.setdefault("runs", 6)
     spec.setdefault("seeds", False)
     spec.setdefault("target", None)
-    spec.setdefault("baseline", "bench/baseline.json")
+    spec.setdefault("stage", None)
+    if spec["stage"] is not None and spec["stage"] not in run_bench.STAGE_REPLAY:
+        problems.append('"stage" must be one of ' + ", ".join(sorted(run_bench.STAGE_REPLAY)))
+    spec.setdefault("baseline", "bench/sections/%s.json" % spec["stage"] if spec["stage"] else "bench/baseline.json")
     spec.setdefault("gate", {})
     spec.setdefault("budget_usd_per_run", 8)
     if not isinstance(spec["runs"], int) or spec["runs"] < 1:
@@ -189,8 +194,13 @@ def command_run(args):
         except Exception as error:  # keep the others going
             print("run %s failed: %r" % (label, error))
 
+    def replay():
+        ns = Namespace(stage=spec["stage"], label=spec["id"] + "-stage", runs=spec["runs"], plugin=str(scratch),
+                       out=str(RESULTS), timeout=1800, budget=spec["budget_usd_per_run"])
+        run_bench.command_stage(ns)
+
     with ThreadPoolExecutor(max_workers=len(labels) + 1) as pool:
-        jobs = [pool.submit(one, label) for label in labels]
+        jobs = [pool.submit(replay)] if spec["stage"] else [pool.submit(one, label) for label in labels]
         seeds_job = None
         if spec["seeds"]:
             ns = Namespace(plugin=str(scratch), label="%s-seeds" % spec["id"], timeout=900, out=str(RESULTS))
@@ -200,11 +210,16 @@ def command_run(args):
         if seeds_job:
             seeds_job.result()
     finished = [l for l in labels if (RESULTS / l / "e2e.json").exists()]
+    results = [str(RESULTS / l / "e2e.json") for l in finished]
+    if spec["stage"]:
+        replayed = RESULTS / (spec["id"] + "-stage")
+        finished = sorted(replayed.glob("run*.json"))
+        results = [str(replayed / "e2e.json")] if finished else []
     if not finished:
         (folder / "DONE").write_text("NO RUNS FINISHED\n")
         write_status(folder, state="done", verdict="NO RUNS FINISHED")
         return 1
-    freeze = Namespace(results=[str(RESULTS / l / "e2e.json") for l in finished], out=str(folder / "result.json"), label=spec["id"],
+    freeze = Namespace(results=results, out=str(folder / "result.json"), label=spec["id"],
                        seeds=str(RESULTS / ("%s-seeds" % spec["id"]) / "seeds.json") if spec["seeds"] else None)
     run_bench.command_freeze(freeze)
     options = {"min_gain": 0.05, "speed_limit": 1.5, "alpha": 0.10, "min_runs": 5, **spec["gate"]}
@@ -274,6 +289,8 @@ def command_wait(args):
             return 1
         time.sleep(10)
     done = len([n for n in range(1, spec["runs"] + 1) if (RESULTS / ("%s-%d" % (spec["id"], n)) / "e2e.json").exists()])
+    if spec["stage"]:
+        done = len(list((RESULTS / (spec["id"] + "-stage")).glob("run*.json")))
     status = json.loads((folder / "status.json").read_text()) if (folder / "status.json").exists() else {}
     print("RUNNING: %d of %d runs finished. State: %s. Run this command again." % (done, spec["runs"], status.get("state", "unknown")))
     return 0

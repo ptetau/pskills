@@ -1,0 +1,753 @@
+{
+ "label": "s-tests-base",
+ "stage": "tests",
+ "plugin_commit": "04565af",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 40,
+     "cache_write": 60341,
+     "cache_read": 637308,
+     "output": 9378
+    },
+    "cost_usd": 0.3565,
+    "duration_s": 81.6,
+    "turns": 12,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 2,
+    "models": {
+     "claude-sonnet-5-5": 0.3565
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 21751,
+      "cache_read": 198022,
+      "output": 74
+     },
+     "cost_usd": 0.1364,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 15.3
+    },
+    "tests": {
+     "tokens": {
+      "input": 30,
+      "cache_write": 38590,
+      "cache_read": 439286,
+      "output": 575
+     },
+     "cost_usd": 0.2201,
+     "messages": 15,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 14427,
+        "cache_read": 51863,
+        "output": 85
+       },
+       "cost_usd": 0.0507,
+       "messages": 6,
+       "calls": 1,
+       "wall_s": 24.1
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 13867,
+        "cache_read": 7443,
+        "output": 21
+       },
+       "cost_usd": 0.0389,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 17.6
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 13867,
+        "cache_read": 7443,
+        "output": 21
+       },
+       "cost_usd": 0.0389,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 17.6
+      }
+     },
+     "wall_s": 65.3
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "tests",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Tests reviewed CH-0001",
+      "Review tests CH-0001",
+      "Lock tests CH-0001",
+      "Tests CH-0001",
+      "Start CH-0001"
+     ],
+     "extra": {
+      "locked": true,
+      "checks_fail_first": true
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   tests"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 83.1,
+   "project": "/tmp/pdlc-stage-9i9jhujw/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 46,
+     "cache_write": 57898,
+     "cache_read": 856424,
+     "output": 11502
+    },
+    "cost_usd": 0.3946,
+    "duration_s": 96.0,
+    "turns": 18,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 2,
+    "models": {
+     "claude-sonnet-5-5": 0.3946
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 12,
+      "cache_write": 21125,
+      "cache_read": 249170,
+      "output": 137
+     },
+     "cost_usd": 0.1438,
+     "messages": 6,
+     "agents": {},
+     "wall_s": 20.3
+    },
+    "tests": {
+     "tokens": {
+      "input": 34,
+      "cache_write": 36773,
+      "cache_read": 607254,
+      "output": 597
+     },
+     "cost_usd": 0.2508,
+     "messages": 17,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 8803,
+        "cache_read": 32524,
+        "output": 58
+       },
+       "cost_usd": 0.0308,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 23.4
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 16382,
+        "cache_read": 24772,
+        "output": 43
+       },
+       "cost_usd": 0.0491,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 17.6
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 16382,
+        "cache_read": 24772,
+        "output": 43
+       },
+       "cost_usd": 0.0491,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 17.6
+      }
+     },
+     "wall_s": 74.6
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "tests",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Tests reviewed CH-0001",
+      "Lock tests CH-0001",
+      "Tests CH-0001",
+      "Start CH-0001"
+     ],
+     "extra": {
+      "locked": true,
+      "checks_fail_first": true
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   tests"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 97.1,
+   "project": "/tmp/pdlc-stage-78b7ysc_/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 42,
+     "cache_write": 59390,
+     "cache_read": 725039,
+     "output": 10799
+    },
+    "cost_usd": 0.3741,
+    "duration_s": 92.5,
+    "turns": 15,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 2,
+    "models": {
+     "claude-sonnet-5-5": 0.3741
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 20412,
+      "cache_read": 201089,
+      "output": 113
+     },
+     "cost_usd": 0.1328,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 15.3
+    },
+    "tests": {
+     "tokens": {
+      "input": 32,
+      "cache_write": 38978,
+      "cache_read": 523950,
+      "output": 686
+     },
+     "cost_usd": 0.2414,
+     "messages": 16,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 10,
+        "cache_write": 13781,
+        "cache_read": 37483,
+        "output": 65
+       },
+       "cost_usd": 0.046,
+       "messages": 5,
+       "calls": 1,
+       "wall_s": 26.9
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 15546,
+        "cache_read": 7437,
+        "output": 19
+       },
+       "cost_usd": 0.0438,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 17.7
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 15546,
+        "cache_read": 7437,
+        "output": 19
+       },
+       "cost_usd": 0.0438,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 17.7
+      }
+     },
+     "wall_s": 74.4
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "tests",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Tests reviewed CH-0001",
+      "Review tests CH-0001",
+      "Lock tests CH-0001",
+      "Tests CH-0001",
+      "Start CH-0001"
+     ],
+     "extra": {
+      "locked": true,
+      "checks_fail_first": true
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   tests"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 93.7,
+   "project": "/tmp/pdlc-stage-78ugtois/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 44,
+     "cache_write": 64178,
+     "cache_read": 754231,
+     "output": 10226
+    },
+    "cost_usd": 0.386,
+    "duration_s": 88.1,
+    "turns": 15,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 2,
+    "models": {
+     "claude-sonnet-5-5": 0.386
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 20877,
+      "cache_read": 200971,
+      "output": 78
+     },
+     "cost_usd": 0.1311,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 15.5
+    },
+    "tests": {
+     "tokens": {
+      "input": 34,
+      "cache_write": 43301,
+      "cache_read": 553260,
+      "output": 652
+     },
+     "cost_usd": 0.2548,
+     "messages": 17,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 13559,
+        "cache_read": 27548,
+        "output": 58
+       },
+       "cost_usd": 0.0421,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 21.6
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 18785,
+        "cache_read": 39017,
+        "output": 49
+       },
+       "cost_usd": 0.0582,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 18.5
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 18785,
+        "cache_read": 39017,
+        "output": 49
+       },
+       "cost_usd": 0.0582,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 18.5
+      }
+     },
+     "wall_s": 70.2
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "tests",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Tests reviewed CH-0001",
+      "Tests reviewed CH-0001",
+      "Review tests CH-0001",
+      "Lock tests CH-0001",
+      "Tests CH-0001",
+      "Start CH-0001"
+     ],
+     "extra": {
+      "locked": true,
+      "checks_fail_first": true
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   tests"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 89.2,
+   "project": "/tmp/pdlc-stage-91dyydo4/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 44,
+     "cache_write": 62340,
+     "cache_read": 758703,
+     "output": 9682
+    },
+    "cost_usd": 0.3774,
+    "duration_s": 85.7,
+    "turns": 15,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 2,
+    "models": {
+     "claude-sonnet-5-5": 0.3774
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 19991,
+      "cache_read": 200389,
+      "output": 100
+     },
+     "cost_usd": 0.1255,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 15.4
+    },
+    "tests": {
+     "tokens": {
+      "input": 34,
+      "cache_write": 42349,
+      "cache_read": 558314,
+      "output": 655
+     },
+     "cost_usd": 0.2519,
+     "messages": 17,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 13673,
+        "cache_read": 28411,
+        "output": 64
+       },
+       "cost_usd": 0.042,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 22.0
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 16141,
+        "cache_read": 42123,
+        "output": 75
+       },
+       "cost_usd": 0.0514,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 19.1
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 16141,
+        "cache_read": 42123,
+        "output": 75
+       },
+       "cost_usd": 0.0514,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 19.1
+      }
+     },
+     "wall_s": 69.2
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "tests",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Tests reviewed CH-0001",
+      "Review tests CH-0001",
+      "Lock tests CH-0001",
+      "Tests CH-0001",
+      "Start CH-0001"
+     ],
+     "extra": {
+      "locked": true,
+      "checks_fail_first": true
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   tests"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 87.1,
+   "project": "/tmp/pdlc-stage-p23dk4fs/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 40,
+     "cache_write": 57503,
+     "cache_read": 757939,
+     "output": 10943
+    },
+    "cost_usd": 0.3812,
+    "duration_s": 90.0,
+    "turns": 15,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 2,
+    "models": {
+     "claude-sonnet-5-5": 0.3812
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 22712,
+      "cache_read": 207033,
+      "output": 72
+     },
+     "cost_usd": 0.1431,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 16.9
+    },
+    "tests": {
+     "tokens": {
+      "input": 30,
+      "cache_write": 34791,
+      "cache_read": 550906,
+      "output": 601
+     },
+     "cost_usd": 0.2381,
+     "messages": 15,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 8179,
+        "cache_read": 31796,
+        "output": 61
+       },
+       "cost_usd": 0.0295,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 27.2
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 14594,
+        "cache_read": 7443,
+        "output": 19
+       },
+       "cost_usd": 0.0411,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 15.0
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 14594,
+        "cache_read": 7443,
+        "output": 19
+       },
+       "cost_usd": 0.0411,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 15.0
+      }
+     },
+     "wall_s": 71.7
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "tests",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Tests reviewed CH-0001",
+      "Review tests CH-0001",
+      "Lock tests CH-0001",
+      "Tests CH-0001",
+      "Start CH-0001"
+     ],
+     "extra": {
+      "locked": true,
+      "checks_fail_first": true
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   tests"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 91.1,
+   "project": "/tmp/pdlc-stage-72hjfx2a/app",
+   "stderr": ""
+  }
+ ]
+}

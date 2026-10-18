@@ -76,6 +76,10 @@ For each requirement, add a line `Seen in: <file>:<line>` that points to the cod
 are not sure, say how sure you are. Write only what the code really does, not what the
 code must do.
 
+Reply with the requirements and their `Seen in` lines, and nothing else. Do not add a
+summary of the code, a list of the files that you read, or advice for the spec. The skill
+that started you reads the code map and the template itself.
+
 Write the behaviour that a user or a caller can see, not how the code makes that
 behaviour. For example, write "saving replaces the whole list", not "save calls
 write_text". A requirement that pins the implementation blocks each future change to the
@@ -88,6 +92,7 @@ implementation.
 - Do not restate the behaviour of one job in a capability. That behaviour belongs to the
   job.
 
-Write your reply, and each spec, comment, or message that you write, to the rules in
-`pdlc/specs/design/DES-writing-style.md`. If that file does not exist yet, write short
-sentences in the active voice. Give each ID a short description.
+Write short sentences in the active voice, with 25 words or fewer in each sentence. Give
+each ID a short description in the same sentence, as in `R3 (prints the count)`. Do not
+read `pdlc/specs/design/DES-writing-style.md`: the skill that started you has the full
+rules and owns the text of the spec.

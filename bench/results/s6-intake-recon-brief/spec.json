@@ -1,0 +1,29 @@
+{
+ "id": "s6-intake-recon-brief",
+ "hypothesis": "When intake gives recon only the root, the spec path, and the words deep look, and recon replies with the requirements only and does not read the 14k-character writing rules, the recon call costs less and its reply adds fewer tokens to the main session.",
+ "lever": "shorter prompts (a fixed ask for recon, and a reply of requirements only)",
+ "edits": [
+  {
+   "file": "skills/intake/SKILL.md",
+   "find": "If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent with\n`run_in_background: false`. Ask recon for a **deep look** at the code map of that spec.\nWrite the requirements from recon into the spec. These requirements come back as `built`,\nwith `Source: recon`. Set the spec to `Status: active`.\n",
+   "replace": "If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent with\n`run_in_background: false`. Give recon three items, and nothing else: the project root, the\nabsolute path of the spec, and the words `deep look`. Recon knows the format of its reply.\nDo not ask recon for a summary of the code, for the template, or for extra detail. Write\nthe requirements from recon into the spec. These requirements come back as `built`, with\n`Source: recon`. Set the spec to `Status: active`.\n"
+  },
+  {
+   "file": "agents/recon.md",
+   "find": "For each requirement, add a line `Seen in: <file>:<line>` that points to the code. If you\nare not sure, say how sure you are. Write only what the code really does, not what the\ncode must do.\n",
+   "replace": "For each requirement, add a line `Seen in: <file>:<line>` that points to the code. If you\nare not sure, say how sure you are. Write only what the code really does, not what the\ncode must do.\n\nReply with the requirements and their `Seen in` lines, and nothing else. Do not add a\nsummary of the code, a list of the files that you read, or advice for the spec. The skill\nthat started you reads the code map and the template itself.\n"
+  },
+  {
+   "file": "agents/recon.md",
+   "find": "Write your reply, and each spec, comment, or message that you write, to the rules in\n`pdlc/specs/design/DES-writing-style.md`. If that file does not exist yet, write short\nsentences in the active voice. Give each ID a short description.\n",
+   "replace": "Write short sentences in the active voice, with 25 words or fewer in each sentence. Give\neach ID a short description in the same sentence, as in `R3 (prints the count)`. Do not\nread `pdlc/specs/design/DES-writing-style.md`: the skill that started you has the full\nrules and owns the text of the spec.\n"
+  }
+ ],
+ "runs": 6,
+ "stage": "intake",
+ "seeds": false,
+ "target": null,
+ "baseline": "bench/sections/intake.json",
+ "gate": {},
+ "budget_usd_per_run": 8
+}

@@ -1,0 +1,54 @@
+diff -ru -x __pycache__ a/skills/init/references/templates/README.md b/skills/init/references/templates/README.md
+--- a/skills/init/references/templates/README.md	2026-10-17 23:42:19.145751846 +0000
++++ b/skills/init/references/templates/README.md	2026-10-18 05:45:47.930909412 +0000
+@@ -26,11 +26,20 @@
+    `bin/check_merge.py` checks all of these conditions.
+ 8. These files are the truth. Boards and dashboards only show what these files contain.
+ 9. Each commit has a subject and trace trailers (see
+-   `specs/design/DES-pdlc-commit-trailers.md`). A hook checks each new commit on a pdlc
+-   branch. Fix what the hook names at once, with `git commit --amend`.
++   `specs/design/DES-pdlc-commit-trailers.md`). The trailers come after a blank line, one
++   on each line. Write `Intent: IN-xxxx` first. On the branch of a change, add
++   `Change: CH-xxxx`. When the commit changes code, checks, or the README, add
++   `Req: <IDs>`. The skill of each stage gives the subject. A hook checks each new commit
++   on a pdlc branch. Fix what the hook names at once, with `git commit --amend`.
+ 10. Write all text to the rules in `specs/design/DES-writing-style.md`. This includes
+     specs, intents, change specs, handoffs, commit messages, pull requests, review
+-    results, code comments, and replies to the user.
++    results, code comments, and replies to the user. The rules in short: write sentences
++    of 25 words or fewer (20 in an instruction), in the active voice, with one topic in
++    each sentence. Write "must" or "can", not "should". Do not use a semicolon. Give
++    each ID a short description in the same sentence, as in `R5 (usage line)`. Read the
++    full rules before you write or change a spec or an intent. For a handoff, a proposal,
++    a commit message, or a reply, the short form is sufficient.
++    `bin/check_writing.py <file>` finds the breaks that a script can find.
+ 
+ ## Layout
+ 
+diff -ru -x __pycache__ a/skills/init/references/templates/handoff.md b/skills/init/references/templates/handoff.md
+--- a/skills/init/references/templates/handoff.md	2026-10-17 08:26:05.388694656 +0000
++++ b/skills/init/references/templates/handoff.md	2026-10-18 05:45:47.931131725 +0000
+@@ -10,7 +10,9 @@
+ 
+ ## Done
+ 
+-Write what this stage did, in a few lines.
++Write what this stage did, in a few lines. Give each requirement, intent, or change a
++short description next to its ID, as in `R5 (usage line)` or `CH-0001 (top option)`.
++Keep each sentence at 25 words or fewer.
+ 
+ ## Decided on defaults
+ 
+diff -ru -x __pycache__ a/skills/init/references/templates/proposal.md b/skills/init/references/templates/proposal.md
+--- a/skills/init/references/templates/proposal.md	2026-10-17 08:26:05.388694656 +0000
++++ b/skills/init/references/templates/proposal.md	2026-10-18 05:45:47.931216810 +0000
+@@ -7,7 +7,8 @@
+ ## Visual review
+ 
+ The GIF, embedded as the delivery adapter says, and how many acceptance lines it shows
+-out of how many.
++out of how many. Give each requirement a short description next to its ID, as in
++`R5 (usage line)`. Keep each sentence at 25 words or fewer.
+ 
+ ## Requirements and checks
+ 

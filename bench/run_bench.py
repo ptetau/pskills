@@ -21,6 +21,7 @@ import sys
 import tempfile
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -37,6 +38,19 @@ INTENT = (
     "`error: --top needs a whole number greater than zero` to standard error and exit "
     "with code 2."
 )
+SECTIONS = HERE / "sections"
+SNAPSHOT = SECTIONS / "project.bundle"
+CHANGE_BRANCH = "pdlc/CH-0001-top-option"
+# stage: (subject that starts the entry commit, branch to work on, prompt, subject that proves the stage finished)
+STAGE_REPLAY = {
+    "intake": ("Set up pdlc", "main", "/pdlc:intake defaults " + INTENT, "Specify IN-"),
+    "ready": ("Specify IN-0001", "main", "/pdlc:ready defaults", "Ready IN-"),
+    "change": ("Ready IN-0001", "main", "/pdlc:change defaults", "Plan IN-"),
+    "tests": ("Plan IN-0001", "main", "/pdlc:tests defaults", "Tests reviewed CH-"),
+    "build": ("Tests reviewed CH-0001", CHANGE_BRANCH, "/pdlc:build defaults", "Built CH-"),
+    "show": ("Built CH-0001", CHANGE_BRANCH, "/pdlc:show defaults", "Visual review CH-"),
+    "verify": ("Visual review CH-0001", CHANGE_BRANCH, "/pdlc:verify defaults", "Verified CH-"),
+}
 ALLOWED_TOOLS = (
     "Read Write Edit Glob Grep Agent Skill "
     + " ".join(
@@ -269,6 +283,7 @@ def analyse(items):
     stage_start = {}
     stage_end = {}
     agent_of = {}
+    agent_remit = {}
     agent_span = {}
     result = {}
     for item in items:
@@ -302,6 +317,9 @@ def analyse(items):
                     if label == "pdlc:reviewer":
                         owner = "tests" if "/review/tests/" in (args.get("prompt") or "") else "verify"
                     agent_of[block["id"]] = (owner or stage, label)
+                    remit = re.search(r"/review/([a-z]+)/", args.get("prompt") or "")
+                    if label == "pdlc:reviewer" and remit:
+                        agent_remit[block["id"]] = label + "/" + remit.group(1)
                     agent_span[block["id"]] = [t, t]
             key = message.get("id") or "m%d" % len(order)
             if key not in messages:
@@ -347,12 +365,23 @@ def analyse(items):
             add_tokens(agent["tokens"], tokens_of(entry["usage"]))
             agent["cost_usd"] += share
             agent["messages"] += 1
+            sub = agent_remit.get(entry["parent"])
+            if sub:
+                part = data["agents"].setdefault(sub, {"tokens": {}, "cost_usd": 0.0, "messages": 0, "calls": 0})
+                add_tokens(part["tokens"], tokens_of(entry["usage"]))
+                part["cost_usd"] += share
+                part["messages"] += 1
     for tool_id, (owner, label) in agent_of.items():
         data = stages.setdefault(owner, blank())
         agent = data["agents"].setdefault(label, {"tokens": {}, "cost_usd": 0.0, "messages": 0, "calls": 0})
         agent["calls"] += 1
         start, end = agent_span[tool_id]
         agent["wall_s"] = round(agent.get("wall_s", 0) + (end - start), 1)
+        sub = agent_remit.get(tool_id)
+        if sub:
+            part = data["agents"].setdefault(sub, {"tokens": {}, "cost_usd": 0.0, "messages": 0, "calls": 0})
+            part["calls"] += 1
+            part["wall_s"] = round(part.get("wall_s", 0) + (end - start), 1)
 
     names = sorted(stage_start, key=stage_start.get)
     for index, name in enumerate(names):
@@ -460,6 +489,136 @@ def inspect_project(project):
     return out
 
 
+# ---------------------------------------------------------------- replaying one stage
+
+
+def entry_commit(project, subject):
+    """The full hash of the newest commit whose subject starts with `subject`."""
+    for line in git(project, "log", "--all", "--format=%H %s").stdout.splitlines():
+        commit, _, text = line.partition(" ")
+        if text.startswith(subject):
+            return commit
+    raise RuntimeError("no commit starts with %r" % subject)
+
+
+def tip_branch(project):
+    """The local branch, other than main, whose last commit is the newest. Main if there is none."""
+    names = git(project, "for-each-ref", "--sort=-committerdate", "--format=%(refname:short)", "refs/heads/").stdout.split()
+    return next((name for name in names if name != "main"), "main")
+
+
+def make_stage_project(dest, stage, plugin):
+    """Clone the snapshot to dest, with the project at the commit where the stage starts."""
+    subprocess.run(["git", "clone", "-q", str(SNAPSHOT), str(dest)], check=True)
+    subject, branch, _, _ = STAGE_REPLAY[stage]
+    # The change branch is only a remote-tracking ref until it is checked out, so find the
+    # commits before the remote goes.
+    entry = entry_commit(dest, subject)
+    if branch == "main":
+        git(dest, "checkout", "-q", "-B", "main", entry)
+    else:
+        plan = entry_commit(dest, "Plan IN-0001")
+        git(dest, "checkout", "-q", "-B", "main", plan)
+        git(dest, "checkout", "-q", "-B", branch, entry)
+    git(dest, "remote", "remove", "origin")
+    sync_verbatim(dest, plugin)
+    tools = Path(dest) / "pdlc" / ".tools"
+    if tools.is_symlink() and not tools.exists():  # the snapshot's link points to a missing folder
+        tools.unlink()
+    if not tools.exists():
+        os.symlink(ensure_tools(), tools)
+    if git(dest, "status", "--porcelain").stdout.strip():
+        git(dest, "add", "-A", "pdlc")
+        git(dest, "commit", "-q", "-m", "Upgrade pdlc")
+    return Path(dest), entry
+
+
+def check_stage(project, stage, entry):
+    """Judge what a stage left in the project, from the commits after its entry commit."""
+    project = Path(project)
+    subjects = [s for s in git(project, "log", "--all", "--format=%s", "--not", entry).stdout.splitlines()
+                if s != "Upgrade pdlc"]
+    done = STAGE_REPLAY[stage][3]
+    finished = any(s.startswith(done) for s in subjects)
+    stopped = any(s.startswith("Stop ") for s in subjects)
+    extra = {}
+    git(project, "checkout", "-q", tip_branch(project))
+    changes = project / "pdlc" / "changes"
+    if stage == "tests":
+        extra["locked"] = any(line.startswith("Tests-Locked:")
+                              for path in changes.glob("CH-*/change.md")
+                              for line in path.read_text().splitlines())
+        extra["checks_fail_first"] = not run_unit_checks(project)["ok"]
+    elif stage == "build":
+        extra["unit"] = run_unit_checks(project)
+        extra["probes"] = run_probes(project)
+    elif stage == "show":
+        extra["gif"] = any(changes.glob("CH-*/review.gif"))
+        extra["frames"] = len(list(changes.glob("CH-*/frames/*.png")))
+    elif stage == "verify":
+        merge = subprocess.run([sys.executable, "pdlc/bin/check_merge.py"], cwd=project, capture_output=True,
+                               text=True, timeout=120)
+        lines = (merge.stdout + merge.stderr).strip().splitlines()
+        extra["merge"] = lines[0].strip() if lines else ""
+    git(project, "checkout", "-q", "main")
+    if stage in ("intake", "ready", "change"):
+        passed = True
+    elif stage == "tests":
+        passed = extra["locked"] and extra["checks_fail_first"]
+    elif stage == "build":
+        passed = extra["unit"]["ok"] and not extra["probes"]["failed"]
+    elif stage == "show":
+        passed = extra["gif"] and extra["frames"] > 0
+    else:
+        passed = extra["merge"].startswith("ok")
+    return {"ok": finished and not stopped and passed, "finished": finished, "stopped": stopped,
+            "subjects": subjects, "extra": extra}
+
+
+def command_stage(args):
+    """Replay one stage from the snapshot, once for each run, and write the results."""
+    plugin = Path(args.plugin).resolve()
+    out_dir = Path(args.out) / args.label
+    out_dir.mkdir(parents=True, exist_ok=True)
+    prompt = STAGE_REPLAY[args.stage][2]
+
+    def one(number):
+        try:
+            work = Path(tempfile.mkdtemp(prefix="pdlc-stage-"))
+            project, entry = make_stage_project(work / "app", args.stage, plugin)
+            events, wall, err = run_claude(prompt, project, plugin, out_dir / ("run%d.stream.jsonl" % number),
+                                           timeout=args.timeout, budget_usd=args.budget)
+            analysis = analyse(events)
+            check = check_stage(project, args.stage, entry)
+            analysis["outcome"] = {
+                "stage": args.stage,
+                "check": check,
+                "merge_check": {"stage": ["ok   " + args.stage] if check["ok"] else ["FAIL " + args.stage]},
+                "probes": check["extra"]["probes"] if args.stage == "build" else {"passed": len(PROBES), "total": len(PROBES), "failed": []},
+                "unit": check["extra"]["unit"] if args.stage == "build" else {"ok": True, "ran": 0},
+                "verify_rounds": None,
+                "stops": [s for s in check["subjects"] if s.startswith("Stop ")],
+            }
+            analysis.update({"wall_s": wall, "project": str(project), "stderr": err[-500:]})
+            (out_dir / ("run%d.json" % number)).write_text(json.dumps(analysis, indent=1))
+            return analysis
+        except Exception as error:  # one failed run must not stop the others
+            print("run %d failed: %r" % (number, error), file=sys.stderr)
+            return None
+
+    with ThreadPoolExecutor(max_workers=args.runs) as pool:
+        results = list(pool.map(one, range(1, args.runs + 1)))
+    runs = [run for run in results if run is not None]
+    summary = {"label": args.label, "stage": args.stage,
+               "plugin_commit": git(plugin, "rev-parse", "--short", "HEAD").stdout.strip(),
+               "model": MODEL, "effort": EFFORT, "runs": runs}
+    (out_dir / "e2e.json").write_text(json.dumps(summary, indent=1))
+    for number, run in enumerate(results, 1):
+        if run is not None:
+            print("run %d: $%.2f, %ss, ok %s" % (number, run["totals"]["cost_usd"], run["wall_s"],
+                                              run["outcome"]["check"]["ok"]))
+
+
 # ---------------------------------------------------------------- the commands
 
 
@@ -562,7 +721,7 @@ def summarise(result):
 
 def agent_stats(result, label):
     """Cost and calls of one agent type over all runs of a result, and its cost for each call."""
-    per_run, cost, calls = [], 0.0, 0
+    per_run, counts, cost, calls = [], [], 0.0, 0
     for run in result["runs"]:
         run_cost = run_calls = 0
         for stage in run["stages"].values():
@@ -572,10 +731,11 @@ def agent_stats(result, label):
                 run_calls += agent["calls"]
         cost += run_cost
         calls += run_calls
+        counts.append(run_calls)
         if run_calls:
             per_run.append(run_cost / run_calls)
     return {"cost": cost, "calls": calls, "per_call": cost / calls if calls else 0.0, "per_run": per_run,
-            "calls_per_run": calls / len(result["runs"]) if result["runs"] else 0.0}
+            "counts": counts, "calls_per_run": calls / len(result["runs"]) if result["runs"] else 0.0}
 
 
 def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha=0.10, min_runs=5):
@@ -638,6 +798,29 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
             share * 100, chance * 100)
         none_text = "waiting turns cost $%.2f -> $%.2f a run, %.0f%% of a run less, and the chance that this is luck is %.0f%% (it must be %.0f%% or less)" % (
             statistics.mean(before), statistics.mean(after), share * 100, chance * 100, alpha * 100)
+    elif target and target.startswith("calls:"):
+        name = target[len("calls:"):]
+        before, after = agent_stats(baseline, name), agent_stats(candidate, name)
+        counts_before, counts_after = before["counts"], after["counts"]
+        mean_before, mean_after = statistics.mean(counts_before), statistics.mean(counts_after)
+        change = (mean_after - mean_before) / mean_before if mean_before else 0.0
+        chance = permutation_p(counts_before, counts_after)
+        p_value = chance
+        needed = min_gain
+        few = min(len(counts_before), len(counts_after)) < min_runs
+        saved = before["per_call"] * (mean_before - mean_after)
+        detail = {"target": target, "calls_before": mean_before, "calls_after": mean_after,
+                  "per_call_before": before["per_call"], "expected_run_saving": saved,
+                  "expected_run_saving_share": saved / base["cost_usd"] if base["cost_usd"] else 0.0}
+        if run_change > 0 and (run_change > max(base["noise"], 0.25)
+                               or permutation_p(cand["costs"], base["costs"]) <= alpha):
+            worse.append("a whole run costs %.0f%% more, and that is not luck" % (run_change * 100))
+        gain_text = "%s calls fell from %.2f to %.2f a run (%.0f%% fewer), and the chance that this is luck is %.0f%%" % (
+            name, mean_before, mean_after, -change * 100, chance * 100)
+        none_text = "%s calls changed from %.2f to %.2f a run (%+.0f%%), and the chance that this is luck is %.0f%% (it must be %.0f%% or less)" % (
+            name, mean_before, mean_after, change * 100, chance * 100, alpha * 100)
+        if chance > alpha:
+            change = 0.0
     elif target:
         before, after = agent_stats(baseline, target), agent_stats(candidate, target)
         change = (after["per_call"] - before["per_call"]) / before["per_call"] if before["per_call"] else 0.0
@@ -705,6 +888,11 @@ def command_gate(args):
         print("waiting    $%.2f -> $%.2f a run, %.1f -> %.1f turns, so about $%.2f (%.0f%%) less in a run" % (
             detail["per_run_before"], detail["per_run_after"], detail["turns_before"], detail["turns_after"],
             detail["expected_run_saving"], detail["expected_run_saving_share"] * 100))
+    elif detail and detail["target"].startswith("calls:"):
+        print("%s  %.2f -> %.2f calls a run at $%.3f each, so about $%.2f (%.0f%%) less in a run" % (
+            detail["target"], detail["calls_before"], detail["calls_after"],
+            detail["per_call_before"], detail["expected_run_saving"],
+            detail["expected_run_saving_share"] * 100))
     elif detail:
         print("%s  each call $%.3f -> $%.3f, %.1f calls a run, so about $%.2f (%.0f%%) less in a run" % (
             detail["target"], detail["per_call_before"], detail["per_call_after"], detail["calls_per_run"],
@@ -981,12 +1169,23 @@ def main(argv=None):
     g.add_argument("--speed-limit", type=float, default=1.5)
     g.add_argument("--min-runs", type=int, default=5, help="runs needed on each side to keep an edit by whole-run cost")
     g.add_argument("--target", help="an agent that the edit aims at, for example pdlc:reviewer")
+    st = sub.add_parser("stage")
+    st.add_argument("--stage", required=True, choices=sorted(STAGE_REPLAY))
+    st.add_argument("--label", required=True)
+    st.add_argument("--runs", type=int, default=6)
+    st.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
+    st.add_argument("--out", default=str(HERE / "results"))
+    st.add_argument("--timeout", type=int, default=1800)
+    st.add_argument("--budget", type=float, default=6.0)
     args = parser.parse_args(argv)
     if args.command == "e2e":
         command_e2e(args)
         return 0
     if args.command == "init-fixture":
         command_init_fixture(args)
+        return 0
+    if args.command == "stage":
+        command_stage(args)
         return 0
     if args.command == "seeds":
         command_seeds(args)

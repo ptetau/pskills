@@ -1,4 +1,6 @@
 """Tests of the parts of run_bench.py that do not call a model."""
+import contextlib
+import io
 import os
 import shutil
 import sys
@@ -102,6 +104,54 @@ class AnalyseTest(unittest.TestCase):
     def test_stage_time_runs_to_the_next_stage(self):
         result = run_bench.analyse(self.events())
         self.assertEqual(result["stages"]["intake"]["wall_s"], 9.0)
+
+
+def reviewer_events():
+    """A verify stage that starts two reviewers, security and privacy, in one message."""
+    return [
+        assistant(1, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:verify"})]),
+        assistant(2, "m2", usage(10, 0, 100, 5), [
+            ("a1", "Agent", {"subagent_type": "pdlc:reviewer",
+                             "prompt": "Review /app/pdlc/changes/CH-0001-x/review/security/packet.md"}),
+            ("a2", "Agent", {"subagent_type": "pdlc:reviewer",
+                             "prompt": "Review /app/pdlc/changes/CH-0001-x/review/privacy/packet.md"})]),
+        assistant(3, "m3", usage(20, 0, 50, 40), parent="a1"),
+        assistant(4, "m4", usage(20, 0, 50, 20), parent="a2"),
+        tool_result(5, "a1"),
+        tool_result(6, "a2"),
+        {"t": 10, "e": {"type": "result", "total_cost_usd": 1.0, "duration_ms": 10000, "num_turns": 4,
+                        "is_error": False, "modelUsage": {"m": {"costUSD": 1.0, "inputTokens": 60,
+                        "outputTokens": 70, "cacheReadInputTokens": 200, "cacheCreationInputTokens": 0}},
+                        "subagent_stats": {"spawned": 2}}},
+    ]
+
+
+class RemitSplitTest(unittest.TestCase):
+    def test_a_reviewer_call_is_counted_under_its_remit_too(self):
+        agents = run_bench.analyse(reviewer_events())["stages"]["verify"]["agents"]
+        self.assertEqual(agents["pdlc:reviewer/security"]["calls"], 1)
+        self.assertAlmostEqual(agents["pdlc:reviewer/security"]["cost_usd"], 0.5233, places=4)
+        self.assertEqual(agents["pdlc:reviewer/privacy"]["calls"], 1)
+        self.assertAlmostEqual(agents["pdlc:reviewer/privacy"]["cost_usd"], 0.2907, places=4)
+
+    def test_the_aggregate_reviewer_entry_does_not_change(self):
+        agents = run_bench.analyse(reviewer_events())["stages"]["verify"]["agents"]
+        self.assertEqual(agents["pdlc:reviewer"]["calls"], 2)
+        self.assertEqual(agents["pdlc:reviewer"]["messages"], 2)
+        self.assertAlmostEqual(agents["pdlc:reviewer"]["cost_usd"], 0.8140, places=3)
+
+    def test_agent_stats_reads_one_remit(self):
+        result = {"runs": [run_bench.analyse(reviewer_events())]}
+        stats = run_bench.agent_stats(result, "pdlc:reviewer/privacy")
+        self.assertAlmostEqual(stats["per_call"], 0.2907, places=4)
+        self.assertEqual(stats["calls"], 1)
+
+    def test_a_reviewer_without_a_remit_in_its_prompt_gets_only_the_aggregate(self):
+        events = reviewer_events()
+        events[1]["e"]["message"]["content"][0]["input"]["prompt"] = "Review the packet"
+        agents = run_bench.analyse(events)["stages"]["verify"]["agents"]
+        self.assertNotIn("pdlc:reviewer/security", agents)
+        self.assertEqual(agents["pdlc:reviewer"]["calls"], 2)
 
 
 def result(costs, probes=True, units=True, seeds=None, wall=100.0):
@@ -310,6 +360,93 @@ class WaitingGateTest(unittest.TestCase):
         self.assertIn("did not finish", verdict["reasons"][0])
 
 
+def calls_result(counts, per_call, totals, label="pdlc:reviewer/compliance"):
+    """A result whose run i makes counts[i] calls of `label`, at per_call dollars each."""
+    runs = []
+    for count, total in zip(counts, totals):
+        agents = {label: {"cost_usd": per_call * count, "calls": count}} if count else {}
+        runs.append({"totals": {"cost_usd": total, "duration_s": 100.0}, "wall_s": 100.0,
+                     "stages": {"verify": {"agents": agents}},
+                     "outcome": {"probes": {"passed": 8, "total": 8}, "unit": {"ok": True}}})
+    return {"runs": runs}
+
+
+REF_TOTALS = [1.26, 1.41, 1.40, 1.62, 1.46, 1.68]
+REF_COUNTS = [1, 1, 1, 2, 1, 1]
+TARGET = "calls:pdlc:reviewer/compliance"
+
+
+class CallsGateTest(unittest.TestCase):
+    def test_agent_stats_counts_the_calls_of_each_run(self):
+        stats = run_bench.agent_stats(calls_result([1, 0, 2], 0.025, [1.0, 1.0, 1.0]), "pdlc:reviewer/compliance")
+        self.assertEqual(stats["counts"], [1, 0, 2])
+        self.assertEqual(len(stats["per_run"]), 2)
+
+    def test_removing_every_call_is_kept(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0] * 6, 0.025, [1.23, 1.38, 1.37, 1.57, 1.43, 1.65])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+        self.assertAlmostEqual(verdict["p"], 0.00108, places=5)
+        self.assertAlmostEqual(verdict["target"]["expected_run_saving"], 0.0292, places=4)
+        self.assertEqual(verdict["target"]["calls_after"], 0)
+
+    def test_one_run_that_still_calls_is_kept(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0, 0, 0, 0, 0, 1], 0.025, [1.23, 1.38, 1.37, 1.57, 1.43, 1.65])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+        self.assertAlmostEqual(verdict["p"], 0.00649, places=5)
+
+    def test_two_runs_that_still_call_are_kept(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0, 0, 0, 0, 1, 1], 0.025, [1.23, 1.38, 1.37, 1.57, 1.43, 1.65])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+        self.assertAlmostEqual(verdict["p"], 0.02273, places=5)
+
+    def test_the_same_calls_is_no_gain(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
+        self.assertIn("changed from 1.17 to 1.17", verdict["reasons"][0])
+
+    def test_fewer_calls_in_a_much_dearer_run_is_a_regression(self):
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0] * 6, 0.025, [t * 1.4 for t in REF_TOTALS])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("REGRESSION"))
+        self.assertIn("not luck", verdict["reasons"][0])
+
+    def test_fewer_calls_in_three_runs_needs_more_runs(self):
+        baseline = calls_result([1, 1, 1], 0.025, [1.3, 1.4, 1.5])
+        candidate = calls_result([0, 0, 0], 0.025, [1.2, 1.3, 1.4])
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("NEED MORE RUNS"))
+        self.assertAlmostEqual(verdict["p"], 0.05)
+
+    def test_a_baseline_without_the_calls_is_no_gain(self):
+        baseline = calls_result([0] * 6, 0.025, REF_TOTALS)
+        candidate = calls_result([0] * 6, 0.025, REF_TOTALS)
+        verdict = run_bench.gate(baseline, candidate, target=TARGET)
+        self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
+
+    def test_the_gate_prints_the_calls_line(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        baseline = calls_result(REF_COUNTS, 0.025, REF_TOTALS)
+        candidate = calls_result([0] * 6, 0.025, [1.23, 1.38, 1.37, 1.57, 1.43, 1.65])
+        (folder / "baseline.json").write_text(run_bench.json.dumps(baseline))
+        (folder / "candidate.json").write_text(run_bench.json.dumps(candidate))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            run_bench.command_gate(Namespace(baseline=str(folder / "baseline.json"),
+                                             candidate=str(folder / "candidate.json"),
+                                             min_gain=0.05, speed_limit=1.5, target=TARGET, min_runs=5))
+        self.assertIn("1.17 -> 0.00 calls a run at $0.025 each", out.getvalue())
+
+
 class WaitingTest(unittest.TestCase):
     def waiting(self, command):
         return run_bench.is_waiting([{"type": "tool_use", "name": "Bash", "input": {"command": command}}])
@@ -464,6 +601,16 @@ class ExperimentSpecTest(unittest.TestCase):
         self.assertEqual((spec["runs"], spec["seeds"], spec["target"]), (6, False, None))
         self.assertEqual(spec["baseline"], "bench/baseline.json")
 
+    def test_a_stage_spec_compares_with_its_stage_baseline(self):
+        spec = run_experiment.load_spec(self.write(stage="verify"))
+        self.assertEqual(spec["baseline"], "bench/sections/verify.json")
+        self.assertTrue((run_experiment.REPO / spec["baseline"]).exists())
+
+    def test_an_unknown_stage_is_refused(self):
+        with self.assertRaises(run_experiment.SpecError) as caught:
+            run_experiment.load_spec(self.write(stage="ship"))
+        self.assertIn('"stage"', str(caught.exception))
+
     def test_a_bad_spec_names_each_problem(self):
         with self.assertRaises(run_experiment.SpecError) as caught:
             run_experiment.load_spec(self.write(id="Bad Id", edits=[]))
@@ -533,6 +680,57 @@ class ExperimentSpecTest(unittest.TestCase):
         self.addCleanup(shutil.rmtree, scratch.parent, True)
         self.assertIn("NEW FINDINGS", report)
         self.assertIn("+" + long_sentence, diff)
+
+
+class StageReplayTest(unittest.TestCase):
+    def stage_project(self, stage, plugin=None):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        return run_bench.make_stage_project(folder / "app", stage, plugin or run_bench.DEFAULT_PLUGIN)
+
+    def subject(self, project, rev="HEAD"):
+        return run_bench.git(project, "log", "-1", "--format=%s", rev).stdout.strip()
+
+    def test_each_stage_starts_at_its_entry_commit(self):
+        for stage, (entry_subject, branch, _, _) in run_bench.STAGE_REPLAY.items():
+            with self.subTest(stage=stage):
+                project, _ = self.stage_project(stage)
+                head = "HEAD~1" if self.subject(project) == "Upgrade pdlc" else "HEAD"
+                self.assertTrue(self.subject(project, head).startswith(entry_subject))
+                self.assertEqual(run_bench.git(project, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip(), branch)
+
+    def test_main_ends_at_the_plan_for_a_change_branch_stage(self):
+        project, _ = self.stage_project("build")
+        self.assertTrue(self.subject(project, "main").startswith("Plan IN-0001"))
+
+    def test_a_stage_project_has_no_remote(self):
+        project, _ = self.stage_project("intake")
+        self.assertEqual(run_bench.git(project, "remote").stdout.strip(), "")
+
+    def test_a_stage_with_no_work_is_not_finished(self):
+        project, entry = self.stage_project("show")
+        result = run_bench.check_stage(project, "show", entry)
+        self.assertFalse(result["finished"])
+        self.assertFalse(result["ok"])
+
+    def test_the_snapshot_passes_the_checks_of_earlier_stages(self):
+        project, _ = self.stage_project("verify")
+        self.assertTrue(run_bench.check_stage(project, "show", run_bench.entry_commit(project, "Built CH-0001"))["ok"])
+        self.assertTrue(run_bench.check_stage(project, "build", run_bench.entry_commit(project, "Tests reviewed CH-0001"))["ok"])
+        project, _ = self.stage_project("build")
+        result = run_bench.check_stage(project, "tests", run_bench.entry_commit(project, "Plan IN-0001"))
+        self.assertTrue(result["ok"])
+
+    def test_a_changed_plugin_file_gets_an_upgrade_commit(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        plugin = folder / "pdlc"
+        shutil.copytree(run_bench.DEFAULT_PLUGIN, plugin, ignore=shutil.ignore_patterns("__pycache__"))
+        readme = plugin / "skills" / "init" / "references" / "templates" / "README.md"
+        readme.write_text(readme.read_text() + "\nA line that the test adds.\n")
+        project, _ = self.stage_project("verify", plugin)
+        self.assertEqual(self.subject(project), "Upgrade pdlc")
+        self.assertIn("A line that the test adds.", (project / "pdlc" / "README.md").read_text())
 
 
 if __name__ == "__main__":

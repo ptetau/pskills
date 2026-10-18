@@ -148,6 +148,25 @@ class Packets(unittest.TestCase):
         self.assertNotIn("behaviour", text)
         self.assertNotIn("centre", text)
 
+    def test_compliance_gets_a_pass_result_and_no_packet_when_it_does_not_apply(self):
+        (self.root / "pdlc/reviews/compliance.md").write_text("# Remit: compliance\n\n- Rules: none listed yet.\n")
+        make_packets.main(["x", "CH-0001", "compliance"], root=self.root)
+        folder = self.folder / "review/compliance"
+        self.assertFalse((folder / "packet.md").exists())
+        self.assertIn("Result: pass", (folder / "result.md").read_text())
+
+    def test_compliance_gets_a_packet_when_a_dependency_file_changed(self):
+        (self.root / "pdlc/reviews/compliance.md").write_text("# Remit: compliance\n\n- Rules: none listed yet.\n")
+        (self.root / "requirements.txt").write_text("requests==2.32.0\n")
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "dependency")
+        make_packets.main(["x", "CH-0001", "compliance"], root=self.root)
+        self.assertIn("requests==2.32.0", self.packet("compliance"))
+
+    def test_compliance_gets_a_packet_when_the_project_lists_rules(self):
+        (self.root / "pdlc/reviews/compliance.md").write_text("# Remit: compliance\n\n- Rules: keep a record of each processing activity.\n")
+        make_packets.main(["x", "CH-0001", "compliance"], root=self.root)
+        self.assertIn("# Remit: compliance", self.packet("compliance"))
+
     def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):
         change = self.folder / "change.md"
         change.write_text(change.read_text().replace("Base: main", "Base: no-such-branch"))

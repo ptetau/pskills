@@ -1,0 +1,108 @@
+{
+ "verdict": "SAME OR BETTER -> keep",
+ "reasons": [
+  "pdlc:reviewer/compliance calls fell from 1.17 to 0.00 a run (100% fewer), and the chance that this is luck is 0%"
+ ],
+ "baseline": {
+  "runs": 6,
+  "cost_usd": 1.4740333333333333,
+  "duration_s": 311.1166666666667,
+  "noise": 0.2845254517084643,
+  "costs": [
+   1.2608,
+   1.4138,
+   1.4024,
+   1.6238,
+   1.4632,
+   1.6802
+  ],
+  "completed": 6,
+  "rounds": [
+   1,
+   1,
+   1,
+   2,
+   2,
+   1
+  ],
+  "probes_all": true,
+  "units_ok": true,
+  "seeds_caught": [
+   "spec-exit-code",
+   "security-eval",
+   "privacy-log",
+   "quality-dead-code",
+   "tests-weak-check"
+  ],
+  "false_fails": [],
+  "waiting": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "waiting_turns": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "candidate": {
+  "runs": 6,
+  "cost_usd": 1.6066,
+  "duration_s": 380.1166666666667,
+  "noise": 0.5544005975351675,
+  "costs": [
+   2.0981,
+   1.4287,
+   1.4149,
+   1.6459,
+   1.2074,
+   1.8446
+  ],
+  "completed": 6,
+  "rounds": [
+   2,
+   2,
+   1,
+   2,
+   1,
+   2
+  ],
+  "probes_all": true,
+  "units_ok": true,
+  "seeds_caught": null,
+  "false_fails": null,
+  "waiting": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "waiting_turns": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "cost_change": 0.08993464643495176,
+ "target": {
+  "target": "calls:pdlc:reviewer/compliance",
+  "calls_before": 1.1666666666666667,
+  "calls_after": 0,
+  "per_call_before": 0.02714285714285714,
+  "expected_run_saving": 0.03166666666666666,
+  "expected_run_saving_share": 0.02148300581171841
+ },
+ "p": 0.0010822510822510823
+}

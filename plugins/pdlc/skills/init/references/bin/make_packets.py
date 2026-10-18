@@ -17,6 +17,9 @@ holds:
       because only that remit judges writing;
   - the material: for the tests remit, the check files and nothing else; for every other
     remit, the changed app files and nothing else.
+The compliance remit gets a result in place of a packet when its remit file still says
+"Rules: none listed yet." and the change touches no dependency file. Then the script
+writes result.md with "Result: pass" and the reason, and no reviewer is needed.
 The specification packet also holds the writing check and points to the visual review
 frames. The writing check is the output of check_writing.py for the lines this change
 wrote in its .md files: README, docs, specs and the change spec.
@@ -31,6 +34,13 @@ from pathlib import Path
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
 WRITING_CHECK = Path(__file__).parent / "check_writing.py"
+# Files that declare dependencies. When a project lists no compliance rules, a change that
+# touches none of these files has nothing for the compliance remit to judge.
+DEPENDENCY_FILES = re.compile(
+    r"(^|/)(requirements[^/]*\.txt|pyproject\.toml|setup\.py|setup\.cfg|Pipfile(\.lock)?|"
+    r"package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml|go\.(mod|sum)|Cargo\.(toml|lock)|"
+    r"Gemfile(\.lock)?|pom\.xml|build\.gradle(\.kts)?|composer\.(json|lock)|[^/]*\.csproj)$")
+NO_RULES = "Rules: none listed yet."
 
 
 def section(text, title):
@@ -49,6 +59,11 @@ def remits(root):
     if not line:
         return DEFAULT_REMITS
     return [r.strip() for r in line.group(1).split(",") if r.strip() and r.strip() != "none"]
+
+
+def compliance_applies(remit_text, changed):
+    """False when the project lists no compliance rules and no dependency file changed."""
+    return NO_RULES not in remit_text or any(DEPENDENCY_FILES.search(f) for f in changed)
 
 
 def spec_file(root, spec_id):
@@ -150,6 +165,17 @@ def main(argv, root=Path(".")):
     for remit in chosen:
         remit_file = root / "pdlc" / "reviews" / (remit + ".md")
         remit_text = remit_file.read_text() if remit_file.exists() else "# Remit: %s\n" % remit
+        if remit == "compliance" and not compliance_applies(remit_text, changed):
+            target = folder / "review" / remit
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "packet.md").unlink(missing_ok=True)
+            (target / "result.md").write_text(
+                "Result: pass\n\nRemit: compliance\n\nProblems: none\n\nFollow-ups: none\n\nNotes:\n"
+                "- Not applicable. The project lists no compliance rules, and the change touches no\n"
+                "  dependency file. make_packets.py wrote this result, so no reviewer is needed.\n")
+            print("wrote %s (compliance does not apply: no rules and no dependency file. Start no reviewer for it.)"
+                  % (target / "result.md").relative_to(root).as_posix())
+            continue
         out = ["# Review packet · %s · %s\n" % (folder.name, remit),
                "Judge only what is in this packet. Write your result next to it, in result.md.\n",
                remit_text.strip() + "\n", spec_for["specification" if remit == "specification" else "other"]]

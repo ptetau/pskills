@@ -1,0 +1,7 @@
+run 1: $0.26, 63.5s, ok True
+run 2: $0.24, 66.5s, ok True
+run 3: $0.27, 64.4s, ok True
+run 4: $0.28, 66.6s, ok True
+run 5: $0.28, 70.3s, ok True
+run 6: $0.26, 63.2s, ok True
+wrote /home/user/pskills/bench/results/s6-intake-recon-brief/result.json with 6 runs

@@ -1,0 +1,123 @@
+diff -ru -x __pycache__ a/skills/init/references/bin/make_packets.py b/skills/init/references/bin/make_packets.py
+--- a/skills/init/references/bin/make_packets.py	2026-10-18 01:29:40.051222225 +0000
++++ b/skills/init/references/bin/make_packets.py	2026-10-18 02:09:17.268662778 +0000
+@@ -17,8 +17,9 @@
+       because only that remit judges writing;
+   - the material: for the tests remit, the check files and nothing else; for every other
+     remit, the changed app files and nothing else.
+-The specification packet also holds the writing check and points to the visual review
+-frames. The writing check is the output of check_writing.py for the lines this change
++The specification packet also holds the writing check and the visual review: for a
++terminal recording, the transcript of the frames (frames/transcript.md); for any other
++recording, a list of the frames. The writing check is the output of check_writing.py for the lines this change
+ wrote in its .md files: README, docs, specs and the change spec.
+ 
+ Run it from the project root, on the change's branch.
+@@ -159,7 +160,12 @@
+             out.append(material(root, base, code, "The code"))
+         if remit == "specification":
+             out.append(writing_check(root, base, text_files))
+-        if remit == "specification" and frames:
++        transcript = folder / "frames" / "transcript.md"
++        if remit == "specification" and transcript.exists():
++            out.append("## Visual review frames\n\nThis is a terminal recording. The transcript below is the text of its frames: "
++                       "the caption, the command and the output of each step. Judge each entry as its frame.\n")
++            out.append(transcript.read_text())
++        elif remit == "specification" and frames:
+             out.append("## Visual review frames\n\nRead each frame to see the change working:\n")
+             out += ["- %s" % f.relative_to(root).as_posix() for f in frames]
+         target = folder / "review" / remit
+diff -ru -x __pycache__ a/skills/init/references/bin/record_gif.mjs b/skills/init/references/bin/record_gif.mjs
+--- a/skills/init/references/bin/record_gif.mjs	2026-10-17 08:26:05.380694656 +0000
++++ b/skills/init/references/bin/record_gif.mjs	2026-10-18 02:09:17.267809926 +0000
+@@ -21,6 +21,9 @@
+ // Every step makes one frame. A caption stays until the next step sets a new one.
+ // A terminal shows each command's output and errors in order, and scrolls like a real
+ // one: every frame shows the newest lines.
++// A terminal recording also writes frames/transcript.md: the caption, the command and
++// the output of each step, as its frame shows them. The specification packet carries
++// this transcript in place of the frames, because the frames of a terminal are text.
+ //
+ // A frame must show what its caption claims. The recording fails, naming the step, when:
+ //   - a frame is blank: almost every pixel is one colour;
+@@ -146,6 +149,7 @@
+ let browser;
+ const frames = [];
+ const lines = [];
++const transcript = [];
+ const problems = [];
+ let caption = "";
+ 
+@@ -169,6 +173,7 @@
+         try { out = execSync(command, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }); }
+         catch (e) { out = (e.stdout || "") + (e.stderr || ""); }
+         lines.push(`<span style="color:#34d399">$</span> ${escape(step.run)}`, escape(out.trimEnd()));
++        transcript.push({ n: i + 1, caption, run: step.run, out: out.trimEnd() });
+         if (!out.trim() && !step.unchanged) {
+           problems.push(`${label}: the command printed nothing, so its frame shows no result. ` +
+             "Show its effect (print it, or run a command that reads it), or join it to the next step.");
+@@ -215,6 +220,15 @@
+   if (app) try { process.kill(-app.pid); } catch {}
+ }
+ 
++if (script.kind === "terminal") {
++  const entries = transcript.map((t) =>
++    `## Frame ${String(t.n).padStart(2, "0")} · ${t.caption}\n\n\`\`\`\`\n$ ${t.run}\n${t.out}\n\`\`\`\`\n`);
++  fs.writeFileSync(path.join(outDir, "frames", "transcript.md"),
++    `# Transcript of the frames · ${script.title || ""}\n\n` +
++    "Each entry is one frame: its caption, the command of its step, and what the command printed.\n\n" +
++    entries.join("\n"));
++}
++
+ if (problems.length) {
+   for (const problem of problems) console.error(`record_gif: ${problem}`);
+   console.error(`record_gif: ${problems.length} frame problem(s). No review.gif was written; ` +
+diff -ru -x __pycache__ a/skills/init/references/reviews/specification.md b/skills/init/references/reviews/specification.md
+--- a/skills/init/references/reviews/specification.md	2026-10-17 08:26:05.384694656 +0000
++++ b/skills/init/references/reviews/specification.md	2026-10-18 02:09:17.268958798 +0000
+@@ -22,3 +22,5 @@
+ - If the packet lists frames, read each frame. Each frame must show what its caption
+   claims, after the step, not the screen before the step. A blank frame, or a frame that
+   shows something else, is a problem.
++- If the packet holds a transcript of the frames, judge each entry of the transcript in
++  the same way. The output of the step must show what its caption claims.
+diff -ru -x __pycache__ a/tests/test_make_packets.py b/tests/test_make_packets.py
+--- a/tests/test_make_packets.py	2026-10-18 01:29:40.051749605 +0000
++++ b/tests/test_make_packets.py	2026-10-18 02:09:17.269050189 +0000
+@@ -126,6 +126,17 @@
+         self.assertIn("frames/01.png", self.packet("specification"))
+         self.assertNotIn("frames/01.png", self.packet("security"))
+ 
++    def test_a_transcript_replaces_the_frame_list_in_the_specification_packet(self):
++        (self.folder / "frames/transcript.md").write_text(
++            "# Transcript of the frames\n\n## Frame 01 · CAP-greeting.R2 · hola\n\n"
++            "````\n$ node greet.js Ana es\nHola, Ana! TRANSCRIPT-MARK\n````\n")
++        make_packets.main(["x", "CH-0001"], root=self.root)
++        text = self.packet("specification")
++        self.assertIn("TRANSCRIPT-MARK", text)
++        self.assertIn("Judge each entry as its frame.", text)
++        self.assertNotIn("frames/01.png", text)
++        self.assertNotIn("TRANSCRIPT-MARK", self.packet("security"))
++
+     def test_only_the_specification_packet_has_the_writing_check(self):
+         make_packets.main(["x", "CH-0001"], root=self.root)
+         text = self.packet("specification")
+diff -ru -x __pycache__ a/tests/test_record_gif.py b/tests/test_record_gif.py
+--- a/tests/test_record_gif.py	2026-10-17 08:26:05.392694656 +0000
++++ b/tests/test_record_gif.py	2026-10-18 02:09:17.269192704 +0000
+@@ -158,6 +158,15 @@
+         self.assertIn("printed nothing", err)
+         self.assertNotIn("step 1", err)
+ 
++    def test_a_terminal_recording_writes_a_transcript_of_its_frames(self):
++        frames = self.record([{"caption": "CAP-x.R1 · says one", "run": "echo one"},
++                              {"caption": "CAP-x.R2 · says two", "run": "echo two"}])
++        text = (frames / "transcript.md").read_text()
++        self.assertIn("## Frame 01 · CAP-x.R1 · says one", text)
++        self.assertIn("$ echo one\none\n", text)
++        self.assertIn("## Frame 02 · CAP-x.R2 · says two", text)
++        self.assertIn("$ echo two\ntwo\n", text)
++
+     def test_a_step_marked_unchanged_may_print_nothing(self):
+         self.record([{"caption": "CAP-x.R1 · prints", "run": "echo one"},
+                      {"caption": "CAP-x.R2 · says nothing", "run": "true", "unchanged": True}])

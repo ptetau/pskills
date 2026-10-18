@@ -1,0 +1,101 @@
+{
+ "verdict": "SAME OR BETTER -> keep",
+ "reasons": [
+  "cost fell 7%, and the chance that this is luck is 6%"
+ ],
+ "baseline": {
+  "runs": 6,
+  "cost_usd": 0.2337,
+  "duration_s": 57.916666666666664,
+  "noise": 0.2276422764227641,
+  "costs": [
+   0.2598,
+   0.2097,
+   0.2501,
+   0.2467,
+   0.2066,
+   0.2293
+  ],
+  "completed": 6,
+  "rounds": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "probes_all": true,
+  "units_ok": true,
+  "seeds_caught": [
+   "spec-exit-code",
+   "security-eval",
+   "privacy-log",
+   "quality-dead-code",
+   "tests-weak-check"
+  ],
+  "false_fails": [],
+  "waiting": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "waiting_turns": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "candidate": {
+  "runs": 6,
+  "cost_usd": 0.21653333333333333,
+  "duration_s": 58.333333333333336,
+  "noise": 0.09190270935960591,
+  "costs": [
+   0.2189,
+   0.2255,
+   0.2267,
+   0.2105,
+   0.2108,
+   0.2068
+  ],
+  "completed": 6,
+  "rounds": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "probes_all": true,
+  "units_ok": true,
+  "seeds_caught": null,
+  "false_fails": null,
+  "waiting": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "waiting_turns": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "cost_change": -0.07345599771787191,
+ "target": {},
+ "p": 0.05627705627705628
+}

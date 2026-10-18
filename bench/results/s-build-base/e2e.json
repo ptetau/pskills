@@ -1,0 +1,645 @@
+{
+ "label": "s-build-base",
+ "stage": "build",
+ "plugin_commit": "04565af",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 38492,
+     "cache_read": 320954,
+     "output": 4134
+    },
+    "cost_usd": 0.2042,
+    "duration_s": 40.1,
+    "turns": 8,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.2042
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 14417,
+      "cache_read": 64245,
+      "output": 32
+     },
+     "cost_usd": 0.0723,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 8.7
+    },
+    "build": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 24075,
+      "cache_read": 256709,
+      "output": 488
+     },
+     "cost_usd": 0.1319,
+     "messages": 8,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 15492,
+        "cache_read": 21730,
+        "output": 48
+       },
+       "cost_usd": 0.0444,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 14.4
+      }
+     },
+     "wall_s": 29.7
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "build",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Built CH-0001",
+      "Build CH-0001: limit output with --top N"
+     ],
+     "extra": {
+      "unit": {
+       "ok": true,
+       "ran": 32
+      },
+      "probes": {
+       "passed": 8,
+       "total": 8,
+       "failed": [],
+       "option_after_file_failed": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   build"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 32
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 41.3,
+   "project": "/tmp/pdlc-stage-7fweq3e9/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 30776,
+     "cache_read": 325062,
+     "output": 4259
+    },
+    "cost_usd": 0.188,
+    "duration_s": 43.5,
+    "turns": 8,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.188
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 14417,
+      "cache_read": 64245,
+      "output": 24
+     },
+     "cost_usd": 0.0728,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 10.4
+    },
+    "build": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 16359,
+      "cache_read": 260817,
+      "output": 454
+     },
+     "cost_usd": 0.1152,
+     "messages": 8,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 6798,
+        "cache_read": 24499,
+        "output": 48
+       },
+       "cost_usd": 0.023,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 14.1
+      }
+     },
+     "wall_s": 31.4
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "build",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Built CH-0001",
+      "Build CH-0001: add --top N option"
+     ],
+     "extra": {
+      "unit": {
+       "ok": true,
+       "ran": 32
+      },
+      "probes": {
+       "passed": 8,
+       "total": 8,
+       "failed": [],
+       "option_after_file_failed": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   build"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 32
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 44.8,
+   "project": "/tmp/pdlc-stage-z95f2ep1/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 26,
+     "cache_write": 31714,
+     "cache_read": 433324,
+     "output": 4695
+    },
+    "cost_usd": 0.2057,
+    "duration_s": 45.4,
+    "turns": 10,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.2057
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 6,
+      "cache_write": 15014,
+      "cache_read": 106557,
+      "output": 39
+     },
+     "cost_usd": 0.0814,
+     "messages": 3,
+     "agents": {},
+     "wall_s": 13.1
+    },
+    "build": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 16700,
+      "cache_read": 326767,
+      "output": 409
+     },
+     "cost_usd": 0.1243,
+     "messages": 10,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 7661,
+        "cache_read": 37860,
+        "output": 59
+       },
+       "cost_usd": 0.0272,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 15.4
+      }
+     },
+     "wall_s": 31.3
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "build",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Built CH-0001",
+      "Build CH-0001: add the --top option"
+     ],
+     "extra": {
+      "unit": {
+       "ok": true,
+       "ran": 32
+      },
+      "probes": {
+       "passed": 8,
+       "total": 8,
+       "failed": [],
+       "option_after_file_failed": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   build"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 32
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 46.9,
+   "project": "/tmp/pdlc-stage-ywu2hxxg/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 24,
+     "cache_write": 28940,
+     "cache_read": 410206,
+     "output": 4326
+    },
+    "cost_usd": 0.1897,
+    "duration_s": 44.3,
+    "turns": 9,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.1897
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 6,
+      "cache_write": 14290,
+      "cache_read": 105451,
+      "output": 52
+     },
+     "cost_usd": 0.0777,
+     "messages": 3,
+     "agents": {},
+     "wall_s": 10.1
+    },
+    "build": {
+     "tokens": {
+      "input": 18,
+      "cache_write": 14650,
+      "cache_read": 304755,
+      "output": 442
+     },
+     "cost_usd": 0.112,
+     "messages": 9,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 6923,
+        "cache_read": 24487,
+        "output": 24
+       },
+       "cost_usd": 0.0221,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 14.1
+      }
+     },
+     "wall_s": 33.1
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "build",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Built CH-0001",
+      "Build CH-0001: add --top N option"
+     ],
+     "extra": {
+      "unit": {
+       "ok": true,
+       "ran": 32
+      },
+      "probes": {
+       "passed": 8,
+       "total": 8,
+       "failed": [],
+       "option_after_file_failed": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   build"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 32
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 45.4,
+   "project": "/tmp/pdlc-stage-risqsxn6/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 24,
+     "cache_write": 30464,
+     "cache_read": 412503,
+     "output": 4492
+    },
+    "cost_usd": 0.1967,
+    "duration_s": 43.2,
+    "turns": 9,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.1967
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 6,
+      "cache_write": 14127,
+      "cache_read": 105457,
+      "output": 80
+     },
+     "cost_usd": 0.078,
+     "messages": 3,
+     "agents": {},
+     "wall_s": 11.5
+    },
+    "build": {
+     "tokens": {
+      "input": 18,
+      "cache_write": 16337,
+      "cache_read": 307046,
+      "output": 396
+     },
+     "cost_usd": 0.1187,
+     "messages": 9,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 7607,
+        "cache_read": 24805,
+        "output": 48
+       },
+       "cost_usd": 0.0243,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 14.2
+      }
+     },
+     "wall_s": 31.0
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "build",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Built CH-0001",
+      "Build CH-0001: add --top N option"
+     ],
+     "extra": {
+      "unit": {
+       "ok": true,
+       "ran": 32
+      },
+      "probes": {
+       "passed": 8,
+       "total": 8,
+       "failed": [],
+       "option_after_file_failed": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   build"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 32
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 44.5,
+   "project": "/tmp/pdlc-stage-ehl97ix_/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 28,
+     "cache_write": 31206,
+     "cache_read": 509446,
+     "output": 5071
+    },
+    "cost_usd": 0.2162,
+    "duration_s": 50.5,
+    "turns": 11,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.2162
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 17623,
+      "cache_read": 147478,
+      "output": 41
+     },
+     "cost_usd": 0.0975,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 12.5
+    },
+    "build": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 13583,
+      "cache_read": 361968,
+      "output": 580
+     },
+     "cost_usd": 0.1187,
+     "messages": 10,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 6863,
+        "cache_read": 24526,
+        "output": 48
+       },
+       "cost_usd": 0.0219,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 12.8
+      }
+     },
+     "wall_s": 36.2
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "build",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Built CH-0001",
+      "Build CH-0001: add the --top option to wordfreq"
+     ],
+     "extra": {
+      "unit": {
+       "ok": true,
+       "ran": 32
+      },
+      "probes": {
+       "passed": 8,
+       "total": 8,
+       "failed": [],
+       "option_after_file_failed": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   build"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 32
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 51.5,
+   "project": "/tmp/pdlc-stage-efryrgcd/app",
+   "stderr": ""
+  }
+ ]
+}

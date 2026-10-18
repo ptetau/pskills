@@ -1,0 +1,7 @@
+run 1: $0.40, 95.2s, ok True
+run 2: $0.37, 89.0s, ok True
+run 3: $0.48, 119.9s, ok True
+run 4: $0.40, 101.4s, ok True
+run 5: $0.45, 109.5s, ok True
+run 6: $0.46, 109.8s, ok True
+wrote /home/user/pskills/bench/results/s6-tests-one-red-run/result.json with 6 runs

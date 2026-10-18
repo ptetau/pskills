@@ -1,0 +1,46 @@
+diff -ru -x __pycache__ a/skills/init/references/bin/record_gif.mjs b/skills/init/references/bin/record_gif.mjs
+--- a/skills/init/references/bin/record_gif.mjs	2026-10-17 08:26:05.380694656 +0000
++++ b/skills/init/references/bin/record_gif.mjs	2026-10-18 02:09:51.927400162 +0000
+@@ -9,7 +9,7 @@
+ //   "title": "CH-0001 · Spanish greeting",
+ //   "base_url": "http://localhost:3000",       (web only)
+ //   "start": "node server.js",                 (optional: started first, stopped after)
+-//   "width": 1000, "height": 640,              (optional)
++//   "width": 1000, "height": 640,              (optional; a terminal defaults to 640 by 400)
+ //   "steps": [
+ //     { "caption": "JOB-x.R1 · Given …, when …, then …", "goto": "/" },
+ //     { "type": ["#title", "buy milk"] }, { "press": "Enter" }, { "click": "#add" },
+@@ -58,8 +58,11 @@
+ const { PNG } = load("pngjs");
+ 
+ const script = JSON.parse(fs.readFileSync(scriptPath, "utf8"));
+-const width = script.width || 1000;
+-const height = script.height || 640;
++// A terminal frame is text at a fixed size, so a smaller frame keeps the text legible and
++// costs a reviewer fewer image tokens. A web page keeps the larger default.
++const terminal = script.kind === "terminal";
++const width = script.width || (terminal ? 640 : 1000);
++const height = script.height || (terminal ? 400 : 640);
+ const escape = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+ 
+ const banner = (title, caption, n, total) => `
+diff -ru -x __pycache__ a/tests/test_record_gif.py b/tests/test_record_gif.py
+--- a/tests/test_record_gif.py	2026-10-17 08:26:05.392694656 +0000
++++ b/tests/test_record_gif.py	2026-10-18 02:09:51.927513419 +0000
+@@ -158,6 +158,16 @@
+         self.assertIn("printed nothing", err)
+         self.assertNotIn("step 1", err)
+ 
++    def test_a_terminal_script_without_a_size_records_640_by_400(self):
++        (self.tmp / "visual.json").write_text(json.dumps(
++            {"kind": "terminal", "title": "CH-0001 · test",
++             "steps": [{"caption": "CAP-x.R1 · says one", "run": "echo one"}]}))
++        run = subprocess.run(["node", str(SCRIPT), "visual.json", "out"], cwd=self.tmp,
++                             capture_output=True, text=True, timeout=180)
++        self.assertEqual(run.returncode, 0, run.stderr)
++        width, height, _ = read_png(self.tmp / "out/frames/01.png")
++        self.assertEqual((width, height), (640, 400))
++
+     def test_a_step_marked_unchanged_may_print_nothing(self):
+         self.record([{"caption": "CAP-x.R1 · prints", "run": "echo one"},
+                      {"caption": "CAP-x.R2 · says nothing", "run": "true", "unchanged": True}])

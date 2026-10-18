@@ -1,0 +1,54 @@
+{
+ "id": "s6-review-packets-lean",
+ "hypothesis": "When a packet gives each acceptance line once, shows a new file once, and sends DES-pdlc-check-tagging only to the tests remit, each reviewer call reads fewer tokens and judges the same material, so a call costs less and the planted defects are still caught.",
+ "lever": "context pack (smaller review packets)",
+ "edits": [
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "  - the material: for the tests remit, the check files and nothing else; for every other\n    remit, the changed app files and nothing else.\n",
+   "replace": "  - the material: for the tests remit, the check files and nothing else; for every other\n    remit, the changed app files and nothing else. A file that the change adds appears\n    once, as its full text, because its diff would repeat the same lines.\nThe full text of a requirement leaves out the acceptance lines that the change spec above\nalready shows, so each line appears once. The lines stay when the change spec lacks any of\nthem. DES-pdlc-check-tagging goes only to the tests remit, because only that remit judges\nthe names of checks.\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "NO_RULES = \"Rules: none listed yet.\"\n",
+   "replace": "NO_RULES = \"Rules: none listed yet.\"\n# Design specs that only one remit judges. The other remits get the rest of the specs.\nONLY_FOR = {\"DES-writing-style\": \"specification\", \"DES-pdlc-check-tagging\": \"tests\"}\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "def spec_file(root, spec_id):\n",
+   "replace": "ACCEPTANCE = re.compile(r\"^\\s*-\\s+Given\\b\")\n\n\ndef without_copied_lines(text, change):\n    \"\"\"A requirement's text without the acceptance lines that the change spec already shows.\n    The lines stay when the change spec lacks any of them, so a reviewer always sees each line.\"\"\"\n    lines = text.splitlines()\n    copied = [line for line in lines if ACCEPTANCE.match(line)]\n    if not copied or not all(line.strip() in change for line in copied):\n        return text\n    kept = [line for line in lines if not ACCEPTANCE.match(line)]\n    kept.append(\"- The acceptance lines of this requirement are in the change spec above.\")\n    return re.sub(r\"\\n{3,}\", \"\\n\\n\", \"\\n\".join(kept)).strip()\n\n\ndef spec_file(root, spec_id):\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "    parts.append(\"### Diff against %s\\n\\n%s\\n\" % (base, fence(git(root, \"diff\", base + \"...HEAD\", \"--\", *files))))\n    for name in files:\n        path = root / name\n        body = path.read_text(errors=\"replace\") if path.exists() else \"(deleted)\"\n        parts.append(\"### %s\\n\\n%s\\n\" % (name, fence(body)))\n    return \"\\n\".join(parts)\n",
+   "replace": "    added = set(git(root, \"diff\", \"--name-only\", \"--diff-filter=A\", base + \"...HEAD\", \"--\", *files).split())\n    changed = [f for f in files if f not in added]\n    if changed:\n        parts.append(\"### Diff against %s\\n\\n%s\\n\" % (base, fence(git(root, \"diff\", base + \"...HEAD\", \"--\", *changed))))\n    for name in files:\n        path = root / name\n        body = path.read_text(errors=\"replace\") if path.exists() else \"(deleted)\"\n        label = name + \" (new file)\" if name in added else name\n        parts.append(\"### %s\\n\\n%s\\n\" % (label, fence(body)))\n    return \"\\n\".join(parts)\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "    spec += [requirement_text(root, r) + \"\\n\" for r in reqs]\n",
+   "replace": "    spec += [without_copied_lines(requirement_text(root, r), change) + \"\\n\" for r in reqs]\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "    # The writing rules go only to the remit that judges writing. The other remits judge code or checks.\n    spec_for = {}\n    for kind in (\"specification\", \"other\"):\n        parts = [text for spec_id, text in relied if kind == \"specification\" or spec_id != \"DES-writing-style\"]\n        spec_for[kind] = \"\\n\".join(spec + parts)\n",
+   "replace": "    # A design spec in ONLY_FOR goes only to the remit that judges it. The other remits get the rest.\n    spec_for = {}\n    for kind in (\"specification\", \"tests\", \"other\"):\n        parts = [text for spec_id, text in relied if ONLY_FOR.get(spec_id, kind) == kind]\n        spec_for[kind] = \"\\n\".join(spec + parts)\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "               remit_text.strip() + \"\\n\", spec_for[\"specification\" if remit == \"specification\" else \"other\"]]\n",
+   "replace": "               remit_text.strip() + \"\\n\", spec_for.get(remit, spec_for[\"other\"])]\n"
+  },
+  {
+   "file": "tests/test_make_packets.py",
+   "find": "    def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):\n",
+   "replace": "    def test_a_requirement_shows_its_acceptance_lines_once(self):\n        r = self.root\n        spec = r / \"pdlc/specs/capabilities/CAP-greeting.md\"\n        spec.write_text(spec.read_text().replace(\n            \"Says hola.\\n\", 'Says hola.\\n\\n- Given lang es, when greeting Ana, then the text is \"Hola, Ana!\"\\n'))\n        git(r, \"add\", \"-A\"); git(r, \"commit\", \"-qm\", \"lines\")\n        make_packets.main([\"x\", \"CH-0001\"], root=self.root)\n        for remit in [\"tests\", \"specification\", \"security\"]:\n            text = self.packet(remit)\n            self.assertEqual(text.count(\"Given lang es\"), 1)\n            self.assertIn(\"Says hola.\", text)\n            self.assertIn(\"acceptance lines of this requirement are in the change spec above\", text)\n\n    def test_a_requirement_keeps_a_line_that_the_change_spec_lacks(self):\n        r = self.root\n        spec = r / \"pdlc/specs/capabilities/CAP-greeting.md\"\n        spec.write_text(spec.read_text().replace(\n            \"Says hola.\\n\", 'Says hola.\\n\\n- Given lang es, when greeting Ana, then the text is \"Hola, Ana!\"\\n'\n            '- Given lang fr, when greeting Ana, then the text is \"Salut, Ana!\"\\n'))\n        git(r, \"add\", \"-A\"); git(r, \"commit\", \"-qm\", \"lines\")\n        make_packets.main([\"x\", \"CH-0001\", \"tests\"], root=self.root)\n        text = self.packet(\"tests\")\n        self.assertEqual(text.count(\"Given lang es\"), 2)\n        self.assertIn(\"Given lang fr\", text)\n\n    def test_a_new_file_appears_once_as_its_full_text(self):\n        r = self.root\n        (r / \"test/new.test.js\").write_text(\"test('CAP-greeting.R2 adios', () => {}) // SECRET-NEW\\n\")\n        change = self.folder / \"change.md\"\n        change.write_text(change.read_text().replace(\"- test/greet.test.js\", \"- test/greet.test.js\\n- test/new.test.js\"))\n        git(r, \"add\", \"-A\"); git(r, \"commit\", \"-qm\", \"new check file\")\n        make_packets.main([\"x\", \"CH-0001\", \"tests\"], root=self.root)\n        text = self.packet(\"tests\")\n        self.assertEqual(text.count(\"SECRET-NEW\"), 1)\n        self.assertIn(\"### test/new.test.js (new file)\", text)\n        self.assertIn(\"### Diff against main\", text)\n        self.assertEqual(text.count(\"SECRET-TEST\"), 2)\n\n    def test_only_the_tests_packet_has_the_check_tagging_rules(self):\n        r = self.root\n        (r / \"pdlc/specs/design/DES-pdlc-check-tagging.md\").write_text(\"# DES-pdlc-check-tagging\\nCHECK-NAMES rule.\\n\")\n        change = self.folder / \"change.md\"\n        change.write_text(change.read_text().replace(\"- DES-writing-style\", \"- DES-writing-style\\n- DES-pdlc-check-tagging\"))\n        git(r, \"add\", \"-A\"); git(r, \"commit\", \"-qm\", \"relies\")\n        make_packets.main([\"x\", \"CH-0001\"], root=self.root)\n        self.assertIn(\"CHECK-NAMES\", self.packet(\"tests\"))\n        self.assertNotIn(\"CHECK-NAMES\", self.packet(\"specification\"))\n        self.assertNotIn(\"CHECK-NAMES\", self.packet(\"security\"))\n\n    def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):\n"
+  }
+ ],
+ "runs": 6,
+ "stage": "verify",
+ "seeds": true,
+ "target": "pdlc:reviewer/quality",
+ "baseline": "bench/sections/verify.json",
+ "gate": {},
+ "budget_usd_per_run": 8
+}

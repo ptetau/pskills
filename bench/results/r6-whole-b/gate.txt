@@ -1,0 +1,7 @@
+baseline   cost $1.61  time  380s  runs 6  noise 55%
+candidate  cost $1.32  time  332s  runs 6  noise 26%
+finished   6 of 6 vs 6 of 6 runs   verify rounds [2, 2, 1, 2, 1, 2] vs [2, 2, 1, 1, 1, 1]
+probes     True vs True
+defects    5 vs 5 caught
+verdict    SAME OR BETTER -> keep
+           cost fell 18%, and the chance that this is luck is 3%

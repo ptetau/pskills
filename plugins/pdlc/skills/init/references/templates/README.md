@@ -26,11 +26,20 @@ This folder holds the pdlc state for this project. Each pdlc skill reads this fi
    `bin/check_merge.py` checks all of these conditions.
 8. These files are the truth. Boards and dashboards only show what these files contain.
 9. Each commit has a subject and trace trailers (see
-   `specs/design/DES-pdlc-commit-trailers.md`). A hook checks each new commit on a pdlc
-   branch. Fix what the hook names at once, with `git commit --amend`.
+   `specs/design/DES-pdlc-commit-trailers.md`). The trailers come after a blank line, one
+   on each line. Write `Intent: IN-xxxx` first. On the branch of a change, add
+   `Change: CH-xxxx`. When the commit changes code, checks, or the README, add
+   `Req: <IDs>`. The skill of each stage gives the subject. A hook checks each new commit
+   on a pdlc branch. Fix what the hook names at once, with `git commit --amend`.
 10. Write all text to the rules in `specs/design/DES-writing-style.md`. This includes
     specs, intents, change specs, handoffs, commit messages, pull requests, review
-    results, code comments, and replies to the user.
+    results, code comments, and replies to the user. The rules in short: write sentences
+    of 25 words or fewer (20 in an instruction), in the active voice, with one topic in
+    each sentence. Write "must" or "can", not "should". Do not use a semicolon. Give
+    each ID a short description in the same sentence, as in `R5 (usage line)`. Read the
+    full rules before you write or change a spec or an intent. For a handoff, a proposal,
+    a commit message, or a reply, the short form is sufficient.
+    `bin/check_writing.py <file>` finds the breaks that a script can find.
 
 ## Layout
 

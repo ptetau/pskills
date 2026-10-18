@@ -28,9 +28,10 @@ read are current.
 - If neither is true, take the oldest intent with status `new` that does not await
   approval.
 
-If you switched to a branch, start a branch for the intent from that branch. Use the
-delivery port. Do this before you commit anything. Write the name of the new branch as the
-`Branch:` of the intent. Set the status of the intent to `specifying`.
+If you switched to an unmerged pdlc branch above, start a branch for the intent from that
+branch. Use the delivery port. Do this before you commit anything. Write the name of the new
+branch as the `Branch:` of the intent. If no pdlc branch is unmerged, do not start a branch.
+Commit on main, and keep `Branch: none`. Set the status of the intent to `specifying`.
 
 ## 2. Decide what it touches
 
@@ -60,9 +61,11 @@ a note about it.
 ## 3. Deepen stub specs
 
 If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent with
-`run_in_background: false`. Ask recon for a **deep look** at the code map of that spec.
-Write the requirements from recon into the spec. These requirements come back as `built`,
-with `Source: recon`. Set the spec to `Status: active`.
+`run_in_background: false`. Give recon three items, and nothing else: the project root, the
+absolute path of the spec, and the words `deep look`. Recon knows the format of its reply.
+Do not ask recon for a summary of the code, for the template, or for extra detail. Write
+the requirements from recon into the spec. These requirements come back as `built`, with
+`Source: recon`. Set the spec to `Status: active`.
 
 ## 4. Write the patches
 

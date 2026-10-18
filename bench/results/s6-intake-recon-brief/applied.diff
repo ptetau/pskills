@@ -1,0 +1,43 @@
+diff -ru -x __pycache__ a/agents/recon.md b/agents/recon.md
+--- a/agents/recon.md	2026-10-17 08:26:05.376694655 +0000
++++ b/agents/recon.md	2026-10-18 05:43:43.332560085 +0000
+@@ -76,6 +76,10 @@
+ are not sure, say how sure you are. Write only what the code really does, not what the
+ code must do.
+ 
++Reply with the requirements and their `Seen in` lines, and nothing else. Do not add a
++summary of the code, a list of the files that you read, or advice for the spec. The skill
++that started you reads the code map and the template itself.
++
+ Write the behaviour that a user or a caller can see, not how the code makes that
+ behaviour. For example, write "saving replaces the whole list", not "save calls
+ write_text". A requirement that pins the implementation blocks each future change to the
+@@ -88,6 +92,7 @@
+ - Do not restate the behaviour of one job in a capability. That behaviour belongs to the
+   job.
+ 
+-Write your reply, and each spec, comment, or message that you write, to the rules in
+-`pdlc/specs/design/DES-writing-style.md`. If that file does not exist yet, write short
+-sentences in the active voice. Give each ID a short description.
++Write short sentences in the active voice, with 25 words or fewer in each sentence. Give
++each ID a short description in the same sentence, as in `R3 (prints the count)`. Do not
++read `pdlc/specs/design/DES-writing-style.md`: the skill that started you has the full
++rules and owns the text of the spec.
+diff -ru -x __pycache__ a/skills/intake/SKILL.md b/skills/intake/SKILL.md
+--- a/skills/intake/SKILL.md	2026-10-17 23:42:19.147725803 +0000
++++ b/skills/intake/SKILL.md	2026-10-18 05:43:43.331918466 +0000
+@@ -60,9 +60,11 @@
+ ## 3. Deepen stub specs
+ 
+ If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent with
+-`run_in_background: false`. Ask recon for a **deep look** at the code map of that spec.
+-Write the requirements from recon into the spec. These requirements come back as `built`,
+-with `Source: recon`. Set the spec to `Status: active`.
++`run_in_background: false`. Give recon three items, and nothing else: the project root, the
++absolute path of the spec, and the words `deep look`. Recon knows the format of its reply.
++Do not ask recon for a summary of the code, for the template, or for extra detail. Write
++the requirements from recon into the spec. These requirements come back as `built`, with
++`Source: recon`. Set the spec to `Status: active`.
+ 
+ ## 4. Write the patches
+ 

@@ -1,0 +1,88 @@
+{
+ "label": "s6-review-packets-lean-seeds",
+ "reviewer_model": "claude-sonnet-5-5",
+ "caught": [
+  "spec-exit-code",
+  "security-eval",
+  "privacy-log",
+  "quality-dead-code",
+  "tests-weak-check"
+ ],
+ "missed": [],
+ "false_fails": [],
+ "cost_usd": 0.5627,
+ "seeded": {
+  "privacy": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:376-377 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log` on every run. The file text and path can identify a person. The log is not in the spec and has no protection or retention limit. \u00b7 privacy rule: do not log personal data, and do not send it to an unexpected place. Also keep only the data needed.\n- wordfreq/cli.py:364 \u00b7 `eval(top)` runs input from the command line as code. This is unsafe. \u00b7 spec R6 says to validate N as digits only. Unsafe command built from input.\n- wordfreq/cli.py:369 \u00b7 An invalid N returns exit code 1. R6 asks for exit code 2. \u00b7 JOB-report-word-frequencies.R6 acceptance lines for invalid N.\n- wordfreq/cli.py:364-367 \u00b7 `eval` accepts values like `+3` or `1e2`. R6 lines say `+3` is an error. \u00b7 JOB-report-word-frequencies.R6.",
+   "source": "file",
+   "cost_usd": 0.0533,
+   "wall_s": 12.6
+  },
+  "quality": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:340 \u00b7 `_parse_top_old` is dead code. Nothing calls it. \u00b7 remit: no dead code\n- wordfreq/cli.py:363 \u00b7 `eval(top)` runs input as code. It is unsafe. It also accepts `+3`, `1e2`-style and other values the spec rejects (`+3` gives 3). The spec says N is valid only when made of digits and above zero. A small digit check, like the dead helper, would do. \u00b7 R6 acceptance (`+3` must give the error); remit: simple code; safety\n- wordfreq/cli.py:368 \u00b7 An invalid N returns exit code 1. The spec requires 2. \u00b7 R6 acceptance lines for invalid N\n- wordfreq/cli.py:358 \u00b7 The usage message is \"usage: wordfreq FILE\" with print, which is the existing behaviour and matches `\\n`. No issue. (Not a problem; see notes.)\n- wordfreq/cli.py:375-376 \u00b7 The code writes the path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. No requirement asks for this. It leaks file content to a shared path, and it fails with a traceback if the path is not writable. \u00b7 Files entry / R6 (the change adds no logging); safety\n- wordfreq/cli.py:352-356 \u00b7 `--top` as the last argument with FILE before it works. But the `--top` check runs after the usage check, so `wordfreq --top 0` with no file gives usage. That is correct per R4. No issue. (Not a problem.)",
+   "source": "file",
+   "cost_usd": 0.0465,
+   "wall_s": 18.8
+  },
+  "security": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:363 \u00b7 `eval(top)` runs user input as Python code, so `--top \"__import__('os').system('...')\"` runs arbitrary commands. It also accepts `+3`, `1e2`-style and other non-digit values that the spec rejects. \u00b7 remit: no injection; R6: N is valid only when made of digits and above zero\n- wordfreq/cli.py:368 \u00b7 An invalid N returns exit code 1. The spec requires 2. \u00b7 JOB-report-word-frequencies.R6 (invalid N exits with code 2)\n- wordfreq/cli.py:375-376 \u00b7 The code writes the file path and the first 200 characters of the file's text to `/tmp/wordfreq-usage.log`. This leaks file content to a shared, world-readable location, and it uses a fixed path in /tmp. Nothing in the spec asks for it. Also, README.md and cli.py are the only listed Files, and the log is not part of the Delivers. \u00b7 remit: no secrets in logs; Files / Delivers\n- wordfreq/cli.py:358 \u00b7 The usage message prints `usage: wordfreq FILE\\n` correctly, but the invalid-N check at line 366 runs after the argument count check. For `wordfreq --top 0` with no file, usage appears, which matches R4. No problem here. (Note only.)\n- wordfreq/cli.py:340-344 \u00b7 `_parse_top_old` is dead code that nothing calls. It is not a security risk, but it adds clutter. It does not break an acceptance line.",
+   "source": "file",
+   "cost_usd": 0.0473,
+   "wall_s": 20.7
+  },
+  "specification": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:670 \u00b7 An invalid N returns exit code 1. The spec needs exit code 2. \u00b7 JOB-report-word-frequencies.R6 (invalid N lines: exit code 2)\n- wordfreq/cli.py:665 \u00b7 `eval(top)` reads N. It accepts `+3` (gives 3) and rejects `03` (a syntax error, so it gives the error). The spec rejects `+3` and says `03` is 3. `eval` also runs code from input, which is unsafe. \u00b7 JOB-report-word-frequencies.R6 (N is valid only when it is made of digits, above zero)\n- wordfreq/cli.py:677-678 \u00b7 The code writes the path and the first 200 characters of the file to `/tmp/wordfreq-usage.log`. No requirement asks for this. It leaks file content to a shared path. \u00b7 remit rule: the code does nothing that the spec did not ask for. Also unsafe.\n- wordfreq/cli.py:642-646 \u00b7 `_parse_top_old` is dead code that nothing calls. The code comment calls it \"the old way\", which is old wording. \u00b7 remit rule: no old wording survives, and no unasked behaviour.\n- README.md:619-621 \u00b7 The README says the error exits with code 2. The code exits with code 1. The README and the code disagree. \u00b7 JOB-report-word-frequencies.R6 (Step 3: README shows the exit code 2)\n- pdlc/changes/CH-0001-top-option/change.md (Progress log, \"Built: the 27 checks pass\") \u00b7 This claim does not match the code, which breaks the exit-code lines. I cannot check the claim, because I cannot see the checks. \u00b7 Remit: the code meets the acceptance lines.",
+   "source": "file",
+   "cost_usd": 0.0767,
+   "wall_s": 18.8
+  },
+  "tests": {
+   "verdict": "fail",
+   "problems": "- tests/test_JOB_report_word_frequencies.py:394 \u00b7 `assert_top_error` checks only that standard output is empty. It never checks the exact stderr message or exit code 2. This weakens the zero, invalid-value and missing-value checks. \u00b7 JOB-report-word-frequencies.R6 lines for `--top 0`, `-1/2.5/abc/1e2/+3/\"\"`, and `FILE --top` (stderr exactly `error: --top needs a whole number greater than zero\\n`, exit code 2)\n- tests/test_JOB_report_word_frequencies.py:398-410 \u00b7 The three checks that use `assert_top_error` pass on a version that prints nothing, prints a wrong message, or exits 0 or 1. Only the later check at line 429 reaches the message, and it covers `0` through the command only. \u00b7 JOB-report-word-frequencies.R6 (each error line needs a check that expects the exact message and exit code)",
+   "source": "file",
+   "cost_usd": 0.0658,
+   "wall_s": 20.1
+  }
+ },
+ "clean": {
+  "specification": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0748,
+   "wall_s": 19.1
+  },
+  "security": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0417,
+   "wall_s": 15.5
+  },
+  "privacy": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0378,
+   "wall_s": 11.5
+  },
+  "quality": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0421,
+   "wall_s": 14.1
+  },
+  "tests": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0767,
+   "wall_s": 28.3
+  }
+ }
+}

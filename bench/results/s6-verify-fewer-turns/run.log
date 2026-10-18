@@ -1,0 +1,7 @@
+run 1: $0.49, 81.1s, ok True
+run 2: $0.51, 126.3s, ok True
+run 3: $0.45, 82.9s, ok True
+run 4: $0.52, 89.1s, ok True
+run 5: $0.54, 89.9s, ok True
+run 6: $0.43, 77.4s, ok True
+wrote /home/user/pskills/bench/results/s6-verify-fewer-turns/result.json with 6 runs

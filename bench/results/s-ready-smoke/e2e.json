@@ -1,0 +1,77 @@
+{
+ "label": "s-ready-smoke",
+ "stage": "ready",
+ "plugin_commit": "04565af",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 12,
+     "cache_write": 33126,
+     "cache_read": 259941,
+     "output": 6181
+    },
+    "cost_usd": 0.2203,
+    "duration_s": 56.4,
+    "turns": 7,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2203
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 12,
+      "cache_write": 33126,
+      "cache_read": 259941,
+      "output": 690
+     },
+     "cost_usd": 0.2203,
+     "messages": 6,
+     "agents": {},
+     "wall_s": 54.9
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {}
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 57.5,
+   "project": "/tmp/pdlc-stage-hodkcpuf/app",
+   "stderr": ""
+  }
+ ]
+}

@@ -1,0 +1,7 @@
+baseline   cost $0.33  time   87s  runs 6  noise 27%
+candidate  cost $0.26  time   66s  runs 6  noise 14%
+finished   6 of 6 vs 6 of 6 runs   verify rounds [None, None, None, None, None, None] vs [None, None, None, None, None, None]
+probes     True vs True
+defects    not measured for the candidate
+verdict    SAME OR BETTER -> keep
+           cost fell 21%, and the chance that this is luck is 0%
