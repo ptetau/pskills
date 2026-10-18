@@ -60,9 +60,11 @@ a note about it.
 ## 3. Deepen stub specs
 
 If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent with
-`run_in_background: false`. Ask recon for a **deep look** at the code map of that spec.
-Write the requirements from recon into the spec. These requirements come back as `built`,
-with `Source: recon`. Set the spec to `Status: active`.
+`run_in_background: false`. Give recon three items, and nothing else: the project root, the
+absolute path of the spec, and the words `deep look`. Recon knows the format of its reply.
+Do not ask recon for a summary of the code, for the template, or for extra detail. Write
+the requirements from recon into the spec. These requirements come back as `built`, with
+`Source: recon`. Set the spec to `Status: active`.
 
 ## 4. Write the patches
 

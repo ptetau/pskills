@@ -7,7 +7,8 @@ Keep these sections, in this order. Write "none" under one with nothing in it.
 ## Visual review
 
 The GIF, embedded as the delivery adapter says, and how many acceptance lines it shows
-out of how many.
+out of how many. Give each requirement a short description next to its ID, as in
+`R5 (usage line)`. Keep each sentence at 25 words or fewer.
 
 ## Requirements and checks
 

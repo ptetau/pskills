@@ -1,0 +1,883 @@
+{
+ "label": "s6-verify-fewer-turns-stage",
+ "stage": "verify",
+ "plugin_commit": "",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 50,
+     "cache_write": 102212,
+     "cache_read": 757155,
+     "output": 11346
+    },
+    "cost_usd": 0.4928,
+    "duration_s": 79.7,
+    "turns": 17,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 4,
+    "models": {
+     "claude-sonnet-5-5": 0.4928
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 21321,
+      "cache_read": 198238,
+      "output": 52
+     },
+     "cost_usd": 0.1334,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 18.7
+    },
+    "verify": {
+     "tokens": {
+      "input": 40,
+      "cache_write": 80891,
+      "cache_read": 558917,
+      "output": 779
+     },
+     "cost_usd": 0.3594,
+     "messages": 20,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 24,
+        "cache_write": 70193,
+        "cache_read": 118035,
+        "output": 133
+       },
+       "cost_usd": 0.2132,
+       "messages": 12,
+       "calls": 4,
+       "wall_s": 51.7
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10647,
+        "cache_read": 20539,
+        "output": 43
+       },
+       "cost_usd": 0.0331,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 7.0
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10187,
+        "cache_read": 7462,
+        "output": 20
+       },
+       "cost_usd": 0.0289,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 11.2
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 10,
+        "cache_write": 39186,
+        "cache_read": 82571,
+        "output": 50
+       },
+       "cost_usd": 0.1223,
+       "messages": 5,
+       "calls": 1,
+       "wall_s": 24.6
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10173,
+        "cache_read": 7463,
+        "output": 20
+       },
+       "cost_usd": 0.0289,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 8.9
+      }
+     },
+     "wall_s": 57.6
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "verify",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Propose CH-0001",
+      "Propose CH-0001",
+      "Propose CH-0001",
+      "Verified CH-0001",
+      "Verify CH-0001: round 1"
+     ],
+     "extra": {
+      "merge": "ok   CH-0001"
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   verify"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 81.1,
+   "project": "/tmp/pdlc-stage-ocgwm5y9/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 54,
+     "cache_write": 104741,
+     "cache_read": 808527,
+     "output": 11235
+    },
+    "cost_usd": 0.5056,
+    "duration_s": 124.9,
+    "turns": 17,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 4,
+    "models": {
+     "claude-sonnet-5-5": 0.5056
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 20857,
+      "cache_read": 195633,
+      "output": 41
+     },
+     "cost_usd": 0.1287,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 16.6
+    },
+    "verify": {
+     "tokens": {
+      "input": 44,
+      "cache_write": 83884,
+      "cache_read": 612894,
+      "output": 853
+     },
+     "cost_usd": 0.3769,
+     "messages": 22,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 28,
+        "cache_write": 71126,
+        "cache_read": 170354,
+        "output": 176
+       },
+       "cost_usd": 0.2237,
+       "messages": 14,
+       "calls": 4,
+       "wall_s": 100.4
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 11087,
+        "cache_read": 20528,
+        "output": 44
+       },
+       "cost_usd": 0.0338,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 12.3
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10187,
+        "cache_read": 7477,
+        "output": 20
+       },
+       "cost_usd": 0.0284,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 9.9
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 39224,
+        "cache_read": 121785,
+        "output": 65
+       },
+       "cost_usd": 0.1288,
+       "messages": 6,
+       "calls": 1,
+       "wall_s": 69.9
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10628,
+        "cache_read": 20564,
+        "output": 47
+       },
+       "cost_usd": 0.0326,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 8.3
+      }
+     },
+     "wall_s": 104.3
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "verify",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Propose CH-0001",
+      "Verified CH-0001",
+      "Verify CH-0001: round 1"
+     ],
+     "extra": {
+      "merge": "ok   CH-0001"
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   verify"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 126.3,
+   "project": "/tmp/pdlc-stage-n917an9q/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 48,
+     "cache_write": 91775,
+     "cache_read": 701708,
+     "output": 9650
+    },
+    "cost_usd": 0.4464,
+    "duration_s": 81.8,
+    "turns": 16,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 4,
+    "models": {
+     "claude-sonnet-5-5": 0.4464
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 22203,
+      "cache_read": 197144,
+      "output": 96
+     },
+     "cost_usd": 0.1346,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 16.9
+    },
+    "verify": {
+     "tokens": {
+      "input": 38,
+      "cache_write": 69572,
+      "cache_read": 504564,
+      "output": 768
+     },
+     "cost_usd": 0.3118,
+     "messages": 19,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 24,
+        "cache_write": 58321,
+        "cache_read": 117965,
+        "output": 146
+       },
+       "cost_usd": 0.178,
+       "messages": 12,
+       "calls": 4,
+       "wall_s": 62.1
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 10,
+        "cache_write": 27360,
+        "cache_read": 82570,
+        "output": 58
+       },
+       "cost_usd": 0.089,
+       "messages": 5,
+       "calls": 1,
+       "wall_s": 33.2
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10634,
+        "cache_read": 20502,
+        "output": 47
+       },
+       "cost_usd": 0.0325,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 8.0
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10170,
+        "cache_read": 7446,
+        "output": 19
+       },
+       "cost_usd": 0.0282,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 11.2
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10157,
+        "cache_read": 7447,
+        "output": 22
+       },
+       "cost_usd": 0.0282,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 9.7
+      }
+     },
+     "wall_s": 63.9
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "verify",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Propose CH-0001",
+      "Verified CH-0001",
+      "Verify CH-0001: round 1"
+     ],
+     "extra": {
+      "merge": "ok   CH-0001"
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   verify"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 82.9,
+   "project": "/tmp/pdlc-stage-t2evfy15/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 58,
+     "cache_write": 103891,
+     "cache_read": 961214,
+     "output": 11610
+    },
+    "cost_usd": 0.5219,
+    "duration_s": 87.8,
+    "turns": 20,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 4,
+    "models": {
+     "claude-sonnet-5-5": 0.5219
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 20981,
+      "cache_read": 195591,
+      "output": 51
+     },
+     "cost_usd": 0.1261,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 17.4
+    },
+    "verify": {
+     "tokens": {
+      "input": 48,
+      "cache_write": 82910,
+      "cache_read": 765623,
+      "output": 882
+     },
+     "cost_usd": 0.3958,
+     "messages": 24,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 26,
+        "cache_write": 70656,
+        "cache_read": 152520,
+        "output": 164
+       },
+       "cost_usd": 0.2132,
+       "messages": 13,
+       "calls": 4,
+       "wall_s": 53.6
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 39272,
+        "cache_read": 117090,
+        "output": 67
+       },
+       "cost_usd": 0.1248,
+       "messages": 6,
+       "calls": 1,
+       "wall_s": 25.9
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10173,
+        "cache_read": 7463,
+        "output": 20
+       },
+       "cost_usd": 0.0277,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 8.5
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10995,
+        "cache_read": 20503,
+        "output": 44
+       },
+       "cost_usd": 0.0327,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 12.0
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10216,
+        "cache_read": 7464,
+        "output": 33
+       },
+       "cost_usd": 0.0279,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 7.2
+      }
+     },
+     "wall_s": 67.9
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "verify",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Update CH-0001: proposal wording",
+      "Propose CH-0001",
+      "Verified CH-0001",
+      "Verify CH-0001: round 1"
+     ],
+     "extra": {
+      "merge": "ok   CH-0001"
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   verify"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 89.1,
+   "project": "/tmp/pdlc-stage-a3qe7i1g/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 56,
+     "cache_write": 107119,
+     "cache_read": 923881,
+     "output": 12277
+    },
+    "cost_usd": 0.5379,
+    "duration_s": 88.9,
+    "turns": 19,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 4,
+    "models": {
+     "claude-sonnet-5-5": 0.5379
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 20719,
+      "cache_read": 195502,
+      "output": 65
+     },
+     "cost_usd": 0.1279,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 16.7
+    },
+    "verify": {
+     "tokens": {
+      "input": 46,
+      "cache_write": 86400,
+      "cache_read": 728379,
+      "output": 782
+     },
+     "cost_usd": 0.41,
+     "messages": 23,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 26,
+        "cache_write": 70562,
+        "cache_read": 157382,
+        "output": 150
+       },
+       "cost_usd": 0.2183,
+       "messages": 13,
+       "calls": 4,
+       "wall_s": 56.8
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10841,
+        "cache_read": 20480,
+        "output": 44
+       },
+       "cost_usd": 0.033,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 9.9
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 39334,
+        "cache_read": 121986,
+        "output": 63
+       },
+       "cost_usd": 0.1286,
+       "messages": 6,
+       "calls": 1,
+       "wall_s": 27.8
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10178,
+        "cache_read": 7457,
+        "output": 24
+       },
+       "cost_usd": 0.0283,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 12.2
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10209,
+        "cache_read": 7459,
+        "output": 19
+       },
+       "cost_usd": 0.0284,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 6.9
+      }
+     },
+     "wall_s": 69.8
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "verify",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Update CH-0001: name the IDs in the proposal",
+      "Propose CH-0001",
+      "Verified CH-0001",
+      "Verify CH-0001: round 1"
+     ],
+     "extra": {
+      "merge": "ok   CH-0001"
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   verify"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 89.9,
+   "project": "/tmp/pdlc-stage-z11zmqel/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 44,
+     "cache_write": 90273,
+     "cache_read": 607368,
+     "output": 9383
+    },
+    "cost_usd": 0.4276,
+    "duration_s": 76.0,
+    "turns": 15,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 4,
+    "models": {
+     "claude-sonnet-5-5": 0.4276
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 18966,
+      "cache_read": 147554,
+      "output": 45
+     },
+     "cost_usd": 0.1126,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 15.6
+    },
+    "verify": {
+     "tokens": {
+      "input": 36,
+      "cache_write": 71307,
+      "cache_read": 459814,
+      "output": 700
+     },
+     "cost_usd": 0.315,
+     "messages": 18,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 22,
+        "cache_write": 58759,
+        "cache_read": 88469,
+        "output": 108
+       },
+       "cost_usd": 0.1763,
+       "messages": 11,
+       "calls": 4,
+       "wall_s": 51.3
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 27751,
+        "cache_read": 52944,
+        "output": 25
+       },
+       "cost_usd": 0.0854,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 25.0
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10201,
+        "cache_read": 7478,
+        "output": 20
+       },
+       "cost_usd": 0.0289,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 9.5
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 10618,
+        "cache_read": 20568,
+        "output": 43
+       },
+       "cost_usd": 0.0331,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 7.9
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10189,
+        "cache_read": 7479,
+        "output": 20
+       },
+       "cost_usd": 0.0289,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 8.9
+      }
+     },
+     "wall_s": 55.7
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "verify",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Propose CH-0001",
+      "Verified CH-0001",
+      "Verify CH-0001: round 1"
+     ],
+     "extra": {
+      "merge": "ok   CH-0001"
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   verify"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 77.4,
+   "project": "/tmp/pdlc-stage-nk7dhy4t/app",
+   "stderr": ""
+  }
+ ]
+}

@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/skills/init/references/bin/make_packets.py b/skills/init/references/bin/make_packets.py
 --- a/skills/init/references/bin/make_packets.py	2026-10-18 02:32:01.741125164 +0000
-+++ b/skills/init/references/bin/make_packets.py	2026-10-18 05:30:11.767368970 +0000
++++ b/skills/init/references/bin/make_packets.py	2026-10-18 05:34:47.041481983 +0000
 @@ -16,7 +16,12 @@
      - every spec it relies on. DES-writing-style goes only to the specification remit,
        because only that remit judges writing;
@@ -96,7 +96,7 @@ diff -ru -x __pycache__ a/skills/init/references/bin/make_packets.py b/skills/in
          else:
 diff -ru -x __pycache__ a/tests/test_make_packets.py b/tests/test_make_packets.py
 --- a/tests/test_make_packets.py	2026-10-18 02:32:01.741835087 +0000
-+++ b/tests/test_make_packets.py	2026-10-18 05:30:11.767478880 +0000
++++ b/tests/test_make_packets.py	2026-10-18 05:34:47.041840774 +0000
 @@ -167,6 +167,55 @@
          make_packets.main(["x", "CH-0001", "compliance"], root=self.root)
          self.assertIn("# Remit: compliance", self.packet("compliance"))

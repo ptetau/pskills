@@ -10,7 +10,9 @@ every section below, in this order. Write "none" under one with nothing in it.
 
 ## Done
 
-Write what this stage did, in a few lines.
+Write what this stage did, in a few lines. Give each requirement, intent, or change a
+short description next to its ID, as in `R5 (usage line)` or `CH-0001 (top option)`.
+Keep each sentence at 25 words or fewer.
 
 ## Decided on defaults
 

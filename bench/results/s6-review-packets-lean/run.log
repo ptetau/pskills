@@ -1,0 +1,8 @@
+model claude-sonnet-5-5  caught 5/5  missed none  false fails none  $0.56
+run 1: $0.51, 100.3s, ok True
+run 2: $0.50, 94.1s, ok True
+run 3: $0.51, 96.1s, ok True
+run 4: $0.45, 84.4s, ok True
+run 5: $0.54, 94.2s, ok True
+run 6: $0.56, 96.8s, ok True
+wrote /home/user/pskills/bench/results/s6-review-packets-lean/result.json with 6 runs

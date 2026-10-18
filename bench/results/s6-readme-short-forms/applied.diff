@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/skills/init/references/templates/README.md b/skills/init/references/templates/README.md
 --- a/skills/init/references/templates/README.md	2026-10-17 23:42:19.145751846 +0000
-+++ b/skills/init/references/templates/README.md	2026-10-18 05:27:25.140477787 +0000
++++ b/skills/init/references/templates/README.md	2026-10-18 05:45:47.930909412 +0000
 @@ -26,11 +26,20 @@
     `bin/check_merge.py` checks all of these conditions.
  8. These files are the truth. Boards and dashboards only show what these files contain.
@@ -27,7 +27,7 @@ diff -ru -x __pycache__ a/skills/init/references/templates/README.md b/skills/in
  
 diff -ru -x __pycache__ a/skills/init/references/templates/handoff.md b/skills/init/references/templates/handoff.md
 --- a/skills/init/references/templates/handoff.md	2026-10-17 08:26:05.388694656 +0000
-+++ b/skills/init/references/templates/handoff.md	2026-10-18 05:27:25.140759149 +0000
++++ b/skills/init/references/templates/handoff.md	2026-10-18 05:45:47.931131725 +0000
 @@ -10,7 +10,9 @@
  
  ## Done
@@ -41,7 +41,7 @@ diff -ru -x __pycache__ a/skills/init/references/templates/handoff.md b/skills/i
  
 diff -ru -x __pycache__ a/skills/init/references/templates/proposal.md b/skills/init/references/templates/proposal.md
 --- a/skills/init/references/templates/proposal.md	2026-10-17 08:26:05.388694656 +0000
-+++ b/skills/init/references/templates/proposal.md	2026-10-18 05:27:25.140874011 +0000
++++ b/skills/init/references/templates/proposal.md	2026-10-18 05:45:47.931216810 +0000
 @@ -7,7 +7,8 @@
  ## Visual review
  

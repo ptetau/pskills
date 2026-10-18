@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/skills/init/references/adapters/inbox-files.md b/skills/init/references/adapters/inbox-files.md
 --- a/skills/init/references/adapters/inbox-files.md	2026-10-16 21:02:23.250876770 +0000
-+++ b/skills/init/references/adapters/inbox-files.md	2026-10-18 05:24:34.466636698 +0000
++++ b/skills/init/references/adapters/inbox-files.md	2026-10-18 05:37:55.863680316 +0000
 @@ -6,6 +6,33 @@
    heading. The status comes from the `Status:` line.
  - **read**: open `pdlc/inbox/IN-<id>-*.md`.
@@ -38,7 +38,7 @@ diff -ru -x __pycache__ a/skills/init/references/adapters/inbox-files.md b/skill
  - **write**: edit the sections of the intent file.
 diff -ru -x __pycache__ a/skills/verify/SKILL.md b/skills/verify/SKILL.md
 --- a/skills/verify/SKILL.md	2026-10-18 02:32:01.741371715 +0000
-+++ b/skills/verify/SKILL.md	2026-10-18 05:24:34.466393488 +0000
++++ b/skills/verify/SKILL.md	2026-10-18 05:37:55.863569661 +0000
 @@ -33,6 +33,9 @@
  - Run all checks. All checks must pass.
  - Make sure that no check file changed since `Tests-Locked`.

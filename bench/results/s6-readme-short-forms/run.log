@@ -1,0 +1,7 @@
+run 1: $0.22, 57.8s, ok True
+run 2: $0.23, 59.2s, ok True
+run 3: $0.23, 57.7s, ok True
+run 4: $0.21, 58.3s, ok True
+run 5: $0.21, 57.5s, ok True
+run 6: $0.21, 59.5s, ok True
+wrote /home/user/pskills/bench/results/s6-readme-short-forms/result.json with 6 runs
