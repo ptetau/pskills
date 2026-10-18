@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/skills/build/SKILL.md b/skills/build/SKILL.md
 --- a/skills/build/SKILL.md	2026-10-17 23:42:19.147259205 +0000
-+++ b/skills/build/SKILL.md	2026-10-18 09:24:46.751263132 +0000
++++ b/skills/build/SKILL.md	2026-10-18 10:01:57.532452843 +0000
 @@ -48,7 +48,9 @@
  1. Commit the app files with the message "Build CH-xxxx: <what changed>". Add the
     trailers `Intent`, `Change`, and `Req` (the requirements that the commit is for). If
@@ -14,7 +14,7 @@ diff -ru -x __pycache__ a/skills/build/SKILL.md b/skills/build/SKILL.md
     the code that was only for that requirement. (The test writer removed the checks of
 diff -ru -x __pycache__ a/skills/init/references/templates/change.md b/skills/init/references/templates/change.md
 --- a/skills/init/references/templates/change.md	2026-10-17 08:26:05.388694656 +0000
-+++ b/skills/init/references/templates/change.md	2026-10-18 09:24:46.750828996 +0000
++++ b/skills/init/references/templates/change.md	2026-10-18 10:01:57.532213772 +0000
 @@ -80,4 +80,6 @@
  
  ## Progress log
@@ -25,7 +25,7 @@ diff -ru -x __pycache__ a/skills/init/references/templates/change.md b/skills/in
 +next to its ID, as in `R5 (usage line)`. Keep each sentence at 25 words or fewer.
 diff -ru -x __pycache__ a/skills/tests/SKILL.md b/skills/tests/SKILL.md
 --- a/skills/tests/SKILL.md	2026-10-17 23:42:19.146955793 +0000
-+++ b/skills/tests/SKILL.md	2026-10-18 09:24:46.751080769 +0000
++++ b/skills/tests/SKILL.md	2026-10-18 10:01:57.532392483 +0000
 @@ -75,6 +75,11 @@
    a corrected check can pass. A pass is correct here. Record each result in the progress
    log.
@@ -40,7 +40,7 @@ diff -ru -x __pycache__ a/skills/tests/SKILL.md b/skills/tests/SKILL.md
  1. Commit the check files with the message "Tests CH-xxxx" and the trailers `Intent`,
 diff -ru -x __pycache__ a/skills/verify/SKILL.md b/skills/verify/SKILL.md
 --- a/skills/verify/SKILL.md	2026-10-18 07:59:38.593731755 +0000
-+++ b/skills/verify/SKILL.md	2026-10-18 09:24:46.752367298 +0000
++++ b/skills/verify/SKILL.md	2026-10-18 10:01:57.533143967 +0000
 @@ -59,7 +59,8 @@
    of the reviewer. The "Notes" of the intent start with
    `Awaits approval: found reviewing CH-xxxx (<remit>)`. If an intent already asks for the

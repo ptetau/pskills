@@ -29,7 +29,7 @@
    "replace": "3. Add a line to the progress log: the round, each remit that failed, and the stage that\n   fixes each problem. Give each requirement a short description next to its ID. Keep\n   each sentence at 25 words or fewer.\n"
   }
  ],
- "runs": 6,
+ "runs": 12,
  "stage": "tests",
  "seeds": false,
  "target": "writing",

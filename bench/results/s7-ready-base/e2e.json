@@ -1,0 +1,549 @@
+{
+ "label": "s7-ready-base",
+ "stage": "ready",
+ "plugin_commit": "668a97a",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 14,
+     "cache_write": 29469,
+     "cache_read": 321608,
+     "output": 7045
+    },
+    "cost_usd": 0.2205,
+    "duration_s": 55.1,
+    "turns": 8,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2205
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 29469,
+      "cache_read": 321608,
+      "output": 577
+     },
+     "cost_usd": 0.2205,
+     "messages": 7,
+     "agents": {},
+     "wall_s": 54.2
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
+   },
+   "wall_s": 56.4,
+   "project": "/tmp/pdlc-stage-lcdii2ko/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 12,
+     "cache_write": 28722,
+     "cache_read": 266846,
+     "output": 6502
+    },
+    "cost_usd": 0.2066,
+    "duration_s": 47.6,
+    "turns": 7,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2066
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 12,
+      "cache_write": 28722,
+      "cache_read": 266846,
+      "output": 586
+     },
+     "cost_usd": 0.2066,
+     "messages": 6,
+     "agents": {},
+     "wall_s": 46.0
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
+   },
+   "wall_s": 49.1,
+   "project": "/tmp/pdlc-stage-mf70_oid/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 12,
+     "cache_write": 27250,
+     "cache_read": 265859,
+     "output": 5412
+    },
+    "cost_usd": 0.1897,
+    "duration_s": 44.9,
+    "turns": 7,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.1897
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 12,
+      "cache_write": 27250,
+      "cache_read": 265859,
+      "output": 659
+     },
+     "cost_usd": 0.1897,
+     "messages": 6,
+     "agents": {},
+     "wall_s": 42.9
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 4,
+       "files": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 26 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"The command checks a repeated\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:85 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:85 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 4,
+     "files": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 26 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"The command checks a repeated\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:85 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:85 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
+   },
+   "wall_s": 46.0,
+   "project": "/tmp/pdlc-stage-z5h1iop1/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 18,
+     "cache_write": 36336,
+     "cache_read": 442352,
+     "output": 9645
+    },
+    "cost_usd": 0.2861,
+    "duration_s": 4.2,
+    "turns": 1,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2861
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 18,
+      "cache_write": 36336,
+      "cache_read": 442352,
+      "output": 605
+     },
+     "cost_usd": 0.2861,
+     "messages": 9,
+     "agents": {},
+     "wall_s": 762.6
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 4,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:68 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top` and\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:70 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top abc`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 4,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:68 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top` and\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:70 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top abc`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
+   },
+   "wall_s": 764.3,
+   "project": "/tmp/pdlc-stage-51zznode/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 12,
+     "cache_write": 26575,
+     "cache_read": 264914,
+     "output": 3993
+    },
+    "cost_usd": 0.1727,
+    "duration_s": 35.7,
+    "turns": 7,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.1727
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 12,
+      "cache_write": 26575,
+      "cache_read": 264914,
+      "output": 627
+     },
+     "cost_usd": 0.1727,
+     "messages": 6,
+     "agents": {},
+     "wall_s": 35.0
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 1,
+       "files": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 0`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 1,
+     "files": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 0`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
+   },
+   "wall_s": 37.2,
+   "project": "/tmp/pdlc-stage-76qrjl4b/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 14,
+     "cache_write": 30768,
+     "cache_read": 334834,
+     "output": 3374
+    },
+    "cost_usd": 0.1903,
+    "duration_s": 31.3,
+    "turns": 8,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.1903
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 30768,
+      "cache_read": 334834,
+      "output": 506
+     },
+     "cost_usd": 0.1903,
+     "messages": 7,
+     "agents": {},
+     "wall_s": 29.9
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 2,
+       "files": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:68 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 2,
+     "files": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:68 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
+   },
+   "wall_s": 32.4,
+   "project": "/tmp/pdlc-stage-xt3ih72u/app",
+   "stderr": ""
+  }
+ ]
+}

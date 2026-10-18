@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/hooks/commits.py b/hooks/commits.py
 --- a/hooks/commits.py	2026-10-17 08:26:05.376694655 +0000
-+++ b/hooks/commits.py	2026-10-18 09:24:01.957057675 +0000
++++ b/hooks/commits.py	2026-10-18 10:01:31.784363209 +0000
 @@ -11,8 +11,16 @@
  It runs while the commit is still the newest, so `git commit --amend` fixes the commit at
  once. It leaves merge commits, other branches and projects without pdlc alone. Exit 2
@@ -133,7 +133,7 @@ diff -ru -x __pycache__ a/hooks/commits.py b/hooks/commits.py
  
 diff -ru -x __pycache__ a/tests/test_commits_hook.py b/tests/test_commits_hook.py
 --- a/tests/test_commits_hook.py	2026-10-17 08:26:05.392694656 +0000
-+++ b/tests/test_commits_hook.py	2026-10-18 09:24:01.958259056 +0000
++++ b/tests/test_commits_hook.py	2026-10-18 10:01:31.784869515 +0000
 @@ -1,6 +1,7 @@
  """Tests for pdlc's commit check hook. Run: python3 -m unittest discover plugins/pdlc/tests"""
  import json
