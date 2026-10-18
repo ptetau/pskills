@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3, 4, and 5 are kept. Round 6 is open.
+**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3, 4, and 5 are kept. Round 6 measures and optimises each section alone.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -276,4 +276,30 @@ Held: the planner's first experiment replaces the frames that the specification 
 Next: the saving per round is now 2% to 4%, and each test costs about $9. The pools that are left
           are the main session (70% of a run), the extra review rounds (about $0.19 a run), and the
           1-hour cache writes (a Claude Code setting, about a fifth of a run).
+[2026-10-18] Sections: measure each stage alone
+Plan: a whole run varies too much to show a saving of 2% to 4%. So I split the pipeline into its
+          seven stages. `bench/sections/project.bundle` is the project of a reference run. Each
+          stage starts and finishes at a known commit in it. `run_bench.py stage` replays one
+          stage in a fresh session from its start commit. Haiku built the command from my spec
+          and found one bug in the spec. Haiku also ran the replays.
+Result: six replays of each stage all finished and passed their stage checks.
+
+          | Stage | Alone | Main session | Agents | In a whole run |
+          |---|---|---|---|---|
+          | verify | $0.51 | $0.31 | $0.19 | $0.53 |
+          | tests | $0.38 | $0.29 | $0.09 | $0.42 |
+          | intake | $0.33 | $0.29 | $0.05 | $0.22 |
+          | show | $0.23 | $0.23 | none | $0.16 |
+          | ready | $0.23 | $0.23 | none | $0.03 |
+          | build | $0.20 | $0.17 | $0.03 | $0.15 |
+          | change | $0.19 | $0.19 | none | $0.06 |
+
+Findings: a replay of tests, verify, or build varies by 10% to 14%. A whole run varies by 35% to
+          60%. An idle session costs $0.03, so nearly all of a stage's cost is its own work. The
+          main session costs more than the agents in each stage. The stages alone cost $2.07
+          together, and a whole run costs $1.61. So one session for all the stages is cheaper
+          than a session for each stage.
+Next: a Fable planner maps where each stage's tokens go and writes one or two experiments for
+          each stage, with verify, tests, and intake first. Each experiment replays only its
+          stage. Six whole runs then check the kept edits together.
 ```
