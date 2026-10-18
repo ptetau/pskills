@@ -1,0 +1,7 @@
+run 1: $1.21, 274.4s, probes 8/8
+run 1: $1.43, 337.5s, probes 8/8
+run 1: $1.41, 350.2s, probes 8/8
+run 1: $1.65, 393.7s, probes 8/8
+run 1: $1.84, 436.0s, probes 8/8
+run 1: $2.10, 488.9s, probes 8/8
+wrote /home/user/pskills/bench/results/r5-compliance-by-risk/result.json with 6 runs

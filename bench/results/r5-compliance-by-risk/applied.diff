@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/skills/init/references/bin/make_packets.py b/skills/init/references/bin/make_packets.py
 --- a/skills/init/references/bin/make_packets.py	2026-10-18 01:29:40.051222225 +0000
-+++ b/skills/init/references/bin/make_packets.py	2026-10-18 02:09:34.149628174 +0000
++++ b/skills/init/references/bin/make_packets.py	2026-10-18 02:22:17.967493491 +0000
 @@ -17,6 +17,9 @@
        because only that remit judges writing;
    - the material: for the tests remit, the check files and nothing else; for every other
@@ -57,7 +57,7 @@ diff -ru -x __pycache__ a/skills/init/references/bin/make_packets.py b/skills/in
                 remit_text.strip() + "\n", spec_for["specification" if remit == "specification" else "other"]]
 diff -ru -x __pycache__ a/skills/verify/SKILL.md b/skills/verify/SKILL.md
 --- a/skills/verify/SKILL.md	2026-10-17 23:42:19.147499610 +0000
-+++ b/skills/verify/SKILL.md	2026-10-18 02:09:34.149735212 +0000
++++ b/skills/verify/SKILL.md	2026-10-18 02:22:17.967641785 +0000
 @@ -37,10 +37,12 @@
  
  1. Get the remits from "Reviews" in `pdlc/config.md`. Do not include `tests`, because the
@@ -77,7 +77,7 @@ diff -ru -x __pycache__ a/skills/verify/SKILL.md b/skills/verify/SKILL.md
  
 diff -ru -x __pycache__ a/tests/test_make_packets.py b/tests/test_make_packets.py
 --- a/tests/test_make_packets.py	2026-10-18 01:29:40.051749605 +0000
-+++ b/tests/test_make_packets.py	2026-10-18 02:09:34.149841186 +0000
++++ b/tests/test_make_packets.py	2026-10-18 02:22:17.967730290 +0000
 @@ -148,6 +148,25 @@
          self.assertNotIn("behaviour", text)
          self.assertNotIn("centre", text)

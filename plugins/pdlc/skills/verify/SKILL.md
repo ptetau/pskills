@@ -37,10 +37,12 @@ Do these steps through the checks port:
 
 1. Get the remits from "Reviews" in `pdlc/config.md`. Do not include `tests`, because the
    tests stage already reviewed the checks, and its result stays.
-2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`.
-3. Start one fresh `pdlc:reviewer` agent for each remit, all in one message, each with
-   `run_in_background: false`. Give each reviewer only the path of its own packet. Do not
-   tell a reviewer what a different reviewer found.
+2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`. For a
+   remit that does not apply, the script writes `result.md` itself and says so. Start no
+   reviewer for that remit.
+3. Start one fresh `pdlc:reviewer` agent for each remit that got a packet, all in one
+   message, each with `run_in_background: false`. Give each reviewer only the path of its
+   own packet. Do not tell a reviewer what a different reviewer found.
 4. The tool calls return when all the reviewers are done. Each reviewer writes
    `review/<remit>/result.md`.
 
