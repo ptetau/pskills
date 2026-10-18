@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/agents/test-writer.md b/agents/test-writer.md
 --- a/agents/test-writer.md	2026-10-17 08:26:05.376694655 +0000
-+++ b/agents/test-writer.md	2026-10-18 09:25:25.236234074 +0000
++++ b/agents/test-writer.md	2026-10-18 10:07:23.073993876 +0000
 @@ -31,6 +31,9 @@
       does not list.
  4. Drive the surface that the line names. A check of a helper alone does not prove a line

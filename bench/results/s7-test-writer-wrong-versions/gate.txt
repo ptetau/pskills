@@ -1,0 +1,7 @@
+baseline   cost $0.40  time  111s  runs 12  noise 43%
+candidate  cost $0.42  time  117s  runs 6  noise 27%
+finished   12 of 12 vs 6 of 6 runs   verify rounds [None, None, None, None, None, None, None, None, None, None, None, None] vs [None, None, None, None, None, None]
+probes     True vs True
+calls:pdlc:reviewer/tests  1.17 -> 1.00 calls a run at $0.045 each, so about $0.01 (2%) less in a run
+verdict    NO GAIN -> revert
+           pdlc:reviewer/tests calls changed from 1.17 to 1.00 a run (-14%), and the chance that this is luck is 43% (it must be 10% or less)

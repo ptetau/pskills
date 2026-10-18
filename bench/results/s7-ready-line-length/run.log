@@ -1,0 +1,7 @@
+run 1: $0.22, 59.3s, ok True
+run 2: $0.27, 83.6s, ok True
+run 3: $0.21, 55.1s, ok True
+run 4: $0.20, 57.9s, ok True
+run 5: $0.23, 61.5s, ok True
+run 6: $0.27, 70.5s, ok True
+wrote /home/user/pskills/bench/results/s7-ready-line-length/result.json with 6 runs

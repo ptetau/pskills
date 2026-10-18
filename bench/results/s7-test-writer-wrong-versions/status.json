@@ -1,0 +1,8 @@
+{
+ "state": "done",
+ "pid": 5141,
+ "at": "10:10:00",
+ "runs": 6,
+ "verdict": "NO GAIN -> revert",
+ "finished": 6
+}

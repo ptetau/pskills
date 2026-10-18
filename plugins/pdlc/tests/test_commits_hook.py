@@ -1,6 +1,7 @@
 """Tests for pdlc's commit check hook. Run: python3 -m unittest discover plugins/pdlc/tests"""
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -9,6 +10,7 @@ from pathlib import Path
 
 PLUGIN = Path(__file__).parent.parent
 HOOK = PLUGIN / "hooks/commits.py"
+WRITING = PLUGIN / "skills/init/references/bin/check_writing.py"
 TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
 
 CHANGE = "# CH-0001 · Email templates\n\nIntent: IN-0001 · Scope: CAP-email · Status: testing · " \
@@ -170,6 +172,131 @@ class CommitHook(unittest.TestCase):
         after = [h for entry in hooks.get("PostToolUse", []) if entry["matcher"] == "Bash"
                  for h in entry["hooks"]]
         self.assertTrue(any("hooks/commits.py" in h["command"] for h in after))
+
+
+LONG = " ".join(["word"] * 30) + "."
+LONGER = " ".join(["other"] * 32) + "."
+
+
+class WritingHook(unittest.TestCase):
+    """The writing part of the hook reports the findings in the text that a commit wrote, once."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        r = self.root = Path(self.tmp.name)
+        for path, text in {
+            "pdlc/config.md": "# pdlc config\n",
+            "pdlc/specs/design/DES-pdlc-commit-trailers.md": TRAILERS.read_text(),
+            "pdlc/specs/jobs/JOB-email.md": "# JOB-email \u00b7 Send mail\n\nStatus: active\n\n## Who and why\n\nA person sends mail.\n",
+            "pdlc/changes/CH-0001-email/change.md": CHANGE,
+        }.items():
+            (r / path).parent.mkdir(parents=True, exist_ok=True)
+            (r / path).write_text(text)
+        (r / "pdlc/bin").mkdir()
+        shutil.copy(WRITING, r / "pdlc/bin/check_writing.py")
+        git(r, "init", "-q", "-b", "main")
+        git(r, "add", "-A")
+        git(r, "commit", "-qm", "Set up pdlc")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def write(self, path, text):
+        target = self.root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text((target.read_text() if target.exists() else "") + text)
+
+    def commit(self, subject, amend=False):
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-q", *(["--amend"] if amend else []), "-m", subject)
+
+    def hook(self):
+        call = {"tool_name": "Bash", "tool_input": {"command": "git commit -m x"}, "cwd": str(self.root)}
+        run = subprocess.run([sys.executable, str(HOOK)], input=json.dumps(call),
+                             capture_output=True, text=True, timeout=60)
+        return run.returncode, run.stderr
+
+    def test_a_long_sentence_in_a_spec_is_reported_on_main(self):
+        self.write("pdlc/specs/jobs/JOB-email.md", "\n" + LONG + "\n")
+        self.commit("Specify IN-0001: mail")
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        self.assertIn("1 writing finding", err)
+        self.assertIn("JOB-email.md", err)
+        self.assertIn("sentence length", err)
+        self.assertIn("git commit --amend", err)
+
+    def test_the_same_findings_are_reported_once(self):
+        self.write("pdlc/specs/jobs/JOB-email.md", "\n" + LONG + "\n")
+        self.commit("Specify IN-0001: mail")
+        self.assertEqual(self.hook()[0], 2)
+        self.assertEqual(self.hook(), (0, ""))
+        self.commit("Specify IN-0001: mail again", amend=True)
+        self.assertEqual(self.hook(), (0, ""))
+
+    def test_a_new_set_of_findings_is_reported_again(self):
+        self.write("pdlc/specs/jobs/JOB-email.md", "\n" + LONG + "\n")
+        self.commit("Specify IN-0001: mail")
+        self.assertEqual(self.hook()[0], 2)
+        self.write("pdlc/specs/jobs/JOB-email.md", LONGER + "\n")
+        self.commit("Specify IN-0001: mail", amend=True)
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        self.assertIn("2 writing findings", err)
+
+    def test_at_most_three_sets_are_reported_for_one_parent(self):
+        for n in range(4):
+            self.write("pdlc/specs/jobs/JOB-email.md", "\n" + " ".join(["w%d" % n] * (30 + n)) + ".\n")
+            self.commit("Specify IN-0001: mail", amend=n > 0)
+            self.assertEqual(self.hook()[0], 2 if n < 3 else 0, "report %d" % n)
+
+    def test_a_line_from_an_older_commit_is_not_reported(self):
+        self.write("pdlc/specs/jobs/JOB-email.md", "\n" + LONG + "\n")
+        self.commit("Specify IN-0001: mail")
+        self.hook()
+        self.write("pdlc/specs/jobs/JOB-email.md", "\nA short new line.\n")
+        self.commit("Ready IN-0001: mail")
+        self.assertEqual(self.hook(), (0, ""))
+
+    def test_review_folders_and_plugin_files_are_not_checked(self):
+        self.write("pdlc/changes/CH-0001-email/review/tests/packet.md", LONG + "\n")
+        self.write("pdlc/templates/change.md", LONG + "\n")
+        self.write("pdlc/README.md", LONG + "\n")
+        self.commit("Review tests CH-0001")
+        self.assertEqual(self.hook(), (0, ""))
+
+    def test_a_handoff_finding_and_a_trailer_problem_come_together(self):
+        git(self.root, "switch", "-qc", "pdlc/CH-0001-email")
+        self.write("pdlc/changes/CH-0001-email/handoff.md", "# Handoff\n\nThe R3 checks pass.\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "Tests reviewed CH-0001\n\nIntent: IN-0001")
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        self.assertIn("Change: CH-0001", err)
+        self.assertIn('"R3" has no name', err)
+
+    def test_without_the_writing_script_only_the_trailers_are_checked(self):
+        (self.root / "pdlc/bin/check_writing.py").unlink()
+        self.write("pdlc/specs/jobs/JOB-email.md", "\n" + LONG + "\n")
+        self.commit("Specify IN-0001: mail")
+        self.assertEqual(self.hook(), (0, ""))
+
+    def test_the_record_keeps_the_working_tree_clean(self):
+        self.write("pdlc/specs/jobs/JOB-email.md", "\n" + LONG + "\n")
+        self.commit("Specify IN-0001: mail")
+        self.hook()
+        self.assertEqual(git(self.root, "status", "--porcelain"), "")
+        self.assertTrue((self.root / ".git/pdlc-writing-reported").exists())
+
+    def test_a_merge_commit_gets_no_writing_check(self):
+        git(self.root, "switch", "-qc", "side")
+        self.write("pdlc/specs/jobs/JOB-email.md", "\n" + LONG + "\n")
+        self.commit("Side")
+        git(self.root, "switch", "-q", "main")
+        self.write("pdlc/inbox/IN-0001-mail.md", "# IN-0001 \u00b7 Mail\n")
+        self.commit("Specify IN-0001: mail")
+        git(self.root, "merge", "-q", "--no-ff", "-m", "Merge side", "side")
+        self.assertEqual(self.hook(), (0, ""))
 
 
 if __name__ == "__main__":

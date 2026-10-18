@@ -1,0 +1,519 @@
+{
+ "label": "s7-ready-line-length",
+ "plugin_commit": "",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 14,
+     "cache_write": 29387,
+     "cache_read": 309748,
+     "output": 6691
+    },
+    "cost_usd": 0.2155,
+    "duration_s": 54.4,
+    "turns": 8,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2155
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 29387,
+      "cache_read": 309748,
+      "output": 590
+     },
+     "cost_usd": 0.2155,
+     "messages": 7,
+     "agents": {},
+     "wall_s": 56.5
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
+   },
+   "wall_s": 59.3,
+   "project": "/tmp/pdlc-stage-sabv7az8/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 32988,
+     "cache_read": 488767,
+     "output": 9211
+    },
+    "cost_usd": 0.273,
+    "duration_s": 79.6,
+    "turns": 11,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.273
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 32988,
+      "cache_read": 488767,
+      "output": 776
+     },
+     "cost_usd": 0.273,
+     "messages": 10,
+     "agents": {},
+     "wall_s": 78.8
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
+   },
+   "wall_s": 83.6,
+   "project": "/tmp/pdlc-stage-r43tppfj/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 12,
+     "cache_write": 29504,
+     "cache_read": 269855,
+     "output": 6249
+    },
+    "cost_usd": 0.2075,
+    "duration_s": 51.8,
+    "turns": 7,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2075
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 12,
+      "cache_write": 29504,
+      "cache_read": 269855,
+      "output": 585
+     },
+     "cost_usd": 0.2075,
+     "messages": 6,
+     "agents": {},
+     "wall_s": 53.5
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
+   },
+   "wall_s": 55.1,
+   "project": "/tmp/pdlc-stage-w7oav0kt/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 12,
+     "cache_write": 27750,
+     "cache_read": 253066,
+     "output": 6672
+    },
+    "cost_usd": 0.2031,
+    "duration_s": 54.8,
+    "turns": 7,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2031
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 12,
+      "cache_write": 27750,
+      "cache_read": 253066,
+      "output": 51
+     },
+     "cost_usd": 0.2031,
+     "messages": 6,
+     "agents": {},
+     "wall_s": 55.8
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
+   },
+   "wall_s": 57.9,
+   "project": "/tmp/pdlc-stage-lnvfc317/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 16,
+     "cache_write": 30287,
+     "cache_read": 366197,
+     "output": 7183
+    },
+    "cost_usd": 0.2296,
+    "duration_s": 56.0,
+    "turns": 9,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2296
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 30287,
+      "cache_read": 366197,
+      "output": 743
+     },
+     "cost_usd": 0.2296,
+     "messages": 8,
+     "agents": {},
+     "wall_s": 59.2
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
+   },
+   "wall_s": 61.5,
+   "project": "/tmp/pdlc-stage-4v1a_2g2/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 35098,
+     "cache_read": 507065,
+     "output": 8033
+    },
+    "cost_usd": 0.2715,
+    "duration_s": 65.6,
+    "turns": 12,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2715
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 35098,
+      "cache_read": 507065,
+      "output": 708
+     },
+     "cost_usd": 0.2715,
+     "messages": 10,
+     "agents": {},
+     "wall_s": 69.0
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Ready IN-0001: wordfreq top option",
+      "Ready IN-0001: wordfreq top option"
+     ],
+     "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      }
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   ready"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
+   },
+   "wall_s": 70.5,
+   "project": "/tmp/pdlc-stage-x6624ihd/app",
+   "stderr": ""
+  }
+ ]
+}

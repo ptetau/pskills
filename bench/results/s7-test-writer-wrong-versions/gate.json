@@ -1,0 +1,148 @@
+{
+ "verdict": "NO GAIN -> revert",
+ "reasons": [
+  "pdlc:reviewer/tests calls changed from 1.17 to 1.00 a run (-14%), and the chance that this is luck is 43% (it must be 10% or less)"
+ ],
+ "baseline": {
+  "runs": 12,
+  "cost_usd": 0.4041666666666667,
+  "duration_s": 110.6,
+  "noise": 0.4297731958762887,
+  "costs": [
+   0.3639,
+   0.523,
+   0.3995,
+   0.3493,
+   0.386,
+   0.413,
+   0.3545,
+   0.4534,
+   0.4088,
+   0.4501,
+   0.3537,
+   0.3948
+  ],
+  "completed": 12,
+  "rounds": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "probes_all": true,
+  "units_ok": true,
+  "seeds_caught": null,
+  "false_fails": null,
+  "waiting": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "waiting_turns": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "writing": [
+   0,
+   7,
+   4,
+   3,
+   0,
+   1,
+   4,
+   2,
+   3,
+   1,
+   1,
+   0
+  ]
+ },
+ "candidate": {
+  "runs": 6,
+  "cost_usd": 0.42236666666666667,
+  "duration_s": 116.91666666666667,
+  "noise": 0.2739326020045773,
+  "costs": [
+   0.3861,
+   0.489,
+   0.4626,
+   0.4306,
+   0.3733,
+   0.3926
+  ],
+  "completed": 6,
+  "rounds": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "probes_all": true,
+  "units_ok": true,
+  "seeds_caught": null,
+  "false_fails": null,
+  "waiting": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "waiting_turns": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "writing": [
+   1,
+   2,
+   0,
+   4,
+   4,
+   0
+  ]
+ },
+ "cost_change": 0.04503092783505153,
+ "target": {
+  "target": "calls:pdlc:reviewer/tests",
+  "calls_before": 1.1666666666666667,
+  "calls_after": 1,
+  "per_call_before": 0.045307142857142865,
+  "expected_run_saving": 0.007551190476190481,
+  "expected_run_saving_share": 0.01868335787923418
+ },
+ "p": 0.43137254901960786
+}

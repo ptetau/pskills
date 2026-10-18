@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/skills/init/references/templates/capability.md b/skills/init/references/templates/capability.md
 --- a/skills/init/references/templates/capability.md	2026-10-17 08:26:05.388694656 +0000
-+++ b/skills/init/references/templates/capability.md	2026-10-18 09:24:26.771553534 +0000
++++ b/skills/init/references/templates/capability.md	2026-10-18 10:07:22.960744429 +0000
 @@ -28,6 +28,8 @@
  
  Status: proposed · Intents: IN-0000
@@ -13,7 +13,7 @@ diff -ru -x __pycache__ a/skills/init/references/templates/capability.md b/skill
  - Given ..., when ..., then ...
 diff -ru -x __pycache__ a/skills/init/references/templates/job.md b/skills/init/references/templates/job.md
 --- a/skills/init/references/templates/job.md	2026-10-17 08:26:05.388694656 +0000
-+++ b/skills/init/references/templates/job.md	2026-10-18 09:24:26.771479244 +0000
++++ b/skills/init/references/templates/job.md	2026-10-18 10:07:22.960658041 +0000
 @@ -32,6 +32,8 @@
  
  Status: proposed · Intents: IN-0000
@@ -26,7 +26,7 @@ diff -ru -x __pycache__ a/skills/init/references/templates/job.md b/skills/init/
  - Given ..., when ..., then ...
 diff -ru -x __pycache__ a/skills/intake/SKILL.md b/skills/intake/SKILL.md
 --- a/skills/intake/SKILL.md	2026-10-18 07:59:38.593731755 +0000
-+++ b/skills/intake/SKILL.md	2026-10-18 09:24:26.771321024 +0000
++++ b/skills/intake/SKILL.md	2026-10-18 10:07:22.960404963 +0000
 @@ -81,7 +81,10 @@
    set `Intents:` to this intent. Write one or two plain sentences. Then write the
    acceptance checks as "Given …, when …, then …" lines. Mark `(assumed)` on each detail

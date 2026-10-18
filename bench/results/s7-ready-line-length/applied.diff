@@ -1,6 +1,6 @@
 diff -ru -x __pycache__ a/skills/ready/SKILL.md b/skills/ready/SKILL.md
 --- a/skills/ready/SKILL.md	2026-10-17 08:26:05.392694656 +0000
-+++ b/skills/ready/SKILL.md	2026-10-18 09:25:06.276186478 +0000
++++ b/skills/ready/SKILL.md	2026-10-18 10:07:23.029972158 +0000
 @@ -38,7 +38,11 @@
  - Business rules that the words leave open: who is permitted to do what, what happens
    twice, and what happens when something is missing.

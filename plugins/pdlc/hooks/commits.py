@@ -11,8 +11,16 @@ DES-pdlc-commit-trailers (commit subjects and trailers):
 It runs while the commit is still the newest, so `git commit --amend` fixes the commit at
 once. It leaves merge commits, other branches and projects without pdlc alone. Exit 2
 shows the problems to Claude.
+
+On any branch, it also runs the writing check of the project (pdlc/bin/check_writing.py) on
+the lines that the commit wrote in the specs, the intents, and the change folders. It skips
+the review packets and results. The findings go to Claude in the same way, so that Claude
+can amend the commit. The hook reports one set of findings once for each parent commit, and
+at most three sets for one parent. So a finding that Claude cannot fix does not block the
+work.
 """
 import glob
+import hashlib
 import json
 import os
 import re
@@ -20,6 +28,12 @@ import subprocess
 import sys
 
 DES = os.path.join("pdlc", "specs", "design", "DES-pdlc-commit-trailers.md")
+WRITING_CHECK = os.path.join("pdlc", "bin", "check_writing.py")
+# The text that the stages write. The review folders hold packets (copies) and the results
+# of the reviewers. The other pdlc/ files come from the plugin.
+WRITTEN_TEXT = re.compile(r"^pdlc/(?:specs|inbox|changes)/(?!.*/review/).*\.md$")
+REPORTED = "pdlc-writing-reported"  # under .git: the sets of findings that this hook reported
+MAX_REPORTS = 3
 PLACEHOLDERS = {"<change>": r"CH-\d+", "<intent>": r"IN-\d+", "<n>": r"\d+",
                 "<design spec>": r"DES-[a-z0-9-]+"}
 
@@ -121,6 +135,59 @@ def problems(root):
     return wrong
 
 
+def fresh_commit(root):
+    """True when HEAD is the commit that this Bash call made or amended, with one parent.
+    A checkout, a merge, or a root commit gets no writing check."""
+    newest = git(root, "reflog", "-1", "--format=%gs") or ""
+    parents = (git(root, "rev-list", "--parents", "-n", "1", "HEAD") or "").split()
+    return newest.startswith("commit") and len(parents) == 2
+
+
+def written_text(root):
+    """The .md files of the newest commit that a pdlc stage wrote, and that still exist."""
+    files = (git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD") or "").split()
+    return [f for f in files if WRITTEN_TEXT.match(f) and os.path.isfile(os.path.join(root, f))]
+
+
+def writing_findings(root):
+    """The findings of the writing check in the lines that the newest commit wrote, or []."""
+    if not os.path.isfile(os.path.join(root, WRITING_CHECK)) or not fresh_commit(root):
+        return []
+    files = written_text(root)
+    if not files:
+        return []
+    try:
+        done = subprocess.run([sys.executable, WRITING_CHECK, "--since", "HEAD~1", *files],
+                              cwd=root, capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return [line for line in done.stdout.splitlines() if " \u00b7 " in line]
+
+
+def reported_before(root, findings):
+    """True when this hook already reported this set of findings for a commit with the same
+    parent, or already reported MAX_REPORTS sets for that parent. If not, it records the set
+    and returns False. The record is under .git, so the working tree stays clean."""
+    parent = git(root, "rev-parse", "HEAD~1") or "none"
+    plain = sorted(re.sub(r":\d+ \u00b7 ", " \u00b7 ", line) for line in findings)
+    key = hashlib.sha1("\n".join(plain).encode()).hexdigest()[:12]
+    git_dir = git(root, "rev-parse", "--absolute-git-dir") or os.path.join(root, ".git")
+    path = os.path.join(git_dir, REPORTED)
+    try:
+        lines = open(path).read().splitlines()
+    except OSError:
+        lines = []
+    seen = [line.split()[1] for line in lines if line.startswith(parent + " ") and len(line.split()) > 1]
+    if key in seen or len(seen) >= MAX_REPORTS:
+        return True
+    try:
+        with open(path, "a") as record:
+            record.write("%s %s\n" % (parent, key))
+    except OSError:
+        pass
+    return False
+
+
 def main():
     try:
         call = json.load(sys.stdin)
@@ -130,18 +197,32 @@ def main():
     if call.get("tool_name") != "Bash" or not re.search(r"\bgit\b[^\n;|&]*\bcommit\b", command):
         return 0
     root = project_root(call.get("cwd") or os.getcwd())
+    if not root:
+        return 0
     try:
-        wrong = problems(root) if root else []
+        wrong = problems(root)
+        findings = writing_findings(root)
+        if findings and reported_before(root, findings):
+            findings = []
     except Exception:  # a broken check must never get in the way of work
         return 0
-    if not wrong:
+    if not wrong and not findings:
         return 0
     sha = git(root, "rev-parse", "--short", "HEAD")
-    print("pdlc: commit %s doesn't follow DES-pdlc-commit-trailers:" % sha, file=sys.stderr)
-    for line in wrong:
-        print("  - %s" % line, file=sys.stderr)
-    print("Fix it now, while it is the newest commit: `git commit --amend` with the right "
-          "subject and trailers. Its files stay as they are.", file=sys.stderr)
+    if wrong:
+        print("pdlc: commit %s doesn't follow DES-pdlc-commit-trailers:" % sha, file=sys.stderr)
+        for line in wrong:
+            print("  - %s" % line, file=sys.stderr)
+        print("Fix it now, while it is the newest commit: `git commit --amend` with the right "
+              "subject and trailers. Its files stay as they are.", file=sys.stderr)
+    if findings:
+        print("pdlc: commit %s has %d writing finding%s in the text that it wrote (DES-writing-style):"
+              % (sha, len(findings), "" if len(findings) == 1 else "s"), file=sys.stderr)
+        for line in findings:
+            print("  - %s" % line, file=sys.stderr)
+        print("Fix each finding that you can now, with `git commit --amend`. The files stay as they "
+              "are. A finding that you cannot fix, for example in a quoted message, can stay: this "
+              "hook reports a set of findings once.", file=sys.stderr)
     return 2
 
 

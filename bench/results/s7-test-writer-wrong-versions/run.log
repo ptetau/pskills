@@ -1,0 +1,7 @@
+run 1: $0.39, 114.9s, ok True
+run 2: $0.49, 136.1s, ok True
+run 3: $0.46, 119.7s, ok True
+run 4: $0.43, 121.8s, ok True
+run 5: $0.37, 105.8s, ok True
+run 6: $0.39, 103.2s, ok True
+wrote /home/user/pskills/bench/results/s7-test-writer-wrong-versions/result.json with 6 runs

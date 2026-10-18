@@ -1,0 +1,7 @@
+baseline   cost $0.21  time  164s  runs 6  noise 54%
+candidate  cost $0.23  time   65s  runs 6  noise 30%
+finished   6 of 6 vs 6 of 6 runs   verify rounds [None, None, None, None, None, None] vs [None, None, None, None, None, None]
+probes     True vs True
+writing    1.8 -> 0.0 findings a run, and a run costs +11%
+verdict    SAME OR BETTER -> keep
+           writing findings fell from 1.8 to 0.0 a run (100% fewer), and the chance that this is luck is 3%
