@@ -1,0 +1,7 @@
+baseline   cost $1.61  time  380s  runs 6  noise 55%
+candidate  cost $1.42  time  411s  runs 6  noise 53%
+finished   6 of 6 vs 5 of 6 runs   verify rounds [2, 2, 1, 2, 1, 2] vs [1, 2, 2, 1, 1, 1]
+probes     True vs True
+defects    5 vs 5 caught
+verdict    REGRESSION -> revert
+           pdlc did not finish in 1 of 6 runs, and it finished in every baseline run

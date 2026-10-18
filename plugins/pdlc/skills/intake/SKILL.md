@@ -28,9 +28,10 @@ read are current.
 - If neither is true, take the oldest intent with status `new` that does not await
   approval.
 
-If you switched to a branch, start a branch for the intent from that branch. Use the
-delivery port. Do this before you commit anything. Write the name of the new branch as the
-`Branch:` of the intent. Set the status of the intent to `specifying`.
+If you switched to an unmerged pdlc branch above, start a branch for the intent from that
+branch. Use the delivery port. Do this before you commit anything. Write the name of the new
+branch as the `Branch:` of the intent. If no pdlc branch is unmerged, do not start a branch.
+Commit on main, and keep `Branch: none`. Set the status of the intent to `specifying`.
 
 ## 2. Decide what it touches
 
