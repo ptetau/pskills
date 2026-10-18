@@ -68,9 +68,9 @@ guards of the `waiting` mode. The guards are the same: the stage finished and pa
 the probes and the project's checks pass, and no planted defect is lost. The stage must not be
 clearly dearer. One guard differs. A stage that costs up to 10% more is not a regression. The
 reason is that the hook adds one amend turn (about 4% of the tests stage) and saves in a later
-stage. A rise above 10% is a regression when it is not luck, and a rise above the noise of the
-baseline and above 25% is one also when it could be luck. `recheck` now also works on a stage
-folder, so an old result gets the count without a new replay. The whole-run count (since the first
+stage. A rise above 10% is a regression when it is not luck. A rise above the noise of the
+baseline and above 25% is a regression also when it could be luck. `recheck` now also works on
+a stage folder, so an old result gets the count without a new replay. The whole-run count (since the first
 commit) comes for free in `inspect_project`.
 
 A stage replay can show that a stage leaves fewer findings. It cannot show the second verify
