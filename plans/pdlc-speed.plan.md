@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3 and 4 are kept. Round 5 is open.
+**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3, 4, and 5 are kept. Round 6 is open.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -45,9 +45,9 @@ A stronger model plans the experiments, and cheaper models make the changes and 
 
 - `bench/baseline.json` holds six runs of today's pdlc, from before round 1. It is the floor
   for effectiveness.
-- `bench/reference.json` holds six runs of the state after the last kept round (round 4), with
+- `bench/reference.json` holds six runs of the state after the last kept round (round 5), with
   its planted-defect result. The next experiment compares its cost with this file.
-  `bench/reference-after-round-3.json` is the one from before round 4.
+  `bench/reference-after-round-4.json` and `bench/reference-after-round-3.json` are the earlier ones.
 
 ## What we measure
 
@@ -251,4 +251,29 @@ Limits: the other five remits no longer see the writing rules for their own pros
 Next: the reviewer sometimes answers in its reply and does not write `result.md`, and the main
           session writes the file; the context that the main session carries into verify; and
           the 21 frames that the specification reviewer reads (about $0.05 a call).
+
+[2026-10-18] Round 5: no compliance reviewer when it has nothing to judge (kept)
+Plan: a Fable agent planned two experiments and a fallback (`bench/experiments/round5/`). Haiku
+          agents built the two harness tasks and ran the experiment. I read the plan and each
+          diff, and I checked the runs. I ran the second experiment and held the first (see
+          "Held" below).
+Edit: when the project lists no compliance rules and the change touches no dependency file,
+          `make_packets.py` writes the compliance `result.md` itself ("Result: pass", not
+          applicable), and the verify skill starts no reviewer for that remit. A project with
+          rules, or a change that touches a dependency file, still gets a reviewer.
+Result: six runs made no compliance reviewer call (1.17 a run before). All six finished, and all
+          8 probes pass. Reviewers on Sonnet still catch 5 of 5 planted defects, with no false
+          alarm. The edit saves one call of $0.027 a run, about 2%, by construction.
+Gate: calls of `pdlc:reviewer/compliance`, SAME OR BETTER.
+Limits: the six runs cost $1.61 on average against $1.47, which is noise (22% chance of luck).
+          The extra review rounds came from the tests, specification, and quality reviews, and
+          none from compliance. A change that vendors a library as plain source no longer gets a
+          compliance look.
+Held: the planner's first experiment replaces the frames that the specification reviewer reads
+          with a text transcript, for a terminal recording. It would save about 4% a run. The
+          planted-defect check cannot see frames, so nothing measures what it loses in the visual
+          review. It waits for a decision, and a planted visual defect would be the guard.
+Next: the saving per round is now 2% to 4%, and each test costs about $9. The pools that are left
+          are the main session (70% of a run), the extra review rounds (about $0.19 a run), and the
+          1-hour cache writes (a Claude Code setting, about a fifth of a run).
 ```
