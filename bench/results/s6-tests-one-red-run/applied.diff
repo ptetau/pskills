@@ -1,0 +1,18 @@
+diff -ru -x __pycache__ a/skills/tests/SKILL.md b/skills/tests/SKILL.md
+--- a/skills/tests/SKILL.md	2026-10-17 23:42:19.146955793 +0000
++++ b/skills/tests/SKILL.md	2026-10-18 05:24:52.416437993 +0000
+@@ -61,9 +61,11 @@
+ 
+ ## 3. Red
+ 
+-Run the checks of each requirement through the checks port. Use a time limit of a few
+-minutes for each run. A run that does not finish is a broken check, not a red one. Send
+-that check back to the test writer before you lock.
++Run all the checks once, through the checks port, with the verbose flag of the runner.
++Use a time limit of a few minutes. The name of each check carries its requirement ID, so
++one run shows the result of each requirement. Do not run the checks again for each
++requirement. A run that does not finish is a broken check, not a red one. Send that check
++back to the test writer before you lock.
+ 
+ - For new behaviour, each check must fail. A check that already passes proves nothing.
+   Send that check back to the test writer with the reason.

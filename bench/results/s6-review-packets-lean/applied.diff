@@ -1,0 +1,155 @@
+diff -ru -x __pycache__ a/skills/init/references/bin/make_packets.py b/skills/init/references/bin/make_packets.py
+--- a/skills/init/references/bin/make_packets.py	2026-10-18 02:32:01.741125164 +0000
++++ b/skills/init/references/bin/make_packets.py	2026-10-18 05:30:11.767368970 +0000
+@@ -16,7 +16,12 @@
+     - every spec it relies on. DES-writing-style goes only to the specification remit,
+       because only that remit judges writing;
+   - the material: for the tests remit, the check files and nothing else; for every other
+-    remit, the changed app files and nothing else.
++    remit, the changed app files and nothing else. A file that the change adds appears
++    once, as its full text, because its diff would repeat the same lines.
++The full text of a requirement leaves out the acceptance lines that the change spec above
++already shows, so each line appears once. The lines stay when the change spec lacks any of
++them. DES-pdlc-check-tagging goes only to the tests remit, because only that remit judges
++the names of checks.
+ The compliance remit gets a result in place of a packet when its remit file still says
+ "Rules: none listed yet." and the change touches no dependency file. Then the script
+ writes result.md with "Result: pass" and the reason, and no reviewer is needed.
+@@ -41,6 +46,8 @@
+     r"package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml|go\.(mod|sum)|Cargo\.(toml|lock)|"
+     r"Gemfile(\.lock)?|pom\.xml|build\.gradle(\.kts)?|composer\.(json|lock)|[^/]*\.csproj)$")
+ NO_RULES = "Rules: none listed yet."
++# Design specs that only one remit judges. The other remits get the rest of the specs.
++ONLY_FOR = {"DES-writing-style": "specification", "DES-pdlc-check-tagging": "tests"}
+ 
+ 
+ def section(text, title):
+@@ -66,6 +73,21 @@
+     return NO_RULES not in remit_text or any(DEPENDENCY_FILES.search(f) for f in changed)
+ 
+ 
++ACCEPTANCE = re.compile(r"^\s*-\s+Given\b")
++
++
++def without_copied_lines(text, change):
++    """A requirement's text without the acceptance lines that the change spec already shows.
++    The lines stay when the change spec lacks any of them, so a reviewer always sees each line."""
++    lines = text.splitlines()
++    copied = [line for line in lines if ACCEPTANCE.match(line)]
++    if not copied or not all(line.strip() in change for line in copied):
++        return text
++    kept = [line for line in lines if not ACCEPTANCE.match(line)]
++    kept.append("- The acceptance lines of this requirement are in the change spec above.")
++    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
++
++
+ def spec_file(root, spec_id):
+     return root / "pdlc" / "specs" / KINDS[spec_id.split("-", 1)[0]] / (spec_id + ".md")
+ 
+@@ -95,11 +117,15 @@
+     parts = ["## %s\n" % title]
+     if not files:
+         return parts[0] + "\nNone changed.\n"
+-    parts.append("### Diff against %s\n\n%s\n" % (base, fence(git(root, "diff", base + "...HEAD", "--", *files))))
++    added = set(git(root, "diff", "--name-only", "--diff-filter=A", base + "...HEAD", "--", *files).split())
++    changed = [f for f in files if f not in added]
++    if changed:
++        parts.append("### Diff against %s\n\n%s\n" % (base, fence(git(root, "diff", base + "...HEAD", "--", *changed))))
+     for name in files:
+         path = root / name
+         body = path.read_text(errors="replace") if path.exists() else "(deleted)"
+-        parts.append("### %s\n\n%s\n" % (name, fence(body)))
++        label = name + " (new file)" if name in added else name
++        parts.append("### %s\n\n%s\n" % (label, fence(body)))
+     return "\n".join(parts)
+ 
+ 
+@@ -148,16 +174,16 @@
+     if scope:
+         spec += ["\n## The spec it covers: title and summary\n", fence(spec_head(root, scope.group(1)))]
+     spec.append("\n## The requirements, in full\n")
+-    spec += [requirement_text(root, r) + "\n" for r in reqs]
++    spec += [without_copied_lines(requirement_text(root, r), change) + "\n" for r in reqs]
+     spec.append("## Specs it relies on\n")
+     relied = []
+     for spec_id in dict.fromkeys(relies):
+         path = spec_file(root, spec_id)
+         relied.append((spec_id, "### %s\n\n%s\n" % (spec_id, fence(path.read_text()) if path.exists() else "(not found)")))
+-    # The writing rules go only to the remit that judges writing. The other remits judge code or checks.
++    # A design spec in ONLY_FOR goes only to the remit that judges it. The other remits get the rest.
+     spec_for = {}
+-    for kind in ("specification", "other"):
+-        parts = [text for spec_id, text in relied if kind == "specification" or spec_id != "DES-writing-style"]
++    for kind in ("specification", "tests", "other"):
++        parts = [text for spec_id, text in relied if ONLY_FOR.get(spec_id, kind) == kind]
+         spec_for[kind] = "\n".join(spec + parts)
+ 
+     frames = sorted((folder / "frames").glob("*.png")) if (folder / "frames").exists() else []
+@@ -178,7 +204,7 @@
+             continue
+         out = ["# Review packet · %s · %s\n" % (folder.name, remit),
+                "Judge only what is in this packet. Write your result next to it, in result.md.\n",
+-               remit_text.strip() + "\n", spec_for["specification" if remit == "specification" else "other"]]
++               remit_text.strip() + "\n", spec_for.get(remit, spec_for["other"])]
+         if remit == "tests":
+             out.append(material(root, base, tests, "The checks"))
+         else:
+diff -ru -x __pycache__ a/tests/test_make_packets.py b/tests/test_make_packets.py
+--- a/tests/test_make_packets.py	2026-10-18 02:32:01.741835087 +0000
++++ b/tests/test_make_packets.py	2026-10-18 05:30:11.767478880 +0000
+@@ -167,6 +167,55 @@
+         make_packets.main(["x", "CH-0001", "compliance"], root=self.root)
+         self.assertIn("# Remit: compliance", self.packet("compliance"))
+ 
++    def test_a_requirement_shows_its_acceptance_lines_once(self):
++        r = self.root
++        spec = r / "pdlc/specs/capabilities/CAP-greeting.md"
++        spec.write_text(spec.read_text().replace(
++            "Says hola.\n", 'Says hola.\n\n- Given lang es, when greeting Ana, then the text is "Hola, Ana!"\n'))
++        git(r, "add", "-A"); git(r, "commit", "-qm", "lines")
++        make_packets.main(["x", "CH-0001"], root=self.root)
++        for remit in ["tests", "specification", "security"]:
++            text = self.packet(remit)
++            self.assertEqual(text.count("Given lang es"), 1)
++            self.assertIn("Says hola.", text)
++            self.assertIn("acceptance lines of this requirement are in the change spec above", text)
++
++    def test_a_requirement_keeps_a_line_that_the_change_spec_lacks(self):
++        r = self.root
++        spec = r / "pdlc/specs/capabilities/CAP-greeting.md"
++        spec.write_text(spec.read_text().replace(
++            "Says hola.\n", 'Says hola.\n\n- Given lang es, when greeting Ana, then the text is "Hola, Ana!"\n'
++            '- Given lang fr, when greeting Ana, then the text is "Salut, Ana!"\n'))
++        git(r, "add", "-A"); git(r, "commit", "-qm", "lines")
++        make_packets.main(["x", "CH-0001", "tests"], root=self.root)
++        text = self.packet("tests")
++        self.assertEqual(text.count("Given lang es"), 2)
++        self.assertIn("Given lang fr", text)
++
++    def test_a_new_file_appears_once_as_its_full_text(self):
++        r = self.root
++        (r / "test/new.test.js").write_text("test('CAP-greeting.R2 adios', () => {}) // SECRET-NEW\n")
++        change = self.folder / "change.md"
++        change.write_text(change.read_text().replace("- test/greet.test.js", "- test/greet.test.js\n- test/new.test.js"))
++        git(r, "add", "-A"); git(r, "commit", "-qm", "new check file")
++        make_packets.main(["x", "CH-0001", "tests"], root=self.root)
++        text = self.packet("tests")
++        self.assertEqual(text.count("SECRET-NEW"), 1)
++        self.assertIn("### test/new.test.js (new file)", text)
++        self.assertIn("### Diff against main", text)
++        self.assertEqual(text.count("SECRET-TEST"), 2)
++
++    def test_only_the_tests_packet_has_the_check_tagging_rules(self):
++        r = self.root
++        (r / "pdlc/specs/design/DES-pdlc-check-tagging.md").write_text("# DES-pdlc-check-tagging\nCHECK-NAMES rule.\n")
++        change = self.folder / "change.md"
++        change.write_text(change.read_text().replace("- DES-writing-style", "- DES-writing-style\n- DES-pdlc-check-tagging"))
++        git(r, "add", "-A"); git(r, "commit", "-qm", "relies")
++        make_packets.main(["x", "CH-0001"], root=self.root)
++        self.assertIn("CHECK-NAMES", self.packet("tests"))
++        self.assertNotIn("CHECK-NAMES", self.packet("specification"))
++        self.assertNotIn("CHECK-NAMES", self.packet("security"))
++
+     def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):
+         change = self.folder / "change.md"
+         change.write_text(change.read_text().replace("Base: main", "Base: no-such-branch"))

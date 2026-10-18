@@ -1,0 +1,6 @@
+edits apply: 4
+writing check skills/init/references/templates/README.md: 2 findings before, 2 after
+writing check skills/init/references/templates/handoff.md: 0 findings before, 0 after
+writing check skills/init/references/templates/proposal.md: 0 findings before, 0 after
+plugin tests: OK
+  OK (skipped=10)
