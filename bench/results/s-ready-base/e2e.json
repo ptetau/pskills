@@ -43,6 +43,7 @@
    },
    "outcome": {
     "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
     "check": {
      "ok": true,
      "finished": true,
@@ -50,7 +51,29 @@
      "subjects": [
       "Ready IN-0001: wordfreq top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 12,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 26 words, starting \"Given a file `a.txt` with\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:70 \u00b7 sentence length \u00b7 34 words, starting \"Given the arguments `--top 0`\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:76 \u00b7 sentence length \u00b7 26 words, starting \"If the command cannot read\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:84 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:84 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:84 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:84 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:93 \u00b7 sentence length \u00b7 29 words, starting \"Given a file with `b\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:101 \u00b7 sentence length \u00b7 29 words, starting \"Given a file with `b\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:113 \u00b7 sentence length \u00b7 28 words, starting \"If the user gives `--top`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -67,7 +90,28 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 12,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 26 words, starting \"Given a file `a.txt` with\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:70 \u00b7 sentence length \u00b7 34 words, starting \"Given the arguments `--top 0`\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:76 \u00b7 sentence length \u00b7 26 words, starting \"If the command cannot read\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:84 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:84 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:84 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:84 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:93 \u00b7 sentence length \u00b7 29 words, starting \"Given a file with `b\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:101 \u00b7 sentence length \u00b7 29 words, starting \"Given a file with `b\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:113 \u00b7 sentence length \u00b7 28 words, starting \"If the user gives `--top`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 53.5,
    "project": "/tmp/pdlc-stage-0i8pim63/app",
@@ -111,6 +155,7 @@
    },
    "outcome": {
     "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
     "check": {
      "ok": true,
      "finished": true,
@@ -118,7 +163,28 @@
      "subjects": [
       "Ready IN-0001: wordfreq top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 11,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:68 \u00b7 sentence length \u00b7 28 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 28 words, starting \"Given the arguments `--top 0`\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:70 \u00b7 sentence length \u00b7 31 words, starting \"Given the argument `--top` with\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:85 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:85 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:104 \u00b7 sentence length \u00b7 27 words, starting \"Given any file, when the\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:106 \u00b7 sentence length \u00b7 33 words, starting \"Given no file `missing.txt`, when\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:112 \u00b7 sentence length \u00b7 28 words, starting \"If the user gives `--top`\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:114 \u00b7 sentence length \u00b7 26 words, starting \"Given a file with `b\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:115 \u00b7 sentence length \u00b7 26 words, starting \"Given a file with `b\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -135,7 +201,27 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 11,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:68 \u00b7 sentence length \u00b7 28 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 28 words, starting \"Given the arguments `--top 0`\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:70 \u00b7 sentence length \u00b7 31 words, starting \"Given the argument `--top` with\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:85 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:85 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:104 \u00b7 sentence length \u00b7 27 words, starting \"Given any file, when the\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:106 \u00b7 sentence length \u00b7 33 words, starting \"Given no file `missing.txt`, when\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:112 \u00b7 sentence length \u00b7 28 words, starting \"If the user gives `--top`\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:114 \u00b7 sentence length \u00b7 26 words, starting \"Given a file with `b\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:115 \u00b7 sentence length \u00b7 26 words, starting \"Given a file with `b\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 74.9,
    "project": "/tmp/pdlc-stage-4nlsm891/app",
@@ -179,6 +265,7 @@
    },
    "outcome": {
     "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
     "check": {
      "ok": true,
      "finished": true,
@@ -186,7 +273,25 @@
      "subjects": [
       "Ready IN-0001: wordfreq top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 8,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:109 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:117 \u00b7 sentence length \u00b7 28 words, starting \"If the user gives `--top`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -203,7 +308,24 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 8,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:109 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:117 \u00b7 sentence length \u00b7 28 words, starting \"If the user gives `--top`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 68.5,
    "project": "/tmp/pdlc-stage-tpmxp2c2/app",
@@ -247,6 +369,7 @@
    },
    "outcome": {
     "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
     "check": {
      "ok": true,
      "finished": true,
@@ -254,7 +377,21 @@
      "subjects": [
       "Ready IN-0001: wordfreq top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 5,
+       "files": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:82 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:82 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:82 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:82 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:102 \u00b7 sentence length \u00b7 27 words, starting \"Given no arguments other than\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -271,7 +408,20 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 5,
+     "files": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:82 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:82 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:82 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:82 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:102 \u00b7 sentence length \u00b7 27 words, starting \"Given no arguments other than\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 48.9,
    "project": "/tmp/pdlc-stage-zudhha58/app",
@@ -315,6 +465,7 @@
    },
    "outcome": {
     "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
     "check": {
      "ok": true,
      "finished": true,
@@ -322,7 +473,25 @@
      "subjects": [
       "Ready IN-0001: wordfreq top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 8,
+       "files": [
+        "pdlc/specs/design/DES-errors.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:75 \u00b7 sentence length \u00b7 26 words, starting \"If the command cannot read\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:113 \u00b7 sentence length \u00b7 28 words, starting \"If the user gives `--top`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -339,7 +508,24 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 8,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 29 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:75 \u00b7 sentence length \u00b7 26 words, starting \"If the command cannot read\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:113 \u00b7 sentence length \u00b7 28 words, starting \"If the user gives `--top`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 52.3,
    "project": "/tmp/pdlc-stage-t82_xin7/app",
@@ -383,6 +569,7 @@
    },
    "outcome": {
     "stage": "ready",
+    "entry": "304eb7063d7db411acb192f8925e31c6828bcf0b",
     "check": {
      "ok": true,
      "finished": true,
@@ -390,7 +577,24 @@
      "subjects": [
       "Ready IN-0001: wordfreq top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 8,
+       "files": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 26 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 28 words, starting \"Given a file `a.txt` and\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md:105 \u00b7 sentence length \u00b7 26 words, starting \"Given no arguments other than\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -407,7 +611,23 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 8,
+     "files": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:64 \u00b7 sentence length \u00b7 26 words, starting \"If the number of files\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:69 \u00b7 sentence length \u00b7 28 words, starting \"Given a file `a.txt` and\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R1\" has no name next to it \u00b7 write \"R1 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 ID alone \u00b7 \"R2\" has no name next to it \u00b7 write \"R2 (<short name>)\"",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 26 words, starting \"N must be a whole\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:83 \u00b7 sentence length \u00b7 31 words, starting \"If N is not valid,\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md:105 \u00b7 sentence length \u00b7 26 words, starting \"Given no arguments other than\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 44.7,
    "project": "/tmp/pdlc-stage-rf99p9me/app",

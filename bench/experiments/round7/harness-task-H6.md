@@ -117,8 +117,9 @@ metric gives `None`.
 The cost guard differs from the `waiting` mode in one point. A stage that costs up to 10% more
 is not a regression here, also when the rise is not luck. The reason is this: the edits that
 this mode judges can add one amend turn to a stage (about 4% of the tests stage). Their saving
-is in a later stage. A rise above 10%, or above the noise of the baseline, is still a
-regression.
+is in a later stage. A rise above 10% is a regression when it is not luck. A rise above the
+noise of the baseline, and above 25%, is a regression also when it could be luck. The `waiting`
+and `calls:` modes use the same test for a rise.
 
 The other guards stay as they are in `gate`. These are a stage that did not finish or failed
 its check (`completed`), the probes, and the project's own checks. The planted defects and the

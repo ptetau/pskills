@@ -92,6 +92,7 @@
    },
    "outcome": {
     "stage": "tests",
+    "entry": "e8ff75f58ff3a9a912b2e0b46424a2bbe5f901b6",
     "check": {
      "ok": true,
      "finished": true,
@@ -104,6 +105,18 @@
       "Start CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 4,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 sentence length \u00b7 26 words, starting \"The R8 check passes too:\" \u00b7 split it: a sentence has 25 words or fewer",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\""
+       ]
+      },
       "locked": true,
       "checks_fail_first": true
      }
@@ -123,7 +136,19 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 4,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 sentence length \u00b7 26 words, starting \"The R8 check passes too:\" \u00b7 split it: a sentence has 25 words or fewer",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\""
+     ]
+    }
    },
    "wall_s": 83.1,
    "project": "/tmp/pdlc-stage-9i9jhujw/app",
@@ -216,6 +241,7 @@
    },
    "outcome": {
     "stage": "tests",
+    "entry": "e8ff75f58ff3a9a912b2e0b46424a2bbe5f901b6",
     "check": {
      "ok": true,
      "finished": true,
@@ -227,6 +253,15 @@
       "Start CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 1,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\""
+       ]
+      },
       "locked": true,
       "checks_fail_first": true
      }
@@ -246,7 +281,16 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 1,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\""
+     ]
+    }
    },
    "wall_s": 97.1,
    "project": "/tmp/pdlc-stage-78b7ysc_/app",
@@ -339,6 +383,7 @@
    },
    "outcome": {
     "stage": "tests",
+    "entry": "e8ff75f58ff3a9a912b2e0b46424a2bbe5f901b6",
     "check": {
      "ok": true,
      "finished": true,
@@ -351,6 +396,16 @@
       "Start CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 2,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\""
+       ]
+      },
       "locked": true,
       "checks_fail_first": true
      }
@@ -370,7 +425,17 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 2,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\""
+     ]
+    }
    },
    "wall_s": 93.7,
    "project": "/tmp/pdlc-stage-78ugtois/app",
@@ -463,6 +528,7 @@
    },
    "outcome": {
     "stage": "tests",
+    "entry": "e8ff75f58ff3a9a912b2e0b46424a2bbe5f901b6",
     "check": {
      "ok": true,
      "finished": true,
@@ -476,6 +542,16 @@
       "Start CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 2,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\""
+       ]
+      },
       "locked": true,
       "checks_fail_first": true
      }
@@ -495,7 +571,17 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 2,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\""
+     ]
+    }
    },
    "wall_s": 89.2,
    "project": "/tmp/pdlc-stage-91dyydo4/app",
@@ -588,6 +674,7 @@
    },
    "outcome": {
     "stage": "tests",
+    "entry": "e8ff75f58ff3a9a912b2e0b46424a2bbe5f901b6",
     "check": {
      "ok": true,
      "finished": true,
@@ -600,6 +687,20 @@
       "Start CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 6,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\""
+       ]
+      },
       "locked": true,
       "checks_fail_first": true
      }
@@ -619,7 +720,21 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 6,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\""
+     ]
+    }
    },
    "wall_s": 87.1,
    "project": "/tmp/pdlc-stage-p23dk4fs/app",
@@ -712,6 +827,7 @@
    },
    "outcome": {
     "stage": "tests",
+    "entry": "e8ff75f58ff3a9a912b2e0b46424a2bbe5f901b6",
     "check": {
      "ok": true,
      "finished": true,
@@ -724,6 +840,17 @@
       "Start CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 3,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 sentence length \u00b7 27 words, starting \"R8 passes, 1 of 1\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      },
       "locked": true,
       "checks_fail_first": true
      }
@@ -743,7 +870,18 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 3,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:105 \u00b7 sentence length \u00b7 27 words, starting \"R8 passes, 1 of 1\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 91.1,
    "project": "/tmp/pdlc-stage-72hjfx2a/app",

@@ -360,6 +360,153 @@ class WaitingGateTest(unittest.TestCase):
         self.assertIn("did not finish", verdict["reasons"][0])
 
 
+class WritingFindingsTest(unittest.TestCase):
+    def project(self):
+        """A git repository with the check script, one spec and a README, committed as base."""
+        root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, root, True)
+        (root / "pdlc" / "bin").mkdir(parents=True)
+        (root / "pdlc" / "specs" / "jobs").mkdir(parents=True)
+        shutil.copyfile(run_bench.DEFAULT_PLUGIN / "skills/init/references/bin/check_writing.py",
+                        root / "pdlc" / "bin" / "check_writing.py")
+        (root / "pdlc" / "specs" / "jobs" / "JOB-x.md").write_text("# JOB-x · Do a thing\n\nA short line.\n")
+        (root / "README.md").write_text("# App\n\nA short line.\n")
+        run_bench.git(root, "init", "-q", "-b", "main")
+        self.commit(root, "base")
+        return root
+
+    def commit(self, root, subject):
+        run_bench.git(root, "add", "-A")
+        run_bench.git(root, "commit", "-q", "-m", subject)
+
+    def head(self, root):
+        return run_bench.git(root, "rev-parse", "HEAD").stdout.strip()
+
+    def test_counts_the_findings_in_the_packet_text_written_since_a_commit(self):
+        root = self.project()
+        base = self.head(root)
+        long_sentence = " ".join(["word"] * 30) + "."
+        (root / "pdlc" / "changes" / "CH-0001-x").mkdir(parents=True)
+        (root / "pdlc" / "changes" / "CH-0001-x" / "change.md").write_text(long_sentence + "\nThe R3 checks pass.\n")
+        (root / "pdlc" / "changes" / "CH-0001-x" / "handoff.md").write_text("The R4 checks pass.\n")
+        (root / "pdlc" / "inbox").mkdir()
+        (root / "pdlc" / "inbox" / "IN-0001-x.md").write_text(long_sentence + "\n")
+        (root / "README.md").write_text("# App\n\nA short line.\nIt picks a color.\n")
+        (root / "pdlc" / "specs" / "jobs" / "JOB-x.md").write_text("# JOB-x · Do a thing\n\nA short line. See R2 for more.\n")
+        self.commit(root, "Write text")
+        result = run_bench.writing_findings(root, base)
+        self.assertEqual(result["count"], 4)
+        self.assertEqual(result["files"], ["README.md", "pdlc/changes/CH-0001-x/change.md", "pdlc/specs/jobs/JOB-x.md"])
+        for finding in result["findings"]:
+            self.assertNotIn("handoff.md", finding)
+            self.assertNotIn("inbox", finding)
+
+    def test_lines_from_before_the_commit_do_not_count(self):
+        root = self.project()
+        spec = root / "pdlc" / "specs" / "jobs" / "JOB-x.md"
+        spec.write_text("# JOB-x · Do a thing\n\n" + " ".join(["word"] * 30) + ".\n")
+        self.commit(root, "Write a long line")
+        since = self.head(root)
+        spec.write_text(spec.read_text() + "A new short line.\n")
+        self.commit(root, "Add a short line")
+        self.assertEqual(run_bench.writing_findings(root, since)["count"], 0)
+
+    def test_no_text_file_gives_zero(self):
+        root = self.project()
+        base = self.head(root)
+        (root / "app.py").write_text("print('hello')\n")
+        self.commit(root, "Add the app")
+        self.assertEqual(run_bench.writing_findings(root, base), {"count": 0, "files": [], "findings": []})
+
+    def test_without_the_script_the_count_is_none(self):
+        root = self.project()
+        base = self.head(root)
+        (root / "pdlc" / "bin" / "check_writing.py").unlink()
+        (root / "README.md").write_text("# App\n\nA short line.\nIt picks a color.\n")
+        self.commit(root, "Remove the script and write text")
+        result = run_bench.writing_findings(root, base)
+        self.assertIsNone(result["count"])
+        self.assertIn("error", result)
+
+
+WRITING_COSTS = [0.36, 0.39, 0.37, 0.39, 0.38, 0.38]
+WRITING_FINDINGS = [4, 1, 2, 2, 6, 3]
+
+
+def writing_result(costs, findings, completed=True):
+    """A result whose run i costs costs[i] and leaves findings[i] writing findings (None: no count)."""
+    runs = []
+    for cost, count in zip(costs, findings):
+        outcome = {"merge_check": {"stage": ["ok   tests" if completed else "FAIL tests"]},
+                   "probes": {"passed": 8, "total": 8, "failed": []},
+                   "unit": {"ok": True, "ran": 8}, "verify_rounds": None}
+        if count is not None:
+            outcome["writing"] = {"count": count, "files": [], "findings": []}
+        runs.append({"totals": {"cost_usd": cost, "duration_s": 300}, "wall_s": 300, "stages": {},
+                     "waiting": {"messages": 0, "cost_usd": 0.0}, "outcome": outcome})
+    return {"runs": runs}
+
+
+class WritingGateTest(unittest.TestCase):
+    def test_fewer_findings_are_kept(self):
+        baseline = writing_result(WRITING_COSTS, WRITING_FINDINGS)
+        candidate = writing_result(WRITING_COSTS, [0, 0, 1, 0, 0, 0])
+        verdict = run_bench.gate(baseline, candidate, target="writing")
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+
+    def test_the_same_findings_are_no_gain(self):
+        baseline = writing_result(WRITING_COSTS, WRITING_FINDINGS)
+        candidate = writing_result(WRITING_COSTS, WRITING_FINDINGS)
+        verdict = run_bench.gate(baseline, candidate, target="writing")
+        self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
+
+    def test_fewer_findings_in_a_slightly_dearer_stage_are_kept(self):
+        baseline = writing_result(WRITING_COSTS, WRITING_FINDINGS)
+        candidate = writing_result([c * 1.04 for c in WRITING_COSTS], [0, 0, 1, 0, 0, 0])
+        verdict = run_bench.gate(baseline, candidate, target="writing")
+        self.assertTrue(verdict["verdict"].startswith("SAME OR BETTER"))
+
+    def test_fewer_findings_in_a_clearly_dearer_stage_are_a_regression(self):
+        baseline = writing_result(WRITING_COSTS, WRITING_FINDINGS)
+        candidate = writing_result([c * 1.15 for c in WRITING_COSTS], [0, 0, 1, 0, 0, 0])
+        verdict = run_bench.gate(baseline, candidate, target="writing")
+        self.assertTrue(verdict["verdict"].startswith("REGRESSION"))
+        self.assertIn("costs 15% more", verdict["reasons"][0])
+
+    def test_a_missing_count_cannot_be_judged(self):
+        baseline = writing_result(WRITING_COSTS, [None] * 6)
+        candidate = writing_result(WRITING_COSTS, [0, 0, 1, 0, 0, 0])
+        verdict = run_bench.gate(baseline, candidate, target="writing")
+        self.assertTrue(verdict["verdict"].startswith("NO GAIN"))
+        self.assertIn("no writing count", verdict["reasons"][0])
+
+    def test_fewer_findings_in_three_runs_need_more_runs(self):
+        baseline = writing_result(WRITING_COSTS, WRITING_FINDINGS)
+        candidate = writing_result(WRITING_COSTS[:3], [0, 0, 0])
+        verdict = run_bench.gate(baseline, candidate, target="writing")
+        self.assertTrue(verdict["verdict"].startswith("NEED MORE RUNS"))
+
+    def test_a_stage_that_did_not_finish_beats_fewer_findings(self):
+        baseline = writing_result(WRITING_COSTS, WRITING_FINDINGS)
+        candidate = writing_result(WRITING_COSTS, [0, 0, 1, 0, 0, 0], completed=False)
+        verdict = run_bench.gate(baseline, candidate, target="writing")
+        self.assertTrue(verdict["verdict"].startswith("REGRESSION"))
+
+    def test_the_gate_prints_the_writing_line(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        baseline = writing_result(WRITING_COSTS, WRITING_FINDINGS)
+        candidate = writing_result(WRITING_COSTS, [0, 0, 1, 0, 0, 0])
+        (folder / "baseline.json").write_text(run_bench.json.dumps(baseline))
+        (folder / "candidate.json").write_text(run_bench.json.dumps(candidate))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            run_bench.command_gate(Namespace(baseline=str(folder / "baseline.json"),
+                                             candidate=str(folder / "candidate.json"),
+                                             min_gain=0.05, speed_limit=1.5, target="writing", min_runs=5))
+        self.assertIn("writing    3.0 -> 0.2 findings a run", out.getvalue())
+
+
 def calls_result(counts, per_call, totals, label="pdlc:reviewer/compliance"):
     """A result whose run i makes counts[i] calls of `label`, at per_call dollars each."""
     runs = []
@@ -731,6 +878,47 @@ class StageReplayTest(unittest.TestCase):
         project, _ = self.stage_project("verify", plugin)
         self.assertEqual(self.subject(project), "Upgrade pdlc")
         self.assertIn("A line that the test adds.", (project / "pdlc" / "README.md").read_text())
+
+    def test_check_stage_counts_the_writing_findings_of_the_stage(self):
+        project, _ = self.stage_project("verify")
+        entry = run_bench.entry_commit(project, "Tests reviewed CH-0001")
+        writing = run_bench.check_stage(project, "build", entry)["extra"]["writing"]
+        self.assertEqual(writing["count"], 0)
+        self.assertEqual(writing["files"], ["README.md", "pdlc/changes/CH-0001-top-option/change.md",
+                                            "pdlc/specs/jobs/JOB-report-word-frequencies.md"])
+
+    def test_a_stage_outcome_carries_the_writing_count_and_the_entry(self):
+        project, _ = self.stage_project("verify")
+        entry = run_bench.entry_commit(project, "Tests reviewed CH-0001")
+        check = run_bench.check_stage(project, "build", entry)
+        outcome = run_bench.stage_outcome("build", check, entry)
+        self.assertEqual(outcome["writing"], check["extra"]["writing"])
+        self.assertEqual(outcome["entry"], entry)
+        self.assertEqual(outcome["merge_check"], {"stage": ["ok   build"]})
+
+    def test_inspect_project_counts_the_findings_of_a_whole_run(self):
+        project, _ = self.stage_project("verify")
+        writing = run_bench.inspect_project(project)["writing"]
+        self.assertEqual(writing["count"], 11)
+        self.assertIn("README.md", writing["files"])
+        self.assertIn("pdlc/specs/jobs/JOB-report-word-frequencies.md", writing["files"])
+
+    def test_recheck_reads_a_stage_folder_again(self):
+        project, _ = self.stage_project("verify")
+        shown = run_bench.entry_commit(project, "Built CH-0001")
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        run = {"totals": {"cost_usd": 0.2, "duration_s": 1.0}, "stages": {}, "waiting": {}, "wall_s": 1.0,
+               "project": str(project), "outcome": {"stage": "show", "entry": shown}}
+        summary = {"label": "x", "stage": "show", "plugin_commit": "x", "model": "m", "effort": "e", "runs": [run]}
+        (folder / "e2e.json").write_text(run_bench.json.dumps(summary))
+        (folder / "run1.json").write_text(run_bench.json.dumps(run))
+        with contextlib.redirect_stdout(io.StringIO()):
+            run_bench.command_recheck(Namespace(folder=str(folder)))
+        saved = run_bench.json.loads((folder / "e2e.json").read_text())["runs"][0]["outcome"]
+        self.assertTrue(saved["check"]["ok"])
+        self.assertEqual(saved["writing"]["count"], 0)
+        self.assertEqual(saved["entry"], shown)
 
 
 if __name__ == "__main__":

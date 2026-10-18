@@ -68,6 +68,7 @@
    },
    "outcome": {
     "stage": "build",
+    "entry": "401537f86dade0a34ae6832305e796c2386f931b",
     "check": {
      "ok": true,
      "finished": true,
@@ -77,6 +78,15 @@
       "Build CH-0001: limit output with --top N"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "README.md",
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "unit": {
        "ok": true,
        "ran": 32
@@ -105,7 +115,16 @@
      "ran": 32
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 41.3,
    "project": "/tmp/pdlc-stage-7fweq3e9/app",
@@ -174,6 +193,7 @@
    },
    "outcome": {
     "stage": "build",
+    "entry": "401537f86dade0a34ae6832305e796c2386f931b",
     "check": {
      "ok": true,
      "finished": true,
@@ -183,6 +203,15 @@
       "Build CH-0001: add --top N option"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "README.md",
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "unit": {
        "ok": true,
        "ran": 32
@@ -211,7 +240,16 @@
      "ran": 32
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 44.8,
    "project": "/tmp/pdlc-stage-z95f2ep1/app",
@@ -280,6 +318,7 @@
    },
    "outcome": {
     "stage": "build",
+    "entry": "401537f86dade0a34ae6832305e796c2386f931b",
     "check": {
      "ok": true,
      "finished": true,
@@ -289,6 +328,15 @@
       "Build CH-0001: add the --top option"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "README.md",
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "unit": {
        "ok": true,
        "ran": 32
@@ -317,7 +365,16 @@
      "ran": 32
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 46.9,
    "project": "/tmp/pdlc-stage-ywu2hxxg/app",
@@ -386,6 +443,7 @@
    },
    "outcome": {
     "stage": "build",
+    "entry": "401537f86dade0a34ae6832305e796c2386f931b",
     "check": {
      "ok": true,
      "finished": true,
@@ -395,6 +453,19 @@
       "Build CH-0001: add --top N option"
      ],
      "extra": {
+      "writing": {
+       "count": 3,
+       "files": [
+        "README.md",
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:107 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:107 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+        "pdlc/changes/CH-0001-top-option/change.md:107 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\""
+       ]
+      },
       "unit": {
        "ok": true,
        "ran": 32
@@ -423,7 +494,20 @@
      "ran": 32
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 3,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:107 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:107 \u00b7 ID alone \u00b7 \"R7\" has no name next to it \u00b7 write \"R7 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:107 \u00b7 ID alone \u00b7 \"R8\" has no name next to it \u00b7 write \"R8 (<short name>)\""
+     ]
+    }
    },
    "wall_s": 45.4,
    "project": "/tmp/pdlc-stage-risqsxn6/app",
@@ -492,6 +576,7 @@
    },
    "outcome": {
     "stage": "build",
+    "entry": "401537f86dade0a34ae6832305e796c2386f931b",
     "check": {
      "ok": true,
      "finished": true,
@@ -501,6 +586,15 @@
       "Build CH-0001: add --top N option"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "README.md",
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "unit": {
        "ok": true,
        "ran": 32
@@ -529,7 +623,16 @@
      "ran": 32
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 44.5,
    "project": "/tmp/pdlc-stage-ehl97ix_/app",
@@ -598,6 +701,7 @@
    },
    "outcome": {
     "stage": "build",
+    "entry": "401537f86dade0a34ae6832305e796c2386f931b",
     "check": {
      "ok": true,
      "finished": true,
@@ -607,6 +711,15 @@
       "Build CH-0001: add the --top option to wordfreq"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "README.md",
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "unit": {
        "ok": true,
        "ran": 32
@@ -635,7 +748,16 @@
      "ran": 32
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 51.5,
    "project": "/tmp/pdlc-stage-efryrgcd/app",
