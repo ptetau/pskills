@@ -1,0 +1,507 @@
+{
+ "label": "s-show-base",
+ "stage": "show",
+ "plugin_commit": "04565af",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 37292,
+     "cache_read": 506981,
+     "output": 5990
+    },
+    "cost_usd": 0.2598,
+    "duration_s": 61.1,
+    "turns": 13,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2598
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 13994,
+      "cache_read": 64643,
+      "output": 19
+     },
+     "cost_usd": 0.0701,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 9.4
+    },
+    "show": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 23298,
+      "cache_read": 442338,
+      "output": 531
+     },
+     "cost_usd": 0.1897,
+     "messages": 8,
+     "agents": {},
+     "wall_s": 50.7
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "show",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Visual review CH-0001"
+     ],
+     "extra": {
+      "gif": true,
+      "frames": 23
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   show"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 62.1,
+   "project": "/tmp/pdlc-stage-dpe6h772/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 29149,
+     "cache_read": 470546,
+     "output": 4599
+    },
+    "cost_usd": 0.2097,
+    "duration_s": 50.9,
+    "turns": 13,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2097
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 14000,
+      "cache_read": 64645,
+      "output": 36
+     },
+     "cost_usd": 0.0672,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 9.2
+    },
+    "show": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 15149,
+      "cache_read": 405901,
+      "output": 504
+     },
+     "cost_usd": 0.1425,
+     "messages": 8,
+     "agents": {},
+     "wall_s": 39.9
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "show",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Visual review CH-0001"
+     ],
+     "extra": {
+      "gif": true,
+      "frames": 23
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   show"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 52.3,
+   "project": "/tmp/pdlc-stage-q7fmapvh/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 26,
+     "cache_write": 31757,
+     "cache_read": 641234,
+     "output": 5892
+    },
+    "cost_usd": 0.2501,
+    "duration_s": 67.2,
+    "turns": 18,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2501
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 14546,
+      "cache_read": 64645,
+      "output": 36
+     },
+     "cost_usd": 0.0686,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 8.0
+    },
+    "show": {
+     "tokens": {
+      "input": 22,
+      "cache_write": 17211,
+      "cache_read": 576589,
+      "output": 482
+     },
+     "cost_usd": 0.1815,
+     "messages": 11,
+     "agents": {},
+     "wall_s": 57.0
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "show",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Visual review CH-0001"
+     ],
+     "extra": {
+      "gif": true,
+      "frames": 23
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   show"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 68.6,
+   "project": "/tmp/pdlc-stage-4_j2oeby/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 22,
+     "cache_write": 33154,
+     "cache_read": 536994,
+     "output": 6032
+    },
+    "cost_usd": 0.2467,
+    "duration_s": 56.0,
+    "turns": 16,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2467
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 13994,
+      "cache_read": 64643,
+      "output": 24
+     },
+     "cost_usd": 0.0694,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 9.6
+    },
+    "show": {
+     "tokens": {
+      "input": 18,
+      "cache_write": 19160,
+      "cache_read": 472351,
+      "output": 547
+     },
+     "cost_usd": 0.1773,
+     "messages": 9,
+     "agents": {},
+     "wall_s": 46.5
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "show",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Visual review CH-0001"
+     ],
+     "extra": {
+      "gif": true,
+      "frames": 23
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   show"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 57.4,
+   "project": "/tmp/pdlc-stage-38kx9byf/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 18,
+     "cache_write": 29496,
+     "cache_read": 419626,
+     "output": 4657
+    },
+    "cost_usd": 0.2066,
+    "duration_s": 48.6,
+    "turns": 14,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2066
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 14531,
+      "cache_read": 64645,
+      "output": 21
+     },
+     "cost_usd": 0.0713,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 9.4
+    },
+    "show": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 14965,
+      "cache_read": 354981,
+      "output": 424
+     },
+     "cost_usd": 0.1352,
+     "messages": 7,
+     "agents": {},
+     "wall_s": 37.6
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "show",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Visual review CH-0001"
+     ],
+     "extra": {
+      "gif": true,
+      "frames": 23
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   show"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 49.8,
+   "project": "/tmp/pdlc-stage-ux80gtgs/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 31260,
+     "cache_read": 481570,
+     "output": 5605
+    },
+    "cost_usd": 0.2293,
+    "duration_s": 56.1,
+    "turns": 13,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 0,
+    "models": {
+     "claude-sonnet-5-5": 0.2293
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 14521,
+      "cache_read": 64645,
+      "output": 19
+     },
+     "cost_usd": 0.0725,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 10.0
+    },
+    "show": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 16739,
+      "cache_read": 416925,
+      "output": 357
+     },
+     "cost_usd": 0.1568,
+     "messages": 8,
+     "agents": {},
+     "wall_s": 45.7
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "show",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Visual review CH-0001"
+     ],
+     "extra": {
+      "gif": true,
+      "frames": 24
+     }
+    },
+    "merge_check": {
+     "stage": [
+      "ok   show"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 57.3,
+   "project": "/tmp/pdlc-stage-1a27vzo2/app",
+   "stderr": ""
+  }
+ ]
+}

@@ -601,6 +601,16 @@ class ExperimentSpecTest(unittest.TestCase):
         self.assertEqual((spec["runs"], spec["seeds"], spec["target"]), (6, False, None))
         self.assertEqual(spec["baseline"], "bench/baseline.json")
 
+    def test_a_stage_spec_compares_with_its_stage_baseline(self):
+        spec = run_experiment.load_spec(self.write(stage="verify"))
+        self.assertEqual(spec["baseline"], "bench/sections/verify.json")
+        self.assertTrue((run_experiment.REPO / spec["baseline"]).exists())
+
+    def test_an_unknown_stage_is_refused(self):
+        with self.assertRaises(run_experiment.SpecError) as caught:
+            run_experiment.load_spec(self.write(stage="ship"))
+        self.assertIn('"stage"', str(caught.exception))
+
     def test_a_bad_spec_names_each_problem(self):
         with self.assertRaises(run_experiment.SpecError) as caught:
             run_experiment.load_spec(self.write(id="Bad Id", edits=[]))

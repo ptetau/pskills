@@ -1,0 +1,579 @@
+{
+ "label": "s-intake-base",
+ "plugin_commit": "04565af",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 24,
+     "cache_write": 51527,
+     "cache_read": 431268,
+     "output": 12564
+    },
+    "cost_usd": 0.3541,
+    "duration_s": 90.5,
+    "turns": 9,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.3541
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 6,
+      "cache_write": 17120,
+      "cache_read": 108532,
+      "output": 56
+     },
+     "cost_usd": 0.1146,
+     "messages": 3,
+     "agents": {},
+     "wall_s": 13.9
+    },
+    "intake": {
+     "tokens": {
+      "input": 18,
+      "cache_write": 34407,
+      "cache_read": 322736,
+      "output": 817
+     },
+     "cost_usd": 0.2394,
+     "messages": 9,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 13898,
+        "cache_read": 43920,
+        "output": 42
+       },
+       "cost_usd": 0.0555,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 34.0
+      }
+     },
+     "wall_s": 77.0
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "intake",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Specify IN-0001: Top option"
+     ],
+     "extra": {}
+    },
+    "merge_check": {
+     "stage": [
+      "ok   intake"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 91.8,
+   "project": "/tmp/pdlc-stage-nxryprcl/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 22,
+     "cache_write": 45622,
+     "cache_read": 360288,
+     "output": 9260
+    },
+    "cost_usd": 0.2939,
+    "duration_s": 72.5,
+    "turns": 9,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.2939
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 6,
+      "cache_write": 23864,
+      "cache_read": 109420,
+      "output": 42
+     },
+     "cost_usd": 0.1403,
+     "messages": 3,
+     "agents": {},
+     "wall_s": 17.8
+    },
+    "intake": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 21758,
+      "cache_read": 250868,
+      "output": 889
+     },
+     "cost_usd": 0.1535,
+     "messages": 8,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 11530,
+        "cache_read": 33871,
+        "output": 72
+       },
+       "cost_usd": 0.0433,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 20.4
+      }
+     },
+     "wall_s": 53.6
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "intake",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Specify IN-0001: Top option"
+     ],
+     "extra": {}
+    },
+    "merge_check": {
+     "stage": [
+      "ok   intake"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 73.6,
+   "project": "/tmp/pdlc-stage-2iuah5ea/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 56025,
+     "cache_read": 361919,
+     "output": 12321
+    },
+    "cost_usd": 0.3571,
+    "duration_s": 88.8,
+    "turns": 9,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.3571
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 15815,
+      "cache_read": 65786,
+      "output": 32
+     },
+     "cost_usd": 0.0984,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 12.1
+    },
+    "intake": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 40210,
+      "cache_read": 296133,
+      "output": 811
+     },
+     "cost_usd": 0.2587,
+     "messages": 8,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 17602,
+        "cache_read": 17900,
+        "output": 57
+       },
+       "cost_usd": 0.0618,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 28.5
+      }
+     },
+     "wall_s": 74.9
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "intake",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Specify IN-0001: Top option"
+     ],
+     "extra": {}
+    },
+    "merge_check": {
+     "stage": [
+      "ok   intake"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 90.0,
+   "project": "/tmp/pdlc-stage-qq1rj5bh/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 49835,
+     "cache_read": 414722,
+     "output": 15883
+    },
+    "cost_usd": 0.3834,
+    "duration_s": 111.6,
+    "turns": 11,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.3834
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 15710,
+      "cache_read": 65782,
+      "output": 37
+     },
+     "cost_usd": 0.1066,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 14.1
+    },
+    "intake": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 34125,
+      "cache_read": 348940,
+      "output": 820
+     },
+     "cost_usd": 0.2768,
+     "messages": 8,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 10836,
+        "cache_read": 13505,
+        "output": 18
+       },
+       "cost_usd": 0.0419,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 43.1
+      }
+     },
+     "wall_s": 96.2
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "intake",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Specify IN-0001: Add a --top option"
+     ],
+     "extra": {}
+    },
+    "merge_check": {
+     "stage": [
+      "ok   intake"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 112.8,
+   "project": "/tmp/pdlc-stage-zx72ph33/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 18,
+     "cache_write": 45277,
+     "cache_read": 350006,
+     "output": 9593
+    },
+    "cost_usd": 0.2971,
+    "duration_s": 74.2,
+    "turns": 9,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.2971
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 15835,
+      "cache_read": 65784,
+      "output": 32
+     },
+     "cost_usd": 0.0938,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 14.2
+    },
+    "intake": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 29442,
+      "cache_read": 284222,
+      "output": 684
+     },
+     "cost_usd": 0.2033,
+     "messages": 7,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 9971,
+        "cache_read": 13406,
+        "output": 22
+       },
+       "cost_usd": 0.034,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 19.0
+      }
+     },
+     "wall_s": 58.6
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "intake",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Specify IN-0001: Top option"
+     ],
+     "extra": {}
+    },
+    "merge_check": {
+     "stage": [
+      "ok   intake"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 75.6,
+   "project": "/tmp/pdlc-stage-sfvn21d7/app",
+   "stderr": ""
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 20,
+     "cache_write": 46058,
+     "cache_read": 412637,
+     "output": 10518
+    },
+    "cost_usd": 0.317,
+    "duration_s": 77.5,
+    "turns": 12,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.317
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 6,
+      "cache_write": 25154,
+      "cache_read": 109389,
+      "output": 43
+     },
+     "cost_usd": 0.1489,
+     "messages": 3,
+     "agents": {},
+     "wall_s": 14.2
+    },
+    "intake": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 20904,
+      "cache_read": 303248,
+      "output": 818
+     },
+     "cost_usd": 0.168,
+     "messages": 7,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 9170,
+        "cache_read": 13506,
+        "output": 41
+       },
+       "cost_usd": 0.0315,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 23.0
+      }
+     },
+     "wall_s": 61.4
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "outcome": {
+    "stage": "intake",
+    "check": {
+     "ok": true,
+     "finished": true,
+     "stopped": false,
+     "subjects": [
+      "Specify IN-0001: Top option"
+     ],
+     "extra": {}
+    },
+    "merge_check": {
+     "stage": [
+      "ok   intake"
+     ]
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 0
+    },
+    "verify_rounds": null,
+    "stops": []
+   },
+   "wall_s": 78.6,
+   "project": "/tmp/pdlc-stage-x_edlp50/app",
+   "stderr": ""
+  }
+ ],
+ "seeds": {
+  "reviewer_model": "claude-sonnet-5-5",
+  "caught": [
+   "spec-exit-code",
+   "security-eval",
+   "privacy-log",
+   "quality-dead-code",
+   "tests-weak-check"
+  ],
+  "missed": [],
+  "false_fails": [],
+  "cost_usd": 0.7205
+ }
+}
