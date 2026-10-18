@@ -1,6 +1,6 @@
-diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/init/references/bin/make_packets.py /tmp/pdlc-exp-r3-lean-packets-w4h29dyd/pdlc/skills/init/references/bin/make_packets.py
---- /home/user/pskills/plugins/pdlc/skills/init/references/bin/make_packets.py	2026-10-17 08:26:05.380694656 +0000
-+++ /tmp/pdlc-exp-r3-lean-packets-w4h29dyd/pdlc/skills/init/references/bin/make_packets.py	2026-10-17 22:49:38.326932156 +0000
+diff -ru -x __pycache__ a/skills/init/references/bin/make_packets.py b/skills/init/references/bin/make_packets.py
+--- a/skills/init/references/bin/make_packets.py	2026-10-17 08:26:05.380694656 +0000
++++ b/skills/init/references/bin/make_packets.py	2026-10-18 01:15:37.339749159 +0000
 @@ -13,7 +13,8 @@
      - the change spec;
      - the title and summary of the spec it covers (everything above its requirements);
@@ -38,9 +38,9 @@ diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/skills/init/references/b
          if remit == "tests":
              out.append(material(root, base, tests, "The checks"))
          else:
-diff -ru -x __pycache__ /home/user/pskills/plugins/pdlc/tests/test_make_packets.py /tmp/pdlc-exp-r3-lean-packets-w4h29dyd/pdlc/tests/test_make_packets.py
---- /home/user/pskills/plugins/pdlc/tests/test_make_packets.py	2026-10-17 08:26:05.392694656 +0000
-+++ /tmp/pdlc-exp-r3-lean-packets-w4h29dyd/pdlc/tests/test_make_packets.py	2026-10-17 22:49:38.327043990 +0000
+diff -ru -x __pycache__ a/tests/test_make_packets.py b/tests/test_make_packets.py
+--- a/tests/test_make_packets.py	2026-10-17 08:26:05.392694656 +0000
++++ b/tests/test_make_packets.py	2026-10-18 01:15:37.339843408 +0000
 @@ -93,7 +93,12 @@
              self.assertIn("Given lang es", text)
              self.assertIn("Says hola.", text)

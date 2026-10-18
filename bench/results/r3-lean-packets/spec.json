@@ -27,7 +27,7 @@
  "runs": 6,
  "seeds": true,
  "target": "pdlc:reviewer",
- "baseline": "bench/baseline.json",
+ "baseline": "bench/reference.json",
  "gate": {},
  "budget_usd_per_run": 8
 }
