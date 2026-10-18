@@ -1,0 +1,8 @@
+model claude-sonnet-5-5  caught 5/5  missed none  false fails none  $0.68
+run 1: $1.40, 285.2s, probes 8/8
+run 1: $1.46, 288.1s, probes 8/8
+run 1: $1.26, 290.2s, probes 8/8
+run 1: $1.41, 293.2s, probes 8/8
+run 1: $1.62, 340.7s, probes 8/8
+run 1: $1.68, 369.3s, probes 8/8
+wrote /home/user/pskills/bench/results/r3-lean-packets/result.json with 6 runs

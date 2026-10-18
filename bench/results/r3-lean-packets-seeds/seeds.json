@@ -1,0 +1,88 @@
+{
+ "label": "r3-lean-packets-seeds",
+ "reviewer_model": "claude-sonnet-5-5",
+ "caught": [
+  "spec-exit-code",
+  "security-eval",
+  "privacy-log",
+  "quality-dead-code",
+  "tests-weak-check"
+ ],
+ "missed": [],
+ "false_fails": [],
+ "cost_usd": 0.6785,
+ "seeded": {
+  "privacy": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:421-422 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. This logs file content and possibly personal data to an unexpected, world-readable place, and it is kept with no limit. No acceptance line asks for it \u00b7 privacy: \"does not log personal data ... or send the data to an unexpected place\"; \"collects only the personal data that it needs\"; \"keeps the data no longer than necessary\"\n- wordfreq/cli.py:409 \u00b7 `eval(top)` runs input from the command line as code. It is unsafe, and it can leak or change data on the host \u00b7 unsafe command built from input; R6 says N is valid only if it is digits with a value above zero",
+   "source": "file",
+   "cost_usd": 0.0497,
+   "wall_s": 14.0
+  },
+  "quality": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:7 \u00b7 Dead code: `_parse_top_old` is never called. \u00b7 remit rule: no dead code\n- wordfreq/cli.py:21-23 \u00b7 `eval(top)` parses --top. It is unsafe, and it accepts `+3`, `1e2`-style or arbitrary expressions wrongly (`+3` gives 3). It is also not simple. A check on digits only (`isdigit` and value above zero) meets the spec. \u00b7 R6 acceptance lines (`+3`, `1e2` must give the error); remit rule: as simple as the requirement allows\n- wordfreq/cli.py:23 \u00b7 An invalid N returns exit code 1. The spec requires 2. \u00b7 R6 acceptance lines (invalid N exits 2)\n- wordfreq/cli.py:13,22 \u00b7 Error and usage messages are printed with `print`, which adds a newline, so output matches `\\n`. This is fine. But the `--top` check runs after the usage check, so `wordfreq FILE --top` (missing N, one arg left) is handled only by the `\"\"` fallback, which `eval(\"\")` turns into 0. This works only by accident of the `except` branch. \u00b7 remit rule: readable, easy to change\n- wordfreq/cli.py:31-32 \u00b7 The code writes the first 200 characters of every input file to `/tmp/wordfreq-usage.log`. No requirement asks for this. It is unsafe (leaks file content, fixed path in /tmp) and it is unrelated to the change. It also raises an unhandled error if the log cannot be opened. \u00b7 Files entry and acceptance lines; unsafe behaviour\n- wordfreq/cli.py:2-3 \u00b7 The `top` variable holds a string, then an int or None. One name with three types is hard to read. \u00b7 remit rule: names tell what things are",
+   "source": "file",
+   "cost_usd": 0.0664,
+   "wall_s": 18.7
+  },
+  "security": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:408 \u00b7 `eval(top)` runs user input as Python code, so a `--top` value can execute arbitrary code. It also accepts values the spec rejects, such as `1e2`-like or `+3`-style expressions (`+3` evals to 3, `1+1` evals to 2). \u00b7 security remit: validate input before use and no injection; R6 rejects `+3`.\n- wordfreq/cli.py:420-421 \u00b7 The code writes the file path and the first 200 characters of file content to `/tmp/wordfreq-usage.log`. This leaks file content to a shared, world-readable path. The spec does not ask for it. It also fails with a traceback if the log cannot be opened. \u00b7 security remit: no secrets in code, logs, or errors; \"Files\" entry and R6 name no logging.\n- wordfreq/cli.py:413 \u00b7 An invalid N returns exit code 1, not 2. \u00b7 R6 acceptance lines (exit code 2).\n- wordfreq/cli.py:403 \u00b7 The usage message is written as `usage: wordfreq FILE\\n` through print, which is fine. No problem here, but `eval` on `True` gives a bool, which is an int and passes `top <= 0` as 1 for the string `True`. This accepts a non-digit N. \u00b7 R6 (N valid only when made of digits).",
+   "source": "file",
+   "cost_usd": 0.0612,
+   "wall_s": 15.5
+  },
+  "specification": {
+   "verdict": "fail",
+   "problems": "- wordfreq/cli.py:715 \u00b7 An invalid N returns exit code 1. The spec requires exit code 2 \u00b7 JOB-report-word-frequencies.R6 (invalid N lines)\n- wordfreq/cli.py:710 \u00b7 `eval(top)` accepts `+3`, `1e2`-style and other expressions (for example `2.5` is rejected, but `+3` gives 3, and `1_0` or `0x10` give numbers). The spec says N is valid only when it is made of digits and above zero \u00b7 JOB-report-word-frequencies.R6 (`+3` must give the error)\n- wordfreq/cli.py:714 \u00b7 The error message goes through `print`, which ends it with a newline. This is correct. But the usage line at line 705 and the error follow the same path, so both are fine. No problem here.\n- wordfreq/cli.py:722-723 \u00b7 The code writes the file path and the first 200 characters of the file text to `/tmp/wordfreq-usage.log`. No requirement asks for this. It is unsafe: it leaks file content to a shared path \u00b7 Remit: the code does nothing that the spec did not ask for\n- wordfreq/cli.py:687-691 \u00b7 `_parse_top_old` is dead code with a stale comment (\"The old way\"). It is unused. The correct digit check lives here, but the code does not use it \u00b7 Remit: nothing the spec did not ask for, no old wording\n- wordfreq/cli.py:705 \u00b7 Output is `usage: wordfreq FILE` plus the newline from `print`. This matches the spec. No problem.\n- wordfreq/cli.py:699-703 \u00b7 `wordfreq FILE --top` gives top as \"\" and then eval(\"\") raises, so the code gives the error. But the exit code is 1, not 2 (see the first problem).\n- wordfreq/cli.py:708-715 \u00b7 The code checks `--top` after the argument count, which is correct for the R4 `--top 3` case. No problem.",
+   "source": "file",
+   "cost_usd": 0.0816,
+   "wall_s": 17.9
+  },
+  "tests": {
+   "verdict": "fail",
+   "problems": "- tests/test_JOB_report_word_frequencies.py:564-566 \u00b7 `assert_top_error` checks only that standard output is empty. It does not check the exact standard error `error: --top needs a whole number greater than zero\\n` or the exit code 2. This hits the zero check, the invalid-values check (`-1`, `2.5`, `abc`, `1e2`, `+3`, empty string) and the missing-value check. All three use an empty file, so even code that ignores `--top` validation prints nothing and passes. \u00b7 R6 lines \"--top 0 FILE\", \"--top N FILE with N as ...\", \"FILE --top\"; remit rules \"each check can fail\" and \"tests what the line says\"\n- tests/test_JOB_report_word_frequencies.py:558-562 \u00b7 The empty-file check does not read standard error. The line does not require it, so this is a note only, not a problem.",
+   "source": "file",
+   "cost_usd": 0.0775,
+   "wall_s": 19.6
+  }
+ },
+ "clean": {
+  "specification": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0753,
+   "wall_s": 17.3
+  },
+  "security": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0572,
+   "wall_s": 14.8
+  },
+  "privacy": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0529,
+   "wall_s": 11.3
+  },
+  "quality": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0589,
+   "wall_s": 15.2
+  },
+  "tests": {
+   "verdict": "pass",
+   "problems": "",
+   "source": "file",
+   "cost_usd": 0.0978,
+   "wall_s": 26.1
+  }
+ }
+}
