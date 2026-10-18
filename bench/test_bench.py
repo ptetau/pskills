@@ -672,5 +672,56 @@ class ExperimentSpecTest(unittest.TestCase):
         self.assertIn("+" + long_sentence, diff)
 
 
+class StageReplayTest(unittest.TestCase):
+    def stage_project(self, stage, plugin=None):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        return run_bench.make_stage_project(folder / "app", stage, plugin or run_bench.DEFAULT_PLUGIN)
+
+    def subject(self, project, rev="HEAD"):
+        return run_bench.git(project, "log", "-1", "--format=%s", rev).stdout.strip()
+
+    def test_each_stage_starts_at_its_entry_commit(self):
+        for stage, (entry_subject, branch, _, _) in run_bench.STAGE_REPLAY.items():
+            with self.subTest(stage=stage):
+                project, _ = self.stage_project(stage)
+                head = "HEAD~1" if self.subject(project) == "Upgrade pdlc" else "HEAD"
+                self.assertTrue(self.subject(project, head).startswith(entry_subject))
+                self.assertEqual(run_bench.git(project, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip(), branch)
+
+    def test_main_ends_at_the_plan_for_a_change_branch_stage(self):
+        project, _ = self.stage_project("build")
+        self.assertTrue(self.subject(project, "main").startswith("Plan IN-0001"))
+
+    def test_a_stage_project_has_no_remote(self):
+        project, _ = self.stage_project("intake")
+        self.assertEqual(run_bench.git(project, "remote").stdout.strip(), "")
+
+    def test_a_stage_with_no_work_is_not_finished(self):
+        project, entry = self.stage_project("show")
+        result = run_bench.check_stage(project, "show", entry)
+        self.assertFalse(result["finished"])
+        self.assertFalse(result["ok"])
+
+    def test_the_snapshot_passes_the_checks_of_earlier_stages(self):
+        project, _ = self.stage_project("verify")
+        self.assertTrue(run_bench.check_stage(project, "show", run_bench.entry_commit(project, "Built CH-0001"))["ok"])
+        self.assertTrue(run_bench.check_stage(project, "build", run_bench.entry_commit(project, "Tests reviewed CH-0001"))["ok"])
+        project, _ = self.stage_project("build")
+        result = run_bench.check_stage(project, "tests", run_bench.entry_commit(project, "Plan IN-0001"))
+        self.assertTrue(result["ok"])
+
+    def test_a_changed_plugin_file_gets_an_upgrade_commit(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        plugin = folder / "pdlc"
+        shutil.copytree(run_bench.DEFAULT_PLUGIN, plugin, ignore=shutil.ignore_patterns("__pycache__"))
+        readme = plugin / "skills" / "init" / "references" / "templates" / "README.md"
+        readme.write_text(readme.read_text() + "\nA line that the test adds.\n")
+        project, _ = self.stage_project("verify", plugin)
+        self.assertEqual(self.subject(project), "Upgrade pdlc")
+        self.assertIn("A line that the test adds.", (project / "pdlc" / "README.md").read_text())
+
+
 if __name__ == "__main__":
     unittest.main()
