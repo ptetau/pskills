@@ -1,0 +1,19 @@
+{
+ "id": "s7-ready-line-length",
+ "hypothesis": "When the ready skill asks for acceptance lines of 25 words or fewer where it settles the bad forms of an input, the specs leave fewer long sentences for the specification reviewer.",
+ "lever": "fewer failed review rounds (the rule at the source)",
+ "edits": [
+  {
+   "file": "skills/ready/SKILL.md",
+   "find": "Settle each item as a requirement with acceptance lines. Do one of these:\n",
+   "replace": "Settle each item as a requirement with acceptance lines. Keep each sentence at 25 words or\nfewer, also in an acceptance line. A line that lists many values is often too long. Write\ntwo lines instead, or end the \"then\" part with a full stop and add a second short\nsentence. Give each ID in a sentence a short description, as in `R5 (usage line)`. Do one\nof these:\n"
+  }
+ ],
+ "runs": 6,
+ "stage": "ready",
+ "seeds": false,
+ "target": "writing",
+ "baseline": "bench/sections/ready.json",
+ "gate": {},
+ "budget_usd_per_run": 8
+}

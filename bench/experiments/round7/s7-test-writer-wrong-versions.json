@@ -1,0 +1,31 @@
+{
+ "id": "s7-test-writer-wrong-versions",
+ "hypothesis": "When the test writer knows the traps that the tests reviewer looks for (a value close to the allowed values, the exit code of the process, a check for each error message), the tests review passes in one round more often.",
+ "lever": "fewer failed review rounds (the rule at the source)",
+ "edits": [
+  {
+   "file": "agents/test-writer.md",
+   "find": "4. Drive the surface that the line names. A check of a helper alone does not prove a line\n   about the surface above the helper.\n",
+   "replace": "4. Drive the surface that the line names. A check of a helper alone does not prove a line\n   about the surface above the helper.\n   - If the line names an exit code or a command, run the command as a process in at least\n     one check. Read its exit code and its output. A check that calls a function and reads\n     its return value does not prove the exit code of the process.\n"
+  },
+  {
+   "file": "agents/test-writer.md",
+   "find": "   see the code, make the check expect the exact message and status instead. See\n   `DES-errors` (the error codes of the project).\n",
+   "replace": "   see the code, make the check expect the exact message and status instead. See\n   `DES-errors` (the error codes of the project). Write one such check for each error code\n   or message that the Interface lists.\n"
+  },
+  {
+   "file": "agents/test-writer.md",
+   "find": "   - For a rule about every member of a class, use one member and one value just outside\n     the class.\n",
+   "replace": "   - For a rule about every member of a class, use one member and one value close to the\n     members, not only far-off values. Examples of such rules are \"only digits\", \"only the\n     owner\", and \"any other value is an error\". A close value differs by its case, a space,\n     a sign, a decimal point, or a trailing character. For \"only digits\", add `+2`, ` 2`,\n     `2.0`, and a value with a trailing newline.\n"
+  },
+  {
+   "file": "agents/test-writer.md",
+   "find": "7. Give a time limit to anything that waits (a reply, a process, a timer). Then an\n   incorrect app fails the check and does not hang the run.\n",
+   "replace": "7. Give a time limit to anything that waits (a reply, a process, a timer). Then an\n   incorrect app fails the check and does not hang the run.\n\nThe reviewer judges your checks with `pdlc/reviews/tests.md`. Its section \"Wrong versions\"\nnames the traps. Before you reply, name for yourself one plausible wrong version of the\ncode for each check. If the check passes on that version, change the values of the check.\n"
+  }
+ ],
+ "runs": 6,
+ "stage": "tests",
+ "seeds": false,
+ "target": "calls:pdlc:reviewer/tests"
+}
