@@ -1,0 +1,8 @@
+baseline   cost $1.88  time  483s  runs 6  noise 60%
+candidate  cost $1.62  time  335s  runs 6  noise 37%
+finished   6 of 6 vs 6 of 6 runs   verify rounds [2, 2, 1, 1, 1, 1] vs [3, 1, 1, 1, 2, 2]
+probes     True vs True
+waiting    $0.24 -> $0.00 a run, 11.8 -> 0.0 turns, so about $0.24 (13%) less in a run
+defects    not measured for the candidate
+verdict    SAME OR BETTER -> keep
+           waiting turns cost $0.24 -> $0.00 a run (11.8 -> 0.0 turns), 13% of a run less, and the chance that this is luck is 0%

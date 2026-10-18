@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** Round 1 done and kept. Later rounds are open.
+**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Round 3 is kept. Round 4 is open.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -24,6 +24,30 @@ Patrick Te Tau chose these on the `/quiz-visual` page on 17 October 2026.
 | Test bed | A small fixture app |
 | How far | The loop, and one round of it |
 
+Round 2 used a sixth lever, fewer failed review rounds, which is not in this list. The
+data showed that a second round of verify costs more than any change to a single stage.
+
+## Who does what
+
+A stronger model plans the experiments, and cheaper models make the changes and run them.
+
+- **Planner:** a Fable agent. It reads the plan, the harness, and every result. It writes an
+  experiment spec for each experiment, and a task for each harness change, in
+  `bench/experiments/<round>/`. It does not run anything.
+- **Executors:** Haiku agents. One builds a harness task from its exact description. Another
+  runs `bench/run_experiment.py check`, `start`, and `wait` on a spec, and reports the output
+  word for word.
+- **Orchestrator:** the main session. It checks the plan, the diff of each harness task, and
+  the saved results before it accepts a report. It applies a kept edit with
+  `bench/run_experiment.py apply`.
+
+## The two reference files
+
+- `bench/baseline.json` holds six runs of today's pdlc, from before round 1. It is the floor
+  for effectiveness.
+- `bench/reference.json` holds six runs of the state after the last kept round (round 3), with
+  its planted-defect result. The next experiment compares its cost with this file.
+
 ## What we measure
 
 - **Cost** is the dollar cost that `claude -p` reports for one run, at list prices. It
@@ -36,6 +60,8 @@ Patrick Te Tau chose these on the `/quiz-visual` page on 17 October 2026.
 
 Today's results are in `bench/baseline.json`. An edit keeps them when all of these are true:
 
+- In every run, pdlc finishes: it proposes the change, and the merge check of pdlc prints
+  `ok`. A run that ends with a `Stop` commit did not finish.
 - All 8 acceptance probes of the intent pass on the change that pdlc proposes.
 - The project's own checks pass.
 - The merge check of pdlc prints `ok`.
@@ -60,15 +86,21 @@ Today's results are in `bench/baseline.json`. An edit keeps them when all of the
 
 - **REGRESSION**: a result from the list above got worse, or the run was more than 50%
   slower. Revert the edit.
-- **NO GAIN**: cost did not fall by more than the noise of the runs, and at least 5%.
+- **NO GAIN**: the cost did not fall by at least 5%, or the fall could easily be luck.
   Revert the edit.
-- **SAME OR BETTER**: nothing got worse and cost fell by more than that. Keep the edit.
+- **SAME OR BETTER**: nothing got worse, the cost fell by at least 5%, and the chance that
+  the fall is luck is 10% or less. Keep the edit.
+
+The chance of luck comes from an exact permutation test of the costs of the runs. Without
+`--target`, the gate asks for at least five runs on each side, and six are better. With fewer
+runs it prints NEED MORE RUNS, because a few runs can mislead (see round 2).
 
 A whole run varies a lot. Three runs of today's pdlc cost $1.78, $1.87, and $2.49, because
-the number of review rounds changes. So two runs cannot prove a saving of 20% on a whole
-run. For an edit that aims at one agent, run the gate with `--target <agent>`. The gate then
-compares the cost of each call of that agent, which varies by about 5%. It also prints what
-the saving means for a whole run. A whole run must still not cost clearly more than before.
+the number of review rounds changes. For an edit that aims at one agent, run the gate with
+`--target <agent>`. The gate then compares the cost of each call of that agent, which
+varies by about 5%. It also prints what the saving means for a whole run. The checks for
+effectiveness still apply in full, so a cheaper agent never excuses a run that did not
+finish.
 
 ## The loop
 
@@ -121,8 +153,83 @@ Result: two runs cost $1.13 and $1.75 (mean $1.44, 30% less, which is inside the
           probes pass in both runs. The project's checks pass. Reviewers on Haiku catch 5 of
           5 planted defects, and they raise no false alarm.
 Gate: for a whole run, NO GAIN (a 30% fall is inside a noise of 43%). Aimed at
-          `pdlc:reviewer`, SAME OR BETTER. The edit stays.
+          `pdlc:reviewer`, SAME OR BETTER. This verdict was wrong. See the correction below.
 Next: start agents in the foreground, so that the main session does not poll (1% to 8%);
           review by risk, because compliance and privacy answer "not applicable" on this
           fixture; and shrink the context that the main session carries into verify.
+
+[2026-10-17] Correction of round 1
+Found: the two runs with Haiku reviewers did not finish. One ended with "Stop CH-0001: three
+          failed rounds, quality remit open". The other ended with "Stop CH-0001: the
+          specification remit failed three times for writing style". The merge check
+          failed in both, because requirements were "built, not verified". All three
+          baseline runs finished. The gate checked the probes and the project's own checks,
+          which the builder passes even when pdlc stops. It did not check that pdlc
+          finished, so it said SAME OR BETTER. Part of the lower cost came from runs that
+          stopped early.
+Fixed: the gate now fails an edit when pdlc does not finish in a run, when it finished in
+          every baseline run. Round 1 now gets REGRESSION, in both modes of the gate.
+          The `model: haiku` line is removed from `agents/reviewer.md`.
+Learned: in 4 of the 5 runs, the specification review failed the first verify round on
+          writing findings: an ID with no description, a sentence of more than 25 words, an
+          imperative in a description. No stage runs the writing check before verify, so
+          each run pays for a second round of reviews. In one run the writing findings did
+          not converge, and pdlc stopped. This is round 2.
+
+[2026-10-17] Round 2: check the writing before verify (reverted)
+Edit: step 3 of `skills/verify/SKILL.md` ran the writing check on the README, the specs, and
+          the change spec before it made the packets. The baseline runs ran the check only
+          after a failed review.
+Result: the first four runs cost $1.43 to $1.60. That is 25% less than three baseline runs,
+          with a 3% chance of luck. Three runs on the final wording cost $1.69, $1.71 and
+          $2.49. Then three more baseline runs and three more runs of the edit settled it:
+          the baseline mean is $1.88 over six runs, and the six runs of the final wording
+          cost $2.07 (10% more). The chance that this is luck is 69%.
+Gate: NO GAIN. The edit is reverted. The first four runs were luck, and three baseline
+          runs were too few.
+Fixed: the gate now says NEED MORE RUNS when a side has fewer than five runs. The probes
+          now require the form that the intent shows (`--top N FILE`). One run accepted
+          only that form, and the old probes failed it for an option that the intent does
+          not ask for.
+Learned from 16 runs:
+          - A run with no extra review round costs $1.36 to $1.71. The cost follows the
+            number of agent calls (correlation 0.95). Runs with 9 agent calls cost $1.36
+            to $1.71, and runs with 14 to 24 calls cost $2.49 to $3.37. An extra round
+            comes from the tests review, the specification review, or the quality review,
+            and no one cause stands out.
+          - Turns that only wait for a background agent cost $0.17 on average, which is 9%
+            of a run. One run spent $0.75 (38%) on 41 such turns.
+Next: round 3 starts agents in the foreground, so that the main session does not poll. It
+          aims at the waiting turns, which are measured directly and do not depend on the
+          review rounds. The gate needs a way to judge the waiting cost, and it needs six
+          runs on each side.
+
+[2026-10-17] Round 3: start agents in the foreground (kept)
+Plan: a Fable agent planned two experiments (`bench/experiments/round3/`). Haiku agents built
+          the harness tasks and ran the experiment. I checked the plan, the code, and the
+          saved results myself.
+Edit: the README and the tests, build, intake, and verify skills say to start each agent with
+          `run_in_background: false`, and not to wait with a sleep, a loop, a monitor, or a
+          notification. The README already said "run it in the foreground", and the model
+          mostly ignored it.
+Result: six runs of the edit had no waiting turn. The baseline runs had 3 to 41, with a mean of
+          11.8 turns and $0.24 a run. All six finished, and all 8 probes pass. A whole run
+          cost $1.62 against $1.88 (14% less, with a 9% chance of luck), and took 335 s
+          against 483 s (31% less).
+Gate: waiting target, SAME OR BETTER. The whole-run saving matches the waiting cost that the
+          edit removed.
+Planted defects: reviewers on Sonnet catch 5 of 5, with no false alarm. The first score was 4
+          of 5. The privacy reviewer found the defect but answered in its reply and did not write
+          `result.md`, and the check read only the file. The check now reads the reply when there
+          is no file, as the main session does in a real run. The saved run was scored again.
+Limits: the verify rounds were 3, 1, 1, 1, 2, 2 against 2, 2, 1, 1, 1, 1 in the baseline, so
+          the whole-run test alone is borderline. The number of review rounds is the noise to
+          beat.
+Two mistakes of mine, fixed on the way: the first start of the experiment failed because the
+          background runner got a relative spec path, and `wait` kept saying RUNNING. A test of
+          `apply` failed in a commit that I pushed, and the next commit fixed it.
+Next: round 4. The planner's second experiment, lean review packets, is not run. It would save
+          about $0.06 a run (3%), and it costs about $12 to test. The other levers left are the
+          context that the main session carries into verify, and the reviewer that does not write
+          its `result.md` (the main session writes some of those files itself).
 ```

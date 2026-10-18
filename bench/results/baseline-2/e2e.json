@@ -204,6 +204,9 @@
       "pdlc/CH-0001-top-option": "?"
      }
     },
+    "stops": [],
+    "verify_rounds": 2,
+    "proposed": true,
     "tip": "pdlc/CH-0001-top-option",
     "unit": {
      "ok": true,
@@ -212,14 +215,15 @@
     "probes": {
      "passed": 8,
      "total": 8,
-     "failed": []
+     "failed": [],
+     "option_after_file_failed": []
     }
    },
    "stderr": "",
    "project": "/tmp/pdlc-bench-nj3t1c7t/app",
    "waiting": {
-    "messages": 1,
-    "cost_usd": 0.0254
+    "messages": 3,
+    "cost_usd": 0.0924
    }
   }
  ]

@@ -187,6 +187,11 @@
       "pdlc/CH-0001-top-option": "?"
      }
     },
+    "stops": [
+     "Stop CH-0001: three failed rounds, quality remit open"
+    ],
+    "verify_rounds": 1,
+    "proposed": false,
     "tip": "pdlc/CH-0001-top-option",
     "unit": {
      "ok": true,
@@ -384,6 +389,11 @@
       "pdlc/CH-0001-top-option": "?"
      }
     },
+    "stops": [
+     "Stop CH-0001: the specification remit failed three times for writing style"
+    ],
+    "verify_rounds": 2,
+    "proposed": false,
     "tip": "pdlc/CH-0001-top-option",
     "unit": {
      "ok": true,

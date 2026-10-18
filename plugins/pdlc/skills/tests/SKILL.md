@@ -49,9 +49,9 @@ Read `pdlc/README.md` first and obey it. Start with its "Before any work" step.
 
 ## 2. Write the checks
 
-Start the `pdlc:test-writer` agent. Give the agent the absolute path of the change spec
-and nothing else. The agent writes the checks that the change spec lists under "Check
-files".
+Start the `pdlc:test-writer` agent with `run_in_background: false`. Give the agent the
+absolute path of the change spec and nothing else. The agent writes the checks that the
+change spec lists under "Check files".
 
 The test writer cannot delete files. If the test writer says that a check file served
 only a `(retire)` requirement, delete that file yourself. Use `git rm` before the lock.
@@ -94,8 +94,8 @@ Every lock gets its own review, including a re-lock sent back from build or veri
 merge check refuses a tests review of an older lock.
 
 1. Run `python3 pdlc/bin/make_packets.py CH-xxxx tests`.
-2. Start a fresh `pdlc:reviewer` agent. Give the agent the path of
-   `pdlc/changes/CH-xxxx-…/review/tests/packet.md` and nothing else.
+2. Start a fresh `pdlc:reviewer` agent with `run_in_background: false`. Give the agent the
+   path of `pdlc/changes/CH-xxxx-…/review/tests/packet.md` and nothing else.
 3. Commit the packet and the result with the message "Review tests CH-xxxx" and the
    trailers `Intent` and `Change`. If the `result.md` of the reviewer says fail, send the
    problems to the test writer. Then do red, lock, and review again. If the review fails a

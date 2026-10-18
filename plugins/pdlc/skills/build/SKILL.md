@@ -27,9 +27,9 @@ Give the merge the trailers `Intent` and `Change`.
 
 ## 2. Build
 
-Start the `pdlc:builder` agent with the absolute path of the change spec. The builder
-changes only the app files under "Files". Then the builder runs the checks, and sends you a
-report.
+Start the `pdlc:builder` agent with `run_in_background: false`. Give the builder the
+absolute path of the change spec. The builder changes only the app files under "Files".
+Then the builder runs the checks, and sends you a report.
 
 - If the builder says that a check looks incorrect, do not change the check. Send the
   reason to `/pdlc:tests`. That skill asks the test writer, and then locks the checks
