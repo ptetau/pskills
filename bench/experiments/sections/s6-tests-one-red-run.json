@@ -1,0 +1,16 @@
+{
+ "id": "s6-tests-one-red-run",
+ "hypothesis": "When the tests skill runs all the checks once with the verbose flag, in place of one run for each requirement and then a run of all, the red step takes one turn in place of two, and the main session of the tests stage costs less.",
+ "lever": "fewer turns (one verbose run in place of several runs)",
+ "edits": [
+  {
+   "file": "skills/tests/SKILL.md",
+   "find": "Run the checks of each requirement through the checks port. Use a time limit of a few\nminutes for each run. A run that does not finish is a broken check, not a red one. Send\nthat check back to the test writer before you lock.\n",
+   "replace": "Run all the checks once, through the checks port, with the verbose flag of the runner.\nUse a time limit of a few minutes. The name of each check carries its requirement ID, so\none run shows the result of each requirement. Do not run the checks again for each\nrequirement. A run that does not finish is a broken check, not a red one. Send that check\nback to the test writer before you lock.\n"
+  }
+ ],
+ "runs": 6,
+ "stage": "tests",
+ "seeds": false,
+ "target": null
+}

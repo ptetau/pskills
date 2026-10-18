@@ -1,0 +1,26 @@
+{
+ "id": "s6-verify-fewer-turns",
+ "hypothesis": "When the verify skill runs the checks and makes the packets in one command, and files a follow-up intent in one command from the shape in the inbox adapter, the main session of verify spends two turns fewer and reads the intent template and the adapter less.",
+ "lever": "fewer turns (one command where the result of one step does not decide the next)",
+ "edits": [
+  {
+   "file": "skills/verify/SKILL.md",
+   "find": "- Make sure that no check file changed since `Tests-Locked`.\n\n## 3. Independent reviews\n",
+   "replace": "- Make sure that no check file changed since `Tests-Locked`.\n\nRun these three steps in one command. Put the packet command of step 3 at the end of that\ncommand, after `&&`. Then the packets exist only when every check passed.\n\n## 3. Independent reviews\n"
+  },
+  {
+   "file": "skills/verify/SKILL.md",
+   "find": "  `Awaits approval: found reviewing CH-xxxx (<remit>)`. If an intent already asks for the\n  same thing, do not file the point.\n",
+   "replace": "  `Awaits approval: found reviewing CH-xxxx (<remit>)`. If an intent already asks for the\n  same thing, do not file the point. Write the intent file in one command, in the shape\n  that the inbox adapter gives. Take the date from `date +%F`.\n"
+  },
+  {
+   "file": "skills/init/references/adapters/inbox-files.md",
+   "find": "- **add**: add one to the highest intent number so far. Pad the result to four digits.\n  Create `pdlc/inbox/IN-<id>-<short-name>.md` from the intent template.\n",
+   "replace": "- **add**: add one to the highest intent number so far. Pad the result to four digits.\n  Create `pdlc/inbox/IN-<id>-<short-name>.md` from the intent template. You can write the\n  file in one command, without a look at the template. The file has this shape:\n\n  ```\n  # IN-<id> · <Short name>\n\n  Status: new · Ticket: none · Branch: none · Added: <today, from date +%F>\n\n  ## What and why\n\n  <what must be true, and why, in a few sentences>\n\n  ## Requirements\n\n  - none yet\n\n  ## Changes\n\n  - none yet\n\n  ## Notes\n\n  - <one line for each decision, or \"none yet\">\n\n  ## Handoff\n\n  <the handoff template, with its sections as ### headings>\n  ```\n"
+  }
+ ],
+ "runs": 6,
+ "stage": "verify",
+ "seeds": false,
+ "target": null
+}
