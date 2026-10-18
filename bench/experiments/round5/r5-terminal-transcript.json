@@ -1,0 +1,56 @@
+{
+ "id": "r5-terminal-transcript",
+ "hypothesis": "When the recorder writes a text transcript of a terminal recording and the specification packet carries that transcript in place of the 17 to 20 frames, each specification review costs about 60% less, and the reviewer still catches every planted defect.",
+ "lever": "context pack (text evidence for the specification reviewer in place of 17 to 20 images of a terminal)",
+ "edits": [
+  {
+   "file": "skills/init/references/bin/record_gif.mjs",
+   "find": "// A terminal shows each command's output and errors in order, and scrolls like a real\n// one: every frame shows the newest lines.\n",
+   "replace": "// A terminal shows each command's output and errors in order, and scrolls like a real\n// one: every frame shows the newest lines.\n// A terminal recording also writes frames/transcript.md: the caption, the command and\n// the output of each step, as its frame shows them. The specification packet carries\n// this transcript in place of the frames, because the frames of a terminal are text.\n"
+  },
+  {
+   "file": "skills/init/references/bin/record_gif.mjs",
+   "find": "const lines = [];\nconst problems = [];\n",
+   "replace": "const lines = [];\nconst transcript = [];\nconst problems = [];\n"
+  },
+  {
+   "file": "skills/init/references/bin/record_gif.mjs",
+   "find": "        lines.push(`<span style=\"color:#34d399\">$</span> ${escape(step.run)}`, escape(out.trimEnd()));\n",
+   "replace": "        lines.push(`<span style=\"color:#34d399\">$</span> ${escape(step.run)}`, escape(out.trimEnd()));\n        transcript.push({ n: i + 1, caption, run: step.run, out: out.trimEnd() });\n"
+  },
+  {
+   "file": "skills/init/references/bin/record_gif.mjs",
+   "find": "if (problems.length) {\n  for (const problem of problems) console.error(`record_gif: ${problem}`);\n",
+   "replace": "if (script.kind === \"terminal\") {\n  const entries = transcript.map((t) =>\n    `## Frame ${String(t.n).padStart(2, \"0\")} · ${t.caption}\\n\\n\\`\\`\\`\\`\\n$ ${t.run}\\n${t.out}\\n\\`\\`\\`\\`\\n`);\n  fs.writeFileSync(path.join(outDir, \"frames\", \"transcript.md\"),\n    `# Transcript of the frames · ${script.title || \"\"}\\n\\n` +\n    \"Each entry is one frame: its caption, the command of its step, and what the command printed.\\n\\n\" +\n    entries.join(\"\\n\"));\n}\n\nif (problems.length) {\n  for (const problem of problems) console.error(`record_gif: ${problem}`);\n"
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "The specification packet also holds the writing check and points to the visual review\nframes.",
+   "replace": "The specification packet also holds the writing check and the visual review: for a\nterminal recording, the transcript of the frames (frames/transcript.md); for any other\nrecording, a list of the frames."
+  },
+  {
+   "file": "skills/init/references/bin/make_packets.py",
+   "find": "        if remit == \"specification\" and frames:\n            out.append(\"## Visual review frames\\n\\nRead each frame to see the change working:\\n\")\n            out += [\"- %s\" % f.relative_to(root).as_posix() for f in frames]\n",
+   "replace": "        transcript = folder / \"frames\" / \"transcript.md\"\n        if remit == \"specification\" and transcript.exists():\n            out.append(\"## Visual review frames\\n\\nThis is a terminal recording. The transcript below is the text of its frames: \"\n                       \"the caption, the command and the output of each step. Judge each entry as its frame.\\n\")\n            out.append(transcript.read_text())\n        elif remit == \"specification\" and frames:\n            out.append(\"## Visual review frames\\n\\nRead each frame to see the change working:\\n\")\n            out += [\"- %s\" % f.relative_to(root).as_posix() for f in frames]\n"
+  },
+  {
+   "file": "skills/init/references/reviews/specification.md",
+   "find": "- If the packet lists frames, read each frame. Each frame must show what its caption\n  claims, after the step, not the screen before the step. A blank frame, or a frame that\n  shows something else, is a problem.\n",
+   "replace": "- If the packet lists frames, read each frame. Each frame must show what its caption\n  claims, after the step, not the screen before the step. A blank frame, or a frame that\n  shows something else, is a problem.\n- If the packet holds a transcript of the frames, judge each entry of the transcript in\n  the same way. The output of the step must show what its caption claims.\n"
+  },
+  {
+   "file": "tests/test_make_packets.py",
+   "find": "    def test_only_the_specification_packet_has_the_writing_check(self):\n",
+   "replace": "    def test_a_transcript_replaces_the_frame_list_in_the_specification_packet(self):\n        (self.folder / \"frames/transcript.md\").write_text(\n            \"# Transcript of the frames\\n\\n## Frame 01 · CAP-greeting.R2 · hola\\n\\n\"\n            \"````\\n$ node greet.js Ana es\\nHola, Ana! TRANSCRIPT-MARK\\n````\\n\")\n        make_packets.main([\"x\", \"CH-0001\"], root=self.root)\n        text = self.packet(\"specification\")\n        self.assertIn(\"TRANSCRIPT-MARK\", text)\n        self.assertIn(\"Judge each entry as its frame.\", text)\n        self.assertNotIn(\"frames/01.png\", text)\n        self.assertNotIn(\"TRANSCRIPT-MARK\", self.packet(\"security\"))\n\n    def test_only_the_specification_packet_has_the_writing_check(self):\n"
+  },
+  {
+   "file": "tests/test_record_gif.py",
+   "find": "    def test_a_step_marked_unchanged_may_print_nothing(self):\n",
+   "replace": "    def test_a_terminal_recording_writes_a_transcript_of_its_frames(self):\n        frames = self.record([{\"caption\": \"CAP-x.R1 · says one\", \"run\": \"echo one\"},\n                              {\"caption\": \"CAP-x.R2 · says two\", \"run\": \"echo two\"}])\n        text = (frames / \"transcript.md\").read_text()\n        self.assertIn(\"## Frame 01 · CAP-x.R1 · says one\", text)\n        self.assertIn(\"$ echo one\\none\\n\", text)\n        self.assertIn(\"## Frame 02 · CAP-x.R2 · says two\", text)\n        self.assertIn(\"$ echo two\\ntwo\\n\", text)\n\n    def test_a_step_marked_unchanged_may_print_nothing(self):\n"
+  }
+ ],
+ "runs": 6,
+ "seeds": true,
+ "target": "pdlc:reviewer",
+ "baseline": "bench/reference.json"
+}

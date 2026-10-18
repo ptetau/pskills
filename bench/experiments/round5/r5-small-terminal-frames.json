@@ -1,0 +1,26 @@
+{
+ "id": "r5-small-terminal-frames",
+ "hypothesis": "When a terminal recording defaults to 640 by 400 pixels in place of 1000 by 640, each frame costs the specification reviewer about 60% fewer image tokens, the text stays the same size, and the reviewer still catches every planted defect.",
+ "lever": "context pack (smaller frames for the specification reviewer; the fallback when r5-terminal-transcript is not kept)",
+ "edits": [
+  {
+   "file": "skills/init/references/bin/record_gif.mjs",
+   "find": "//   \"width\": 1000, \"height\": 640,              (optional)\n",
+   "replace": "//   \"width\": 1000, \"height\": 640,              (optional; a terminal defaults to 640 by 400)\n"
+  },
+  {
+   "file": "skills/init/references/bin/record_gif.mjs",
+   "find": "const width = script.width || 1000;\nconst height = script.height || 640;\n",
+   "replace": "// A terminal frame is text at a fixed size, so a smaller frame keeps the text legible and\n// costs a reviewer fewer image tokens. A web page keeps the larger default.\nconst terminal = script.kind === \"terminal\";\nconst width = script.width || (terminal ? 640 : 1000);\nconst height = script.height || (terminal ? 400 : 640);\n"
+  },
+  {
+   "file": "tests/test_record_gif.py",
+   "find": "    def test_a_step_marked_unchanged_may_print_nothing(self):\n",
+   "replace": "    def test_a_terminal_script_without_a_size_records_640_by_400(self):\n        (self.tmp / \"visual.json\").write_text(json.dumps(\n            {\"kind\": \"terminal\", \"title\": \"CH-0001 · test\",\n             \"steps\": [{\"caption\": \"CAP-x.R1 · says one\", \"run\": \"echo one\"}]}))\n        run = subprocess.run([\"node\", str(SCRIPT), \"visual.json\", \"out\"], cwd=self.tmp,\n                             capture_output=True, text=True, timeout=180)\n        self.assertEqual(run.returncode, 0, run.stderr)\n        width, height, _ = read_png(self.tmp / \"out/frames/01.png\")\n        self.assertEqual((width, height), (640, 400))\n\n    def test_a_step_marked_unchanged_may_print_nothing(self):\n"
+  }
+ ],
+ "runs": 6,
+ "seeds": false,
+ "target": "pdlc:reviewer",
+ "baseline": "bench/reference.json"
+}
