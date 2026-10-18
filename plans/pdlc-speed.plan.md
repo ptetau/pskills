@@ -1,6 +1,6 @@
 # Plan: make pdlc faster and cheaper
 
-**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3, 4, and 5 are kept. Round 6 measures and optimises each section alone.
+**Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3, 4, 5, and 6 are kept.
 **Plan location:** `plans/pdlc-speed.plan.md`
 
 ## Goal
@@ -45,9 +45,12 @@ A stronger model plans the experiments, and cheaper models make the changes and 
 
 - `bench/baseline.json` holds six runs of today's pdlc, from before round 1. It is the floor
   for effectiveness.
-- `bench/reference.json` holds six runs of the state after the last kept round (round 5), with
+- `bench/reference.json` holds six runs of the state after the last kept round (round 6), with
   its planted-defect result. The next experiment compares its cost with this file.
-  `bench/reference-after-round-4.json` and `bench/reference-after-round-3.json` are the earlier ones.
+  `bench/reference-after-round-5.json`, `bench/reference-after-round-4.json`, and
+  `bench/reference-after-round-3.json` are the earlier ones.
+- `bench/sections/<stage>.json` holds six replays of one stage, from before round 6. An
+  experiment that names a stage compares its cost with this file.
 
 ## What we measure
 
@@ -302,4 +305,36 @@ Findings: a replay of tests, verify, or build varies by 10% to 14%. A whole run 
 Next: a Fable planner maps where each stage's tokens go and writes one or two experiments for
           each stage, with verify, tests, and intake first. Each experiment replays only its
           stage. Six whole runs then check the kept edits together.
+[2026-10-18] Round 6: an experiment for each costly stage (two kept)
+Plan: a Fable planner mapped where the tokens of each stage go, and wrote five specs
+          (`bench/experiments/sections/plan.md`). Each spec replays only its own stage, six
+          times. Haiku agents ran the specs and the whole runs. I read each diff, and I checked
+          the text that the kept edits made.
+Kept: s6-intake-recon-brief (intake gives recon a fixed ask, and recon replies with
+          requirements only). Intake fell from $0.33 to $0.26 (21%). The two sets of runs do
+          not overlap. The specs have as many requirements and acceptance lines as before, and
+          fewer writing findings (13 against 19).
+Kept: s6-readme-short-forms (the README gives a short form of the writing and trailer rules).
+          Show fell from $0.23 to $0.22 (7%, a 6% chance of luck). The main session no longer
+          reads the full writing rules for a handoff. The handoffs have fewer IDs with no
+          description (6 of 41 against 23 of 36), and no writing finding.
+Reverted: s6-review-packets-lean (packets 11% to 31% smaller, and a reviewer call costs the
+          same), s6-verify-fewer-turns (4%, below the 5% that the gate needs), and
+          s6-tests-one-red-run (12% dearer, because the model ran extra filtered runs).
+Fix: in the first six whole runs, one run made the intent branch pdlc/IN-0001-top-option,
+          although no pdlc branch was unmerged. The gate said REGRESSION. No replay and no
+          earlier whole run made such a branch. The cause was a sentence in the intake skill
+          that depended on a condition two paragraphs above it. The sentence now names the
+          condition.
+Result: six new whole runs with the fix all finished. All 8 probes pass, the project's checks
+          pass, and the reviewers catch 5 of 5 planted defects with no false alarm. A run costs
+          $1.32 against $1.61 (18% less, a 3% chance of luck). The edits explain about 8%.
+          Fewer review rounds (1.33 against 1.67) explain about 4%. The rest is likely luck.
+Gate: whole-run cost, SAME OR BETTER.
+Limits: the stage baselines in `bench/sections/` are from before round 6. Each stage reads the
+          README, so a new stage experiment needs new baselines first (about $14). A problem
+          in 1 run of 6 can hide in six runs.
+Next: the verify and tests stages are still 60% of a run. Smaller packets do not help, because
+          a reviewer call costs mostly its start-up and the frames. The turns of the main
+          session are the lever that is left.
 ```

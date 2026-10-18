@@ -1,0 +1,298 @@
+{
+ "label": "r6-whole-b-4",
+ "plugin_commit": "05330c7",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 128,
+     "cache_write": 190963,
+     "cache_read": 2554314,
+     "output": 37058
+    },
+    "cost_usd": 1.2127,
+    "duration_s": 273.5,
+    "turns": 51,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 9,
+    "models": {
+     "claude-sonnet-5-5": 1.2127
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 2,
+      "cache_write": 6973,
+      "cache_read": 30354,
+      "output": 17
+     },
+     "cost_usd": 0.0372,
+     "messages": 1,
+     "agents": {},
+     "wall_s": 6.5
+    },
+    "intake": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 31402,
+      "cache_read": 249060,
+      "output": 105
+     },
+     "cost_usd": 0.1738,
+     "messages": 8,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 11198,
+        "cache_read": 17746,
+        "output": 53
+       },
+       "cost_usd": 0.0349,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 13.5
+      }
+     },
+     "wall_s": 49.2
+    },
+    "ready": {
+     "tokens": {
+      "input": 2,
+      "cache_write": 874,
+      "cache_read": 57531,
+      "output": 32
+     },
+     "cost_usd": 0.0167,
+     "messages": 1,
+     "agents": {},
+     "wall_s": 13.7
+    },
+    "change": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 6740,
+      "cache_read": 119196,
+      "output": 27
+     },
+     "cost_usd": 0.0556,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 13.1
+    },
+    "tests": {
+     "tokens": {
+      "input": 42,
+      "cache_write": 51781,
+      "cache_read": 692093,
+      "output": 342
+     },
+     "cost_usd": 0.3187,
+     "messages": 21,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 21734,
+        "cache_read": 70795,
+        "output": 138
+       },
+       "cost_usd": 0.0761,
+       "messages": 9,
+       "calls": 2,
+       "wall_s": 38.7
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 15766,
+        "cache_read": 41295,
+        "output": 59
+       },
+       "cost_usd": 0.0525,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 18.2
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 15766,
+        "cache_read": 41295,
+        "output": 59
+       },
+       "cost_usd": 0.0525,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 18.2
+      }
+     },
+     "wall_s": 87.9
+    },
+    "build": {
+     "tokens": {
+      "input": 16,
+      "cache_write": 11376,
+      "cache_read": 290663,
+      "output": 135
+     },
+     "cost_usd": 0.1019,
+     "messages": 8,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 10,
+        "cache_write": 7589,
+        "cache_read": 48834,
+        "output": 79
+       },
+       "cost_usd": 0.0322,
+       "messages": 5,
+       "calls": 1,
+       "wall_s": 13.1
+      }
+     },
+     "wall_s": 26.2
+    },
+    "show": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 7011,
+      "cache_read": 343651,
+      "output": 63
+     },
+     "cost_usd": 0.106,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 24.3
+    },
+    "verify": {
+     "tokens": {
+      "input": 38,
+      "cache_write": 74806,
+      "cache_read": 771766,
+      "output": 944
+     },
+     "cost_usd": 0.4028,
+     "messages": 19,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 24,
+        "cache_write": 61988,
+        "cache_read": 96849,
+        "output": 171
+       },
+       "cost_usd": 0.1917,
+       "messages": 12,
+       "calls": 4,
+       "wall_s": 42.1
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 9505,
+        "cache_read": 19160,
+        "output": 45
+       },
+       "cost_usd": 0.0305,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 7.8
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 8901,
+        "cache_read": 7447,
+        "output": 33
+       },
+       "cost_usd": 0.0262,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 4.6
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 9679,
+        "cache_read": 19171,
+        "output": 46
+       },
+       "cost_usd": 0.031,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 9.8
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 33903,
+        "cache_read": 51071,
+        "output": 47
+       },
+       "cost_usd": 0.1039,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 19.9
+      }
+     },
+     "wall_s": 51.5
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 275.0,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-top-option"
+    ],
+    "changes": [
+     "CH-0001-top-option"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-top-option": [
+      "ok   CH-0001"
+     ]
+    },
+    "change_status": {
+     "CH-0001-top-option": {
+      "pdlc/CH-0001-top-option": "?"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 1,
+    "proposed": true,
+    "tip": "pdlc/CH-0001-top-option",
+    "unit": {
+     "ok": true,
+     "ran": 33
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": [
+      "top 2 keeps the two most common",
+      "top 1 keeps one",
+      "top larger than the word count keeps all",
+      "top 0 is an error",
+      "top -3 is an error",
+      "top abc is an error",
+      "top 2.5 is an error"
+     ]
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-pvg7h9w0/app"
+  }
+ ]
+}
