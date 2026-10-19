@@ -42,4 +42,6 @@ python3 scripts/sync_shared.py --check
 python3 quiz-visual/scripts/test_quiz_visual.py
 python3 bench/test_bench.py
 (cd plugins/pdlc && python3 -m unittest discover -s tests)
+python3 blueprint/scripts/check_blueprint.py blueprint/references/notifications.blueprint.md \
+  --design decompose/references/notifications.design.md
 ```

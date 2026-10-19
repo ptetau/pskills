@@ -55,8 +55,8 @@ Design by contract (Meyer, Eiffel) sorts each failure by fault:
 | Broken | Meaning | Whose bug | HTTP |
 |--------|---------|-----------|------|
 | Precondition | what the method requires of its caller | the caller's | 4xx: "the client seems to have erred" (RFC 9110) |
-| Postcondition | what the method guarantees on return | the supplier's | 5xx |
-| Invariant | what must hold for every valid instance, before and after every call | the supplier's | 5xx |
+| Postcondition | what the method guarantees on return | the system's | 5xx |
+| Invariant | what must hold for every valid instance, before and after every call | the system's | 5xx |
 
 Each invariant in section 2 names its enforcement point and its error code. The error
 catalog in section 3 gives the fault and the status of each code.

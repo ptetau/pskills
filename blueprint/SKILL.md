@@ -75,7 +75,7 @@ each such detail, do these steps:
 
 1. Decide the detail one time. Use the conventional default
    (`references/conventions.md`).
-2. Mark the detail *(assumed)* one time, at the place where a reader first meets it. The
+2. Mark the detail `(assumed)` one time, at the place where a reader first meets it. The
    checker compares the number of marks with the number of listed decisions.
 3. List the detail in section 1, under **Decisions added by this spec**. Add one line that
    tells what changes if the decision is incorrect.
@@ -136,14 +136,17 @@ methods in the style of the language: `Route` becomes `route` in TypeScript, and
 wider contract is a design change. A blueprint must not add, remove, or rename a component
 or a verb, and the `--design` option checks this rule.
 
+After `pdlc` takes the blueprint in, the pdlc specs lead, and nobody edits the blueprint
+file. A later design change starts again with `/decompose`.
+
 **Lifecycles** follow the design. The Manager decides each transition. If the state lives
 longer than one flow, a ResourceAccess stores the state. The verbs of that ResourceAccess
 do each transition atomically. The "Stored by" line in section 4 names that
 ResourceAccess.
 
 **Business thresholds** that the design gives to a named owner ("Legal decides the
-expiry"): select a conservative placeholder. Mark the placeholder *(assumed; owner:
-Legal)*, and list it. Use a `[NEEDS CLARIFICATION]` only when no placeholder is safe to
+expiry"): select a conservative placeholder. Mark the placeholder `(assumed)`, and name the owner
+after the marker, outside the brackets. List the placeholder. Use a `[NEEDS CLARIFICATION]` only when no placeholder is safe to
 build against.
 
 A design in a different format works in the same way. Find the scope, rules, data,
@@ -170,7 +173,7 @@ lifecycles, components, and behaviours, and translate each one.
 - **Out of scope (non-goals)**: rejected candidates, future changes that are only tests of
   the design, and any other work that a reasonable agent can wander into.
 - **Decisions carried from the design**: the assumptions of the design, without changes.
-- **Decisions added by this spec**: each *(assumed)* detail, with one line for each
+- **Decisions added by this spec**: each `(assumed)` detail, with one line for each
   detail. Keep the two lists separate. Then the new list is short enough to review.
 - **Words used here**: each technical word that the blueprint uses, with a plain
   explanation in one line.
@@ -242,9 +245,15 @@ for each code. Each row gives these items:
   there is no HTTP boundary, remove the column.
 - Whether a retry can help.
 
-Design by contract decides the fault. A broken precondition is the fault of the caller (a
-4xx). A broken postcondition or invariant is the fault of the supplier (a 5xx). At an HTTP
-boundary, errors travel as RFC 9457 problem details, with the code in a `code` member.
+Design by contract decides the fault. Write the fault as one of three words, the words of
+`DES-errors` in pdlc:
+
+- `caller`: a broken precondition (a 4xx).
+- `system`: a broken postcondition or invariant (a 5xx).
+- `outside service`: a failure or refusal of a vendor or another outside system.
+
+At an HTTP boundary, errors travel as RFC 9457 problem details, with the code in a `code`
+member.
 
 ## Phase 4 — State machines
 
@@ -300,7 +309,7 @@ rules:
      - ResourceAccess is the only code that touches a vendor or storage.
      - Managers run the steps in order, and hold no business rules.
      - A Client says how its callers prove who they are (a sign-in, an API key, a card and
-       PIN). If the design does not say, decide how, and mark the decision *(assumed)*.
+       PIN). If the design does not say, decide how, and mark the decision `(assumed)`.
    - **May call**: take this item from the call rules of the design. Write it as a
      separate `- **May call:**` line. The checker reads only that line. Thus, "only
      librarians may call it" in other text is not a problem.
@@ -408,6 +417,9 @@ Write 3–5 Gherkin scenarios that a test harness can run.
    - Run `/quiz-plan` to turn the blueprint into steps.
    - Run `/quiz-plan-execute` to build the blueprint, with the scenarios as its failing
      tests.
+   - Run `/pdlc:intake <name>.blueprint.md` to build the blueprint with the `pdlc` plugin,
+     when `pdlc` is installed. After intake, the pdlc specs lead. The blueprint stays a frozen
+     input.
 
 ## Style
 
@@ -459,7 +471,7 @@ Write 3–5 Gherkin scenarios that a test harness can run.
 /blueprint notifications.design.md
 ```
 
-The skill reads the design from the worked example of `/decompose`. The skill selects
+The skill reads the design from `decompose/references/notifications.design.md`. The skill selects
 TypeScript and a modular monolith, and writes `notifications.blueprint.md`:
 
 - Six invariants: at-most-once delivery, quiet hours, no silent drops, forward-only
@@ -476,5 +488,6 @@ TypeScript and a modular monolith, and writes `notifications.blueprint.md`:
   The blueprint marks each decision where it applies, and lists it for review.
 
 The blueprint passes
-`check_blueprint.py --design notifications.design.md --compile --render`. The full result
+`check_blueprint.py --design decompose/references/notifications.design.md --compile --render`.
+The full result
 is `references/notifications.blueprint.md`.

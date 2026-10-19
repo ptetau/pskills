@@ -433,6 +433,9 @@ pass. As an alternative, record why you accept a failure.
      machines, signatures, and Gherkin scenarios).
    - `/quiz-plan`, to turn the walls (and, in subsystem mode, the migration steps) into
      an executable change plan.
+   - `/pdlc:intake <name>.blueprint.md`, to build the blueprint when the `pdlc` plugin is
+     installed. Run [[blueprint]] first. The blueprint, not the design, holds the types,
+     codes, and signatures that `pdlc` needs.
 
 ## Rules
 
@@ -469,6 +472,8 @@ pass. As an alternative, record why you accept a failure.
 - `references/design-template.md`: the shape of `<name>.design.md`.
 - `references/examples.md`: a worked inception example (notifications), and a worked
   subsystem example (promotions in an existing shop).
+- `references/notifications.design.md`: the first example of `examples.md` as a full design
+  document, in the shape of the template. `/blueprint` uses it as its worked example.
 - `references/sources.md`: where each idea comes from, with links.
 - `references/c4.md`: the C4 diagrams. Topics: the level that each skill draws, the
   notation rules, and Mermaid examples that render. Shared with `/blueprint`.
@@ -494,4 +499,5 @@ skill defines one `Envelope` contract and about a dozen bricks.
 
 The skill assembles all eight features with no new bricks. The skill shows that WhatsApp,
 escalation, and a regional rule each touch one component. Then the skill writes
-`notifications.design.md`. See `references/examples.md` for the full run.
+`notifications.design.md`. See `references/examples.md` for the full run, and
+`references/notifications.design.md` for the finished document.

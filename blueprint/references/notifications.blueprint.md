@@ -1,6 +1,6 @@
 # Notifications: Agent System Design Document
 
-**Source design:** `notifications.design.md` (the worked example in `decompose/references/examples.md`)
+**Source design:** `decompose/references/notifications.design.md` (the first worked example of `/decompose`)
 · **Language:** TypeScript · **Status:** draft
 
 ## 1. Header & Boundary Box: what gets built, and what doesn't
@@ -9,7 +9,7 @@
 email, SMS, or Slack messages. Each message is in the language of the person, and goes on
 the channel and at the time that the person selects.
 **Target mode:** one app in TypeScript on Node.js 20, with a Postgres database
-*(assumed)*. A timer in the app wakes the app each minute.
+(assumed). A timer in the app wakes the app each minute.
 
 ```mermaid
 C4Container
@@ -104,7 +104,7 @@ decisions first.
 ## 2. System Invariants: rules that must always hold
 
 1. **Each message is sent at most one time.** The key of a message is
-   `eventId:recipientId:channel` *(assumed)*. If the same event comes again, the app
+   `eventId:recipientId:channel` (assumed). If the same event comes again, the app
    returns the first result and sends nothing new. If the event comes again with
    different data, the app refuses the event. Enforced by `OutboxAccess.claim`, in the
    same database transaction that saves the message. Violation: `IDEMPOTENCY_CONFLICT`.
@@ -118,7 +118,7 @@ decisions first.
    delivery does not change again. Enforced by `OutboxAccess`'s lifecycle verbs
    (`startAttempt`, `failAttempt`, `scheduleRetry`, `giveUp`, `confirmDelivery`). Each
    verb is a compare-and-set on the current state. Violation: `INVALID_TRANSITION`.
-5. **Tries are limited.** After 5 failed tries *(assumed)*, the app marks the delivery
+5. **Tries are limited.** After 5 failed tries (assumed), the app marks the delivery
    `dead` and reports the delivery. The app does not try the delivery again. Enforced by
    `NotificationManager`, which uses the delivery state machine. Outcome:
    `RETRIES_EXHAUSTED`.
@@ -129,7 +129,7 @@ decisions first.
 ## 3. Core Domain Data Contracts: the exact shape of the data
 
 **How the types work:** each kind of ID has its own type, so that the code cannot use one
-kind of ID in place of a different kind. Times are ISO 8601 strings in UTC *(assumed)*. A
+kind of ID in place of a different kind. Times are ISO 8601 strings in UTC (assumed). A
 `?` marks a field that can be missing. Errors come back as values. One part does not
 throw an error to a different part.
 
@@ -237,10 +237,10 @@ status). Over HTTP, errors use RFC 9457 problem details, with the code in a `cod
 | `QUIET_HOURS_DEFERRED` | not an error: routing held the message until quiet hours end | — | 202 | — |
 | `NO_REACHABLE_CHANNEL` | no allowed channel has a contact for the recipient | caller | 422 | no, until the recipient's data changes |
 | `INVALID_TRANSITION` | a lifecycle verb was applied to a delivery in the wrong state (a broken precondition, often a lost race) | caller | 409 | no |
-| `RETRIES_EXHAUSTED` | a delivery failed 5 times and is dead | supplier (vendor) | — (internal) | no |
-| `TEMPLATE_NOT_FOUND` | no template exists for the event type | supplier | 500 | no, until a template ships |
-| `PROVIDER_REJECTED` | the vendor refused the message | caller data or vendor | — (internal) | no |
-| `PROVIDER_UNAVAILABLE` | the vendor timed out or answered 408, 429, or 5xx | vendor | — (internal) | yes, with backoff |
+| `RETRIES_EXHAUSTED` | a delivery failed 5 times and is dead | outside service | — (internal) | no |
+| `TEMPLATE_NOT_FOUND` | no template exists for the event type | system | 500 | no, until a template ships |
+| `PROVIDER_REJECTED` | the vendor refused the message | outside service | — (internal) | no |
+| `PROVIDER_UNAVAILABLE` | the vendor timed out or answered 408, 429, or 5xx | outside service | — (internal) | yes, with backoff |
 | `RECIPIENT_NOT_FOUND` | no recipient has that ID | caller | 404 | no |
 
 ## 4. State Machines: how things move from one state to the next
@@ -361,7 +361,7 @@ can call the Utilities.
 
 - **Purpose:** receives events that other systems post over HTTP.
 - **Encapsulates:** which systems send events, and how.
-- **Constraints:** each product system proves who it is with its own API key *(assumed)*.
+- **Constraints:** each product system proves who it is with its own API key (assumed).
   EventsApi only validates and forwards events, and does no routing or rendering.
   EventsApi calls one Manager.
 - **May call:** `NotificationManager`, infrastructure.
@@ -394,14 +394,14 @@ export interface Scheduler {
 
 - **Failure & retry:** the app logs a failed tick, and the next tick tries again. The
   methods of the Manager are idempotent, so ticks that overlap are safe.
-- **Internals:** `OnSchedule(cron)`: the digest release at 08:00 local time *(assumed)*,
+- **Internals:** `OnSchedule(cron)`: the digest release at 08:00 local time (assumed),
   and a tick each minute for the retries that are due.
 
 #### AdminPortal
 
 - **Purpose:** lets persons select their channel and quiet hours.
 - **Encapsulates:** the preferences UI.
-- **Constraints:** staff sign in with the company's sign-in *(assumed)*. AdminPortal calls
+- **Constraints:** staff sign in with the company's sign-in (assumed). AdminPortal calls
   one Manager for each action.
 - **May call:** `NotificationManager`.
 
@@ -479,8 +479,8 @@ export interface RoutingEngine {
   value. No caller retries RoutingEngine.
 - **Internals:** the policies that RoutingEngine applies, in this order: `Expand` (event
   to recipients), `Prefer` (channel), `QuietHours` (hold what can wait). Only
-  `password.reset` and `alert.*` are urgent *(assumed)*. The default quiet hours are 22:00
-  to 07:00 in the time zone of the person *(assumed)*.
+  `password.reset` and `alert.*` are urgent (assumed). The default quiet hours are 22:00
+  to 07:00 in the time zone of the person (assumed).
 
 #### RenderingEngine
 
@@ -497,7 +497,7 @@ export interface RenderingEngine {
 ```
 
 - **Failure & retry:** uses English when the language of the recipient is missing
-  *(assumed)*. If the template itself is missing, RenderingEngine returns
+  (assumed). If the template itself is missing, RenderingEngine returns
   `TEMPLATE_NOT_FOUND`. No caller retries RenderingEngine.
 
 ### Resource access (ResourceAccess)
@@ -536,7 +536,7 @@ export interface DeliveryAccess {
 }
 ```
 
-- **Failure & retry:** a 10 s timeout for each call *(assumed)*. Timeouts, 408, 429, and
+- **Failure & retry:** a 10 s timeout for each call (assumed). Timeouts, 408, 429, and
   5xx become `PROVIDER_UNAVAILABLE`, and other 4xx statuses become `PROVIDER_REJECTED`.
   DeliveryAccess returns the `Retry-After` of the vendor to the Manager, so that the
   Manager can honour the `Retry-After` value. DeliveryAccess does not retry by itself.

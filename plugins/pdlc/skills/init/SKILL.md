@@ -47,10 +47,11 @@ Create `pdlc/` at the project root, with these contents:
 ### 2. Map existing code
 
 If the project has no code yet (a new build), there is nothing to map. In that case, if
-`/decompose` is installed, recommend that the user runs `/decompose` first. `/decompose`
-decides where the main parts go. Recommend that the user then starts the first intent
-with the result of `/decompose`. Do not run `/decompose` yourself, and do not wait for
-it. Continue with the next step.
+`/decompose` is installed, recommend that the user runs `/decompose` first, and then
+`/blueprint`. `/decompose` decides where the main parts go. `/blueprint` turns that design
+into types, error codes, and signatures. Recommend that the user then starts the first
+intent with `/pdlc:intake <name>.blueprint.md`. Do not run `/decompose` or `/blueprint`
+yourself, and do not wait for them. Continue with the next step.
 
 Start the `pdlc:recon` agent, and ask for a **thin map** of the project. Show the user
 what recon found, as two short lists: capabilities and jobs. Give the code map of each
