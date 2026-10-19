@@ -28,6 +28,8 @@ requirement has a `Source`.
 
 Status: proposed · Intents: IN-0000
 
-Write one or two sentences that say what must be true.
+Write one or two sentences that say what must be true. Keep each sentence at 25 words or
+fewer, also in each acceptance line below. Give each ID a short description, as in
+`R5 (usage line)`.
 
 - Given ..., when ..., then ...

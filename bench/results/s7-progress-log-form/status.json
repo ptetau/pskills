@@ -1,0 +1,8 @@
+{
+ "state": "done",
+ "pid": 16037,
+ "at": "10:06:38",
+ "runs": 12,
+ "verdict": "REGRESSION -> revert",
+ "finished": 12
+}

@@ -43,6 +43,7 @@
    },
    "outcome": {
     "stage": "change",
+    "entry": "9550d2098bfb87a4a9a9085fc79eae75a9196e7a",
     "check": {
      "ok": true,
      "finished": true,
@@ -50,7 +51,17 @@
      "subjects": [
       "Plan IN-0001: Top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 1,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -67,7 +78,16 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 1,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 37.0,
    "project": "/tmp/pdlc-stage-musndg52/app",
@@ -111,6 +131,7 @@
    },
    "outcome": {
     "stage": "change",
+    "entry": "9550d2098bfb87a4a9a9085fc79eae75a9196e7a",
     "check": {
      "ok": true,
      "finished": true,
@@ -118,7 +139,17 @@
      "subjects": [
       "Plan IN-0001: wordfreq top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 1,
+       "files": [
+        "pdlc/changes/CH-0001-wordfreq-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-wordfreq-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -135,7 +166,16 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 1,
+     "files": [
+      "pdlc/changes/CH-0001-wordfreq-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-wordfreq-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 38.2,
    "project": "/tmp/pdlc-stage-t75tm_7y/app",
@@ -179,6 +219,7 @@
    },
    "outcome": {
     "stage": "change",
+    "entry": "9550d2098bfb87a4a9a9085fc79eae75a9196e7a",
     "check": {
      "ok": true,
      "finished": true,
@@ -186,7 +227,17 @@
      "subjects": [
       "Plan IN-0001: top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 1,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -203,7 +254,16 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 1,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 44.9,
    "project": "/tmp/pdlc-stage-99x50jw4/app",
@@ -247,6 +307,7 @@
    },
    "outcome": {
     "stage": "change",
+    "entry": "9550d2098bfb87a4a9a9085fc79eae75a9196e7a",
     "check": {
      "ok": true,
      "finished": true,
@@ -254,7 +315,17 @@
      "subjects": [
       "Plan IN-0001: wordfreq-top-option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 1,
+       "files": [
+        "pdlc/changes/CH-0001-wordfreq-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-wordfreq-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -271,7 +342,16 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 1,
+     "files": [
+      "pdlc/changes/CH-0001-wordfreq-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-wordfreq-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 39.6,
    "project": "/tmp/pdlc-stage-0l4frqsa/app",
@@ -315,6 +395,7 @@
    },
    "outcome": {
     "stage": "change",
+    "entry": "9550d2098bfb87a4a9a9085fc79eae75a9196e7a",
     "check": {
      "ok": true,
      "finished": true,
@@ -322,7 +403,17 @@
      "subjects": [
       "Plan IN-0001: wordfreq-top"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 1,
+       "files": [
+        "pdlc/changes/CH-0001-wordfreq-top/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-wordfreq-top/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -339,7 +430,16 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 1,
+     "files": [
+      "pdlc/changes/CH-0001-wordfreq-top/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-wordfreq-top/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 45.6,
    "project": "/tmp/pdlc-stage-4l85dzy1/app",
@@ -383,6 +483,7 @@
    },
    "outcome": {
     "stage": "change",
+    "entry": "9550d2098bfb87a4a9a9085fc79eae75a9196e7a",
     "check": {
      "ok": true,
      "finished": true,
@@ -390,7 +491,17 @@
      "subjects": [
       "Plan IN-0001: Top option"
      ],
-     "extra": {}
+     "extra": {
+      "writing": {
+       "count": 1,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+       ]
+      }
+     }
     },
     "merge_check": {
      "stage": [
@@ -407,7 +518,16 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 1,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:16 \u00b7 sentence length \u00b7 27 words, starting \"Given the arguments `--top 2`\" \u00b7 split it: a sentence has 25 words or fewer"
+     ]
+    }
    },
    "wall_s": 39.8,
    "project": "/tmp/pdlc-stage-lcv2a5ug/app",

@@ -81,7 +81,10 @@ Write directly into the spec files. For a new spec, use `pdlc/templates/`.
   set `Intents:` to this intent. Write one or two plain sentences. Then write the
   acceptance checks as "Given …, when …, then …" lines. Mark `(assumed)` on each detail
   that the words of the intent do not give, right where you write the detail. Examples of
-  such details are a message, a limit, an order, and a format.
+  such details are a message, a limit, an order, and a format. Keep each sentence at 25
+  words or fewer, also in an acceptance line. When a case needs more words, end the
+  "then" part with a full stop and add a second short sentence. Give each ID in a sentence
+  a short description, as in `R5 (usage line)`.
 - **The intent's own words bind.** Copy every example that the intent gives (an output, a
   message, or a value) into an acceptance line, exactly. Read the words of the intent
   plainly, for every value. This includes the edge values: zero, empty, and an
@@ -113,6 +116,11 @@ value, or a button). Fix each place in the specs that still shows those words:
   that it means.
 - The notes, the "Known gap" lines, and the "Changes" lists that show the old
   behaviour.
+
+**The summary shows what you add.** For each requirement that you add, write the new
+behaviour into the summary of its spec in one short sentence. The summary is "Who and why"
+in a job, or "What it is for" in a capability. An example is the new option of a command.
+The specification review fails a summary that does not show what the change adds.
 
 Do not edit the README here, because the README is app code. For each README line that
 shows the old behaviour, add a line to the "Notes" of the intent:

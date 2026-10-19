@@ -272,6 +272,21 @@
     "verify_rounds": 1,
     "proposed": true,
     "tip": "pdlc/CH-0001-top-option",
+    "writing": {
+     "count": 5,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:52 \u00b7 ID alone \u00b7 \"R5\" has no name next to it \u00b7 write \"R5 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:52 \u00b7 ID alone \u00b7 \"R6\" has no name next to it \u00b7 write \"R6 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:52 \u00b7 ID alone \u00b7 \"R9\" has no name next to it \u00b7 write \"R9 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:93 \u00b7 ID alone \u00b7 \"R9\" has no name next to it \u00b7 write \"R9 (<short name>)\"",
+      "pdlc/changes/CH-0001-top-option/change.md:101 \u00b7 ID alone \u00b7 \"IN-0001\" has no name next to it \u00b7 write \"IN-0001 (<short name>)\""
+     ]
+    },
     "unit": {
      "ok": true,
      "ran": 33

@@ -55,6 +55,7 @@
    },
    "outcome": {
     "stage": "show",
+    "entry": "97efb59e02774219ab9dac72db5b073339d88bb9",
     "check": {
      "ok": true,
      "finished": true,
@@ -63,6 +64,11 @@
       "Visual review CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [],
+       "findings": []
+      },
       "gif": true,
       "frames": 23
      }
@@ -82,7 +88,12 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [],
+     "findings": []
+    }
    },
    "wall_s": 62.1,
    "project": "/tmp/pdlc-stage-dpe6h772/app",
@@ -138,6 +149,7 @@
    },
    "outcome": {
     "stage": "show",
+    "entry": "97efb59e02774219ab9dac72db5b073339d88bb9",
     "check": {
      "ok": true,
      "finished": true,
@@ -146,6 +158,11 @@
       "Visual review CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [],
+       "findings": []
+      },
       "gif": true,
       "frames": 23
      }
@@ -165,7 +182,12 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [],
+     "findings": []
+    }
    },
    "wall_s": 52.3,
    "project": "/tmp/pdlc-stage-q7fmapvh/app",
@@ -221,6 +243,7 @@
    },
    "outcome": {
     "stage": "show",
+    "entry": "97efb59e02774219ab9dac72db5b073339d88bb9",
     "check": {
      "ok": true,
      "finished": true,
@@ -229,6 +252,11 @@
       "Visual review CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [],
+       "findings": []
+      },
       "gif": true,
       "frames": 23
      }
@@ -248,7 +276,12 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [],
+     "findings": []
+    }
    },
    "wall_s": 68.6,
    "project": "/tmp/pdlc-stage-4_j2oeby/app",
@@ -304,6 +337,7 @@
    },
    "outcome": {
     "stage": "show",
+    "entry": "97efb59e02774219ab9dac72db5b073339d88bb9",
     "check": {
      "ok": true,
      "finished": true,
@@ -312,6 +346,11 @@
       "Visual review CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [],
+       "findings": []
+      },
       "gif": true,
       "frames": 23
      }
@@ -331,7 +370,12 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [],
+     "findings": []
+    }
    },
    "wall_s": 57.4,
    "project": "/tmp/pdlc-stage-38kx9byf/app",
@@ -387,6 +431,7 @@
    },
    "outcome": {
     "stage": "show",
+    "entry": "97efb59e02774219ab9dac72db5b073339d88bb9",
     "check": {
      "ok": true,
      "finished": true,
@@ -395,6 +440,11 @@
       "Visual review CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [],
+       "findings": []
+      },
       "gif": true,
       "frames": 23
      }
@@ -414,7 +464,12 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [],
+     "findings": []
+    }
    },
    "wall_s": 49.8,
    "project": "/tmp/pdlc-stage-ux80gtgs/app",
@@ -470,6 +525,7 @@
    },
    "outcome": {
     "stage": "show",
+    "entry": "97efb59e02774219ab9dac72db5b073339d88bb9",
     "check": {
      "ok": true,
      "finished": true,
@@ -478,6 +534,11 @@
       "Visual review CH-0001"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [],
+       "findings": []
+      },
       "gif": true,
       "frames": 24
      }
@@ -497,7 +558,12 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [],
+     "findings": []
+    }
    },
    "wall_s": 57.3,
    "project": "/tmp/pdlc-stage-1a27vzo2/app",

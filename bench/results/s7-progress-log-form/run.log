@@ -1,0 +1,13 @@
+run 1: $0.36, 115.8s, ok True
+run 2: $0.38, 105.7s, ok True
+run 3: $0.35, 92.8s, ok True
+run 4: $0.35, 93.1s, ok True
+run 5: $0.36, 93.5s, ok True
+run 6: $0.34, 84.4s, ok False
+run 7: $0.36, 105.7s, ok True
+run 8: $0.35, 95.5s, ok False
+run 9: $0.37, 106.0s, ok True
+run 10: $0.34, 100.9s, ok True
+run 11: $0.34, 97.4s, ok True
+run 12: $0.36, 102.1s, ok True
+wrote /home/user/pskills/bench/results/s7-progress-log-form/result.json with 12 runs

@@ -1,0 +1,36 @@
+{
+ "id": "s7-progress-log-form",
+ "hypothesis": "When the skills that write a progress log line give its form at the point of use (a description next to each ID, sentences of 25 words or fewer), the line passes the writing check, so the specification reviewer fails fewer rounds.",
+ "lever": "fewer failed review rounds (the rule at the source, as the round 6 handoff edit did)",
+ "edits": [
+  {
+   "file": "skills/init/references/templates/change.md",
+   "find": "Add the newest entry last. Record decisions, not only actions.\n",
+   "replace": "Add the newest entry last. Record decisions, not only actions. Write one line for each\nentry: the stage, then what happened and why. Give each requirement a short description\nnext to its ID, as in `R5 (usage line)`. Keep each sentence at 25 words or fewer.\n"
+  },
+  {
+   "file": "skills/tests/SKILL.md",
+   "find": "  a corrected check can pass. A pass is correct here. Record each result in the progress\n  log.\n",
+   "replace": "  a corrected check can pass. A pass is correct here. Record each result in the progress\n  log.\n\nWrite each progress log line as the change template says: the stage, then what happened\nand why. Give each requirement a short description next to its ID, as in\n`R5 (usage line): 3 checks pass, the behaviour exists`. Keep each sentence at 25 words or\nfewer.\n"
+  },
+  {
+   "file": "skills/build/SKILL.md",
+   "find": "2. Tick the steps of the change, and add a line to the progress log of the change. In the\n",
+   "replace": "2. Tick the steps of the change. Add a line to the progress log: what you built, and the\n   result of the checks. Give each requirement a short description next to its ID, as in\n   `R5 (usage line)`. Keep each sentence at 25 words or fewer. In the\n"
+  },
+  {
+   "file": "skills/verify/SKILL.md",
+   "find": "- Add the ID of the new intent to the progress log of the change, for the proposal.\n",
+   "replace": "- Add the ID of the new intent to the progress log of the change, for the proposal. Write\n  the name of the intent next to its ID, as in `IN-0002 (size limit)`.\n"
+  },
+  {
+   "file": "skills/verify/SKILL.md",
+   "find": "3. Add a line to the progress log.\n",
+   "replace": "3. Add a line to the progress log: the round, each remit that failed, and the stage that\n   fixes each problem. Give each requirement a short description next to its ID. Keep\n   each sentence at 25 words or fewer.\n"
+  }
+ ],
+ "runs": 12,
+ "stage": "tests",
+ "seeds": false,
+ "target": "writing"
+}

@@ -6,6 +6,8 @@ Commands:
   run_bench.py e2e --label L     run the scripted intent through /pdlc:ship, one run
   run_bench.py gate BASELINE CANDIDATE
                                  compare two result files and print the verdict
+                                 With `--target writing`, the gate judges the writing findings
+                                 that a run leaves in its specs, change spec and README.
 
 A run uses `claude -p` with the plugin folder given by --plugin, in a throwaway copy of
 bench/fixture-app. Nothing in the copy comes back into the repository.
@@ -458,6 +460,36 @@ def run_unit_checks(project):
     return {"ok": proc.returncode == 0, "ran": int(ran.group(1)) if ran else 0}
 
 
+# The text whose writing the specification packet checks: the README and other docs outside
+# pdlc/, the specs, and the change spec. A finding elsewhere costs no review round.
+PACKET_TEXT = re.compile(r"^(?:pdlc/specs/.*\.md|pdlc/changes/[^/]+/change\.md|(?!pdlc/).*\.md)$")
+
+
+def writing_findings(project, since):
+    """The writing-check findings in the packet text that the commits after `since` wrote.
+
+    Returns {"count", "files", "findings"}. It runs the project's own pdlc/bin/check_writing.py
+    with --since, so the rules are the ones that the reviewers see. The project must be checked
+    out at the tip that holds the text. When the script is missing or fails, "count" is None and
+    "error" says why.
+    """
+    project = Path(project)
+    changed = git(project, "diff", "--name-only", since + "...HEAD").stdout.split()
+    files = [f for f in changed if PACKET_TEXT.match(f) and (project / f).is_file()]
+    if not files:
+        return {"count": 0, "files": [], "findings": []}
+    script = project / "pdlc" / "bin" / "check_writing.py"
+    if not script.is_file():
+        return {"count": None, "files": files, "findings": [], "error": "no pdlc/bin/check_writing.py"}
+    try:
+        done = subprocess.run([sys.executable, str(script), "--since", since, *files], cwd=project,
+                              capture_output=True, text=True, timeout=120)
+    except (OSError, subprocess.SubprocessError) as error:
+        return {"count": None, "files": files, "findings": [], "error": repr(error)}
+    findings = [line for line in done.stdout.splitlines() if " · " in line]
+    return {"count": len(findings), "files": files, "findings": findings}
+
+
 def inspect_project(project):
     """Read what a ship run left in the project. Check each change branch as the merge would."""
     project = Path(project)
@@ -483,6 +515,8 @@ def inspect_project(project):
     tip = max((b for b in branches if b != "main"), key=lambda b: git(project, "log", "-1", "--format=%ct", b).stdout.strip() or "0", default="main")
     git(project, "checkout", "-q", tip)
     out["tip"] = tip
+    root = git(project, "rev-list", "--max-parents=0", "HEAD").stdout.split()[0]
+    out["writing"] = writing_findings(project, root)
     out["unit"] = run_unit_checks(project)
     out["probes"] = run_probes(project)
     git(project, "checkout", "-q", "main")
@@ -543,6 +577,7 @@ def check_stage(project, stage, entry):
     stopped = any(s.startswith("Stop ") for s in subjects)
     extra = {}
     git(project, "checkout", "-q", tip_branch(project))
+    extra["writing"] = writing_findings(project, entry)
     changes = project / "pdlc" / "changes"
     if stage == "tests":
         extra["locked"] = any(line.startswith("Tests-Locked:")
@@ -575,6 +610,19 @@ def check_stage(project, stage, entry):
             "subjects": subjects, "extra": extra}
 
 
+def stage_outcome(stage, check, entry):
+    """The outcome of one stage replay, in the shape that summarise and gate read."""
+    return {
+        "stage": stage, "entry": entry, "check": check,
+        "merge_check": {"stage": ["ok   " + stage] if check["ok"] else ["FAIL " + stage]},
+        "probes": check["extra"]["probes"] if stage == "build" else {"passed": len(PROBES), "total": len(PROBES), "failed": []},
+        "unit": check["extra"]["unit"] if stage == "build" else {"ok": True, "ran": 0},
+        "verify_rounds": None,
+        "stops": [s for s in check["subjects"] if s.startswith("Stop ")],
+        "writing": check["extra"]["writing"],
+    }
+
+
 def command_stage(args):
     """Replay one stage from the snapshot, once for each run, and write the results."""
     plugin = Path(args.plugin).resolve()
@@ -590,15 +638,7 @@ def command_stage(args):
                                            timeout=args.timeout, budget_usd=args.budget)
             analysis = analyse(events)
             check = check_stage(project, args.stage, entry)
-            analysis["outcome"] = {
-                "stage": args.stage,
-                "check": check,
-                "merge_check": {"stage": ["ok   " + args.stage] if check["ok"] else ["FAIL " + args.stage]},
-                "probes": check["extra"]["probes"] if args.stage == "build" else {"passed": len(PROBES), "total": len(PROBES), "failed": []},
-                "unit": check["extra"]["unit"] if args.stage == "build" else {"ok": True, "ran": 0},
-                "verify_rounds": None,
-                "stops": [s for s in check["subjects"] if s.startswith("Stop ")],
-            }
+            analysis["outcome"] = stage_outcome(args.stage, check, entry)
             analysis.update({"wall_s": wall, "project": str(project), "stderr": err[-500:]})
             (out_dir / ("run%d.json" % number)).write_text(json.dumps(analysis, indent=1))
             return analysis
@@ -716,6 +756,7 @@ def summarise(result):
         "false_fails": result.get("seeds", {}).get("false_fails"),
         "waiting": [r.get("waiting", {}).get("cost_usd", 0.0) for r in runs],
         "waiting_turns": [r.get("waiting", {}).get("messages", 0) for r in runs],
+        "writing": [(r["outcome"].get("writing") or {}).get("count") for r in runs],
     }
 
 
@@ -798,6 +839,29 @@ def gate(baseline, candidate, min_gain=0.05, speed_limit=1.5, target=None, alpha
             share * 100, chance * 100)
         none_text = "waiting turns cost $%.2f -> $%.2f a run, %.0f%% of a run less, and the chance that this is luck is %.0f%% (it must be %.0f%% or less)" % (
             statistics.mean(before), statistics.mean(after), share * 100, chance * 100, alpha * 100)
+    elif target == "writing":
+        before, after = base["writing"], cand["writing"]
+        if not before or not after or None in before or None in after:
+            missing = "baseline" if (not before or None in before) else "candidate"
+            change, needed, few, p_value, detail = 0.0, min_gain, False, None, {}
+            gain_text = none_text = ("the %s has no writing count, so the findings cannot be judged "
+                                     "(run `recheck` on its folder)" % missing)
+        else:
+            chance = permutation_p(before, after)
+            p_value = chance
+            needed = min_gain
+            few = min(len(before), len(after)) < min_runs
+            mean_before, mean_after = statistics.mean(before), statistics.mean(after)
+            change = (mean_after - mean_before) / mean_before if mean_before else 0.0
+            detail = {"target": "writing", "findings_before": mean_before, "findings_after": mean_after}
+            if run_change > max(base["noise"], 0.25) or (run_change > 0.10 and permutation_p(cand["costs"], base["costs"]) <= alpha):
+                worse.append("a run costs %.0f%% more, and that is not luck" % (run_change * 100))
+            if chance > alpha:
+                change = 0.0
+            gain_text = "writing findings fell from %.1f to %.1f a run (%.0f%% fewer), and the chance that this is luck is %.0f%%" % (
+                mean_before, mean_after, -change * 100, chance * 100)
+            none_text = "writing findings changed from %.1f to %.1f a run (%+.0f%%), and the chance that this is luck is %.0f%% (it must be %.0f%% or less)" % (
+                mean_before, mean_after, change * 100, chance * 100, alpha * 100)
     elif target and target.startswith("calls:"):
         name = target[len("calls:"):]
         before, after = agent_stats(baseline, name), agent_stats(candidate, name)
@@ -888,6 +952,9 @@ def command_gate(args):
         print("waiting    $%.2f -> $%.2f a run, %.1f -> %.1f turns, so about $%.2f (%.0f%%) less in a run" % (
             detail["per_run_before"], detail["per_run_after"], detail["turns_before"], detail["turns_after"],
             detail["expected_run_saving"], detail["expected_run_saving_share"] * 100))
+    elif detail and detail["target"] == "writing":
+        print("writing    %.1f -> %.1f findings a run, and a run costs %+.0f%%" % (
+            detail["findings_before"], detail["findings_after"], result["cost_change"] * 100))
     elif detail and detail["target"].startswith("calls:"):
         print("%s  %.2f -> %.2f calls a run at $%.3f each, so about $%.2f (%.0f%%) less in a run" % (
             detail["target"], detail["calls_before"], detail["calls_after"],
@@ -911,12 +978,17 @@ def command_recheck(args):
     """Read the outcome of each run again from its project folder, with the current checks."""
     folder = Path(args.folder)
     summary = json.loads((folder / "e2e.json").read_text())
+    stage = summary.get("stage")
     for number, run in enumerate(summary["runs"], 1):
         project = Path(run["project"])
         if not project.exists():
             print("run %d: the project folder is gone, so the outcome stays as it was" % number)
             continue
-        run["outcome"] = inspect_project(project)
+        if stage:
+            entry = run["outcome"].get("entry") or entry_commit(project, STAGE_REPLAY[stage][0])
+            run["outcome"] = stage_outcome(stage, check_stage(project, stage, entry), entry)
+        else:
+            run["outcome"] = inspect_project(project)
         (folder / ("run%d.json" % number)).write_text(json.dumps(run, indent=1))
     (folder / "e2e.json").write_text(json.dumps(summary, indent=1))
     print("checked %d runs again" % len(summary["runs"]))
@@ -1168,7 +1240,7 @@ def main(argv=None):
     g.add_argument("--min-gain", type=float, default=0.05)
     g.add_argument("--speed-limit", type=float, default=1.5)
     g.add_argument("--min-runs", type=int, default=5, help="runs needed on each side to keep an edit by whole-run cost")
-    g.add_argument("--target", help="an agent that the edit aims at, for example pdlc:reviewer")
+    g.add_argument("--target", help="an agent that the edit aims at, for example pdlc:reviewer; or waiting; or writing (the writing findings that a run leaves)")
     st = sub.add_parser("stage")
     st.add_argument("--stage", required=True, choices=sorted(STAGE_REPLAY))
     st.add_argument("--label", required=True)

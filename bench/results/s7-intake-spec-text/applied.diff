@@ -1,0 +1,53 @@
+diff -ru -x __pycache__ a/skills/init/references/templates/capability.md b/skills/init/references/templates/capability.md
+--- a/skills/init/references/templates/capability.md	2026-10-17 08:26:05.388694656 +0000
++++ b/skills/init/references/templates/capability.md	2026-10-18 10:07:22.960744429 +0000
+@@ -28,6 +28,8 @@
+ 
+ Status: proposed · Intents: IN-0000
+ 
+-Write one or two sentences that say what must be true.
++Write one or two sentences that say what must be true. Keep each sentence at 25 words or
++fewer, also in each acceptance line below. Give each ID a short description, as in
++`R5 (usage line)`.
+ 
+ - Given ..., when ..., then ...
+diff -ru -x __pycache__ a/skills/init/references/templates/job.md b/skills/init/references/templates/job.md
+--- a/skills/init/references/templates/job.md	2026-10-17 08:26:05.388694656 +0000
++++ b/skills/init/references/templates/job.md	2026-10-18 10:07:22.960658041 +0000
+@@ -32,6 +32,8 @@
+ 
+ Status: proposed · Intents: IN-0000
+ 
+-Write one or two sentences that say what must be true.
++Write one or two sentences that say what must be true. Keep each sentence at 25 words or
++fewer, also in each acceptance line below. Give each ID a short description, as in
++`R5 (usage line)`.
+ 
+ - Given ..., when ..., then ...
+diff -ru -x __pycache__ a/skills/intake/SKILL.md b/skills/intake/SKILL.md
+--- a/skills/intake/SKILL.md	2026-10-18 07:59:38.593731755 +0000
++++ b/skills/intake/SKILL.md	2026-10-18 10:07:22.960404963 +0000
+@@ -81,7 +81,10 @@
+   set `Intents:` to this intent. Write one or two plain sentences. Then write the
+   acceptance checks as "Given …, when …, then …" lines. Mark `(assumed)` on each detail
+   that the words of the intent do not give, right where you write the detail. Examples of
+-  such details are a message, a limit, an order, and a format.
++  such details are a message, a limit, an order, and a format. Keep each sentence at 25
++  words or fewer, also in an acceptance line. When a case needs more words, end the
++  "then" part with a full stop and add a second short sentence. Give each ID in a sentence
++  a short description, as in `R5 (usage line)`.
+ - **The intent's own words bind.** Copy every example that the intent gives (an output, a
+   message, or a value) into an acceptance line, exactly. Read the words of the intent
+   plainly, for every value. This includes the edge values: zero, empty, and an
+@@ -114,6 +117,11 @@
+ - The notes, the "Known gap" lines, and the "Changes" lists that show the old
+   behaviour.
+ 
++**The summary shows what you add.** For each requirement that you add, write the new
++behaviour into the summary of its spec in one short sentence. The summary is "Who and why"
++in a job, or "What it is for" in a capability. An example is the new option of a command.
++The specification review fails a summary that does not show what the change adds.
++
+ Do not edit the README here, because the README is app code. For each README line that
+ shows the old behaviour, add a line to the "Notes" of the intent:
+ `README: "<old line>" → <requirement>`. The change for that requirement fixes the README

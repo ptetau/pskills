@@ -1,0 +1,7 @@
+run 1: $0.30, 74.7s, ok True
+run 2: $0.31, 85.7s, ok True
+run 3: $0.24, 66.2s, ok True
+run 4: $0.26, 77.0s, ok True
+run 5: $0.26, 71.2s, ok True
+run 6: $0.26, 73.0s, ok True
+wrote /home/user/pskills/bench/results/s7-intake-spec-text/result.json with 6 runs

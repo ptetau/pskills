@@ -1,0 +1,34 @@
+{
+ "id": "s7-intake-spec-text",
+ "hypothesis": "When intake and the spec templates ask for acceptance lines of 25 words or fewer, a description next to each ID, and a summary that shows the new behaviour, the specs pass the specification review in one round more often.",
+ "lever": "fewer failed review rounds (the rule at the source)",
+ "edits": [
+  {
+   "file": "skills/intake/SKILL.md",
+   "find": "  that the words of the intent do not give, right where you write the detail. Examples of\n  such details are a message, a limit, an order, and a format.\n",
+   "replace": "  that the words of the intent do not give, right where you write the detail. Examples of\n  such details are a message, a limit, an order, and a format. Keep each sentence at 25\n  words or fewer, also in an acceptance line. When a case needs more words, end the\n  \"then\" part with a full stop and add a second short sentence. Give each ID in a sentence\n  a short description, as in `R5 (usage line)`.\n"
+  },
+  {
+   "file": "skills/intake/SKILL.md",
+   "find": "Do not edit the README here, because the README is app code.",
+   "replace": "**The summary shows what you add.** For each requirement that you add, write the new\nbehaviour into the summary of its spec in one short sentence. The summary is \"Who and why\"\nin a job, or \"What it is for\" in a capability. An example is the new option of a command.\nThe specification review fails a summary that does not show what the change adds.\n\nDo not edit the README here, because the README is app code."
+  },
+  {
+   "file": "skills/init/references/templates/job.md",
+   "find": "Write one or two sentences that say what must be true.\n",
+   "replace": "Write one or two sentences that say what must be true. Keep each sentence at 25 words or\nfewer, also in each acceptance line below. Give each ID a short description, as in\n`R5 (usage line)`.\n"
+  },
+  {
+   "file": "skills/init/references/templates/capability.md",
+   "find": "Write one or two sentences that say what must be true.\n",
+   "replace": "Write one or two sentences that say what must be true. Keep each sentence at 25 words or\nfewer, also in each acceptance line below. Give each ID a short description, as in\n`R5 (usage line)`.\n"
+  }
+ ],
+ "runs": 6,
+ "stage": "intake",
+ "seeds": false,
+ "target": "writing",
+ "baseline": "bench/sections/intake.json",
+ "gate": {},
+ "budget_usd_per_run": 8
+}

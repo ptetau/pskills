@@ -1,0 +1,7 @@
+baseline   cost $0.40  time  111s  runs 12  noise 43%
+candidate  cost $0.35  time   99s  runs 12  noise 12%
+finished   12 of 12 vs 10 of 12 runs   verify rounds [None, None, None, None, None, None, None, None, None, None, None, None] vs [None, None, None, None, None, None, None, None, None, None, None, None]
+probes     True vs True
+writing    2.2 -> 0.3 findings a run, and a run costs -13%
+verdict    REGRESSION -> revert
+           pdlc did not finish in 2 of 12 runs, and it finished in every baseline run

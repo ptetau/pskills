@@ -38,7 +38,11 @@ state. Examine each item in this list. Skip each item that does not apply:
 - Business rules that the words leave open: who is permitted to do what, what happens
   twice, and what happens when something is missing.
 
-Settle each item as a requirement with acceptance lines. Do one of these:
+Settle each item as a requirement with acceptance lines. Keep each sentence at 25 words or
+fewer, also in an acceptance line. A line that lists many values is often too long. Write
+two lines instead, or end the "then" part with a full stop and add a second short
+sentence. Give each ID in a sentence a short description, as in `R5 (usage line)`. Do one
+of these:
 
 - Add lines to the requirement that the item belongs to.
 - Write a new `proposed` requirement in the right spec. List the new requirement as added

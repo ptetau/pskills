@@ -1,0 +1,115 @@
+{
+ "verdict": "SAME OR BETTER -> keep",
+ "reasons": [
+  "writing findings fell from 1.7 to 0.0 a run (100% fewer), and the chance that this is luck is 9%"
+ ],
+ "baseline": {
+  "runs": 6,
+  "cost_usd": 0.2757,
+  "duration_s": 80.26666666666667,
+  "noise": 0.22306855277475515,
+  "costs": [
+   0.2778,
+   0.243,
+   0.2841,
+   0.3045,
+   0.2891,
+   0.2557
+  ],
+  "completed": 6,
+  "rounds": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "probes_all": true,
+  "units_ok": true,
+  "seeds_caught": null,
+  "false_fails": null,
+  "waiting": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "waiting_turns": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "writing": [
+   0,
+   5,
+   0,
+   1,
+   0,
+   4
+  ]
+ },
+ "candidate": {
+  "runs": 6,
+  "cost_usd": 0.27171666666666666,
+  "duration_s": 74.63333333333334,
+  "noise": 0.26719008771391756,
+  "costs": [
+   0.3,
+   0.3102,
+   0.2376,
+   0.2558,
+   0.2645,
+   0.2622
+  ],
+  "completed": 6,
+  "rounds": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "probes_all": true,
+  "units_ok": true,
+  "seeds_caught": null,
+  "false_fails": null,
+  "waiting": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "waiting_turns": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "writing": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "cost_change": -0.014448071575383891,
+ "target": {
+  "target": "writing",
+  "findings_before": 1.6666666666666667,
+  "findings_after": 0
+ },
+ "p": 0.09090909090909091
+}

@@ -1,0 +1,8 @@
+baseline   cost $1.32  time  332s  runs 6  noise 26%
+candidate  cost $1.48  time  338s  runs 6  noise 56%
+finished   6 of 6 vs 6 of 6 runs   verify rounds [2, 2, 1, 1, 1, 1] vs [1, 2, 1, 2, 1, 1]
+probes     True vs True
+calls:pdlc:reviewer/specification  1.50 -> 1.33 calls a run at $0.091 each, so about $0.02 (1%) less in a run
+defects    5 vs 5 caught
+verdict    NO GAIN -> revert
+           pdlc:reviewer/specification calls changed from 1.50 to 1.33 a run (-11%), and the chance that this is luck is 50% (it must be 10% or less)

@@ -116,6 +116,7 @@
    },
    "outcome": {
     "stage": "verify",
+    "entry": "662b4c7aecdcc24a767ca715eb779d003019d0cc",
     "check": {
      "ok": true,
      "finished": true,
@@ -126,6 +127,14 @@
       "Verify CH-0001: round 1"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "merge": "ok   CH-0001"
      }
     },
@@ -144,7 +153,15 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 91.4,
    "project": "/tmp/pdlc-stage-916t13wn/app",
@@ -261,6 +278,7 @@
    },
    "outcome": {
     "stage": "verify",
+    "entry": "662b4c7aecdcc24a767ca715eb779d003019d0cc",
     "check": {
      "ok": true,
      "finished": true,
@@ -272,6 +290,14 @@
       "Verify CH-0001: round 1"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "merge": "ok   CH-0001"
      }
     },
@@ -290,7 +316,15 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 88.2,
    "project": "/tmp/pdlc-stage-0xsouz46/app",
@@ -407,6 +441,7 @@
    },
    "outcome": {
     "stage": "verify",
+    "entry": "662b4c7aecdcc24a767ca715eb779d003019d0cc",
     "check": {
      "ok": true,
      "finished": true,
@@ -417,6 +452,14 @@
       "Verify CH-0001: round 1"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "merge": "ok   CH-0001"
      }
     },
@@ -435,7 +478,15 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 77.0,
    "project": "/tmp/pdlc-stage-zz5q5ys7/app",
@@ -552,6 +603,7 @@
    },
    "outcome": {
     "stage": "verify",
+    "entry": "662b4c7aecdcc24a767ca715eb779d003019d0cc",
     "check": {
      "ok": true,
      "finished": true,
@@ -562,6 +614,14 @@
       "Verify CH-0001: round 1"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "merge": "ok   CH-0001"
      }
     },
@@ -580,7 +640,15 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 82.1,
    "project": "/tmp/pdlc-stage-g94d468u/app",
@@ -697,6 +765,7 @@
    },
    "outcome": {
     "stage": "verify",
+    "entry": "662b4c7aecdcc24a767ca715eb779d003019d0cc",
     "check": {
      "ok": true,
      "finished": true,
@@ -707,6 +776,16 @@
       "Verify CH-0001: round 1"
      ],
      "extra": {
+      "writing": {
+       "count": 1,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": [
+        "pdlc/changes/CH-0001-top-option/change.md:108 \u00b7 ID alone \u00b7 \"IN-0002\" has no name next to it \u00b7 write \"IN-0002 (<short name>)\""
+       ]
+      },
       "merge": "ok   CH-0001"
      }
     },
@@ -725,7 +804,17 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 1,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": [
+      "pdlc/changes/CH-0001-top-option/change.md:108 \u00b7 ID alone \u00b7 \"IN-0002\" has no name next to it \u00b7 write \"IN-0002 (<short name>)\""
+     ]
+    }
    },
    "wall_s": 86.9,
    "project": "/tmp/pdlc-stage-cztsyirs/app",
@@ -842,6 +931,7 @@
    },
    "outcome": {
     "stage": "verify",
+    "entry": "662b4c7aecdcc24a767ca715eb779d003019d0cc",
     "check": {
      "ok": true,
      "finished": true,
@@ -853,6 +943,14 @@
       "Verify CH-0001: round 1"
      ],
      "extra": {
+      "writing": {
+       "count": 0,
+       "files": [
+        "pdlc/changes/CH-0001-top-option/change.md",
+        "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+       ],
+       "findings": []
+      },
       "merge": "ok   CH-0001"
      }
     },
@@ -871,7 +969,15 @@
      "ran": 0
     },
     "verify_rounds": null,
-    "stops": []
+    "stops": [],
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    }
    },
    "wall_s": 72.8,
    "project": "/tmp/pdlc-stage-tabxuk4k/app",
