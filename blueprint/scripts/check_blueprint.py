@@ -80,7 +80,7 @@ SECTIONS = [
     (5, r"module|interface|signature"),
     (6, r"verification|test|bdd|gherkin"),
 ]
-TYPED_LANGS = {"ts", "typescript", "go", "golang", "rust", "rs"}
+TYPED_LANGS = {"ts", "typescript", "go", "golang", "rust", "rs", "fsharp", "fs"}
 CODE = r"[A-Z][A-Z0-9]+(?:_[A-Z0-9]+)+"
 ERROR_CODE = re.compile(r"`(%s)`" % CODE)
 BARE_CODE = re.compile(r"\b(%s)\b" % CODE)
@@ -92,6 +92,8 @@ MONEY_AS_NUMBER = re.compile(
 STATE_TYPE = re.compile(r"\b(?:type|enum)\s+(\w*(?:Status|State))\b")
 COMPONENT = re.compile(r"\b([A-Z][A-Za-z0-9]*(?:Manager|Engine|Access))\b")
 DESIGN_CALL = re.compile(r"\b([A-Z][A-Za-z0-9]*(?:Manager|Engine|Access))\.([A-Z][A-Za-z0-9]*)\b")
+BRICK_CALL = re.compile(r"`([A-Z][A-Za-z0-9]*(?:Manager|Engine|Access))\.([A-Z][A-Za-z0-9]*)`\s*"
+                        r"\((?:Input|Transform|Transport|Store|State machine)\b")
 NOT_COMPONENTS = {"ResourceAccess"}
 DB_ASSERTION = re.compile(r"\b(database|db|sql|rows?|columns?)\b", re.I)
 STEP = re.compile(r"^\s*(Given|When|Then|And|But|\*)\b", re.M)
@@ -159,6 +161,8 @@ def methods_of(body):
     names = set()
     for _, block in code_blocks(body, TYPED_LANGS):
         names.update(re.findall(r"^\s*(?:func\s+(?:\([^)]*\)\s*)?)?(?:async\s+)?([a-zA-Z_]\w*)\s*\(", block, re.M))
+        # F#: a signature is "let name (args) : type", so the name follows "let" (and "rec", "private")
+        names.update(re.findall(r"^\s*let\s+(?:rec\s+|private\s+|inline\s+)*([a-zA-Z_]\w*)\b", block, re.M))
     return names - {"if", "for", "while", "switch", "return", "function"}
 
 
@@ -181,19 +185,25 @@ def design_components(design_text):
     walls = next((body for title, body in sections.values() if re.search(r"wall", title, re.I)), design_text)
     comps = {}
     lines = strip_code(walls).split("\n")
-    type_col = None
+    type_col, name_col = None, 0
     for i, line in enumerate(lines):
         if not line.lstrip().startswith("|"):
-            type_col = None
+            type_col, name_col = None, 0
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if i + 1 < len(lines) and re.match(r"^\s*\|[-| :]+\|\s*$", lines[i + 1]):
-            type_col = next((k for k, c in enumerate(cells) if c.lower() == "type"), None)
+            type_col = next((k for k, c in enumerate(cells) if c.lower() in ("type", "layer")), None)
+            # the name is in a "Component" column when there is one, else in the first column
+            name_col = next((k for k, c in enumerate(cells) if c.lower() in ("component", "name")), 0)
             continue
-        if type_col is not None and type_col < len(cells) and cells[0] and not set(cells[0]) <= set("-: "):
+        if type_col is not None and type_col < len(cells) and name_col < len(cells) and cells[name_col] \
+                and not set(cells[name_col]) <= set("-: "):
             kind = re.sub(r"[^a-z]", "", cells[type_col].lower())
             if kind in COMPONENT_TYPES:
-                comps[cells[0].strip("`").strip()] = kind
+                # a Utility row can list several names: `Logging`, `Alerting`, `Clock`
+                names = re.findall(r"`([A-Z][A-Za-z0-9]*)`", cells[name_col]) or [cells[name_col].strip("`").strip()]
+                for name in names:
+                    comps[name] = kind
     if comps:
         return comps
     # no typed table: a layer listing ("Clients  A  B") plus suffixed names in the walls text
@@ -368,6 +378,9 @@ def check_design(design_text, s5, components, s3_code="", s4=""):
         errors.append("--design: `%s` is in section 5 but not in the design (a blueprint never adds components)" % h)
     bodies = {c.split("\n", 1)[0].strip().strip("`"): c for c in components}
     verbs = {(c, v) for c, v in DESIGN_CALL.findall(design_text) if c in comps}
+    # `Component.Name` followed by a brick kind names a brick, not a verb: `LeaseAccess.Lease` (Store)
+    brick_calls = {(c, v) for c, v in BRICK_CALL.findall(design_text) if c in comps}
+    verbs -= brick_calls
     bricks = set()
     lines = strip_code(design_text).split("\n")
     api_col = brick_col = None
@@ -377,7 +390,7 @@ def check_design(design_text, s5, components, s3_code="", s4=""):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if i + 1 < len(lines) and re.match(r"^\s*\|[-| :]+\|\s*$", lines[i + 1]):
-            api_col = next((k for k, c in enumerate(cells) if re.match(r"api\b", c, re.I)), None)
+            api_col = next((k for k, c in enumerate(cells) if re.match(r"(api|verbs?)\b", c, re.I)), None)
             brick_col = next((k for k, c in enumerate(cells) if re.match(r"bricks?\b", c, re.I)), None)
             continue
         name = cells[0].strip("`").strip() if cells else ""
@@ -390,15 +403,18 @@ def check_design(design_text, s5, components, s3_code="", s4=""):
                         into.add((name, v))
     dsections, _ = split_sections(design_text)
     brick_section = next((b for t, b in dsections.values() if re.search(r"brick", t, re.I)), "")
-    for block in re.split(r"^(?=###\s)", brick_section, flags=re.M):
+    # a component's bricks sit under "### Name" or under a bold line such as "**`Name`** (contract: …)"
+    for block in re.split(r"^(?=###\s|\*\*`[A-Z])", brick_section, flags=re.M):
         head = block.split("\n", 1)[0]
-        name = head[4:].strip().strip("`") if head.startswith("### ") else ""
+        m = re.match(r"^(?:###\s+`?([A-Z][A-Za-z0-9]*)`?|\*\*`([A-Z][A-Za-z0-9]*)`\*\*)", head)
+        name = (m.group(1) or m.group(2)) if m else ""
         if name in comps:
             for line in strip_code(block).split("\n"):
                 cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.lstrip().startswith("|") else []
                 if cells and not set(cells[0]) <= set("-: "):
                     for b in re.findall(r"`([A-Z][A-Za-z0-9]*)", cells[0]):
                         bricks.add((name, b))
+    verbs -= bricks     # `RecordsAccess.QueryBuilder` in a feature-assembly table names a brick, not a verb
     for comp, brick in sorted(bricks):
         body = bodies.get(comp)
         if body is None:
