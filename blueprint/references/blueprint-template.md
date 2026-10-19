@@ -5,7 +5,7 @@
 ## 1. Header & Boundary Box: what gets built, and what does not
 
 **System:** {one line: what it does, for whom}
-**Target mode:** {modular monolith | event-driven services | …} in {language}, {runtime}, {storage} *(assumed, if the design did not say)*
+**Target mode:** {modular monolith | event-driven services | …} in {language}, {runtime}, {storage} (assumed). Delete the mark when the design gave the choice.
 
 A C4 container diagram: what runs, and the components that each container holds (see
 `c4.md`). If there is a single container, write "Everything runs in one container: {name}"
@@ -100,15 +100,20 @@ export type Result<T> = { ok: true; value: T } | { ok: false; error: ErrorCode; 
 ### Error catalog
 
 Give one row for each code in `ErrorCode`. The fault column says who must fix the error.
-The fault is the caller's (a 4xx status) when the caller sent something that the method
-cannot accept. The fault is ours (a 5xx status) when our code broke its own promise. Over
-HTTP, errors use RFC 9457 problem details (`application/problem+json`), with the code in a
-`code` field.
+Write one of three words, as `DES-errors` of pdlc does:
+
+- `caller`: the caller sent something that the method cannot accept (a 4xx status).
+- `system`: our code broke its own promise (a 5xx status).
+- `outside service`: a vendor or another outside system failed or refused.
+
+Over HTTP, errors use RFC 9457 problem details (`application/problem+json`), with the code
+in a `code` field.
 
 | Code | Meaning | Fault | HTTP | Retry helps? |
 |------|---------|-------|------|--------------|
 | `{ERROR_A}` | {what went wrong} | caller | {409} | no |
-| `{ERROR_B}` | {what went wrong} | supplier | {503} | yes, with backoff |
+| `{ERROR_B}` | {what went wrong} | system | {500} | no |
+| `{ERROR_C}` | {what went wrong} | outside service | {502} | yes, with backoff |
 
 (If there is no HTTP boundary, remove the HTTP column.)
 

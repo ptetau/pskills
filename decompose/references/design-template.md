@@ -223,3 +223,6 @@ In inception mode, write "Not applicable: inception", and keep the number.
 - `/blueprint` to turn this document into an agent-ready spec: typed contracts, state
   machines, signatures, and Gherkin scenarios.
 - `/quiz-plan` to turn the walls and the migration steps into an executable change plan.
+- `/pdlc:intake <name>.blueprint.md`, to build the blueprint when the `pdlc` plugin is
+  installed. Run `/blueprint` first, because the blueprint holds the types, codes, and
+  signatures that `pdlc` needs.

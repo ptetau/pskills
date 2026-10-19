@@ -9,6 +9,8 @@ measure what changes, and we do not guess.
 
 ## Example 1 — Inception: a notifications service
 
+The finished document of this example is `notifications.design.md`. Keep the two files the same.
+
 **Features**
 
 | ID | Feature |

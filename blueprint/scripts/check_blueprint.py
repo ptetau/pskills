@@ -47,7 +47,7 @@ more than 5
 scenarios, more than 5 steps in a scenario, a Background over 4 steps, a Then step that
 asserts storage, money typed as a bare number, `any` in TypeScript, a component without
 "May call", a Manager calling a Manager on a flow line that doesn't say it is queued,
-fewer *(assumed)* marks than decisions added (or more than listed), a design utility not
+fewer (assumed) marks than decisions added (or more than listed), a design utility not
 mentioned in section 5, filler phrasing.
 
 Usage:
@@ -377,10 +377,11 @@ def check_design(design_text, s5, components, s3_code="", s4=""):
             continue    # a Utility the design names; only the walls table's typed rows are required
         errors.append("--design: `%s` is in section 5 but not in the design (a blueprint never adds components)" % h)
     bodies = {c.split("\n", 1)[0].strip().strip("`"): c for c in components}
-    verbs = {(c, v) for c, v in DESIGN_CALL.findall(design_text) if c in comps}
+    called = {(c, v) for c, v in DESIGN_CALL.findall(design_text) if c in comps}
     # `Component.Name` followed by a brick kind names a brick, not a verb: `LeaseAccess.Lease` (Store)
     brick_calls = {(c, v) for c, v in BRICK_CALL.findall(design_text) if c in comps}
-    verbs -= brick_calls
+    called -= brick_calls
+    verbs = set()       # the verbs that an API (or Verbs) column lists always count, also when a brick has the same name
     bricks = set()
     lines = strip_code(design_text).split("\n")
     api_col = brick_col = None
@@ -414,7 +415,8 @@ def check_design(design_text, s5, components, s3_code="", s4=""):
                 if cells and not set(cells[0]) <= set("-: "):
                     for b in re.findall(r"`([A-Z][A-Za-z0-9]*)", cells[0]):
                         bricks.add((name, b))
-    verbs -= bricks     # `RecordsAccess.QueryBuilder` in a feature-assembly table names a brick, not a verb
+    called -= bricks    # `RecordsAccess.QueryBuilder` in a feature-assembly table names a brick, not a verb
+    verbs |= called
     for comp, brick in sorted(bricks):
         body = bodies.get(comp)
         if body is None:
@@ -503,7 +505,7 @@ def check(text, compile_ts=False, draft=False, design_text=None, render=False):
         warnings.append("%d inline '(assumed)' tags but only %d decisions listed; list every one"
                         % (assumed, decisions + carried))
     elif assumed < decisions:
-        warnings.append("%d decisions added but only %d marked *(assumed)* where they are used; mark each one "
+        warnings.append("%d decisions added but only %d marked (assumed) where they are used; mark each one "
                         "at the place it applies, so a reader sees it there" % (decisions, assumed))
     if assumed and not re.search(r"decisions (added|carried)|assumptions", s1, re.I):
         errors.append("%d '(assumed)' tags but section 1 has no 'Decisions added by this spec' list" % assumed)

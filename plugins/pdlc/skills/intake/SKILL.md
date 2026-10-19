@@ -25,6 +25,10 @@ read are current.
   the user for "What and why". Tell the user the ID of the new intent.
 - If the user named an intent, read that intent. If the "Notes" of the intent say
   `Awaits approval:`, remove that line. Naming the intent is the approval.
+- If the user named a `.blueprint.md` file, read the file as the words of the intent. Take
+  "What and why" from its scope. Take the requirements, the error codes, and the signatures
+  from its other sections. Keep each `(assumed)` mark. After this step, the pdlc specs lead,
+  and nobody changes the blueprint file.
 - If neither is true, take the oldest intent with status `new` that does not await
   approval.
 

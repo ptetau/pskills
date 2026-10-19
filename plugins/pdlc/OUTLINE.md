@@ -572,7 +572,42 @@ pdlc.
   intents. For example, "add a Linear tracker adapter" becomes a capability change to
   pdlc. The installed pdlc builds and verifies that change.
 
-## 16. Open questions
+## 16. Before the first intent: design and blueprint
+
+For a new system, two other tools can run before the first intent. `/decompose` decides
+where the walls go. `/blueprint` turns that design into types, error codes, signatures, and
+scenarios. Both tools are optional, and each also works alone.
+
+When the user has a blueprint, the first intent is `/pdlc:intake <name>.blueprint.md`.
+Intake reads the file as the words of the intent. The blueprint holds the details that a
+change needs: the types, the codes, and the signatures. The design holds none of them.
+
+The same idea has a different name in each tool. This table gives the match:
+
+| In the blueprint | In pdlc |
+|---|---|
+| The in-scope list of section 1 | "What and why" of the intent |
+| An invariant, with its enforcement point | A requirement of the capability that enforces the rule |
+| The error table: code, meaning, fault | The rows of `DES-errors`: code, meaning, whose fault |
+| The signature of a method | The "Interface" of a change |
+| A scenario (Given, when, then) | The acceptance lines of a requirement |
+| An Engine or a ResourceAccess | A capability |
+| A method of a Manager | A job |
+| A decision marked `(assumed)` | The same mark, `(assumed)` |
+| The fault words `caller`, `system`, and `outside service` | The same three words in `DES-errors` |
+
+Four rules keep the chain consistent:
+
+- The design and the blueprint are frozen inputs. After intake, the pdlc specs lead. To change
+  the design later, run `/decompose` on the real code, then `/blueprint`, then
+  `/pdlc:intake` again.
+- The blueprint has no IDs. Intake gives each requirement its pdlc ID.
+- The blueprint writes the mark `(assumed)` in plain form, with any reason outside the
+  brackets. The pdlc merge check accepts only that form.
+- `/decompose` and `/blueprint` use the master writing check. It has a reading grade of 7 and
+  a glossary rule. pdlc has a smaller check, with four rules.
+
+## 17. Open questions
 
 - Do we ship the CI check script in v1? Or is the check of the delivery adapter
   sufficient at the start?
