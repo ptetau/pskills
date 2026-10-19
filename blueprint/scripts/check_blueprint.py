@@ -80,7 +80,7 @@ SECTIONS = [
     (5, r"module|interface|signature"),
     (6, r"verification|test|bdd|gherkin"),
 ]
-TYPED_LANGS = {"ts", "typescript", "go", "golang", "rust", "rs"}
+TYPED_LANGS = {"ts", "typescript", "go", "golang", "rust", "rs", "fsharp", "fs"}
 CODE = r"[A-Z][A-Z0-9]+(?:_[A-Z0-9]+)+"
 ERROR_CODE = re.compile(r"`(%s)`" % CODE)
 BARE_CODE = re.compile(r"\b(%s)\b" % CODE)
@@ -159,6 +159,8 @@ def methods_of(body):
     names = set()
     for _, block in code_blocks(body, TYPED_LANGS):
         names.update(re.findall(r"^\s*(?:func\s+(?:\([^)]*\)\s*)?)?(?:async\s+)?([a-zA-Z_]\w*)\s*\(", block, re.M))
+        # F#: a signature is "let name (args) : type", so the name follows "let" (and "rec", "private")
+        names.update(re.findall(r"^\s*let\s+(?:rec\s+|private\s+|inline\s+)*([a-zA-Z_]\w*)\b", block, re.M))
     return names - {"if", "for", "while", "switch", "return", "function"}
 
 
@@ -377,7 +379,7 @@ def check_design(design_text, s5, components, s3_code="", s4=""):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if i + 1 < len(lines) and re.match(r"^\s*\|[-| :]+\|\s*$", lines[i + 1]):
-            api_col = next((k for k, c in enumerate(cells) if re.match(r"api\b", c, re.I)), None)
+            api_col = next((k for k, c in enumerate(cells) if re.match(r"(api|verbs?)\b", c, re.I)), None)
             brick_col = next((k for k, c in enumerate(cells) if re.match(r"bricks?\b", c, re.I)), None)
             continue
         name = cells[0].strip("`").strip() if cells else ""
