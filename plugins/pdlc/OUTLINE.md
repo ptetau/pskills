@@ -27,6 +27,11 @@ An intent does not go directly to code. First, the intent becomes a change to th
   conventions: how we show a list, how we name files, how we write errors, and how we
   test.
 
+A behaviour can apply to more than one job, for example the shape of an error. That
+behaviour is in one spec only: the capability spec or design spec that those jobs use.
+The job specs do not repeat the behaviour. Thus, an intent touches few specs, and divides
+into few changes.
+
 When the specs are sufficiently clear to build from, pdlc writes a **change spec**. A
 change spec covers exactly one job or one capability. The change spec lists only these
 items:
@@ -288,6 +293,18 @@ code. Anything new that the reviewer wants (another input check, another error) 
 follow-up for the user. A follow-up is not a reason to make the change bigger. Verify
 files each follow-up as a new intent that waits for your approval.
 
+The first review of a remit lists every problem that the reviewer can find. A later review
+of the same remit for the same change is a re-review. The packet of a re-review holds the
+earlier problems and the diff since the earlier review. For tests, the diff starts at the
+earlier lock. For each other remit, the diff starts at the commit of the earlier packet.
+
+The re-reviewer judges only two things: whether each earlier problem is fixed, and the
+material that changed. The re-reviewer does not raise a new problem on material that did
+not change. For example, after the first security review, the builder changes only
+`src/greet.js`. Then the second security review does not raise a new problem in
+`src/store.js`. Thus, a remit does not find new problems in old material round after
+round.
+
 The project can edit each remit in `pdlc/reviews/`. In `config.md`, the project selects
 which remits run.
 
@@ -471,7 +488,7 @@ pdlc is a Claude Code plugin. You call its skills as `/pdlc:<name>`.
 | `init` | Prepares pdlc in a project: folders, templates, recon, default conventions, and adapters. |
 | `intake` | Takes an intent from the inbox, and writes spec patches with `proposed` requirements. |
 | `ready` | Asks you about each unclear item (like `/quiz`). Looks for contradictions (like `/argue`). Then marks the requirements `ready`. |
-| `change` | Divides a ready intent into milestones, with one job or capability in each milestone. Writes a change spec for each milestone. |
+| `change` | Divides a ready intent into milestones, with one job or capability in each milestone. Puts each milestone after the milestones that it needs. Writes a change spec for each milestone. |
 | `tests` | Tells the test writer to write the checks from the spec. Makes sure that the checks fail. Locks the checks, and gets a review of the checks. |
 | `build` | Tells the builder to write app code until the locked checks pass. Marks the requirements `built`. |
 | `show` | Records the change as it works, as `review.gif` and frames. |
@@ -603,7 +620,8 @@ Four rules keep the chain consistent:
   `/pdlc:intake` again.
 - The blueprint has no IDs. Intake gives each requirement its pdlc ID.
 - The blueprint writes the mark `(assumed)` in plain form, with any reason outside the
-  brackets. The pdlc merge check accepts only that form.
+  brackets. The pdlc merge check accepts that form, and any other mark that starts with
+  `(assumed`.
 - `/decompose` and `/blueprint` use the master writing check. It has a reading grade of 7 and
   a glossary rule. pdlc has a smaller check, with four rules.
 

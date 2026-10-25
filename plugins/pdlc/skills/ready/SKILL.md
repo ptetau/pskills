@@ -48,6 +48,11 @@ of these:
 - Write a new `proposed` requirement in the right spec. List the new requirement as added
   in the "Requirements" section of the intent.
 
+The right spec is the spec that step 2 (decide what it touches) of `/pdlc:intake` gives.
+Some behaviour applies to every job in the same way, for example an unreadable store, or a
+size limit on each request. Write that behaviour one time, in the capability that those
+jobs use.
+
 Ask about each item, as step 4 (ask about what is unclear) says. If the user gave
 `defaults`, take your recommended answer and mark the answer `(assumed)`. Put the list in
 the handoff. Do not build an item that you omit here, unless the user approves the
@@ -73,7 +78,8 @@ A requirement is clear when these conditions are true:
   wrong type, and too large. Stored data has two more bad forms: unreadable, and written
   by an older version. The "then" of such a line is a coded refusal, or a stated default
   for an older record. A crash, a hang, a stack trace, or a silent empty, zero, or null is
-  not a correct "then".
+  not a correct "then". If a capability reads the input for every job, these lines are in
+  the capability one time, not in each job.
 - Each line checks one behaviour. The "then" of the line is something that a caller can
   see: a reply, an output, or a sent message. A stored row is not a correct "then".
 - Each failure line names its error code, and `DES-errors` has that code. For a new code,
@@ -83,6 +89,10 @@ A requirement is clear when these conditions are true:
 - Words like "fast", "easy" or "secure" have a number or a rule behind them.
 - Each capability spec and design spec that the requirement relies on exists, or is part
   of this intent.
+- The lines of a capability use only the interface of the capability, or jobs that are
+  already built. The lines do not use a job that this intent adds or changes. The change
+  for that job comes after the change for the capability. Thus, when the checks of the
+  capability run, that job does not exist yet.
 
 ## 4. Ask about what is unclear
 

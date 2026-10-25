@@ -47,6 +47,21 @@ What an acceptance line does ask for is always in scope. A line that is not met 
 problem, not a follow-up. For the tests remit, a line that is not fully proved where the
 line says is also a problem, not a follow-up.
 
+On a first review, list every problem that you can find. A later review of this remit for
+this change judges only what changed. Thus, a problem that you miss now stays missed.
+
+A packet with a "Re-review" section is a later review. An earlier reviewer judged this
+remit for this change. Judge only these two things:
+
+- Each earlier problem in that section. If the problem is not fixed, list it again under
+  "Problems".
+- The changes in the diff of that section. List a new problem only where a changed line
+  causes the problem.
+
+Do not raise a new problem on material that did not change. This rule also applies to a
+problem that the earlier review missed. For the tests remit, write "Wrong versions" lines
+only for the checks that changed.
+
 Then write `result.md` in the same folder as the packet:
 
 ```

@@ -142,7 +142,8 @@ Four rules keep the chain consistent:
   `/pdlc:intake` again.
 - The blueprint has no IDs. Intake gives each requirement its pdlc ID.
 - The blueprint writes the mark `(assumed)` in plain form, with any reason outside the
-  brackets. The pdlc merge check accepts only that form.
+  brackets. The pdlc merge check accepts that form, and any other mark that starts with
+  `(assumed`.
 - `/decompose` and `/blueprint` use the master writing check. It has a reading grade of 7 and
   a glossary rule. pdlc has a smaller check, with four rules.
 

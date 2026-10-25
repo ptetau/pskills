@@ -171,20 +171,31 @@ class MergeCheck(unittest.TestCase):
                                                  "the values are filled in (assumed)."))
         self.assertEqual(self.run_check("CH-0001")[0], 0)
 
-    def test_fails_on_another_form_of_the_marker_in_the_change_spec(self):
-        self.write(reqs="### CAP-email.R2 · Send from a template\n\n- Given 3 tries *(assumed)*, then stop.")
-        code, out = self.run_check("CH-0001")
-        self.assertEqual(code, 1)
-        self.assertIn('change.md: write "*(assumed)*" as "(assumed)"', out)
-
-    def test_fails_on_a_reason_inside_the_marker_in_a_requirement_of_the_change(self):
-        self.write()
+    def test_passes_with_any_marker_that_starts_with_assumed(self):
+        self.write(reqs="### CAP-email.R2 · Send from a template\n\n"
+                        "- Given 3 tries (assumed limit), then stop (assumed: each retry is slow).")
         path = self.root / "pdlc/specs/capabilities/CAP-email.md"
         path.write_text(path.read_text().replace("the values are filled in.",
                                                  "the values are filled in (assumed: a new name)."))
         code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
+
+    def test_fails_on_emphasis_around_the_marker_in_the_change_spec(self):
+        self.write(reqs="### CAP-email.R2 · Send from a template\n\n"
+                        "- Given 3 tries *(assumed)*, then stop _(assumed: a reason)_.")
+        code, out = self.run_check("CH-0001")
         self.assertEqual(code, 1)
-        self.assertIn('CAP-email.R2: write "(assumed: a new name)" as "(assumed)"', out)
+        self.assertIn('change.md: write "*(assumed)*" so it starts with "(assumed"', out)
+        self.assertIn('change.md: write "_(assumed: a reason)_" so it starts with "(assumed"', out)
+
+    def test_fails_on_a_marker_that_does_not_start_with_assumed_in_a_requirement(self):
+        self.write()
+        path = self.root / "pdlc/specs/capabilities/CAP-email.md"
+        path.write_text(path.read_text().replace("the values are filled in.",
+                                                 "the values are filled in (name assumed)."))
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn('CAP-email.R2: write "(name assumed)" so it starts with "(assumed"', out)
 
     def test_ignores_the_marker_in_requirements_the_change_does_not_list(self):
         self.write()
@@ -330,6 +341,39 @@ class MergeCheck(unittest.TestCase):
         code, out = self.run_check("CH-0001")
         self.assertEqual(code, 1)
         self.assertIn("a check passes a wrong version: CAP-email.R2 fills values", out)
+
+    def test_a_re_review_needs_wrong_versions_when_a_check_changed(self):
+        old, new = self.relocked_repo()
+        self.reviewed_lock(new)
+        packet = self.change / "review/tests/packet.md"
+        packet.write_text("## Re-review\n\nEarlier review: %s\n\n" % old + packet.read_text())
+        self.passed(["tests"], wrong="Wrong versions:\n- none\n")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn('tests review lists no "Wrong versions"', out)
+
+    def test_a_re_review_needs_no_wrong_versions_when_no_check_changed(self):
+        _, new = self.relocked_repo()
+        (self.root / "notes.txt").write_text("not a check\n")
+        self.commit_all("an unrelated commit")
+        later = git(self.root, "rev-parse", "HEAD")
+        self.write(checks="- test/email.test.js", lock="Tests-Locked: %s\n" % later)
+        self.reviewed_lock(later)
+        packet = self.change / "review/tests/packet.md"
+        packet.write_text("## Re-review\n\nEarlier review: %s\n\n" % new + packet.read_text())
+        self.passed(["tests"], wrong="Wrong versions:\n- none\n")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
+
+    def test_a_re_review_still_fails_a_check_that_passes_a_wrong_version(self):
+        old, new = self.relocked_repo()
+        self.reviewed_lock(new)
+        packet = self.change / "review/tests/packet.md"
+        packet.write_text("## Re-review\n\nEarlier review: %s\n\n" % old + packet.read_text())
+        self.passed(["tests"], wrong="Wrong versions:\n- CAP-email.R2 fills values · skips one · passes\n")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("a check passes a wrong version", out)
 
     def test_a_change_with_no_checks_needs_no_wrong_versions(self):
         self.write(checks="none")

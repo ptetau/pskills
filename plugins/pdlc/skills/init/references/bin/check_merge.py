@@ -3,11 +3,14 @@
 
 A change may merge only when:
   - every requirement it lists is verified (and every retired one is gone from its spec);
-  - its change spec and requirements write the assumption marker one way: "(assumed)";
+  - each assumption marker in its change spec and requirements starts with "(assumed",
+    with no emphasis around it: "(assumed)", "(assumed limit)", "(assumed: a reason)";
   - its checks are locked, and no check file changed after the lock;
   - the tests review judged the checks as they are locked now: its packet carries the
     current lock;
-  - the tests review names a wrong version of the code that each check fails on;
+  - the tests review names a wrong version of the code that each check fails on. A
+    re-review (its packet says "Earlier review:") names one only for each check that
+    changed since the earlier lock. If no check changed, it needs none;
   - every review remit named in pdlc/config.md passed;
   - the branch merges into main without conflicts;
   - every other change of its intent is "in review" or "merged" on its own branch, so the
@@ -33,8 +36,9 @@ REQ = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b(.*)$", re.M)
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
 READY = ("in review", "merged")
-# The marker with emphasis (*(assumed)*), or brackets that hold "assumed" and more text.
-MARKER = re.compile(r"[*_]+\(assumed\)[*_]+|\([^()\n]*\bassumed\b[^()\n]*\)", re.I)
+# A marker with emphasis (*(assumed)*), or brackets that hold the word "assumed". A marker
+# passes when it starts with "(assumed".
+MARKER = re.compile(r"[*_]+\(assumed\b[^()\n]*\)[*_]+|\([^()\n]*\bassumed\b[^()\n]*\)", re.I)
 
 
 def section(text, title):
@@ -68,10 +72,10 @@ def status_of(root, req_id):
 
 
 def marker_problems(where, text):
-    """Each assumption marker in the text written any way but "(assumed)"."""
-    return ['%s: write "%s" as "(assumed)", with any reason outside the brackets'
+    """Each assumption marker in the text that does not start with "(assumed"."""
+    return ['%s: write "%s" so it starts with "(assumed", for example "(assumed)"'
             % (where, found.group(0)) for found in MARKER.finditer(text or "")
-            if found.group(0) != "(assumed)"]
+            if not found.group(0).startswith("(assumed")]
 
 
 def remits(root):
@@ -110,6 +114,18 @@ def wrong_versions(folder):
 
 def git(root, *args):
     return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True)
+
+
+def checks_unchanged_since_earlier_review(root, folder, lock, checks):
+    """True when the tests packet is a re-review, and no check file changed between the
+    lock that the earlier review judged and this lock."""
+    packet = folder / "review" / "tests" / "packet.md"
+    text = packet.read_text() if packet.exists() else ""
+    earlier = re.search(r"^Earlier review:\s*([0-9a-f]{7,40})\b", text, re.M)
+    if not earlier or not lock:
+        return False
+    diff = git(root, "diff", "--name-only", earlier.group(1), lock, "--", *checks)
+    return diff.returncode == 0 and not diff.stdout.strip()
 
 
 def field(text, name):
@@ -245,7 +261,8 @@ def check_change(root, folder):
 
     if checks and "tests" in wanted and (folder / "review" / "tests" / "result.md").exists():
         lines = wrong_versions(folder)
-        if not lines:
+        if not lines and not checks_unchanged_since_earlier_review(
+                root, folder, lock.group(1) if lock else None, checks):
             problems.append('tests review lists no "Wrong versions"; review the checks again')
         for line in lines:
             if re.search(r"·\s*passes\b", line, re.I):

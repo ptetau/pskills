@@ -4,7 +4,8 @@ description: >
   Makes one or more change specs from a ready pdlc intent. Each change covers exactly one
   job, one capability, or one design spec. Each change lists the interface that its checks
   are permitted to call, and lists only the files that the change is permitted to touch.
-  Capability changes come before the jobs that need them. Use when the user says
+  A change comes after the changes that it needs, and capability changes come before the
+  jobs that need them. Use when the user says
   "/pdlc:change", or wants to plan the work for a ready intent.
 ---
 
@@ -31,7 +32,13 @@ maps.
 Put the requirements into groups by the spec that each requirement is in. Each group is
 one change. A change must not cover two specs.
 
-Put the changes in this order: design specs first, then capabilities, then jobs. If a
+Put the changes in the order of what each change needs. A change whose acceptance lines
+use the interface or the output of a second change comes after that second change. For
+example, a line of `JOB-pay-invoice` (pay an invoice) says "then `invoices` shows invoice 7
+as paid". That line uses the `invoices` command. Thus, the change that builds `invoices`
+comes first.
+
+Where that rule gives no order, put design specs first, then capabilities, then jobs. If a
 capability relies on a second capability, put the second capability first.
 
 ## 3. Write each change spec

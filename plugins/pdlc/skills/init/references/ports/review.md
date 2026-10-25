@@ -8,7 +8,9 @@ each reviewer sees only its packet.
 - **review**: the input is a change and a list of remits. Build one packet for each remit.
   Give each packet to a separate, fresh reviewer to judge. Return the result of each
   remit: pass or fail, and its problems. Each result goes into
-  `review/<remit>/result.md` in the change folder.
+  `review/<remit>/result.md` in the change folder. A re-review (a later review of the same
+  remit) judges only whether the earlier problems are fixed, and what changed since the
+  earlier review.
 
 ## Remits
 

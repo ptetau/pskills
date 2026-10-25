@@ -195,8 +195,10 @@ or a default answer. Mark each such decision `(assumed)` where you write it in a
 change spec. Also list the decision in the handoff. Thus, no guess stays hidden.
 
 Write the marker plain, right after the words that it marks. Put any reason outside the
-brackets, as in "at most 20 items (assumed), to keep the list short". The merge check
-rejects any other form in a change.
+brackets, as in "at most 20 items (assumed), to keep the list short". In a change, the
+merge check rejects a marker that does not start with `(assumed`, such as
+`(limit assumed)`. The merge check also rejects a marker with emphasis, such as
+`*(assumed)*`.
 
 If the skill runs with `defaults`, do not ask. Take your recommended answer. Record each
 answer as `<question> → <answer> (assumed)` in two places: "Decided on defaults" in the

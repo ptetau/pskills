@@ -91,7 +91,9 @@ Each such change makes a new lock, which replaces the old `Tests-Locked:` line.
 ## 5. Review the checks
 
 Every lock gets its own review, including a re-lock sent back from build or verify. The
-merge check refuses a tests review of an older lock.
+merge check refuses a tests review of an older lock. After the first review,
+`make_packets.py` makes a re-review packet. The packet holds the earlier problems, and the
+diff of the checks since the earlier lock. The reviewer judges only these two items.
 
 1. Run `python3 pdlc/bin/make_packets.py CH-xxxx tests`.
 2. Start a fresh `pdlc:reviewer` agent with `run_in_background: false`. Give the agent the

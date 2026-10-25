@@ -49,9 +49,14 @@ thing belongs:
   the capability offers to jobs. These requirements do not give the user-facing behaviour
   of one job.
 - How we do something in all places → a **design** spec.
-- How something looks to the user (a format, a wording, or a layout) → the **job** where
-  the user sees it. This holds even when a capability makes the value. Add the requirement
-  to each place where the user sees the value (a page, an output, or a reply).
+- How the output of one job looks to the user (a format, a wording, or a layout) → that
+  **job**. This holds even when a capability makes the value. Add a line for each place in
+  the job that shows the value (a page, an output, or a reply).
+- A behaviour that many jobs share (a reply format or an error shape) → the
+  **capability** or **design** spec that those jobs use. Write the behaviour there one
+  time. Do not repeat the behaviour in each job. Then the jobs need no change for the
+  behaviour. For example, "every email has an unsubscribe link" goes in `CAP-email`
+  (sending email), not in each job that sends email.
 
 Prefer an existing spec. Create a new spec only when no spec fits. When you create a
 capability, put its boundary around a thing that is likely to change (a vendor, a set of

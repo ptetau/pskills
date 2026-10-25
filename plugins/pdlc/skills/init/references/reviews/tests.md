@@ -34,7 +34,8 @@ For each check, name one plausible wrong version of the code. Decide whether the
 fails on that version. Write one line for each check under "Wrong versions" in your
 result: the check, the wrong version, and `fails` or `passes`. A check that passes a
 plausible wrong version is a problem. Name the value or line that catches the wrong
-version.
+version. On a re-review, write a line only for each check that changed since the earlier
+review.
 
 Look for these traps:
 

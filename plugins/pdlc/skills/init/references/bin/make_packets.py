@@ -24,6 +24,16 @@ The specification packet also holds the writing check and points to the visual r
 frames. The writing check is the output of check_writing.py for the lines this change
 wrote in its .md files: README, docs, specs and the change spec.
 
+Each packet records the commit that it was made at ("Made at:"). If this remit already
+has a result for this change, the new packet is a re-review. The script finds the newest
+result in the folder, or else in git. A re-review packet adds a "Re-review" section:
+  - "Earlier review:", the commit that the earlier review judged: for tests, the lock in
+    its packet; for every other remit, its "Made at";
+  - the problems from the earlier result;
+  - the diff of the material since that commit.
+On a re-review, the writing check covers only the lines changed since that commit, and
+the frame list marks each frame that did not change.
+
 Run it from the project root, on the change's branch.
 """
 import re
@@ -50,6 +60,13 @@ def section(text, title):
 
 def git(root, *args):
     return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True).stdout
+
+
+def show(root, ref, path):
+    """A file as it is at a commit, or None if git cannot find it there."""
+    out = subprocess.run(["git", "show", "%s:%s" % (ref, path)], cwd=root,
+                         capture_output=True, text=True)
+    return out.stdout if out.returncode == 0 else None
 
 
 def remits(root):
@@ -101,6 +118,80 @@ def material(root, base, files, title):
         body = path.read_text(errors="replace") if path.exists() else "(deleted)"
         parts.append("### %s\n\n%s\n" % (name, fence(body)))
     return "\n".join(parts)
+
+
+def earlier_review(root, target, remit):
+    """The commit that an earlier review of this remit judged, and the problems that it
+    found. The newest result is in the folder, or else in the newest commit that has it.
+    None when there is no earlier result, or its packet does not say what it judged."""
+    result, packet = target / "result.md", target / "packet.md"
+    found = None
+    if result.exists():
+        found = result.read_text(), (packet.read_text() if packet.exists() else "")
+    else:
+        path = result.relative_to(root).as_posix()
+        for sha in git(root, "log", "--format=%H", "--", path).split():
+            text = show(root, sha, path)
+            if text is not None:
+                found = text, show(root, sha, packet.relative_to(root).as_posix()) or ""
+                break
+    if not found:
+        return None
+    text, old_packet = found
+    locks = re.findall(r"^Tests-Locked:\s*([0-9a-f]{7,40})\b", old_packet, re.M)
+    made = re.findall(r"^Made at:\s*([0-9a-f]{7,40})\b", old_packet, re.M)
+    shas = (locks[-1:] if remit == "tests" else []) + made[:1]
+    if not shas:
+        return None
+    problems = re.search(r"^[#*_ \t]*Problems\b[*_:]*(.*?)(?=^[^\s-]|\Z)", text,
+                         re.M | re.S | re.I)
+    problems = problems.group(1).strip() if problems else ""
+    if problems.lower().strip("-. ") in ("", "none"):
+        # If this cannot find the problems of a failed result, the whole result goes in.
+        # Thus, no problem is lost.
+        passed = re.match(r"\s*Result:\s*pass\b", text, re.I)
+        problems = "none" if passed else fence(text)
+    return shas[0], problems
+
+
+def re_review(remit, sha, problems, diff):
+    """The section that makes a packet a re-review."""
+    judged = "the checks locked at" if remit == "tests" else "this change at"
+    rule = ("Do not raise a new problem on material that did not change. This rule also applies"
+            "\nto a problem that the earlier review missed.")
+    if remit == "tests":
+        rule += ('\nWrite a "Wrong versions" line only for each check that changed. If no check'
+                 '\nchanged, write "none" under "Wrong versions".')
+    return "\n".join([
+        "## Re-review\n",
+        "Earlier review: %s\n" % sha,
+        "An earlier review of this remit judged %s %s. Judge only these two things:\n"
+        % (judged, sha[:12]),
+        '1. Each earlier problem below. If the problem is not fixed, list it again under'
+        ' "Problems".',
+        "2. The changes since the earlier review, in the diff below. List a new problem only",
+        "   where a changed line causes the problem.\n",
+        rule + "\n",
+        "### Earlier problems\n", problems + "\n",
+        "### Changes since the earlier review\n",
+        (fence(diff) if diff.strip() else "Nothing changed.") + "\n"])
+
+
+def diff_since(root, sha, files):
+    """The diff of the files from the commit to HEAD. None if git cannot make it."""
+    if not files:
+        return ""
+    out = subprocess.run(["git", "diff", sha, "HEAD", "--", *files], cwd=root,
+                         capture_output=True, text=True)
+    return out.stdout if out.returncode == 0 else None
+
+
+def unchanged_since(root, sha, path):
+    """True when the file is the same now as at the commit."""
+    then = subprocess.run(["git", "rev-parse", "-q", "--verify", "%s:%s" % (sha, path)],
+                          cwd=root, capture_output=True, text=True).stdout.strip()
+    now = git(root, "hash-object", path).strip()
+    return bool(then) and then == now
 
 
 def writing_check(root, base, files):
@@ -161,12 +252,13 @@ def main(argv, root=Path(".")):
         spec_for[kind] = "\n".join(spec + parts)
 
     frames = sorted((folder / "frames").glob("*.png")) if (folder / "frames").exists() else []
+    head = git(root, "rev-parse", "HEAD").strip()
     chosen = argv[2:] or remits(root)
     for remit in chosen:
         remit_file = root / "pdlc" / "reviews" / (remit + ".md")
         remit_text = remit_file.read_text() if remit_file.exists() else "# Remit: %s\n" % remit
+        target = folder / "review" / remit
         if remit == "compliance" and not compliance_applies(remit_text, changed):
-            target = folder / "review" / remit
             target.mkdir(parents=True, exist_ok=True)
             (target / "packet.md").unlink(missing_ok=True)
             (target / "result.md").write_text(
@@ -176,19 +268,30 @@ def main(argv, root=Path(".")):
             print("wrote %s (compliance does not apply: no rules and no dependency file. Start no reviewer for it.)"
                   % (target / "result.md").relative_to(root).as_posix())
             continue
+        judged = tests if remit == "tests" else code
+        if remit == "specification":
+            judged = list(dict.fromkeys(code + text_files))
+        earlier = earlier_review(root, target, remit)
+        diff = diff_since(root, earlier[0], judged) if earlier else None
+        earlier = earlier + (diff,) if diff is not None else None
         out = ["# Review packet · %s · %s\n" % (folder.name, remit),
                "Judge only what is in this packet. Write your result next to it, in result.md.\n",
-               remit_text.strip() + "\n", spec_for["specification" if remit == "specification" else "other"]]
+               "Made at: %s\n" % head]
+        if earlier:
+            out.append(re_review(remit, *earlier))
+        out += [remit_text.strip() + "\n", spec_for["specification" if remit == "specification" else "other"]]
         if remit == "tests":
             out.append(material(root, base, tests, "The checks"))
         else:
             out.append(material(root, base, code, "The code"))
         if remit == "specification":
-            out.append(writing_check(root, base, text_files))
+            out.append(writing_check(root, earlier[0] if earlier else base, text_files))
         if remit == "specification" and frames:
             out.append("## Visual review frames\n\nRead each frame to see the change working:\n")
-            out += ["- %s" % f.relative_to(root).as_posix() for f in frames]
-        target = folder / "review" / remit
+            for frame in frames:
+                path = frame.relative_to(root).as_posix()
+                same = earlier and unchanged_since(root, earlier[0], path)
+                out.append("- %s%s" % (path, " (unchanged since the earlier review)" if same else ""))
         target.mkdir(parents=True, exist_ok=True)
         (target / "packet.md").write_text("\n".join(out) + "\n")
         stale = target / "result.md"
