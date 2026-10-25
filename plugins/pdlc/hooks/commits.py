@@ -65,6 +65,17 @@ def section(text, title):
     return match.group(1) if match else ""
 
 
+def field(text, name):
+    """A header field of a change spec or intent, such as Status or Branch. The value is
+    bare: "IN-0001 (poll-input-errors)" gives "IN-0001", and "`pdlc/CH-0001-x`" gives
+    "pdlc/CH-0001-x"."""
+    match = re.search(r"\b%s:[ \t]*([^·\n]*?)[ \t]*(?:·|$)" % name, text, re.M)
+    if not match:
+        return None
+    value = match.group(1).replace("`", "")
+    return re.sub(r"\s+\(.*\)$", "", value).strip()
+
+
 def shapes(text):
     """(shape, regex) for each subject listed under "Subjects"."""
     found = []
@@ -82,7 +93,6 @@ def shapes(text):
 
 def owner(root, branch):
     """("change", "CH-0031") or ("intent", "IN-0012") for the spec whose Branch is this one."""
-    named = re.compile(r"\bBranch:[ \t]*%s[ \t]*(?:·|$)" % re.escape(branch), re.M)
     places = [("change", os.path.join(root, "pdlc", "changes", "CH-*", "change.md")),
               ("intent", os.path.join(root, "pdlc", "inbox", "IN-*.md"))]
     for kind, pattern in places:
@@ -91,7 +101,7 @@ def owner(root, branch):
                 text = open(path).read()
             except OSError:
                 continue
-            if named.search(text):
+            if field(text, "Branch") == branch:
                 name = os.path.basename(os.path.dirname(path) if kind == "change" else path)
                 return kind, "-".join(name.split("-", 2)[:2])
     return None

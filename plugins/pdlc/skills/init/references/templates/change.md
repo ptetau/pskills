@@ -3,6 +3,10 @@
 Intent: IN-0000 · Scope: CAP-name · Status: planned · Ticket: none · Branch: none · Base: main
 Tests-Locked: none
 
+The pdlc scripts read each header field. Thus, a header field holds only its bare value.
+Do not add a name in brackets, and do not add backticks. For example, write
+`Intent: IN-0001`, not `Intent: IN-0001 (poll-input-errors)`.
+
 Keep these sections, in this order, and add no others.
 
 ## Delivers

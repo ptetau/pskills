@@ -2,6 +2,10 @@
 
 Status: new · Ticket: none · Branch: none · Added: YYYY-MM-DD
 
+The pdlc scripts read each header field. Thus, a header field holds only its bare value.
+Do not add a name in brackets, and do not add backticks. For example, write
+`Branch: pdlc/IN-0001-reset`, not `Branch: pdlc/IN-0001-reset (the intent branch)`.
+
 ## What and why
 
 Write what you want to be true, and why, in your own words. A few sentences are

@@ -39,6 +39,9 @@ These items are not prose. Do not change them to obey the rules:
 
 - Code, commands, file paths, and identifiers.
 - Error codes, field names, and values.
+- Header fields, for example `Intent:`, `Scope:`, `Status:`, `Branch:`, and `Base:`. A
+  script reads each value. Thus, a header field holds only the bare value, with no name
+  and no backticks. Write `Intent: IN-0001`, not `Intent: IN-0001 (poll-input-errors)`.
 - Quoted text. For example, the words of a user, or the trigger phrases in the description
   of a skill.
 - The names of products, organisations, and published works.
@@ -226,6 +229,8 @@ An ID is a short code that names an item, for example "B2", "R3", "V1", "UC2", "
 - When the reader must select an alternative, give each alternative its ID and its
   description in the question. Do not ask "B1, B2, or B3?".
 - In a table, a row that gives the ID and the description is sufficient for that row.
+- A header field, for example `Intent: IN-0001`, holds only the ID. Do not add a
+  description to the ID there.
 - Make each description short and simple: two to eight words.
 - If the ID is not necessary for the reader, do not use the ID. Use the description only.
 

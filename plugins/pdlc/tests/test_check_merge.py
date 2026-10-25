@@ -84,6 +84,9 @@ class MergeCheck(unittest.TestCase):
         self.change.mkdir(parents=True)
         self.config(ALL)
         self.passed(ALL)
+        (self.root / "pdlc/inbox").mkdir()
+        (self.root / "pdlc/inbox/IN-0002-password-reset.md").write_text(
+            INTENT.replace("- CH-0002 · Send the reset\n", ""))
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -222,6 +225,12 @@ class MergeCheck(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("FAIL CH-0001", out)
 
+    def test_no_argument_finds_the_change_whose_branch_is_in_backticks(self):
+        self.write(r2="built", status="building", branch="`pdlc/CH-0001-email-templates`")
+        code, out = self.run_check(branch="pdlc/CH-0001-email-templates")
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL CH-0001", out)
+
     def test_a_branch_with_no_change_spec_checks_changes_in_review(self):
         self.write(r2="verified", status="in review", branch="pdlc/CH-0001-email-templates")
         self.assertEqual(self.run_check(branch="some-other-branch")[0], 0)
@@ -234,6 +243,14 @@ class MergeCheck(unittest.TestCase):
         code, out = self.run_check("CH-0001")
         self.assertEqual(code, 1)
         self.assertIn("privacy review has no result", out)
+
+    def test_a_missing_result_gives_the_command_that_makes_it(self):
+        self.write()
+        (self.change / "review/compliance/result.md").unlink()
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("compliance review has no result", out)
+        self.assertIn("python3 pdlc/bin/make_packets.py CH-0001 compliance", out)
 
     def test_fails_when_a_remit_did_not_pass(self):
         self.write()
@@ -432,7 +449,6 @@ class MergeCheck(unittest.TestCase):
     def stacked_repo(self):
         """IN-0002 planned on main as CH-0001 then CH-0002; CH-0001 in review on its branch."""
         self.write(r1="ready", r2="ready", status="planned")
-        (self.root / "pdlc/inbox").mkdir(parents=True)
         (self.root / "pdlc/inbox/IN-0002-password-reset.md").write_text(INTENT)
         self.write_second("planned", "none")
         git(self.root, "init", "-q", "-b", "main")
@@ -461,6 +477,31 @@ class MergeCheck(unittest.TestCase):
         code, out = self.run_check("CH-0001")
         self.assertEqual(code, 1)
         self.assertIn("CH-0002 of IN-0002 is not ready (status: building)", out)
+
+    def test_a_header_field_is_its_value_without_a_name_in_brackets_or_backticks(self):
+        header = ("Intent: IN-0001 (poll-input-errors) · Scope: CAP-http-plumbing · "
+                  "Status: in review · Ticket: none · Branch: `pdlc/CH-0001-x` · Base: main")
+        self.assertEqual(check_merge.field(header, "Intent"), "IN-0001")
+        self.assertEqual(check_merge.field(header, "Branch"), "pdlc/CH-0001-x")
+        self.assertEqual(check_merge.field(header, "Status"), "in review")
+        self.assertEqual(check_merge.field(header, "Base"), "main")
+
+    def test_fails_when_another_change_is_building_and_the_intent_has_its_name(self):
+        self.stacked_repo()
+        self.stack_second("building")
+        git(self.root, "switch", "-q", self.FIRST)
+        spec = self.change / "change.md"
+        spec.write_text(spec.read_text().replace("Intent: IN-0002", "Intent: IN-0002 (password-reset)"))
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("CH-0002 of IN-0002 is not ready (status: building)", out)
+
+    def test_fails_when_the_intent_of_the_change_is_not_in_the_inbox(self):
+        self.write()
+        (self.root / "pdlc/inbox/IN-0002-password-reset.md").unlink()
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("IN-0002 is not in pdlc/inbox", out)
 
     def test_passes_when_every_change_of_the_intent_is_in_review(self):
         self.stacked_repo()

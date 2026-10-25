@@ -3,6 +3,8 @@
 
 Usage:
   python3 pdlc/bin/make_packets.py CH-0001            every remit in pdlc/config.md
+  python3 pdlc/bin/make_packets.py CH-0001 --verify   every remit in pdlc/config.md except
+                                                      tests, for the verify stage
   python3 pdlc/bin/make_packets.py CH-0001 tests      one remit
 
 Each packet is pdlc/changes/<change>/review/<remit>/packet.md. Writing a packet removes
@@ -56,6 +58,17 @@ NO_RULES = "Rules: none listed yet."
 def section(text, title):
     match = re.search(r"^## %s\s*$(.*?)(?=^## |\Z)" % re.escape(title), text, re.M | re.S)
     return match.group(1) if match else ""
+
+
+def field(text, name):
+    """A header field of a change spec or intent, such as Status or Branch. The value is
+    bare: "IN-0001 (poll-input-errors)" gives "IN-0001", and "`pdlc/CH-0001-x`" gives
+    "pdlc/CH-0001-x"."""
+    match = re.search(r"\b%s:[ \t]*([^·\n]*?)[ \t]*(?:·|$)" % name, text, re.M)
+    if not match:
+        return None
+    value = match.group(1).replace("`", "")
+    return re.sub(r"\s+\(.*\)$", "", value).strip()
 
 
 def git(root, *args):
@@ -206,17 +219,18 @@ def writing_check(root, base, files):
 
 
 def main(argv, root=Path(".")):
-    if len(argv) < 2:
+    verify = "--verify" in argv[1:]
+    args = [a for a in argv[1:] if a != "--verify"]
+    if not args:
         print(__doc__)
         return 1
-    folders = sorted(p.parent for p in (root / "pdlc" / "changes").glob(argv[1] + "-*/change.md"))
+    folders = sorted(p.parent for p in (root / "pdlc" / "changes").glob(args[0] + "-*/change.md"))
     if not folders:
-        print("No change spec found for %s" % argv[1])
+        print("No change spec found for %s" % args[0])
         return 1
     folder = folders[0]
     change = (folder / "change.md").read_text()
-    found = re.search(r"Base:\s*([^\s·]+)", change)
-    base = found.group(1) if found else "main"
+    base = field(change, "Base") or "main"
 
     checks = re.findall(r"^-\s+`?([^`\s]+)`?", section(change, "Check files"), re.M)
     checks = [c for c in checks if c.lower() != "none"]
@@ -234,10 +248,10 @@ def main(argv, root=Path(".")):
 
     reqs = re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)", section(change, "Requirements"), re.M)
     relies = re.findall(r"\b((?:JOB|CAP|DES)-[a-z0-9-]+)\b", section(change, "Relies on"))
-    scope = re.search(r"Scope:\s*((?:JOB|CAP|DES)-[a-z0-9-]+)", change)
+    scope = re.match(r"(?:JOB|CAP|DES)-[a-z0-9-]+", field(change, "Scope") or "")
     spec = ["## The change spec\n", fence(change)]
     if scope:
-        spec += ["\n## The spec it covers: title and summary\n", fence(spec_head(root, scope.group(1)))]
+        spec += ["\n## The spec it covers: title and summary\n", fence(spec_head(root, scope.group(0)))]
     spec.append("\n## The requirements, in full\n")
     spec += [requirement_text(root, r) + "\n" for r in reqs]
     spec.append("## Specs it relies on\n")
@@ -253,8 +267,11 @@ def main(argv, root=Path(".")):
 
     frames = sorted((folder / "frames").glob("*.png")) if (folder / "frames").exists() else []
     head = git(root, "rev-parse", "HEAD").strip()
-    chosen = argv[2:] or remits(root)
-    for remit in chosen:
+    if verify:
+        chosen = [r for r in remits(root) if r != "tests"] + args[1:]
+    else:
+        chosen = args[1:] or remits(root)
+    for remit in dict.fromkeys(chosen):
         remit_file = root / "pdlc" / "reviews" / (remit + ".md")
         remit_text = remit_file.read_text() if remit_file.exists() else "# Remit: %s\n" % remit
         target = folder / "review" / remit

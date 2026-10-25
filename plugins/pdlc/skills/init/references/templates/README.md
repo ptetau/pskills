@@ -149,6 +149,12 @@ Each stage, and each stop, ends in the same way:
 - Do not commit on a branch that merged into main, not even a status or a `Base:`. Work
   that you find after a change merged is a new change. The merge check refuses the branch
   of a merged change if the branch has new commits.
+- Work only in the project checkout. Do not make a git worktree. The agents, the guard,
+  and the scripts use the paths of the project checkout, so work in a worktree goes to
+  the wrong place.
+- Before you switch to a different branch, commit your work. Then run
+  `git switch <branch>`. If `git switch` refuses, run `git status` and commit or delete
+  the files that it shows. For example, delete a cache folder such as `__pycache__/`.
 
 Before you select an intent or a change by its status, do these steps:
 

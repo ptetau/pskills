@@ -171,6 +171,23 @@ class Packets(PacketRepo):
         make_packets.main(["x", "CH-0001", "compliance"], root=self.root)
         self.assertIn("# Remit: compliance", self.packet("compliance"))
 
+    def test_reads_the_scope_and_the_base_in_backticks_or_with_a_name(self):
+        change = self.folder / "change.md"
+        change.write_text(change.read_text().replace("Scope: CAP-greeting", "Scope: `CAP-greeting`")
+                          .replace("Base: main", "Base: `main` (the default branch)"))
+        self.assertEqual(make_packets.main(["x", "CH-0001", "security"], root=self.root), 0)
+        self.assertIn("Greets people in English only.", self.packet("security"))
+
+    def test_verify_makes_every_configured_remit_except_tests(self):
+        (self.root / "pdlc/config.md").write_text(
+            "## Reviews\n\n- remits: tests, specification, security, compliance\n")
+        (self.root / "pdlc/reviews/compliance.md").write_text("# Remit: compliance\n\n- Rules: none listed yet.\n")
+        self.assertEqual(make_packets.main(["x", "CH-0001", "--verify"], root=self.root), 0)
+        made = sorted(p.name for p in (self.folder / "review").iterdir())
+        self.assertEqual(made, ["compliance", "security", "specification"])
+        self.assertIn("Result: pass", (self.folder / "review/compliance/result.md").read_text())
+        self.assertTrue((self.folder / "review/security/packet.md").exists())
+
     def test_a_missing_base_branch_stops_instead_of_sending_empty_packets(self):
         change = self.folder / "change.md"
         change.write_text(change.read_text().replace("Base: main", "Base: no-such-branch"))

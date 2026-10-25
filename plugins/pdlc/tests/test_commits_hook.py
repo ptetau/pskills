@@ -109,6 +109,15 @@ class CommitHook(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("Change: CH-0001", err)
 
+    def test_a_branch_in_backticks_is_still_the_branch_of_the_change(self):
+        (self.root / "pdlc/changes/CH-0001-email/change.md").write_text(
+            CHANGE.replace("Intent: IN-0001", "Intent: IN-0001 (password-reset)")
+            .replace("Branch: pdlc/CH-0001-email", "Branch: `pdlc/CH-0001-email`"))
+        self.commit("Start CH-0001", "Intent: IN-0001")
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        self.assertIn("Change: CH-0001", err)
+
     def test_a_commit_with_no_intent_trailer_is_named(self):
         self.commit("Start CH-0001", "Change: CH-0001")
         code, err = self.hook()

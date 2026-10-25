@@ -13,8 +13,8 @@ A change may merge only when:
     changed since the earlier lock. If no check changed, it needs none;
   - every review remit named in pdlc/config.md passed;
   - the branch merges into main without conflicts;
-  - every other change of its intent is "in review" or "merged" on its own branch, so the
-    intent's changes merge together;
+  - its intent is in pdlc/inbox, and every other change of the intent is "in review" or
+    "merged" on its own branch, so the intent's changes merge together;
   - it hasn't merged already: a merged change's branch takes no new commits.
 
 Usage:
@@ -129,9 +129,14 @@ def checks_unchanged_since_earlier_review(root, folder, lock, checks):
 
 
 def field(text, name):
-    """A header field of a change spec or intent, such as Status or Branch."""
+    """A header field of a change spec or intent, such as Status or Branch. The value is
+    bare: "IN-0001 (poll-input-errors)" gives "IN-0001", and "`pdlc/CH-0001-x`" gives
+    "pdlc/CH-0001-x"."""
     match = re.search(r"\b%s:[ \t]*([^·\n]*?)[ \t]*(?:·|$)" % name, text, re.M)
-    return match.group(1) if match else None
+    if not match:
+        return None
+    value = match.group(1).replace("`", "")
+    return re.sub(r"\s+\(.*\)$", "", value).strip()
 
 
 def show(root, ref, path):
@@ -168,9 +173,12 @@ def status_on_own_branch(root, path, refs):
 def partners_not_ready(root, folder, text):
     """Problems with the other changes of this change's intent: each must be ready too."""
     intent = field(text, "Intent")
-    found = sorted((root / "pdlc" / "inbox").glob("%s-*.md" % intent)) if intent else []
-    if not found:
+    if not intent or intent == "none":
         return []
+    found = sorted((root / "pdlc" / "inbox").glob("%s-*.md" % intent))
+    if not found:
+        return ["%s is not in pdlc/inbox, so the check cannot find the other changes of the "
+                "intent" % intent]
     listed = re.findall(r"\bCH-\d+\b", section(found[0].read_text(), "Changes"))
     problems, refs = [], branches(root)
     for other in dict.fromkeys(listed):
@@ -255,7 +263,9 @@ def check_change(root, folder):
     for remit in wanted:
         result = folder / "review" / remit / "result.md"
         if not result.exists():
-            problems.append("%s review has no result" % remit)
+            problems.append("%s review has no result. Run python3 pdlc/bin/make_packets.py %s %s, "
+                            "and start a reviewer if it writes a packet"
+                            % (remit, change_id(folder), remit))
         elif not re.match(r"\s*Result:\s*pass\b", result.read_text(), re.I):
             problems.append("%s review did not pass" % remit)
 
@@ -301,11 +311,10 @@ def main(argv, root=Path("."), branch=None):
     else:
         branch = branch or current_branch(root)
         folders = [f for f in everything
-                   if branch and re.search(r"Branch:\s*%s\s*(?:·|$)" % re.escape(branch),
-                                           (f / "change.md").read_text(), re.M)]
+                   if branch and field((f / "change.md").read_text(), "Branch") == branch]
         if not folders:
             folders = [f for f in everything
-                       if re.search(r"Status:\s*in review\b", (f / "change.md").read_text())]
+                       if field((f / "change.md").read_text(), "Status") == "in review"]
     failed = False
     for folder in folders:
         problems = check_change(root, folder)

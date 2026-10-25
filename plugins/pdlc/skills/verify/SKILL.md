@@ -35,11 +35,12 @@ Do these steps through the checks port:
 
 ## 3. Independent reviews
 
-1. Get the remits from "Reviews" in `pdlc/config.md`. Do not include `tests`, because the
-   tests stage already reviewed the checks, and its result stays.
-2. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx <remit> <remit> …`. For a
-   remit that does not apply, the script writes `result.md` itself and says so. Start no
-   reviewer for that remit.
+1. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx --verify`. Do not list the
+   remits yourself. The `--verify` option picks each remit under "Reviews" in
+   `pdlc/config.md`, except `tests`. The tests stage already reviewed the checks, and its
+   result stays.
+2. For a remit that does not apply, the script writes `result.md` itself and says so.
+   Start no reviewer for that remit.
    In a later round, the packet of each remit that a reviewer judged before is a
    re-review. A re-review packet holds the earlier problems of the remit and the diff
    since the earlier review. The reviewer judges only these two items.

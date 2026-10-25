@@ -104,6 +104,20 @@ class RecordMerges(unittest.TestCase):
         self.assertEqual(git(self.root, "log", "-1", "--format=%(trailers:key=Intent,valueonly)"),
                          "IN-0001")
 
+    def test_reads_an_intent_with_its_name_and_a_branch_in_backticks(self):
+        git(self.root, "switch", "-q", FIRST)
+        path = self.root / "pdlc/changes/CH-0001-email-templates/change.md"
+        path.write_text(path.read_text().replace("Intent: IN-0001", "Intent: IN-0001 (password-reset)")
+                        .replace("Branch: " + FIRST, "Branch: `%s`" % FIRST))
+        self.commit_all("Name the intent")
+        git(self.root, "switch", "-q", "main")
+        self.merge(FIRST)
+        code, out = self.run_record()
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.status_of("pdlc/changes/CH-0001-email-templates/change.md"), "merged")
+        self.assertEqual(git(self.root, "log", "-1", "--format=%(trailers:key=Intent,valueonly)"),
+                         "IN-0001")
+
     def test_leaves_a_change_whose_branch_has_not_merged(self):
         self.merge(FIRST)
         self.run_record()
