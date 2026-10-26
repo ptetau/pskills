@@ -1,0 +1,173 @@
+{
+  "skill": "pdlc:ready",
+  "skillPath": "/tmp/claude-0/-home-user-pskills/ea747940-d227-5dc6-8b7c-95df4abfb5bf/scratchpad/v030/plugins/pdlc/skills/ready/SKILL.md",
+  "skillSha256": "c64c16bfe52abd853413c79022230e23f3db6e712f9969ffe08dafdc616a3206",
+  "createdAt": "2026-10-26T20:32:07Z",
+  "structure": {
+    "summary": "Without `defaults`, the run asks one question in each message and waits for each reply. With `defaults`, the run goes to the end with no question. The output is spec patches, an updated intent file, one commit `Ready IN-xxxx: <name>`, and a final reply that says `/pdlc:change` is next.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "Turn pattern. Without `defaults`, each message asks one question. The question has two or three answers, and one answer is recommended with a one-line reason. The user can reply `skip` to take the recommended answer. With `defaults`, the run asks no question, except about a contradiction that the user must decide."
+      },
+      {
+        "id": "S2",
+        "description": "Spec patches in `pdlc/specs/`. Each new acceptance line is a \"Given …, when …, then …\" sentence of 25 words or fewer. Each guessed detail has a plain `(assumed)` marker right after its words. Each new error code has a row in `DES-errors`."
+      },
+      {
+        "id": "S3",
+        "description": "The intent record in `pdlc/inbox/`. The intent says `Status: ready` when each of its requirements is `ready` or `retiring`. \"Requirements\" lists each added or changed requirement. \"Notes\" has one line for each decision, in a fixed form. The \"Handoff\" section is new, in the form of the handoff template."
+      },
+      {
+        "id": "S4",
+        "description": "One commit with the subject `Ready IN-xxxx: <name>` and the trailer `Intent: IN-xxxx`. The run also commits when it stops for a contradiction."
+      },
+      {
+        "id": "S5",
+        "description": "The final reply. The reply says what changed and that `/pdlc:change` is next. On a stop, the reply shows the two statements that conflict and asks which one to change."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The user can go straight to the plan: at the end, IN-0001 (the --top option) and each of its requirements are `ready`.",
+      "pass": "The intent file of IN-0001 (the --top option) says `Status: ready`. Each requirement in its \"Requirements\" list says `Status: ready` in its spec. That list holds each requirement that the run added, and each added requirement says `Intents: IN-0001`. At the start, the intent says `specifying`. But `JOB-report-word-frequencies.R5` (usage line), R7 (top N words) and R8 (one --top only) already say `ready`. A run that stops for a contradiction also passes, if the intent stays `specifying` and the reply names the two requirements that conflict.",
+      "partial": "The intent says `ready`, but a requirement that the run added is still `proposed`. Or an added requirement is not in the \"Requirements\" list. Or the run stops for a contradiction, but does not name the two requirements that conflict.",
+      "source": "6. Finish (steps 1 and 2); 5. Look for contradictions"
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "After the run, the specs give one result for each command line. This includes a bad N together with a wrong number of files or a second --top.",
+      "pass": "At the start, `JOB-report-word-frequencies.R5` (usage line) and R7 (top N words) both claim `wordfreq --top 0` with no FILE. R5 (usage line) gives `usage: wordfreq FILE`, but R7 (top N words) gives `error: --top needs a whole number greater than zero`. In the same way, R8 (one --top only) and R7 (top N words) both claim `wordfreq --top 0 --top 2 FILE`. The run settles the conflict with an acceptance line for a bad N with no FILE, and with a line in \"Notes\". That result is the --top error, because the intent gives that error for each bad N, with no exception. A different result passes only when the user chose it in a reply.",
+      "partial": "The run settles only one of the two cases, or adds no acceptance line, or adds no line in \"Notes\". Or the run gives the usage line for a bad N with no FILE, and the user did not choose that result.",
+      "source": "5. Look for contradictions; 4. Ask about what is unclear (recommend the plain reading)"
+    },
+    {
+      "id": "R3",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "A test writer can write each check of the intent with no guess. Each acceptance line has a concrete input and the exact output, and each failure line names an error code.",
+      "pass": "Each acceptance line of `JOB-report-word-frequencies.R5` (usage line), R7 (top N words), R8 (one --top only), and each new requirement obeys three rules. The \"given\" names a concrete file content, not \"any file\". The \"then\" gives the exact text and the exit code, not \"the same error\". Each failure line names its error code, and `pdlc/specs/design/DES-errors.md` has a row for that code. At the start, nine lines of R7 (top N words) say \"Given any file\", and eight lines say \"the same error\". Also at the start, no failure line names a code, and DES-errors has no code for the usage line.",
+      "partial": "The run fixes one or two of the three problems, or fixes some lines and not others. For example, the usage lines get a new code, but R7 (top N words) still says \"the same error\".",
+      "source": "3. Check each requirement"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "The run asks the user only in the permitted form. Each message has one question, with two or three answers and one recommended answer. With `defaults`, the run asks nothing.",
+      "pass": "With `defaults`, no message asks the user a question, and the run goes to the end with no wait. The only exception is a contradiction that the user must decide. Without `defaults`, each message asks one question at most. Each question offers two or three answers. One answer is marked as recommended, with one line on why. The run waits for the reply before the next question.",
+      "partial": "One message asks two questions, or a question has no recommended answer or no reason. Or, with `defaults`, the run stops one time to ask about an item that it can take by default.",
+      "appliesWhen": "The prompt has `defaults`, or the run asks the user at least one question.",
+      "source": "4. Ask about what is unclear; \"Asking questions\" in pdlc/README.md"
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 1,
+      "criterion": "Each acceptance line and sentence that the run writes in a spec keeps the pdlc form.",
+      "pass": "Each new or changed acceptance line is one \"Given …, when …, then …\" sentence. Each new or changed sentence has 25 words or fewer. Quoted text, a number, an ID, and text in brackets each count as one word. Each guessed detail has the marker `(assumed)` right after its words. The marker has no emphasis and no other word in the brackets. Each ID in a new sentence has a short description, as in `R5 (usage line)`.",
+      "partial": "Most new lines keep the form. But one sentence has more than 25 words, or one marker has a wrong form, or one ID has no description.",
+      "appliesWhen": "The run writes or changes at least one requirement sentence or acceptance line.",
+      "source": "2. Settle what the intent implies (25 words, IDs with a description); \"Asking questions\" in pdlc/README.md (the marker)"
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "The intent keeps a full record of this stage. The record is a new \"Handoff\" in the template form, and a line in \"Notes\" for each decision.",
+      "pass": "The run replaces the \"Handoff\" section of IN-0001 (the --top option). The new handoff has a title with `ready → change` (or `ready → user` on a stop), and a `Time:` line in the form of `date -Iseconds`. Then the handoff has six `###` sections in this order: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, `Next: do this first`. An empty section says \"none\", and `Decided on defaults` lists each `(assumed)` decision of this run. Each decision of this run also has a line in \"Notes\", in one of the three forms of the intent template. At the start, the handoff has no title and no `Time:` line.",
+      "partial": "The handoff is new, but it does not have a section, the title, or the `Time:` line. Or a decision is in the handoff but not in \"Notes\", or in \"Notes\" but not in the handoff.",
+      "source": "6. Finish (step 3); 4. Ask about what is unclear (the Notes line); \"Stages and handoffs\" in pdlc/README.md"
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "The run ends in a commit on main with the subject `Ready IN-0001: wordfreq top option` and the trailer `Intent: IN-0001`.",
+      "pass": "After the tag `start`, main has a commit with the subject `Ready IN-0001: wordfreq top option`, exactly. A blank line comes before the trailer `Intent: IN-0001`, and the commit has no `Change:` or `Req:` trailer. The commit changes only files under `pdlc/specs/` and `pdlc/inbox/`. Any other new commit is a `Convention DES-<name>` commit with the same trailer, and no other branch has new commits. At the end, `git status --porcelain` shows nothing.",
+      "partial": "The subject and the trailer are correct. But the commit has an extra pdlc trailer, or it changes a file outside `pdlc/specs/` and `pdlc/inbox/`. Or the run leaves changes that are not committed.",
+      "source": "6. Finish (step 4); \"Where pdlc commits\" and rule 9 in pdlc/README.md"
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 2,
+      "criterion": "The final reply gives the result first, then what changed. The reply says that `/pdlc:change` is next.",
+      "pass": "The last message starts with the result: IN-0001 (the --top option) is ready, or it waits for the user. Then the message tells what the run changed in the specs, with the decisions that the run took. If nothing had to change, the message says so. The message says that `/pdlc:change` is next. Each ID in the message has a short description. On a stop, the message shows the two statements that conflict, and asks which one to change.",
+      "partial": "The message gives the result, but it does not tell what changed or what is next. Or some IDs in the message have no description.",
+      "source": "6. Finish (step 6); rule 10 in pdlc/README.md"
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The run examines the behaviour that the intent implies but does not state. The handoff holds the list of these items.",
+      "pass": "The handoff, or \"Notes\", lists the implied behaviour that the run examined. The list covers the kinds that the skill names: bad and empty input, limits and sizes, order, existing data, unsafe input, and business rules. For each item, the list tells how the run settled the item, or why the item does not apply. The list covers a very large N, for example `--top 99999999999999999999`. At the start, R7 (top N words) has no line for a very large N. After the run, an acceptance line settles that case.",
+      "partial": "The list exists, but it does not cover some kinds. Or the list names a very large N, but no acceptance line settles that case.",
+      "source": "2. Settle what the intent implies"
+    },
+    {
+      "id": "R10",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "When the run changes what a requirement does, no spec text still shows the old behaviour.",
+      "pass": "For each requirement whose behaviour the run changes, the run fixes each place that shows the old behaviour. These places are the requirement sentence, its title, the lines of other requirements, the cross-references, and the lines in \"Notes\". For example, if a bad N now comes before the usage line, the sentence of R5 (usage line) tells that exception. If the user puts --top before FILE, R7 (top N words) no longer says that --top can come after FILE. Also, the lines of R7 (top N words) that put --top after FILE agree with the new rule. And the line in \"Notes\" about --top after FILE gives the new answer.",
+      "partial": "The run changes the main sentence, but one other place still shows the old behaviour. For example, an old acceptance line or an old line in \"Notes\" stays.",
+      "appliesWhen": "The run changes the behaviour of a requirement that existed at the start. For example, the run changes which error comes first, or where --top can stand.",
+      "source": "5. Look for contradictions (leave no old wording; the guessed side gives way)"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical: defaults, no intent named",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "The defaults path: the run takes the oldest `specifying` intent and settles the implied cases. Then the run checks each line, settles the conflict of the usage line and the --top error, marks `ready`, and commits.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "axis": "interactive: intent named by ID, no defaults",
+      "prompt": "IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "Questions one at a time, each with two or three answers and a recommended answer. Also the same checks, markers and commit as P01 (the defaults path).",
+      "replies": [
+        "Take the answer that you recommend.",
+        "Take the answer that you recommend.",
+        "Take the answer that you recommend.",
+        "Take the answer that you recommend.",
+        "Yes, go ahead."
+      ]
+    },
+    {
+      "id": "P03",
+      "axis": "ambiguous: a yes-or-no question that names the intent by its subject",
+      "prompt": "Is the wordfreq --top option ready to build?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "The run finds the intent from its subject, takes the reply `skip` from \"Asking questions\", and starts the final reply with the answer to the question.",
+      "replies": [
+        "skip",
+        "skip",
+        "skip",
+        "skip",
+        "Yes, go ahead."
+      ]
+    },
+    {
+      "id": "P04",
+      "axis": "edge-but-valid: the user changes an assumed answer",
+      "prompt": "IN-0001 defaults. I read the handoff of intake, and I want to change one assumed answer: --top must come before FILE, so `wordfreq FILE --top 2` gives the usage line.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "A guessed detail gives way to the words of the user. No old wording stays in R7 (top N words) or in \"Notes\", and `defaults` settles the other items.",
+      "replies": []
+    }
+  ]
+}

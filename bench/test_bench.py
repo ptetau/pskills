@@ -903,10 +903,15 @@ class StageReplayTest(unittest.TestCase):
         self.assertEqual(run_bench.git(project, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip(),
                          run_bench.CHANGE_BRANCH)
 
-    def test_prepare_board_sets_a_tracker(self):
-        config = (self.prepare("board") / "pdlc" / "config.md").read_text()
-        self.assertIn("- tracker: tracker-github-projects", config)
-        self.assertIn("- owner: example-org", config)
+    def test_prepare_board_sets_a_tracker_on_main_and_on_the_branch(self):
+        project = self.prepare("board")
+        for branch in ("main", run_bench.CHANGE_BRANCH):
+            with self.subTest(branch=branch):
+                config = run_bench.git(project, "show", branch + ":pdlc/config.md").stdout
+                self.assertIn("- tracker: tracker-github-projects", config)
+                self.assertIn("- status field: Status", config)
+        self.assertEqual(run_bench.git(project, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip(),
+                         run_bench.CHANGE_BRANCH)
 
     def test_check_stage_counts_the_writing_findings_of_the_stage(self):
         project, _ = self.stage_project("verify")

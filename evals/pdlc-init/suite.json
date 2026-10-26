@@ -1,0 +1,191 @@
+{
+  "skill": "pdlc:init",
+  "skillPath": "/tmp/claude-0/-home-user-pskills/ea747940-d227-5dc6-8b7c-95df4abfb5bf/scratchpad/v030/plugins/pdlc/skills/init/SKILL.md",
+  "skillSha256": "d791f644046000fc7fc70c92610d9cde1c520c64be6589e4984b3024db1e5aa2",
+  "createdAt": "2026-10-26T20:26:53Z",
+  "structure": {
+    "summary": "With `defaults`, the run is one reply with no questions. Without `defaults`, the run is multi-turn: it shows the code map and asks one question at a time, and each scripted reply answers one question. Each run ends with one `Set up pdlc` commit on `main` that adds the `pdlc/` folder. Then a final reply tells the user how to start.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The `pdlc/` scaffold. `README.md` is a copy of the README template. The scaffold also has `config.md`, `templates/` (each other template), `ports/`, `adapters/`, `bin/`, and `reviews/`. The folders `inbox/`, `changes/`, `specs/jobs/`, `specs/capabilities/`, and `specs/design/` exist, with a `.gitkeep` in each empty folder. `specs/design/` holds each file of `references/defaults/`, without its `## Question` section."
+      },
+      {
+        "id": "S2",
+        "description": "One spec for each job and each capability that the user keeps, from the job template or the capability template. Each spec has `Status: stub`, a summary, a code map, and only the line \"None written yet.\" under \"Requirements\"."
+      },
+      {
+        "id": "S3",
+        "description": "`pdlc/config.md` with a chosen value in place of each placeholder. The Checks section gives six items: all, one requirement, check folders, acceptance file, acceptance, and ID form. The Adapters section gives one adapter for each port. The Visual section gives `start` and `url`."
+      },
+      {
+        "id": "S4",
+        "description": "One commit on `main` with the subject `Set up pdlc`. The commit holds only the `pdlc/` folder."
+      },
+      {
+        "id": "S5",
+        "description": "A final reply that tells the user how to start. `/pdlc:ship <what you want>` runs all the stages, or the user runs one stage at a time from `/pdlc:intake`. The reply names each unsure item of the map. With `defaults`, the reply also lists each decision that the run made, and says that `/pdlc:dashboard` adds the dashboard."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "The new `pdlc/` folder holds each file that init copies from the plugin, and the default design specs.",
+      "pass": "The commit adds each of these items:\n- `pdlc/README.md`, a copy of the README template of the plugin (a `cp` in the transcript, or a file that starts with \"# pdlc\" and has the sections \"Core rules\", \"Code maps\", and \"Asking questions\").\n- `pdlc/config.md`.\n- `pdlc/templates/` with capability, change, design, handoff, intent, job, and proposal (each a `.md` file).\n- `pdlc/ports/` with checks, delivery, inbox, review, tracker, and visual.\n- `pdlc/adapters/` with the 8 adapter files, and `pdlc/reviews/` with the 6 remit files.\n- `pdlc/bin/` with check_merge.py, check_writing.py, make_packets.py, record_gif.mjs, and record_merges.py.\n- A `.gitkeep` in `pdlc/inbox/` and in `pdlc/changes/`.\n- `pdlc/specs/design/` with the 7 defaults: DES-errors, DES-pdlc-branches, DES-pdlc-check-tagging, DES-pdlc-commit-trailers, DES-pdlc-ids, DES-pdlc-review-checklist, and DES-writing-style. No design spec has a `## Question` section.\nAn extra design spec for a convention that the user picked is permitted.",
+      "partial": "One or two of these files or folders are missing. Or one design spec keeps its `## Question` section. Or `pdlc/README.md` is not the README template.",
+      "source": "### 1. Create the folder; ### 3. Agree the defaults, step 3 (\"Do not copy its `## Question` section\")"
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "Each new job spec and capability spec is a stub in the form of its template.",
+      "pass": "Each file in `pdlc/specs/jobs/` and `pdlc/specs/capabilities/` obeys these rules:\n- The file starts with `# JOB-<name> · <a few words>` or `# CAP-<name> · <a few words>`, then `Status: stub`. Each `<name>` is short and lowercase, with dashes.\n- A job has the sections \"Who and why\", \"Relies on\", \"Code map\", and \"Requirements\", in this order. A capability has \"What it is for\", \"Code map\", and \"Requirements\", in this order.\n- Real text replaces each `<placeholder>`, and each guide sentence under a section heading.\n- \"Relies on\" names only specs that exist in `pdlc/specs/`.\n- Under \"Requirements\", the only line is \"None written yet.\"",
+      "partial": "One spec breaks one of these rules. Examples are a leftover guide sentence, a missing or extra section, a written requirement, or a \"Relies on\" ID with no spec.",
+      "source": "### 2. Map existing code: \"Set `Status: stub`\", \"write only the line \\\"None written yet.\\\"\""
+    },
+    {
+      "id": "R3",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The code maps split the code of wordfreq into clear boundaries, so that each later change knows the files that it owns.",
+      "pass": "The code maps obey these rules:\n- A job owns the command entry point: `wordfreq/cli.py` (or its `main` function as a named part) and `wordfreq/__main__.py`. No capability holds the command entry point.\n- Exactly one code map holds `wordfreq/counter.py`, the logic that counts words. Usually a capability holds this file.\n- Each app file, or each named part of a file, is in a maximum of one code map.\n- If two specs share a file, each spec names its own parts. The capability lists the file with `: the rest`.\n- No code map lists `README.md`, and no code map lists a path that does not exist.",
+      "partial": "The code maps have one fault. For example, a file or a part is in two code maps, or `wordfreq/counter.py` is in no code map. Other faults are a path that does not exist, and `README.md` in a code map.",
+      "source": "### 2. Map existing code; README \"Code maps\""
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "`pdlc/config.md` has a chosen value in place of each placeholder, example, and hint.",
+      "pass": "The Adapters section names one adapter for each port: inbox-files, checks-command, review-agent, visual-terminal, delivery-github, and tracker none. The app serves no pages, so visual-terminal is the correct adapter. The Visual section gives `start: none` and `url: none`. In the Adapters, Checks, and Visual sections, no `...` placeholder and no \"(or …)\" hint remains. The ID form line gives one word only. The Reviews, Board columns, and Tracker settings sections are the same as in the template.",
+      "partial": "`pdlc/config.md` has one fault: one leftover placeholder, example, or hint, or one wrong adapter.",
+      "source": "### 4. Set up checks and the visual review (\"replace each placeholder, each example, and each \\\"(or …)\\\" hint\"); ### 5. Pick adapters"
+    },
+    {
+      "id": "R5",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The six check settings work for this Python `unittest` project, and the run proves that the all command skips acceptance files.",
+      "pass": "The Checks section gives these values, or equivalent values that work:\n- all: `python3 -m unittest discover -s tests`, which runs the 8 existing checks.\n- one requirement: the same command with a name filter on `{req}`, for example `-k {req}`.\n- check folders: `tests/`. If the acceptance file is in a different folder, the check folders also list that folder.\n- acceptance file: a path with `{intent}` that the all command does not find, for example `tests/acceptance_{intent}.py`.\n- acceptance: a command with `{files}` that runs such a file, for example `python3 -m unittest {files}`.\n- ID form: `underscored`.\nThe transcript also shows a test with IN-9999 (the made-up intent of the test). A check that always fails goes into the acceptance path. The all command runs, and its output does not include that check. Then the acceptance command runs the file, and the check fails.",
+      "partial": "One value is wrong, missing, or does not work. Examples are ID form `dotted`, or an acceptance path that the all command finds. Or all six values are correct, but the transcript does not show the test with IN-9999 (the made-up intent).",
+      "source": "### 4. Set up checks and the visual review (\"Write these six items\", \"make sure that the \\\"all\\\" command skips acceptance files\")"
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "appliesWhen": "The prompt gives `defaults`.",
+      "criterion": "With `defaults`, the run asks the user nothing, and the final reply lists each decision that the run made for the user.",
+      "pass": "No message waits for a reply from the user. The final reply lists the decisions, so that the user can change them. The list covers the map, the branch names, the check names, the writing style, the check settings, and the adapters. The final reply also says that `/pdlc:dashboard` adds the live dashboard.",
+      "partial": "The run asks nothing, but the list misses one or two of these topics. Or the final reply does not say that `/pdlc:dashboard` adds the dashboard.",
+      "source": "## Before you start (\"At the end, list each decision that you made\"); ### 6. Offer the live dashboard (\"With `defaults`, do not install the dashboard\")"
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 2,
+      "appliesWhen": "The prompt does not give `defaults`.",
+      "criterion": "Without `defaults`, the run asks one question at a time, each with a recommended answer, about each decision that init leaves to the user.",
+      "pass": "Each message to the user asks one question. A question with options gives two or three options, and marks one option as recommended, with a short reason. The questions cover the map, the branch names, the check names, the writing style, the six check settings, the adapters, and the live dashboard. For the map, the run shows the capabilities and the jobs as two short lists with their code maps. Then the run asks if the user wants to merge, split, or rename an item. For the check settings, the run shows the six values, and asks the user to confirm them.",
+      "partial": "The run has one fault. Examples are a topic with no question, a message with two or more questions, or a question with options and no recommended option.",
+      "source": "### 2 (\"Ask if the user wants to merge, split, or rename an item\"); ### 3, step 1; ### 4 (\"Ask the user to make sure\"); ### 5; ### 6; README \"Asking questions\""
+    },
+    {
+      "id": "R8",
+      "kind": "outcome",
+      "weight": 2,
+      "appliesWhen": "A scripted reply picks an option that is not the recommended option, or asks the run to rename an item of the map.",
+      "criterion": "Each answer of the user that differs from the proposal of the run shows in the pdlc files.",
+      "pass": "For the branch pattern of the user, `DES-pdlc-branches.md` gives `feature/<change ID>-<short name>` for changes and `feature/<intent ID>-<short name>` for intents, with matching examples. The rule no longer gives the `pdlc/` pattern, and the header says `Default: no`. For the renamed job, the spec file is `pdlc/specs/jobs/JOB-word-report.md`, and its heading starts with `# JOB-word-report`. No spec keeps the old name of that job.",
+      "partial": "The answer shows in the file, but one detail is wrong. For example, the header still says `Default: yes`, or the old pattern or the old name stays in one place. Or a file name differs from its heading.",
+      "source": "### 3. Agree the defaults, step 2 (\"write the rule again to agree with the answer. Then set `Default: no`\"); ### 2 (\"For each job and capability that the user keeps\")"
+    },
+    {
+      "id": "R9",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 3,
+      "criterion": "One commit on `main` records the new `pdlc/` folder, and the run leaves no other change.",
+      "pass": "After the tag `start`, `main` has exactly one new commit, with the subject `Set up pdlc`. The commit holds only paths under `pdlc/`. The run makes no new branch. After the run, `git status` shows no changed file and no new file, apart from ignored files. Thus, the acceptance file of IN-9999 (the made-up intent) is gone. Also, `.gitignore` is the same as at `start`, because it already lists `pdlc/.tools/` and `__pycache__/`.",
+      "partial": "The commit is on `main`, but the run has one fault. For example, the subject differs, or the commit holds a file outside `pdlc/`. Other faults are two or more commits, and a file that the run leaves uncommitted.",
+      "source": "### 7. Finish, step 1 (\"Commit the new `pdlc/` folder and no other changes\")"
+    },
+    {
+      "id": "R10",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 2,
+      "criterion": "The final reply tells the user how to start with pdlc.",
+      "pass": "The final reply says that `/pdlc:ship <what you want>` runs all the stages. The reply also says that the user can run one stage at a time, and start with `/pdlc:intake`. If the run names an unsure item of the map, the final reply lists the item, and no spec holds the item.",
+      "partial": "The final reply gives only one of the two ways to start. Or a spec holds an item that the run calls unsure.",
+      "source": "### 7. Finish, step 2; ### 2 (\"Do not put an \\\"Unsure\\\" item into a spec. Put each one in your summary at the end.\")"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "typical: `defaults`, no questions",
+      "exercises": "The full path with `defaults`: the scaffold, the code map, the config for a Python CLI, the acceptance test, the commit, and the decision list.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "prompt": "set up pdlc for this project\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "interactive: no `defaults`, the user takes each recommended answer",
+      "exercises": "One question at a time, each with a recommended answer: the map, three init questions, the checks, the adapters, and the dashboard (the user says no).",
+      "replies": [
+        "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
+        "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
+        "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
+        "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
+        "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
+        "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
+        "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
+        "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
+        "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard."
+      ]
+    },
+    {
+      "id": "P03",
+      "prompt": "set up pdlc in this repo. Our team has its own rule for branch names.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "edge-but-valid: the user picks a non-recommended option",
+      "exercises": "A default that the user changes: the run writes DES-pdlc-branches (the branch-name rule) again with the pattern of the user, and sets `Default: no`.",
+      "replies": [
+        "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no."
+      ]
+    },
+    {
+      "id": "P04",
+      "prompt": "pdlc, please\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "terse: the user renames an item of the map",
+      "exercises": "A map edit from the user: the job spec of the command gets the new name (JOB-word-report). The code maps keep their boundaries.",
+      "replies": [
+        "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
+        "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no."
+      ]
+    }
+  ]
+}

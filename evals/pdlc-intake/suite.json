@@ -1,0 +1,171 @@
+{
+  "skill": "pdlc:intake",
+  "skillPath": "/tmp/claude-0/-home-user-pskills/ea747940-d227-5dc6-8b7c-95df4abfb5bf/scratchpad/v030/plugins/pdlc/skills/intake/SKILL.md",
+  "skillSha256": "86b5b7219e50623cec4f7e1f032c8f6e0377d1712965e3e73c76d91e87bb06e6",
+  "createdAt": "2026-10-26T20:29:27Z",
+  "structure": {
+    "summary": "With `defaults`, the skill works in one pass and asks nothing. Without `defaults`, the skill asks one question at a time, and only about a point with two possible meanings. The output is an intent file, spec patches, one `Specify` commit on main, and a short final reply.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The intent file `pdlc/inbox/IN-xxxx-<short-name>.md` follows the intent template. The header line is `Status: specifying · Ticket: none · Branch: none · Added: <date>`, with bare values. \"What and why\" holds the words of the user. \"Requirements\" lists each requirement of the intent with one word: added, changed, or retiring. \"Notes\" holds one line for each decision, in the forms of the template. The other sections of the template stay in the file."
+      },
+      {
+        "id": "S2",
+        "description": "The \"Handoff\" section of the intent file holds the handoff template, with its sections as `###` headings. The section starts with the title `intake → ready` and a Time line from the real clock. Then come the sections \"Done\", \"Decided on defaults\", \"Open\", \"Look here\", \"Don't redo\", and \"Next: do this first\". An empty section says \"none\"."
+      },
+      {
+        "id": "S3",
+        "description": "The spec patches go directly into the files in `pdlc/specs/`. A new requirement has the heading `### <spec ID>.R<n> · <title>`, the next free number, and the line `Status: proposed · Intents: IN-xxxx`. One or two sentences follow, then \"Given …, when …, then …\" acceptance lines. A plain `(assumed)` mark follows each detail that the user did not give. A changed requirement stays in its place, with `Status: proposed` and the intent in `Intents:`. A removed requirement gets `Status: retiring`."
+      },
+      {
+        "id": "S4",
+        "description": "A new spec starts from its template in `pdlc/templates/`. A new error gets a row in the table of `DES-errors`."
+      },
+      {
+        "id": "S5",
+        "description": "Each spec that says `Status: stub` and that the run changes becomes `Status: active`. The spec then holds requirements of what the code does today, with `Status: built` and `Source: recon`."
+      },
+      {
+        "id": "S6",
+        "description": "One commit on main records the work, because the fixture has no unmerged pdlc branch. The subject is `Specify IN-xxxx: <intent name>`, and the trailer `Intent: IN-xxxx` comes after a blank line. The commit holds only spec and intent files. After the commit, the working tree is clean."
+      },
+      {
+        "id": "S7",
+        "description": "A final reply to the user gives the ID of the new intent, says what intake wrote, and says that `/pdlc:ready` is next."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The specs hold all of the request of the user, in the exact terms of the user.",
+      "pass": "Each part of the request has at least one requirement with acceptance lines. Each example that the user gives appears exactly in an acceptance line: a message, an exit code, an input, or an output line. Examples are `error: --top needs a whole number greater than zero` with exit code 2, the lines `Rose 1` and `rose 1`, and each filler word that the user names. Each value keeps its plain meaning, also at the edge: `--top` with `0`, `-1`, or `2.5` gets the error, and `--min-count 0` shows each word. No `(assumed)` detail narrows the words of the user.",
+      "partial": "Each part has a requirement. But one example is not exact, for example a changed message or a missing exit code. Or one edge value is narrowed or has no acceptance line.",
+      "source": "4. Write the patches: \"The intent's own words bind\""
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The user can find each detail that the run decided alone, and can change the detail later.",
+      "pass": "Each detail that the words of the user do not give has a plain `(assumed)` mark right after its words. For example, an order, a limit, a message, an error code, or the output for an N that is more than the number of words. The mark starts with `(assumed`, has no emphasis, and keeps any reason outside the brackets. No detail that the user gave has the mark. The \"Decided on defaults\" section of the handoff lists each assumed decision on its own line, as `<requirement>: <question> → <answer> (assumed)`.",
+      "partial": "Most invented details have the mark, but one or two details do not. Or \"Decided on defaults\" lists only some decisions, or only points to the Notes. Or a mark has a wrong form, such as `*(assumed)*` or `(limit assumed)`.",
+      "source": "4. Write the patches: \"Mark (assumed) on each detail\"; pdlc/README.md \"Asking questions\"; templates/handoff.md \"Decided on defaults\""
+    },
+    {
+      "id": "R3",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "After the run, each spec tells a reader the current truth. The summaries show the new behaviour, and no text still shows a behaviour that the request replaces.",
+      "pass": "The summary (\"Who and why\" or \"What it is for\") of each spec with a new requirement names the new behaviour, such as the `--top N` option. When the request replaces a behaviour, no text in `pdlc/specs/` still shows the old behaviour, such as \"It ignores case\" in `CAP-word-counting`. This rule covers the title, the summary, the examples in other requirements, the cross-references, and the notes. Each changed requirement has the Note `<ID>: was \"<old>\", now \"<new>\"` in the intent. Each README line that shows a replaced behaviour has the Note `README: \"<old line>\" → <requirement>`.",
+      "partial": "The specs have one gap. A summary does not name an added behaviour. Or one place still shows the old behaviour. Or one was-and-now Note or one README Note is missing.",
+      "source": "4. Write the patches: \"The newest words win\", \"Leave no old wording\", \"The summary shows what you add\""
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S6",
+      "weight": 2,
+      "criterion": "The run records its work in a `Specify` commit on main, and the commit holds only spec and intent files.",
+      "pass": "Each new commit after `start` is on main, with the subject `Specify IN-0001: <intent name>` and the name from the heading of the intent. The message ends with a blank line and the trailer `Intent: IN-0001`, with no `Req:` and no `Change:` trailer. The run makes no new branch. The commits change only files in `pdlc/specs/` and `pdlc/inbox/`. Thus, `wordfreq/`, `tests/`, `README.md`, `pdlc/README.md`, `pdlc/config.md`, and `pdlc/changes/` stay the same. At the end, `git status --porcelain` shows nothing.",
+      "partial": "The files are correct, but the commit has a small fault. Examples are a different subject, a name that is not the intent name, a `Req:` trailer, or one file that stays uncommitted. Or the run made a branch.",
+      "source": "\"Intake does not write code\"; 5. Record and finish, step 3; pdlc/README.md \"Where pdlc commits\"; DES-pdlc-commit-trailers"
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "Each requirement, spec, and error row that the run adds or changes has the pdlc form (this item covers S3 and S4).",
+      "pass": "Each new requirement has the heading `### <spec ID>.R<n> · <short title>`, with the next free number in its spec, and then `Status: proposed · Intents: IN-0001`. One or two plain sentences follow, then acceptance lines in the form \"Given …, when …, then …\". Each changed requirement keeps its ID and its place, says `Status: proposed`, and has `IN-0001` in `Intents:`. A new spec has the sections of its template in `pdlc/templates/`, in order. A new error has a row in the table of `DES-errors`: a code in `UPPER_SNAKE_CASE`, its meaning, `caller`, and `no`. Each sentence, also in an acceptance line, has 25 words or fewer and a short description of each ID that it names, as in `R2 (tie order)`.",
+      "partial": "The form is mostly correct, but one item is wrong. Examples are a gap in the numbers, a used number, a changed requirement under a new ID, or a missing `Intents:` value. Other examples are a missing template section, a new error with no `DES-errors` row, or a few sentences of more than 25 words.",
+      "source": "4. Write the patches: \"New requirement\", \"Changed requirement\", \"For a new spec, use pdlc/templates/\"; DES-errors \"Rule\""
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 2,
+      "criterion": "Each stub spec that the run changes also gets the requirements of what the code does today.",
+      "pass": "Each changed spec that said `Status: stub` at `start` now says `Status: active`. The spec holds correct requirements of the current code, each with `Status: built` and `Source: recon`. In `CAP-word-counting`, the code ignores case and takes a word as the letters a to z and the apostrophe. The code puts the most common word first, with equal counts in alphabetical order. In `JOB-report-word-frequencies`, the command prints `<word> <count>` lines, and gives exit code 2 with `usage: wordfreq FILE` or `error: cannot read <path>`. A recon requirement that the request then changes says `Status: proposed`.",
+      "partial": "The spec is active and has recon requirements. But one requirement does not agree with the code, or the requirements do not have `Status: built` and `Source: recon`. Or a second changed stub spec stays a stub.",
+      "appliesWhen": "the run changes a spec that says `Status: stub` at `start`",
+      "source": "3. Deepen stub specs; agents/recon.md \"A deep look at one area\""
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "The intent file records the request, its requirements, its decisions, and a handoff for ready, in the form of the templates (this item covers S1 and S2).",
+      "pass": "One new file `pdlc/inbox/IN-0001-<short-name>.md` follows the intent template, with the header line `Status: specifying · Ticket: none · Branch: none · Added: <today>`. \"What and why\" holds the request in the words of the user. \"Requirements\" lists each requirement whose `Intents:` has `IN-0001`, each with one word: added, changed, or retiring. The \"Notes\" lines use the forms of the template. The \"Handoff\" section holds the handoff template as `###` headings, under the title `intake → ready` and a Time line such as `2026-10-26T10:15:02+00:00`. The sections \"Done\", \"Decided on defaults\", \"Open\", \"Look here\", \"Don't redo\", and \"Next: do this first\" come in this order, with \"none\" under an empty section.",
+      "partial": "The file and its header are correct, but one part is wrong. Examples are a \"What and why\" that changes the words of the user, or a requirement that \"Requirements\" does not list. Another example is a handoff with no title, no Time line, or a missing section.",
+      "source": "1. Get the intent; 5. Record and finish, steps 1 and 2; templates/intent.md; templates/handoff.md"
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each part of the request is in the spec where pdlc says that the part belongs.",
+      "pass": "An option, an output, or a message of the `wordfreq` command is in `JOB-report-word-frequencies`. A new command, such as `python3 -m wordfreq.compare`, gets its own job spec, with `CAP-word-counting` and `DES-errors` under \"Relies on\". A rule about what a word is, such as the case rule, is in `CAP-word-counting`. A job can show an example of such a rule, but does not state the rule again. A list of filler words to omit is in one spec only, the capability or the job. The run makes no new spec for a part that an existing spec covers.",
+      "partial": "Each part is in a suitable spec, but one rule is out of place. Examples are a rule about words that only the job states, one rule in two specs, or a new spec that repeats an existing spec. Another example is a new job with an incomplete \"Relies on\" list.",
+      "source": "2. Decide what it touches; 4. Write the patches: \"New job\""
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The run asks the user only about a point with two possible meanings, in the pdlc form. With `defaults`, the run asks nothing.",
+      "pass": "With `defaults`, the transcript has no question to the user. Then the Notes of the intent record each choice in place of a question, as `<question> → <answer> (assumed)`. Without `defaults`, the run asks before it writes the specs, and only about a point with two possible meanings, such as \"boring words\". Each message asks one question, offers two or three answers, and marks one answer as recommended with a one-line reason. The Notes of the intent record the answer. A request with one plain meaning gets no question.",
+      "partial": "The run asks about the correct point, but breaks one rule. Examples are two questions in one message, no recommended answer, or an answer that the Notes do not record. Or with `defaults`, the run asks nothing, but the Notes record none of its choices. Or the run also asks about a detail that an `(assumed)` mark can settle.",
+      "source": "2. Decide what it touches: \"If the intent has two possible meanings, ask the user\"; pdlc/README.md \"Asking questions\""
+    },
+    {
+      "id": "R10",
+      "kind": "structure",
+      "structureRef": "S7",
+      "weight": 1,
+      "criterion": "The final reply tells the user what intake did and what comes next.",
+      "pass": "The last message to the user gives the ID of the new intent with a short description, such as `IN-0001` (top option). The message names the specs and requirements that the run added or changed, each ID with a short description. The message says that `/pdlc:ready` is next. The message makes sense alone, and does not paste the full specs.",
+      "partial": "The message gives the intent ID and the next step, but does not say what intake wrote. Or the message gives IDs with no description.",
+      "source": "1. Get the intent: \"Tell the user the ID of the new intent\"; 5. Record and finish, step 5"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "prompt": "defaults Add a --top N option to wordfreq. With it, the command prints only the N most common words. If N is not a whole number greater than zero, print `error: --top needs a whole number greater than zero` to standard error and exit with code 2.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state intake --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "typical: one new option, with `defaults`",
+      "exercises": "The prompt tests a new job requirement with the exact message, the exit code, and the edge values of N. The prompt also tests a new `DES-errors` row, recon on the stub job, and the job summary. With `defaults`, the Notes record the choices.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "prompt": "Stop ignoring case when wordfreq counts words. `Rose` and `rose` must count as two different words. For example, a file with `Rose saw a rose` must give the lines `Rose 1` and `rose 1`.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state intake --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "change of a behaviour that exists, without `defaults`, with one plain meaning",
+      "exercises": "The prompt tests recon on the stub capability, and a changed requirement in place with a was-and-now Note. The prompt also tests the old words \"It ignores case\" in the capability summary, and a README Note with no README edit. The example lines stay exact, the order of equal counts is assumed, and the run asks nothing.",
+      "replies": []
+    },
+    {
+      "id": "P03",
+      "prompt": "Make wordfreq skip the boring words.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state intake --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "ambiguous: a vague request, without `defaults`, with scripted replies",
+      "exercises": "The prompt tests one question about what \"boring words\" means, with a recommended answer. The Notes record the answer, and the filler words of the reply appear in acceptance lines. The full list of words is `(assumed)`, and old examples with `the` or `and` change.",
+      "replies": [
+        "I mean common filler words, such as `the`, `a`, `and`, `of` and `to`. Leave them out of the output every time. I do not want an option for it.",
+        "Take your recommended answer.",
+        "Yes, go ahead."
+      ]
+    },
+    {
+      "id": "P04",
+      "prompt": "defaults Two separate things for wordfreq. First, add a new command, `python3 -m wordfreq.compare OLD NEW`. It prints each word that is in the file NEW but not in the file OLD, one word on each line. Second, add a `--min-count N` option to the normal report. With it, wordfreq prints only the words that appear at least N times.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state intake --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "rich input: two separate parts, a new job and a new option, with `defaults`",
+      "exercises": "The prompt tests a new job spec from the template, with \"Relies on\" and a \"Code map\". The prompt also tests a new requirement in the job, and both parts in one intent and one commit. Other tests are the edge value `--min-count 0`, and the assumed order and errors of the new command.",
+      "replies": []
+    }
+  ]
+}

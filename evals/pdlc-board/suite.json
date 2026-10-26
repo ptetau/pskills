@@ -1,0 +1,145 @@
+{
+  "skill": "pdlc:board",
+  "skillPath": "/tmp/claude-0/-home-user-pskills/ea747940-d227-5dc6-8b7c-95df4abfb5bf/scratchpad/v030/plugins/pdlc/skills/board/SKILL.md",
+  "skillSha256": "4ff8bd954efc7b6b9557f0ab28963f615ffe72bcc9a0d8b526539bdc68035520",
+  "createdAt": "2026-10-26T20:29:13Z",
+  "structure": {
+    "summary": "The run gives one final reply and asks no questions, because the skill asks none. The run examines the tracker setup first. Then the run ends in one of three ways: a stop at a gap, a dry-run table, or a sync with card counts.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "Stop at a setup gap. If the tracker is `none`, the reply says that there is no tracker. If \"Tracker settings\" does not have a setting that the adapter file reads, the reply names that setting. If a column from \"Board columns\" is not on the board, the reply lists each missing column. After each of these gaps, the run stops. With `dry-run`, no access to the board is not a gap: the run does not do the column check, and goes on."
+      },
+      {
+        "id": "S2",
+        "description": "Dry-run table. The table has one row for each intent and each change that is not cancelled. Each row gives the card key (or `none`), the current column, and the correct column from \"Board columns\". The current column is `unknown` when the run cannot get to the board. The run changes no file, and does not change the board."
+      },
+      {
+        "id": "S3",
+        "description": "Sync without `dry-run`. Through the tracker port, the run shows each intent, and then each change of that intent. The run writes each new card key into the `Ticket` of the intent or the change. If the run wrote a `Ticket`, the run commits on main with the message \"Board: record card keys\". The final reply gives the number of cards made, the number of cards moved, and the number of cards that did not need a change."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The user gets the true list of cards. The list has one card for each intent and each change that is not cancelled, with its pdlc status and the column for that status.",
+      "appliesWhen": "The run lists the cards that the board must show, in a table or in a list.",
+      "pass": "The list has exactly three cards. IN-0001 (wordfreq top option) has the status `in review` and the column In review. CH-0001 (top option) has the status `in review` and the column In review. IN-0002 (wordfreq top huge number) has the status `new` and the column Backlog. These values come from the branch `pdlc/CH-0001-top-option`, which is the newest branch for each item. On main, IN-0001 (wordfreq top option) says `ready`, CH-0001 (top option) says `planned`, and IN-0002 (wordfreq top huge number) does not exist, so a value from main is wrong.",
+      "partial": "The list has all three cards, but exactly one status or one column is wrong. Or the list has no card for IN-0002 (wordfreq top huge number), and the two other cards are correct.",
+      "source": "## 2. Find what the board must show. pdlc/README.md: \"Before you select an intent or a change by its status\""
+    },
+    {
+      "id": "R2",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "The dry-run table gives the card key, the current column, and the correct column for each card. Each current column that the run could not see is `unknown`.",
+      "appliesWhen": "The user asks for a dry-run: the word `dry-run`, or words that ask only to see what the board needs, with no change. Also, the run shows the cards.",
+      "pass": "The cards are in one table, with one row for each card. Each row names the intent or the change. Each row gives the card key, the current column, and the correct column. The card key is `none`, because each `Ticket` is `none`. Each current column is `unknown`, because the run cannot get to the board.",
+      "partial": "One of the three fields is missing, or the cards are in a list and not in a table. Or a current column shows a value other than `unknown`, for example a blank, `none`, or \"no card\".",
+      "source": "## 3: \"Print a table with one row for each item. Give the card key, the current column, and the correct column.\" ## 1: \"Show the current column of each card as unknown\""
+    },
+    {
+      "id": "R3",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The user can trust each statement about the board, because the reply states only what the run saw.",
+      "pass": "The reply makes no claim about the board that a board call in the transcript did not return. Thus, the reply gives no card key and no current column from the board. Also, the reply does not say that a card was made, moved, or is up to date. No board call can succeed in these fixtures. If the run tried the board, the reply says that the run could not get to the board. A reply that stops before the board, and says nothing about the board, meets the item.",
+      "partial": "The reply says that the run could not get to the board, but one statement still reads as a fact about the board. Examples are \"the board has no cards yet\" and \"all cards are up to date\".",
+      "source": "Description: \"pdlc is the truth, and the board only shows the truth.\" ## 1: \"it is possible that you cannot get to the board\""
+    },
+    {
+      "id": "R4",
+      "kind": "behavior",
+      "weight": 3,
+      "criterion": "pdlc stays the truth: the run changes no pdlc file and makes no commit to make the board agree.",
+      "pass": "The capture shows no new commit after `start` on any branch, and `git status --porcelain` in `proj` shows nothing. The skill permits one edit only: a `Ticket` with a card key that a board call returned. No board call can succeed here, so the correct result has no edit. A switch to main is not a change. Main is an older commit, so a diff of the main checkout against `start` shows old content, not new work. Ignore caches, for example `__pycache__/`.",
+      "partial": "The only change is to \"Tracker settings\" in `pdlc/config.md`, or a note that records an assumption. Also, the reply tells the user about the change.",
+      "source": "Rules: \"Only write to the board. Do not act on moves that persons make on the board.\" ## 3: \"do not change the board or a file\". pdlc/README.md core rule 8."
+    },
+    {
+      "id": "R5",
+      "kind": "outcome",
+      "weight": 2,
+      "criterion": "The user who set a tracker does not hear that the project has no tracker.",
+      "appliesWhen": "The setup in the prompt uses the state `board`.",
+      "pass": "The run takes the tracker `tracker-github-projects` as set, with the owner example-org, the project 7 and the status field Status. Main and the branch `pdlc/CH-0001-top-option` both have this setting, in the commit \"Set the tracker\".",
+      "partial": "The reply names the tracker setting, but the result of the run is still \"there is no tracker\".",
+      "source": "## 1: \"Read the tracker adapter in pdlc/config.md\""
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "When the setup check finds a gap, the reply names the exact gap, and the run stops at that gap.",
+      "appliesWhen": "The setup in the prompt uses the state `done`. Or the setup uses the state `board`, and the run takes the tracker `tracker-github-projects` as set. R5 (tracker found) grades a run that does not.",
+      "pass": "At the state `done`, the reply says that the tracker is `none`. Then the run shows no card table and makes no board call.\n\nAt the state `board`, \"Tracker settings\" has each setting that the adapter file reads: owner, project and status field. Thus, the next gap is no access to the board. With a dry-run, the run goes on and shows each current column as `unknown`, and skips the column check. Without a dry-run, the run says that it cannot get to the board, and stops.",
+      "partial": "The reply names the gap, but the run goes on after the gap without a dry-run. Or the reply says that a setting is missing when each setting is present. Or the reply says that the board is not reachable, but does not say why.",
+      "source": "## 1. Examine the setup"
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 1,
+      "criterion": "After a sync, the run records each new card key and reports the counts.",
+      "appliesWhen": "There is no dry-run, and a board call in the transcript succeeded: the call returned a card key or an item ID. The board in these fixtures cannot be reached, so this condition is usually false.",
+      "pass": "Each new card key is in the `Ticket` of its intent or change. One commit on main has the subject \"Board: record card keys\". The final reply gives the number of cards made, the number of cards moved, and the number of cards that did not need a change.",
+      "partial": "One of these three parts is missing or different.",
+      "source": "## 3. Make the board agree with pdlc (without dry-run). ## 4. Finish"
+    },
+    {
+      "id": "R8",
+      "kind": "outcome",
+      "weight": 2,
+      "criterion": "The user knows what to do next: the reply names each block on the board work, and a step that removes each block.",
+      "pass": "For each block that the reply names, the reply gives one step that removes the block. The steps match the blocks in this project. Some examples follow.\n\n- Set a tracker adapter and its settings in `pdlc/config.md`.\n- Give the session a tool that can get to the GitHub project, for example the `gh` CLI with project access.",
+      "partial": "The reply names a block, but gives no step for the block. Or a step does not remove the block that the step is for.",
+      "source": "## 1: \"tell the user which setting is missing\". Adapter tracker-github-projects, Tools: \"stop and tell the user\""
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "When the user asks for a dry-run, the run makes no board write.",
+      "appliesWhen": "The user asks for a dry-run: the word `dry-run`, or words that ask only to see what the board needs, with no change.",
+      "pass": "The transcript has no call that makes, edits, or moves a board item. Examples are `gh project item-create`, `gh project item-edit`, and a GraphQL mutation. A read of the board is permitted. The reply does not say that the run changed the board.",
+      "partial": "The run tried one board write, and the write failed.",
+      "source": "Description: \"With dry-run, the skill does not change the board.\" ## 3: \"If the user passed dry-run, do not change the board or a file.\""
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical",
+      "prompt": "dry-run\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state board --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "The prompt runs a dry-run at a tracker that the run cannot reach. The prompt tests the table with `unknown` current columns, the statuses from the newest branch, and no change to the board or to pdlc.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "axis": "sync without dry-run, with defaults",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state board --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "The prompt runs a sync, and the board cannot be reached. The prompt tests a stop at the setup gap or at the board, no made-up card key, and no `Ticket` write. The prompt also tests no commit \"Board: record card keys\" and an honest report. With `defaults`, the run asks no question.",
+      "replies": []
+    },
+    {
+      "id": "P03",
+      "axis": "edge-but-valid: no tracker",
+      "prompt": "dry-run\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "The stop when the tracker is `none`: the reply says that there is no tracker, shows no table, makes no board call, and changes nothing.",
+      "replies": []
+    },
+    {
+      "id": "P04",
+      "axis": "natural phrasing: a dry-run without the word",
+      "prompt": "I connected our GitHub project to pdlc today. Before anything goes on the board, show me what the board needs. Do not change anything yet.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state board --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "The prompt asks for a dry-run in plain words. The run must treat the request as a dry-run, and make no board write and no file change. The run gives the same honest table or stop as with `dry-run`.",
+      "replies": []
+    }
+  ]
+}

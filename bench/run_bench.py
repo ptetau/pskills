@@ -690,16 +690,26 @@ def command_prepare(args):
     else:
         make_done_project(dest, plugin)
     if args.state == "board":
-        config = dest / "pdlc" / "config.md"
-        text = config.read_text().replace("- tracker: none", "- tracker: tracker-github-projects")
-        text = text.replace("## Tracker settings\n\nThis section is necessary only when a tracker adapter is set. "
-                            "The file of the adapter\ntells what goes here.\n\n- none",
-                            "## Tracker settings\n\nThis section is necessary only when a tracker adapter is set. "
-                            "The file of the adapter\ntells what goes here.\n\n- owner: example-org\n- project: 7")
-        config.write_text(text)
-        git(dest, "commit", "-q", "-am", "Set the tracker")
+        # pdlc reads the config on main before any work, so main and the branch both get the tracker.
+        branch = git(dest, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+        for name in ("main", branch):
+            git(dest, "checkout", "-q", name)
+            set_tracker(dest)
     git(dest, "tag", "start")
     print(dest.resolve())
+
+
+def set_tracker(project):
+    """Set a GitHub Projects tracker that no run can reach, and commit it."""
+    config = Path(project) / "pdlc" / "config.md"
+    text = config.read_text().replace("- tracker: none", "- tracker: tracker-github-projects")
+    text = text.replace("## Tracker settings\n\nThis section is necessary only when a tracker adapter is set. "
+                        "The file of the adapter\ntells what goes here.\n\n- none",
+                        "## Tracker settings\n\nThis section is necessary only when a tracker adapter is set. "
+                        "The file of the adapter\ntells what goes here.\n\n- owner: example-org\n- project: 7\n"
+                        "- status field: Status")
+    config.write_text(text)
+    git(project, "commit", "-q", "-am", "Set the tracker")
 
 
 # ---------------------------------------------------------------- the commands

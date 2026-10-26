@@ -1,0 +1,168 @@
+{
+  "skill": "pdlc:trace",
+  "skillPath": "/tmp/claude-0/-home-user-pskills/ea747940-d227-5dc6-8b7c-95df4abfb5bf/scratchpad/v030/plugins/pdlc/skills/trace/SKILL.md",
+  "skillSha256": "790f22afc5242fca6cea6540f97f8dc44806854da1ca6cd7f066636e84ba1668",
+  "createdAt": "2026-10-26T20:26:02Z",
+  "structure": {
+    "summary": "The skill gives one reply and asks no questions. The reply answers one trace question in plain words. The trace goes from code to its commit, requirement, intent and ticket. Or the trace goes from an intent or a requirement to its changes, commits, files and checks. The run only reads git and the pdlc files, and changes no file.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The reply: the answer in plain words, with the file paths, the commit hashes and the check names that support each link."
+      },
+      {
+        "id": "S2",
+        "description": "From code (a file, and maybe a line): the commit of the line (`git blame`) or the commits of the file (`git log --follow`). Then the trailers of the commit. Then each `Req` with its title and status from `pdlc/specs/`. Then the intent with its name and status from the inbox port. Then the ticket, if there is one."
+      },
+      {
+        "id": "S3",
+        "description": "From an intent: the requirements and the changes of the intent, with their statuses. Then the commits of each change (`git log --all --grep \"Change: CH-xxxx\"`). Then the checks that prove each requirement (the find operation of the checks port)."
+      },
+      {
+        "id": "S4",
+        "description": "From a requirement: the requirement, its status and its intents. Then the checks that prove the requirement. Then the commits whose `Req` trailer names the requirement, and the files that these commits changed."
+      },
+      {
+        "id": "S5",
+        "description": "Links to the files in the folder of a change, `pdlc/changes/CH-xxxx-name/`, when the files help the user. These files are `change.md`, the review results, the GIF and the handoff."
+      },
+      {
+        "id": "S6",
+        "description": "A statement of each missing link, as a finding. Examples are a commit with no trailers, a requirement with no checks, and an intent that names a change that does not exist."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The first lines of the reply answer the question that the user asked, in plain words.",
+      "pass": "The answer comes before the details, and a person who does not know pdlc can understand it. The expected answer for each prompt is as follows.\n- Line 26 of wordfreq/cli.py: the line rejects a `--top` value that is not an integer greater than zero. The line exists for JOB-report-word-frequencies.R7 (print only the N most common words) of IN-0001 (wordfreq top option).\n- IN-0001: the reply says what the intent changed in the code, in the checks and in the specs.\n- JOB-report-word-frequencies.R8 (one --top option only): the reply names the check that proves this requirement, and the test file of the check.\n- wordfreq/counter.py: the file came with the code from before pdlc, and no intent or ticket asked for it. The reply also names the nearest spec. This spec is CAP-word-counting (a stub whose code map holds the file), or the recon requirements of JOB-report-word-frequencies.",
+      "partial": "The answer is in the reply, but only after a long block of raw git output. Or the reply answers only part of the question. For example, the reply lists the three requirements of the commit, but does not say which requirement line 26 serves. Or the reply says that counter.py has no trace, and names no spec.",
+      "source": "\"This skill answers trace questions in plain words, with file paths and links.\""
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each fact in the answer is true for the project, and the answer invents no link.",
+      "pass": "The facts in the reply agree with these facts of the fixture.\n- Line 26 of wordfreq/cli.py comes from the commit `Build CH-0001: add the --top option`. The trailers of that commit are `Intent: IN-0001`, `Change: CH-0001`, and `Req: JOB-report-word-frequencies.R5, JOB-report-word-frequencies.R7, JOB-report-word-frequencies.R8`. The commit has no `Ticket` trailer, and the intent says `Ticket: none`.\n- IN-0001 changed JOB-report-word-frequencies.R5 (usage line). IN-0001 added JOB-report-word-frequencies.R7 (print only the N most common words) and JOB-report-word-frequencies.R8 (one --top option only). IN-0001 has one change, CH-0001 (top option), with 14 commits. The code changes are in wordfreq/cli.py, README.md and tests/test_JOB_report_word_frequencies.py.\n- One check proves JOB-report-word-frequencies.R8 (one --top option only). The check is `test_JOB_report_word_frequencies_R8_repeated_top_prints_usage`. Two commits name this requirement in `Req`: the first `Tests CH-0001` and `Build CH-0001: add the --top option`.\n- The only commit of wordfreq/counter.py is `Set up pdlc`, and that commit has no trailers.\n- On the branch pdlc/CH-0001-top-option, IN-0001 (wordfreq top option) and CH-0001 (top option) are `in review`. On that branch, the three requirements of IN-0001 are `verified`.",
+      "partial": "One small fact is wrong, but each main link is correct. Examples are a wrong count of checks, or the statuses from main (`ready`) with no word about the branch. A wrong commit or a wrong requirement is a miss. A claim that JOB-report-word-frequencies.R8 (one --top option only) has no checks is a miss. An invented link is a miss, for example IN-0001 as the reason for wordfreq/counter.py.",
+      "source": "Each section of the skill; pdlc/README.md, \"Before you select an intent or a change by its status\""
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "For a question about code with trace trailers, the reply follows the chain from the code to the ticket.",
+      "pass": "The reply names the commit of the line, with its subject. The reply gives the trailers of the commit. For each `Req`, the reply gives the title and the status of the requirement. The reply gives the name and the status of the intent. The reply names the ticket, or says that there is no ticket.",
+      "partial": "One link of the chain is missing. Often the reply gives no status for a requirement, or says nothing about the ticket. Or the reply omits one of the three requirement IDs of the `Req` trailer.",
+      "appliesWhen": "the question names a file or a line of code, and the commit of that code has trace trailers",
+      "source": "From code (a file, and maybe a line), steps 1 to 5"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "For a question about an intent, the reply gives the requirements, the changes, the commits of each change and the checks of each requirement.",
+      "pass": "The reply lists the three requirements of IN-0001 (wordfreq top option), each with its status. These requirements are JOB-report-word-frequencies.R5, JOB-report-word-frequencies.R7 and JOB-report-word-frequencies.R8. The reply lists CH-0001 (top option) with its status. The reply lists the commits of CH-0001, in full or in groups, and names the commits that changed code or checks. For each requirement, the reply names the checks that prove the requirement, by class name, check name or count.",
+      "partial": "One of the four parts is missing. Often the reply omits the checks of each requirement or the commits of the change. Or the reply gives no statuses.",
+      "appliesWhen": "the question names an intent",
+      "source": "From an intent, steps 1 to 3"
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "For a question about a requirement, the reply gives the requirement, its checks, and the commits and files that name the requirement.",
+      "pass": "The reply gives JOB-report-word-frequencies.R8 (one --top option only) with its title, its status and its intent IN-0001 (wordfreq top option). The reply names each check that proves the requirement, with the path of the test file. The reply lists the commits whose `Req` trailer names the requirement. The reply also lists the files that these commits changed.",
+      "partial": "One of these parts is missing. Often the reply lists the commits but not the files that the commits changed. Or the reply omits the status or the intent of the requirement.",
+      "appliesWhen": "the question names a requirement",
+      "source": "From a requirement, steps 1 to 3"
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "Each link in the answer names its source, so that the user can open it.",
+      "pass": "Each commit has its short hash and its subject. Each requirement, intent and change has the path of its file, or a link to the file. Each check has its name and the path of its test file. A short quote of a trailer or of a spec line can replace a path.",
+      "partial": "Some links have a source, and some links do not. For example, the commits have hashes, but the statuses come with no file path.",
+      "source": "\"in plain words, with file paths and links\""
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 1,
+      "criterion": "When the trace reaches a change, the reply links to the files in the folder of that change.",
+      "pass": "The reply gives the path of `pdlc/changes/CH-0001-top-option/change.md`. The reply also gives at least one more file from that folder that helps the answer. Examples are `proposal.md`, `review.gif`, `handoff.md` and a review `result.md`.",
+      "partial": "The reply names only the folder or only `change.md`. Or the reply names the change ID with no path.",
+      "appliesWhen": "the trace reaches a change, for example CH-0001 (top option)",
+      "source": "Change folders"
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "structureRef": "S6",
+      "weight": 2,
+      "criterion": "The reply tells the user about each missing link that the trace meets, as a finding.",
+      "pass": "The reply says in plain words which link is missing, and what the gap means. For wordfreq/counter.py, the reply says that the commit `Set up pdlc` has no trace trailers. Thus, no requirement, intent or ticket comes from that commit. The reply also says one of these facts: CAP-word-counting has no requirements, or no check carries the ID of a recon requirement.",
+      "partial": "The reply names only one gap, for example the missing trailers, and says nothing about the specs. Or the gap shows only in raw git output, with no statement.",
+      "appliesWhen": "the trace meets a missing link. Examples are a commit with no trailers, a requirement with no checks, and a spec with no requirements. An intent that names a change that does not exist is also a missing link. A missing ticket alone is not a missing link, because the ticket is optional",
+      "source": "Say when a link is missing"
+    },
+    {
+      "id": "R9",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The run changes nothing in the project.",
+      "pass": "After the run, `proj` has no new commit on any branch. No tracked file is changed or deleted. The only new files are caches that `.gitignore` lists, for example `__pycache__/`. The run ends on the branch where it started, `pdlc/CH-0001-top-option`. A switch to main and back, for the start step of `pdlc/README.md`, is permitted when it changes nothing.",
+      "partial": "The project ends in its start state, but the run left it on a different branch. Or the run wrote a temporary file in `proj` and then deleted it.",
+      "source": "\"Do not change any file.\""
+    },
+    {
+      "id": "R10",
+      "kind": "behavior",
+      "weight": 1,
+      "criterion": "Each ID in the prose of the reply comes with a short description.",
+      "pass": "Each requirement, intent, change and spec ID in a sentence has a short description in the same sentence or table row. An example is `JOB-report-word-frequencies.R7 (print only the N most common words)`. The description has two to eight words. A header field, a commit trailer and quoted git output can hold a bare ID.",
+      "partial": "Most IDs have a description, but some IDs in the prose are bare.",
+      "source": "pdlc/README.md, Core rules, rule 10 (the rules of DES-writing-style)"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical",
+      "prompt": "Why does line 26 of wordfreq/cli.py exist?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "From code with a line: `git blame` of one line, the trailers, and three requirements with titles and statuses. Also the intent, no ticket, the change folder, and the statuses on the change branch.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "axis": "reverse direction (from an intent to code), with defaults",
+      "prompt": "defaults. What did IN-0001 (the --top option) change?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "From an intent: the requirements and the change with statuses, the commits of CH-0001 (top option), the checks of each requirement, and the change folder.",
+      "replies": []
+    },
+    {
+      "id": "P03",
+      "axis": "terse: one requirement ID",
+      "prompt": "What proves JOB-report-word-frequencies.R8 (one --top option only)?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "From a requirement: the status and the intent, and the find operation of the checks port in the underscored ID form. Also the commits whose `Req` trailer names the requirement, and the files of those commits.",
+      "replies": []
+    },
+    {
+      "id": "P04",
+      "axis": "edge-but-valid: code with no trace trailers",
+      "prompt": "Why does wordfreq/counter.py exist? Which requirement asked for it?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "From a full file with `git log --follow`: the seed commit has no trailers. Thus, the reply must name the missing links, and must not invent an intent.",
+      "replies": []
+    }
+  ]
+}
