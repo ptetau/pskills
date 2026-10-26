@@ -1,0 +1,1288 @@
+{
+ "skill": "pdlc:conventions",
+ "skillSha256": "658ac9e8061f0f30b104dd00a2fa432948d878c4c817561488d1c1a702893b5a",
+ "suiteSha256": "970724430e93d97047874a789586b76ee5fc9affd7b8006389e24c852c0563c3",
+ "runId": "base-20261026T202910Z",
+ "generatedAt": "2026-10-26T20:47:12Z",
+ "config": {
+  "prompts": [
+   "P01",
+   "P02"
+  ],
+  "runs": 3,
+  "wave": 3,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "lean",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 11,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 96,
+  "stability": 61.2,
+  "overall": 76.6,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 6,
+  "totalRuns": 6
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 3,
+   "usable": 6,
+   "quality": 96,
+   "stability": 64.8,
+   "overall": 78.9,
+   "grade": "C",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 90.5,
+  "median": 95.2,
+  "max": 100
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "Before the run writes the convention, it names the subject and why the subject is important now. Then it asks one question. The question has two or three options, each with a real example from wordfreq, and one recommended option with a reason.",
+   "passRate": 83.3,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "With `defaults`, the run asks no question and takes its recommended option. It marks the choice as assumed in a file that the user can read.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The design spec has the form of the design template. A new spec is a new file in `pdlc/specs/design/`. A changed spec is the existing file, edited in place, with `Default: no`.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": 90,
+   "classCross": "equivalent"
+  },
+  {
+   "id": "R4",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user gets a rule that a later stage can apply with no guess. The rule is the option that the user agreed to, or the recommended option with `defaults`.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user gets exactly one migration intent for each job or capability whose code breaks the agreed rule. Code that already obeys the rule gets no migration intent.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "Each intent that the run adds is a file from the intent template, in the form of the inbox-files adapter. Each migration intent has the name \"Migrate <spec> to <convention>\".",
+   "passRate": 100,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 33.3,
+   "stabilityCross": 25,
+   "classCross": "major_drift"
+  },
+  {
+   "id": "R7",
+   "kind": "behavior",
+   "weight": 3,
+   "criterion": "The run does not start the intents, and does not migrate any code. The user selects when each intent runs.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run commits all its work on main, in one commit with the subject `Convention DES-<name>`.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": 90,
+   "classCross": "equivalent"
+  },
+  {
+   "id": "R9",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The closing message tells the user how many migration intents the run added. It also says that the user selects when each intent runs.",
+   "passRate": 83.3,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 25,
+   "classCross": "major_drift"
+  },
+  {
+   "id": "R10",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The design spec has requirements for the convention, with the status `proposed`. The run adds one intent to build the check.",
+   "passRate": 83.3,
+   "stabilityWithin": 30,
+   "classesWithin": {
+    "P01": "contradictory",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 0,
+   "classCross": "contradictory"
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 3,
+   "quality": 95.2,
+   "stability": 61.9
+  },
+  {
+   "id": "P02",
+   "usableRuns": 3,
+   "quality": 96.8,
+   "stability": 67.6
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "outputs/P01-r01.md",
+   "status": "completed",
+   "note": "Scripted reply 2 (Yes, go ahead) went unused. The skill asks only one question, and it needs no confirmation after the option is chosen. The work is one commit on main in proj after the tag start.",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "In a pipe with other tools, a person cannot see which program failed unless each message names wordfreq. ... - **A (recommended): both messages.** Result: `wordfreq: error: cannot read /no/such/file.txt`"
+    },
+    {
+     "id": "R2",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "-Status: agreed · Default: yes · Ask at init: no\n+Status: agreed · Default: no · Ask at init: no"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Each error message that wordfreq prints must start with `wordfreq: `. This holds for every message that wordfreq writes to standard error, also the usage line."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "IN-0002 (migrate JOB-report-word-frequencies to DES-errors) ... CAP-word-counting (turn text into ordered word counts) prints no message, so it needs no intent."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "# IN-0002 · Migrate JOB-report-word-frequencies to DES-errors\n\nStatus: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Status: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "12f517f Convention DES-errors"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I added 2 intents ... IN-0001 (check the DES-errors message prefix) builds the check ... I did not start either intent. You select when each intent runs."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "### DES-errors.R1 · Messages start with the program name\n\nStatus: proposed · Intents: IN-0001, IN-0002"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 95.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Your rule closes that gap, so a person who runs wordfreq in a pipe with other tools can see which program failed. ... 1. **Add the prefix and keep the rest (recommended).**"
+    },
+    {
+     "id": "R2",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "-Status: agreed · Default: yes · Ask at init: no\n+Status: agreed · Default: no · Ask at init: no"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Each error message that wordfreq prints starts with `wordfreq: `. The rule covers the usage message and the message for a file that wordfreq cannot read."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "It gets one intent: \"Migrate JOB-report-word-frequencies to DES-errors\". ... CAP-word-counting prints no message, so it needs no intent."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "# IN-0001 · Migrate JOB-report-word-frequencies to DES-errors\n\nStatus: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "I did not start IN-0001, and I did not change any code."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "**Commit:** \"Convention DES-errors\" on main (16da8ee)."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I added 1 migration intent. ... I did not start IN-0001 ... You select when it runs."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "That intent also builds the checks for R1 and R2. I add no separate check intent (assumed)"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "outputs/P01-r03.md",
+   "status": "completed",
+   "note": "The skill ran to the end. I committed DES-errors and one migration intent (IN-0001) as \"Convention DES-errors\" on main in proj. I folded the \"check intent\" into the migration intent and said so to the user.",
+   "quality": 90.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Today DES-errors lists error codes, and its table is empty. The rule does not say how a message looks."
+    },
+    {
+     "id": "R2",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "-Status: agreed · Default: yes · Ask at init: no\n+Status: agreed · Default: no · Ask at init: no"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Each error message that wordfreq prints starts with `wordfreq: `. The prefix is the program name, a colon, and one space. This rule covers every message that reports an error, also the usage message."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I added 1 intent: IN-0001 (migrate JOB-report-word-frequencies to DES-errors). ... CAP-word-counting (the word counter) prints no messages, so it needs no intent."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "# IN-0001 · Migrate JOB-report-word-frequencies to DES-errors\n\nStatus: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "I did not change the code, the tests or the README."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "I committed the change as \"Convention DES-errors\"."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I added 1 intent: IN-0001 (migrate JOB-report-word-frequencies to DES-errors). It has the status `new`, and I did not start it. You choose when it runs."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "IN-0001 also builds the check for DES-errors.R1."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#1",
+   "prompt": "P02",
+   "repeat": 1,
+   "capture": "outputs/P02-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "n/a",
+     "evidence": "/pdlc:conventions defaults: set a convention for how numbers show"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "You ran the skill with `defaults`, so I take option 1 (plain digits) and do not ask. ... Print each number in the output of wordfreq as a whole number in plain digits (assumed)"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "# DES-number-format · How numbers show in the output\n\nStatus: agreed · Default: no"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Do not group the digits with a separator. Do not pad the number with spaces or zeros. ... In `tests/test_cli.py`, the word \"the\" appears 3 times, and the line is `the 3`."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I added 0 migration intents, because the code already obeys the rule."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "# IN-0001 · Build the check for DES-number-format\n\nStatus: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Status: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "committed it as \"Convention DES-number-format\""
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I added 1 intent in total, IN-0001 (build the check for DES-number-format), with the status `new`. I added 0 migration intents ... You choose when IN-0001 (build the check) runs."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "### DES-number-format.R1 · No thousands separator\n\nStatus: proposed · Intents: IN-0001"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#2",
+   "prompt": "P02",
+   "repeat": 2,
+   "capture": "outputs/P02-r02.md",
+   "status": "completed",
+   "note": "Skill ran on defaults with no questions. Wrote DES-number-format and IN-0001 (check builder), added 0 migration intents, committed on main in proj. One scratch file (commit message) was briefly written in the scratchpad and then deleted.",
+   "quality": 95.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "n/a",
+     "evidence": "/pdlc:conventions defaults: set a convention for how numbers show"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "You asked for `defaults`, so I take option 1 (plain digits) and do not ask. ... wordfreq writes each count as plain decimal digits (assumed)."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "# DES-number-format · How wordfreq shows numbers\n\nStatus: agreed · Default: no"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "The text `the cat and the hat and the bat` gives the line `the 3`. If the word `the` appears 1204 times, the line is `the 1204`. The line is not `the 1,204` and not `the  1204`."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I added 0 migration intents. The only number that wordfreq prints is the count, and `wordfreq/cli.py` already prints it as plain digits."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "# IN-0001 · Check the number format\n\nStatus: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Status: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "Convention DES-number-format\n\nIntent: IN-0001"
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "I added 0 migration intents. ... Its status is `new`. I did not start it."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "### DES-number-format.R1 · Count has no separator\n\nStatus: proposed · Intents: IN-0001"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#3",
+   "prompt": "P02",
+   "repeat": 3,
+   "capture": "outputs/P02-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 95.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "n/a",
+     "evidence": "/pdlc:conventions defaults: set a convention for how numbers show"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "You ran with `defaults`, so I took option A (plain digits) and did not ask. ... wordfreq writes each number in its output as plain digits (assumed)"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "# DES-number-format · How wordfreq shows numbers\n\nStatus: agreed · Default: no"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "A number has no thousands separator, no padding, and no leading zero. The output does not depend on the locale of the machine."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "**Migration intents.** I added none. The code of wordfreq already obeys the rule, so no job or capability needs a change."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "# IN-0001 · Number format check\n\nStatus: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Status: new · Ticket: none · Branch: none · Added: 2026-10-26"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "I committed this on main as \"Convention DES-number-format\" (d93b249), with the trailer `Intent: IN-0001`."
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "I added 1 intent to build the checks, and 0 migration intents. ... Its status is `new`. I did not start it."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "### DES-number-format.R1 · Count with no separator\n\nStatus: proposed · Intents: IN-0001"
+    }
+   ],
+   "excluded": null
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "All three runs offer the same three options and recommend the same one. The details differ. P01#1 frames the question as 'which messages', lists the options in a different order, uses /no/such/file.txt, and adds a note on tracebacks. P01#2 uses notes.txt. P01#2 and P01#3 also ask a second question to confirm before they write.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "First message names DES-errors and the pipe reason, shows the two current messages, and asks one question with three options: prefix on both keeping the rest (recommended), drop `error: `, or prefix only the read error"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "equivalent",
+   "reason": "The header changes are the same in all three runs, and so is the set of sections added. Only the subsection name differs ('Error messages' or 'Message prefix'), and P01#1 adds a paragraph that excludes tracebacks.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Edits DES-errors in place: title becomes 'error codes and messages', Default yes becomes no, keeps the old rule and table, adds a prefix subsection, an Example, a Why paragraph and a Requirements section"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "minor_drift",
+   "reason": "All three runs write the same rule: prefix on both messages, rest kept. P01#1 adds a scope exclusion for tracebacks, and P01#3 spells out how the prefix is formed. The example file differs (notes.txt or /no/such/file.txt).",
+   "groups": [
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Rule: each error message, the usage message included, starts with `wordfreq: ` and keeps its text; the example shows both prefixed messages"
+    },
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Same rule and example, plus an assumed scope decision that the rule does not cover a Python traceback"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "equivalent",
+   "reason": "Each run adds one migration intent, for the job only, and says CAP-word-counting needs none. The ID differs (IN-0002 in P01#1, IN-0001 in the others), and P01#2 and P01#3 fold the check into that intent, but the set of migrated specs is the same.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Exactly one migration intent, for JOB-report-word-frequencies; none for CAP-word-counting because it prints no message"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "All three runs use the same header, a migration name that follows the rule, and a spec path in What and why. They differ in content: P01#1 writes two intent files, P01#2 fills a whole handoff block and wraps the notes in backticks, and P01#3 leaves a short handoff placeholder.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Two intent files (IN-0001 check, IN-0002 migration) from the template, with 'none yet' in Changes and Handoff"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "One migration intent file whose Notes entries are wrapped in backticks and whose Handoff section is filled in (Time, Done, Decided, Look here, Next)"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "One migration intent file from the template, with plain Notes and a one-sentence Handoff placeholder"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "All three runs leave their intents unstarted and change only files in pdlc/. Each run says it changed no code, tests or README.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Every intent has Status new and Branch none; no code, test or README change; no requirement written into a job or capability spec"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "All three runs report one commit on main with the exact subject. Only P01#1 shows the commit itself, which has an Intent trailer. For P01#2 and P01#3 the evidence is the transcript claim, because those captures do not show the commit.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "One commit on main with the subject 'Convention DES-errors' that holds the spec and the intents"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "major_drift",
+   "reason": "P01#1 reports two intents, and one is a separate check intent. P01#2 and P01#3 report one migration intent that also builds the check. The counts and the content of the closing messages differ in substance.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Closing message says 2 intents were added and keeps the check intent IN-0001 apart from the migration intent IN-0002; says the user selects when each runs"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Closing message says 1 intent (the migration IN-0001, which also builds the check) was added, gives the reason CAP-word-counting needs none, and says the user chooses when it runs"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "contradictory",
+   "reason": "P01#1 adds a separate intent to build the check. P01#2 and P01#3 decide outright not to add one and fold the check into the migration intent. Those are opposite choices. The requirement split also differs: one requirement or two.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "One proposed requirement R1 with two Given lines, Intents IN-0001, IN-0002, and a separate intent to build the check"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Two proposed requirements (R1 read error, R2 usage) that point to IN-0001; no separate check intent (assumed), the check is folded into the migration intent"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "One proposed requirement R1 with two Given lines that points to IN-0001; no separate check intent, the check is folded into the migration intent"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "All three runs skip the question, take option 1 (plain digits) and put a plain (assumed) marker in the spec and the Notes. P02#2 adds a second assumed decision on scope that the other two runs do not record.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#3"
+     ],
+     "description": "Asks no question, takes recommended plain digits, marks only that one choice (assumed) in the Rule and in the Notes of the check intent IN-0001"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Asks no question, takes recommended plain digits, and also records a second assumed choice (the rule covers every number, not only the count) in the spec, the Notes and the closing message"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R3",
+   "class": "equivalent",
+   "reason": "Each run writes the same file name, header form, status line and section set. Only the title words differ (P02#1 'How numbers show in the output', the others 'How wordfreq shows numbers'), and P02#3 puts its example in a code block.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "New file pdlc/specs/design/DES-number-format.md with header '# DES-number-format · <few words>', 'Status: agreed · Default: no', and Rule, Example, Why, Requirements sections"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R4",
+   "class": "minor_drift",
+   "reason": "The rule is the same in all runs, but the details differ. P02#3 adds 'no leading zero', locale independence and a limit to whole numbers that defers fractions. P02#2 says any other number follows the same rule (assumed). The examples differ too (the 1200, the 1204, a code block).",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Rule: each number or count in wordfreq output is plain digits with no thousands separator and no padding, with a wordfreq example line such as 'the 1200' and a Why about scripts and tools such as sort -n"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R5",
+   "class": "equivalent",
+   "reason": "Each run adds no migration intent for the same reason. P02#1 also notes that counter.py prints nothing.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Adds 0 migration intents because cli.py already prints str(count) as plain digits"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "All three runs use the same file name pattern and header line. The Handoff section is a placeholder in P02#1 and a full handoff in the other two, with different from-to labels. Only P02#1 puts the spec path in What and why.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Check intent IN-0001 has the spec path in What and why, Requirements lines with ': added', and Handoff 'none yet. Intake writes the first handoff'"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Check intent IN-0001 has no spec path in What and why, Requirements lines without ': added', and a full Handoff headed 'conventions → user'"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Check intent IN-0001 has no spec path in What and why, Requirements lines with ': added', and a full Handoff headed 'intake → ready'"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "Each run leaves its one intent unstarted and changes only files in pdlc/. P02#3 also notes that it did not add a Relies on line to the job.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "IN-0001 has Status new and Branch none, only pdlc/ files change, and no requirement goes into a job or capability spec"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "All runs report the same single commit and subject. P02#2 and P02#3 show an 'Intent: IN-0001' trailer, and P02#1 does not say if it has a trailer, which is permitted either way.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "One commit on main with subject 'Convention DES-number-format' that holds the spec and IN-0001"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R9",
+   "class": "major_drift",
+   "reason": "All runs name the spec and keep the check intent apart from 0 migration intents. Only P02#1 tells the user that they choose when the intent runs. P02#2 and P02#3 say only that the run did not start it.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Gives 1 intent in total and 0 migration intents, names IN-0001 as the check, and says the user chooses when IN-0001 runs, with the intake command"
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Gives 0 migration intents apart from check intent IN-0001 and says 'I did not start it', but does not say that the user selects when the intent runs"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "All runs have the same two requirements, the same status and the same intent link. The example counts differ (1200, 1204, 12/3, 1204/7), and P02#3 adds a second Given line to R2 about a single space.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Requirements R1 (no separator) and R2 (no padding), each 'Status: proposed · Intents: IN-0001' with Given/when/then, plus one check intent IN-0001"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R3",
+   "class": "equivalent",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Changed convention: edit existing DES-errors in place, keep ID and old error-code rule, flip Default: yes to no, keep Ask at init, retitle to 'error codes and messages', add a ### subsection under Rule plus Example, extended Why, and a Requirements section"
+    },
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "New convention: one new file pdlc/specs/design/DES-number-format.md, header '# DES-number-format · <few words>' then 'Status: agreed · Default: no', with Rule, Example, Why and Requirements sections all filled and no template guide text"
+    }
+   ],
+   "reason": "Both runs of each prompt give the spec the same form: an in-place edit with Default: no for the changed convention, and a new file with the template header and sections for the new one. Only the wording differs, plus small details such as where an '(assumed)' marker sits.",
+   "tally": {
+    "counts": [
+     2,
+     2
+    ],
+    "agreement": 50,
+    "split": "2 / 2 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R6",
+   "class": "major_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Two inbox files: IN-0001 is a separate check intent and IN-0002 is 'Migrate JOB-report-word-frequencies to DES-errors'; correct header; What and why gives the spec path; Handoff left as '- none yet'"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "One inbox file, IN-0001 'Migrate JOB-report-word-frequencies to DES-errors', which also carries the checks; Notes lines wrapped in backticks; Handoff section filled with Done/Decided/Open/Look here/Don't redo/Next"
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "One check intent, IN-0001 'Build the check for DES-number-format', with the template header and spec path; Requirements bullets end with ': added'; Handoff is a placeholder sentence ('none yet. Intake writes the first handoff...')"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "One check intent, IN-0001 'Check the number format', with the template header and spec path; Handoff section filled with the full handoff structure"
+    }
+   ],
+   "reason": "Every run uses the same intent template and header. For the same prompt, though, P01#1 writes two intent files and P01#2 writes one. The Handoff section is a placeholder in some runs and a full structured handoff in others, and P01#2 wraps its Notes in backticks.",
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R8",
+   "class": "equivalent",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "One commit on main with the exact subject 'Convention DES-<name>', holding the spec and the intents, with an Intent trailer and no Req trailer where the log is shown"
+    }
+   ],
+   "reason": "Each run makes one commit on main with the exact subject 'Convention DES-<name>'. The differences are small: P01#1 adds a body and P02#2 does not, and two captures show the commit only in the transcript.",
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R9",
+   "class": "major_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Names DES-errors and says 'I added 2 intents' as a total, listing the check intent IN-0001 and the migration intent IN-0002 apart, but gives no explicit migration count; says it did not start them and that the user selects when each runs"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Names DES-errors and says '1 migration intent', IN-0001 with a description (it also builds the checks); says it did not start it and 'You select when it runs'"
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Names DES-number-format, says 1 intent in total (IN-0001, the check) and 0 migration intents with a reason; says the user chooses when IN-0001 runs and gives the intake command"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Names DES-number-format, says 0 migration intents with a reason, and lists IN-0001 (the check) as not started; does not say that the user selects when it runs"
+    }
+   ],
+   "reason": "Every run ends with a summary that names the spec, counts the intents and lists their IDs. The counting differs: P01#1 gives only a total, while the others give a migration count. P02#2 leaves out the statement that the user selects when each intent runs.",
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R10",
+   "class": "contradictory",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "One requirement, DES-errors.R1, status proposed, 'Intents: IN-0001, IN-0002', with a separate check intent IN-0001 apart from the migration intent"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Two requirements, R1 and R2, status proposed, 'Intents: IN-0001'; explicitly adds no separate check intent (assumed), so the migration intent builds the checks"
+    },
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Two requirements, R1 (no separator) and R2 (no padding), status proposed, 'Intents: IN-0001', with one dedicated check intent IN-0001 and no migration intents"
+    }
+   ],
+   "reason": "For the same prompt, P01#1 adds a separate intent to build the check, while P01#2 explicitly decides against one and puts the checks in the migration intent. These are opposite choices. The P02 runs agree with each other and use a separate check intent.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}
