@@ -1,0 +1,990 @@
+{
+ "skill": "pdlc:board",
+ "skillSha256": "4ff8bd954efc7b6b9557f0ab28963f615ffe72bcc9a0d8b526539bdc68035520",
+ "suiteSha256": "d94bfb9c7d39bff1d6af7c23aa9f98d21d1f0b71be0073dc3213b3854a982ca3",
+ "runId": "base-20261026T203314Z",
+ "generatedAt": "2026-10-26T20:43:55Z",
+ "config": {
+  "prompts": [
+   "P01",
+   "P02"
+  ],
+  "runs": 3,
+  "wave": 3,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "lean",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 11,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 89.6,
+  "stability": 60.4,
+  "overall": 73.6,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 6,
+  "totalRuns": 6
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 3,
+   "usable": 6,
+   "quality": 89.6,
+   "stability": 60.4,
+   "overall": 73.6,
+   "grade": "C",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 83.3,
+  "median": 86.8,
+  "max": 100
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user gets the true list of cards. The list has one card for each intent and each change that is not cancelled, with its pdlc status and the column for that status.",
+   "passRate": 100,
+   "stabilityWithin": 57.5,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The dry-run table gives the card key, the current column, and the correct column for each card. Each current column that the run could not see is `unknown`.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user can trust each statement about the board, because the reply states only what the run saw.",
+   "passRate": 66.7,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 3,
+   "criterion": "pdlc stays the truth: the run changes no pdlc file and makes no commit to make the board agree.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "outcome",
+   "weight": 2,
+   "criterion": "The user who set a tracker does not hear that the project has no tracker.",
+   "passRate": 100,
+   "stabilityWithin": 42.5,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "When the setup check finds a gap, the reply names the exact gap, and the run stops at that gap.",
+   "passRate": 91.7,
+   "stabilityWithin": 42.5,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "After a sync, the run records each new card key and reports the counts.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "outcome",
+   "weight": 2,
+   "criterion": "The user knows what to do next: the reply names each block on the board work, and a step that removes each block.",
+   "passRate": 75,
+   "stabilityWithin": 42.5,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "When the user asks for a dry-run, the run makes no board write.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 3,
+   "quality": 86.8,
+   "stability": 65.3
+  },
+  {
+   "id": "P02",
+   "usableRuns": 3,
+   "quality": 93.6,
+   "stability": 54.3
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "outputs/P01-r01.md",
+   "status": "completed",
+   "note": "Dry run finished with no project changes. The session had no GitHub projects tool, so the board columns showed as unknown.",
+   "quality": 86.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "IN-0002 (wordfreq top huge number), status `new` | none | unknown | Backlog"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "| Item | Card key | Current column | Correct column |"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "This is a dry run. The board needs 3 new cards"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "and I changed nothing."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "This session has no tool for GitHub projects, so I could not read the board."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "I skipped the column check. The current column of each card is \"unknown\"."
+    },
+    {
+     "id": "R7",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "This session has no tool for GitHub projects, so I could not read the board."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "and I changed nothing."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "outputs/P01-r02.md",
+   "status": "completed",
+   "note": "Dry run finished in one turn. The board was unreachable (no GitHub Projects tool), so columns show as \"unknown\". No project file changed.",
+   "quality": 86.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "IN-0002 (wordfreq top huge number), status new | none | unknown | Backlog"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "| Item | Card key | Current column | Correct column |"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "Dry run: the board needs 3 new cards and no moves."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "I changed nothing."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "This session has no GitHub Projects tool, so I skipped the column check."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "This session has no GitHub Projects tool, so I skipped the column check. Each current column shows as \"unknown\"."
+    },
+    {
+     "id": "R7",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "The skill commits on main, but the README lets only `record_merges.py` commit on main while a pdlc branch is unmerged."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I changed nothing."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "outputs/P01-r03.md",
+   "status": "completed",
+   "note": "Dry run finished. The board was unreachable (no gh project command or projects tool), so current columns were reported as unknown. No file in proj changed.",
+   "quality": 86.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "IN-0002 · wordfreq top huge number | new | none | unknown | Backlog"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "| Item | pdlc status | Card key | Current column | Correct column |"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "Dry run: the board needs 3 new cards."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "I changed nothing."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "The tracker is `tracker-github-projects`. All three settings are present: owner `example-org`, project `7`, status field `Status`."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "This session has no `gh project` command and no GitHub projects tool. Thus I skipped the column check."
+    },
+    {
+     "id": "R7",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "This session has no `gh project` command and no GitHub projects tool."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I changed nothing."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#1",
+   "prompt": "P02",
+   "repeat": 1,
+   "capture": "outputs/P02-r01.md",
+   "status": "blocked",
+   "note": "The board adapter needs the gh project commands or a GitHub projects tool. This session has only gh api, restricted to its own repositories (HTTP 403 for project 7), so the skill stopped as written. Nothing was changed.",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R2",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "I cannot reach the board, so I stopped. I changed nothing."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "I changed nothing."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "The tracker is `tracker-github-projects` (owner `example-org`, project 7)."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "the call for project 7 returned HTTP 403"
+    },
+    {
+     "id": "R7",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "run `/pdlc:board` in a session where `gh` is signed in with access to project 7"
+    },
+    {
+     "id": "R9",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#2",
+   "prompt": "P02",
+   "repeat": 2,
+   "capture": "outputs/P02-r02.md",
+   "status": "blocked",
+   "note": "No GitHub projects tool in this session (no gh project, REST projectsV2 path got HTTP 403), so the skill stopped at step 1 as the adapter says; proj only moved from the CH-0001 branch to main (no commits, no file changes).",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R2",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "This session cannot reach the GitHub project board, so I changed nothing."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "wrote no `Ticket`, and made no commit"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "The tracker adapter is `tracker-github-projects`."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "It refused the project path `orgs/example-org/projectsV2/7/fields` with HTTP 403."
+    },
+    {
+     "id": "R7",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "Run `/pdlc:board` in a session that has access to project 7 of `example-org`."
+    },
+    {
+     "id": "R9",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#3",
+   "prompt": "P02",
+   "repeat": 3,
+   "capture": "outputs/P02-r03.md",
+   "status": "blocked",
+   "note": "No GitHub projects tool in this session (gh is the built-in client with gh api only; the projectsV2 call returned 403), so the skill stopped at step 1 as the adapter says. No cards were made, no Ticket was written, and no commit was made.",
+   "quality": 83.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "IN-0002 (wordfreq top huge number): status new, so the column must be Backlog."
+    },
+    {
+     "id": "R2",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "pdlc has three items and no card yet"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "I wrote no `Ticket`, so there is no commit."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Its settings are all present: owner `example-org`, project 7, status field `Status`."
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "so I stopped at step 1. ... pdlc has three items and no card yet:"
+    },
+    {
+     "id": "R7",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "give this session the `gh` CLI with the `project` scope, then run `/pdlc:board` again"
+    },
+    {
+     "id": "R9",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "All three runs give the same three cards with the same statuses and columns, read from the same branch. Only the side notes differ: run 2 adds that nothing is cancelled, and run 3 names the main values ready and planned.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Lists exactly three cards from the branch pdlc/CH-0001-top-option: IN-0001 in review -> In review, CH-0001 in review -> In review, IN-0002 new -> Backlog, and notes that main holds older statuses."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "All runs use one table with card key none, current column unknown and the correct column. Run 3 puts the pdlc status in its own column, and runs 1 and 2 put it in the item cell.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Four-column table (Item with the status in the item cell, Card key none, Current column unknown, Correct column)."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Five-column table with a separate pdlc status column, plus Card key none, Current column unknown, Correct column."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "minor_drift",
+   "reason": "Every run says it could not reach the board and claims no card key or current column. Only run 1 adds the warning that the counts depend on a board lookup.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Says that the board was not readable, takes no board facts, and warns that a real run looks up each ID on the board first, so the counts can change."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Says that the board was not reachable and takes no board facts, but gives the real-run counts (3 made, 0 moved) with no warning that a board lookup can change them."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "equivalent",
+   "reason": "All three runs change no file and make no commit. Run 2 also reports a switch to main and a record_merges.py run that found nothing, and the outcome is still no change.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Says 'I changed nothing', and the Files section is None: no pdlc edit and no commit."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "major_drift",
+   "reason": "No run says there is no tracker. But only run 3 states the tracker and its settings, and runs 1 and 2 leave the tracker implicit.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Takes the tracker as set without naming it: talks only about the missing GitHub projects tool, not about the tracker settings."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Names the tracker tracker-github-projects and confirms that owner example-org, project 7 and status field Status are all present."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "All runs find the same gap (no board access) and handle the dry-run the same way. Run 3 adds an explicit check that each setting is present.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Names the gap as no GitHub projects tool in the session, goes on because it is a dry-run, skips the column check and shows unknown."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "First confirms that all three tracker settings are present, then names the gap (no gh project command or tool), skips the column check and shows unknown."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "major_drift",
+   "reason": "Only run 2 gives steps that remove the blocks. Runs 1 and 3 name the missing tool and give no step.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3"
+     ],
+     "description": "Names the block (no GitHub projects tool) but gives no next step to remove it."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Gives a 'Two things to settle before a real run' section: add a GitHub projects tool (gh project commands or GitHub project tools), and handle where the card keys get committed while the branch is unmerged."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "No run makes or claims a board write. All three say they changed nothing, in slightly different words.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Makes no board write, and says that it changed nothing and could not reach the board."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R1",
+   "class": "major_drift",
+   "reason": "Only P02#3 lists the cards, and its list is correct. P02#1 and P02#2 list no cards at all, so the item shows up in one run and not in the other two.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Gives no list of cards; the reply stops at the board-access gap."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Lists all three cards with correct status and column: IN-0001 and CH-0001 in review/In review, IN-0002 new/Backlog."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R3",
+   "class": "minor_drift",
+   "reason": "All three runs say the board was not reachable and avoid board claims. P02#3 adds one phrase ('no card yet') that can read as a statement about the board.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Says the run could not reach the board and makes no claim about board contents; reports only its own actions (changed nothing)."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Says the run could not reach the board and is careful about unknowns, but adds 'pdlc has three items and no card yet', which can read as a fact about the board."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R4",
+   "class": "equivalent",
+   "reason": "In all three runs the capture shows no files, and each reply says it made no change or commit. Only the wording differs.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Makes no file change and no commit; the capture shows no files, and the reply says nothing was changed."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "All runs take the tracker as set. Only P02#3 names the status field and says outright that every setting is present.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Takes tracker-github-projects as set and names the owner example-org and project 7, but does not name the status field."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Takes tracker-github-projects as set and says all settings are present: owner example-org, project 7, status field Status."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "All runs name the same access gap and its cause. P02#3 still shows the card table after the gap without a dry-run, while P02#1 and P02#2 stop cleanly.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Names the gap (no gh project tool; gh api got HTTP 403 on the project) and stops with no card table."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Names the gap with its reason and confirms the settings are present, says it stopped at step 1, but still shows the pdlc card list with target columns after the gap."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "All runs give the same two next steps for the same block. P02#1 and P02#3 name gh with project access; P02#2 says only 'a session that has access'. P02#3 says to give this session the tool rather than use a different session.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Names the missing project-access tool as the block. Offers two next steps: rerun /pdlc:board with access to project 7, or run /pdlc:board dry-run."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R6",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Dry-run: names the gap as no GitHub Projects tool in the session, skips the column check, goes on and shows the card table with each current column as \"unknown\". P01#2 also adds a closing list of things to settle before a real run."
+    },
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "No dry-run: says it cannot reach the board and says why (no `gh project` commands or project tool, HTTP 403 on project 7). Stops with no card table and no board change, and suggests a session with access or `/pdlc:board dry-run`. P02#2 also states that the column check did not run."
+    }
+   ],
+   "reason": "Each run takes the correct branch for its input. The dry-run runs go on with unknown columns, and the non-dry-run runs stop and give the reason. The details differ inside each pair: P01#2 adds a section on what to settle before a real run, P02#1 names the owner and project settings, and P02#2 adds a column-check line and a record_merges note.",
+   "tally": {
+    "counts": [
+     2,
+     2
+    ],
+    "agreement": 50,
+    "split": "2 / 2 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}
