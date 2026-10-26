@@ -1,147 +1,110 @@
 ---
 name: verify
 description: >
-  Examines a built and recorded pdlc change before the merge. Runs each check. Then sends
+  Examines a built and recorded pdlc change before the merge. Runs each check, and sends
   one packet for each review remit (specification, security, quality, compliance,
-  privacy) to a different fresh, independent reviewer, all at the same time. When all
-  pass, marks the requirements verified, runs the merge check, and proposes the merge with
-  the GIF. Does not merge. Use when the user says "/pdlc:verify", or when a change has its
-  visual review.
+  privacy) to a fresh, independent reviewer, all at the same time. When all pass, marks
+  the requirements verified, and proposes the merge with the GIF. Does not merge. Use
+  when the user says "/pdlc:verify", or when a change has its visual review.
 ---
 
 # pdlc verify
 
-This skill decides if a change is sufficiently good to merge. Then the skill asks the user
-to approve the merge.
+## Goal
 
-Read `pdlc/README.md` first and obey it. Start with its "Before any work" step. Then read
-the `handoff.md` of the change.
+The `verify` skill decides if a change is good enough to merge. When it is, the change is
+`verified`, and the user gets a proposal to approve. The skill does not merge the change.
 
-## 1. Pick the change
+## Constraints
 
-Use the change that the user named. If the user did not name a change, use the first
-change with the status `building` that has a `review.gif`. Switch to the branch of that
-change.
+- The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first. The reviewers
+  obey "Who does what".
+- The change is the one that the user names, or else the first `building` change that has
+  a `review.gif`. The skill works on the branch of the change.
+- Through the checks port, all of these pass:
+  - The checks of each requirement. Each requirement has at least one check.
+    "No checks found" is a failure, except for a `(retire)` requirement.
+  - All checks, and **run earlier acceptance**. No check file changed since
+    `Tests-Locked`.
+  - For the last change under "Changes" of the intent, **run acceptance**. Its commit
+    (`git rev-parse HEAD`) is the pass commit. For an earlier change, a failure is
+    expected.
+- `python3 pdlc/bin/make_packets.py CH-xxxx --verify` makes the packets, for the remits
+  under "Reviews" in `pdlc/config.md` except `tests`, whose result stays. The skill does
+  not list the remits itself.
+- The script writes the `result.md` of a remit that does not apply, which gets no
+  reviewer. In a later round, the script makes re-review packets: the earlier problems and
+  the diff since the earlier review. The reviewer judges only these two items.
+- Each remit with a packet gets one fresh `pdlc:reviewer`, all in one message. Each
+  reviewer gets only the path of its packet, and does not hear what another one found.
+- New behaviour ("New behaviour needs approval") is each point under "Follow-ups", and
+  each problem that only new behaviour can fix. Examples are a new limit or size cap, a
+  guard, another input check, and a new error or status.
+- In every round, each such point becomes a `new` intent through the inbox port, in the
+  words of the reviewer. Its "Notes" start with
+  `Awaits approval: found reviewing CH-xxxx (<remit>)`. A point that an intent asks for
+  already gets no new intent.
+- With `defaults`, the skill does not approve such an intent. The intent waits for the
+  user.
+- Each problem of a failed round goes to the stage that fixes it, not to the user:
+  - A failed check, or a problem with a check: tests.
+  - A failed acceptance check: build. A wrong acceptance check: acceptance. A check of an
+    earlier intent is wrong when this intent changes its requirement.
+  - An acceptance line that is not met, while each check passes: tests first (for a check
+    tagged with that requirement), then build.
+  - A remit rule, a design spec, or unsafe code: build, with no new check.
+  - Old wording in a title, summary, cross-reference, or note of a spec ("Spec patches"):
+    the skill fixes the words now, on this branch. The words match the requirements as
+    they are. Only those words change, and no acceptance line.
+- A remit that failed only for new behaviour or old wording sends nothing to build. The
+  next stage is `verify` again, and that run counts as a round ("Rounds").
+- The build stage only makes the code meet an existing acceptance line, design spec, or
+  remit rule, inside "Files", with the plainest fix (for example, a clearer message). No
+  requirement, acceptance line, or error code changes on the branch of a change.
+- The gate of the delivery port passes, except for lines that say `not ready`. These lines
+  clear when the last change of the intent is `verified`. For the last change, the gate
+  passes with no exception.
+- The skill corrects each other problem that the gate names:
+  - A conflict with main: a merge of main into this branch. The merge keeps the text of
+    main, and the statuses of this branch for its own requirements.
+  - A mark that the gate names: the mark becomes `(assumed)`, with the reason outside the
+    brackets, and the same meaning.
+  - A correction of app files after the acceptance run: the acceptance checks run again,
+    and the new commit goes on `Acceptance-Passed:`.
+- The proposal goes through the delivery port, with the base of the change as its target.
+  Its description fills each section of `pdlc/templates/proposal.md`:
+  - The embedded GIF (the adapter says how), and a table of each requirement, its checks,
+    and their result.
+  - A table of each remit and its result, with a link to each `result.md`.
+  - The acceptance file, its lock, and its review. For the last change, the pass commit.
+  - The lock commit, and each "Manual checks" item for the user to confirm.
+  - Each `(assumed)` detail of the change spec and its requirements, one line each.
+  - The changes that merge together, and the intents filed for new behaviour.
 
-## 2. Run the checks
+## Inputs
 
-Do these steps through the checks port:
+- `pdlc/README.md`, the change spec, its `handoff.md`, `review.gif`, and the intent.
+- The "Reviews" of `pdlc/config.md`, and `pdlc/templates/proposal.md`.
 
-- For each requirement in the change, run its checks. Each requirement needs at least one
-  check, and all its checks must pass. "No checks found" is a failure, but not for a
-  `(retire)` requirement.
-- Run all checks. All checks must pass.
-- Make sure that no check file changed since `Tests-Locked`.
-- Run **run earlier acceptance** for the intent. All its checks must pass.
-- If this change is the last change under "Changes" of the intent, run **run
-  acceptance**. All its checks must pass. Note the commit of that run
-  (`git rev-parse HEAD`). For an earlier change, a failure of these checks is expected.
+## Outputs
 
-## 3. Independent reviews
-
-1. Make the packets: `python3 pdlc/bin/make_packets.py CH-xxxx --verify`. Do not list the
-   remits yourself. The `--verify` option picks each remit under "Reviews" in
-   `pdlc/config.md`, except `tests`. The tests stage already reviewed the checks, and its
-   result stays.
-2. For a remit that does not apply, the script writes `result.md` itself and says so.
-   Start no reviewer for that remit.
-   In a later round, the packet of each remit that a reviewer judged before is a
-   re-review. A re-review packet holds the earlier problems of the remit and the diff
-   since the earlier review. The reviewer judges only these two items.
-3. Start one fresh `pdlc:reviewer` agent for each remit that got a packet, all in one
-   message, each with `run_in_background: false`. Give each reviewer only the path of its
-   own packet. Do not tell a reviewer what a different reviewer found.
-4. The tool calls return when all the reviewers are done. Each reviewer writes
-   `review/<remit>/result.md`.
-
-## 4. New behaviour
-
-A review point needs new behaviour when no acceptance line, design spec, or remit rule
-asks for the behaviour. Examples are a new limit or size cap, a guard, another input
-check, and a new error or status. Reviewers list these points under "Follow-ups". A
-problem that only new behaviour can fix is also such a point. For each such point, in
-every round, do these steps:
-
-- Do not build the point on this branch.
-- File the point through the inbox port as a new intent, with status `new`, in the words
-  of the reviewer. The "Notes" of the intent start with
-  `Awaits approval: found reviewing CH-xxxx (<remit>)`. If an intent already asks for the
-  same thing, do not file the point.
-- Add the ID of the new intent to the progress log of the change, for the proposal.
-
-If the user gave `defaults`, do not approve such an intent. The intent waits for the user.
-
-Commit each packet, each result, and each new intent now, whether the round passes or
-fails. Use the message "Verify CH-xxxx: round <n>" and the trailers `Intent` and `Change`.
-The findings of a failed round must stay in git.
-
-## 5. If anything failed
-
-1. Collect the failed checks and each other problem from the results in the `handoff.md`
-   of the change. Address each problem to the stage that fixes the problem:
-   - A failed check, or a problem with a check: the tests stage.
-   - A failed acceptance check: the build stage. If the acceptance check itself is wrong,
-     the acceptance stage. A check of an earlier intent is wrong when this intent changes
-     the requirement that the check proves.
-   - A problem that says that an acceptance line is not met, although each check passed:
-     the tests stage first (for a check tagged with the requirement of that line), then
-     the build stage.
-   - Old wording in the title, summary, cross-reference, or note of a spec: fix the
-     wording yourself now, on this branch. Make the wording match the requirements as they
-     are. Change only those words. Do not change an acceptance line.
-   - Any other problem (a remit rule, a design spec, or unsafe code): the build stage. No
-     acceptance line names the problem, so the problem needs no new check.
-2. If a remit failed only for new behaviour or old wording, send nothing to the build
-   stage for that remit. The next stage is verify again, and that run counts as a round.
-3. Add a line to the progress log.
-4. Commit with the message "Send back CH-xxxx: <stage>" and the trailers `Intent` and
-   `Change`.
-5. Tell the user which stage is next. Stop here.
-
-Every problem goes to the tests, acceptance, or build stage. No problem goes to the user.
-The build stage only makes the code meet an existing acceptance line, design spec, or
-remit rule. The build stage stays inside the "Files" of the change and uses the plainest
-fix, for example a clearer message. Do not add or change a requirement, an acceptance
-line, or an error code on the branch of a change.
-
-## 6. If everything passed
-
-1. In the spec file of each requirement in the change, set the requirement to `verified`.
-   Set the change to `in review`. For the last change of the intent, write the commit from
-   step 2 on the line `Acceptance-Passed:` of the intent.
-2. Commit the results and the statuses with the message "Verified CH-xxxx" and the
-   trailers `Intent` and `Change`.
-3. Run the gate through the delivery port. The gate must pass, except for lines that say
-   `not ready`. Those lines clear when the last change of the intent is verified. For the
-   last change, the gate must pass with no exception.
-
-   Correct each other problem that the gate names. Commit each correction with the message
-   "Update CH-xxxx: <what>". Use these rules:
-   - For a conflict with main, merge main into this branch. Give the merge commit the
-     trailers `Intent` and `Change`. Keep the text of main, and keep the statuses of this
-     branch for its own requirements.
-   - For a marker that the gate names, write the marker as `(assumed)`. Move any reason
-     out of the brackets, and keep the meaning.
-   - If a correction changes app files after the acceptance checks passed, run the
-     acceptance checks of step 2 again. Write the new commit on `Acceptance-Passed:`.
-4. Propose the merge through the delivery port, with the base of the change as the
-   target. Write the description from `pdlc/templates/proposal.md`, and fill each section.
-   Put these items in the description:
-   - The GIF, embedded. The delivery adapter tells how.
-   - A table of each requirement, its checks, and their result.
-   - A table of each remit and its result, with a link to each `result.md`.
-   - The acceptance checks of the intent: the file, the lock, and the review result. For
-     the last change, also the commit at which the checks passed.
-   - The lock commit, and each "Manual checks" item that the user must confirm.
-   - Each detail that is marked `(assumed)` in the change spec and its requirements, on
-     one line each. Thus, the user reviews all these details in one place.
-   - The other changes that merge together with this change.
-   - The intents that you filed in step 4 (new behaviour).
-5. If each change for the intent is now `in review` or `merged`, set the intent to
-   `in review`. Do this on the branch of the change.
-6. Write `handoff.md`: the link, and what the user must confirm. Commit the handoff
-   together with the intent. Use the message "Propose CH-xxxx" and the trailers `Intent`
-   and `Change`. Each commit on the branch of a change carries the trailer `Change`.
-7. Tell the tracker port. Give the user the link.
-
-Do not merge the change yourself.
+- In every round, the commit "Verify CH-xxxx: round <n>" (`Intent`, `Change`): each
+  packet, each result, and each new intent. The findings of a failed round stay in git.
+  The progress log names each new intent.
+- After a failed round:
+  - The `handoff.md` gives each problem to its stage. Its title is `verify → tests`,
+    `verify → build`, or `verify → acceptance`. The progress log has a new line.
+  - The commit "Send back CH-xxxx: <stage>" (`Intent`, `Change`).
+  - The user hears which stage is next, and the skill stops.
+- After a passed round:
+  - Each requirement of the change is `verified` in its spec file, and the change is
+    `in review`. For the last change, the pass commit is on `Acceptance-Passed:`.
+  - The commit "Verified CH-xxxx" (`Intent`, `Change`): the results and the statuses.
+  - Each gate correction is a commit "Update CH-xxxx: <what>". A merge of main has the
+    trailers `Intent` and `Change`.
+  - The proposal. When each change of the intent is `in review` or `merged`, the intent is
+    `in review`, on the branch of the change.
+  - The handoff `verify → user`: the link, and what the user must confirm.
+  - The commit "Propose CH-xxxx" (`Intent`, `Change`): the handoff and the intent.
+  - The user gets the link.
+- The skill is done when the change is proposed, or when a failed round goes back.

@@ -2,71 +2,61 @@
 name: build
 description: >
   Builds one pdlc change whose checks are written and locked. The pdlc:builder agent
-  writes app code until the checks pass. The agent cannot change the checks. The skill
-  commits with trace trailers, and marks the requirements as built. Use when the user says
-  "/pdlc:build", or when the tests of a change are locked and reviewed.
+  writes app code until the checks pass, and cannot change the checks. Commits with trace
+  trailers, and marks the requirements as built. Use when the user says "/pdlc:build", or
+  when the tests of a change are locked and reviewed.
 ---
 
 # pdlc build
 
-This skill makes the locked checks of a change pass. The skill does not change the checks.
+## Goal
 
-Read `pdlc/README.md` first. Obey the instructions in that file, and start with its
-"Before any work" step. Then read the `handoff.md` of the change.
+Build makes the locked checks of one change pass, with app code from the builder. Build
+does not change the checks.
 
-## 1. Select the change
+## Constraints
 
-If the user named a change, use that change. If not, use the first change with the status
-`building`, in the order that the intent gives. If the `Tests-Locked:` line in the change
-spec has no hash, tell the user that `/pdlc:tests` comes first. Then stop. Switch to the
-branch of the change.
+- The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first. The builder
+  obeys "Who does what".
+- The change is the one that the user names, or else the first `building` change in the
+  order of the intent. Build works on the branch of the change.
+- A `Tests-Locked:` line with no hash stops the skill, and the user hears that
+  `/pdlc:tests` comes first.
+- When the base branch has new commits since this branch started (for example, a
+  correction after a review), build first merges the base into this branch. The merge has
+  the trailers `Intent` and `Change`.
+- The `pdlc:builder` agent gets the absolute path of the change spec, and of each
+  acceptance file that must pass:
+  - The file of each other intent whose `Acceptance-Passed:` holds a hash.
+  - For the last change under "Changes" of the intent, the file of this intent.
+- The builder changes only the app files under "Files", runs the checks, and reports.
+- A check that the builder calls incorrect stays as it is. The reason goes to
+  `/pdlc:tests`, which asks the test writer and locks again, and then build runs again. For
+  an acceptance check, the reason goes to `/pdlc:acceptance`.
+- A file that the builder needs outside "Files" is a question for the user. On a yes, the
+  file goes into "Files", and the builder runs again.
+- The same problem a third time stops the skill, and build asks the user ("Rounds").
+- After the builder, all checks and the acceptance checks of "Acceptance checks" pass,
+  through the checks port.
+- No check changed since the lock:
+  `git diff --name-only <Tests-Locked hash> -- <check files>` shows nothing.
 
-If the base branch has new commits since this branch started, merge the base branch into
-this branch first. For example, the base branch can have a correction after a review.
-Give the merge the trailers `Intent` and `Change`.
+## Inputs
 
-## 2. Build
+- `pdlc/README.md`, the shared rules.
+- The change spec, its `handoff.md`, and its base branch.
+- The intent, and the intents whose `Acceptance-Passed:` holds a hash.
 
-Start the `pdlc:builder` agent with `run_in_background: false`. Give the builder the
-absolute path of the change spec. Also give the absolute path of each acceptance file
-that must pass:
+## Outputs
 
-- The acceptance file of each other intent whose `Acceptance-Passed:` holds a hash.
-- For the last change under "Changes" of the intent, the acceptance file of the intent.
-
-The builder changes only the app files under "Files". Then the builder runs the checks,
-and sends you a report.
-
-- If the builder says that a check looks incorrect, do not change the check. Send the
-  reason to `/pdlc:tests`. That skill asks the test writer, and then locks the checks
-  again. Then build again. For an acceptance check, send the reason to
-  `/pdlc:acceptance`.
-- If the builder needs a file that "Files" does not list, ask the user. If the user
-  agrees, add the file to "Files". Then start the builder again.
-- If the same problem comes back a third time, stop and ask the user.
-
-## 3. Examine the work of the builder
-
-Run all checks through the checks port. Each check must pass. To make sure that no check
-changed, run `git diff --name-only <Tests-Locked hash> -- <check files>`.
-
-Then run the acceptance checks through the checks port:
-
-1. Run **run earlier acceptance** for the intent. Each check must pass.
-2. For the last change of the intent, also run **run acceptance**. Each check must pass.
-   For an earlier change, a failure of these checks is expected. Do not report it.
-
-## 4. Commit and finish
-
-1. Commit the app files with the message "Build CH-xxxx: <what changed>". Add the
-   trailers `Intent`, `Change`, and `Req` (the requirements that the commit is for). If
-   there is a ticket, also add the trailer `Ticket`.
-2. Tick the steps of the change, and add a line to the progress log of the change. In the
-   spec file of each requirement in the change, set the requirement to `built`. If a
-   requirement has the mark `(retire)`, remove the requirement from its spec. Also remove
-   the code that was only for that requirement. (The test writer removed the checks of
-   that requirement before this step.)
-3. Write `handoff.md` for the show stage. Give what you built, how to run it, and anything
-   that you did not expect.
-4. Commit with the message "Built CH-xxxx" and the trailers `Intent` and `Change`.
-5. Tell the user that `/pdlc:show` is the next step.
+- The commit "Build CH-xxxx: <what changed>": the app files. Its trailers are `Intent`,
+  `Change`, `Req` (the requirements of the commit), and `Ticket` when there is a ticket.
+- The ticked steps of the change, and a new line in its progress log.
+- Each requirement of the change is `built` in its spec file. A `(retire)` requirement
+  leaves its spec, with the code that served only that requirement. The test writer
+  removed its checks before.
+- The handoff `build → show`: what build made, how to run it, and anything unexpected.
+- The commit "Built CH-xxxx" with the trailers `Intent` and `Change`: the specs, the
+  change spec, and the handoff.
+- For the user: `/pdlc:show` is next.
+- Build is done when every check that it runs passes, and no check changed since the lock.

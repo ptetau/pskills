@@ -9,6 +9,9 @@ languages, frameworks, and types of system.
 ## What you need
 
 - Claude Code.
+- A Sonnet 5.5 class model or above. On a lower model, for example a Haiku model, each
+  pdlc skill and agent does no work. The skill or agent tells you that pdlc needs a
+  Sonnet 5.5 class model or above.
 - A project in a git repository.
 
 ## 1. Add the marketplace

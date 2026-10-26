@@ -82,6 +82,9 @@ These rules are fixed. All other items are defaults that you can change.
    Intents link to tickets.
 8. **Plain prose everywhere.** Each skill, agent, prompt, and spec is short, simple, and
    clear. If you must read a sentence two times, write the sentence again.
+9. **A Sonnet 5.5 class model or above.** pdlc runs only on a Sonnet 5.5 class model or
+   above. On a lower model, for example a Haiku model, each skill and agent does no work.
+   The skill or agent tells the user that pdlc needs a Sonnet 5.5 class model or above.
 
 ---
 
@@ -296,8 +299,8 @@ builds:
 
 A reviewer fails a change only for what the spec of the change covers, or for unsafe
 code. Anything new that the reviewer wants (another input check, another error) is a
-follow-up for the user. A follow-up is not a reason to make the change bigger. Verify
-files each follow-up as a new intent that waits for your approval.
+follow-up for the user. A follow-up is not a reason to make the change bigger. The `verify`
+stage files each follow-up as a new intent that waits for your approval.
 
 The first review of a remit lists every problem that the reviewer can find. A later review
 of the same remit for the same change is a re-review. The packet of a re-review holds the
@@ -422,7 +425,7 @@ to be the same in each project. Thus, these items are part of the core.
 
 A new adapter is only one more intent, for example "add a Linear tracker adapter". The
 spec of the adapter is a capability spec. Then pdlc builds the adapter against the port
-contract, and verifies the adapter as it verifies each other change. Each port contract
+contract, and runs `verify` on the adapter as on each other change. Each port contract
 has a short conformance check. Thus, pdlc tests each adapter in the same way.
 
 ---
@@ -543,6 +546,11 @@ pdlc is a Claude Code plugin. You call its skills as `/pdlc:<name>`.
 `/quiz-plan-execute`, and `/probe`, in that order. These three skills keep the ideas, and
 remove all the parts that pdlc does not need.
 
+Each skill is declarative. After its front matter, a `SKILL.md` has a title and four
+sections: Goal, Constraints, Inputs, and Outputs. A skill says what must be true, and the
+model decides how to get there. The `README.md` of the project holds the rules that all
+skills share, and a skill names the section of a shared rule.
+
 ### Agents
 
 | Agent | What it does |
@@ -551,6 +559,9 @@ remove all the parts that pdlc does not need.
 | `test-writer` | Writes checks from the spec only. Does not read app code. |
 | `builder` | Writes app code until the locked checks pass. Does not change checks. |
 | `reviewer` | Judges one packet for one remit. Sees nothing else. |
+
+Each agent has `model: inherit`, so that the agent runs on the model of the session. An
+agent on a model below the Sonnet 5.5 class does no work, and reports this.
 
 ---
 
@@ -571,7 +582,7 @@ You put "let users reset their password" into the inbox as `IN-0012`.
    checks fail, and pdlc locks them on the branch of the intent.
 5. **build** completes `CH-0031` (email templates), test first. Each commit carries its
    trailers. The acceptance checks of `IN-0012` still fail, as expected.
-6. **verify** runs the checks and the reviewer. The checks and the review pass. Thus,
+6. **`verify`** runs the checks and the reviewer. The checks and the review pass. Thus,
    `CAP-email.R3` (send from a template) is `verified`, and a PR opens.
 7. The same steps occur for `CH-0032` (the password reset job). Its `verify` stage also
    runs the acceptance checks of `IN-0012`, and they pass. You approve the two PRs, and
@@ -629,7 +640,7 @@ pdlc.
   yet, the check is a `manual check`.
 - **pdlc manages changes to pdlc.** A change to pdlc is an intent like all other
   intents. For example, "add a Linear tracker adapter" becomes a capability change to
-  pdlc. The installed pdlc builds and verifies that change.
+  pdlc. The installed pdlc builds that change and runs its `verify` stage.
 
 ## 16. Before the first intent: design and blueprint
 

@@ -569,6 +569,10 @@ approve the change. Each commit traces back to its requirement and its intent.
 `pdlc` fits all types of system. `pdlc` can also manage changes to this repository, and
 changes to `pdlc` itself.
 
+`pdlc` runs only on a Sonnet 5.5 class model or above. On a lower model, for example a
+Haiku model, each `pdlc` skill and agent does no work. The skill or agent tells you that
+`pdlc` needs a Sonnet 5.5 class model or above.
+
 `pdlc` does not install like the skills above. `pdlc` installs as a plugin from the
 marketplace of this repository:
 
@@ -580,8 +584,9 @@ claude plugin install pdlc@pskills --scope project
 `plugins/pdlc/INSTALL.md` gives the full steps.
 
 `pdlc` has these skills: `ship` (runs everything), `init`, `intake`, `ready`, `change`,
-`tests`, `build`, `show`, `verify`, `conventions`, `trace`, `board`, and `dashboard`
-(optional live dashboard). `pdlc` has these agents: `recon`, `test-writer`, `builder`, and
+`acceptance`, `tests`, `build`, `show`, `verify`, `conventions`, `trace`, `board`, and
+`dashboard` (optional live dashboard). Each skill states its goal, its constraints, its
+inputs, and its outputs, and the model decides how to reach the goal. `pdlc` has these agents: `recon`, `test-writer`, `builder`, and
 `reviewer`. For the design, read `plugins/pdlc/OUTLINE.md`. For the build progress, read
 `plans/build-pdlc-v1.plan.md`.
 

@@ -1,7 +1,7 @@
 ---
 name: intake
 description: >
-  Takes one intent into pdlc and makes spec patches from it: new jobs, new capabilities,
+  Takes one intent into pdlc, and makes spec patches from it: new jobs, new capabilities,
   new conventions, or changes to existing specs. Marks each new requirement as proposed.
   Does not write code. Use when the user says "/pdlc:intake", or tells you about
   something to build or change in a pdlc project. Also use when the user names an intent
@@ -10,145 +10,81 @@ description: >
 
 # pdlc intake
 
-Intake makes changes to the specs from an intent. Intake does not write code.
+## Goal
 
-Read `pdlc/README.md` first, and follow its instructions. Start with its "Before any
-work" step.
+Intake turns one intent into spec patches. Each requirement that the intent needs is in
+its right spec, as `proposed`. Intake does not write code.
 
-## 1. Get the intent
+## Constraints
 
-First, find where to work ("Where pdlc commits" in `pdlc/README.md`). If a pdlc branch is
-unmerged, switch to the newest unmerged pdlc branch. Then the inbox and the specs that you
-read are current.
+- The session model is a Sonnet 5.5 class model or above ("Core rules" in
+  `pdlc/README.md`). On a lower model, intake does no work. Intake tells the user that
+  pdlc needs a Sonnet 5.5 class model or above.
+- The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first.
+- When a pdlc branch is unmerged, intake reads the inbox and the specs on the newest one
+  ("Where pdlc commits"). The intent then gets its own branch from there, through the
+  delivery port, before the first commit. `Branch:` names it.
+- With no unmerged pdlc branch, intake commits on main, and the intent keeps
+  `Branch: none`.
+- The intent comes from the first of these sources that applies, in this order:
+  - New words of the user: a new intent from the inbox port, with those words as
+    "What and why". The user gets its ID.
+  - An intent that the user names. The name is the approval, so an `Awaits approval:`
+    line in its "Notes" goes.
+  - A `.blueprint.md` file that the user names, read as the words of the intent. Its
+    scope gives "What and why". Its other sections give the requirements, the error
+    codes, and the signatures. Each `(assumed)` mark stays. After intake, the pdlc specs
+    lead, and nobody changes the file.
+  - The oldest `new` intent with no `Awaits approval:`.
+- Each patch obeys "Spec patches" (where a behaviour belongs, the words of the intent, the
+  newest words, no old wording) and "Questions" (the `(assumed)` mark).
+- Intake writes directly into the spec files. A new spec comes from `pdlc/templates/`.
+- A new requirement has the next free number in its spec, `Status: proposed`, and this
+  intent in `Intents:`. It has one or two plain sentences, then "Given …, when …, then …"
+  lines.
+- Each detail that the words of the intent do not give (a message, a limit, an order, a
+  format) has the mark `(assumed)` where intake writes it.
+- A changed requirement changes in place, with `Status: proposed`, and this intent added
+  to `Intents:`. A removed requirement gets `Status: retiring`, and this intent too.
+- A new job lists the capabilities and the design specs that it relies on.
+- The summary of a spec ("Who and why" in a job, "What it is for" in a capability) shows
+  each requirement that intake adds, in one short sentence, for example the new option of
+  a command. The specification review fails a summary that does not.
+- Intake finds every requirement that the newest words change. For example, a new format
+  changes every example of the old format.
+- A spec with `Status: stub` first gets a deep look from `pdlc:recon`. Recon gets three
+  items only: the project root, the absolute path of the spec, and the words `deep look`.
+  Recon gets no request for a summary, the template, or extra detail.
+- The requirements from recon go into the spec as `built`, with `Source: recon`. Then the
+  spec becomes `Status: active`.
+- The statuses on main can be out of date. Thus, intake lists the change branches first
+  ("Where pdlc commits"). The handoff names each changed requirement that an unmerged
+  change covers. The change of this intent for that spec stacks after the unmerged change.
+- A requirement that is still `proposed` for another open intent is a question: how do
+  the two intents fit? With `defaults`, this intent wins where they differ, and its changes
+  come after the changes of the other intent.
+- An intent with two possible meanings is a question before intake goes on. With
+  `defaults`, intake takes the more likely meaning, and writes a note. Only two possible
+  meanings make a point a question for ready.
 
-- If the user described something new, add it through the inbox port. Use the words of
-  the user for "What and why". Tell the user the ID of the new intent.
-- If the user named an intent, read that intent. If the "Notes" of the intent say
-  `Awaits approval:`, remove that line. Naming the intent is the approval.
-- If the user named a `.blueprint.md` file, read the file as the words of the intent. Take
-  "What and why" from its scope. Take the requirements, the error codes, and the signatures
-  from its other sections. Keep each `(assumed)` mark. After this step, the pdlc specs lead,
-  and nobody changes the blueprint file.
-- If neither is true, take the oldest intent with status `new` that does not await
-  approval.
+## Inputs
 
-If you switched to an unmerged pdlc branch above, start a branch for the intent from that
-branch. Use the delivery port. Do this before you commit anything. Write the name of the new
-branch as the `Branch:` of the intent. If no pdlc branch is unmerged, do not start a branch.
-Commit on main, and keep `Branch: none`. Set the status of the intent to `specifying`.
+- `pdlc/README.md`, the shared rules.
+- The words of the user, an intent ID, or a `.blueprint.md` file.
+- The inbox, `pdlc/specs/`, the README of the project, and `pdlc/templates/`.
+- The change branches and their change specs.
 
-## 2. Decide what it touches
+## Outputs
 
-Read the specs in `pdlc/specs/`. For each thing that the intent needs, decide where the
-thing belongs:
-
-- What a user does, through a route, a command, or a page, and what the user gets back →
-  a **job** spec. This holds even when the code of the job is in a shared file.
-- What the system can do, for use by jobs (a store, an outside service, or plumbing that
-  every job uses) → a **capability** spec. The requirements of the capability say what
-  the capability offers to jobs. These requirements do not give the user-facing behaviour
-  of one job.
-- How we do something in all places → a **design** spec.
-- How the output of one job looks to the user (a format, a wording, or a layout) → that
-  **job**. This holds even when a capability makes the value. Add a line for each place in
-  the job that shows the value (a page, an output, or a reply).
-- A behaviour that many jobs share (a reply format or an error shape) → the
-  **capability** or **design** spec that those jobs use. Write the behaviour there one
-  time. Do not repeat the behaviour in each job. Then the jobs need no change for the
-  behaviour. For example, "every email has an unsubscribe link" goes in `CAP-email`
-  (sending email), not in each job that sends email.
-
-Prefer an existing spec. Create a new spec only when no spec fits. When you create a
-capability, put its boundary around a thing that is likely to change (a vendor, a set of
-rules, a store). Name the capability for that thing, not for a feature: `CAP-payments`,
-not `CAP-checkout-button`.
-
-If the intent has two possible meanings, ask the user before you continue (see "Asking
-questions" in `pdlc/README.md`). With `defaults`, take the more likely meaning, and write
-a note about it.
-
-## 3. Deepen stub specs
-
-If a spec that you will change says `Status: stub`, start the `pdlc:recon` agent with
-`run_in_background: false`. Give recon three items, and nothing else: the project root, the
-absolute path of the spec, and the words `deep look`. Recon knows the format of its reply.
-Do not ask recon for a summary of the code, for the template, or for extra detail. Write
-the requirements from recon into the spec. These requirements come back as `built`, with
-`Source: recon`. Set the spec to `Status: active`.
-
-## 4. Write the patches
-
-First, list the change branches, as "Where pdlc commits" in `pdlc/README.md` says. The
-statuses on `main` can be out of date. Do not edit a change spec (`changes/*/change.md`).
-A change that is not merged keeps what it copied. If you change a requirement that an
-unmerged change covers, say so in the handoff. The change of this intent for that spec
-then stacks after the unmerged change.
-
-Write directly into the spec files. For a new spec, use `pdlc/templates/`.
-
-- **New requirement:** use the next free number in that spec. Set `Status: proposed`, and
-  set `Intents:` to this intent. Write one or two plain sentences. Then write the
-  acceptance checks as "Given …, when …, then …" lines. Mark `(assumed)` on each detail
-  that the words of the intent do not give, right where you write the detail. Examples of
-  such details are a message, a limit, an order, and a format. Keep each sentence at 25
-  words or fewer, also in an acceptance line. When a case needs more words, end the
-  "then" part with a full stop and add a second short sentence. Give each ID in a sentence
-  a short description, as in `R5 (usage line)`.
-- **The intent's own words bind.** Copy every example that the intent gives (an output, a
-  message, or a value) into an acceptance line, exactly. Read the words of the intent
-  plainly, for every value. This includes the edge values: zero, empty, and an
-  integer. Do not use an `(assumed)` reading to narrow the words of the intent and keep the
-  old behaviour.
-- **Changed requirement:** edit the requirement in place. Set `Status: proposed`. Add this
-  intent to `Intents:`.
-- **Removed requirement:** set `Status: retiring`, and add this intent to `Intents:`.
-- **New job:** list the capabilities and the design specs that the job relies on.
-
-**The newest words win.** Sometimes the intent asks for something that an older
-requirement or an `(assumed)` detail rules out. In that case, change the older text to
-match. This case is a changed requirement, not a contradiction.
-
-Find every changed requirement of this type. For example, a new format changes every
-example that shows the old format. For each changed requirement, add a Note:
-`<ID>: was "<old>", now "<new>"`.
-
-Make a point a question for ready only if the words of the intent have two possible
-meanings.
-
-**Leave no old wording.** For each requirement that you change or retire, search
-`pdlc/specs/` and the README for the words of the old behaviour (a command, a message, a
-value, or a button). Fix each place in the specs that still shows those words:
-
-- The title and the summary of the spec.
-- The examples and the acceptance lines in other requirements.
-- The cross-references (`see CAP-x.R4`). Each cross-reference must still point at the rule
-  that it means.
-- The notes, the "Known gap" lines, and the "Changes" lists that show the old
-  behaviour.
-
-**The summary shows what you add.** For each requirement that you add, write the new
-behaviour into the summary of its spec in one short sentence. The summary is "Who and why"
-in a job, or "What it is for" in a capability. An example is the new option of a command.
-The specification review fails a summary that does not show what the change adds.
-
-Do not edit the README here, because the README is app code. For each README line that
-shows the old behaviour, add a line to the "Notes" of the intent:
-`README: "<old line>" → <requirement>`. The change for that requirement fixes the README
-line.
-
-Sometimes a requirement that you must change is still `proposed` for a different intent
-that is not done. In that case, ask the user how to fit the two intents together. With
-`defaults`, this intent wins where the two intents differ. The changes of this intent come
-after the changes of the other intent.
-
-## 5. Record and finish
-
-1. In the "Requirements" section of the intent, list each requirement that you added,
-   changed, or retired. Give one word for each requirement: added, changed, or retiring.
-   This list must include each requirement whose text you touched.
-2. Write the "Handoff" of the intent for ready (see `pdlc/templates/handoff.md`): what you
-   wrote, what you assumed, and what looks unclear.
-3. Commit the spec and intent files with the message "Specify IN-xxxx: <name>" and the
-   trailer `Intent: IN-xxxx`. If you stop early, commit these files also.
-4. Tell the tracker port.
-5. Tell the user what you wrote, and that `/pdlc:ready` is next.
+- The patched specs, and each new spec.
+- In the intent:
+  - `Status: specifying`.
+  - "Requirements": each requirement whose text intake touched, with one word for each:
+    added, changed, or retiring.
+  - The "Notes" lines of "Spec patches".
+  - The handoff `intake → ready`: what intake wrote, what it assumed, and what looks
+    unclear.
+- The commit "Specify IN-xxxx: <name>" with the trailer `Intent`: the specs and the
+  intent. Intake commits also when it stops early.
+- For the user: what intake wrote, and that `/pdlc:ready` is next.
+- Intake is done when the commit holds each requirement that the intent needs.

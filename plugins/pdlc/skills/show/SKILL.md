@@ -9,76 +9,63 @@ description: >
 
 # pdlc show
 
-This skill makes a short GIF that shows the change do what its spec says.
+## Goal
 
-Read `pdlc/README.md` first and obey it. Start with its "Before any work" step. Then read
-the `handoff.md` of the change.
+Show makes a short GIF, `review.gif`, and its frames. They show the change do what its
+spec says, one acceptance line after the other, as a user meets the change.
 
-## 1. Pick the change
+## Constraints
 
-Use the change that the user named. If the user did not name a change, use the first
-`building` change whose requirements are all `built`. Switch to the branch of that change.
+- The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first.
+- The change is the one that the user names, or else the first `building` change whose
+  requirements are all `built`. Show works on the branch of the change.
+- Every change gets its show, also with nothing new on screen, and show does not wait for
+  later changes. A capability shows its interface in a terminal (`"kind": "terminal"`),
+  also in a web app.
+- `pdlc/changes/CH-xxxx-…/visual.json` obeys the visual port and its adapter in
+  `pdlc/config.md`.
+- Each acceptance line gets one or more steps, in order. The first step of a line sets the
+  caption: the requirement ID, then the line in a few words. The count of lines matches
+  the change spec.
+- The steps show the behaviour as a user meets it:
+  - A web app: pages and clicks.
+  - A CLI: commands and their output.
+  - A library: a short script that calls the interface.
+- A helper script lives in the change folder. Paths are relative to the project root, so
+  that anyone can record again.
+- A terminal script ends with a step that runs all checks and shows them pass. The
+  recorder runs commands only in terminal scripts, so a web script has no such step.
+- A terminal frame scrolls like a real terminal, and shows the newest lines, also errors.
+  The output of each step stays under one screen, so that its command stays in view.
+- The recorder is `node pdlc/bin/record_gif.mjs pdlc/changes/CH-xxxx-…/visual.json
+  pdlc/changes/CH-xxxx-…`. It needs Node, `playwright`, `gifenc`, and `pngjs`.
+- After `missing <name>`, the packages go into `pdlc/.tools/` with
+  `npm install --prefix pdlc/.tools playwright gifenc pngjs`. With no browser,
+  `npx --prefix pdlc/.tools playwright install chromium` adds one. `.gitignore` lists
+  `pdlc/.tools/`.
+- Each frame shows what its caption claims. The recorder fails, and names the step, for a
+  blank frame. It also fails for a click, typing, a key, or a command that changes nothing
+  on screen.
+- A failed recording means a wrong script: a wrong selector, a missing step, or a command
+  that prints nothing. Such a command prints its result, or the next command reads it.
+- A step has `"unchanged": true` only when its acceptance line says that nothing changes.
+- Show reads the last frame of each acceptance line itself. A frame with an error,
+  incorrect content, or the screen from before the step means a wrong script.
+- Show corrects the script and records again. Show does not correct the app.
 
-Every change gets its show, even one with nothing new on screen yet. A capability shows
-its interface in a terminal (`"kind": "terminal"`), even in a web app. Do not hold show
-until later changes land.
+## Inputs
 
-## 2. Get the recorder ready
+- `pdlc/README.md`, the shared rules.
+- The change spec and its `handoff.md`.
+- The visual port, its adapter, and the "Visual" section of `pdlc/config.md`.
 
-The recorder is `pdlc/bin/record_gif.mjs`. The recorder needs Node, `playwright`,
-`gifenc`, and `pngjs`.
+## Outputs
 
-If the recording (step 4) stops with `missing <name>`, install the packages in
-`pdlc/.tools/`: `npm install --prefix pdlc/.tools playwright gifenc pngjs`. Then, if the
-recorder finds no browser, run `npx --prefix pdlc/.tools playwright install chromium`.
-
-Make sure that `pdlc/.tools/` is in `.gitignore`.
-
-## 3. Write the script
-
-Obey the visual port and its adapter in `pdlc/config.md`. Write
-`pdlc/changes/CH-xxxx-…/visual.json`:
-
-- Write one or more steps for each acceptance line, in order. The first step for each
-  line sets a caption: the requirement ID, then the acceptance line in a few words. Each
-  line gets a step. Compare the count of lines with the change spec.
-- Show the behaviour as a user meets it:
-  - For a web app, show pages and clicks.
-  - For a CLI, show commands and their output.
-  - For a library, show a short script that calls the interface.
-- A helper script that a step runs lives in the change folder. Paths are relative to the
-  project root, so anyone can record again.
-- For a terminal script, end with a step that runs all checks and shows that they pass.
-  The recorder runs commands only in terminal scripts. Thus, a web script does not have
-  this step.
-- A terminal frame scrolls like a real terminal. The frame shows the newest lines,
-  including errors. Keep the output of each step under one screen, so that the command of
-  the step stays in view.
-
-## 4. Record
-
-Run `node pdlc/bin/record_gif.mjs pdlc/changes/CH-xxxx-…/visual.json pdlc/changes/CH-xxxx-…`.
-
-A frame must show what its caption claims. The recorder fails and names the step in two
-cases:
-
-- A frame is blank.
-- A click, typing, a key press, or a command changes nothing on screen.
-
-If the recorder fails, correct the script. Look for a wrong selector, a missing step, or a
-command that prints nothing. For a command that prints nothing, print its result, or read
-the result with the next command. Then record again. Set `"unchanged": true` on a step
-only when its acceptance line says that nothing changes.
-
-Then read the last frame of each acceptance line yourself. If the frame shows an error,
-incorrect content, or the screen from before the step, correct the script and record
-again. Do not correct the app in this skill.
-
-## 5. Finish
-
-1. Write `handoff.md` for `/pdlc:verify`. Give what the GIF shows, frame by frame. Also
-   give how many acceptance lines the GIF shows, out of how many.
-2. Commit `visual.json`, any helper script, `review.gif`, `frames/`, and the handoff
-   together. Use the message "Visual review CH-xxxx". Add the trailers `Intent`, `Change`,
-   and `Review: pdlc/changes/CH-xxxx-…/review.gif`.
-3. Tell the user that `/pdlc:verify` is next.
+- `visual.json`, any helper script, `review.gif`, and `frames/` in the change folder.
+- The handoff `show → verify`: what the GIF shows, frame by frame, and how many acceptance
+  lines it shows, out of how many.
+- One commit of all these files, "Visual review CH-xxxx", with the trailers `Intent`,
+  `Change`, and `Review: pdlc/changes/CH-xxxx-…/review.gif`.
+- For the user: `/pdlc:verify` is next.
+- Show is done when the GIF shows each acceptance line, and each last frame shows what its
+  caption claims.

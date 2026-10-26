@@ -1,72 +1,66 @@
 ---
 name: dashboard
 description: >
-  Installs the optional live dashboard of pdlc. The dashboard has two parts. The first
-  part is the dashboard-builder agent, which keeps one HTML page with tasks, questions for
-  the user, deliverables, and anything that is stuck. The second part is a rule in the
-  CLAUDE.md of the user. The rule tells each session to use the dashboard for all work in
-  progress. Installs only after the user says yes. Use when the user says
-  "/pdlc:dashboard", asks for a live dashboard, or says yes to the dashboard during pdlc
-  init.
+  Installs the optional live dashboard of pdlc. The dashboard-builder agent keeps one HTML
+  page with tasks, questions for the user, deliverables, and anything that is stuck. A
+  rule in the CLAUDE.md of the user tells each session to use the dashboard for all work
+  in progress. Installs only after the user says yes. Use when the
+  user says "/pdlc:dashboard", asks for a live dashboard, or says yes to the dashboard
+  during pdlc init.
 ---
 
 # pdlc dashboard
 
-This skill installs the live dashboard for this user. The skill changes files in the home
-folder of the user, outside the project. Thus, always ask the user first.
+## Goal
 
-The files to install are in the `references/` folder, next to this file.
+Dashboard installs the live dashboard for this user, only after a clear yes. The install
+changes files in the home folder of the user, outside the project.
 
-## 1. Tell the user and ask
+## Constraints
 
-Tell the user these facts in a short text, in your own words:
+- The files to install are in the `references/` folder next to this file.
+- Before the question, the user hears these facts, in a short text in the words of the
+  skill:
+  - A helper agent keeps one web page, `.dashboard/index.html`. The page shows the tasks
+    and their status, the questions with the default action, the latest deliverables,
+    and anything that is stuck. The page refreshes itself every 10 seconds, and opens with
+    a double-click.
+  - The helper can use only `.dashboard/` and its own memory, and a guard script enforces
+    this limit.
+  - The skill adds a rule to `~/.claude/CLAUDE.md`. With the rule, each session uses the
+    dashboard for work in progress, and continues with the default when it needs a
+    decision of the user.
+- The question is "Install the live dashboard?", and the default is **no**. There is no
+  install without a clear yes, also with `defaults`.
+- `~/.claude/agents/` exists, or the skill makes it. `references/dashboard-builder.md` and
+  `references/dashboard-builder-guard.py` go there.
+- A file that is there already and is different shows the difference to the user. The
+  skill replaces it only after the user agrees.
+- `~/.claude/CLAUDE.md` exists, or the skill makes it. A file with a "## Live dashboard"
+  section does not change, and the user hears that the section is there. Else
+  `references/claude-md-rule.md` goes at the end of the file, after a blank line.
+- In a git repository, `.dashboard/` is in `.git/info/exclude`, so that the dashboard
+  goes into no commit.
 
-- A helper agent keeps one web page, `.dashboard/index.html`. The page shows the tasks and
-  their status, the questions for you with the default action, the latest deliverables,
-  and anything that is stuck. The page refreshes itself every 10 seconds. To open the
-  page, double-click it.
-- The helper can only use `.dashboard/` and its own memory. A guard script makes sure that
-  the helper obeys this limit.
-- The skill adds a rule to your `~/.claude/CLAUDE.md`. With the rule, each session uses
-  the dashboard for work in progress. When a session needs your decision, the session
-  continues with the default.
+## Inputs
 
-Ask: "Install the live dashboard?" The default is **no**. Do not install without a clear
-yes, also when the skill runs with `defaults`. The install changes files outside the
-project.
+- The yes or no of the user.
+- `references/dashboard-builder.md`, `references/dashboard-builder-guard.py`, and
+  `references/claude-md-rule.md`.
+- `~/.claude/agents/`, `~/.claude/CLAUDE.md`, and the `.git` folder of the project.
 
-## 2. Install
+## Outputs
 
-Do these steps only after the user says yes:
-
-1. If there is no `~/.claude/agents/` folder, make that folder.
-2. Copy `references/dashboard-builder.md` and `references/dashboard-builder-guard.py` to
-   `~/.claude/agents/`. If one of the files is there and is different, show the
-   difference. Then ask the user before you replace that file.
-3. If there is no `~/.claude/CLAUDE.md`, make that file. If `~/.claude/CLAUDE.md` has a
-   "## Live dashboard" section, do not change the file. Tell the user that the section is
-   there. If the file has no such section, add `references/claude-md-rule.md` to the end
-   of `~/.claude/CLAUDE.md`, after a blank line.
-4. If this project is a git repository, add `.dashboard/` to `.git/info/exclude`. Then
-   the dashboard does not go into a commit.
-
-## 3. Finish
-
-- Tell the user what you installed, and where.
-- Tell the user that the rule starts to work in the next session. Also tell the user that
-  the helper asks for their style the first time: dark or light, dense or airy, and one
-  accent colour.
-- Tell the user that they can remove a design skill from the `skills:` list in
-  `~/.claude/agents/dashboard-builder.md`. They can do this when that skill is not
-  installed on this machine.
-
-## To remove the dashboard
-
-Delete these items:
-
-- `~/.claude/agents/dashboard-builder.md`.
-- `dashboard-builder-guard.py`, in the same folder.
-- The "## Live dashboard" section in `~/.claude/CLAUDE.md`.
-
-The dashboard-builder agent keeps its saved style in
-`~/.claude/agent-memory/dashboard-builder/`.
+- After a yes, the two agent files in `~/.claude/agents/`, and the rule in
+  `~/.claude/CLAUDE.md`.
+- For the user:
+  - What the skill installed, and where.
+  - The rule starts to work in the next session.
+  - The first time, the helper asks for a style: dark or light, dense or airy, and one
+    accent colour.
+  - The user can remove a design skill from the `skills:` list in
+    `~/.claude/agents/dashboard-builder.md` when that skill is not on this machine.
+- To remove the dashboard, the user deletes `~/.claude/agents/dashboard-builder.md`,
+  `dashboard-builder-guard.py` in the same folder, and the "## Live dashboard" section of
+  `~/.claude/CLAUDE.md`. The agent keeps its saved style in
+  `~/.claude/agent-memory/dashboard-builder/`.
