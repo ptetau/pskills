@@ -1,0 +1,1137 @@
+{
+ "skill": "pdlc:trace",
+ "skillSha256": "790f22afc5242fca6cea6540f97f8dc44806854da1ca6cd7f066636e84ba1668",
+ "suiteSha256": "0d06ef760af07e5cc9685e981445ff7f7fc894a0b3c9f0591032c2b7962dfebe",
+ "runId": "base-20261026T203041Z",
+ "generatedAt": "2026-10-26T20:44:22Z",
+ "config": {
+  "prompts": [
+   "P01",
+   "P02"
+  ],
+  "runs": 3,
+  "wave": 3,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "lean",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 11,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 86.7,
+  "stability": 58.5,
+  "overall": 71.2,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 6,
+  "totalRuns": 6
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 3,
+   "usable": 6,
+   "quality": 86.7,
+   "stability": 60.7,
+   "overall": 72.5,
+   "grade": "C",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 78.6,
+  "median": 86.4,
+  "max": 96.9
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The first lines of the reply answer the question that the user asked, in plain words.",
+   "passRate": 91.7,
+   "stabilityWithin": 75,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Each fact in the answer is true for the project, and the answer invents no link.",
+   "passRate": 91.7,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "For a question about code with trace trailers, the reply follows the chain from the code to the ticket.",
+   "passRate": 66.7,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "For a question about an intent, the reply gives the requirements, the changes, the commits of each change and the checks of each requirement.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "For a question about a requirement, the reply gives the requirement, its checks, and the commits and files that name the requirement.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "Each link in the answer names its source, so that the user can open it.",
+   "passRate": 66.7,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 33.3,
+   "stabilityCross": 25,
+   "classCross": "major_drift"
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "When the trace reaches a change, the reply links to the files in the folder of that change.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The reply tells the user about each missing link that the trace meets, as a finding.",
+   "passRate": 100,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P02": "major_drift"
+   },
+   "agreementWithin": 33.3,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run changes nothing in the project.",
+   "passRate": 100,
+   "stabilityWithin": 95,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R10",
+   "kind": "behavior",
+   "weight": 1,
+   "criterion": "Each ID in the prose of the reply comes with a short description.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 3,
+   "quality": 79.8,
+   "stability": 59.3
+  },
+  {
+   "id": "P02",
+   "usableRuns": 3,
+   "quality": 92.7,
+   "stability": 61.9
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 78.6,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Line 26 of `wordfreq/cli.py` checks the value of `--top`. It exists for JOB-report-word-frequencies.R7 (print only the N most common words)."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "IN-0001 (wordfreq top option) is `in review` on the branch. On main, its status is still `ready`."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "R5 (usage line for a wrong number of arguments) is `verified`. R8 (one `--top` option only) is `verified`."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "Intent: IN-0001 (wordfreq top option) is `in review` on the branch."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Its spec is `pdlc/changes/CH-0001-top-option/change.md`. The same folder holds `proposal.md`, `review.gif`, and the six review results in `review/`."
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I changed no file."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "The table in `proposal.md` says 19 checks for R7"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 82.1,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Line 26 exists to reject a bad value of `--top`. It makes sure that N is a whole number greater than zero. Intent IN-0001 (wordfreq top option) asked for `--top N`"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "The class `JOB_report_word_frequencies_R7` in `tests/test_JOB_report_word_frequencies.py` has 20 checks."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "R5 (usage line) and R8 (one `--top` option only) are other lines of the same commit."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "IN-0002 (wordfreq top huge number) records it."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "`pdlc/changes/CH-0001-top-option/change.md`, status `in review`. Step 2 (limit the output) covers R7. The same folder holds `review.gif`, `proposal.md`, and the review results."
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "None."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "Line 26 serves R7."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 78.6,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "checks that the value of `--top` is a whole number greater than zero. It exists because of requirement R7 (print only the N most common words) of intent IN-0001 (wordfreq top option)."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "holds 19 checks"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "R5 (usage line) covers lines 20 to 22. R8 (one `--top` only) covers lines 13 to 15."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Requirement: [JOB-report-word-frequencies.R7](pdlc/specs/jobs/JOB-report-word-frequencies.md)"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "More files for CH-0001: [handoff.md](pdlc/changes/CH-0001-top-option/handoff.md), [review.gif](pdlc/changes/CH-0001-top-option/review.gif)"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "None."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "More files for CH-0001:"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#1",
+   "prompt": "P02",
+   "repeat": 1,
+   "capture": "outputs/P02-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 90.6,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "IN-0001 (wordfreq top option) added the `--top N` option to `wordfreq`. All the work is on the branch `pdlc/CH-0001-top-option`."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Fourteen commits are on the branch. They carry `Intent: IN-0001` and `Change: CH-0001`."
+    },
+    {
+     "id": "R3",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "R8 (one `--top` option only): 1 check in the class `JOB_report_word_frequencies_R8`."
+    },
+    {
+     "id": "R5",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "IN-0001 has the status `in review`."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Its folder is `pdlc/changes/CH-0001-top-option/`. - Spec: `change.md` - Handoff: `handoff.md`."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "IN-0001 has no acceptance file. The current `pdlc/README.md` expects the lines `Acceptance-File:` and `Acceptance-Locked:` in each intent."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "absent"
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "The commits 92ab648 and 60b8332 name R5, R7, and R8. The commit b1f1432 names R7 only."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#2",
+   "prompt": "P02",
+   "repeat": 2,
+   "capture": "outputs/P02-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 90.6,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "IN-0001 (the `--top` option) added `--top N` to `wordfreq`. One change, CH-0001 (top option), carries all the work."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "IN-0001 is `in review`. I read it from the branch. Main still shows `ready`, because the branch has not merged."
+    },
+    {
+     "id": "R3",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Build: 60b8332 (the code, with `Req` R5, R7, R8), then 97efb59 (marked built)."
+    },
+    {
+     "id": "R5",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "On main, with `Intent: IN-0001` only: 304eb70 (specify), 9550d20 (ready), e8ff75f (plan)."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "See [proposal.md](pdlc/changes/CH-0001-top-option/proposal.md). - The visual review is [review.gif](pdlc/changes/CH-0001-top-option/review.gif)."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "No acceptance checks link to this intent. Only the checks of CH-0001 prove its requirements."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I changed no file."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "- IN-0001 has no ticket."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#3",
+   "prompt": "P02",
+   "repeat": 3,
+   "capture": "outputs/P02-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 96.9,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "IN-0001 (the --top option) added `wordfreq --top N`. With it, the command prints only the N most common words."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Intent IN-0001: `in review`, no ticket. File: `pdlc/inbox/IN-0001-wordfreq-top-option.md`."
+    },
+    {
+     "id": "R3",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "60b8332 Build CH-0001: add the --top option, 97efb59 Built"
+    },
+    {
+     "id": "R5",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Change CH-0001: `in review`, base main. File: `pdlc/changes/CH-0001-top-option/change.md`."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "The merge proposal is `pdlc/changes/CH-0001-top-option/proposal.md`. The handoff is `pdlc/changes/CH-0001-top-option/handoff.md`."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "So no acceptance checks prove IN-0001 as a whole."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "absent"
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "- R5: 3 checks in the class `JOB_report_word_frequencies_R5`."
+    }
+   ],
+   "excluded": null
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "All three runs answer before the details. P01#1 leaves the validity rule and IN-0001 (wordfreq top option) out of its opening and adds the commit date and branch. P01#2 and P01#3 put the full rule and both IDs in their first two sentences.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Opener says only that the line 'checks the value of --top' and exists for R7 (print only the N most common words). It adds the commit and branch. The whole-number-greater-than-zero rule and IN-0001 appear only later."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Opener says the line makes sure the --top value is a whole number greater than zero. It names both R7 (print only the N most common words) and IN-0001 (wordfreq top option) as the reason."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "All runs give the same commit, trailers, requirements, intent, change, statuses and IN-0002 (wordfreq top huge number) gap. P01#3 repeats the stale count of 19 R7 checks. P01#1 and P01#2 give the true count of 20, and P01#1 even flags the 19 as stale.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Every stated fact matches the fixture: commit 60b8332 and its trailers, no ticket, the branch statuses (with main still 'ready'), and 20 checks in the R7 class."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "The main links and statuses are correct, but the reply says the R7 class holds 19 checks (the stale proposal count). The file holds 20."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "minor_drift",
+   "reason": "All runs walk the same commit-to-ticket chain in the same order. Only P01#1 gives a status for R5 (usage line) and R8 (one --top option only). P01#2 and P01#3 give a status for R7 alone.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Full chain: commit with subject, all trailers, title and 'verified' status for each of R5, R7 and R8, intent status (in review on the branch, ready on main), and ticket none."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Chain has commit, trailers, intent status and ticket none. Only R7 gets a status. R5 (usage line) and R8 (one --top option) get titles, but no status."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "The runs cite their sources in different ways. P01#1 leaves the intent with no path. P01#2 uses plain paths. P01#3 links every file and lists the checks by name, so the coverage and the format both differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Gives the commit hash and subject, the requirement spec path, the change.md path, and the test file with its class. It gives no file path for IN-0001 (wordfreq top option) or IN-0002 (wordfreq top huge number)."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Gives plain backtick paths for the requirement spec, DES-errors.md, the IN-0001 inbox file, change.md, and the test file with its class. IN-0002 has no path."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Gives clickable markdown links for every source: requirement, intent, change, proposal, test file, review result, and the IN-0002 file. It also names each check one by one."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "All runs give change.md and name more files from the CH-0001 (top option) folder. P01#3 adds handoff.md and a specific review result, and links each file. P01#1 and P01#2 only name proposal.md, review.gif and the review results.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Gives the path of change.md and says that the same folder holds proposal.md, review.gif and the review results. These files are named, not linked."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Links change.md, proposal.md, handoff.md, review.gif, the review/ folder, and review/tests/result.md, each as a markdown link."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "All three projects end clean, with HEAD equal to start, main unchanged, and the same branch checked out. Only P01#3 left the __pycache__ folders that .gitignore lists, which the rubric permits.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "proj ends at start on pdlc/CH-0001-top-option. It has no new commits and no changed or untracked files, apart from the ignored __pycache__ folders in one run."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "All runs use the 'ID (description)' pattern. P01#1 repeats the descriptions almost everywhere. P01#2 and P01#3 leave several later mentions bare.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Describes almost every ID at each mention, including the repeats of IN-0001 and CH-0001. Only one bare 'R7' is left, in the last bullet."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Describes each ID at its first mention, but leaves several later mentions bare. Examples are R7, IN-0001, CH-0001, IN-0002 and the JOB-report-word-frequencies spec ID."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "All three runs open with the same plain answer: IN-0001 added `--top N`, the work sits on the unmerged branch, and CH-0001 is the one change. Then each run gives the details. Only the wording and small asides differ, for example the note about the main status in P02#1.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Opens with a plain answer: IN-0001 added `--top N` to wordfreq through one change, CH-0001, on an unmerged branch. Details follow."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "Each run states the same correct core facts and invents no link. The extra facts differ. P02#1 gives the Req trailers of three commits and does not mention the ticket. P02#2 and P02#3 say that there is no ticket. P02#3 says it ran the 32 checks, but the other runs report the pass count from the handoff or the proposal.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Correct main facts: R5 changed, R7 and R8 added, 14 CH-0001 commits with the same hashes, the code in cli.py, README and the test file, branch statuses in review and verified, and 3/20/1 checks."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R4",
+   "class": "minor_drift",
+   "reason": "All runs give the requirements with statuses, CH-0001 with its status, the 14 commits and the checks of each requirement (3/20/1, by class). P02#1 puts the requirements and the commits in tables. The other two runs use bullet lists, and their commit groupings differ a little.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Gives all four parts. A table lists the requirements, a second table groups the commits by stage with the files of each commit, and a list gives the checks of each requirement by class and count."
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Gives all four parts as bullet lists. The status block comes first, then the requirements, the files with commits, the commits grouped by stage or round, and the checks of each requirement by class and count."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "Only P02#3 gives the path of the intent file and the commit subjects with the hashes. P02#1 and P02#2 leave out the intent path and label the commits by stage. P02#2 also uses Markdown links where the other runs use plain paths. So source coverage differs materially.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Plain paths for the job spec, the change folder and the test file. The intent has no file path. The branch commits show a hash with a stage label in a table, not the full subjects."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Clickable Markdown links to change.md, the job spec, proposal.md and review.gif. The intent has no file path. The commits show a hash with a short parenthesized role, not the subjects."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Plain paths for every record, the intent file `pdlc/inbox/IN-0001-...` among them. Each commit has its hash and its subject. Each check has its class and its test file."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "Every run gives change.md and other files of the change folder, so all three take the same approach. The set of files and the presentation differ. P02#1 lists the folder contents in one section, P02#2 links three files, and P02#3 gives four or five full paths.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "A dedicated section lists the folder `pdlc/changes/CH-0001-top-option/` and its files: change.md, handoff.md, proposal.md, review.gif, frames/ and review/<remit>/result.md."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Inline Markdown links to change.md, proposal.md and review.gif in the status section and the review section. No handoff and no result files."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Full plain paths to change.md, review/<remit>/result.md, proposal.md and handoff.md, spread across the sections. The commit list also gives the path of review.gif."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R8",
+   "class": "major_drift",
+   "reason": "All runs have a missing-links section with the acceptance gap and the gap in the count of checks. P02#3 does not flag the commit with no trailers that P02#1 and P02#2 report. P02#3 adds a gap that no other run gives (old checks with no requirement ID), and P02#1 adds several more gaps. So the reported gaps differ materially.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Six numbered gaps: 19 vs 20 checks, no acceptance file, the 'Upgrade pdlc' commit with no trailers, IN-0002, invalid UTF-8 and non-ASCII digits. Ends by confirming that every IN-0001 commit and every requirement has its links."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Three gaps: no acceptance file, 19 vs 20 checks, and the 'Upgrade pdlc' and 'Set up pdlc' commits with no trailers."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Three gaps: no acceptance file, 19 vs 20 checks, and older checks in test_cli.py with no requirement ID. It does not flag the 'Upgrade pdlc' commit with no trailers. A separate follow-up section gives IN-0002 and UTF-8."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R9",
+   "class": "identical",
+   "reason": "In each proj, the branch tip equals the tag start, `git status --porcelain --ignored` is empty, and the reflog shows no checkout after setup. The end state is the same in all three runs.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "The project is untouched: no new commit, a clean tree with no ignored files left, no branch checkout after setup, and the run ends on `pdlc/CH-0001-top-option` at the tag start."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "All runs are partial in the same way: each ID has a description at its first mention, and later mentions are bare. P02#3 also leaves the IDs bare in the checks section, but P02#1 and P02#2 describe them there. The descriptions also differ, for example 'wordfreq top option' and 'the --top option'.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Describes each ID at its first mention, in the requirements section and in the checks section. IDs are bare in the commit prose, the status lines and the gap notes, for example 'R7 has 19 checks'."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Describes each ID at its first mention and in the requirements section. The checks section is bare ('R5: 3 checks'), and IDs are also bare in the commit prose and the gap notes."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R6",
+   "class": "major_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Sources every link: commit short hash with its subject, quoted trailers, file paths for the requirement spec, the error spec (DES-errors.md), the intent file, the change.md and the test file with its check class."
+    },
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Commit short hash with its subject and quoted trailers. Paths for the job spec, change.md and the test file with its class. The intent and the TOP_INVALID error code have no file path."
+    },
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "All commits by short hash, but most branch commits carry a stage label instead of their subject. Paths for the job spec, the change files and the test file with check classes. The intent has no file path. P02#1 writes backtick paths and a commit table, and P02#2 writes clickable markdown links."
+    }
+   ],
+   "reason": "Only P01#2 sources each link, including a path to the intent file. P01#1 leaves the intent and the error code without a path. The P02 runs replace most commit subjects with stage labels and give no intent path. So the runs would grade differently, pass against partial.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R7",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "The trace step gives the full path of change.md. One sentence then says that the same folder holds proposal.md, review.gif and the review results, as bare names."
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "A dedicated 'The change' section gives the folder path and a bulleted list: change.md, handoff.md, proposal.md, review.gif with frames/, and review/<remit>/result.md."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Clickable markdown links with full paths to change.md (in Status) and to proposal.md and review.gif (in Reviews). No handoff.md and no result.md path."
+    }
+   ],
+   "reason": "Every run gives the change.md path and at least two more files from the change folder. The set of files differs (only P02#1 names handoff.md and frames/), and so does the format: one inline sentence, a dedicated list, or links spread over several sections.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

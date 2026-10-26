@@ -1,0 +1,3 @@
+/home/user/pskills                                      ee65fcb [claude/zen-brown-ww7xi3]
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-1  03297cb [worktree-wf_659738b2-1f3-1] locked
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-2  03297cb [worktree-wf_659738b2-1f3-2] locked
