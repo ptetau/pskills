@@ -30,10 +30,13 @@ Then do these steps:
    a fix needs new behaviour, do not add that behaviour, and say so in your reply.
 5. Run the checks with the command in `pdlc/config.md`. Before you finish, run all the
    checks. Make sure that nothing else breaks.
+6. The skill can also give you acceptance files. Run them with the "acceptance" command
+   in `pdlc/config.md`. Each of their checks must pass too.
 
-You are not permitted to change checks or `pdlc/` files. A guard stops you. Also, the
-merge check fails if a check changes after the lock. If a check looks incorrect, or you
-need a file that is not in "Files", stop and tell why. Do not work around it.
+You are not permitted to change checks, acceptance files, or `pdlc/` files. A guard stops
+you. Also, the merge check fails if a check changes after the lock. If a check looks
+incorrect, or you need a file that is not in "Files", stop and tell why. Do not work
+around it.
 
 Do not commit. The skill that started you makes the commit. Reply with the files that you
 changed, one line for each file, and the results of the checks.

@@ -60,9 +60,10 @@ builder changes only those parts.
 
 ## Check files
 
-List the check files for this change. Name each file after the spec, as
+List the component check files for this change. Name each file after the spec, as
 `DES-pdlc-check-tagging` (check naming) tells you. Only the test writer writes these
-files.
+files. The acceptance checks of the intent are in a different file, and are not listed
+here.
 
 - path/to/check
 

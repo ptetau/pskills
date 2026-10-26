@@ -21,6 +21,10 @@ In `pdlc/config.md`, the project selects which remits run.
 The tests packet holds the spec and the checks, but not the code. Each other packet holds
 the spec and the code, but not the checks.
 
+The acceptance checks of an intent get one review, with the tests remit. Its packet holds
+the intent, its requirements, the interface of each of its changes, and the acceptance
+file. Its result goes into `pdlc/acceptance/<intent>/review/tests/result.md`.
+
 ## Success
 
 If a change has a problem in one remit, the change fails that remit. The results of the

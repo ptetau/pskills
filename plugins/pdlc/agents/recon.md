@@ -40,6 +40,10 @@ the recent git history. Do not read everything. Then report these items:
 3. **Checks.** How the project runs checks today. Give the command that runs all checks,
    and how to run only the checks whose name contains some text. Also give the folders
    that hold the checks. If there are no checks, say "none found".
+
+   Also give a path for the acceptance checks of one intent, with `{intent}` for the ID.
+   The command that runs all checks must not find this path. Then give the command that
+   runs given files at such paths, with `{files}` for the paths.
 4. **Running it.** Say if the project serves pages. If it does, give the command that
    starts the project and the address that it answers on.
 5. **Conventions.** The patterns that you can see (naming, layout, error handling, style

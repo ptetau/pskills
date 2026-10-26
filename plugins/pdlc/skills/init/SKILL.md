@@ -94,16 +94,33 @@ For each file in `references/defaults/`, do these steps:
 ### 4. Set up checks and the visual review
 
 Complete the "Checks" section of `pdlc/config.md` with the answer from recon. Write these
-four items:
+six items:
 
 - The command that runs all checks.
 - The command that runs only the checks of one requirement.
 - The check folders. If the project has no check folders yet, write `tests/`.
+- The acceptance file: the path of the acceptance checks of one intent, with `{intent}`
+  where the ID goes. The "all" command must not run this file.
+- The acceptance command: the command that runs acceptance files, with `{files}` where the
+  paths go.
 - The one ID form.
 
-Ask the user to make sure that the four items are correct. In `config.md`, replace each
+For example, Python `unittest` skips `tests/acceptance_{intent}.py`, and
+`python3 -m unittest {files}` runs it. `node --test` skips
+`acceptance/{intent}.acceptance.js`, and `node --test {files}` runs it. If the acceptance
+file is outside the check folders, add its folder to the check folders.
+
+Ask the user to make sure that the six items are correct. In `config.md`, replace each
 placeholder, each example, and each "(or …)" hint with the value that you chose, or with
 `none`.
+
+If the project can run checks, make sure that the "all" command skips acceptance files:
+
+1. Write an acceptance file for the made-up intent `IN-9999`, with one check that always
+   fails.
+2. Run the "all" command. The output must not show that check.
+3. Run the acceptance command on the file. The check must fail.
+4. Delete the file. If step 2 or 3 went wrong, select a different path, and try again.
 
 Set the visual adapter:
 

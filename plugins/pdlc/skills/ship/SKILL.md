@@ -2,11 +2,11 @@
 name: ship
 description: >
   Runs pdlc from start to end. Takes the request of the user (or an intent in progress)
-  through intake, ready, and change. Then takes each change through tests, build, show,
-  and verify. Stacks the changes, and proposes each merge. Continues with the recommended
-  answers. Stops only for contradictions, out-of-scope files, repeated failure, or the end
-  of the stack. Continues from the point where it stopped. Use when the user says
-  "/pdlc:ship", "ship it", or wants pdlc to run all the way alone.
+  through intake, ready, change, and acceptance. Then takes each change through tests,
+  build, show, and verify. Stacks the changes, and proposes each merge. Continues with the
+  recommended answers. Stops only for contradictions, out-of-scope files, repeated
+  failure, or the end of the stack. Continues from the point where it stopped. Use when
+  the user says "/pdlc:ship", "ship it", or wants pdlc to run all the way alone.
 ---
 
 # pdlc ship
@@ -38,15 +38,18 @@ always continue after a stop, a crash, or a new session.
 ## 2. Run the stages
 
 For each stage, follow its skill (`pdlc:intake`, `pdlc:ready`, `pdlc:change`,
-`pdlc:tests`, `pdlc:build`, `pdlc:show`, `pdlc:verify`). Always use `defaults`. Each stage
-starts from the last handoff. At its end, each stage writes the next handoff. Do not carry
-details from one stage into the next stage, except through the handoff and the files.
+`pdlc:acceptance`, `pdlc:tests`, `pdlc:build`, `pdlc:show`, `pdlc:verify`). Always use
+`defaults`. Each stage starts from the last handoff. At its end, each stage writes the
+next handoff. Do not carry details from one stage into the next stage, except through the
+handoff and the files.
 
 ```
-intent:          intake → ready → change
+intent:          intake → ready → change → acceptance
 for each change: tests → build → show → verify → propose
 ```
 
+- The acceptance stage writes and locks the acceptance checks of the intent before the
+  first change starts. These checks pass only at the last change of the intent.
 - Each change runs each stage, in order. Do not hold or skip show or verify, also when a
   change has nothing on screen yet.
 - Changes stack. When a change is proposed (`in review`), start the tests of the next
@@ -57,14 +60,16 @@ for each change: tests → build → show → verify → propose
 
 ## 3. When a stage fails
 
-- If verify fails, go to the stage that the handoff of verify names for each problem:
-  tests or build. Then run build, show, and verify. Do not ask the user about a failed
-  review.
+- If `verify` fails, go to the stage that the handoff of `verify` names for each problem:
+  tests, acceptance, or build. Then run build, show, and verify. Do not ask the user about
+  a failed review.
 - If the tests review fails, go back to tests. Then run build, show, and verify.
-- Each change can have two rounds. On the third failure, stop.
+- If the acceptance review fails, go back to acceptance.
+- Each change can have two rounds, and the acceptance stage of each intent too. On the
+  third failure, stop.
 
-A round is one failed tests review, one failed verify, or one builder report that a check
-is wrong. Fixing a check before it is locked is not a round.
+A round is one failed tests or acceptance review, one failed `verify`, or one builder
+report that a check is wrong. Fixing a check before it is locked is not a round.
 An agent blocked twice also counts as one.
 
 ## 4. Stop only for these

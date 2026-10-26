@@ -11,8 +11,9 @@ This folder holds the pdlc state for this project. Each pdlc skill reads this fi
    scripts. A capability holds only the shared logic under the entry points. A job change
    uses capabilities, but does not edit their code. A missing capability gets its own
    change, before the job change.
-5. The test writer writes the checks before the code, from the spec only. Then the checks
-   are locked. A writer of app code must not change the checks.
+5. The test writer writes the checks before the code, from the spec only. The acceptance
+   checks of an intent come first, then the component checks of each change. Then the
+   checks are locked. A writer of app code must not change the checks.
 6. Reviews are independent. Each remit gets one fresh reviewer, and each reviewer sees only
    its packet.
 7. A change merges only when all of these are true:
@@ -21,6 +22,8 @@ This folder holds the pdlc state for this project. Each pdlc skill reads this fi
    - Each review remit passed.
    - The branch of the change merges into main without conflicts.
    - Every other change of the same intent is `in review` or `merged`.
+   - The acceptance checks of the intent are locked and reviewed, and they passed at the
+     last change of the intent.
 
    The changes of an intent merge together, with the bottom of the stack first.
    `bin/check_merge.py` checks all of these conditions.
@@ -51,6 +54,8 @@ This folder holds the pdlc state for this project. Each pdlc skill reads this fi
   remit judges.
 - `inbox/`: one file for each intent.
 - `specs/jobs/`, `specs/capabilities/`, `specs/design/`: the specs.
+- `acceptance/IN-xxxx-name/review/tests/`: the review of the acceptance checks of an
+  intent, as `packet.md` and `result.md`.
 - `changes/CH-xxxx-name/`: one folder for each change, with these items:
   - `change.md`: the change spec.
   - `handoff.md`: the latest handoff between stages.
@@ -106,8 +111,8 @@ Starting an agent:
 
 ## Stages and handoffs
 
-The stages for an intent are intake → ready → change. The stages for each change are
-tests → build → show → verify. `/pdlc:ship` runs all the stages.
+The stages for an intent are intake → ready → change → acceptance. The stages for each
+change are tests → build → show → verify. `/pdlc:ship` runs all the stages.
 
 Each stage first reads the latest handoff. At its end, each stage writes a new handoff:
 
@@ -132,11 +137,33 @@ Each stage, and each stop, ends in the same way:
 - The handoff of the stage says only what the files show. Count the checks that ran and
   the acceptance lines shown. Do not estimate.
 
+## Acceptance checks
+
+Each intent has one acceptance file, at the "acceptance file" path in `config.md`. Its
+checks prove the acceptance lines of the intent, through what a user uses. A check can use
+each feature of the intent, and each feature that exists already.
+
+- The acceptance stage writes, locks, and reviews the file before the first change starts.
+  The lines `Acceptance-File:` and `Acceptance-Locked:` of the intent record the file and
+  the lock.
+- The checks of each change are component checks. A component check uses only the
+  interface of its change and of earlier changes.
+- The "all" command does not run an acceptance file. Thus, the acceptance checks of an
+  open intent can fail until its last change, and main stays green.
+- The `build` and `verify` stages of each change run all checks and **run earlier
+  acceptance**. Each check must pass.
+- The `verify` stage of the last change also runs **run acceptance**. Each check must
+  pass. Then the `verify` stage writes the commit of that run on `Acceptance-Passed:`.
+- After the intent merges, its acceptance checks stay. Each later change keeps them green.
+
 ## Where pdlc commits
 
 - Init commits on main. The intent stages (intake, ready, change) also commit on main when
   no pdlc branch is unmerged. The records of pdlc are not code, so this is by design, also
   where the usual rule is to branch first.
+- The acceptance stage commits on the branch of the intent, `pdlc/IN-xxxx-<short-name>`.
+  If the intent has no branch yet, the acceptance stage starts it. Thus, the acceptance
+  checks go to main only together with their code.
 - A change commits on its own branch: its code, status, lock, and handoff. On main, a
   change that did not merge yet still has the status `planned`.
 - While any pdlc branch is unmerged, only `bin/record_merges.py` commits on main. The

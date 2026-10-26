@@ -3,10 +3,14 @@
 Time: <the output of `date -Iseconds`; never typed by hand>
 
 The title is one of these, and nothing else: `intake → ready`, `ready → change`,
-`change → tests`, `tests → build`, `build → show` or `show → verify`. After a failed
-round, the title is `verify → tests` or `verify → build`. Once verify proposes the change,
-the title is `verify → user`. When a stage stops, the title is `<this stage> → user`. Keep
-every section below, in this order. Write "none" under one with nothing in it.
+`change → acceptance`, `acceptance → tests`, `tests → build`, `build → show` or
+`show → verify`. After a failed round, the title is `verify → tests`, `verify → build` or
+`verify → acceptance`. After the acceptance stage corrects a check for a change, the title
+is `acceptance → build`.
+
+Once verify proposes the change, the title is `verify → user`. When a stage stops, the
+title is `<this stage> → user`. Keep every section below, in this order. Write "none"
+under one with nothing in it.
 
 ## Done
 

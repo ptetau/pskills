@@ -122,6 +122,41 @@ class Guard(unittest.TestCase):
             self.assertTrue(self.ok("pdlc:builder", "Write", file_path=scratch))
             self.assertTrue(self.ok("pdlc:recon", "Read", file_path=scratch))
 
+    # acceptance files are checks: the test writer writes them, the builder cannot
+
+    def with_acceptance_line(self):
+        (self.cwd / "pdlc/config.md").write_text(
+            CONFIG + "- acceptance file: `acceptance/{intent}.acceptance.js` (the acceptance checks "
+                     "of one intent)\n")
+
+    def test_the_test_writer_reads_and_writes_the_acceptance_file_of_the_config(self):
+        self.with_acceptance_line()
+        self.assertTrue(self.ok("pdlc:test-writer", "Write", file_path="acceptance/IN-0001.acceptance.js"))
+        self.assertTrue(self.ok("pdlc:test-writer", "Read", file_path="acceptance/IN-0002.acceptance.js"))
+        self.assertFalse(self.ok("pdlc:test-writer", "Write", file_path="acceptance/helpers.js"))
+
+    def test_the_builder_cannot_change_the_acceptance_file_of_the_config(self):
+        self.with_acceptance_line()
+        self.assertFalse(self.ok("pdlc:builder", "Edit", file_path="acceptance/IN-0001.acceptance.js"))
+        self.assertTrue(self.ok("pdlc:builder", "Read", file_path="acceptance/IN-0001.acceptance.js"))
+        self.assertTrue(self.ok("pdlc:builder", "Edit", file_path="acceptance/helpers.js"))
+
+    def test_a_file_named_for_the_acceptance_of_an_intent_is_a_check_without_the_config_line(self):
+        self.assertFalse(self.ok("pdlc:builder", "Write", file_path="acceptance_IN_0001.py"))
+        self.assertFalse(self.ok("pdlc:builder", "Write", file_path="e2e2/IN-0003.acceptance.js"))
+        self.assertTrue(self.ok("pdlc:test-writer", "Write", file_path="acceptance_IN_0001.py"))
+        self.assertTrue(self.ok("pdlc:builder", "Write", file_path="src/acceptance.py"))
+
+    def test_reviewer_reads_the_acceptance_packet_and_writes_its_result(self):
+        base = "pdlc/acceptance/IN-0001-reset/review/tests/"
+        self.assertTrue(self.ok("pdlc:reviewer", "Read", file_path=base + "packet.md"))
+        self.assertTrue(self.ok("pdlc:reviewer", "Write", file_path=base + "result.md"))
+        self.assertFalse(self.ok("pdlc:reviewer", "Write", file_path=base + "packet.md"))
+
+    def test_test_writer_cannot_read_the_acceptance_review(self):
+        self.assertFalse(self.ok("pdlc:test-writer", "Read",
+                                 file_path="pdlc/acceptance/IN-0001-reset/review/tests/result.md"))
+
     # recon: read only
 
     def test_recon_never_writes(self):

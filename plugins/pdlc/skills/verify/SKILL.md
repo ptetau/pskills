@@ -32,6 +32,10 @@ Do these steps through the checks port:
   `(retire)` requirement.
 - Run all checks. All checks must pass.
 - Make sure that no check file changed since `Tests-Locked`.
+- Run **run earlier acceptance** for the intent. All its checks must pass.
+- If this change is the last change under "Changes" of the intent, run **run
+  acceptance**. All its checks must pass. Note the commit of that run
+  (`git rev-parse HEAD`). For an earlier change, a failure of these checks is expected.
 
 ## 3. Independent reviews
 
@@ -76,6 +80,9 @@ The findings of a failed round must stay in git.
 1. Collect the failed checks and each other problem from the results in the `handoff.md`
    of the change. Address each problem to the stage that fixes the problem:
    - A failed check, or a problem with a check: the tests stage.
+   - A failed acceptance check: the build stage. If the acceptance check itself is wrong,
+     the acceptance stage. A check of an earlier intent is wrong when this intent changes
+     the requirement that the check proves.
    - A problem that says that an acceptance line is not met, although each check passed:
      the tests stage first (for a check tagged with the requirement of that line), then
      the build stage.
@@ -91,7 +98,7 @@ The findings of a failed round must stay in git.
    `Change`.
 5. Tell the user which stage is next. Stop here.
 
-Every problem goes to the tests stage or the build stage. No problem goes to the user.
+Every problem goes to the tests, acceptance, or build stage. No problem goes to the user.
 The build stage only makes the code meet an existing acceptance line, design spec, or
 remit rule. The build stage stays inside the "Files" of the change and uses the plainest
 fix, for example a clearer message. Do not add or change a requirement, an acceptance
@@ -100,24 +107,31 @@ line, or an error code on the branch of a change.
 ## 6. If everything passed
 
 1. In the spec file of each requirement in the change, set the requirement to `verified`.
-   Set the change to `in review`.
+   Set the change to `in review`. For the last change of the intent, write the commit from
+   step 2 on the line `Acceptance-Passed:` of the intent.
 2. Commit the results and the statuses with the message "Verified CH-xxxx" and the
    trailers `Intent` and `Change`.
 3. Run the gate through the delivery port. The gate must pass, except for lines that say
-   that another change of this intent is not ready. Those lines clear when each change in
-   the stack is proposed. Correct each other problem that the gate names. Commit each
-   correction with the message "Update CH-xxxx: <what>". Use these rules:
+   `not ready`. Those lines clear when the last change of the intent is verified. For the
+   last change, the gate must pass with no exception.
+
+   Correct each other problem that the gate names. Commit each correction with the message
+   "Update CH-xxxx: <what>". Use these rules:
    - For a conflict with main, merge main into this branch. Give the merge commit the
      trailers `Intent` and `Change`. Keep the text of main, and keep the statuses of this
      branch for its own requirements.
    - For a marker that the gate names, write the marker as `(assumed)`. Move any reason
      out of the brackets, and keep the meaning.
+   - If a correction changes app files after the acceptance checks passed, run the
+     acceptance checks of step 2 again. Write the new commit on `Acceptance-Passed:`.
 4. Propose the merge through the delivery port, with the base of the change as the
    target. Write the description from `pdlc/templates/proposal.md`, and fill each section.
    Put these items in the description:
    - The GIF, embedded. The delivery adapter tells how.
    - A table of each requirement, its checks, and their result.
    - A table of each remit and its result, with a link to each `result.md`.
+   - The acceptance checks of the intent: the file, the lock, and the review result. For
+     the last change, also the commit at which the checks passed.
    - The lock commit, and each "Manual checks" item that the user must confirm.
    - Each detail that is marked `(assumed)` in the change spec and its requirements, on
      one line each. Thus, the user reviews all these details in one place.

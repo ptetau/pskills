@@ -2,7 +2,9 @@
 
 Default: yes
 
-You judge the checks, not the code. You do not see the code.
+You judge the checks, not the code. You do not see the code. The list below is for the
+component checks of a change. For the acceptance checks of an intent, the section
+"Acceptance checks of an intent" gives the differences.
 
 - Each acceptance line in the change spec has at least one check. The exception is a
   requirement marked `(retire)`: its acceptance lines get no check, and each check that
@@ -10,6 +12,9 @@ You judge the checks, not the code. You do not see the code.
 - The name of each check contains its requirement ID.
 - Each check tests what the acceptance line says, through the "Interface" in the change
   spec. The check does not depend on the internal structure of the code.
+- A component check is permitted to prepare state directly, for example with a fixture
+  file. But the check reads each result through the interface, unless the requirement is
+  about the stored form.
 - A check proves each line at the surface that the line names. A line where the person
   clicks needs a check that clicks and reads what shows. A check of a helper below that
   surface is not sufficient alone.
@@ -52,3 +57,23 @@ Look for these traps:
   "Any other value is an error" needs a value close to an allowed value, not only a few
   far-off values. A close value differs by its case, a space, or a prefix. "Only the
   owner may" needs a person who is not the owner.
+
+## Acceptance checks of an intent
+
+The packet holds the intent, the full text of its requirements, and the "Interface" of
+each of its changes. Judge the acceptance checks by the list at the top, with these
+differences:
+
+- Each acceptance line of each requirement that the intent lists has at least one check. A
+  `retiring` requirement has no check.
+- Each check uses only what a user uses: commands, HTTP requests, pages, or the public
+  functions of a library. A check can use each feature of the intent, and each feature
+  that exists already.
+- No check reads or writes stored data directly. A check that opens a saved file or
+  queries a store is a problem.
+- A check can leave the acceptance file of an earlier intent only when the check proved a
+  requirement that this intent changes or retires. Then a check in this file proves the
+  new line. Any other removal is a problem.
+- Each check fails until the last change of the intent is built. That is not a problem.
+
+Write "Wrong versions" for the acceptance checks in the same way as for other checks.

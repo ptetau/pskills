@@ -67,6 +67,11 @@ In that folder, write `change.md` from `pdlc/templates/change.md`.
   command, or a request), list that surface. Then the checks drive that surface, and not
   only a helper below the surface. Select the new names here. Use the style of the existing
   code, and mark each new name `(assumed)`.
+
+  List only the items of this change, of earlier changes, and of code that exists already.
+  Do not list an item that a later change builds. The component checks of the change call
+  only these items. The acceptance checks of the intent read the "Interface" of every
+  change.
 - **Test seams:** how a check controls what an acceptance line depends on. A seam can
   control the clock (for any line that depends on the current date or time), randomness,
   and external vendors or stores. Give each seam at the outermost interface that the checks
@@ -95,9 +100,9 @@ In that folder, write `change.md` from `pdlc/templates/change.md`.
   A job change always lists the README of the project. Another change lists the README if
   the change alters what the README tells a user. If `.gitignore` lacks the folders that
   the checks will write, list `.gitignore` too.
-- **Check files:** the check files that this change adds or changes. These files are in
-  the check folders that `pdlc/config.md` gives. Name a new check file after the spec, as
-  `DES-pdlc-check-tagging` says.
+- **Check files:** the component check files that this change adds or changes. These
+  files are in the check folders that `pdlc/config.md` gives. Name a new check file after
+  the spec, as `DES-pdlc-check-tagging` says.
 - **Steps:** usually one step for each requirement. Each step gives its requirement, the
   check that proves the requirement (with the requirement ID in its name), and "Done
   when". A `(retire)` requirement gets no check. The step for a `(retire)` requirement
@@ -119,10 +124,10 @@ In that folder, write `change.md` from `pdlc/templates/change.md`.
 ## 4. Finish
 
 - In the "Changes" section of the intent, list the changes in order.
-- Write the "Handoff" section of the intent for the tests stage. Give the changes, their
-  order, and anything about the interface that helps the test writer.
+- Write the "Handoff" section of the intent for the acceptance stage. Give the changes,
+  their order, and anything about the interface that helps the test writer.
 - Commit with the message "Plan IN-xxxx: <names of changes>" and the trailer
   `Intent: IN-xxxx`.
 - Tell the tracker port about each new change.
-- Tell the user the changes, in order. Also tell the user that `/pdlc:tests` is the next
-  step.
+- Tell the user the changes, in order. Also tell the user that `/pdlc:acceptance` is the
+  next step.

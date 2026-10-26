@@ -349,5 +349,128 @@ class ReReview(PacketRepo):
         self.assertNotIn("## Re-review", text)
 
 
+INTENT = """# IN-0001 · Spanish greeting
+
+Status: building · Ticket: none · Branch: pdlc/IN-0001-es · Added: 2026-10-10
+
+## Requirements
+
+- CAP-greeting.R2 · Greets in Spanish
+
+## Changes
+
+- CH-0001 · Spanish greeting
+
+## Acceptance checks
+
+Acceptance-File: acceptance/IN-0001.acceptance.js
+Acceptance-Locked: {lock}
+Acceptance-Passed: none
+
+## Notes
+
+- none
+"""
+
+
+class AcceptancePacket(PacketRepo):
+    """The tests packet for the acceptance checks of an intent."""
+
+    def setUp(self):
+        super().setUp()
+        r = self.root
+        config = r / "pdlc/config.md"
+        config.write_text(config.read_text() + "\n## Checks\n\n"
+                          "- acceptance file: `acceptance/{intent}.acceptance.js` (the note)\n")
+        (r / "acceptance").mkdir()
+        (r / "acceptance/IN-0001.acceptance.js").write_text(
+            "test('IN-0001 CAP-greeting.R2 says hola', () => {}) // ACCEPT-CHECK\n")
+        self.intent_file = r / "pdlc/inbox/IN-0001-es.md"
+        self.intent_file.parent.mkdir(parents=True)
+        self.intent_file.write_text(INTENT.format(lock="none"))
+        git(r, "add", "-A"); git(r, "commit", "-qm", "Acceptance IN-0001")
+        self.lock = head(r)
+        self.intent_file.write_text(INTENT.format(lock=self.lock))
+        git(r, "add", "-A"); git(r, "commit", "-qm", "Lock acceptance IN-0001")
+        self.review = r / "pdlc/acceptance/IN-0001-es/review/tests"
+
+    def acceptance_packet(self):
+        return (self.review / "packet.md").read_text()
+
+    def test_an_intent_gets_a_tests_packet_for_its_acceptance_checks(self):
+        self.assertEqual(make_packets.main(["x", "IN-0001"], root=self.root), 0)
+        text = self.acceptance_packet()
+        self.assertIn("# Remit: tests", text)
+        self.assertIn("Acceptance-Locked: %s" % self.lock, text)
+        self.assertIn("ACCEPT-CHECK", text)
+        self.assertIn("Says hola.", text)
+        self.assertIn("`greet(name, lang)` in `src/greet.js`", text)
+        self.assertNotIn("Not this one.", text)
+
+    def test_the_acceptance_packet_has_no_code_and_no_component_checks(self):
+        make_packets.main(["x", "IN-0001"], root=self.root)
+        text = self.acceptance_packet()
+        self.assertNotIn("SECRET-CODE", text)
+        self.assertNotIn("SECRET-TEST", text)
+        self.assertNotIn("Write plainly.", text)
+
+    def test_the_acceptance_packet_is_a_re_review_after_a_new_lock(self):
+        make_packets.main(["x", "IN-0001"], root=self.root)
+        (self.review / "result.md").write_text(
+            "Result: fail\n\nProblems:\n- acceptance/IN-0001.acceptance.js:1 · no case for Bob · "
+            "CAP-greeting.R2 (greets in Spanish)\n")
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "Review acceptance IN-0001")
+        first = self.lock
+        (self.root / "acceptance/IN-0001.acceptance.js").write_text(
+            "test('IN-0001 CAP-greeting.R2 says hola', () => {}) // ACCEPT-CHECK\n"
+            "test('IN-0001 CAP-greeting.R2 Bob', () => {}) // ACCEPT-BOB\n")
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "Acceptance IN-0001")
+        self.lock = head(self.root)
+        self.intent_file.write_text(INTENT.format(lock=self.lock))
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "Lock acceptance IN-0001")
+        make_packets.main(["x", "IN-0001"], root=self.root)
+        rereview = self.acceptance_packet().split("## Re-review", 1)[1].split("# Remit: tests", 1)[0]
+        self.assertIn("Earlier review: %s" % first, rereview)
+        self.assertIn("no case for Bob", rereview)
+        self.assertIn("+test('IN-0001 CAP-greeting.R2 Bob'", rereview)
+
+    def test_the_acceptance_packet_shows_the_checks_that_the_lock_took_from_earlier_intents(self):
+        r = self.root
+        (r / "acceptance/IN-0000.acceptance.js").write_text(
+            "test('IN-0000 CAP-greeting.R1 hello', () => {})\n"
+            "test('IN-0000 CAP-greeting.R2 says hi', () => {}) // OLD-LINE\n")
+        git(r, "add", "-A"); git(r, "commit", "-qm", "an earlier intent")
+        (r / "acceptance/IN-0000.acceptance.js").write_text("test('IN-0000 CAP-greeting.R1 hello', () => {})\n")
+        (r / "acceptance/IN-0001.acceptance.js").write_text(
+            "test('IN-0001 CAP-greeting.R2 says hola', () => {}) // ACCEPT-CHECK\n")
+        git(r, "add", "-A"); git(r, "commit", "-qm", "Acceptance IN-0001")
+        self.intent_file.write_text(INTENT.format(lock=head(r)))
+        git(r, "add", "-A"); git(r, "commit", "-qm", "Lock acceptance IN-0001")
+        make_packets.main(["x", "IN-0001"], root=r)
+        moved = self.acceptance_packet().split("## Checks removed from earlier intents", 1)[1]
+        self.assertIn("-test('IN-0000 CAP-greeting.R2 says hi', () => {}) // OLD-LINE", moved)
+
+    def test_an_intent_with_no_acceptance_file_gets_no_packet(self):
+        self.intent_file.write_text(INTENT.format(lock="none").replace(
+            "Acceptance-File: acceptance/IN-0001.acceptance.js", "Acceptance-File: none"))
+        self.assertEqual(make_packets.main(["x", "IN-0001"], root=self.root), 1)
+        self.assertFalse(self.review.exists())
+
+    def test_code_packets_leave_out_the_acceptance_checks(self):
+        make_packets.main(["x", "CH-0001", "security", "specification"], root=self.root)
+        for remit in ["security", "specification"]:
+            text = self.packet(remit)
+            self.assertIn("SECRET-CODE", text)
+            self.assertNotIn("ACCEPT-CHECK", text)
+
+    def test_code_packets_leave_out_a_file_named_as_acceptance_checks_without_the_config_line(self):
+        (self.root / "pdlc/config.md").write_text("## Reviews\n\n- remits: security\n")
+        (self.root / "tests").mkdir()
+        (self.root / "tests/acceptance_IN_0001.py").write_text("# ACCEPT-PY\n")
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "more")
+        make_packets.main(["x", "CH-0001", "security"], root=self.root)
+        self.assertNotIn("ACCEPT-PY", self.packet("security"))
+
+
 if __name__ == "__main__":
     unittest.main()

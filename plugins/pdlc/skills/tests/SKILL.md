@@ -1,17 +1,18 @@
 ---
 name: tests
 description: >
-  Writes and locks the checks of a pdlc change before any app code. The pdlc:test-writer
-  agent writes the checks from the spec only. Each new check must fail. Then the skill
-  commits and locks the checks, and an independent reviewer judges the checks against the
-  spec. Use when the user says "/pdlc:tests", or when a change is planned and ready for its
-  checks.
+  Writes and locks the component checks of a pdlc change before any app code. The
+  pdlc:test-writer agent writes the checks from the spec only. Each new check must fail.
+  Then the skill commits and locks the checks, and an independent reviewer judges the
+  checks against the spec. Use when the user says "/pdlc:tests", or when a change is
+  planned and ready for its checks.
 ---
 
 # pdlc tests
 
 The checks come first. A test writer that does not see the code writes the checks from
-the spec.
+the spec. This skill writes the component checks of one change. The acceptance checks of
+the intent come before the first change, from `/pdlc:acceptance`.
 
 Read `pdlc/README.md` first and obey it. Start with its "Before any work" step.
 
@@ -19,6 +20,8 @@ Read `pdlc/README.md` first and obey it. Start with its "Before any work" step.
 
 - Use the change that the user named. If the user did not name a change, use the first
   `planned` change, in the order of the intent.
+- For the first change of an intent, the acceptance stage must be complete. Its handoff
+  in the intent has the title `acceptance → tests`. If not, run `/pdlc:acceptance` first.
 - If the change already has a branch, `/pdlc:build` or `/pdlc:verify` sent the change
   back to this skill. In this condition, do these steps:
   - Switch to that branch. Do not start a new branch.
@@ -33,7 +36,7 @@ Read `pdlc/README.md` first and obey it. Start with its "Before any work" step.
   that change first.
 - Start the branch from the base, through the delivery port. If the intent has a
   `Branch:`, the first change of the intent starts from that branch instead. Then the
-  change carries the specs of the intent.
+  change carries the specs and the acceptance checks of the intent.
 - If the first change starts from the branch of the intent, make sure that this branch
   holds the base: `git merge-base --is-ancestor <base> <intent branch>`. If the command
   fails, merge the base into the branch of the intent first. Give the merge commit the

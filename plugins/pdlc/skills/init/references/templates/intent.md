@@ -25,6 +25,16 @@ intent, in order.
 
 - none yet
 
+## Acceptance checks
+
+Acceptance-File: none
+Acceptance-Locked: none
+Acceptance-Passed: none
+
+The acceptance stage writes the path of the file and the lock. The `verify` stage of the
+last change writes the commit at which the checks passed. Each line holds only a bare
+value: a path, a commit hash, or `none`.
+
 ## Notes
 
 This section holds the decisions and answers from intake, ready, and change, with the

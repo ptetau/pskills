@@ -14,7 +14,8 @@ The delivery port moves a change from a branch to main.
   stack first. Return the link to the request.
 - **gate**: run the merge check. If a requirement that the change touches is not
   `verified`, the gate fails. The gate also fails if another change of the same intent is
-  not `in review` or `merged`.
+  not `in review` or `merged`. The gate also fails until the acceptance checks of the
+  intent are locked, reviewed, and passed at the last change.
 - **merged?**: the input is a change. Say if the branch of the change is merged.
 
 ## Success

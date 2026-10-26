@@ -5,7 +5,8 @@ one agent for each remit.
 
 - **review**: build the packets with `python3 pdlc/bin/make_packets.py <change> <remits…>`.
   In the `verify` stage, write `--verify` in place of the remits. The option picks each
-  remit in `pdlc/config.md`, except `tests`.
+  remit in `pdlc/config.md`, except `tests`. For the acceptance checks of an intent, run
+  `python3 pdlc/bin/make_packets.py <intent>`.
 
   For each remit, start a fresh `pdlc:reviewer` agent. Give the agent only the path of
   its packet. Start all the agents at the same time. Do not give a reviewer the build

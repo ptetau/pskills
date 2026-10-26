@@ -28,12 +28,19 @@ Give the merge the trailers `Intent` and `Change`.
 ## 2. Build
 
 Start the `pdlc:builder` agent with `run_in_background: false`. Give the builder the
-absolute path of the change spec. The builder changes only the app files under "Files".
-Then the builder runs the checks, and sends you a report.
+absolute path of the change spec. Also give the absolute path of each acceptance file
+that must pass:
+
+- The acceptance file of each other intent whose `Acceptance-Passed:` holds a hash.
+- For the last change under "Changes" of the intent, the acceptance file of the intent.
+
+The builder changes only the app files under "Files". Then the builder runs the checks,
+and sends you a report.
 
 - If the builder says that a check looks incorrect, do not change the check. Send the
   reason to `/pdlc:tests`. That skill asks the test writer, and then locks the checks
-  again. Then build again.
+  again. Then build again. For an acceptance check, send the reason to
+  `/pdlc:acceptance`.
 - If the builder needs a file that "Files" does not list, ask the user. If the user
   agrees, add the file to "Files". Then start the builder again.
 - If the same problem comes back a third time, stop and ask the user.
@@ -42,6 +49,12 @@ Then the builder runs the checks, and sends you a report.
 
 Run all checks through the checks port. Each check must pass. To make sure that no check
 changed, run `git diff --name-only <Tests-Locked hash> -- <check files>`.
+
+Then run the acceptance checks through the checks port:
+
+1. Run **run earlier acceptance** for the intent. Each check must pass.
+2. For the last change of the intent, also run **run acceptance**. Each check must pass.
+   For an earlier change, a failure of these checks is expected. Do not report it.
 
 ## 4. Commit and finish
 

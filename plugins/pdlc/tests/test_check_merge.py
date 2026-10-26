@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 SCRIPT = Path(__file__).parent.parent / "skills/init/references/bin/check_merge.py"
 spec = importlib.util.spec_from_file_location("check_merge", SCRIPT)
@@ -76,7 +77,13 @@ def git(root, *args):
 
 
 class MergeCheck(unittest.TestCase):
+    """The checks of one change. The class AcceptanceGate tests the acceptance checks of the
+    intent, so these tests leave them out."""
+
     def setUp(self):
+        stub = mock.patch.object(check_merge, "acceptance_problems", return_value=[], create=True)
+        stub.start()
+        self.addCleanup(stub.stop)
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         (self.root / "pdlc/specs/capabilities").mkdir(parents=True)
@@ -581,6 +588,282 @@ class MergeCheck(unittest.TestCase):
         self.merged_and_recorded()
         code, out = self.run_check("CH-0001")
         self.assertNotIn("already merged", out)
+        self.assertEqual(code, 0, out)
+
+
+# The acceptance checks of the intent
+
+ACCEPTANCE_FILE = "acceptance/IN-0002.acceptance.js"
+ACCEPTANCE_REVIEW = "pdlc/acceptance/IN-0002-password-reset/review/tests"
+
+ACCEPTED_INTENT = """# IN-0002 · Password reset
+
+Status: building · Ticket: none · Branch: pdlc/IN-0002-password-reset · Added: 2026-10-10
+
+## Requirements
+
+- CAP-email.R1 · Send plain email
+- CAP-email.R2 · Send from a template
+
+## Changes
+
+{changes}
+
+## Acceptance checks
+
+Acceptance-File: {file}
+Acceptance-Locked: {lock}
+Acceptance-Passed: {passed}
+
+The acceptance stage writes the file and the lock. Verify of the last change writes the pass.
+"""
+
+ACCEPTANCE_WRONG = ("Wrong versions:\n"
+                    "- IN-0002 CAP-email.R2 sends from a template · sends no email · fails\n")
+
+
+class AcceptanceGate(unittest.TestCase):
+    """A change merges only when the acceptance checks of its intent are locked, reviewed at
+    the lock, and recorded as passing at the top of the stack of the intent."""
+
+    INTENT_BRANCH = "pdlc/IN-0002-password-reset"
+    FIRST = "pdlc/CH-0001-email-templates"
+    SECOND = "pdlc/CH-0002-send-reset"
+    NAMES = {"CH-0001": "CH-0001-email-templates", "CH-0002": "CH-0002-send-reset"}
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def put(self, path, text):
+        (self.root / path).parent.mkdir(parents=True, exist_ok=True)
+        (self.root / path).write_text(text)
+
+    def commit(self, message):
+        git(self.root, "add", "-A")
+        git(self.root, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", message)
+        return git(self.root, "rev-parse", "HEAD")
+
+    def intent(self, lock="none", passed="none", file=ACCEPTANCE_FILE):
+        changes = "\n".join("- %s · %s" % (c, self.NAMES[c].split("-", 2)[2]) for c in self.changes)
+        self.put("pdlc/inbox/IN-0002-password-reset.md", ACCEPTED_INTENT.format(
+            changes=changes, file=file, lock=lock, passed=passed))
+
+    def review(self, lock, result="pass", wrong=ACCEPTANCE_WRONG):
+        self.put(ACCEPTANCE_REVIEW + "/packet.md",
+                 "# Review packet · IN-0002-password-reset · tests\n\nAcceptance-Locked: %s\n" % lock)
+        self.put(ACCEPTANCE_REVIEW + "/result.md", "Result: %s\n\nProblems: none\n\n%s" % (result, wrong))
+
+    def change(self, change, status, branch, reqs):
+        folder = "pdlc/changes/%s" % self.NAMES[change]
+        self.put(folder + "/change.md", CHANGE.format(status=status, reqs=reqs, branch=branch,
+                                                      lock="", checks="none")
+                 .replace("# CH-0001 · Email templates", "# %s · %s" % (change, self.NAMES[change])))
+        self.put(folder + "/review/tests/result.md", "Result: pass\n\nProblems: none\n")
+
+    def start(self, changes=("CH-0001",)):
+        """main with the plan, then the intent branch with the acceptance checks, locked and
+        reviewed. Returns the lock."""
+        self.changes = list(changes)
+        self.put("pdlc/config.md", CONFIG.format(remits="tests"))
+        self.put("pdlc/specs/capabilities/CAP-email.md", CAPABILITY.format(r1="ready", r2="ready"))
+        self.put("src/email.js", "// sends email\n")
+        for change in self.changes:
+            self.change(change, "planned", "none", "### CAP-email.R2 · Send from a template")
+        self.intent()
+        git(self.root, "init", "-q", "-b", "main")
+        self.commit("Plan IN-0002")
+        git(self.root, "switch", "-qc", self.INTENT_BRANCH)
+        self.put(ACCEPTANCE_FILE, "test('IN-0002 CAP-email.R2 sends from a template', () => {})\n")
+        lock = self.commit("Acceptance IN-0002")
+        self.intent(lock=lock)
+        self.commit("Lock acceptance IN-0002")
+        self.review(lock)
+        self.commit("Review acceptance IN-0002")
+        self.lock = lock
+        return lock
+
+    def build(self, change, branch, start, reqs, r1="ready", r2="verified"):
+        """The change on its own branch, in review, with its code."""
+        git(self.root, "switch", "-qc", branch, start)
+        self.change(change, "in review", branch, reqs)
+        self.put("pdlc/specs/capabilities/CAP-email.md", CAPABILITY.format(r1=r1, r2=r2))
+        self.put("src/email.js", (self.root / "src/email.js").read_text() + "// %s\n" % change)
+        return self.commit("Build " + change)
+
+    def build_first(self):
+        return self.build("CH-0001", self.FIRST, self.INTENT_BRANCH,
+                          "### CAP-email.R2 · Send from a template")
+
+    def record_pass(self, sha=None):
+        sha = sha or git(self.root, "rev-parse", "HEAD")
+        self.intent(lock=self.lock, passed=sha)
+        self.commit("Verified")
+        return sha
+
+    def run_check(self, change="CH-0001"):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = check_merge.main(["check_merge.py", change], root=self.root)
+        return code, out.getvalue()
+
+    def test_passes_when_the_acceptance_checks_are_locked_reviewed_and_passed(self):
+        self.start()
+        self.build_first()
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 0, out)
+
+    def test_fails_when_the_acceptance_checks_are_not_locked(self):
+        self.start()
+        self.build_first()
+        self.intent(lock="none")
+        self.commit("lock removed")
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("acceptance checks of IN-0002 are not locked", out)
+
+    def test_fails_when_the_acceptance_review_is_of_an_older_lock(self):
+        self.start()
+        self.build_first()
+        self.review(git(self.root, "rev-parse", "main"))
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("acceptance review of IN-0002 is not of the current lock %s" % self.lock, out)
+
+    def test_fails_when_the_acceptance_review_did_not_pass(self):
+        self.start()
+        self.build_first()
+        self.review(self.lock, result="fail")
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("acceptance review of IN-0002 did not pass", out)
+
+    def test_fails_when_the_acceptance_review_has_no_result(self):
+        self.start()
+        self.build_first()
+        (self.root / ACCEPTANCE_REVIEW / "result.md").unlink()
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("acceptance review of IN-0002 has no result", out)
+        self.assertIn("python3 pdlc/bin/make_packets.py IN-0002", out)
+
+    def test_fails_when_the_acceptance_review_lists_no_wrong_versions(self):
+        self.start()
+        self.build_first()
+        self.review(self.lock, wrong="Wrong versions:\n- none\n")
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn('acceptance review of IN-0002 lists no "Wrong versions"', out)
+
+    def test_fails_when_an_acceptance_check_passes_a_wrong_version(self):
+        self.start()
+        self.build_first()
+        self.review(self.lock, wrong="Wrong versions:\n- IN-0002 CAP-email.R2 · any email · passes\n")
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("acceptance review of IN-0002: a check passes a wrong version", out)
+
+    def test_fails_when_the_acceptance_file_changed_after_the_lock(self):
+        self.start()
+        self.build_first()
+        self.put(ACCEPTANCE_FILE, "test('IN-0002 CAP-email.R2 weakened', () => {})\n")
+        self.commit("weaken")
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("changed after the acceptance checks were locked: %s" % ACCEPTANCE_FILE, out)
+
+    def test_fails_until_the_acceptance_checks_passed_at_the_top_of_the_stack(self):
+        self.start()
+        self.build_first()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("acceptance checks of IN-0002 are not ready: no Acceptance-Passed at the top "
+                      "of the stack (CH-0001)", out)
+
+    def test_fails_when_app_files_changed_after_the_acceptance_checks_passed(self):
+        self.start()
+        self.build_first()
+        self.record_pass()
+        self.put("src/email.js", "// changed after the pass\n")
+        self.commit("late change")
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("files changed after the acceptance checks of IN-0002 passed: src/email.js", out)
+
+    def test_pdlc_records_can_change_after_the_acceptance_checks_passed(self):
+        self.start()
+        self.build_first()
+        self.record_pass()
+        self.put("pdlc/changes/CH-0001-email-templates/handoff.md", "# Handoff\n")
+        self.commit("Propose CH-0001")
+        code, out = self.run_check()
+        self.assertEqual(code, 0, out)
+
+    def test_fails_when_the_pass_is_older_than_the_lock(self):
+        self.start()
+        self.build_first()
+        passed = self.record_pass()
+        self.put(ACCEPTANCE_FILE, "test('IN-0002 CAP-email.R2 corrected', () => {})\n")
+        self.lock = self.commit("Acceptance IN-0002")
+        self.intent(lock=self.lock, passed=passed)
+        self.review(self.lock)
+        self.commit("Lock acceptance IN-0002")
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("Acceptance-Passed %s of IN-0002 does not come after its lock" % passed, out)
+
+    def test_in_ci_the_top_is_read_from_its_branch_and_not_from_a_merge_with_main(self):
+        self.start()
+        self.build_first()
+        self.record_pass()
+        git(self.root, "switch", "-q", "main")
+        self.put("src/other.js", "// another intent merged\n")
+        self.commit("work of another intent on main")
+        git(self.root, "switch", "-q", "--detach", self.FIRST)
+        git(self.root, "-c", "user.email=t@t", "-c", "user.name=t", "merge", "-q", "--no-ff",
+            "-m", "the merge commit that CI checks out", "main")
+        code, out = self.run_check()
+        self.assertEqual(code, 0, out)
+
+    def stack(self, passed):
+        """CH-0001 in review, and CH-0002 in review on top of it. The pass is on CH-0002 only."""
+        self.start(changes=("CH-0001", "CH-0002"))
+        self.build_first()
+        self.build("CH-0002", self.SECOND, self.FIRST, "### CAP-email.R1 · Send plain email",
+                   r1="verified")
+        if passed:
+            self.record_pass()
+        git(self.root, "switch", "-q", self.FIRST)
+
+    def test_a_lower_change_reads_the_pass_at_the_top_of_the_stack(self):
+        self.stack(passed=True)
+        self.assertIn("Acceptance-Passed: none",
+                      (self.root / "pdlc/inbox/IN-0002-password-reset.md").read_text())
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
+
+    def test_a_lower_change_is_not_ready_until_the_top_of_the_stack_passed(self):
+        self.stack(passed=False)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("acceptance checks of IN-0002 are not ready: no Acceptance-Passed at the top "
+                      "of the stack (CH-0002)", out)
+
+    def test_a_change_that_only_retires_needs_no_acceptance_checks(self):
+        self.start()
+        git(self.root, "switch", "-qc", self.FIRST, self.INTENT_BRANCH)
+        self.change("CH-0001", "in review", self.FIRST, "### CAP-email.R7 · Old thing (retire)")
+        self.intent(lock="none", file="none")
+        self.commit("Verified")
+        code, out = self.run_check()
         self.assertEqual(code, 0, out)
 
 
