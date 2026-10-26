@@ -1,0 +1,7 @@
+/home/user/pskills                                      ee65fcb [claude/zen-brown-ww7xi3]
+/home/user/pskills/.claude/worktrees/wf_191c58c5-054-1  03297cb [worktree-wf_191c58c5-054-1] locked
+/home/user/pskills/.claude/worktrees/wf_191c58c5-054-2  03297cb [worktree-wf_191c58c5-054-2] locked
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-1  03297cb [worktree-wf_659738b2-1f3-1] locked
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-2  03297cb [worktree-wf_659738b2-1f3-2] locked
+/home/user/pskills/.claude/worktrees/wf_9130f466-aab-1  03297cb [worktree-wf_9130f466-aab-1] locked
+/home/user/pskills/.claude/worktrees/wf_9130f466-aab-2  03297cb [worktree-wf_9130f466-aab-2] locked
