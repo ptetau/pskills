@@ -879,6 +879,35 @@ class StageReplayTest(unittest.TestCase):
         self.assertEqual(self.subject(project), "Upgrade pdlc")
         self.assertIn("A line that the test adds.", (project / "pdlc" / "README.md").read_text())
 
+    def prepare(self, state):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        with contextlib.redirect_stdout(io.StringIO()):
+            run_bench.main(["prepare", "--state", state, "--dest", str(folder / "app")])
+        return folder / "app"
+
+    def test_prepare_tags_the_start_of_each_state(self):
+        for state in run_bench.PREPARE_STATES:
+            with self.subTest(state=state):
+                project = self.prepare(state)
+                self.assertEqual(run_bench.git(project, "rev-parse", "start").stdout,
+                                 run_bench.git(project, "rev-parse", "HEAD").stdout)
+
+    def test_prepare_init_has_no_pdlc_folder(self):
+        self.assertFalse((self.prepare("init") / "pdlc").exists())
+
+    def test_prepare_done_is_at_the_proposal(self):
+        project = self.prepare("done")
+        head = "HEAD~1" if self.subject(project) == "Upgrade pdlc" else "HEAD"
+        self.assertTrue(self.subject(project, head).startswith("Propose CH-0001"))
+        self.assertEqual(run_bench.git(project, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip(),
+                         run_bench.CHANGE_BRANCH)
+
+    def test_prepare_board_sets_a_tracker(self):
+        config = (self.prepare("board") / "pdlc" / "config.md").read_text()
+        self.assertIn("- tracker: tracker-github-projects", config)
+        self.assertIn("- owner: example-org", config)
+
     def test_check_stage_counts_the_writing_findings_of_the_stage(self):
         project, _ = self.stage_project("verify")
         entry = run_bench.entry_commit(project, "Tests reviewed CH-0001")
