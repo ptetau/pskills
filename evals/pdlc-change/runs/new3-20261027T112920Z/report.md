@@ -32,7 +32,9 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The third declarative version of change (0.4.0, commit 52c0ada) does the work as well as the old one, and as consistently within the noise of the eval. Against the first baseline, overall is 79.0 against 79.4. Against the second baseline, overall is 79.0 against 81.7. `compare_vet.py` shows NO REGRESSION for both. R6 (the steps) rises from 66.7% to 100%, because the skill now gives one form for the README step. The biggest issue left is the order of the errors when two apply to one input (R4 and R10). The old version drifts there too.
+The third declarative version of change (0.4.0, commit 52c0ada) does the work as well as the old one. The new version is also as consistent as the old one, in the range of the noise of the eval. Against the first baseline, overall is 79.0 against 79.4. Against the second baseline, overall is 79.0 against 81.7. `compare_vet.py` shows NO REGRESSION for both. R6 (the steps) rises from 66.7% to 100%, because the skill now gives one form for the README step.
+
+The biggest issue left is the order of the errors when two apply to one input (R4 and R10). The old version drifts there too.
 
 ---
 
@@ -99,8 +101,8 @@ The runs make different decisions on their own: P02#1 assumes the short name, P0
 
 ## What to fix
 
-1. Constraints, Interface: when two errors can apply to one input and the acceptance lines do not say which wins, the Interface gives one order, marks it `(assumed)`, and lists it in "Decided on defaults" → moves R4 and R10.
-2. Better still: the ready stage settles that order before the change stage, so that the change stage has no choice to make.
+1. Constraints, Interface: when two errors can apply to one input and the acceptance lines do not say which wins, the Interface gives one order. The Interface marks that order `(assumed)` and lists it in "Decided on defaults" → moves R4 (a usable Interface) and R10 (each decision visible to the user).
+2. Better still: the ready stage settles the order of the errors before the change stage, so that the change stage has no choice to make.
 
 ## Excluded runs and lost judges
 

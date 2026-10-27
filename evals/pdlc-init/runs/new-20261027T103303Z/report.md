@@ -32,7 +32,9 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The new init skill (0.4.0) sets up a correct `pdlc/` folder each time, as the old one does: R1, R3, R5 and R9 pass in each usable run. Against the old version (0.3.0), overall moves from 85.4 to 84.5, and `compare_vet.py` shows NO REGRESSION. R10 (how to start) rises to 100%, and R4 (no placeholder in the config) rises to 100%. The biggest issue is R6: one run lists its decisions but omits some topics. One run of P02 died on an API error that was not about the skill, as in the baseline, so 5 of 6 runs are usable.
+The new init skill (0.4.0) prepares a correct `pdlc/` folder each time, as the old one does. R1 (the copied files), R3 (the code maps), R5 (the check settings) and R9 (one clean commit) pass in each usable run. Against the old version (0.3.0), overall moves from 85.4 to 84.5, and `compare_vet.py` shows NO REGRESSION. R10 (how to start) rises to 100%, and R4 (no placeholder in the config) rises to 100%.
+
+The biggest issue is R6 (the list of decisions): one run lists its decisions but omits some topics. One run of P02 (interactive, with no `defaults`) died on an API error that was not about the skill, as in the baseline. Thus, 5 of 6 runs are usable.
 
 ---
 
@@ -74,7 +76,7 @@ Both runs give the two ways to start in near-identical words. Run 1 reports two 
 
 ## What to fix
 
-1. Outputs, the decision list: name the topics that the list covers (the map, the branch names, the check names, the writing style, the check settings and the adapters) → moves R6.
+1. Outputs, the decision list: name the topics that the list covers (the map, the branch names, the check names, the writing style, the check settings and the adapters) → moves R6 (the list of decisions).
 
 ## Excluded runs and lost judges
 

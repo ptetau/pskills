@@ -30,7 +30,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The old intake skill writes the request into the specs in the user's own words: R1 (all of the request), R4 (the commit) and R9 (questions) pass in each usable run, and every item passes in at least 80% of runs. The biggest issue is stability (55.1). The runs differ in which details they mark `(assumed)` (R2), in how much old wording they remove (R3), and in the recon requirements of the stub specs (R6). One run of P01 died on an API error that was not about the skill, so 5 of 6 runs are usable.
+The old intake skill writes the request into the specs in the user's own words. R1 (all of the request), R4 (the commit) and R9 (questions) pass in each usable run, and every item passes in at least 80% of runs. The biggest issue is stability (55.1). The runs differ in which details they mark `(assumed)` (R2), and in how much old wording they remove (R3). The runs also differ in the recon requirements of the stub specs (R6). One run of P01 (one new option, with `defaults`) died on an API error that was not about the skill, so 5 of 6 runs are usable.
 
 ---
 
@@ -94,9 +94,9 @@ P02#1 changes the job spec and states the case rule there again. P02#2 and P02#3
 
 ## What to fix
 
-1. "4. Write the patches": list the kinds of detail that always get `(assumed)`, for example an error code, an order, or a limit → moves R2.
-2. "4. Write the patches": tell the run to search each spec for the old wording of a changed behaviour → moves R3.
-3. "3. Deepen stub specs": name the minimum set of recon requirements, one for each behaviour of the code that the request touches → moves R6.
+1. "4. Write the patches": list the kinds of detail that always get `(assumed)`, for example an error code, an order, or a limit → moves R2 (each detail that the run decided alone).
+2. "4. Write the patches": tell the run to search each spec for the old wording of a changed behaviour → moves R3 (the current truth in each spec).
+3. "3. Deepen stub specs": name the minimum set of recon requirements, one for each behaviour of the code that the request touches → moves R6 (recon requirements for stub specs).
 
 ## Excluded runs and lost judges
 

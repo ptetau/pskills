@@ -32,7 +32,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The first declarative version of intake (0.4.0, commit 887d6ce) scores higher overall than the old one: 74.3 against 71.3, and stability rises by 6.3 points. But `compare_vet.py` shows REGRESSION, because R1 (all of the request, in the user's words) falls from 100% to 75%. In each P01 run, the run assumes that a whole number has digits only, so `+3` gives the error. The old runs make the same assumption, but their judge marked it as met. The assumption does narrow the user's words, so the next commit adds a constraint against it, and a new eval measures it.
+The first declarative version of intake (0.4.0, commit 887d6ce) scores higher overall than the old one: 74.3 against 71.3. Stability also rises by 6.3 points. But `compare_vet.py` shows REGRESSION, because R1 (all of the request, in the user's words) falls from 100% to 75%. In each run of P01 (one new option, with `defaults`), the run assumes that a "whole number" has digits only, so `+3` gives the error. The old runs make the same assumption, but their judge marked it as met. The assumption does narrow the user's words, so the next commit adds a constraint against it, and a new eval measures the constraint.
 
 ---
 
@@ -88,8 +88,8 @@ All runs update the summary and add the was/now Note. Runs 1 and 2 treat the REA
 
 ## What to fix
 
-1. Constraints: an `(assumed)` detail adds to the words of the intent, and does not remove a value that their plain reading permits, for example `+3` for "a whole number" → moves R1. This fix is in the next commit.
-2. Constraints: tell the run to search each spec for the old wording of a changed behaviour → moves R3.
+1. Constraints: an `(assumed)` detail adds to the words of the intent. The detail does not remove a value that the plain reading of those words permits, for example `+3` for "a whole number" → moves R1 (all of the request, in the user's words). This fix is in the next commit.
+2. Constraints: tell the run to search each spec for the old wording of a changed behaviour → moves R3 (the current truth in each spec).
 
 ## Excluded runs and lost judges
 

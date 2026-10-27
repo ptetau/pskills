@@ -30,7 +30,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The old conventions skill writes a clear rule, finds the right migration intents, and starts no work: R4, R5 and R7 (the three outcome and safety items) pass in each run. The biggest issue is the check intent. Some runs add a separate intent to build the check, and some runs fold the check into the migration intent (R10, R9). The form of each new intent also drifts, mainly its Handoff section (R6). One wave of 3 runs per prompt is a small sample, so the stability score is rough.
+The old conventions skill writes a clear rule, finds the right migration intents, and starts no work. R4 (a rule that needs no guess), R5 (exactly the needed migration intents) and R7 (no intent started, no code migrated) are the three outcome and safety items, and they pass in each run. The biggest issue is the check intent. Some runs add a separate intent to build the check, and some runs fold the check into the migration intent (R10, R9). The form of each new intent also drifts, mainly its Handoff section (R6). One wave of 3 runs per prompt is a small sample, so the stability score is rough.
 
 ---
 
@@ -129,9 +129,9 @@ Every run ends with a summary that names the spec, counts the intents and lists 
 
 ## What to fix
 
-1. "3. Write the convention": say whether the check gets its own intent, or rides in the migration intent when there is one → moves R10 and R9.
-2. "4. Add the migration intents": say what a new intent holds in its Handoff section ("none yet") → moves R6.
-3. "4. Add the migration intents": say that "What and why" links to the design spec → moves R6.
+1. "3. Write the convention": say whether the check gets its own intent, or rides in the migration intent when there is one → moves R10 (requirements and one check intent) and R9 (the count in the closing message).
+2. "4. Add the migration intents": say what a new intent holds in its Handoff section ("none yet") → moves R6 (the form of each new intent).
+3. "4. Add the migration intents": say that "What and why" links to the design spec → moves R6 (the form of each new intent).
 
 ## Excluded runs and lost judges
 

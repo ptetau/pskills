@@ -32,7 +32,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The new board skill (0.4.0) lists the right cards and changes nothing, as the old one does: R1, R4 and R9 pass in each run. Against the old version (0.3.0), overall rises from 73.6 to 76.9, and `compare_vet.py` shows NO REGRESSION. R3 (no claim about the unread board) rises from 66.7% to 83.3%. The biggest issue is still R8: half the runs name the missing GitHub projects tool but give no step to add it.
+The new board skill (0.4.0) lists the right cards and changes nothing, as the old one does. R1 (true card list), R4 (no pdlc change) and R9 (no board write) pass in each run. Against the old version (0.3.0), overall rises from 73.6 to 76.9, and `compare_vet.py` shows NO REGRESSION. R3 (no claim about the unread board) rises from 66.7% to 83.3%. The biggest issue is still R8 (a step that removes each block): half the runs name the missing GitHub projects tool but give no step to add it.
 
 ---
 
@@ -87,8 +87,8 @@ Only P01#1 points to the fix for the access block. P01#2 gives no next step, and
 
 ## What to fix
 
-1. Outputs: for each block, the reply gives the one step that removes it, for example "give this session the `gh project` commands" → moves R8.
-2. Constraints, the dry-run rule: say "if the board has no cards yet" when the run cannot read the board → moves R3.
+1. Outputs: for each block, the reply gives the one step that removes it, for example "give this session the `gh project` commands" → moves R8 (a step that removes each block).
+2. Constraints, the dry-run rule: say "if the board has no cards yet" when the run cannot read the board → moves R3 (no claim about the unread board).
 
 ## Excluded runs and lost judges
 

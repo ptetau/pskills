@@ -32,7 +32,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The new trace skill (0.4.0) gives true facts and changes nothing: R2 (true facts) rises to 100%, and R9 (no change) passes in each run. Against the old version (0.3.0), overall rises from 71.2 to 75.4, and `compare_vet.py` shows NO REGRESSION. Stability rises by 9.7 points, but quality falls by 3.4 points, inside the tolerance of 5. The biggest issue is the answer to "why does this line exist?": no run says in full which requirement the line serves and gives the chain (R3), and no run cites a source for each link (R6).
+The new trace skill (0.4.0) gives true facts and changes nothing: R2 (true facts) rises to 100%, and R9 (no change) passes in each run. Against the old version (0.3.0), overall rises from 71.2 to 75.4, and `compare_vet.py` shows NO REGRESSION. Stability rises by 9.7 points, but quality falls by 3.4 points, inside the tolerance of 5. The biggest issue is the answer to "why does this line exist?": no run says in full which requirement the line serves and gives the chain (R3). Also, no run cites a source for each link (R6).
 
 ---
 
@@ -88,9 +88,9 @@ met 0 · partial 6 · missed 0
 No item drifted beyond minor_drift.
 ## What to fix
 
-1. Outputs: "the answer names the one requirement that the asked line serves, then the chain of the commit" → moves R3 and R1.
-2. Outputs: give one form for each link: a commit with its short hash and subject, and a spec, intent or change with its file path → moves R6.
-3. Constraints: each short ID in the reply, such as R7, keeps a short description → moves R10.
+1. Outputs: "the answer names the one requirement that the asked line serves, then the chain of the commit" → moves R3 (the chain from code to ticket) and R1 (plain answer).
+2. Outputs: give one form for each link. A commit link gives the short hash and subject, and a spec, intent or change link gives the file path → moves R6 (a source for each link).
+3. Constraints: each short ID in the reply, such as "R7", keeps a short description → moves R10 (a description for each ID).
 
 ## Excluded runs and lost judges
 

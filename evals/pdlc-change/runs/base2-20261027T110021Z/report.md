@@ -30,7 +30,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-This is the second run of the old change skill (0.3.0), to measure the noise of the eval. Overall is 81.7, against 79.4 in the first run, and `compare_vet.py` shows NO REGRESSION between the two. Thus, the score of the same skill moves by about 2 points between runs, and stability by about 3 points. The old skill writes the README step the same way in each run: its "Check" is "none", and the specification review reads the README.
+This report gives the second run of the old change skill (0.3.0), to measure the noise of the eval. Overall is 81.7, against 79.4 in the first run, and `compare_vet.py` shows NO REGRESSION between the two runs. Thus, the score of the same skill moves by about 2 points between runs, and stability moves by about 3 points. The old skill writes the README step the same way in each run: its "Check" is "none", and the specification review reads the README.
 
 ---
 
@@ -80,7 +80,7 @@ Only P02#3 makes and records a default decision, in all three required places. P
 
 ## What to fix
 
-1. None for this run. It measures noise. See the first baseline for the fixes.
+1. None for this run. This run measures noise. See the first baseline for the fixes.
 
 ## Excluded runs and lost judges
 

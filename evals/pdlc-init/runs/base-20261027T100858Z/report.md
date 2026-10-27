@@ -30,7 +30,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The old init skill sets up a correct `pdlc/` folder each time: R1 (the copied files), R3 (the code maps), R5 (the check settings) and R9 (one clean commit) pass in each usable run. Every item passes in at least 80% of runs. The biggest issue is the list of unsure items in the final reply (R10). Some runs list unsure items and still put one of them in a code map, and other runs say that nothing is unsure. One run of P02 died on an API error that was not about the skill, so 5 of 6 runs are usable.
+The old init skill prepares a correct `pdlc/` folder each time. R1 (the copied files), R3 (the code maps), R5 (the check settings) and R9 (one clean commit) pass in each usable run. Every item passes in at least 80% of runs. The biggest issue is the list of unsure items in the final reply (R10). Some runs list unsure items and still put one of them in a code map, and other runs say that nothing is unsure. One run of P02 (interactive, with no `defaults`) died on an API error that was not about the skill, so 5 of 6 runs are usable.
 
 ---
 
@@ -86,8 +86,8 @@ All runs give both ways to start. Two runs report no unsure items, and the other
 
 ## What to fix
 
-1. "### 2. Map existing code": say what counts as an unsure item, for example an empty file such as `__init__.py` → moves R10.
-2. "### 7. Finish": tell the run to check that no spec holds an item that the reply calls unsure → moves R10.
+1. "### 2. Map existing code": say what counts as an unsure item, for example an empty file such as `__init__.py` → moves R10 (the final reply on how to start).
+2. "### 7. Finish": tell the run to make sure that no spec holds an item that the reply calls unsure → moves R10 (the final reply on how to start).
 
 ## Excluded runs and lost judges
 

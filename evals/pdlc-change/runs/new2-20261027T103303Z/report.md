@@ -32,7 +32,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The fixed declarative change skill (0.4.0, commit 5324a17) does the work as well as the old one: quality is 96.4 in both, and R4 (a usable Interface) is back to 100%. But `compare_vet.py` still shows REGRESSION, because stability falls from 65.4 to 55.4 and overall from 79.4 to 73.1. The drift is in items where the old version also drifted: the order of the error checks (R4, R10), the README step (R6), the order of "Relies on" (R1), and one run that shortened a copied line (R3). A second run of the old version measures how much of this fall is noise.
+The fixed declarative change skill (0.4.0, commit 5324a17) does the work as well as the old one. Quality is 96.4 in both, and R4 (a usable Interface) is back to 100%. But `compare_vet.py` still shows REGRESSION, because stability falls from 65.4 to 55.4 and overall falls from 79.4 to 73.1. The drift is in items where the old version also drifted: the order of the error checks (R4, R10) and the README step (R6). The other drifted items are the order of "Relies on" (R1) and one run that shortened a copied line (R3). A second run of the old version measures how much of this fall is noise.
 
 ---
 
@@ -128,9 +128,9 @@ P02#2 records the short name as an assumed decision in three places. P02#1 and P
 
 ## What to fix
 
-1. Constraints, Requirements: "copy each acceptance line word for word, also a long one" → moves R3.
-2. Constraints, Steps: "one step for each requirement, in number order", and one form for the README step → moves R6.
-3. Constraints, Relies on: give the entries in one order (capabilities, then the design specs in name order) → moves R1.
+1. Constraints, Requirements: "copy each acceptance line word for word, also a long one" → moves R3 (an exact copy of each requirement).
+2. Constraints, Steps: "one step for each requirement, in number order", and one form for the README step → moves R6 (the steps and the README step).
+3. Constraints, Relies on: give the entries in one order (capabilities, then the design specs in name order) → moves R1 (the template sections and "Relies on").
 
 ## Excluded runs and lost judges
 

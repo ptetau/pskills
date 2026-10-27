@@ -105,9 +105,9 @@ All runs name the same access gap and its cause. P02#3 still shows the card tabl
 
 ## What to fix
 
-1. "## 3" (dry-run table): when the run cannot read the board, say "if the board has no cards yet" and not "the board needs N new cards" → moves R3.
-2. "## 1. Examine the setup": for each block, tell the user the one step that removes it, for example "give this session the `gh project` commands" → moves R8.
-3. "## 1. Examine the setup": tell the run to name the tracker and its settings when it finds them, so the user sees that the setup is right → moves R5 and R6.
+1. "## 3" (dry-run table): when the run cannot read the board, say "if the board has no cards yet" and not "the board needs N new cards" → moves R3 (no claim about the unread board).
+2. "## 1. Examine the setup": for each block, tell the user the one step that removes it, for example "give this session the `gh project` commands" → moves R8 (a step that removes each block).
+3. "## 1. Examine the setup": when the run finds the tracker and its settings, tell the run to name them. Then the user sees that the setup is right → moves R5 (the set tracker is not called missing) and R6 (name the exact gap and stop).
 
 ## Excluded runs and lost judges
 

@@ -32,7 +32,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The first declarative version of change (0.4.0, commit 887d6ce) plans the right single change and lists the right files: R2 and R5 pass in each run. Against the old version (0.3.0), overall falls from 79.4 to 71.2, and `compare_vet.py` shows REGRESSION. The cause is R4 (an Interface that a test writer can use alone): it falls from 100% to 66.7%. The new runs leave out details that the old runs gave, for example where `--top` can stand and the order of words with equal counts.
+The first declarative version of change (0.4.0, commit 887d6ce) plans the right single change and lists the right files. R2 (one change for each spec) and R5 (only the permitted files) pass in each run. Against the old version (0.3.0), overall falls from 79.4 to 71.2, and `compare_vet.py` shows REGRESSION. The cause is R4 (an Interface that a test writer can use alone): it falls from 100% to 66.7%. The new runs omit details that the old runs gave, for example where `--top` can stand and the order of words with equal counts.
 
 ---
 
@@ -142,8 +142,8 @@ P02#2 makes an assumed decision and records it in three places. P02#1 and P02#3 
 
 ## What to fix
 
-1. Constraints, the Interface entries: say what "in", "out" and each error must give. "In" gives each form of input that a line uses. "Out" gives the full result with its order. Each error gives its exact text, where it shows, and its exit code → moves R4. This fix is in the next commit, and a new eval measures it.
-2. Constraints, Steps: say "one step for each requirement, in number order" → moves R6.
+1. Constraints, the Interface entries: say what "in", "out" and each error must give. "In" gives each form of input that a line uses. "Out" gives the full result with its order. Each error gives its exact text, where it shows, and its exit code → moves R4 (an Interface that a test writer can use alone). This fix is in the next commit, and a new eval measures it.
+2. Constraints, Steps: say "one step for each requirement, in number order" → moves R6 (the steps and the README step).
 
 ## Excluded runs and lost judges
 

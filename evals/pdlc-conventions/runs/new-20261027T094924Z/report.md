@@ -32,7 +32,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The new conventions skill (0.4.0) finds the right migration intents and starts no work, as the old one does: R5 and R7 pass in each run. Against the old version (0.3.0), overall moves from 76.6 to 76.2, and `compare_vet.py` shows NO REGRESSION. R1 (the question before the spec) rises to 100%. The biggest issue is the recommendation in P01: one run keeps `error: ` after the new prefix, and two runs replace it, so the rule itself differs between runs (R1 and R4 drift).
+The new conventions skill (0.4.0) finds the right migration intents and starts no work, as the old one does. R5 (exactly the needed migration intents) and R7 (no intent started, no code migrated) pass in each run. Against the old version (0.3.0), overall moves from 76.6 to 76.2, and `compare_vet.py` shows NO REGRESSION. R1 (the question before the spec) rises to 100%. The biggest issue is the recommendation in P01 (change the errors convention): one run keeps `error: ` after the new prefix, and two runs replace it. Thus, the rule itself differs between runs, and both R1 (the question before the spec) and R4 (a rule that needs no guess) drift.
 
 ---
 
@@ -114,8 +114,8 @@ Every run gives the migration count and says the intents did not start. The P01 
 
 ## What to fix
 
-1. Constraints: when a new rule meets an old one, say whether the recommendation keeps or replaces the old part, and why → moves R4 and R1.
-2. Constraints: say whether the check gets its own intent or rides in the migration intent → moves R10 and R9.
+1. Constraints: when a new rule meets an old one, say whether the recommendation keeps or replaces the old part. Also say why → moves R4 (a rule that needs no guess) and R1 (the question before the spec).
+2. Constraints: say whether the check gets its own intent or rides in the migration intent → moves R10 (requirements and one check intent) and R9 (the count in the closing message).
 
 ## Excluded runs and lost judges
 

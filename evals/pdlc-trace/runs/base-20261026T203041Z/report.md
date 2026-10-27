@@ -30,7 +30,7 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The old trace skill answers the question and changes nothing: R1 (plain answer) and R2 (true facts) pass in 11 of 12 verdicts, and R9 (no change) passes in each run. The biggest issue is how it cites its sources (R6): each run uses a different form, and most runs give no path for the intent. Bare short IDs such as "R7" also stay in the prose (R10). One wave of 3 runs per prompt is a small sample, so the stability score is rough.
+The old trace skill answers the question and changes nothing. R1 (plain answer) and R2 (true facts) pass in 11 of 12 verdicts, and R9 (no change) passes in each run. The biggest issue is how it cites its sources (R6): each run uses a different form, and most runs give no path for the intent. Bare short IDs such as "R7" also stay in the prose (R10). One wave of 3 runs per prompt is a small sample, so the stability score is rough.
 
 ---
 
@@ -117,9 +117,9 @@ Only P01#2 sources each link, including a path to the intent file. P01#1 leaves 
 
 ## What to fix
 
-1. "This skill answers trace questions" (the opening rule): give one form for each link, for example "commit: short hash and subject; spec, intent, change: the file path" → moves R6.
-2. "From code": tell the run to name the requirement that the asked line serves, then the other requirements of the commit → moves R3 and R1.
-3. Add a rule: each short ID in the reply, such as R7, keeps a short description → moves R10.
+1. "This skill answers trace questions" (the opening rule): give one form for each link, for example "commit: short hash and subject; spec, intent, change: the file path" → moves R6 (a source for each link).
+2. "From code": tell the run to name the requirement that the asked line serves. Then tell the run to name the other requirements of the commit → moves R3 (the chain from code to ticket) and R1 (plain answer).
+3. Add a rule: each short ID in the reply, such as "R7", keeps a short description → moves R10 (a description for each ID).
 
 ## Excluded runs and lost judges
 

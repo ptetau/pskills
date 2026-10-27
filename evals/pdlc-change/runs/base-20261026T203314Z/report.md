@@ -30,7 +30,9 @@ Not settled: this eval judged one wave of 3 runs per prompt, so no later wave co
 
 ## Verdict
 
-The old change skill plans the right single change and copies its requirements exactly: R2, R3 and R5 pass in each run, with identical output for R3 and R5. The biggest issue is the order of the steps and the decisions that it records. Some runs put R7 (top N words) before R5 (usage line), and the runs disagree about the README line (R6). Each run records a different set of `(assumed)` decisions (R10). One wave of 3 runs per prompt is a small sample, so the stability score is rough.
+The old change skill plans the right single change and copies its requirements exactly. R2 (one change for each spec) passes in each run. R3 (an exact copy of each requirement) and R5 (only the permitted files) also pass in each run, and their output is identical between runs.
+
+The biggest issue is the order of the steps and the decisions that the old change skill records. Some runs put requirement R7 (top N words) before requirement R5 (usage line), and the runs disagree about the README line (R6). Each run records a different set of `(assumed)` decisions (R10). One wave of 3 runs per prompt is a small sample, so the stability score is rough.
 
 ---
 
@@ -109,9 +111,9 @@ P01#1 puts the steps in a different order (R7 before R5) and adds a regression c
 
 ## What to fix
 
-1. "Steps": say "one step for each requirement, in number order" and not "usually" → moves R6.
-2. "Interface": name the decisions that the run must settle, for example the order of the errors, and mark each one `(assumed)` → moves R10.
-3. "Steps", the README step: tell the run to read the README line that the intent Notes link to, and say whether it changes → moves R6.
+1. "Steps": say "one step for each requirement, in number order" and not "usually" → moves R6 (the steps and the README step).
+2. "Interface": name the decisions that the run must settle, for example the order of the errors, and mark each one `(assumed)` → moves R10 (each decision visible to the user).
+3. "Steps", the README step: tell the run to read the README line that the intent Notes link to. Also tell the run to say whether that line changes → moves R6 (the steps and the README step).
 
 ## Excluded runs and lost judges
 
