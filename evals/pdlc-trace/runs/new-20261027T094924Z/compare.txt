@@ -1,0 +1,14 @@
+Measure                                                         Baseline Candidate  Change
+quality                                                             86.7      83.3    -3.4
+stability                                                           58.5      68.2    +9.7
+overall                                                             71.2      75.4    +4.2
+R1 (weight 3) The first lines of the reply answer the question      91.7      83.3    -8.4
+R2 (weight 3) Each fact in the answer is true for the project,      91.7     100.0    +8.3
+R3 (weight 2) For a question about code with trace trailers, t      66.7      50.0   -16.7
+R4 (weight 2) For a question about an intent, the reply gives      100.0     100.0    +0.0
+R6 (weight 2) Each link in the answer names its source, so tha      66.7      50.0   -16.7
+R7 (weight 1) When the trace reaches a change, the reply links     100.0     100.0    +0.0
+R8 (weight 2) The reply tells the user about each missing link     100.0     100.0    +0.0
+R9 (weight 2) The run changes nothing in the project.              100.0     100.0    +0.0
+R10 (weight 1) Each ID in the prose of the reply comes with a       50.0      50.0    +0.0
+NO REGRESSION
