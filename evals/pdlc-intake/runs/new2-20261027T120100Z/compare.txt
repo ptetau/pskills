@@ -1,0 +1,17 @@
+Measure                                                         Baseline Candidate  Change
+quality                                                             92.3      86.0    -6.3
+stability                                                           55.1      60.4    +5.3
+overall                                                             71.3      72.1    +0.8
+R1 (weight 3) The specs hold all of the request of the user, i     100.0     100.0    +0.0
+R2 (weight 3) The user can find each detail that the run decid      80.0      66.7   -13.3
+R3 (weight 3) After the run, each spec tells a reader the curr     100.0      75.0   -25.0
+R4 (weight 2) The run records its work in a `Specify` commit o     100.0      91.7    -8.3
+R5 (weight 2) Each requirement, spec, and error row that the r      80.0      75.0    -5.0
+R6 (weight 2) Each stub spec that the run changes also gets th      90.0     100.0   +10.0
+R7 (weight 2) The intent file records the request, its require      90.0      91.7    +1.7
+R8 (weight 2) Each part of the request is in the spec where pd      90.0      75.0   -15.0
+R9 (weight 2) The run asks the user only about a point with tw     100.0     100.0    +0.0
+R10 (weight 1) The final reply tells the user what intake did       90.0     100.0   +10.0
+WARN  quality fell 6.3 points
+FAIL  R3 (After the run, each spec tells a reader the curren) pass rate fell 25 points
+REGRESSION

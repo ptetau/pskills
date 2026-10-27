@@ -1,0 +1,1410 @@
+{
+ "skill": "pdlc:intake",
+ "skillSha256": "af6a7e5a98c547a3277b05493e06499a8a37e018f91992f4beb1ccd3a39c768a",
+ "suiteSha256": "a88a6fc2b7b83e0bacd11c098b6ea7a7f34230a272bf693ec3b16844dbb51f59",
+ "runId": "new2-20261027T120100Z",
+ "generatedAt": "2026-10-27T12:35:15Z",
+ "config": {
+  "prompts": [
+   "P01",
+   "P02"
+  ],
+  "runs": 3,
+  "wave": 3,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "lean",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 11,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 86,
+  "stability": 60.4,
+  "overall": 72.1,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 6,
+  "totalRuns": 6
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 3,
+   "usable": 6,
+   "quality": 86,
+   "stability": 62,
+   "overall": 73,
+   "grade": "C",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 72.7,
+  "median": 86.4,
+  "max": 93.2
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The specs hold all of the request of the user, in the exact terms of the user.",
+   "passRate": 100,
+   "stabilityWithin": 75,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user can find each detail that the run decided alone, and can change the detail later.",
+   "passRate": 66.7,
+   "stabilityWithin": 30,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "contradictory"
+   },
+   "agreementWithin": 33.3,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "After the run, each spec tells a reader the current truth. The summaries show the new behaviour, and no text still shows a behaviour that the request replaces.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run records its work in a `Specify` commit on main, and the commit holds only spec and intent files.",
+   "passRate": 91.7,
+   "stabilityWithin": 75,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R5",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "Each requirement, spec, and error row that the run adds or changes has the pdlc form (this item covers S3 and S4).",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "Each stub spec that the run changes also gets the requirements of what the code does today.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent file records the request, its requirements, its decisions, and a handoff for ready, in the form of the templates (this item covers S1 and S2).",
+   "passRate": 91.7,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 25,
+   "classCross": "major_drift"
+  },
+  {
+   "id": "R8",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each part of the request is in the spec where pdlc says that the part belongs.",
+   "passRate": 75,
+   "stabilityWithin": 75,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run asks the user only about a point with two possible meanings, in the pdlc form. With `defaults`, the run asks nothing.",
+   "passRate": 100,
+   "stabilityWithin": 75,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R10",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply tells the user what intake did and what comes next.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 3,
+   "quality": 90.2,
+   "stability": 65.5
+  },
+  {
+   "id": "P02",
+   "usableRuns": 3,
+   "quality": 81.8,
+   "stability": 58.6
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "outputs/P01-r01.md",
+   "status": "completed",
+   "note": "No Agent tool was available, so the pdlc:recon deep look on the stub job spec was done inline by the main session, and the message and handoff say so. Everything else ran as written: commit 85b89df on main, with the Intent trailer.",
+   "quality": 93.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Given N is `2.5`, when `wordfreq --top 2.5 FILE` runs, then standard error is\n  `error: --top needs a whole number greater than zero` and the exit code is 2."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "When N is not a whole number greater than zero (`+3` counts), wordfreq fails with"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "They can add `--top N` to see only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: Top option"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R5 · Top option needs a whole number greater than zero\n\nStatus: proposed · Intents: IN-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Status: built · Intents: none · Source: recon"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Handoff · IN-0001 · intake → ready\n\nTime: 2026-10-27T12:08:26+00:00"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "| `INVALID_TOP` (assumed) | The value after `--top` is missing, or is not a whole number greater than zero | `caller` | `no` |"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "JOB-report-word-frequencies.R4: where can `--top N` stand? → before FILE or after FILE (assumed)"
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:ready` for IN-0001 (top option)."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "outputs/P01-r02.md",
+   "status": "blocked",
+   "note": "No Agent tool in this session, so pdlc:recon could not start. I did the deep look inline from recon.md and ran the CLI to confirm. All skill outputs were produced and committed (db3dc2e) and the handoff says so.",
+   "quality": 93.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Given N is `-1`, when `wordfreq --top -1 FILE` runs, then it prints\n  `error: --top needs a whole number greater than zero` to standard error and exits with\n  code 2."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "when `wordfreq --top 10 FILE` runs,\n  then it prints `the 3`, `and 2`, `bat 1`, `cat 1`, and `hat 1`."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "With `--top N`, they see only the N most common words."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: Top N option"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R6 · Bad top value\n\nStatus: proposed · Intents: IN-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R2 · Line order\n\nStatus: built · Intents: none · Source: recon"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Handoff · IN-0001 · intake → ready\n\nTime: 2026-10-27T12:09:08+00:00"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "| `INVALID_TOP` | The value of `--top` is not a whole number greater than zero. | `caller` | `no` |"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "JOB-report-word-frequencies.R6: What does `--top` with no value give? → the same error as a bad N (assumed)"
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "IN-0001 (top N option) now has its spec patches, committed on main as \"Specify IN-0001: Top N option\". Run `/pdlc:ready` next."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "outputs/P01-r03.md",
+   "status": "blocked",
+   "note": "No Agent tool was available, so pdlc:recon could not run as a subagent. I did the deep look on the stub job spec myself, said so in the handoff and the reply, and finished the rest of intake and the commit \"Specify IN-0001: Top option\" on main in proj.",
+   "quality": 84.1,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Given N is `0`, `-3`, `two`, `2.5`, or an empty argument, when the user runs\n  `wordfreq --top N FILE`, then the exit code is 2."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "N can be any whole number greater than zero, for example `3`, `+3`, or `02`."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "With `--top N`, they see only the N most common words."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: Top option"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "The lines keep the format\nand the order of the output without the option. N can be any whole number greater than\nzero, for example `3`, `+3`, or `02`. The option can come before or after FILE (assumed)."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Given a file with the text `Tea, tea! TEA.`, when the user runs `wordfreq FILE`, then the\n  command prints `tea 3`."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "## Handoff\n\nTime: 2026-10-27T12:15:01+00:00"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "| `TOP_INVALID` | The value after `--top` is not a whole number greater than zero | `caller` | `no` |"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "JOB-report-word-frequencies.R5: Where can the option go? → before or after FILE (assumed)"
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "IN-0001 (top option) has its spec patches, and the commit \"Specify IN-0001: Top option\" holds them on main. Next, run `/pdlc:ready`."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#1",
+   "prompt": "P02",
+   "repeat": 1,
+   "capture": "outputs/P02-r01.md",
+   "status": "completed",
+   "note": "The pdlc:recon agent could not be spawned (no Agent tool in this run), so the deep look at the two stub specs was done inline by reading the code; the handoff and reply say so. Intake committed on main as 6a11e15.",
+   "quality": 88.6,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Given a file with `Rose saw a rose`, when the user runs `python3 -m wordfreq FILE`, then the output has the lines `Rose 1` and `rose 1`."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "CAP-word-counting.R2: how do words with equal counts sort when they differ in case? → every uppercase letter comes before every lowercase letter (assumed)"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "CAP-word-counting.R2 (order of the pairs): changed"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: Keep case when counting words"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R4 · Case is kept in the output\n\nStatus: proposed · Intents: IN-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "-Status: stub\n+Status: active"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Status: specifying · Ticket: none · Branch: none · Added: 2026-10-27"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "The command `wordfreq FILE` counts words that differ in case as different words."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Your words do not give an order. `/pdlc:ready` asks you about this order."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:ready` for IN-0001 (keep case when counting words)."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#2",
+   "prompt": "P02",
+   "repeat": 2,
+   "capture": "outputs/P02-r02.md",
+   "status": "completed",
+   "note": "The Agent tool was not available, so pdlc:recon could not run. I did the deep look at both stub specs myself and said so in the handoff and the reply.",
+   "quality": 72.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Given a file with `Rose saw a rose`, when the user runs `wordfreq FILE`, then the output has the lines `Rose 1` and `rose 1`."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "When two words differ only in case, the capital letter comes first."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "CAP-word-counting.R2 (order of the pairs): changed"
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "Intent: IN-0001\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "When two words differ only in case, the word with the capital letter at the first\ndifference comes first (assumed)."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Status: built · Intents: none · Source: recon"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Status: specifying · Ticket: none · Branch: none · Added: 2026-10-27"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "It counts words that\ndiffer in case as different words, and prints one line for each."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "`/pdlc:ready` will ask you which one you want."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "Intake is done for IN-0001 (case-sensitive words)."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#3",
+   "prompt": "P02",
+   "repeat": 3,
+   "capture": "outputs/P02-r03.md",
+   "status": "blocked",
+   "note": "Intake ran to the end and committed \"Specify IN-0001: Keep case when counting words\" on main in proj. I had no Agent tool, so the pdlc:recon agent could not start. I did the deep look on the two stub specs myself, from the files in their code maps, and said so in the handoff and the reply.",
+   "quality": 84.1,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Given a file with the text `Rose saw a rose`, when the user runs `wordfreq` on the file, then the output has the lines `Rose 1` and `rose 1`."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "The comparison treats `R` and `r` as the same letter (assumed). When two words differ only in case, the word with the capital letter comes first (assumed)."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "CAP-word-counting.R2 (order of the pairs): changed"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: Keep case when counting words"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "The pairs have the most common word first. Words with equal counts are in alphabetical order. The comparison treats `R` and `r` as the same letter (assumed)."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Status: built · Intents: none · Source: recon"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Status: specifying · Ticket: none · Branch: none · Added: 2026-10-27"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "wordfreq keeps the case of each word, as CAP-word-counting.R3 (case is kept) says."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "`/pdlc:ready` will ask you which reading you want."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:ready` for IN-0001 (keep case when counting words)."
+    }
+   ],
+   "excluded": null
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "All three runs keep the user's message and exit code 2 word for word, and all cover 0, a negative N and 2.5. Run 1 also settles the `3.0` edge with an assumed acceptance line, and runs 2 and 3 leave it unspecified. Run 3 also adds a `02` example.",
+   "groups": [
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Exact message and exit code 2 for 0, a negative number, 2.5, non-numeric and empty N; `3.0` has no acceptance line and is left open for ready"
+    },
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "The same exact message and exit code lines for 0, -2, 2.5, abc and empty N, and also decides that `3.0` is accepted as whole (assumed), with an acceptance line"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "All three runs use plain `(assumed)` marks and the `<req>: <question> → <answer> (assumed)` list. The set of marked decisions differs: run 2 drops the N-above-word-count decision, and run 1 adds `3.0` and the bad-N-with-no-file case.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Ten assumed decisions listed one per line, among them N above the word count, `3.0` as whole and a bad N with no file; the DES-errors code cell also carries (assumed); `+3` is not marked"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Eight assumed decisions listed one per line, among them N above the word count; `3.0` is left open; `+3` and `02` are not marked"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Seven assumed decisions listed one per line; the case where N is above the word count has no mark and no Decided-on-defaults line; `+3` is not marked"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "minor_drift",
+   "reason": "All three runs update the summary and record the usage-line change as was/now. Run 3 records only one of the two README lines that runs 1 and 2 record.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "The job summary names `--top N`; a was/now Note covers the usage requirement; two README Notes cover the description line and the example command"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "The job summary names `--top N`; one was/now Note covers the usage requirement; only one README Note covers the example command, and the description line has no Note"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "equivalent",
+   "reason": "All three runs make the same single main commit with the same trailer block and the same three files. Only the body wording and the intent name in the subject differ, and each name matches its own intent heading.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "One commit on main, `Specify IN-0001: <intent name>`, a body, then the trailer `Intent: IN-0001` followed by the Co-Authored-By and Claude-Session lines; only the inbox, JOB and DES-errors files change; no branch; clean status"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "All three runs use the same heading, status line and Given/when/then form, and all add a caller/no error row. The numbering, the Source line on the changed requirement, the error code name, and how the acceptance lines are grouped all differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Three recon requirements, with the changed usage requirement R3 keeping `Source: recon`; new requirements R4 and R5; DES-errors row `INVALID_TOP` with (assumed) in the code cell"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Four recon requirements, with the changed usage requirement R3 lacking `Source: recon`; new requirements R5 and R6; plain DES-errors row `INVALID_TOP`"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Four recon requirements, with the changed usage requirement R4 keeping `Source: recon`; new requirements R5 and R6; DES-errors row `TOP_INVALID`; several N values merged into one acceptance line"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "Each run activates the JOB stub and writes built/recon requirements that match the code, and CAP-word-counting stays stub in all three. How the requirements are split and ordered differs, and run 3 adds a case example.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "The job becomes active with three recon requirements: output and order merged in R1, unreadable file, and usage (now proposed)"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "The job becomes active with four recon requirements: output, order, usage as R3 (now proposed), and unreadable file as R4"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "The job becomes active with four recon requirements: output (with a `Tea, tea! TEA.` case example), order, unreadable file as R3, and usage as R4 (now proposed)"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "Runs 1 and 2 include the handoff title, and run 3 leaves it out. All other parts of the intent file have the same structure.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Intent file with the correct header, the user's words verbatim, a requirements list with added/changed, and a Handoff with the title `Handoff · IN-0001 · intake → ready`, a Time line and the six sections in order"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "The same intent file, but the Handoff has no `intake → ready` title line and starts directly with the Time line"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "All three runs put each part of the request in the same specs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "The option, its output and its error all go in JOB-report-word-frequencies, the error code goes in DES-errors, CAP-word-counting is untouched, and no new spec is made"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "minor_drift",
+   "reason": "All three runs ask nothing and record their choices in the pdlc Note form. Which choices they record, and which they defer to ready, differs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "No question; ten choices recorded as question → answer (assumed), and `3.0` is decided as a default rather than deferred"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "No question; seven choices recorded; `3.0`, a repeated `--top`, and `--top=3` are left as open points for ready"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "No question; eight choices recorded; `3.0` is left open for ready; a repeated `--top` is decided in an acceptance line but has no Note"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "All three replies give IN-0001 with a description, the described requirements and `/pdlc:ready`. Run 1 has no open-point section and puts next at the end. Runs 2 and 3 flag `3.0` as unclear, and run 2 adds two more open points.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "The answer comes first with the commit hash; it lists described requirements, the DES-errors row and the decisions taken; it names no open point and ends with `/pdlc:ready` as next"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "The answer comes first with `/pdlc:ready` as next; it lists described requirements, the DES-errors row and the assumed defaults, flags `3.0` as unclear for ready, and notes that recon was not available"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "All three runs put the user's example exactly into acceptance lines of both the capability and the job. Only the extra invented examples differ (Tea, tea tea Tea, rose Rose rose), and none changes the user's terms.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Case rule in a CAP requirement with acceptance line (\"Rose\", 1) and (\"rose\", 1); JOB R4 has the exact line 'output has the lines `Rose 1` and `rose 1`'; no assumption narrows the request"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R2",
+   "class": "contradictory",
+   "reason": "P02#1 assumes that uppercase words sort before all lowercase words (Rose before a). P02#2 and P02#3 assume case-insensitive order (a before Rose), so the recorded defaults conflict. P02#2 also leaves several invented ordering details unmarked, and P02#3 marks them all.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Assumes code-point order (every uppercase before every lowercase, so Rose before a); marked (assumed) in the summary, R2 body and an acceptance line; one Decided-on-defaults line"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Assumes case-insensitive alphabetical order with the capital first on a tie; marks only the capital-first rule; the `Zebra apple` line, the summary sentence and the TEA/Tea order are unmarked; one Decided-on-defaults line"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Assumes case-insensitive alphabetical order with the capital first; two separate (assumed) marks (R equals r, capital first) plus a marked full-order acceptance line; one Decided-on-defaults line"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R3",
+   "class": "minor_drift",
+   "reason": "Each run updates both summaries and removes 'ignores case' from the specs. Each run also leaves out a was/now note for the changed R2 (order of the pairs). The runs differ in the number of README notes, the requirement that each note names, and whether the CAP summary names the new tie order.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Both summaries updated, CAP summary names the assumed uppercase-first order; was/now note for the case requirement only; two README notes (ignores case → JOB R4, alphabetical-order line → CAP R2)"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Both summaries updated, CAP summary names capital-first ordering; was/now note for CAP R3 only; one README note pointing to CAP R3"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Both summaries updated, CAP summary names only the case rule; was/now note for CAP R3 only; one README note pointing to JOB R4"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R4",
+   "class": "minor_drift",
+   "reason": "Each run makes one Specify commit on main, with no branch, that changes only pdlc/specs and pdlc/inbox. Each subject matches the intent heading. The commit messages differ: P02#1 has no body, and P02#2 puts a blank line between the Intent trailer and the Co-Authored-By lines.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "One commit on main 'Specify IN-0001: Keep case when counting words', no body, Intent trailer in the final trailer block; only specs and inbox; clean tree"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "One commit on main 'Specify IN-0001: Case-sensitive words' with a body paragraph; Intent trailer split from the Co-Authored-By block by a blank line; only specs and inbox; clean tree"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "One commit on main 'Specify IN-0001: Keep case when counting words' with a body paragraph; Intent trailer in the final trailer block; only specs and inbox; clean tree"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "Each run uses the same heading form, Status/Intents lines, Given/when/then lines, and JOB R4 as the next free number. P02#1 adds 'Seen in:' lines and numbers the CAP requirements in a different order. P02#3 splits a long acceptance sentence that P02#1 and P02#2 keep whole.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Recon numbering puts the case rule at CAP R4 and the word rule at R3; recon requirements carry 'Seen in:' lines; long one-sentence acceptance lines wrapped"
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Recon numbering puts the case rule at CAP R3 and the word rule at R4; no 'Seen in:' lines; same heading and status form"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "Each run makes both stub specs active and writes the same five correct recon requirements, with Status: built and Source: recon. The changed recon requirements become proposed. P02#1 adds 'Seen in:' lines and more edge-case examples.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Both specs active; five built/recon requirements with 'Seen in:' lines and extra edge examples (r2d2, cafe, empty file, two arguments)"
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Both specs active; five built/recon requirements (count, what a word is, output, unreadable file, usage) with basic examples and no 'Seen in:' lines"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "Each run writes the same header, the user's words, the Requirements list, and a complete handoff in order. P02#2 keeps the template's instruction paragraphs in the intent file, and P02#1 and P02#3 remove them.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#3"
+     ],
+     "description": "Intent file with the template guidance text removed; correct header, user words, Requirements list, template-form Notes, and a full handoff with title, Time line and six sections"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Same sections and handoff, but the file keeps the template's instruction prose (the header-field paragraph, the 'Intake writes this section' text, and the Notes forms list with 'Entries:')"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "Each run puts the case rule and the order rule in CAP-word-counting and the output example in the job, and makes no new spec. P02#1 and P02#2 state the case rule again in the job. P02#3 cites the CAP requirement.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Case and order rules in CAP; JOB R4 states the case rule again in its own words with no reference to the CAP requirement"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Case and order rules in CAP; JOB R4 points to CAP-word-counting.R3 ('as CAP-word-counting.R3 says') and shows the example"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "No run asks the user anything. Each run records the order-of-equal-counts choice in Notes in the <question> → <answer> (assumed) form and leaves the question to ready.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Asks no question; settles the tie order as an (assumed) Note and leaves the question to /pdlc:ready"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "Each reply gives IN-0001 with a description, the changed requirements with descriptions, and /pdlc:ready as the next step. P02#1 gives the commit hash and leaves out the outdated test. P02#2 and P02#3 add the test point, and P02#2 also lists the recon requirement IDs.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Reply gives the intent ID and the commit hash, lists the changed requirements, the assumption, the README point and the recon note, then /pdlc:ready; no mention of the outdated test"
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Reply gives the intent ID, lists the changed requirements and the assumption, then 'Other points' (recon, README, outdated test_ignores_case check), then /pdlc:ready"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R4",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "The reply reports one commit on main with the subject 'Specify IN-0001: <intent heading name>'. Its files are only in pdlc/specs/ and pdlc/inbox/. The capture holds no commit message."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "The same Specify commit on main with the intent heading name. The captured message adds a body paragraph, and after 'Intent: IN-0001' it adds Co-Authored-By and Claude-Session trailers."
+    }
+   ],
+   "reason": "Each run makes one Specify commit on main, names it after the intent heading, and changes only spec and inbox files. Only P01#2 shows its message, and that message has a body and extra trailers after the Intent trailer, so the trailer details differ or cannot be checked.",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R5",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Uses the '### <ID>.R<n> · <title>' heading, the Status/Intents line and Given/when/then lines. Recon requirements have 'Seen in:' lines. The changed recon requirement keeps 'Source: recon' next to proposed. The new DES-errors code cell holds '(assumed)'."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Uses the same heading, status and Given/when/then form, but with no 'Seen in:' lines. The changed requirement drops Source. A plain INVALID_TOP row goes in DES-errors. One recon requirement (R4) has a number after the changed R3, and the new ones are R5 and R6."
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Uses the same form, and recon requirements have 'Seen in:' lines. The changed requirements drop Source. No DES-errors row, because no error is needed."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Uses the same form, with no 'Seen in:' lines. Acceptance lines are not wrapped, and one requirement body has two paragraphs. No DES-errors row."
+    }
+   ],
+   "reason": "All runs use the same heading, status-line and Given/when/then form, give new numbers in order, and keep changed IDs in place. Details differ: 'Seen in:' lines, keeping 'Source: recon' on a changed requirement, '(assumed)' in the error code cell, and line wrapping.",
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R6",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "The changed job spec becomes active. Its recon requirements are R1 (output plus order in one requirement) and R2 (unreadable file), both built with Source: recon. The usage requirement R3 becomes proposed but keeps Source: recon. CAP stays a stub because it is not changed."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "The changed job spec becomes active. Order is a separate recon requirement: R1 (output), R2 (order) and R4 (unreadable file), all built and recon. Usage R3 becomes proposed with no Source. CAP stays a stub because it is not changed."
+    },
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Both stub specs become active. CAP and JOB get built/recon requirements for the current code: count, word definition, output, unreadable file and usage. The recon requirements for case and order become proposed."
+    }
+   ],
+   "reason": "Every run makes each changed stub spec active, writes built/recon requirements for the current code, and moves the changed recon requirements to proposed. The runs split the requirements differently (order merged into output or separate), and they differ on whether the changed requirement keeps Source: recon.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R7",
+   "class": "major_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P02#1"
+     ],
+     "description": "The intent file has the template header line and the user's words in 'What and why'. Requirements are listed with added/changed. Notes lines use the template forms. The handoff has the 'intake → ready' title, a Time line and the six ### sections in order. The template guidance text is removed."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "The same header, sections, notes forms and handoff, but the file keeps the template's guidance paragraphs. These are the header-field note, the instructions in Requirements, Changes and Acceptance checks, and the Notes form list with an 'Entries:' label."
+    }
+   ],
+   "reason": "All runs share the sections, their order, the header and the handoff layout. P02#2 keeps the template's guidance prose in each section and the other three runs remove it, so the file layout is materially different.",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R10",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Opens with the intent ID plus a description and the commit. Lists each spec and requirement written, with descriptions, then the assumed defaults and side notes (README, recon). Ends with 'Next: run /pdlc:ready'."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Says /pdlc:ready is next in the opening paragraph. Then gives the described requirement list and the defaults, adds an 'Open for ready' paragraph, and ends with the recon note."
+    }
+   ],
+   "reason": "Each reply gives the intent ID with a description, the requirements it wrote with descriptions, the assumptions, and /pdlc:ready as the next step. P01#2 moves the next step to the top and adds an open-items paragraph.",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}
