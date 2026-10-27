@@ -36,11 +36,15 @@ change spec is sufficient for the test writer and the builder.
   - Relies on: for a job change, each capability that the job uses, marked "used, not
     changed". Always the design specs that apply, with `DES-writing-style`,
     `DES-pdlc-check-tagging`, and `DES-errors`.
-  - Interface: what the checks are permitted to call, sufficient for each check without
-    the code. That is functions and arguments, commands and flags, routes, and page
-    elements with what they show.
+  - Interface: what the checks are permitted to call. The test writer does not see the
+    code, so the Interface alone is sufficient to write each check. That is functions and
+    arguments, commands and flags, routes, and page elements with what they show.
   - Each Interface entry gives its file, what goes in and out (with types where the
     language has them), and each error by its code in `DES-errors`.
+  - "In" gives each form of input that an acceptance line uses, for example each place
+    where an option can stand. "Out" gives the full result, with its order and the order
+    of equal items. Each error gives its exact text, where the text shows, and the exit
+    code or status. An error with no code in `DES-errors` also gives these items.
   - When the "when" of a line is a user action (a click, a command, a request), the
     Interface lists that surface. Then the checks drive it, not only a helper below it.
   - A new name follows the style of the existing code, and has the mark `(assumed)`.
