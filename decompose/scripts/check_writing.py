@@ -244,7 +244,8 @@ def for_count(sent):
 
 
 def words_of(s):
-    return re.findall(r"[A-Za-z0-9][A-Za-z0-9'’-]*", s)
+    # A number such as 74.3 or 0.4.0 is one word (8.5 to 8.7).
+    return re.findall(r"\d+(?:[.,]\d+)+|[A-Za-z0-9][A-Za-z0-9'’-]*", s)
 
 
 def paragraphs_of(prose, line_of):
