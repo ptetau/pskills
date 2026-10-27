@@ -49,6 +49,8 @@ its right spec, as `proposed`. Intake does not write code.
   zero" also permits `+3`, so an assumed rule such as "digits only" is not correct.
 - A changed requirement changes in place, with `Status: proposed`, and this intent added
   to `Intents:`. A removed requirement gets `Status: retiring`, and this intent too.
+- Each changed requirement gets the Note `<ID>: was "<old>", now "<new>"` in the intent.
+  This rule is for each reason of the change, not only for "The newest words win".
 - A new job lists the capabilities and the design specs that it relies on.
 - The summary of a spec ("Who and why" in a job, "What it is for" in a capability) shows
   each requirement that intake adds, in one short sentence, for example the new option of
