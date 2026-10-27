@@ -32,6 +32,9 @@ then marks it `ready`.
 - Each item is a question for the user. With `defaults`, ready takes its recommended
   answer, marked `(assumed)`. The handoff lists the items. Nobody builds an item that
   ready omits, unless the user approves the item.
+- The recommended answer is the plain reading of the words of the intent, for each value.
+  It does not keep the old behaviour where the plain words change it. It does not change
+  the result of an example in the intent.
 - A requirement is clear when all of these are true:
   - The requirement says what must be true, not how to build it.
   - Each acceptance line is "Given …, when …, then …", and a check can prove it with a
