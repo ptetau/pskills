@@ -1,0 +1,16 @@
+Measure                                                         Baseline Candidate  Change
+quality                                                             97.1      98.9    +1.8
+stability                                                           68.7      63.1    -5.6
+overall                                                             81.7      79.0    -2.7
+R1 (weight 2) The change spec has the path, the header, and th     100.0     100.0    +0.0
+R2 (weight 3) The user gets one change for each spec of IN-000     100.0     100.0    +0.0
+R3 (weight 2) The "Requirements" section copies each requireme     100.0     100.0    +0.0
+R4 (weight 3) A test writer who cannot see the code can write       83.3      91.7    +8.4
+R5 (weight 2) "Files" and "Check files" list only what this jo     100.0     100.0    +0.0
+R6 (weight 2) The "Steps" section has one step for each requir     100.0     100.0    +0.0
+R7 (weight 2) The intent file lists the changes and holds a ne     100.0     100.0    +0.0
+R8 (weight 2) The run leaves one Plan commit on main and chang      91.7     100.0    +8.3
+R9 (weight 3) The last message tells the user where the work s     100.0     100.0    +0.0
+R10 (weight 2) Each decision that the run makes without an ins     100.0     100.0    +0.0
+WARN  stability fell 5.6 points
+NO REGRESSION
