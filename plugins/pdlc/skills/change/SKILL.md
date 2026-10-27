@@ -32,7 +32,8 @@ change spec is sufficient for the test writer and the builder.
   - Header: the intent, the one spec as `Scope`, `Status: planned`, the ticket of the
     intent, `Branch: none`, and `Base: main`. The tests stage sets the real base.
   - Requirements: the heading and the acceptance lines of each requirement, in number
-    order, and nothing else. A `retiring` requirement has ` (retire)` after its heading.
+    order, and nothing else. Each line is a word-for-word copy, also a long line. A
+    `retiring` requirement has ` (retire)` after its heading.
   - Relies on: for a job change, each capability that the job uses, marked "used, not
     changed". Always the design specs that apply, with `DES-writing-style`,
     `DES-pdlc-check-tagging`, and `DES-errors`.
@@ -71,10 +72,12 @@ change spec is sufficient for the test writer and the builder.
   - Check files: the component check files that the change adds or changes, in the check
     folders of `pdlc/config.md`. A new file has the name of its spec, as
     `DES-pdlc-check-tagging` says.
-  - Steps: usually one for each requirement, with its requirement, the check that proves
-    it (with the requirement ID in its name), and "Done when". A `(retire)` requirement
-    gets no check. Its step removes the code and the checks that only it used.
-  - When "Files" lists the README, the last step is for the README. Its "Done when" says
+  - Steps: one for each requirement, in number order, with its requirement, the check
+    that proves it (with the requirement ID in its name), and "Done when". A `(retire)`
+    requirement gets no check. Its step removes the code and the checks that only it used.
+  - When "Files" lists the README, the last step is for the README. Its "Check" is
+    "none", because the specification review reads the README against "Done when". The
+    README is not a manual check. Its "Done when" says
     that the README tells what the change adds. It no longer shows what the change
     removes or changes, also each `README:` line in the intent "Notes" for these
     requirements.
