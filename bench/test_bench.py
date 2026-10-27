@@ -447,6 +447,23 @@ def writing_result(costs, findings, completed=True):
     return {"runs": runs}
 
 
+class CompletedTest(unittest.TestCase):
+    def run_with(self, checks):
+        return {"outcome": {"merge_check": checks}}
+
+    def test_an_intent_branch_with_no_output_does_not_count(self):
+        checks = {"pdlc/CH-0001-top-option": ["ok   CH-0001"], "pdlc/IN-0001-top-option": []}
+        self.assertTrue(run_bench.completed(self.run_with(checks)))
+
+    def test_a_failed_change_branch_is_not_complete(self):
+        checks = {"pdlc/CH-0001-top-option": ["FAIL CH-0001", "  - R4 is built, not verified"],
+                  "pdlc/IN-0001-top-option": []}
+        self.assertFalse(run_bench.completed(self.run_with(checks)))
+
+    def test_no_output_on_each_branch_is_not_complete(self):
+        self.assertFalse(run_bench.completed(self.run_with({"pdlc/IN-0001-top-option": []})))
+
+
 class WritingGateTest(unittest.TestCase):
     def test_fewer_findings_are_kept(self):
         baseline = writing_result(WRITING_COSTS, WRITING_FINDINGS)

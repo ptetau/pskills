@@ -766,9 +766,13 @@ def noise(values):
 
 
 def completed(run):
-    """A run is complete when pdlc proposed the change and the merge check passes on its branch."""
-    checks = run["outcome"].get("merge_check") or {}
-    return bool(checks) and all(lines and lines[0].startswith("ok") for lines in checks.values())
+    """A run is complete when pdlc proposed the change and the merge check passes on its branch.
+
+    The merge check prints nothing on an intent branch, which has no change of its own to merge.
+    Such a branch does not count.
+    """
+    checks = [lines for lines in (run["outcome"].get("merge_check") or {}).values() if lines]
+    return bool(checks) and all(lines[0].startswith("ok") for lines in checks)
 
 
 def permutation_p(base, cand):
