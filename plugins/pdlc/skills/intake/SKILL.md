@@ -44,6 +44,9 @@ its right spec, as `proposed`. Intake does not write code.
   lines.
 - Each detail that the words of the intent do not give (a message, a limit, an order, a
   format) has the mark `(assumed)` where intake writes it.
+- An `(assumed)` detail adds to the words of the intent. It does not remove a value that
+  the plain reading of those words permits. For example, "a whole number greater than
+  zero" also permits `+3`, so an assumed rule such as "digits only" is not correct.
 - A changed requirement changes in place, with `Status: proposed`, and this intent added
   to `Intents:`. A removed requirement gets `Status: retiring`, and this intent too.
 - A new job lists the capabilities and the design specs that it relies on.
