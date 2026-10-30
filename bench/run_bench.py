@@ -216,8 +216,10 @@ def add_tokens(total, more):
         total[key] = total.get(key, 0) + value
 
 
-STAGES = ("init", "intake", "ready", "change", "tests", "build", "show", "verify", "ship")
-AGENT_STAGE = {"pdlc:recon": "intake", "pdlc:test-writer": "tests", "pdlc:builder": "build"}
+STAGES = ("init", "intake", "ready", "change", "acceptance", "tests", "build", "show", "verify", "ship")
+# The stages that use each agent. The first one is the stage of a call from any other stage.
+AGENT_STAGES = {"pdlc:recon": ("intake", "init"), "pdlc:test-writer": ("tests", "acceptance"),
+                "pdlc:builder": ("build",)}
 SKILL_FILE = re.compile(r"skills/(%s)/SKILL\.md" % "|".join(STAGES))
 WAITING_TOOLS = {"ReadNotifications", "Monitor", "TaskOutput"}
 WORK_WORDS = ("git commit", "git add", "unittest", "pytest", "npm ", "node ",
@@ -229,19 +231,38 @@ def stage_name(skill):
     return skill.split(":")[-1] if skill else "ship"
 
 
-def stage_from_call(name, args):
+def agent_stage(label, prompt, current):
+    """The stage that an agent call belongs to, or None.
+
+    A reviewer with a remit other than tests counts toward verify. For the test writer and the
+    tests reviewer, the prompt decides first: a change path is the tests stage, and an intent or
+    acceptance path is the acceptance stage. Otherwise a stage that uses the agent keeps it.
+    """
+    prompt = prompt or ""
+    if label == "pdlc:reviewer" and "/review/tests/" not in prompt:
+        return "verify"
+    if label in ("pdlc:reviewer", "pdlc:test-writer"):
+        if "pdlc/changes/CH-" in prompt:
+            return "tests"
+        if "pdlc/acceptance/" in prompt or "inbox/IN-" in prompt:
+            return "acceptance"
+    serves = ("tests", "acceptance") if label == "pdlc:reviewer" else AGENT_STAGES.get(label, ())
+    if current in serves:
+        return current
+    return serves[0] if serves else None
+
+
+def stage_from_call(name, args, current=None):
     """The stage that a top-level tool call starts, or None.
 
     The Skill tool names its stage. A read of one skill file also starts that stage. A
     command that reads several skill files at once reads ahead, so it starts no stage.
+    An agent call starts the stage of its agent, unless the current stage uses that agent.
     """
     if name == "Skill":
         return stage_name(args.get("skill"))
     if name in ("Agent", "Task"):
-        label = args.get("subagent_type")
-        if label == "pdlc:reviewer":
-            return "tests" if "/review/tests/" in (args.get("prompt") or "") else "verify"
-        return AGENT_STAGE.get(label)
+        return agent_stage(args.get("subagent_type"), args.get("prompt"), current)
     text = args.get("file_path") or args.get("command") or ""
     if "record_gif" in text:
         return "show"
@@ -308,16 +329,14 @@ def analyse(items):
                     continue
                 name, args = block.get("name"), block.get("input") or {}
                 if parent is None:
-                    started = stage_from_call(name, args)
+                    started = stage_from_call(name, args, stage)
                     if started:
                         stage = started
                         stage_start.setdefault(stage, t)
                         stage_end[stage] = t
                 if name in ("Agent", "Task"):
                     label = args.get("subagent_type") or "general-purpose"
-                    owner = AGENT_STAGE.get(label)
-                    if label == "pdlc:reviewer":
-                        owner = "tests" if "/review/tests/" in (args.get("prompt") or "") else "verify"
+                    owner = agent_stage(label, args.get("prompt"), stage)
                     agent_of[block["id"]] = (owner or stage, label)
                     remit = re.search(r"/review/([a-z]+)/", args.get("prompt") or "")
                     if label == "pdlc:reviewer" and remit:

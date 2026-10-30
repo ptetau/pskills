@@ -106,6 +106,60 @@ class AnalyseTest(unittest.TestCase):
         self.assertEqual(result["stages"]["intake"]["wall_s"], 9.0)
 
 
+class AcceptanceStageTest(unittest.TestCase):
+    """The acceptance stage starts the same agents as the tests stage, so its stage decides."""
+
+    def events(self):
+        return [
+            assistant(1, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:acceptance"})]),
+            assistant(2, "m2", usage(10, 0, 100, 5), [("a1", "Agent", {"subagent_type": "pdlc:test-writer"})]),
+            assistant(3, "m3", usage(20, 0, 50, 40), parent="a1"),
+            tool_result(10, "a1"),
+            assistant(11, "m4", usage(10, 0, 100, 5), [
+                ("a2", "Agent", {"subagent_type": "pdlc:reviewer",
+                                 "prompt": "Review /app/pdlc/inbox/IN-0001-x/review/tests/packet.md"})]),
+            assistant(12, "m5", usage(20, 0, 50, 30), parent="a2"),
+            tool_result(20, "a2"),
+            assistant(21, "m6", usage(10, 0, 100, 5), [("s2", "Skill", {"skill": "pdlc:tests"})]),
+            assistant(22, "m7", usage(10, 0, 100, 5), [("a3", "Agent", {"subagent_type": "pdlc:test-writer"})]),
+            assistant(23, "m8", usage(20, 0, 50, 10), parent="a3"),
+            tool_result(30, "a3"),
+            {"t": 31, "e": {"type": "result", "total_cost_usd": 1.0, "duration_ms": 31000, "num_turns": 8,
+                            "is_error": False, "modelUsage": {"m": {"costUSD": 1.0}},
+                            "subagent_stats": {"spawned": 3}}},
+        ]
+
+    def test_the_agents_of_acceptance_stay_in_acceptance(self):
+        stages = run_bench.analyse(self.events())["stages"]
+        self.assertEqual(sorted(stages["acceptance"]["agents"]),
+                         ["pdlc:reviewer", "pdlc:reviewer/tests", "pdlc:test-writer"])
+        self.assertEqual(stages["acceptance"]["wall_s"], 20.0)
+        self.assertEqual(stages["tests"]["agents"]["pdlc:test-writer"]["tokens"]["output"], 10)
+
+    def test_an_agent_with_no_stage_skill_starts_its_own_stage(self):
+        events = [assistant(1, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:change"})]),
+                  assistant(2, "m2", usage(10, 0, 0, 5), [("a1", "Agent", {"subagent_type": "pdlc:test-writer"})])]
+        self.assertIn("tests", run_bench.analyse(events)["stages"])
+
+    def test_the_prompt_names_the_stage_of_a_check_writer(self):
+        self.assertEqual(run_bench.agent_stage(
+            "pdlc:test-writer", "Write the acceptance checks of the intent /app/pdlc/inbox/IN-0001-x.md", "intake"),
+            "acceptance")
+        self.assertEqual(run_bench.agent_stage(
+            "pdlc:test-writer", "Write the component checks of /app/pdlc/changes/CH-0001-x/change.md", "acceptance"),
+            "tests")
+        self.assertEqual(run_bench.agent_stage(
+            "pdlc:reviewer", "Read /app/pdlc/acceptance/IN-0001-x/review/tests/packet.md", "init"), "acceptance")
+        self.assertEqual(run_bench.agent_stage(
+            "pdlc:reviewer", "Read /app/pdlc/changes/CH-0001-x/review/quality/packet.md", "acceptance"), "verify")
+
+    def test_recon_in_init_stays_in_init(self):
+        events = [assistant(1, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:init"})]),
+                  assistant(2, "m2", usage(10, 0, 0, 5), [("a1", "Agent", {"subagent_type": "pdlc:recon"})]),
+                  assistant(3, "m3", usage(20, 0, 0, 7), parent="a1")]
+        self.assertIn("pdlc:recon", run_bench.analyse(events)["stages"]["init"]["agents"])
+
+
 def reviewer_events():
     """A verify stage that starts two reviewers, security and privacy, in one message."""
     return [
