@@ -22,3 +22,6 @@ You judge if the code does what the spec says. You do not see the checks.
 - If the packet lists frames, read each frame. Each frame must show what its caption
   claims, after the step, not the screen before the step. A blank frame, or a frame that
   shows something else, is a problem.
+- On a re-review, the writing check covers only the lines that changed since the earlier
+  review. Judge only the frames that do not have the mark "unchanged since the earlier
+  review".

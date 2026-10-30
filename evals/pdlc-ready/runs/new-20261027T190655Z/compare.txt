@@ -1,0 +1,15 @@
+Measure                                                         Baseline Candidate  Change
+quality                                                             80.7      77.3    -3.4
+stability                                                           53.8      52.8    -1.0
+overall                                                             65.9      63.9    -2.0
+R1 (weight 3) The user can go straight to the plan: at the end     100.0     100.0    +0.0
+R2 (weight 3) After the run, the specs give one result for eac      91.7      75.0   -16.7
+R3 (weight 3) A test writer can write each check of the intent      58.3      66.7    +8.4
+R4 (weight 2) The run asks the user only in the permitted form     100.0     100.0    +0.0
+R5 (weight 1) Each acceptance line and sentence that the run w      58.3      58.3    +0.0
+R6 (weight 2) The intent keeps a full record of this stage. Th      91.7      75.0   -16.7
+R7 (weight 2) The run ends in a commit on main with the subjec     100.0     100.0    +0.0
+R8 (weight 2) The final reply gives the result first, then wha      75.0      66.7    -8.3
+R9 (weight 2) The run examines the behaviour that the intent i      50.0      50.0    +0.0
+R10 (weight 2) When the run changes what a requirement does, n      66.7      66.7    +0.0
+NO REGRESSION

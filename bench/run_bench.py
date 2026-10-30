@@ -554,6 +554,19 @@ def make_stage_project(dest, stage, plugin):
         plan = entry_commit(dest, "Plan IN-0001")
         git(dest, "checkout", "-q", "-B", "main", plan)
         git(dest, "checkout", "-q", "-B", branch, entry)
+    return finish_snapshot_project(dest, plugin), entry
+
+
+def make_done_project(dest, plugin):
+    """Clone the snapshot to dest, with the change branch at its last commit, the proposal."""
+    subprocess.run(["git", "clone", "-q", str(SNAPSHOT), str(dest)], check=True)
+    git(dest, "checkout", "-q", "-B", "main", entry_commit(dest, "Plan IN-0001"))
+    git(dest, "checkout", "-q", "-B", CHANGE_BRANCH, "origin/" + CHANGE_BRANCH)
+    return finish_snapshot_project(dest, plugin)
+
+
+def finish_snapshot_project(dest, plugin):
+    """Remove the remote, and bring the files that init copies up to the plugin under test."""
     git(dest, "remote", "remove", "origin")
     sync_verbatim(dest, plugin)
     tools = Path(dest) / "pdlc" / ".tools"
@@ -564,7 +577,7 @@ def make_stage_project(dest, stage, plugin):
     if git(dest, "status", "--porcelain").stdout.strip():
         git(dest, "add", "-A", "pdlc")
         git(dest, "commit", "-q", "-m", "Upgrade pdlc")
-    return Path(dest), entry
+    return Path(dest)
 
 
 def check_stage(project, stage, entry):
@@ -659,6 +672,46 @@ def command_stage(args):
                                               run["outcome"]["check"]["ok"]))
 
 
+PREPARE_STATES = ["init", *STAGE_REPLAY, "done", "board"]
+
+
+def command_prepare(args):
+    """Make a project at one state, for a run that a different tool drives, for example /vet.
+
+    The states are: before init, the start of each replay stage, after the proposal ("done"),
+    and "done" with a board tracker set. The tag `start` marks the commit where the run starts.
+    """
+    plugin = Path(args.plugin).resolve()
+    dest = Path(args.dest)
+    if args.state == "init":
+        make_project(dest, plugin, with_pdlc=False)
+    elif args.state in STAGE_REPLAY:
+        make_stage_project(dest, args.state, plugin)
+    else:
+        make_done_project(dest, plugin)
+    if args.state == "board":
+        # pdlc reads the config on main before any work, so main and the branch both get the tracker.
+        branch = git(dest, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+        for name in ("main", branch):
+            git(dest, "checkout", "-q", name)
+            set_tracker(dest)
+    git(dest, "tag", "start")
+    print(dest.resolve())
+
+
+def set_tracker(project):
+    """Set a GitHub Projects tracker that no run can reach, and commit it."""
+    config = Path(project) / "pdlc" / "config.md"
+    text = config.read_text().replace("- tracker: none", "- tracker: tracker-github-projects")
+    text = text.replace("## Tracker settings\n\nThis section is necessary only when a tracker adapter is set. "
+                        "The file of the adapter\ntells what goes here.\n\n- none",
+                        "## Tracker settings\n\nThis section is necessary only when a tracker adapter is set. "
+                        "The file of the adapter\ntells what goes here.\n\n- owner: example-org\n- project: 7\n"
+                        "- status field: Status")
+    config.write_text(text)
+    git(project, "commit", "-q", "-am", "Set the tracker")
+
+
 # ---------------------------------------------------------------- the commands
 
 
@@ -713,9 +766,13 @@ def noise(values):
 
 
 def completed(run):
-    """A run is complete when pdlc proposed the change and the merge check passes on its branch."""
-    checks = run["outcome"].get("merge_check") or {}
-    return bool(checks) and all(lines and lines[0].startswith("ok") for lines in checks.values())
+    """A run is complete when pdlc proposed the change and the merge check passes on its branch.
+
+    The merge check prints nothing on an intent branch, which has no change of its own to merge.
+    Such a branch does not count.
+    """
+    checks = [lines for lines in (run["outcome"].get("merge_check") or {}).values() if lines]
+    return bool(checks) and all(lines[0].startswith("ok") for lines in checks)
 
 
 def permutation_p(base, cand):
@@ -1249,7 +1306,14 @@ def main(argv=None):
     st.add_argument("--out", default=str(HERE / "results"))
     st.add_argument("--timeout", type=int, default=1800)
     st.add_argument("--budget", type=float, default=6.0)
+    pr = sub.add_parser("prepare")
+    pr.add_argument("--state", required=True, choices=PREPARE_STATES)
+    pr.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
+    pr.add_argument("--dest", required=True)
     args = parser.parse_args(argv)
+    if args.command == "prepare":
+        command_prepare(args)
+        return 0
     if args.command == "e2e":
         command_e2e(args)
         return 0

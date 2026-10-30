@@ -10,58 +10,49 @@ description: >
 
 # pdlc board
 
-This skill makes the board agree with pdlc. The other skills tell the tracker port about
-each new status while they work. This skill makes all of the board agree with pdlc in one
-pass. For example, use this skill when the board no longer agrees with pdlc, or after you
-configure a new tracker.
+## Goal
 
-Read `pdlc/README.md` first. Obey the instructions in that file, and start with its
-"Before any work" step.
+Board makes all of the board agree with pdlc in one pass. The other skills tell the
+tracker port about each new status while they work. Board is for a board that no longer
+agrees with pdlc, or for a new tracker.
 
-## 1. Examine the setup
+## Constraints
 
-- Read the tracker adapter in `pdlc/config.md`. If the adapter is `none`, tell the user
-  that there is no tracker. Then stop.
-- Read the adapter file, and the settings for the adapter under "Tracker settings". If a
-  setting is missing, tell the user which setting is missing. Then stop.
-- Make sure that each column in "Board columns" is on the board. If a column is not on the
-  board, list each missing column. Then stop.
-- With `dry-run`, it is possible that you cannot get to the board (no access yet). In that
-  condition, do not do the column check. Show the current column of each card as
-  "unknown".
+- The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first.
+- A tracker adapter `none` in `pdlc/config.md` stops the skill, and the user hears that
+  there is no tracker.
+- A missing setting of the adapter under "Tracker settings" stops the skill, and the user
+  hears which setting is missing.
+- Each column in "Board columns" is on the board. Else the skill stops, and lists each
+  missing column.
+- With `dry-run` and no access to the board yet, the skill does no column check, and the
+  current column of each card is "unknown".
+- Each intent and each change that is not `cancelled` gets a card with these items:
+  - The ID, the name, the status, and the column of that status.
+  - The `Ticket` (the card key), or `none`.
+  - The links: the intent file, and the pull request of a change that has one.
+- With `dry-run`, the skill changes no board and no file.
+- Without `dry-run`, **show intent** of the tracker port runs for each intent, then
+  **show change** for each change of that intent.
+- The skill only writes to the board. It does not act on moves that persons make on the
+  board, because that function comes later.
+- The skill does not delete a card.
+- The card of a cancelled intent moves to a `cancelled` column if there is one. Else the
+  card does not move.
 
-## 2. Find what the board must show
+## Inputs
 
-For each intent that is not `cancelled`, and for each change that is not `cancelled`, find
-these items:
+- `pdlc/README.md`, the tracker adapter, "Tracker settings", and "Board columns" in
+  `pdlc/config.md`.
+- Each intent and each change, with its status, `Ticket`, and links.
+- The argument `dry-run`, if the user gives it.
 
-- The ID, the name, and the status.
-- The column for that status, from "Board columns".
-- The `Ticket` (the card key), or `none` if the intent or change has no card yet.
-- The links: the intent file, and the pull request of the change, if the change has one.
+## Outputs
 
-## 3. Make the board agree with pdlc
-
-If the user passed `dry-run`, do not change the board or a file. Print a table with one
-row for each item. Give the card key, the current column, and the correct column. Then
-stop.
-
-If the user did not pass `dry-run`, use the tracker port:
-
-- Use **show intent** for each intent. Then use **show change** for each change of that
-  intent.
-- Write each new card key into the `Ticket` of the intent or the change.
-
-## 4. Finish
-
-- If you wrote a `Ticket`, commit on main with the message "Board: record card keys".
-- Tell the user how many cards you made and how many cards you moved. Also tell the user
-  how many cards did not need a change.
-
-## Rules
-
-- Only write to the board. Do not act on moves that persons make on the board. That
-  function comes later.
-- Do not delete a card.
-- If an intent is cancelled, and there is a column for `cancelled`, move the card of the
-  intent to that column. If there is no such column, do not move the card.
+- With `dry-run`: a table, with one row for each item, of the card key, the current
+  column, and the correct column. The skill then stops.
+- Without `dry-run`: the board agrees with pdlc, and each new card key is in the `Ticket`
+  of its intent or change.
+- If the skill wrote a `Ticket`, the commit "Board: record card keys" on main.
+- For the user: how many cards the skill made, how many it moved, and how many needed no
+  change.

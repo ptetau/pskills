@@ -3,15 +3,25 @@
 
 A change may merge only when:
   - every requirement it lists is verified (and every retired one is gone from its spec);
-  - its change spec and requirements write the assumption marker one way: "(assumed)";
+  - each assumption marker in its change spec and requirements starts with "(assumed",
+    with no emphasis around it: "(assumed)", "(assumed limit)", "(assumed: a reason)";
   - its checks are locked, and no check file changed after the lock;
   - the tests review judged the checks as they are locked now: its packet carries the
     current lock;
-  - the tests review names a wrong version of the code that each check fails on;
+  - the tests review names a wrong version of the code that each check fails on. A
+    re-review (its packet says "Earlier review:") names one only for each check that
+    changed since the earlier lock. If no check changed, it needs none;
   - every review remit named in pdlc/config.md passed;
   - the branch merges into main without conflicts;
-  - every other change of its intent is "in review" or "merged" on its own branch, so the
-    intent's changes merge together;
+  - its intent is in pdlc/inbox, and every other change of the intent is "in review" or
+    "merged" on its own branch, so the intent's changes merge together;
+  - the acceptance checks of its intent are locked ("Acceptance-Locked:" in the intent), the
+    tests review judged them at that lock with "Wrong versions", and the acceptance file did
+    not change after the lock;
+  - the acceptance checks passed at the top of the stack: the intent on the branch of its
+    last change says "Acceptance-Passed: <hash>", that commit comes after the lock, and only
+    pdlc/ files changed after it. A change that only retires requirements is permitted
+    to have "Acceptance-Locked: none";
   - it hasn't merged already: a merged change's branch takes no new commits.
 
 Usage:
@@ -33,8 +43,10 @@ REQ = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b(.*)$", re.M)
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
 READY = ("in review", "merged")
-# The marker with emphasis (*(assumed)*), or brackets that hold "assumed" and more text.
-MARKER = re.compile(r"[*_]+\(assumed\)[*_]+|\([^()\n]*\bassumed\b[^()\n]*\)", re.I)
+HASH = re.compile(r"^[0-9a-f]{7,40}$")
+# A marker with emphasis (*(assumed)*), or brackets that hold the word "assumed". A marker
+# passes when it starts with "(assumed".
+MARKER = re.compile(r"[*_]+\(assumed\b[^()\n]*\)[*_]+|\([^()\n]*\bassumed\b[^()\n]*\)", re.I)
 
 
 def section(text, title):
@@ -68,10 +80,10 @@ def status_of(root, req_id):
 
 
 def marker_problems(where, text):
-    """Each assumption marker in the text written any way but "(assumed)"."""
-    return ['%s: write "%s" as "(assumed)", with any reason outside the brackets'
+    """Each assumption marker in the text that does not start with "(assumed"."""
+    return ['%s: write "%s" so it starts with "(assumed", for example "(assumed)"'
             % (where, found.group(0)) for found in MARKER.finditer(text or "")
-            if found.group(0) != "(assumed)"]
+            if not found.group(0).startswith("(assumed")]
 
 
 def remits(root):
@@ -90,32 +102,63 @@ def check_files(text):
     return [p for p in paths if p.lower() != "none"]
 
 
+def has_lock(packet, lock, name="Tests-Locked"):
+    """True when the text of a tests packet carries this lock, copied from the change spec
+    (Tests-Locked) or from the intent (Acceptance-Locked)."""
+    seen = re.findall(r"^%s:\s*([0-9a-f]{7,40})\b" % name, packet or "", re.M)
+    return bool(seen) and (seen[-1].startswith(lock) or lock.startswith(seen[-1]))
+
+
 def reviewed_lock(folder, lock):
     """True when the tests packet carries this lock, copied from the change spec."""
     packet = folder / "review" / "tests" / "packet.md"
-    if not packet.exists():
-        return False
-    seen = re.findall(r"^Tests-Locked:\s*([0-9a-f]{7,40})\b", packet.read_text(), re.M)
-    return bool(seen) and (seen[-1].startswith(lock) or lock.startswith(seen[-1]))
+    return packet.exists() and has_lock(packet.read_text(), lock)
+
+
+def wrong_version_lines(text):
+    """The lines under "Wrong versions" in the text of a tests review's result."""
+    block = re.search(r"^#*\s*Wrong versions:?\s*$(.*?)(?=^[^\s-]|\Z)", text or "", re.M | re.S)
+    lines = re.findall(r"^\s*-\s+(.+?)\s*$", block.group(1), re.M) if block else []
+    return [line for line in lines if line.lower() != "none"]
 
 
 def wrong_versions(folder):
     """The lines under "Wrong versions" in the tests review's result."""
     result = folder / "review" / "tests" / "result.md"
-    text = result.read_text() if result.exists() else ""
-    block = re.search(r"^#*\s*Wrong versions:?\s*$(.*?)(?=^[^\s-]|\Z)", text, re.M | re.S)
-    lines = re.findall(r"^\s*-\s+(.+?)\s*$", block.group(1), re.M) if block else []
-    return [line for line in lines if line.lower() != "none"]
+    return wrong_version_lines(result.read_text() if result.exists() else "")
 
 
 def git(root, *args):
     return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True)
 
 
+def checks_unchanged_since_earlier_review(root, folder, lock, checks):
+    """True when the tests packet is a re-review, and no check file changed between the
+    lock that the earlier review judged and this lock."""
+    packet = folder / "review" / "tests" / "packet.md"
+    return unchanged_since_earlier_review(root, packet.read_text() if packet.exists() else "",
+                                          lock, checks)
+
+
+def unchanged_since_earlier_review(root, text, lock, checks):
+    """True when the text of a tests packet is a re-review, and no check file changed
+    between the lock that the earlier review judged and this lock."""
+    earlier = re.search(r"^Earlier review:\s*([0-9a-f]{7,40})\b", text or "", re.M)
+    if not earlier or not lock:
+        return False
+    diff = git(root, "diff", "--name-only", earlier.group(1), lock, "--", *checks)
+    return diff.returncode == 0 and not diff.stdout.strip()
+
+
 def field(text, name):
-    """A header field of a change spec or intent, such as Status or Branch."""
+    """A header field of a change spec or intent, such as Status or Branch. The value is
+    bare: "IN-0001 (poll-input-errors)" gives "IN-0001", and "`pdlc/CH-0001-x`" gives
+    "pdlc/CH-0001-x"."""
     match = re.search(r"\b%s:[ \t]*([^·\n]*?)[ \t]*(?:·|$)" % name, text, re.M)
-    return match.group(1) if match else None
+    if not match:
+        return None
+    value = match.group(1).replace("`", "")
+    return re.sub(r"\s+\(.*\)$", "", value).strip()
 
 
 def show(root, ref, path):
@@ -135,15 +178,24 @@ def change_id(folder):
     return "-".join(folder.name.split("-", 2)[:2])
 
 
-def status_on_own_branch(root, path, refs):
-    """A change's status on its own branch, the one its change spec names. A change whose
-    branch is gone counts as merged if main's copy reads "in review" or "merged". None
-    when it has no branch."""
+def own_branch(root, path, refs):
+    """The branch, as git knows it, that a change spec names as its own. None when the
+    change has no branch."""
     for ref in refs:
         text = show(root, ref, path)
         branch = field(text, "Branch") if text else None
         if branch and branch != "none" and (ref == branch or ref.endswith("/" + branch)):
-            return field(text, "Status")
+            return ref
+    return None
+
+
+def status_on_own_branch(root, path, refs):
+    """A change's status on its own branch, the one its change spec names. A change whose
+    branch is gone counts as merged if main's copy reads "in review" or "merged". None
+    when it has no branch."""
+    ref = own_branch(root, path, refs)
+    if ref:
+        return field(show(root, ref, path), "Status")
     on_main = show(root, "main", path) or show(root, "origin/main", path)
     status = field(on_main, "Status") if on_main else None
     return status if status in READY else None
@@ -152,9 +204,12 @@ def status_on_own_branch(root, path, refs):
 def partners_not_ready(root, folder, text):
     """Problems with the other changes of this change's intent: each must be ready too."""
     intent = field(text, "Intent")
-    found = sorted((root / "pdlc" / "inbox").glob("%s-*.md" % intent)) if intent else []
-    if not found:
+    if not intent or intent == "none":
         return []
+    found = sorted((root / "pdlc" / "inbox").glob("%s-*.md" % intent))
+    if not found:
+        return ["%s is not in pdlc/inbox, so the check cannot find the other changes of the "
+                "intent" % intent]
     listed = re.findall(r"\bCH-\d+\b", section(found[0].read_text(), "Changes"))
     problems, refs = [], branches(root)
     for other in dict.fromkeys(listed):
@@ -167,6 +222,112 @@ def partners_not_ready(root, folder, text):
             problems.append("%s of %s is not ready (no branch)" % (other, intent))
         elif status not in READY:
             problems.append("%s of %s is not ready (status: %s)" % (other, intent, status))
+    return problems
+
+
+def record(text, name):
+    """The value of a line such as "Acceptance-Locked: 1a2b3c4" in the "Acceptance checks"
+    section of an intent: the last such line, without backticks. None if there is none."""
+    found = re.findall(r"^%s:[ \t]*`?([^`\s]+)`?" % re.escape(name),
+                       section(text or "", "Acceptance checks"), re.M)
+    return found[-1] if found else None
+
+
+def changed_files(root, old, new, *paths):
+    """The files that differ between two commits, or None if git can't compare them."""
+    out = git(root, "diff", "--name-only", old, new, "--", *paths)
+    return out.stdout.split() if out.returncode == 0 else None
+
+
+def is_ancestor(root, old, new):
+    return git(root, "merge-base", "--is-ancestor", old, new).returncode == 0
+
+
+def acceptance_problems(root, folder, text, reqs):
+    """Problems with the acceptance checks of this change's intent. The checks must be
+    locked, reviewed at the lock, unchanged since the lock, and recorded as passing at the
+    top of the stack: the branch of the last change of the intent."""
+    intent = field(text, "Intent")
+    found = sorted((root / "pdlc" / "inbox").glob("%s-*.md" % intent)) if intent else []
+    if not found:
+        return []  # partners_not_ready names the missing intent
+    listed = list(dict.fromkeys(re.findall(r"\bCH-\d+\b", section(found[0].read_text(), "Changes"))))
+    top_id = listed[-1] if listed else change_id(folder)
+    # The top of the stack is the branch of the last change. In CI, HEAD can be a merge of
+    # the pull request into main, so HEAD stands in only when git knows no such branch.
+    specs = sorted((root / "pdlc" / "changes").glob(top_id + "-*/change.md"))
+    top = own_branch(root, specs[0].relative_to(root).as_posix(), branches(root)) if specs else None
+    if not top and top_id == change_id(folder):
+        top = "HEAD"
+
+    def read(path):
+        """A file at the top of the stack. This checkout stands in when the top is HEAD, or
+        when the top change has no branch yet."""
+        if top and top != "HEAD":
+            return show(root, top, path)
+        return (root / path).read_text() if (root / path).exists() else None
+
+    intent_text = read(found[0].relative_to(root).as_posix()) or found[0].read_text()
+    checks, lock = record(intent_text, "Acceptance-File"), record(intent_text, "Acceptance-Locked")
+    passed = record(intent_text, "Acceptance-Passed")
+    if not lock or not HASH.match(lock):
+        if lock == "none" and reqs and all("(retire)" in rest for _, rest in reqs):
+            return []
+        return ["acceptance checks of %s are not locked (no Acceptance-Locked hash in the "
+                "intent); run /pdlc:acceptance" % intent]
+    if not checks or checks == "none":
+        return ["%s names no Acceptance-File, so the check cannot find its acceptance checks"
+                % intent]
+    problems = []
+
+    if "tests" in remits(root):
+        review = "pdlc/acceptance/%s/review/tests/" % found[0].stem
+        packet, result = read(review + "packet.md"), read(review + "result.md")
+        if not has_lock(packet, lock, "Acceptance-Locked"):
+            problems.append("acceptance review of %s is not of the current lock %s; review the "
+                            "acceptance checks again" % (intent, lock))
+        if result is None:
+            problems.append("acceptance review of %s has no result. Run python3 "
+                            "pdlc/bin/make_packets.py %s, and start a reviewer" % (intent, intent))
+        elif not re.match(r"\s*Result:\s*pass\b", result, re.I):
+            problems.append("acceptance review of %s did not pass" % intent)
+        else:
+            lines = wrong_version_lines(result)
+            if not lines and not unchanged_since_earlier_review(root, packet, lock, [checks]):
+                problems.append('acceptance review of %s lists no "Wrong versions"; review the '
+                                'acceptance checks again' % intent)
+            for line in lines:
+                if re.search(r"·\s*passes\b", line, re.I):
+                    problems.append("acceptance review of %s: a check passes a wrong version: %s"
+                                    % (intent, line))
+
+    # A change below a later lock holds an older copy of the file. That copy must not change
+    # after the change got it, so the diff starts where this branch and the lock meet.
+    since = git(root, "merge-base", "HEAD", lock).stdout.strip()
+    changed = changed_files(root, since, "HEAD", checks) if since else None
+    if changed is None:
+        problems.append("can't compare the acceptance checks of %s with the lock %s" % (intent, lock))
+    locked_changed = list(changed or [])
+
+    if not top:
+        return problems  # partners_not_ready says that the top change has no branch
+    if not passed or not HASH.match(passed):
+        problems.append("acceptance checks of %s are not ready: no Acceptance-Passed at the top "
+                        "of the stack (%s)" % (intent, top_id))
+    elif not is_ancestor(root, lock, passed):
+        problems.append("Acceptance-Passed %s of %s does not come after its lock %s; run the acceptance "
+                        "checks again" % (passed, intent, lock))
+    elif not is_ancestor(root, passed, top):
+        problems.append("Acceptance-Passed %s of %s is not on the branch of %s; run the acceptance "
+                        "checks there" % (passed, intent, top_id))
+    else:
+        locked_changed += changed_files(root, lock, passed, checks) or []
+        later = [f for f in changed_files(root, passed, top) or [] if not f.startswith("pdlc/")]
+        if later:
+            problems.append("files changed after the acceptance checks of %s passed: %s; run them "
+                            "again" % (intent, ", ".join(later)))
+    problems += ["changed after the acceptance checks were locked: %s" % path
+                 for path in dict.fromkeys(locked_changed)]
     return problems
 
 
@@ -239,13 +400,16 @@ def check_change(root, folder):
     for remit in wanted:
         result = folder / "review" / remit / "result.md"
         if not result.exists():
-            problems.append("%s review has no result" % remit)
+            problems.append("%s review has no result. Run python3 pdlc/bin/make_packets.py %s %s, "
+                            "and start a reviewer if it writes a packet"
+                            % (remit, change_id(folder), remit))
         elif not re.match(r"\s*Result:\s*pass\b", result.read_text(), re.I):
             problems.append("%s review did not pass" % remit)
 
     if checks and "tests" in wanted and (folder / "review" / "tests" / "result.md").exists():
         lines = wrong_versions(folder)
-        if not lines:
+        if not lines and not checks_unchanged_since_earlier_review(
+                root, folder, lock.group(1) if lock else None, checks):
             problems.append('tests review lists no "Wrong versions"; review the checks again')
         for line in lines:
             if re.search(r"·\s*passes\b", line, re.I):
@@ -255,6 +419,7 @@ def check_change(root, folder):
         problems.append("conflicts with main: %s" % path)
 
     problems += partners_not_ready(root, folder, text)
+    problems += acceptance_problems(root, folder, text, reqs)
 
     if merged_already(root, folder):
         problems.append("%s already merged; new commits on its branch won't reach main. "
@@ -284,11 +449,10 @@ def main(argv, root=Path("."), branch=None):
     else:
         branch = branch or current_branch(root)
         folders = [f for f in everything
-                   if branch and re.search(r"Branch:\s*%s\s*(?:·|$)" % re.escape(branch),
-                                           (f / "change.md").read_text(), re.M)]
+                   if branch and field((f / "change.md").read_text(), "Branch") == branch]
         if not folders:
             folders = [f for f in everything
-                       if re.search(r"Status:\s*in review\b", (f / "change.md").read_text())]
+                       if field((f / "change.md").read_text(), "Status") == "in review"]
     failed = False
     for folder in folders:
         problems = check_change(root, folder)

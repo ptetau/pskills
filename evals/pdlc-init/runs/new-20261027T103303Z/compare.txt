@@ -1,0 +1,14 @@
+Measure                                                         Baseline Candidate  Change
+quality                                                             96.8      98.9    +2.1
+stability                                                           75.3      72.2    -3.1
+overall                                                             85.4      84.5    -0.9
+R1 (weight 2) The new `pdlc/` folder holds each file that init     100.0     100.0    +0.0
+R2 (weight 2) Each new job spec and capability spec is a stub      100.0     100.0    +0.0
+R3 (weight 3) The code maps split the code of wordfreq into cl     100.0     100.0    +0.0
+R4 (weight 2) `pdlc/config.md` has a chosen value in place of       90.0     100.0   +10.0
+R5 (weight 3) The six check settings work for this Python `uni     100.0     100.0    +0.0
+R6 (weight 2) With `defaults`, the run asks the user nothing,      100.0      83.3   -16.7
+R7 (weight 2) Without `defaults`, the run asks one question at     100.0     100.0    +0.0
+R9 (weight 3) One commit on `main` records the new `pdlc/` fol     100.0     100.0    +0.0
+R10 (weight 2) The final reply tells the user how to start wit      80.0     100.0   +20.0
+NO REGRESSION

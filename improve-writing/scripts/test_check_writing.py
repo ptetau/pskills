@@ -12,6 +12,7 @@ CASES = [
     ("Run the tests and then read every line of the log, and after that write a summary of the failures for the team.", "length"),
     ("The checker reads the design file and compares each part of the design with the parts that the blueprint gives in section five of the text.", "length"),
     ("Run the tests. Read the log.", None),
+    ("The new version scores 74.3 overall, 71.3 for the old version, 79.0 for change, 81.7 for the second run, and 84.5 for init.", None),
     ("The first part reads the file; the second part writes it.", "semicolon"),
     ("Don't run the tests.", "contraction"),
     ("The user's file is open.", None),

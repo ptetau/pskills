@@ -1,84 +1,90 @@
 # pdlc
 
-This folder holds the pdlc state for this project. Each pdlc skill reads this file first.
+This folder holds the pdlc state for this project. This file holds the definitions and the
+rules that all pdlc skills share. Each skill reads this file first, and names its sections.
 
 ## Core rules
 
-1. All work enters through the inbox.
-2. Specs come before code. An intent must be `ready` before you plan a change for it.
-3. A change covers exactly one job, one capability, or one design spec.
-4. A job owns its entry points: its routes or request handlers, commands, and page
-   scripts. A capability holds only the shared logic under the entry points. A job change
-   uses capabilities, but does not edit their code. A missing capability gets its own
-   change, before the job change.
-5. The test writer writes the checks before the code, from the spec only. Then the checks
-   are locked. A writer of app code must not change the checks.
-6. Reviews are independent. Each remit gets one fresh reviewer, and each reviewer sees only
-   its packet.
-7. A change merges only when all of these are true:
+1. pdlc runs only on a Sonnet 5.5 class model or above. On a lower model, for example a
+   Haiku model, a pdlc skill or agent does no work. The skill or agent tells the user that
+   pdlc needs a Sonnet 5.5 class model or above.
+2. All work enters through the inbox.
+3. Specs come before code. pdlc plans a change only for a `ready` intent.
+4. A change covers exactly one job, one capability, or one design spec.
+5. A job change uses capabilities, but does not edit their code ("Code maps"). A missing
+   capability gets its own change, before the job change.
+6. The test writer writes the checks from the spec, before the code. The acceptance checks
+   of the intent come first, then the component checks of each change. A writer of app
+   code does not change a locked check.
+7. Each review remit gets one fresh reviewer, and the reviewer sees only its packet.
+8. A change merges only when all of these are true, as `bin/check_merge.py` confirms:
    - The requirements of the change are `verified`.
    - The tests of the change did not change after the lock.
    - Each review remit passed.
    - The branch of the change merges into main without conflicts.
-   - Every other change of the same intent is `in review` or `merged`.
+   - Every other change of the intent is `in review` or `merged`.
+   - The acceptance checks of the intent are locked, reviewed, and passed at its last
+     change.
+9. These files are the truth. Boards and dashboards only show what these files contain.
 
-   The changes of an intent merge together, with the bottom of the stack first.
-   `bin/check_merge.py` checks all of these conditions.
-8. These files are the truth. Boards and dashboards only show what these files contain.
-9. Each commit has a subject and trace trailers (see
-   `specs/design/DES-pdlc-commit-trailers.md`). The trailers come after a blank line, one
-   on each line. Write `Intent: IN-xxxx` first. On the branch of a change, add
-   `Change: CH-xxxx`. When the commit changes code, checks, or the README, add
-   `Req: <IDs>`. The skill of each stage gives the subject. A hook checks each new commit
-   on a pdlc branch. Fix what the hook names at once, with `git commit --amend`.
-10. Write all text to the rules in `specs/design/DES-writing-style.md`. This includes
-    specs, intents, change specs, handoffs, commit messages, pull requests, review
-    results, code comments, and replies to the user. The rules in short: write sentences
-    of 25 words or fewer (20 in an instruction), in the active voice, with one topic in
-    each sentence. Write "must" or "can", not "should". Do not use a semicolon. Give
-    each ID a short description in the same sentence, as in `R5 (usage line)`. Read the
-    full rules before you write or change a spec or an intent. For a handoff, a proposal,
-    a commit message, or a reply, the short form is sufficient.
-    `bin/check_writing.py <file>` finds the breaks that a script can find.
+## Commits
+
+- The subject comes from "Subjects" in `specs/design/DES-pdlc-commit-trailers.md`. Each
+  skill gives its subjects.
+- The trailers follow a blank line, one on each line: `Intent: IN-xxxx` first, then
+  `Change: CH-xxxx` on the branch of a change. A commit that changes code, checks, or the
+  README also has `Req: <IDs>`.
+- A hook examines each new commit on a pdlc branch. The skill fixes each problem that the
+  hook names at once, with `git commit --amend`.
+
+## Writing
+
+- All text obeys `specs/design/DES-writing-style.md`: specs, intents, change specs,
+  handoffs, commits, pull requests, review results, code comments, and replies.
+- In short: 25 words or fewer in a sentence (20 in an instruction), the active voice, and
+  one topic. The text has "must" or "can", not "should", and no semicolon. Each ID has a
+  short description in the same sentence, as in `R5 (usage line)`.
+- The limit holds also in an acceptance line. A long line becomes two lines, or ends its
+  "then" part with a full stop and a second short sentence.
+- A skill reads the full rules before it writes or changes a spec or an intent. For a
+  handoff, a proposal, a commit message, or a reply, the short form is sufficient.
+- `bin/check_writing.py <file>` finds the breaks that a script can find.
 
 ## Layout
 
-- `config.md`: the adapters, how to run checks, the check folders, the review remits, the
-  visual review settings, and the board columns.
-- `ports/`: what each port does.
-- `adapters/`: how this project does the work of each port.
-- `reviews/`: one file for each review remit. Each file says what the reviewer of that
-  remit judges.
+- `config.md`: the adapters, the check commands and folders, the review remits, the visual
+  settings, and the board columns.
+- `ports/`: what each port does. `adapters/`: how this project does it.
+- `reviews/`: one file for each remit, with what its reviewer judges.
 - `inbox/`: one file for each intent.
 - `specs/jobs/`, `specs/capabilities/`, `specs/design/`: the specs.
-- `changes/CH-xxxx-name/`: one folder for each change, with these items:
-  - `change.md`: the change spec.
-  - `handoff.md`: the latest handoff between stages.
-  - `visual.json`, `review.gif`, `frames/`: the visual review.
-  - `review/<remit>/packet.md` and `result.md`: each independent review.
-  - `proposal.md`: the merge proposal, when the project has no remote.
-- `templates/`: blank copies of each document. When you write one, replace each
-  `<placeholder>` and the guide sentence under each heading with real content.
+- `acceptance/IN-xxxx-name/review/tests/`: `packet.md` and `result.md` of the review of the
+  acceptance checks of an intent.
+- `changes/CH-xxxx-name/`: one folder for each change, with `change.md` (the change spec),
+  `handoff.md`, `visual.json`, `review.gif`, `frames/`, `review/<remit>/packet.md` and
+  `result.md`, and `proposal.md` when there is no remote.
+- `templates/`: blank documents. A filled document has real content in place of each
+  `<placeholder>` and each guide sentence.
 - `bin/`: `check_merge.py`, `check_writing.py`, `make_packets.py`, `record_gif.mjs`,
   `record_merges.py`.
-- `.tools/`: the tools that the visual review installs. This folder is not committed.
+- `.tools/`: the tools of the visual review. This folder is not committed.
 
 ## Code maps
 
-Each job and capability lists what it owns in its "Code map". The scope of a change comes
-from that code map.
+The "Code map" of each job and capability lists what it owns, and gives the scope of a
+change.
 
 - A job owns its entry points (a route or request handler, a command, a page script or
   event handler), with its line in any routing table or command list.
 - A capability owns the shared logic under them: storage, outside services, and the
   plumbing every job uses (starting the server, routing, reading a request, writing a
   reply).
-- A file that holds parts of several specs is shared. Each code map names its parts:
+- A file with parts of several specs is shared. Each code map names its parts:
   `src/server.py: POST /reset route and handle_reset` for a job, and
   `src/server.py: the rest` for the capability that holds the plumbing.
-- A change is permitted to list a shared file in "Files", with its own parts. The change
-  edits only those parts. A new route or command adds its own part beside the others.
-- The project's README is in no code map. A change changes only what the README says
+- A change can list a shared file in "Files" with its own parts, and edits only those
+  parts. A new route or command adds its own part beside the others.
+- The README of the project is in no code map. A change changes only what the README says
   about its own spec, and how to run the app and the checks.
 
 ## Who does what
@@ -91,91 +97,143 @@ from that code map.
 | `pdlc:reviewer` | judges one packet for one remit | sees anything other than its packet |
 | `pdlc:recon` | maps existing code | writes anything |
 
-A guard in the pdlc plugin keeps the roles in these lanes.
+A guard in the pdlc plugin keeps the roles in these lanes. For each agent:
 
-Starting an agent:
-
-- Give it absolute paths: the project root, and the full path of each file it needs.
-- Start it with the Agent tool, with `run_in_background: false`. Then the tool call
-  returns the reply of the agent. Do not wait for an agent with a sleep, a loop, a
-  monitor, or a notification. Start agents that work side by side (the reviewers) in one
-  message, each with `run_in_background: false`. Do not stop an agent because it is slow.
-- If the guard or a tool blocks an agent, fix the path. Then run the agent once more from
-  the project root. If the agent fails again, that counts as one failure of its stage. A
-  blocked agent is not a reason to stop.
+- The skill gives absolute paths: the project root, and each file that the agent needs.
+- The Agent tool starts the agent with `run_in_background: false`, so that the call
+  returns the reply. Agents that work side by side (the reviewers) start in one message.
+- No skill waits for an agent with a sleep, a loop, a monitor, or a notification. No skill
+  stops an agent because it is slow.
+- When the guard or a tool blocks an agent, the skill fixes the path, and runs the agent
+  once more from the project root. A second block is one failure of the stage. A blocked
+  agent is not a reason to stop.
 
 ## Stages and handoffs
 
-The stages for an intent are intake → ready → change. The stages for each change are
-tests → build → show → verify. `/pdlc:ship` runs all the stages.
+The intent stages are intake → ready → change → acceptance. The change stages are tests →
+build → show → `verify`. `/pdlc:ship` runs them all.
 
-Each stage first reads the latest handoff. At its end, each stage writes a new handoff:
+- Each stage starts from the latest handoff, and ends with a new one from
+  `templates/handoff.md`, which replaces the old one. Git keeps the history.
+- An intent stage writes the "Handoff" of the intent, with the template sections as `###`
+  headings. A change stage writes `changes/CH-xxxx-name/handoff.md`.
+- The title comes from the list in the template. Every section stays, with "none" under an
+  empty one. The time comes from the real clock (`date -Iseconds`).
+- A handoff says only what the files show, with real counts of the checks that ran and of
+  the acceptance lines shown.
 
-- An intent stage writes the "Handoff" section of the intent. The sections of the template
-  are `###` headings under that section. Thus, the full handoff stays inside that one
-  section.
-- A change stage writes `changes/CH-xxxx-name/handoff.md`.
+At the end of each stage, and at each stop:
 
-Use `templates/handoff.md`. Take the title from the list in the template. Keep every
-section, and write "none" under a section that is empty. Take the time from the real clock
-(`date -Iseconds`). Replace the old handoff. Git keeps the history.
-
-Each stage, and each stop, ends in the same way:
-
-- The stage sets the statuses that it owns. The tests stage sets `testing`, then
-  `building`. The verify stage sets `in review` when everything passed.
+- The statuses that the stage owns are set. The tests stage sets `testing`, then
+  `building`. The `verify` stage sets `in review` when everything passed.
   `bin/record_merges.py` sets `merged` and `done`.
-- The stage commits everything that it wrote: specs, the intent, the change folder, review
-  packets, and results. Then `git status --porcelain` shows nothing. The stage deletes the
-  files that the checks leave behind (caches and build output), and does not commit them.
-  Init lists the folders of these files in `.gitignore`.
-- The handoff of the stage says only what the files show. Count the checks that ran and
-  the acceptance lines shown. Do not estimate.
+- Everything that the stage wrote is committed: specs, the intent, the change folder,
+  packets, and results. `git status --porcelain` shows nothing.
+- The files that the checks leave behind (caches, build output) are deleted, not
+  committed. Init lists their folders in `.gitignore`.
+- The tracker port knows each status that changed ("Ports").
+
+## Checks before code
+
+The acceptance stage and the tests stage share these rules. The lock line is
+`Acceptance-Locked:` in the intent, or `Tests-Locked:` right under the header of the
+change spec.
+
+- Red: before the lock, each check of new behaviour fails. A check that passes goes back
+  to the test writer with the reason.
+- A check of existing behaviour (only the words changed) can pass. After a send-back from
+  build or `verify`, app code exists, so a corrected check can pass. The skill records
+  each such result in the progress log, or in the intent "Notes" for acceptance.
+- A check that fails because a command, a route, or a function does not exist yet counts
+  as failing. The error comes from the missing interface, not from a mistake in the check.
+- A run has a time limit of a few minutes. A run that does not finish has a broken check,
+  not a red one. The broken check goes back to the test writer before the lock.
+- When the test writer reports a missing "Interface" item, the skill adds the item to the
+  change spec itself (it can see the code). Then the test writer runs again.
+- Lock: the commit of the checks. Its hash goes on the lock line, and replaces an older
+  hash.
+- After the lock, only the test writer changes the checks, and only through the skill of
+  the stage. Each change makes a new lock, and each lock gets its own review. The merge
+  check refuses a tests review of an older lock.
+- Review: `bin/make_packets.py` makes the tests packet, and a fresh `pdlc:reviewer` gets
+  only its path. A later packet is a re-review: the earlier problems, and the diff of the
+  checks since the earlier lock. The reviewer judges only these two items.
+- A failed review sends its problems to the test writer, and red, lock, and review run
+  again ("Rounds").
+
+## Acceptance checks
+
+Each intent has one acceptance file, at the "acceptance file" path in `config.md`. Its
+checks prove the acceptance lines through what a user uses. They can use each feature of
+the intent, and each feature that exists already.
+
+- The acceptance stage writes, locks, and reviews the file before the first change.
+  `Acceptance-File:` and `Acceptance-Locked:` in the intent record the file and the lock.
+- A component check (a check of a change) uses only the interface of its change and of
+  earlier changes.
+- The "all" command does not run an acceptance file. Thus, the acceptance checks of an
+  open intent can fail until its last change, and main stays green.
+- The build and `verify` stages run all checks and **run earlier acceptance**, and for the
+  last change also **run acceptance**. Each check must pass. The `verify` stage writes the
+  commit of that run on `Acceptance-Passed:`.
+- For an earlier change, a failure of **run acceptance** is expected, and is not reported.
+- After the intent merges, its acceptance checks stay, and each later change keeps them
+  green.
+
+## Rounds
+
+A round is one failed tests or acceptance review, one failed `verify`, or one builder
+report that a check is wrong. A fix of a check before its lock is not a round. An agent
+blocked twice is one round. Each change has two rounds, and so does the acceptance stage
+of each intent. The third failure of the same stage stops the work, and the skill asks the
+user.
 
 ## Where pdlc commits
 
-- Init commits on main. The intent stages (intake, ready, change) also commit on main when
-  no pdlc branch is unmerged. The records of pdlc are not code, so this is by design, also
-  where the usual rule is to branch first.
-- A change commits on its own branch: its code, status, lock, and handoff. On main, a
-  change that did not merge yet still has the status `planned`.
-- While any pdlc branch is unmerged, only `bin/record_merges.py` commits on main. The
-  intent stages then work on the own branch of the intent, `pdlc/IN-xxxx-<short-name>`.
-  That branch starts from the newest unmerged branch: the first line of
-  `git branch --no-merged main --list 'pdlc/*' --sort=-committerdate`. In that command,
-  use the branch pattern from `DES-pdlc-branches` (the branch names). The `Branch:` of the
-  intent names the branch of the intent. The spec patches of the intent then come after
-  the work that they change, so every branch merges into main in order, with no conflicts.
-- Do not commit on a branch that merged into main, not even a status or a `Base:`. Work
-  that you find after a change merged is a new change. The merge check refuses the branch
-  of a merged change if the branch has new commits.
-
-Before you select an intent or a change by its status, do these steps:
-
-1. List the unmerged branches.
-2. Read the `change.md` of each change from its own branch
-   (`git show <branch>:pdlc/changes/<folder>/change.md`).
-3. Read each intent from the newest branch that has it.
-
-A change with no branch is `planned`.
+- Init commits on main. So do intake, ready, and change while no pdlc branch is unmerged.
+  The records of pdlc are not code, so this is by design, also where the usual rule is to
+  branch first.
+- The acceptance stage commits on the intent branch, `pdlc/IN-xxxx-<short-name>`, and
+  starts it if necessary. Thus, the acceptance checks go to main only with their code.
+- A change commits its code, status, lock, and handoff on its own branch. On main, an
+  unmerged change still has the status `planned`.
+- While any pdlc branch is unmerged, only `bin/record_merges.py` commits on main, and the
+  intent stages work on the intent branch. That branch starts from the newest unmerged
+  branch: the first line of
+  `git branch --no-merged main --list 'pdlc/*' --sort=-committerdate`, with the pattern of
+  `DES-pdlc-branches` (the branch names). The `Branch:` of the intent names it.
+- Thus, the spec patches come after the work that they change, and every branch merges
+  into main in order, with no conflicts.
+- Nothing is committed on a branch that merged into main, not even a status or a `Base:`.
+  Work found after a change merged is a new change. The merge check refuses the branch of
+  a merged change if it has new commits.
+- All work stays in the project checkout, not in a git worktree. The agents, the guard,
+  and the scripts use the paths of the checkout.
+- A skill commits its work before `git switch <branch>`. When `git switch` refuses, the
+  skill commits or deletes what `git status` shows, for example `__pycache__/`.
+- A skill selects an intent or a change by its status only where it lives. It lists the
+  unmerged branches, and reads each `change.md` from its own branch
+  (`git show <branch>:pdlc/changes/<folder>/change.md`). It reads each intent from the
+  newest branch that has it. A change with no branch is `planned`.
 
 ## Stacked changes
 
-A change is built on the branch of the change before it, also before that earlier change
-merges. The `Base:` of the change names that branch, and the pull request of the change
-targets that branch.
+A change is built on the branch of the change before it, also before that change merges.
+Its `Base:` names that branch, and its pull request targets that branch.
 
-The first change of an intent is built on the newest unmerged change of an earlier intent.
-If there is none, the first change is built on main. If the intent has a `Branch:`, the
-first change starts from that branch. Then the first change carries the spec patches of
-the intent into the same pull request. If that branch does not hold the base of the change
-yet, the tests skill merges the base into that branch first.
-
-The changes of an intent merge together, with the bottom of the stack first. The merge
-check fails each of them until all are `in review`. The base of a change can merge into
-main before the verify stage proposes the change (`git merge-base --is-ancestor <base> main`
-succeeds). If so, set the `Base:` of the change to main on the branch of the change. Then
-propose against main. Do not rewrite `Base:` on a branch that merged into main.
+- The base is the branch of the previous change in the intent "Changes". For the first
+  change, it is the newest unmerged change of an earlier intent, or else main.
+- If the intent has a `Branch:`, the first change starts from that branch, and so carries
+  the spec patches and the acceptance checks. When that branch lacks the base
+  (`git merge-base --is-ancestor <base> <intent branch>` fails), the tests stage merges the
+  base into it first, with the trailer `Intent`.
+- In that merge, a requirement that the intent changed keeps the text and status of the
+  intent. Each other requirement keeps the text and status of the base.
+- The changes of an intent merge together, bottom first. The merge check fails each of
+  them until all are `in review`.
+- The base can merge into main before `verify` proposes the change
+  (`git merge-base --is-ancestor <base> main` succeeds). Then `Base:` becomes main on the
+  branch of the change, and the proposal targets main. A merged branch keeps its `Base:`.
 
 ## Statuses
 
@@ -184,61 +242,85 @@ propose against main. Do not rewrite `Base:` on a branch that merged into main.
 - Change: planned → testing → building → in review → merged. Also cancelled.
 - Spec file: stub (no requirements written yet) or active.
 
-## Asking questions
+## Questions
 
-Ask the user one short question at a time. Offer two or three answers. Mark the answer
-that you recommend, and give one line on why. The user can reply `skip` to take the
-recommended answer.
+- A question is short, and comes one at a time, with two or three answers. The recommended
+  answer has a mark and one line on why. The reply `skip` takes it.
+- A decision that a skill makes without an instruction (a name, a limit, a message, an
+  order, a default answer) has the mark `(assumed)` where the spec or change spec states
+  it. The handoff lists it too. Thus, no guess stays hidden.
+- The mark is plain, right after the words that it marks, with any reason outside the
+  brackets: "at most 20 items (assumed), to keep the list short". In a change, the merge
+  check rejects `(limit assumed)`, `*(assumed)*`, and each mark that does not start with
+  `(assumed`.
+- With `defaults`, a skill asks nothing, and takes its recommended answer. Each answer goes
+  as `<question> → <answer> (assumed)` in "Decided on defaults" in the handoff and in the
+  intent "Notes", so that the user can change it.
 
-A skill can decide something without an instruction: a name, a limit, a message, an order,
-or a default answer. Mark each such decision `(assumed)` where you write it in a spec or a
-change spec. Also list the decision in the handoff. Thus, no guess stays hidden.
+## Spec patches
 
-Write the marker plain, right after the words that it marks. Put any reason outside the
-brackets, as in "at most 20 items (assumed), to keep the list short". The merge check
-rejects any other form in a change.
+These rules hold each time that a skill writes or changes a spec.
 
-If the skill runs with `defaults`, do not ask. Take your recommended answer. Record each
-answer as `<question> → <answer> (assumed)` in two places: "Decided on defaults" in the
-handoff, and "Notes" in the intent. Then the user can change the answer later.
-
-## Before any work
-
-Switch to main. If there is a remote, pull main. Then run
-`python3 pdlc/bin/record_merges.py`. The script sets each change whose branch merged to
-`merged`. It sets each intent whose changes all merged to `done`. Then it commits those
-records on main.
-
-Do not do this bookkeeping by hand. Do not do it on another branch.
+- Where a behaviour belongs:
+  - What a user does through a route, a command, or a page, and gets back: a **job**,
+    also in a shared file.
+  - What the system offers to jobs (a store, an outside service, shared plumbing): a
+    **capability**. Its requirements give what it offers to jobs, not the behaviour of one
+    job.
+  - How the project does something everywhere: a **design** spec.
+  - How the output of one job looks (a format, a wording, a layout): that **job**, also
+    when a capability makes the value. The job has a line for each place that shows it.
+  - A behaviour that many jobs share (a reply format, an error shape, an unreadable store,
+    a size limit on each request): one time, in the capability or design spec that those
+    jobs use. For example, "every email has an unsubscribe link" goes in `CAP-email`.
+  - An existing spec comes first. A new capability has its boundary around a thing that is
+    likely to change (a vendor, a set of rules, a store), and is named for it:
+    `CAP-payments`, not `CAP-checkout-button`.
+- The words of the intent bind. Each example in the intent (an output, a message, a value)
+  is an acceptance line, exactly. The plain reading holds for every value, also zero,
+  empty, and an integer. No `(assumed)` reading or recommendation narrows the words to
+  keep the old behaviour, or changes the result of an example.
+- The newest words win. When the intent asks for something that an older requirement or
+  an `(assumed)` detail rules out, the older text changes to match. This case is a changed
+  requirement, not a contradiction. The intent "Notes" get
+  `<ID>: was "<old>", now "<new>"`.
+- No old wording. For each changed or retired requirement, a search of `pdlc/specs/` and
+  the README finds the old words (a command, a message, a value, a button). No title,
+  summary, example, acceptance line, note, "Known gap" line, or "Changes" list in the
+  specs shows them. Each cross-reference (`see CAP-x.R4`) points at the rule it means.
+- The README is app code, so a spec stage does not edit it. Each README line with old
+  behaviour gets `README: "<old line>" → <requirement>` in the intent "Notes". The change
+  for that requirement fixes the line.
+- A spec stage does not edit a change spec (`changes/*/change.md`). An unmerged change
+  keeps what it copied.
 
 ## New behaviour needs approval
 
-A review point can need new behaviour: behaviour that no acceptance line, design spec, or
-remit rule asks for. Do not build it on the branch of a change. The verify stage adds it
-as a new intent with the status `new`, whose "Notes" start with `Awaits approval:`. No
-skill takes up such an intent on its own, also with `defaults`. Work on the intent starts
-only when the user names it. Then remove the `Awaits approval:` line.
+New behaviour is behaviour that no acceptance line, design spec, or remit rule asks for.
+Nobody builds it on the branch of a change. The `verify` stage files it as a `new` intent
+whose "Notes" start with `Awaits approval:`. No skill takes up such an intent on its own,
+also with `defaults`. Work starts only when the user names it, and then the line goes.
+
+## Bookkeeping on main
+
+Before any work, each skill that names this section switches to main, pulls main if there
+is a remote, and runs `python3 pdlc/bin/record_merges.py`. The script sets each change
+whose branch merged to `merged`, and each intent whose changes all merged to `done`. Then
+it commits those records on main. Nobody does this bookkeeping by hand, or on another
+branch.
 
 ## pdlc's own files
 
 `README.md`, `ports/`, `adapters/`, `templates/`, and `bin/` come from the pdlc plugin.
-These files change only when pdlc is upgraded, on main, in a commit of their own. Do not
-change these files on the branch of a change. An upgrade can also refresh the `DES-pdlc-*`
-design specs and the `reviews/` files that still say `Default: yes`. When the project
-changes one of these specs or files, the file says `Default: no` and belongs to the
-project.
+They change only in a pdlc upgrade, on main, in a commit of their own, and not on the
+branch of a change. An upgrade can also refresh the `DES-pdlc-*` design specs and the
+`reviews/` files that say `Default: yes`. A file that the project changes says
+`Default: no`, and belongs to the project.
 
-## Using a port
+## Ports
 
-To use a port, do these steps:
-
-1. Read `ports/<port>.md` to find what the port does.
-2. Find the adapter of the port in `config.md`.
-3. Follow `adapters/<adapter>.md`.
-
-If a port covers a tool, do not call that tool directly.
-
-## After any status change
-
-Tell the tracker port about the intent or the change whose status changed. If the tracker
-is `none`, skip this step.
+- Each port works through its adapter: `ports/<port>.md` says what the port does,
+  `config.md` names the adapter, and `adapters/<adapter>.md` says how.
+- No skill calls a tool directly when a port covers that tool.
+- After each status change of an intent or a change, the tracker port gets it. With the
+  tracker `none`, nothing happens.

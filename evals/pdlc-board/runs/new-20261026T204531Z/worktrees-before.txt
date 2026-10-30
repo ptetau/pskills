@@ -1,0 +1,41 @@
+/home/user/pskills                                      dff589c [claude/zen-brown-ww7xi3]
+/home/user/pskills/.claude/worktrees/wf_191c58c5-054-1  03297cb [worktree-wf_191c58c5-054-1]
+/home/user/pskills/.claude/worktrees/wf_191c58c5-054-2  03297cb [worktree-wf_191c58c5-054-2]
+/home/user/pskills/.claude/worktrees/wf_191c58c5-054-3  03297cb [worktree-wf_191c58c5-054-3]
+/home/user/pskills/.claude/worktrees/wf_191c58c5-054-4  03297cb [worktree-wf_191c58c5-054-4]
+/home/user/pskills/.claude/worktrees/wf_191c58c5-054-5  03297cb [worktree-wf_191c58c5-054-5]
+/home/user/pskills/.claude/worktrees/wf_191c58c5-054-6  03297cb [worktree-wf_191c58c5-054-6]
+/home/user/pskills/.claude/worktrees/wf_339da2a9-577-1  03297cb [worktree-wf_339da2a9-577-1]
+/home/user/pskills/.claude/worktrees/wf_339da2a9-577-2  03297cb [worktree-wf_339da2a9-577-2]
+/home/user/pskills/.claude/worktrees/wf_339da2a9-577-3  03297cb [worktree-wf_339da2a9-577-3] locked
+/home/user/pskills/.claude/worktrees/wf_339da2a9-577-4  03297cb [worktree-wf_339da2a9-577-4] locked
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-1  03297cb [worktree-wf_659738b2-1f3-1]
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-2  03297cb [worktree-wf_659738b2-1f3-2]
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-3  03297cb [worktree-wf_659738b2-1f3-3]
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-4  03297cb [worktree-wf_659738b2-1f3-4]
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-5  03297cb [worktree-wf_659738b2-1f3-5]
+/home/user/pskills/.claude/worktrees/wf_659738b2-1f3-6  03297cb [worktree-wf_659738b2-1f3-6]
+/home/user/pskills/.claude/worktrees/wf_9130f466-aab-1  03297cb [worktree-wf_9130f466-aab-1] locked
+/home/user/pskills/.claude/worktrees/wf_9130f466-aab-2  03297cb [worktree-wf_9130f466-aab-2]
+/home/user/pskills/.claude/worktrees/wf_9130f466-aab-3  03297cb [worktree-wf_9130f466-aab-3]
+/home/user/pskills/.claude/worktrees/wf_9130f466-aab-4  03297cb [worktree-wf_9130f466-aab-4] locked
+/home/user/pskills/.claude/worktrees/wf_b81bc028-541-1  03297cb [worktree-wf_b81bc028-541-1]
+/home/user/pskills/.claude/worktrees/wf_b81bc028-541-2  03297cb [worktree-wf_b81bc028-541-2]
+/home/user/pskills/.claude/worktrees/wf_b81bc028-541-3  03297cb [worktree-wf_b81bc028-541-3]
+/home/user/pskills/.claude/worktrees/wf_b81bc028-541-4  03297cb [worktree-wf_b81bc028-541-4]
+/home/user/pskills/.claude/worktrees/wf_b81bc028-541-5  03297cb [worktree-wf_b81bc028-541-5]
+/home/user/pskills/.claude/worktrees/wf_b81bc028-541-6  03297cb [worktree-wf_b81bc028-541-6]
+/home/user/pskills/.claude/worktrees/wf_d878f0bb-0d0-1  03297cb [worktree-wf_d878f0bb-0d0-1]
+/home/user/pskills/.claude/worktrees/wf_d878f0bb-0d0-2  03297cb [worktree-wf_d878f0bb-0d0-2]
+/home/user/pskills/.claude/worktrees/wf_d878f0bb-0d0-3  03297cb [worktree-wf_d878f0bb-0d0-3]
+/home/user/pskills/.claude/worktrees/wf_d878f0bb-0d0-4  03297cb [worktree-wf_d878f0bb-0d0-4]
+/home/user/pskills/.claude/worktrees/wf_d878f0bb-0d0-5  03297cb [worktree-wf_d878f0bb-0d0-5] locked
+/home/user/pskills/.claude/worktrees/wf_d878f0bb-0d0-6  03297cb [worktree-wf_d878f0bb-0d0-6] locked
+/home/user/pskills/.claude/worktrees/wf_deef55d7-9a3-1  03297cb [worktree-wf_deef55d7-9a3-1]
+/home/user/pskills/.claude/worktrees/wf_deef55d7-9a3-2  03297cb [worktree-wf_deef55d7-9a3-2]
+/home/user/pskills/.claude/worktrees/wf_deef55d7-9a3-3  03297cb [worktree-wf_deef55d7-9a3-3] locked
+/home/user/pskills/.claude/worktrees/wf_deef55d7-9a3-4  03297cb [worktree-wf_deef55d7-9a3-4] locked
+/home/user/pskills/.claude/worktrees/wf_ef7d4123-2b4-1  03297cb [worktree-wf_ef7d4123-2b4-1]
+/home/user/pskills/.claude/worktrees/wf_ef7d4123-2b4-2  03297cb [worktree-wf_ef7d4123-2b4-2]
+/home/user/pskills/.claude/worktrees/wf_ef7d4123-2b4-3  03297cb [worktree-wf_ef7d4123-2b4-3] locked
+/home/user/pskills/.claude/worktrees/wf_ef7d4123-2b4-4  03297cb [worktree-wf_ef7d4123-2b4-4] locked

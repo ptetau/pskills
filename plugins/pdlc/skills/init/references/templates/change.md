@@ -3,6 +3,10 @@
 Intent: IN-0000 · Scope: CAP-name · Status: planned · Ticket: none · Branch: none · Base: main
 Tests-Locked: none
 
+The pdlc scripts read each header field. Thus, a header field holds only its bare value.
+Do not add a name in brackets, and do not add backticks. For example, write
+`Intent: IN-0001`, not `Intent: IN-0001 (poll-input-errors)`.
+
 Keep these sections, in this order, and add no others.
 
 ## Delivers
@@ -56,9 +60,10 @@ builder changes only those parts.
 
 ## Check files
 
-List the check files for this change. Name each file after the spec, as
+List the component check files for this change. Name each file after the spec, as
 `DES-pdlc-check-tagging` (check naming) tells you. Only the test writer writes these
-files.
+files. The acceptance checks of the intent are in a different file, and are not listed
+here.
 
 - path/to/check
 

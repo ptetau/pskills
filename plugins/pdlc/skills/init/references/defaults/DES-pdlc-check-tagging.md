@@ -31,6 +31,13 @@ Lay checks out the same way everywhere:
   `describe("CAP-email.R3", ...)`.
 - Each check's name still starts with the ID, then says what it proves.
 
+The acceptance checks of an intent go in one file for each intent, at the path of
+"acceptance file" in `pdlc/config.md`. The name of the file holds the word "acceptance"
+and the intent ID, for example `tests/acceptance_IN_0012.py` or
+`acceptance/IN-0012.acceptance.js`. The "all" command does not run such a file. Inside the
+file, make one group for each requirement, and start each check name with the requirement
+ID.
+
 ## Why
 
 The trace from a requirement to its checks is only as good as this naming. Thus, the

@@ -30,9 +30,14 @@ def section(text, title):
 
 
 def field(text, name):
-    """A header field of a change spec or intent, such as Status or Branch."""
+    """A header field of a change spec or intent, such as Status or Branch. The value is
+    bare: "IN-0001 (poll-input-errors)" gives "IN-0001", and "`pdlc/CH-0001-x`" gives
+    "pdlc/CH-0001-x"."""
     match = re.search(r"\b%s:[ \t]*([^·\n]*?)[ \t]*(?:·|$)" % name, text, re.M)
-    return match.group(1) if match else None
+    if not match:
+        return None
+    value = match.group(1).replace("`", "")
+    return re.sub(r"\s+\(.*\)$", "", value).strip()
 
 
 def with_status(text, status):

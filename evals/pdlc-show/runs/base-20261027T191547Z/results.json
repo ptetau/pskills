@@ -1,0 +1,1368 @@
+{
+ "skill": "pdlc:show",
+ "skillSha256": "0fd54b344108ad777e6ebe748212b1fb13bc24fb0438c7dafa48fb5bbc164674",
+ "suiteSha256": "0c3500a61ac6dd8eb9b1770a93f641989ea4b38231dd93cb19462c86de785b54",
+ "runId": "base-20261027T191547Z",
+ "generatedAt": "2026-10-27T19:38:25Z",
+ "config": {
+  "prompts": [
+   "P01",
+   "P02"
+  ],
+  "runs": 3,
+  "wave": 3,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "lean",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 11,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 92,
+  "stability": 67.2,
+  "overall": 78.6,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 6,
+  "totalRuns": 6
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 3,
+   "usable": 6,
+   "quality": 92,
+   "stability": 65.2,
+   "overall": 77.4,
+   "grade": "C",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 84.1,
+  "median": 93.2,
+  "max": 95.5
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A reviewer can find each acceptance line of CH-0001 (top option) in the recording, because each line has its own captioned step.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Each step proves its acceptance line as a user meets the command. Thus, a reviewer can confirm the line from the frame alone.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 33.3,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "`visual.json` is a terminal script that anyone can record again from the project root, and the script ends with a step that runs all checks.",
+   "passRate": 91.7,
+   "stabilityWithin": 42.5,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R4",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The change folder holds `review.gif` and its frames from a successful recording of the final `visual.json`.",
+   "passRate": 100,
+   "stabilityWithin": 75,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": 90,
+   "classCross": "equivalent"
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run looks at the recorded frames itself before the commit, and the run records again when a frame is wrong.",
+   "passRate": 91.7,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run changes only the records of the visual review. The app, the checks, the specs, and the statuses stay as they were.",
+   "passRate": 100,
+   "stabilityWithin": 75,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The handoff to `/pdlc:verify` obeys the template. The handoff tells what the GIF shows, frame by frame, and gives the count of acceptance lines shown.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 33.3,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "One commit, `Visual review CH-0001`, holds all the files of the visual review, with the trailers `Intent`, `Change`, and `Review`.",
+   "passRate": 91.7,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": 90,
+   "classCross": "equivalent"
+  },
+  {
+   "id": "R9",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply tells the user that `/pdlc:verify` is next.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": 90,
+   "classCross": "equivalent"
+  },
+  {
+   "id": "R10",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user and the `verify` stage get a true account of the recording. Each claim in the final reply and in the handoff agrees with the files.",
+   "passRate": 91.7,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 3,
+   "quality": 93.9,
+   "stability": 60.9
+  },
+  {
+   "id": "P02",
+   "usableRuns": 3,
+   "quality": 90.2,
+   "stability": 69.5
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 90.9,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "\"caption\": \"JOB-report-word-frequencies.R8 · --top given twice: usage line, exit 2\""
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Frame 4: `--top 2 notes.txt` on `b a b c a b` prints `b 3` and `a 2`, with exit code 0."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "work=$(mktemp -d \"${TMPDIR:-/tmp}/wordfreq-show.XXXXXX\") || exit 1"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "It has 23 frames of the terminal recording, one for each step of visual.json."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I read the last frame of each acceptance line, and each frame shows what its caption says."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "I changed no app code and no check file."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Frames 12 to 19 give the same error and exit code 2."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "Commit: \"Visual review CH-0001\" on the branch `pdlc/CH-0001-top-option`."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:verify` for CH-0001 (top option)."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "The GIF shows 22 of 22 acceptance lines, and all 32 checks pass."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 95.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Frames 5 to 22 show JOB-report-word-frequencies.R7 (print only N words): 18 of 18 lines."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=\"$root\" python3 -m wordfreq \"$@\" >\"$out\" 2>\"$err\""
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "\"run\": \"python3 -m unittest discover -s tests\""
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Binary file, 990071 bytes, 24 frames."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I read each of the 24 frames. Each frame shows the result that its caption claims."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "All of these files are in `pdlc/changes/CH-0001-top-option/`."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Frames 12 to 20: these values of N give the `--top` error on standard error"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "The commit is \"Visual review CH-0001\", with the trailers `Intent`, `Change`, and `Review`."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:verify`."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "The GIF shows 22 of 22 acceptance lines, in 24 frames."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 95.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "\"caption\": \"JOB-report-word-frequencies.R8 · --top given twice: usage line, exit code 2\""
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "[sys.executable, \"-m\", \"wordfreq\", *sys.argv[1:]]"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "\"run\": \"python3 -m unittest discover -s tests; echo \\\"exit code: $?\\\"\""
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`review.gif` has 23 frames. It shows 22 of 22 acceptance lines in a terminal."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I read the last frame of each acceptance line. Each frame shows what its caption claims."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "This stage changed no app code and no check."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Frames 11 to 19 (R7): each bad N gives `error: --top needs a whole number greater than zero`"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "I committed the work on `pdlc/CH-0001-top-option` as \"Visual review CH-0001\" (751cede)."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "`/pdlc:verify` is next."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "The last frame runs all checks. 32 checks ran and all passed."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#1",
+   "prompt": "P02",
+   "repeat": 1,
+   "capture": "outputs/P02-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 84.1,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "The first 22 frames show 22 of the 22 acceptance lines"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "The command prints the sample file, the arguments that it ran, the standard output, the standard error, and the exit code."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "\"run\": \"python3 -m unittest discover -s tests\""
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`review.gif` has 23 frames."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "I read the last frame of each acceptance line"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "All files are in `pdlc/changes/CH-0001-top-option/`."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Frames 11 to 19: a bad N gives the `TOP_INVALID` error, empty standard output, and exit code 2."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "The commit is \"Visual review CH-0001\"."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "`/pdlc:verify` is next."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "I read the last frame of each acceptance line, and each frame shows what its caption says."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#2",
+   "prompt": "P02",
+   "repeat": 2,
+   "capture": "outputs/P02-r02.md",
+   "status": "completed",
+   "note": "Recording passed on the first run (23 frames, 22 of 22 acceptance lines, 32 checks pass) and the commit \"Visual review CH-0001\" was made. The worktree's .vet-capture/ and .claude/ files were left out of the Files section. An earlier turn was stopped by a safety classifier, and no tool call was lost.",
+   "quality": 95.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Frames 1 to 22 show 22 of 22 acceptance lines"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Frame 21: `--top 2 missing.txt` prints `error: cannot read missing.txt`. The exit code is 2."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "\"run\": \"python3 -m unittest discover -s tests\""
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`review.gif` has 23 frames."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I read each of the 23 frames."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "It holds `visual.json`, the helper `show_command.py` with its `samples/`, `review.gif`, `frames/`, and the new `handoff.md`."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Frames 12 to 19: the values `-1`, `abc`, `2.5`, `3.0`, `+3`, `1e2`, and `\"\"` (one frame for each)"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "The commit is \"Visual review CH-0001\" on the branch `pdlc/CH-0001-top-option`."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "`/pdlc:verify` is next."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "Frame 23 shows all 32 checks pass."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#3",
+   "prompt": "P02",
+   "repeat": 3,
+   "capture": "outputs/P02-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 90.9,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "`review.gif` shows 22 of 22 acceptance lines, in 23 frames."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Frame 21: `--top 2 missing.txt` gives `error: cannot read missing.txt` and exit code 2."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "\"run\": \"python3 -m unittest discover -s tests\""
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "It has 23 frames, one for each step of `visual.json`."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I read each frame."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "The GIF, the frames, `visual.json`, the helper `case.py`, and the handoff are in `pdlc/changes/CH-0001-top-option/`."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Frames 12 to 19 each give the same error and exit code 2."
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "The work is one commit after the tag `start`: `40cdd1c Visual review CH-0001`."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:verify`."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "`review.gif` shows 22 of 22 acceptance lines, in 23 frames."
+    }
+   ],
+   "excluded": null
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "All runs give each of the 22 lines its own step, with a full requirement ID and in spec order. P01#2 adds an intro step for the sample files that the other runs do not have.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3"
+     ],
+     "description": "22 acceptance steps, one for each line in change-spec order (R5 x3, R7 x18, R8 x1). Each caption starts with the full JOB-report-word-frequencies.Rn ID. No intro step. An all-checks step comes last."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "The same 22 captioned acceptance steps in the same order, but an extra first step captioned 'CH-0001' shows the sample files before the acceptance steps."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "Every run uses a wrapper that runs the real CLI with the arguments of each line and shows both streams and the exit code. The runs differ in how they supply the input and whether a frame shows it: in every frame, once in an intro frame, or never.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Shell helper show.sh takes the input text as an argument and writes notes.txt in a scratch folder. It echoes 'notes.txt holds: ...' in every frame, then runs python3 -m wordfreq and prints labelled stdout, stderr and the exit code."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Shell helper show-case.sh runs python3 -m wordfreq in a committed samples/ folder and echoes the command line. A separate first frame shows the contents of the sample files once. Each frame prints labelled stdout, stderr and the exit code."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Python helper wf.py runs python3 -m wordfreq by subprocess in a committed samples/ folder. It prints labelled stdout, stderr and the exit code. No frame shows the contents of the input files."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "P01#1 makes its inputs in a /tmp scratch folder and does not commit them. P01#2 and P01#3 commit sample files in the change folder. That is a material structural difference, and the helpers and last-step commands also differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "The helper makes inputs at run time in a mktemp folder under ${TMPDIR:-/tmp}, so the commit holds no input files. The last step is 'PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests'."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "The input files are committed in samples/. The shell helper uses mktemp temp files to capture output. The last step is a plain 'python3 -m unittest discover -s tests'. There is an extra step for the sample files."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "The input files are committed in samples/. The Python helper uses no temp paths. visual.json sets width and height. The last step is 'python3 -m unittest discover -s tests; echo \"exit code: $?\"'."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "minor_drift",
+   "reason": "Each run committed a GIF and frames whose count equals its step count. The frame count differs: 23 against 24.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3"
+     ],
+     "description": "review.gif and frames/01-23.png are committed in the change folder. There are 23 frames for the 23 steps of visual.json."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "review.gif and frames/01-24.png are committed in the change folder. There are 24 frames for the 24 steps, which include the intro sample-file step."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "All runs say they inspected the frames before the commit. P01#2 says it read every frame, while P01#1 and P01#3 say they read only the last frame of each acceptance line.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3"
+     ],
+     "description": "The run says that it read the last frame of each acceptance line and that each frame matches its caption. It does not say it read the all-checks frame. It reports no re-recording."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "The run says that it read all 24 frames and that each frame matches its caption. It reports no re-recording."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "The final file footprint is limited to the change folder in all runs. P01#3 also did a preliminary step on main, which the other runs do not report.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "All new and changed files are inside pdlc/changes/CH-0001-top-option/. The run reports no other branch activity."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "All new and changed files are inside the change folder. Before the work, the run also switched to main and ran record_merges.py, which found nothing to record."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "All three use the same title, a fresh time, the same section order and a 22-of-22 count. They differ in which frames they group in Done and in whether they replace or keep the Decided on defaults section.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Title 'show → verify', fresh Time, '22 of 22'. Done lists the frames mostly one by one but groups frames 12-19. Decided on defaults is replaced with 2 new show defaults."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Title 'show → verify', fresh Time, '22 acceptance lines out of 22'. Done groups frames 2-4, 5-6 and 12-20. Decided on defaults is replaced with 3 new show defaults."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Title 'show → verify', fresh Time, '22 of 22'. Done lists frames one by one with an (Rn) tag but groups frames 11-19. Decided on defaults keeps the old build-stage entry unchanged."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "Each run made one commit with the same subject on the change branch, and the commit holds all its visual-review files. Only P01#2 names the trailers in its reply.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "One commit 'Visual review CH-0001' on pdlc/CH-0001-top-option holds visual.json, the helper, any sample files, review.gif, frames and handoff.md."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "All three replies name /pdlc:verify as next. P01#3 says it in the first line and the others in the last line.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "The final reply names /pdlc:verify as the next step."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "All the counts and frame descriptions agree with visual.json in each run. The runs differ only in what they examined: P01#1 and P01#3 leave the all-checks frame unexamined and do not say so, while P01#2 says it read every frame.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3"
+     ],
+     "description": "Accurate counts: 23 frames, 22 of 22 lines, 32 checks, and frame ranges that match visual.json. The run says it read the last frame of each acceptance line and does not say that the all-checks frame was not examined."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Accurate counts: 24 frames, 22 of 22 lines, 32 tests, and frame ranges that match visual.json. The run says it read every frame, so no frame is left unexamined."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "All three runs have the same 22 steps in the same order, and each caption starts with the full ID. Runs 1 and 2 put the concrete expected output in each caption. Run 3 describes the cases in abstract words.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "22 acceptance steps in spec order (R5 x3, R7 x18, R8 x1) plus a checks step; each caption starts with the full JOB-report-word-frequencies.Rn ID and states the concrete expected output (e.g. 'b 3 and a 2', 'empty output, exit 2')"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Same 22 steps in the same order with full requirement IDs, but the captions describe each case abstractly ('the 2 top words', 'tied words at the cut: alphabetical order', 'all 3 words') and the R5 captions drop 'empty output'"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "All three runs wrap the real python3 -m wordfreq in a subprocess helper with Given-matching sample inputs, and each shows the exit code. Two details differ: whether the frame echoes the real command line, and whether the two-files line uses files that exist.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Helper run_case.py runs python3 -m wordfreq in samples/ and echoes 'runs: python3 -m wordfreq ARGS'; it prints the file contents, stdout, stderr and the exit code, and notes when a .txt file does not exist; a.txt and b.txt for the two-files line do not exist"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Helper show_command.py echoes 'samples$ python3 -m wordfreq ARGS' and prints the file contents, stdout, stderr and the exit code; it adds a.txt and b.txt as real sample files for the two-files line (a recorded default)"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Helper case.py prints the file contents, stdout, stderr and the exit code, but does not echo the python3 -m wordfreq command and prints nothing for a missing file; a.txt and b.txt do not exist"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R3",
+   "class": "minor_drift",
+   "reason": "All three runs make the same script: kind, title, relative paths, inputs in the change folder and a final all-checks step. Runs 1 and 2 set the terminal size, and run 3 omits it.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Terminal visual.json titled 'CH-0001 · Top option' with an explicit width/height (1200x640 or 1200x680); relative helper and samples paths in the change folder; no 'unchanged' flags; the last step runs python3 -m unittest discover -s tests"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Same terminal script, relative paths, helper and samples, and final unittest step, but with no width/height set"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R4",
+   "class": "equivalent",
+   "reason": "Each run commits review.gif and 23 frames that equal the 23 steps. Only the binary file sizes differ.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "review.gif plus frames/01.png to 23.png in the change folder; 23 frames match the 23 steps of the committed visual.json"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "All three runs report a frame inspection with no re-recording needed. Run 1 limits its claim to the last frame of each acceptance line. Runs 2 and 3 claim to have read all 23 frames.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "States that it read the last frame of each acceptance line (the 22 acceptance frames), not explicitly the checks frame, and that each matches its caption"
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "States that it read every one of the 23 frames and that each matches its caption"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R6",
+   "class": "equivalent",
+   "reason": "All three runs touch only the change folder. The helper names and sample files differ, but all of these files stay in the folder.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Every added or changed file is inside pdlc/changes/CH-0001-top-option/ (visual.json, helper, samples, GIF, frames, handoff); there is no change to the app, the tests, the specs or the status"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "All three runs follow the same template, title and count. The details differ: which frames are grouped in Done (11-19 vs 12-19), and the contents of Decided on defaults (none, three items or one item).",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "show → verify handoff with a fresh Time and six sections; Done lists frames one by one but groups frames 11-19 (all invalid N values) together; gives '22 of 22'; Decided on defaults is 'none'"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "show → verify handoff; Done has headed blocks for each requirement, with frame 11 alone and frames 12-19 grouped; gives '22 of 22'; Decided on defaults lists three assumed items (helper, samples folder, a.txt/b.txt exist); Next repeats the 22 of 22 count"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "show → verify handoff; Done has nested bullets, with frame 11 alone and frames 12-19 grouped; gives '22 of 22'; Decided on defaults lists one assumed item (the helper case.py); Don't redo adds a third bullet"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "Each run reports one commit with the same subject that holds all the review files. The captures do not show the trailers, and nothing visible differs.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "One commit 'Visual review CH-0001' on pdlc/CH-0001-top-option that holds visual.json, the helper, the samples, review.gif, the frames and handoff.md"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "All three replies name /pdlc:verify as next. They word it differently and put it in a different place in the reply.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "The final reply names /pdlc:verify as the next step"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "All three runs give accurate counts and accurate frame descriptions. Run 1 limits its inspection claim to the acceptance frames and does not name the checks frame as unexamined. Runs 2 and 3 claim a full inspection.",
+   "groups": [
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Counts agree with the files (22 of 22 lines, 23 frames, 32 checks); frame descriptions match visual.json; claims that all 23 frames were examined"
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Counts and frame descriptions agree with the files (22 of 22, 23 frames, 32 checks); says that only the last frame of each acceptance line was read, and does not name frame 23 as unexamined"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R3",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Terminal script with 23 steps. A shell helper (show.sh) writes each input text into a mktemp scratch folder, so no sample files are committed. Relative paths throughout. The last step runs the unittest discover command (with a PYTHONDONTWRITEBYTECODE prefix)."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Terminal script with 24 steps. The first step shows the committed samples/ files. A shell helper (show-case.sh) runs the command in samples/. Relative paths throughout. The last step runs the unittest discover command."
+    },
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Terminal script with 23 steps, plus width and height set. A Python helper (run_case.py or show_command.py) runs the command in a committed samples/ folder. Relative paths throughout. The last step runs the unittest discover command."
+    }
+   ],
+   "reason": "Every run writes a terminal visual.json with relative helper calls from the root and a last step that runs all checks. The details differ: shell helper versus Python helper, inputs made inline versus committed samples/, an extra step that shows the samples in P01#2, and width/height set only in the P02 runs.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R4",
+   "class": "equivalent",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "review.gif plus frames/01.png onward sit in the change folder, with one frame per visual.json step (23/23, 24/24, 23/23, 23/23). No capture shows the recorder command line."
+    }
+   ],
+   "reason": "All runs produce the GIF and the numbered frames in the change folder, and the frame count matches the step count. P01#2 has 24 frames only because its script has 24 steps.",
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R7",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P02#2"
+     ],
+     "description": "Title is show → verify, the Time line has a real ISO value, and the six sections are in template order. Done lists frames by requirement, one bullet per frame, except one bullet for the invalid-N error frames. Done says 22 of 22. Decided on defaults lists the assumed helper and sample choices."
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Same layout and per-frame list nested by requirement, with one grouped bullet for the error frames and 22 of 22 in Done. Decided on defaults says \"none\"."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Same title, time and sections, but Done is a flat list. It starts with a sample-files frame and groups more frames (frames 2 to 4 together, frames 5 and 6 together, frames 12 to 20 together). It gives counts per requirement (3 of 3, 1 of 1) plus 22 of 22. Decided on defaults lists three assumptions."
+    }
+   ],
+   "reason": "All handoffs share the title, the timestamp form, the six sections in order, the 22 of 22 count and a /pdlc:verify next step. They differ in how finely Done groups the frames, in whether Done gives counts per requirement, and in whether Decided on defaults lists assumptions or says none.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R8",
+   "class": "equivalent",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "One commit named \"Visual review CH-0001\" on the change branch holds visual.json, the helper, any samples, review.gif, the frames and handoff.md. Only P01#2 states the Intent/Change/Review trailers; the other captures do not show the trailers."
+    }
+   ],
+   "reason": "Every run makes a single commit with the same subject and the same set of review files. The only difference is how much of the commit message each capture reports.",
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R9",
+   "class": "equivalent",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P02#2"
+     ],
+     "description": "The final reply ends by naming /pdlc:verify as the next step."
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "The final reply names /pdlc:verify as next in its opening paragraph, and mentions it again at the end."
+    }
+   ],
+   "reason": "All runs name /pdlc:verify as the next step in the final reply. Only the position of that line differs.",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

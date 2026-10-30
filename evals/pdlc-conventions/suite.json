@@ -1,0 +1,172 @@
+{
+  "skill": "pdlc:conventions",
+  "skillPath": "/tmp/claude-0/-home-user-pskills/ea747940-d227-5dc6-8b7c-95df4abfb5bf/scratchpad/v030/plugins/pdlc/skills/conventions/SKILL.md",
+  "skillSha256": "658ac9e8061f0f30b104dd00a2fa432948d878c4c817561488d1c1a702893b5a",
+  "createdAt": "2026-10-26T20:24:35Z",
+  "structure": {
+    "summary": "Without `defaults`, the run is multi-turn. The first message names the subject and asks one question with two or three options. After the reply, the run writes the files, makes one commit, and ends with a short message. With `defaults`, the run asks no question and does all the work in one pass. The work is one design spec in `pdlc/specs/design/`, zero or more new intents in `pdlc/inbox/`, and one commit `Convention DES-<name>` on main.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "Without `defaults`, an opening message names the subject of the convention. It says in one or two sentences why the subject is important now. Then the message asks one question with two or three options. Each option has a short real example from this project. One option is marked as the recommendation, with a reason of one line. With `defaults`, the run asks no question and takes the recommended option."
+      },
+      {
+        "id": "S2",
+        "description": "The design spec. A new convention is a new file `pdlc/specs/design/DES-<name>.md` from the design template. The file has a heading `# DES-<name> · <few words>`, the line `Status: agreed · Default: no`, and the sections Rule, Example and Why. A changed convention is an edit of the existing spec. A spec that was a default gets `Default: no`."
+      },
+      {
+        "id": "S3",
+        "description": "Requirements for the check, when a check can test the convention. The spec gets a Requirements section with `DES-<name>.R1` and on, each with the status `proposed`. The run also adds one intent to build the check."
+      },
+      {
+        "id": "S4",
+        "description": "One migration intent for each job or capability whose code does not obey the convention. Each is a file `pdlc/inbox/IN-<4 digits>-<short-name>.md` from the intent template, with the name \"Migrate <spec> to <convention>\". Its \"What and why\" says what changed and links to the design spec. The intents are not started."
+      },
+      {
+        "id": "S5",
+        "description": "A closing message that tells the user how many intents the run added. The message also says that the user selects when each intent runs."
+      },
+      {
+        "id": "S6",
+        "description": "One commit on main with the subject `Convention DES-<name>`. After the commit, the working tree is clean."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "Before the run writes the convention, it names the subject and why the subject is important now. Then it asks one question. The question has two or three options, each with a real example from wordfreq, and one recommended option with a reason.",
+      "pass": "The first message to the user names the subject of the convention in one or two sentences. It says why the subject is important now. Then the message asks one question only, with two or three options.\n\nEach option shows a short example from this project. Examples are a real message such as `error: cannot read <path>`, a real function such as `count_words(text)`, or a real output line such as `the 3`. Exactly one option is marked as recommended, with a reason of one line. No file under `pdlc/specs/design/` changes before the first scripted reply.",
+      "partial": "The run asks before it writes, but one part is wrong. Each of these cases is a partial.\n\nThe subject or the reason is missing. There are four or more options. An option has no example, or an invented example. No option is recommended, or two options are. One message asks two questions.\n\nA run that writes the spec before the first reply is a miss.",
+      "appliesWhen": "the prompt does not start with `defaults`",
+      "source": "1. Tell the user what to decide; 2. Give options; README \"Asking questions\""
+    },
+    {
+      "id": "R2",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "With `defaults`, the run asks no question and takes its recommended option. It marks the choice as assumed in a file that the user can read.",
+      "pass": "The run does not stop to ask the user. The transcript or the closing message names the option that the run took. It also shows that this option is the recommendation of the run.\n\nA plain `(assumed)` marker records the choice, right after the words that it marks. The marker is in the design spec. Or the marker ends a line `<question> → <answer> (assumed)` in the Notes of an intent that the run added.",
+      "partial": "The run asks no question and takes the recommended option. But no file records the choice with `(assumed)`. Or the marker has a wrong form, such as `*(assumed)*` or `(format assumed)`.\n\nA run that asks the user and waits is a miss. A run that takes an option other than its recommendation is also a miss.",
+      "appliesWhen": "the prompt starts with `defaults`",
+      "source": "2. Give options: \"With defaults, use the recommended option\"; README \"Asking questions\""
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "The design spec has the form of the design template. A new spec is a new file in `pdlc/specs/design/`. A changed spec is the existing file, edited in place, with `Default: no`.",
+      "pass": "For a new convention, the run adds one file `pdlc/specs/design/DES-<name>.md`. The name is short, lowercase, and has dashes. The first line is `# DES-<name> · <few words>`. The next line is `Status: agreed · Default: no`.\n\nThe sections Rule, Example and Why have real content. No guide sentence of the template and no `<placeholder>` stays. A Requirements section is present only if it holds requirements.\n\nFor a changed convention, the run edits the existing file. The file keeps its ID and its name. `Default: yes` becomes `Default: no`. The other header fields, such as `Ask at init: no`, can stay. The run keeps each part of the old rule that the change does not replace, for example the table of error codes in DES-errors. The run adds no second spec for the same subject.",
+      "partial": "The spec is in `pdlc/specs/design/`, but one part is wrong. Each of these cases is a partial.\n\nA changed default still says `Default: yes`. A guide sentence stays. A section is missing. The header line has a different form. The run adds a new spec next to an existing spec for the same subject.",
+      "source": "3. Write the convention; templates/design.md"
+    },
+    {
+      "id": "R4",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The user gets a rule that a later stage can apply with no guess. The rule is the option that the user agreed to, or the recommended option with `defaults`.",
+      "pass": "The Rule section says what to do in exact words. It gives the exact prefix, format, stream, exit code, or type-hint rule. It also says which code or output the rule applies to.\n\nThe Example shows the convention on real wordfreq code or output. Examples are `wordfreq: cannot read notes.txt` and `def count_words(text: str) -> list[tuple[str, int]]`. The Why section gives a reason. The rule is the option that the transcript shows as the choice. The rule does what the prompt asks. No sentence in the spec contradicts the rule.",
+      "partial": "The rule matches the agreed option, but one part is weak. Each of these cases is a partial.\n\nThe scope is vague, as in \"errors must be clear\". The example is generic, and not from wordfreq. Old text in the spec contradicts the new rule.\n\nA missing rule is a miss. A rule that is different from the agreed option or from the request is also a miss.",
+      "source": "3. Write the convention; Purpose: \"keeps the software consistent\""
+    },
+    {
+      "id": "R5",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The user gets exactly one migration intent for each job or capability whose code breaks the agreed rule. Code that already obeys the rule gets no migration intent.",
+      "pass": "The fixture has these facts. JOB-report-word-frequencies (the wordfreq command) owns `wordfreq/cli.py`, `wordfreq/__main__.py` and `wordfreq/__init__.py`. `cli.py` prints `usage: wordfreq FILE` and `error: cannot read <path>` to standard error, and exits with code 2 for both. It prints each result to standard output as `word + \" \" + str(count)`. Its `main(argv=None, stdout=None, stderr=None)` has no type hints.\n\nCAP-word-counting (word counts) owns `wordfreq/counter.py`. Its `count_words(text)` prints nothing and has no type hints.\n\nThus, a rule for an error prefix breaks only the job, which gives one intent. A rule for type hints breaks the job and the capability, which gives two intents. A rule for numbers breaks the job only if the rule is different from plain `str(count)` digits. A rule that records the current streams and exit codes breaks nothing, which gives no intent.\n\nThe run passes when the specs with a migration intent are exactly the specs that the agreed rule breaks, with one intent for each spec. The intent to build a check (R10) does not count here.",
+      "partial": "The set is nearly right. Each of these cases is a partial.\n\nOne of two specs has no intent. One spec has two intents. One intent covers two specs.\n\nEach of these cases is a miss. The rule breaks some code, but the run adds no migration intent. The rule breaks no code, but the run adds a migration intent. The run names only a spec whose code already obeys.",
+      "source": "4. Add the migration intents: \"Find the jobs and capabilities whose code does not obey\""
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "Each intent that the run adds is a file from the intent template, in the form of the inbox-files adapter. Each migration intent has the name \"Migrate <spec> to <convention>\".",
+      "pass": "Each new intent is a file `pdlc/inbox/IN-<4 digits>-<short-name>.md`. The fixture inbox is empty, so the numbers start at IN-0001 and go up by one. The first line is `# IN-xxxx · <name>`. The header line has the fields of the template, with bare values and a real date. The fields are `Status`, `Ticket`, `Branch` and `Added`.\n\nThe name of a migration intent is \"Migrate <spec ID> to <DES ID>\", for example `Migrate JOB-report-word-frequencies to DES-errors`. Its \"What and why\" says what changed, and gives the path or a link of the design spec. The other sections of the template stay. No guide sentence of the template stays.",
+      "partial": "The intents are in `pdlc/inbox/`, but one part is wrong. Each of these cases is a partial.\n\nA number is out of order, or does not have four digits. A migration intent has a different form of name. \"What and why\" has no link to the design spec. A header value has brackets or backticks. A guide sentence stays.",
+      "appliesWhen": "the run adds at least one intent",
+      "source": "4. Add the migration intents; adapters/inbox-files.md; templates/intent.md"
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 3,
+      "criterion": "The run does not start the intents, and does not migrate any code. The user selects when each intent runs.",
+      "pass": "Each intent that the run adds has `Status: new` and `Branch: none`. The run makes no pdlc branch and no change folder. The run writes no requirement into a job spec or a capability spec.\n\nNo file outside `pdlc/` changes after `start`. Thus, `wordfreq/`, `tests/` and `README.md` stay the same. A new `Design:` line under \"Relies on\" in a job spec or a capability spec is permitted.",
+      "partial": "The run changes no file outside `pdlc/`, but it starts some work on an intent. For example, an intent has a status other than `new`. Or the run writes a requirement for the migration into a job spec or a capability spec.\n\nA change to app code, to a test, or to `README.md` is a miss. A branch for an intent is also a miss.",
+      "source": "4. \"Do not start these intents ... The user selects when each intent runs.\""
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "structureRef": "S6",
+      "weight": 2,
+      "criterion": "The run commits all its work on main, in one commit with the subject `Convention DES-<name>`.",
+      "pass": "After `start`, main has one new commit with the exact subject `Convention DES-<name>`. `DES-<name>` is the spec that the run wrote. The commit holds the design spec and each intent that the run added.\n\nThe commit changes only files in `pdlc/`, so it has no `Req` trailer. An `Intent` trailer is permitted. A `Record merges` commit from the script is also permitted. At the end, `git status --porcelain` shows nothing, and the run made no other branch.",
+      "partial": "The subject is correct, but one part is wrong. Each of these cases is a partial.\n\nThe work is in two or more commits. A file stays uncommitted. The commit has a `Req` trailer. The subject has a small difference, such as `Convention: DES-errors`.\n\nNo commit is a miss. A commit on a different branch is a miss. A different subject is also a miss.",
+      "source": "5. Finish: \"Commit with the message Convention DES-<name>\"; DES-pdlc-commit-trailers"
+    },
+    {
+      "id": "R9",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 2,
+      "criterion": "The closing message tells the user how many migration intents the run added. It also says that the user selects when each intent runs.",
+      "pass": "The last message names the design spec. It gives the number of migration intents. The number is the same as the number of migration intent files. When the number is zero, the message says that no migration intent was necessary.\n\nThe message gives the ID of each intent with a short description, or names the spec of each intent. It keeps the intent to build a check apart from the migration intents, or it counts all intents and says so. It says that the run did not start the intents, and that the user selects when each intent runs.",
+      "partial": "The message gives a number, but one part is wrong. Each of these cases is a partial.\n\nThe number does not match the files. The message counts the check intent as a migration intent, with no note. The message does not say that the user selects when each intent runs.\n\nA message with no number is a miss.",
+      "source": "4. \"Tell the user how many intents you added. The user selects when each intent runs.\""
+    },
+    {
+      "id": "R10",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "The design spec has requirements for the convention, with the status `proposed`. The run adds one intent to build the check.",
+      "pass": "A check can test each convention in these prompts. One example is a unittest that calls `wordfreq.cli.main` and reads its output. Another example is a unittest that reads the type hints with `inspect`.\n\nThus, the spec has a `## Requirements` section. Each requirement has a heading `### DES-<name>.R<n> · <short title>` and a line `Status: proposed · Intents: IN-xxxx`. It also has at least one Given, when, then line. The run adds one intent to build the check, apart from the migration intents. The `Intents:` value of each requirement names an intent that exists.",
+      "partial": "The spec has requirements, but one part is wrong. Each of these cases is a partial.\n\nA status is not `proposed`. The `Intents:` value names no real intent. The run adds no intent to build the check. The check is only a line in a migration intent.\n\nA spec with no requirements is a miss.",
+      "source": "3. \"If a check can examine the convention ... add requirements ... Mark the requirements proposed. Add an intent to build the check.\""
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "axis": "typical",
+      "prompt": "Change our errors convention, DES-errors. Each error message that wordfreq prints must start with `wordfreq: `. Then a user who runs wordfreq in a pipe with other tools can see which program failed.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state intake --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "A change to an existing default convention. It tests the question with examples, the edit of DES-errors to `Default: no`, one migration intent for the job only, the check requirements, and the commit.",
+      "replies": [
+        "Yes, use the option that you recommend.",
+        "Yes, go ahead."
+      ]
+    },
+    {
+      "id": "P02",
+      "axis": "new convention with defaults, terse",
+      "prompt": "defaults: set a convention for how numbers show in the output of wordfreq. No design spec covers this yet.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state intake --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "A new design spec from the template, with no question. It tests the `(assumed)` record of the choice, and migration intents that follow the chosen rule. Plain digits give no migration intent.",
+      "replies": []
+    },
+    {
+      "id": "P03",
+      "axis": "rich input, the rule breaks a job and a capability",
+      "prompt": "Add a convention for type hints. Give each function in the `wordfreq` package a type hint on each argument and on its return value. We will add more options soon, and I want the code typed before it grows. Use only the standard library: do not add mypy or any other dependency. The tests run with `python3 -m unittest discover -s tests`.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state intake --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "A new convention that JOB-report-word-frequencies and CAP-word-counting both break. It tests two migration intents, a check with only the standard library, and the count in the closing message.",
+      "replies": [
+        "Yes, use the option that you recommend.",
+        "Yes, go ahead."
+      ]
+    },
+    {
+      "id": "P04",
+      "axis": "edge: the code already obeys, defaults",
+      "prompt": "defaults: record what wordfreq does now with standard output, standard error and exit codes, as the convention for each future option. Do not change how wordfreq behaves.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state intake --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "exercises": "A convention that records the current behaviour. It tests no migration intent, a closing message that says zero, no change to app code, and the check requirements.",
+      "replies": []
+    }
+  ]
+}

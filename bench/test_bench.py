@@ -447,6 +447,23 @@ def writing_result(costs, findings, completed=True):
     return {"runs": runs}
 
 
+class CompletedTest(unittest.TestCase):
+    def run_with(self, checks):
+        return {"outcome": {"merge_check": checks}}
+
+    def test_an_intent_branch_with_no_output_does_not_count(self):
+        checks = {"pdlc/CH-0001-top-option": ["ok   CH-0001"], "pdlc/IN-0001-top-option": []}
+        self.assertTrue(run_bench.completed(self.run_with(checks)))
+
+    def test_a_failed_change_branch_is_not_complete(self):
+        checks = {"pdlc/CH-0001-top-option": ["FAIL CH-0001", "  - R4 is built, not verified"],
+                  "pdlc/IN-0001-top-option": []}
+        self.assertFalse(run_bench.completed(self.run_with(checks)))
+
+    def test_no_output_on_each_branch_is_not_complete(self):
+        self.assertFalse(run_bench.completed(self.run_with({"pdlc/IN-0001-top-option": []})))
+
+
 class WritingGateTest(unittest.TestCase):
     def test_fewer_findings_are_kept(self):
         baseline = writing_result(WRITING_COSTS, WRITING_FINDINGS)
@@ -878,6 +895,40 @@ class StageReplayTest(unittest.TestCase):
         project, _ = self.stage_project("verify", plugin)
         self.assertEqual(self.subject(project), "Upgrade pdlc")
         self.assertIn("A line that the test adds.", (project / "pdlc" / "README.md").read_text())
+
+    def prepare(self, state):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        with contextlib.redirect_stdout(io.StringIO()):
+            run_bench.main(["prepare", "--state", state, "--dest", str(folder / "app")])
+        return folder / "app"
+
+    def test_prepare_tags_the_start_of_each_state(self):
+        for state in run_bench.PREPARE_STATES:
+            with self.subTest(state=state):
+                project = self.prepare(state)
+                self.assertEqual(run_bench.git(project, "rev-parse", "start").stdout,
+                                 run_bench.git(project, "rev-parse", "HEAD").stdout)
+
+    def test_prepare_init_has_no_pdlc_folder(self):
+        self.assertFalse((self.prepare("init") / "pdlc").exists())
+
+    def test_prepare_done_is_at_the_proposal(self):
+        project = self.prepare("done")
+        head = "HEAD~1" if self.subject(project) == "Upgrade pdlc" else "HEAD"
+        self.assertTrue(self.subject(project, head).startswith("Propose CH-0001"))
+        self.assertEqual(run_bench.git(project, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip(),
+                         run_bench.CHANGE_BRANCH)
+
+    def test_prepare_board_sets_a_tracker_on_main_and_on_the_branch(self):
+        project = self.prepare("board")
+        for branch in ("main", run_bench.CHANGE_BRANCH):
+            with self.subTest(branch=branch):
+                config = run_bench.git(project, "show", branch + ":pdlc/config.md").stdout
+                self.assertIn("- tracker: tracker-github-projects", config)
+                self.assertIn("- status field: Status", config)
+        self.assertEqual(run_bench.git(project, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip(),
+                         run_bench.CHANGE_BRANCH)
 
     def test_check_stage_counts_the_writing_findings_of_the_stage(self):
         project, _ = self.stage_project("verify")

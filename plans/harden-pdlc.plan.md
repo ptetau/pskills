@@ -408,4 +408,29 @@ Fixes (Opus):
   (polls-api). One plan put a change before the change it depends on. Review follow-ups
   became intents that wait for approval (four in pocket-cli), as designed.
 - Not reviewed by Sonnet: main held no new work in either app.
+
+[2026-10-25] Second confirmation round (pdlc 0.2.2, master after PR #20 plus the round fixes)
+- pocket-cli: the first change merged. The second change stopped, because the compliance
+  review had no result. A packet run had omitted the compliance remit (review area).
+- polls-api: three of the five changes of one intent merged while the fourth change was
+  building. The merge check read "Intent: IN-0001 (poll-input-errors)" as the full value,
+  found no intent file, and skipped the check of the other changes. The builder also made
+  git worktrees and wrote files into the main checkout.
+- Fixes (pdlc 0.2.3): the scripts read the bare value of a header field. The merge check
+  fails when the intent is not in the inbox. `make_packets.py --verify` makes the packets
+  for each remit except tests. The project README forbids git worktrees.
+
+[2026-10-25] Third confirmation round (pdlc 0.2.3)
+- pocket-cli: all five changes of the first intent merged. The first change of the
+  second intent stopped: the store now writes a new key, and two locked checks of an
+  earlier job compared the saved file exactly. A store change cannot edit the checks of a
+  job, so ship stopped.
+- polls-api: nothing merged. The shared error shape went to the capability, but each job
+  owns its own replies. The second run moved the job replies back to the job specs. Then
+  the second change stopped: its checks read polls through a route that a later change
+  builds.
+- Probes on main: pocket-cli 1 of 14 (the probes test the final behaviour after all
+  three intents), polls-api 4 of 20.
+- Open: a check of a job must not compare the saved data of a capability, and a check
+  must use only the interfaces that exist at its place in the stack.
 ```

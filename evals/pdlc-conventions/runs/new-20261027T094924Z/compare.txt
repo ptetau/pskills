@@ -1,0 +1,15 @@
+Measure                                                         Baseline Candidate  Change
+quality                                                             96.0      95.6    -0.4
+stability                                                           61.2      60.8    -0.4
+overall                                                             76.6      76.2    -0.4
+R1 (weight 2) Before the run writes the convention, it names t      83.3     100.0   +16.7
+R2 (weight 2) With `defaults`, the run asks no question and ta     100.0     100.0    +0.0
+R3 (weight 2) The design spec has the form of the design templ     100.0     100.0    +0.0
+R4 (weight 3) The user gets a rule that a later stage can appl     100.0      91.7    -8.3
+R5 (weight 3) The user gets exactly one migration intent for e     100.0     100.0    +0.0
+R6 (weight 2) Each intent that the run adds is a file from the     100.0     100.0    +0.0
+R7 (weight 3) The run does not start the intents, and does not     100.0     100.0    +0.0
+R8 (weight 2) The run commits all its work on main, in one com     100.0     100.0    +0.0
+R9 (weight 2) The closing message tells the user how many migr      83.3      75.0    -8.3
+R10 (weight 2) The design spec has requirements for the conven      83.3      91.7    +8.4
+NO REGRESSION

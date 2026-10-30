@@ -9,6 +9,9 @@ languages, frameworks, and types of system.
 ## What you need
 
 - Claude Code.
+- A Sonnet 5.5 class model or above. On a lower model, for example a Haiku model, each
+  pdlc skill and agent does no work. The skill or agent tells you that pdlc needs a
+  Sonnet 5.5 class model or above.
 - A project in a git repository.
 
 ## 1. Add the marketplace
@@ -71,7 +74,8 @@ changes. `/pdlc:ship` stops only when it needs you. Or, do one stage at a time:
 /pdlc:intake <what you want>   change your words into spec changes
 /pdlc:ready        make vague items clear, and look for contradictions
 /pdlc:change       divide the work into changes, one job or capability each
-/pdlc:tests        a test writer writes the checks from the spec, then pdlc locks them
+/pdlc:acceptance   a test writer writes the checks of the intent, then pdlc locks them
+/pdlc:tests        a test writer writes the checks of a change, then pdlc locks them
 /pdlc:build        a builder writes code until the locked checks pass
 /pdlc:show         record a GIF of the change as it works
 /pdlc:verify       run the checks and the independent reviews, then propose the merge
@@ -137,6 +141,8 @@ script fails if one of these conditions is true:
 - The branch cannot merge into `main` without conflicts. The script tests this only when
   the checkout holds `main`.
 - Another change of the same intent is not ready to merge with this change.
+- The acceptance checks of the intent are not locked, not reviewed at the lock, or not
+  recorded as passing at its last change.
 
 Fetch `main` and each branch, so that the script can see them. In GitHub Actions, set
 `fetch-depth: 0`. If no change uses the branch, the script examines each change with the
@@ -147,7 +153,7 @@ status `in review`.
 The pdlc plugin includes a guard that keeps each agent to its own role:
 
 - The test writer cannot read app code.
-- The builder cannot change checks.
+- The builder cannot change checks. An acceptance file is a check too.
 - Each reviewer sees only its packet.
 
 To see each decision of the guard, start Claude Code with

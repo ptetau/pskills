@@ -27,6 +27,11 @@ An intent does not go directly to code. First, the intent becomes a change to th
   conventions: how we show a list, how we name files, how we write errors, and how we
   test.
 
+A behaviour can apply to more than one job, for example the shape of an error. That
+behaviour is in one spec only: the capability spec or design spec that those jobs use.
+The job specs do not repeat the behaviour. Thus, an intent touches few specs, and divides
+into few changes.
+
 When the specs are sufficiently clear to build from, pdlc writes a **change spec**. A
 change spec covers exactly one job or one capability. The change spec lists only these
 items:
@@ -35,20 +40,22 @@ items:
 - The other specs that the change relies on.
 - The files that the change must touch.
 
-First, a test writer writes the checks of the change from the spec. The test writer does
-not see the code. Then pdlc locks the checks. A builder writes the code, and the builder
-cannot touch the checks.
+First, a test writer writes the acceptance checks of the intent from the specs. These
+checks prove the intent as a user meets it, and they pass only when all its changes are
+built. Then, for each change, the test writer writes the component checks of the change.
+The test writer does not see the code. pdlc locks each set of checks. A builder writes the
+code, and the builder cannot touch the checks.
 
 When the code is complete, pdlc records the change as a GIF. Independent reviewers
 judge the change: one reviewer for each remit, and each reviewer sees only its packet.
 Then you approve the change. Only after these steps can the change merge.
 
 ```
- intent ─► spec patches ─► ready ─► change specs ─► tests ─► build ─► show ─► verify ─► merge
- (inbox)   (job/cap/design) (clarify, (one job or    (written  (builder, (GIF)  (checks +   (you
-                            contra-   cap each,       first,    can't            6 inde-     approve)
-                            dictions) stacked)        locked)   touch tests)     pendent
-                                                                                 reviews)
+ intent ─► spec patches ─► ready ─► change specs ─► acceptance ─► tests ─► build ─► show ─► verify ─► merge
+ (inbox)   (job/cap/design) (clarify, (one job or    (checks of   (written  (builder, (GIF)  (checks +   (you
+                            contra-   cap each,       the intent,  first,    can't            6 inde-     approve)
+                            dictions) stacked)        locked)      locked)   touch tests)     pendent
+                                                                                              reviews)
 ```
 
 ---
@@ -75,6 +82,9 @@ These rules are fixed. All other items are defaults that you can change.
    Intents link to tickets.
 8. **Plain prose everywhere.** Each skill, agent, prompt, and spec is short, simple, and
    clear. If you must read a sentence two times, write the sentence again.
+9. **A Sonnet 5.5 class model or above.** pdlc runs only on a Sonnet 5.5 class model or
+   above. On a lower model, for example a Haiku model, each skill and agent does no work.
+   The skill or agent tells the user that pdlc needs a Sonnet 5.5 class model or above.
 
 ---
 
@@ -93,6 +103,7 @@ pdlc/
     capabilities/       one file per capability
     design/             one file per convention, including pdlc's own defaults
   changes/              one change spec per milestone
+  acceptance/           the review of the acceptance checks of each intent
 ```
 
 All the files are in markdown. Git keeps the history of the files, together with the code
@@ -174,6 +185,7 @@ prove the requirement.
 - The requirements that the intent added or changed (the `intake` skill writes this
   list).
 - The changes that deliver the intent, in order (the `change` skill writes this list).
+- The acceptance checks: the file, the lock, and the commit at which the checks passed.
 
 ### Job, capability and design specs
 
@@ -214,7 +226,8 @@ simplified form of the `.plan.md` format that `/quiz-plan` uses.
 - **Files**: only the app files that this change is permitted to touch. These files come
   from the code map. The list names a shared file with the parts of this spec, and only
   those parts change.
-- **Check files**: the checks. Only the test writer is permitted to change these files.
+- **Check files**: the component checks. Only the test writer is permitted to change these
+  files.
 - **Tests-Locked**: the commit that locked the checks.
 - **Steps**: small steps. Each step gives the requirement that it serves and the test that
   proves it.
@@ -263,7 +276,7 @@ line exist?" and "what did IN-0012 change?"
 
 | Who | Sees | Writes | Never |
 |---|---|---|---|
-| test writer | the spec, the interface, existing checks | checks | reads app code |
+| test writer | the spec, the interface, existing checks | acceptance checks and component checks | reads app code |
 | builder | the spec, app code, the locked checks | app code | changes checks |
 | reviewer (one per remit) | only its packet | its result | sees another packet or result |
 
@@ -277,7 +290,8 @@ Each remit has one fresh reviewer. Each reviewer gets one packet, which `make_pa
 builds:
 
 - **tests**: the spec and the checks, but not the code. This review runs immediately
-  after the checks are locked, before the builder writes code.
+  after the checks are locked, before the builder writes code. The acceptance checks of an
+  intent get their own tests review, before the first change starts.
 - **specification, security, quality, compliance, privacy**: the spec and the code, but
   not the checks. These reviews run in parallel after the visual review. The
   specification reviewer also examines the frames of the GIF and the output of
@@ -285,11 +299,54 @@ builds:
 
 A reviewer fails a change only for what the spec of the change covers, or for unsafe
 code. Anything new that the reviewer wants (another input check, another error) is a
-follow-up for the user. A follow-up is not a reason to make the change bigger. Verify
-files each follow-up as a new intent that waits for your approval.
+follow-up for the user. A follow-up is not a reason to make the change bigger. The `verify`
+stage files each follow-up as a new intent that waits for your approval.
+
+The first review of a remit lists every problem that the reviewer can find. A later review
+of the same remit for the same change is a re-review. The packet of a re-review holds the
+earlier problems and the diff since the earlier review. For tests, the diff starts at the
+earlier lock. For each other remit, the diff starts at the commit of the earlier packet.
+
+The re-reviewer judges only two things: whether each earlier problem is fixed, and the
+material that changed. The re-reviewer does not raise a new problem on material that did
+not change. For example, after the first security review, the builder changes only
+`src/greet.js`. Then the second security review does not raise a new problem in
+`src/store.js`. Thus, a remit does not find new problems in old material round after
+round.
 
 The project can edit each remit in `pdlc/reviews/`. In `config.md`, the project selects
 which remits run.
+
+### Acceptance checks of an intent
+
+pdlc makes one change for each spec. But an honest acceptance check often needs a second
+feature of the same intent. For example, the check of `add` reads the result with `list`,
+and `list` comes in a later change. Thus, acceptance checks belong to the intent. These
+are the decisions, one on each line:
+
+- **What they prove:** each check proves one acceptance line through what a user uses, with any feature of the intent or any existing feature.
+- **No stored data:** an acceptance check does not read or write stored data directly, so a later change to the store does not break it.
+- **Where they live:** one file for each intent, at the "acceptance file" path of `config.md`, with "acceptance" and the intent ID in its name.
+- **How they run:** the "all" command skips that file, and a second command, "acceptance", runs given acceptance files.
+- **The checks port:** "run acceptance" runs the file of one intent, and "run earlier acceptance" runs the files of the other intents that passed.
+- **When they are written:** the acceptance stage runs after the change stage, and before the tests of the first change.
+- **Red first:** each acceptance check of new behaviour must fail before the lock, as each component check must.
+- **Where they are committed:** on the intent branch `pdlc/IN-xxxx-<name>`, under the first change, because they fail before the code exists.
+- **The lock:** the line `Acceptance-Locked: <hash>` in the "Acceptance checks" section of the intent records the lock.
+- **A later lock:** a correction after the first change is committed at the top of the stack of the intent, and gets a new lock and review.
+- **The review:** `make_packets.py IN-xxxx` makes one tests packet, and the tests remit judges it against the acceptance lines, with "Wrong versions".
+- **Build and verify:** each change runs all checks and the acceptance checks of each earlier intent that passed, and all of these must pass.
+- **The last change:** its `verify` stage also runs the acceptance checks of its own intent, and writes `Acceptance-Passed: <hash>` in the intent.
+- **The gate:** `check_merge.py` fails each change of the intent until the checks are locked, reviewed at the lock, and unchanged since the lock.
+- **The pass at the top:** the gate also reads `Acceptance-Passed:` on the branch of the last change, and only `pdlc/` files can change after it.
+- **Main stays green:** the "all" command skips acceptance files, and an intent joins "run earlier acceptance" only when its pass record merges.
+- **Regression:** after the intent merges, its acceptance checks stay, and each later change keeps them green.
+- **A changed requirement:** a later intent moves the old check of a changed requirement into its own acceptance file, and the review judges each move.
+- **Component checks:** the checks of a change test one spec through the interface of that change and of earlier changes only.
+- **Fixtures:** a component check can prepare state directly, for example with a fixture file, but reads results through the interface.
+- **The guard:** the guard treats an acceptance file as a check, so the test writer writes it and the builder cannot.
+- **Init:** recon proposes the path and the command, and init makes sure that the "all" command skips that path.
+- **Only retired requirements:** an intent that only retires requirements has nothing to prove, and keeps `Acceptance-Locked: none`.
 
 ### Visual review
 
@@ -308,13 +365,15 @@ the first three:
    ID, and those checks pass. The checks are written before the change. A check is
    usually an automated test. But a check can be anything that proves the requirement
    (see section 14).
-2. **Review passes.** A reviewer agent that did not write the code reads the change spec,
+2. **The acceptance checks of the intent pass.** They are locked and reviewed, and they
+   passed at the last change of the intent.
+3. **Review passes.** A reviewer agent that did not write the code reads the change spec,
    the diff, and the design specs. The reviewer agent examines these items:
    - The diff stays inside the files of the change, and inside its one job or capability.
    - The change meets each acceptance check, and the checks really prove this.
    - The change follows the design specs.
    - Each commit has its trace trailers.
-3. **You approve the merge.** You use your time for judgement, not for checklists.
+4. **You approve the merge.** You use your time for judgement, not for checklists.
 
 The changes of an intent merge together, with the bottom of the stack first. A change can
 merge only when each change of its intent is ready too. Thus, main does not get half a
@@ -366,7 +425,7 @@ to be the same in each project. Thus, these items are part of the core.
 
 A new adapter is only one more intent, for example "add a Linear tracker adapter". The
 spec of the adapter is a capability spec. Then pdlc builds the adapter against the port
-contract, and verifies the adapter as it verifies each other change. Each port contract
+contract, and runs `verify` on the adapter as on each other change. Each port contract
 has a short conformance check. Thus, pdlc tests each adapter in the same way.
 
 ---
@@ -471,8 +530,9 @@ pdlc is a Claude Code plugin. You call its skills as `/pdlc:<name>`.
 | `init` | Prepares pdlc in a project: folders, templates, recon, default conventions, and adapters. |
 | `intake` | Takes an intent from the inbox, and writes spec patches with `proposed` requirements. |
 | `ready` | Asks you about each unclear item (like `/quiz`). Looks for contradictions (like `/argue`). Then marks the requirements `ready`. |
-| `change` | Divides a ready intent into milestones, with one job or capability in each milestone. Writes a change spec for each milestone. |
-| `tests` | Tells the test writer to write the checks from the spec. Makes sure that the checks fail. Locks the checks, and gets a review of the checks. |
+| `change` | Divides a ready intent into milestones, with one job or capability in each milestone. Puts each milestone after the milestones that it needs. Writes a change spec for each milestone. |
+| `acceptance` | Tells the test writer to write the acceptance checks of the intent. Makes sure that the checks fail. Locks the checks on the intent branch, and gets a review of the checks. |
+| `tests` | Tells the test writer to write the component checks of a change from the spec. Makes sure that the checks fail. Locks the checks, and gets a review of the checks. |
 | `build` | Tells the builder to write app code until the locked checks pass. Marks the requirements `built`. |
 | `show` | Records the change as it works, as `review.gif` and frames. |
 | `verify` | Runs all the checks and the independent code reviews. Marks the requirements `verified`, and proposes the merge. |
@@ -486,6 +546,11 @@ pdlc is a Claude Code plugin. You call its skills as `/pdlc:<name>`.
 `/quiz-plan-execute`, and `/probe`, in that order. These three skills keep the ideas, and
 remove all the parts that pdlc does not need.
 
+Each skill is declarative. After its front matter, a `SKILL.md` has a title and four
+sections: Goal, Constraints, Inputs, and Outputs. A skill says what must be true, and the
+model decides how to get there. The `README.md` of the project holds the rules that all
+skills share, and a skill names the section of a shared rule.
+
 ### Agents
 
 | Agent | What it does |
@@ -494,6 +559,9 @@ remove all the parts that pdlc does not need.
 | `test-writer` | Writes checks from the spec only. Does not read app code. |
 | `builder` | Writes app code until the locked checks pass. Does not change checks. |
 | `reviewer` | Judges one packet for one remit. Sees nothing else. |
+
+Each agent has `model: inherit`, so that the agent runs on the model of the session. An
+agent on a model below the Sonnet 5.5 class does no work, and reports this.
 
 ---
 
@@ -509,14 +577,16 @@ You put "let users reset their password" into the inbox as `IN-0012`.
    requirements `ready`.
 3. **change** writes two milestones. `CH-0031` adds templates to `CAP-email`. `CH-0032`
    builds `JOB-reset-password`, and uses email but does not edit email.
-4. **build** completes `CH-0031` (email templates), test first. Each commit carries its
-   trailers.
-5. **verify** runs the checks and the reviewer. The checks and the review pass. Thus,
-   `CAP-email.R3` (send from a template) is `verified`, and a PR opens. You approve the
-   PR, and the PR merges.
-6. The same steps occur for `CH-0032` (the password reset job). When that change merges,
-   `IN-0012` (the password reset intent) is `done`, and the card on your board moves to
-   Done.
+4. **acceptance** writes the acceptance checks of `IN-0012` (the password reset intent).
+   One check asks for a reset, reads the email, and signs in with the new password. The
+   checks fail, and pdlc locks them on the branch of the intent.
+5. **build** completes `CH-0031` (email templates), test first. Each commit carries its
+   trailers. The acceptance checks of `IN-0012` still fail, as expected.
+6. **`verify`** runs the checks and the reviewer. The checks and the review pass. Thus,
+   `CAP-email.R3` (send from a template) is `verified`, and a PR opens.
+7. The same steps occur for `CH-0032` (the password reset job). Its `verify` stage also
+   runs the acceptance checks of `IN-0012`, and they pass. You approve the two PRs, and
+   they merge together. `IN-0012` is `done`, and the card on your board moves to Done.
 
 ---
 
@@ -570,7 +640,7 @@ pdlc.
   yet, the check is a `manual check`.
 - **pdlc manages changes to pdlc.** A change to pdlc is an intent like all other
   intents. For example, "add a Linear tracker adapter" becomes a capability change to
-  pdlc. The installed pdlc builds and verifies that change.
+  pdlc. The installed pdlc builds that change and runs its `verify` stage.
 
 ## 16. Before the first intent: design and blueprint
 
@@ -603,7 +673,8 @@ Four rules keep the chain consistent:
   `/pdlc:intake` again.
 - The blueprint has no IDs. Intake gives each requirement its pdlc ID.
 - The blueprint writes the mark `(assumed)` in plain form, with any reason outside the
-  brackets. The pdlc merge check accepts only that form.
+  brackets. The pdlc merge check accepts that form, and any other mark that starts with
+  `(assumed`.
 - `/decompose` and `/blueprint` use the master writing check. It has a reading grade of 7 and
   a glossary rule. pdlc has a smaller check, with four rules.
 

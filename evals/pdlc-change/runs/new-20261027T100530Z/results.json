@@ -1,0 +1,1331 @@
+{
+ "skill": "pdlc:change",
+ "skillSha256": "bfbce365a687d222126922f5e2d013754799acc9604ac7cdc9f0ea62bebdfa7f",
+ "suiteSha256": "1715fd2392defdb427881d2b6b4dd23f3d003c072882d56bf3541fff720811e7",
+ "runId": "new-20261027T100530Z",
+ "generatedAt": "2026-10-27T10:29:19Z",
+ "config": {
+  "prompts": [
+   "P01",
+   "P02"
+  ],
+  "runs": 3,
+  "wave": 3,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "lean",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 11,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 91.3,
+  "stability": 55.6,
+  "overall": 71.2,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 6,
+  "totalRuns": 6
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 3,
+   "usable": 6,
+   "quality": 91.3,
+   "stability": 57.4,
+   "overall": 72.4,
+   "grade": "C",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 84.8,
+  "median": 91.3,
+  "max": 95.7
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The change spec has the path, the header, and the sections of the template, and \"Relies on\" has the fixed entries.",
+   "passRate": 100,
+   "stabilityWithin": 80,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user gets one change for each spec of IN-0001 (the --top option), and these changes cover the intent exactly.",
+   "passRate": 100,
+   "stabilityWithin": 95,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The \"Requirements\" section copies each requirement of the change exactly, and copies nothing else.",
+   "passRate": 91.7,
+   "stabilityWithin": 62.5,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "identical"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A test writer who cannot see the code can write each check from the \"Interface\" section, through the command that the user runs.",
+   "passRate": 66.7,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 33.3,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "\"Files\" and \"Check files\" list only what this job change is permitted to touch.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical",
+    "P02": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The \"Steps\" section has one step for each requirement and a last step for the README, and \"Manual checks\" says \"none\".",
+   "passRate": 66.7,
+   "stabilityWithin": 0,
+   "classesWithin": {
+    "P01": "contradictory",
+    "P02": "contradictory"
+   },
+   "agreementWithin": 33.3,
+   "stabilityCross": 0,
+   "classCross": "contradictory"
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent file lists the changes and holds a new handoff for the acceptance stage.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run leaves one Plan commit on main and changes nothing else.",
+   "passRate": 100,
+   "stabilityWithin": 75,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R9",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The last message tells the user where the work stands and what to run next, and the message agrees with the files.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R10",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each decision that the run makes without an instruction is visible to the user, and with `defaults` the run asks no question.",
+   "passRate": 91.7,
+   "stabilityWithin": 12.5,
+   "classesWithin": {
+    "P01": "contradictory",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 3,
+   "quality": 89.9,
+   "stability": 49.3
+  },
+  {
+   "id": "P02",
+   "usableRuns": 3,
+   "quality": 92.8,
+   "stability": 65.4
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 84.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: planned · Ticket: none · Branch: none · Base: main"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "CH-0001 (top option) is the one change for IN-0001 (wordfreq top option)."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "then standard error is `usage: wordfreq FILE`. Standard output is empty, and the exit code is 2."
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "in: `FILE` is a path to a UTF-8 file. `--top N` is optional, and can come once only."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "CH-0001 (top option) lists `wordfreq/cli.py` and `README.md` in \"Files\"."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Check: `JOB_report_word_frequencies_R5` in `tests/test_JOB_report_word_frequencies.py`"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Handoff · IN-0001 · change → acceptance"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "I committed the plan as \"Plan IN-0001: top option\" on main."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:acceptance` for IN-0001 (wordfreq top option)."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "CH-0001 (top option) splits it into two sentences, and the job spec is not edited."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "outputs/P01-r02.md",
+   "status": "completed",
+   "note": "Completed. Plan committed on main in proj as c9ef723. A safety classifier interrupted one response mid-run; I resumed with plain commands and no work was lost.",
+   "quality": 95.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: planned · Ticket: none · Branch: none · Base: main"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "CH-0001 (top option) covers JOB-report-word-frequencies (report word frequencies). It holds R5 (usage line), R7 (print the N most common words), and R8 (one --top option only)."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R7 · Print only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`--top N` can come before or after `FILE`."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Check file: `tests/test_JOB_report_word_frequencies.py`."
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "- JOB-report-word-frequencies.R7 · the README line \"Each line has a word, a space, and the count.\" changes to cover `--top` · read the \"Use\" section of the README"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Handoff · IN-0001 · change → acceptance"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "committed it on main as `Plan IN-0001: top-option`"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:acceptance`."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "CH-0001: what is the short name of the change? → top-option, from the name of the intent (assumed)"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 89.1,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: planned · Ticket: none · Branch: none · Base: main"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "I planned one change for IN-0001 (top option): CH-0001 (top option). It covers R5 (usage line), R7 (print only N words), and R8 (one --top only)"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R7 · Print only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "Both give nothing on standard output and exit code 2."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Check file: `tests/test_JOB_report_word_frequencies.py`."
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "### Step 1 · Print only the N most common words · [ ]\n\n- Requirement: JOB-report-word-frequencies.R7"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Handoff · IN-0001 · change → acceptance"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "Plan IN-0001: top option"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "The next stage is `/pdlc:acceptance`."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "Order of the errors: the usage line comes first (assumed), then the `TOP_INVALID` error, then the file error."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#1",
+   "prompt": "P02",
+   "repeat": 1,
+   "capture": "outputs/P02-r01.md",
+   "status": "completed",
+   "note": "The skill asks no question, so the scripted reply \"skip\" was never used. The plan is committed on main in proj. check_writing.py flags one 27-word acceptance line in R5, copied exactly from the spec.",
+   "quality": 93.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: planned · Ticket: none · Branch: none · Base: main"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "CH-0001 (top option) covers R5 (usage line), R7 (print the top N words), and R8 (one --top option)."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R7 · Print only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "A file that cannot be read gives `error: cannot read <path>` and exit code 2."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "- wordfreq/cli.py\n- README.md\n\n## Check files\n\n- tests/test_JOB_report_word_frequencies.py"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "The README no longer shows the line \"Each line has a word, a space, and the count.\" as it stands. The README names each seam that a user can set. This change has none."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "+Handoff · IN-0001 · change → acceptance\n+Time: 2026-10-27T10:14:35+00:00"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "The plan is committed on main as \"Plan IN-0001: top-option\"."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:acceptance` to write the acceptance checks for IN-0001 (wordfreq top option)."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "### Decided on defaults\n \n-- see \"Notes\" of this intent\n+- none"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#2",
+   "prompt": "P02",
+   "repeat": 2,
+   "capture": "outputs/P02-r02.md",
+   "status": "completed",
+   "note": "The skill asks no question, so the scripted reply \"skip\" went unused. Committed on main in proj as \"Plan IN-0001: top-option\". The writing check still flags the third R5 acceptance line (27 words), copied verbatim from the spec.",
+   "quality": 89.1,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: planned · Ticket: none · Branch: none · Base: main"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "CH-0001 (top option) covers R5 (usage line), R7 (top N words), and R8 (one option only) of JOB-report-word-frequencies"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R7 · Print only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "out: standard output, standard error, and the exit code (0 or 2)."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "- wordfreq/cli.py\n- README.md\n\n## Check files\n\n- tests/test_JOB_report_word_frequencies.py"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "- JOB-report-word-frequencies.R7 · The README tells what `--top N` does and the error for a bad N · read the \"Use\" section of `README.md`"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "+Handoff · IN-0001 · change → acceptance\n+\n+Time: 2026-10-27T10:22:45+00:00"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "I committed the plan on main as \"Plan IN-0001: top-option\"."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I planned one change for IN-0001 (top option for wordfreq). `/pdlc:acceptance` is next."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "+- JOB-report-word-frequencies.R7: which fault wins when a command has more than one? → bad N first, then two `--top` options, then file count, then unreadable file (assumed)"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#3",
+   "prompt": "P02",
+   "repeat": 3,
+   "capture": "outputs/P02-r03.md",
+   "status": "completed",
+   "note": "The skill asked no question, so the scripted reply \"skip\" went unused. It planned CH-0001 and committed it on main in proj.",
+   "quality": 95.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: planned · Ticket: none · Branch: none · Base: main"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "CH-0001 covers R5 (usage line), R7 (print only N words), and R8 (one option only)."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R7 · Print only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "errors with no code in `DES-errors`: the usage line `usage: wordfreq FILE` and `error: cannot read <path>`. Each goes to standard error with exit code 2."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "- wordfreq/cli.py\n- README.md\n\n## Check files\n\n- tests/test_JOB_report_word_frequencies.py"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "- Steps: R7 (print only N words), then R8 (one option only), then R5 (usage line), then the README."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "+Handoff · IN-0001 · change → acceptance\n+\n+Time: 2026-10-27T10:20:12+00:00"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "I committed the plan on main as \"Plan IN-0001: top option\"."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "The next stage is `/pdlc:acceptance` for IN-0001 (wordfreq top option)."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "### Decided on defaults\n \n-- see \"Notes\" of this intent\n+- none"
+    }
+   ],
+   "excluded": null
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "The path, title, header, Tests-Locked line, section list and the four Relies on entries are the same in all three runs. P01#2 lists DES-errors second in Relies on, and P01#1 and P01#3 list it last, so the order of one list differs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "CH-0001-top-option/change.md, title '# CH-0001 · Top option', exact bare header plus 'Tests-Locked: none', the nine template sections with Test seams under Interface, and Relies on lists CAP-word-counting (used, not changed) and the three DES specs"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "equivalent",
+   "reason": "Each run plans the same single job change with the same three requirements and no capability change. Only the wording of the explanation differs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Exactly one change, CH-0001, scoped to JOB-report-word-frequencies, with R5, R7 and R8, and no capability change for CAP-word-counting"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "P01#1 chose to edit an acceptance line of R5 (usage line), and P01#2 and P01#3 explicitly chose to copy it as it is. The headings, the R7 and R8 lines, and the absence of Status lines are the same in all three runs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Copies the three requirements and all 18 R7 lines, but rewrites the third R5 line into two sentences ('... FILE`. Standard output is empty ...') to shorten it"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Copies the three requirements and all 18 R7 lines verbatim, with the 27-word R5 line kept as it stands in the spec"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "major_drift",
+   "reason": "All three runs give the command, its inputs, its output and the three errors with exit code 2, and all say there are no seams. P01#3 adds an assumed error order and a new-process rule that the other runs do not have. P01#2 splits the errors into their own entries and adds a trigger condition and a check order.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Command entry in __main__.py with inline in/out/errors (TOP_INVALID, usage line, cannot read, exit 2), plus untyped main(argv, stdout, stderr) in cli.py; a check can run the command or call main; seams none"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Command entry and typed main entry, plus separate entries for TOP_INVALID (with its trigger condition, and the value is checked before the file is read) and for the two uncoded errors; a check can call either; seams none with an io.StringIO note"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Intro says checks must drive the command in a new process; command entry with inline errors, typed main entry, plus an assumed error-order entry (usage line, then TOP_INVALID, then file error); seams none"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "identical",
+   "reason": "All three runs list the same two Files entries and the same check file, word for word.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Files: wordfreq/cli.py and README.md only; Check files: tests/test_JOB_report_word_frequencies.py"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "contradictory",
+   "reason": "The runs give incompatible answers for how the README is checked: an automated R7 check (P01#1), a manual check (P01#2), or no check at all (P01#3). Manual checks is 'none' in two runs and lists an item in P01#2. P01#3 also breaks the number order of the steps.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Steps R5, R7, R8 in number order with Check starting with the underscored ID; the README step names an R7 check that reads README.md; all four README conditions; Manual checks 'none'"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Steps R5, R7, R8 in number order with Check text 'the checks in the group JOB_..._RN'; the README step Check is 'manual check'; Manual checks lists the README line item"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Steps in the order R7, R5, R8 (not number order) with Check 'the checks in the class JOB_..._RN'; the README step says no check reads it; Manual checks 'None.'"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "All runs replace 'none yet' and write a change → acceptance handoff with a Time line and the six sections in order. The form of the Changes entry differs (name only, or a description and the requirements), and the content of the sections differs in details.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Changes entry is 'CH-0001 · Top option' (name only); handoff 'change → acceptance' with a Time line and the six sections, Decided on defaults 'none', Next tells acceptance to write checks via the command or main"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Changes entry is 'CH-0001 (top option): R5, R7, R8 ...' (description plus requirements); handoff 'change → acceptance' with a Time line and the six sections, a defaults entry, Next tells acceptance to write checks and gives interface notes"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "All runs report one Plan commit on main that touches only pdlc files. The change name in the subject is 'top option' in two runs and the slug 'top-option' in P01#2. The captures do not show the trailers.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3"
+     ],
+     "description": "One Plan commit on main with the subject 'Plan IN-0001: top option'; only the change folder and the intent change, and the intent status stays the same"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "One Plan commit on main with the subject 'Plan IN-0001: top-option' (the hyphenated slug); only the change folder and the intent change, and the intent status stays the same"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "minor_drift",
+   "reason": "Each message gives the one change with a description and names /pdlc:acceptance as the next step. The extra details differ: P01#3 lists the steps and an assumed error order, P01#2 lists the interface and a short-name default, and P01#1 lists the files and two open items.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Lists CH-0001 (top option) with its scope and requirements, names /pdlc:acceptance as the next step, and states the Plan commit and open items consistently with the files"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "contradictory",
+   "reason": "P01#3 decides the error order on defaults, but P01#1 and P01#2 list that same question as open. P01#1 reports no decisions, and P01#2 reports a different decision (the short name).",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "No (assumed) markers; Decided on defaults is 'none' and Notes get no entry; the bad-N-plus-wrong-file-count case is left as an open item"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Marks the short name 'top-option (assumed)' in the progress log, and lists it in Decided on defaults and in Notes in '<id>: <question> → <answer> (assumed)' form; the error-order question is left open"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Marks an assumed error order (usage line, then TOP_INVALID, then file error) in Interface, and lists it in Decided on defaults and in Notes in the arrow form"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R1",
+   "class": "identical",
+   "reason": "All three runs have the same path, title, header line, section list, and a byte-identical Relies on section.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Path CH-0001-top-option/change.md, title '# CH-0001 · Top option', the same bare header and Tests-Locked line, the nine template sections with Test seams under Interface, and Relies on with the four fixed entries"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R2",
+   "class": "identical",
+   "reason": "Each run plans one job change with the same three requirements and says that CAP-word-counting needs no change.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Exactly one change, CH-0001, scoped to JOB-report-word-frequencies, with R5, R7 and R8 and no capability change"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R3",
+   "class": "identical",
+   "reason": "The Requirements section is byte-identical in the three change specs.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "R5, R7 (all 18 lines) and R8 copied verbatim with spec headings, no Status line or description"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R4",
+   "class": "major_drift",
+   "reason": "P02#2 drops the output line format and adds a new fault-order rule. P02#3 names main's stream arguments as a test seam, where P02#1 says none.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Command entry in __main__.py with inputs, the '<word> <count>' output with exit 0, all three error texts with exit 2, plus main() in cli.py; Test seams is 'none'"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Command entry whose 'out' gives only streams and exit codes, not the '<word> <count>' line form; adds an assumed fault-precedence list that carries the usage and cannot-read texts; Test seams is 'None'"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Command and main() entries marked existing, with full output and error texts; Test seams lists clock, randomness and vendors as none, and names main's stdout/stderr parameters as a seam"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R5",
+   "class": "identical",
+   "reason": "All three runs list the same two files and the same check file.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Files lists wordfreq/cli.py and README.md; Check files lists tests/test_JOB_report_word_frequencies.py"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R6",
+   "class": "contradictory",
+   "reason": "The step order differs in each run. The README is checked by an automated check in P02#1, by a manual check in P02#2, and by no check in P02#3, so Manual checks says none in two runs and lists an item in one.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Steps in order R5, R7, R8, then README; the README step's Check is an automated readme check in the R7 group; Manual checks says none"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Steps in order R7, R5, R8, then README; the README step's Check is 'manual check', and Manual checks lists a README item"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Steps in order R7, R8, R5, then README; the README step's Check is 'none, no check reads it'; Manual checks says none"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "Every run has the same handoff structure with the acceptance stage next. The Changes line form, the Open and Look here items, and the Decided on defaults content differ in the details.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#3"
+     ],
+     "description": "Changes lists CH-0001 with its name and scope; handoff 'change → acceptance' with a Time line and six sections; Decided on defaults says none; Next tells acceptance to drive the command"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "The same handoff structure and next stage, but Changes lists the requirements and not the scope, Decided on defaults has one assumed entry, and Done and Open are longer bullet lists"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "The commit substance is the same in each run. The subjects say 'top-option' in two runs and 'top option' in one, and P02#3 has no body.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "One Plan commit on main that touches only the change folder and the intent file, with an Intent: IN-0001 trailer and no Req trailer; status stays ready, no new branch, clean tree"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R9",
+   "class": "minor_drift",
+   "reason": "All runs list the one change with a description and name /pdlc:acceptance next, which agrees with the files. The message order and the extra details differ.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#3"
+     ],
+     "description": "Lists CH-0001 (top option) with its requirements, a 'what it holds' list (interface, seams, files, steps, manual checks), the open items, and /pdlc:acceptance next"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Gives /pdlc:acceptance first, then CH-0001 with its files and check file, the assumed fault-order decision, and two attention items; no list of the interface or steps"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R10",
+   "class": "major_drift",
+   "reason": "P02#2 makes an assumed decision and records it in three places. P02#1 and P02#3 make no such decision and say none.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#3"
+     ],
+     "description": "No (assumed) markers in the change spec; Decided on defaults says none; no question asked"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "One assumed decision (the fault precedence order) marked '(assumed)' in Interface, listed in Decided on defaults in the arrow form, and recorded in the intent Notes; no question asked"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R1",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Path pdlc/changes/CH-0001-top-option/change.md, the same title, a bare header and Tests-Locked line, the nine template sections in template order with Test seams under Interface. Relies on lists CAP-word-counting (used, not changed), then DES-writing-style, DES-pdlc-check-tagging, DES-errors."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "The same path, header and nine sections in the same order. Relies on has the same four entries, but DES-errors comes before DES-writing-style and DES-pdlc-check-tagging."
+    }
+   ],
+   "reason": "All four runs have the same path, header, Tests-Locked line, section set and section order, and the same four Relies on entries. P01#2 puts the Relies on entries in a different order, and the Test seams and Progress log formats vary a little (P02#2 writes Test seams as a paragraph, not a bullet).",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R6",
+   "class": "contradictory",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P02#1"
+     ],
+     "description": "Steps 1-3 cover R5, R7, R8 in number order with underscored-ID checks. Step 4 (README) uses an automated R7 check that reads README.md, its Done when has all four conditions, and Manual checks says \"none\"."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Steps 1-3 cover R5, R7, R8 in number order. Step 4 (README) has Check `manual check`, its Done when has the four conditions, and Manual checks lists a README item, not \"none\"."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "The steps come in the order R7, R5, R8, not number order. Step 4 (README) has Check `manual check` and a bulleted Done when with the four conditions. Manual checks lists a README item."
+    }
+   ],
+   "reason": "Two runs prove the README step with an automated check and write \"none\" in Manual checks. The other two make the README a manual check and list it under Manual checks, which is the opposite choice. P02#2 also orders the steps R7, R5, R8 and does not keep number order.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R7",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P02#1"
+     ],
+     "description": "Changes lists CH-0001 (P01#1 as \"CH-0001 · Top option\", P02#1 with the job name). The handoff header \"change → acceptance\" comes with the Time line directly below it, then the six sections in order. Done is a paragraph, Decided on defaults is \"none\", and Next asks for acceptance checks with Interface notes."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Changes lists CH-0001 with its requirements. The header and Time line are split by a blank line, then the six sections in order. Done is a paragraph. Decided on defaults records an assumed short-name default, which is also added to Notes. Next asks for acceptance checks with Interface notes."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Changes lists CH-0001 with its requirements. The header and Time line are split by a blank line, then the six sections. Done is a bulleted list. Decided on defaults records an assumed fault-order default, which is also added to Notes. Next asks for acceptance checks on the intent branch."
+    }
+   ],
+   "reason": "Every run updates Changes and writes a change → acceptance handoff that has a Time line and the six sections in template order. The details differ: the format of the Changes entry, Done as a paragraph or as bullets, a blank line before Time, and whether Decided on defaults is \"none\" or lists an assumed default.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R8",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Reports one Plan commit on main with the subject \"Plan IN-0001: top option\" (with a space). Only the change folder and the intent file change, and the intent Status line does not change."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Reports one Plan commit on main with the subject \"Plan IN-0001: top-option\" (hyphenated short name). Only the change folder and the intent file change, and the intent Status line does not change."
+    }
+   ],
+   "reason": "All runs report one Plan commit on main that touches only the change folder and the intent file, and none changes the intent status. The change name in the subject differs: \"top option\" in P01#1 and \"top-option\" in the other three. The captures do not show the trailers, so those cannot be compared.",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

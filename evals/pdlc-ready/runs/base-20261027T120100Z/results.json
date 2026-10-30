@@ -1,0 +1,1392 @@
+{
+ "skill": "pdlc:ready",
+ "skillSha256": "c64c16bfe52abd853413c79022230e23f3db6e712f9969ffe08dafdc616a3206",
+ "suiteSha256": "82a346c92ed1e12832dd5eb1fbf52035ef20f1a8320aafc0238fe34244587e5b",
+ "runId": "base-20261027T120100Z",
+ "generatedAt": "2026-10-27T19:06:55Z",
+ "config": {
+  "prompts": [
+   "P01",
+   "P02"
+  ],
+  "runs": 3,
+  "wave": 3,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "lean",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 11,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 80.7,
+  "stability": 53.8,
+  "overall": 65.9,
+  "grade": "D",
+  "confidence": "normal",
+  "usableRuns": 6,
+  "totalRuns": 6
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 3,
+   "usable": 6,
+   "quality": 80.7,
+   "stability": 51.1,
+   "overall": 64.2,
+   "grade": "D",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 75,
+  "median": 78.4,
+  "max": 93.2
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user can go straight to the plan: at the end, IN-0001 (the --top option) and each of its requirements are `ready`.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "After the run, the specs give one result for each command line. This includes a bad N together with a wrong number of files or a second --top.",
+   "passRate": 91.7,
+   "stabilityWithin": 30,
+   "classesWithin": {
+    "P01": "contradictory",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A test writer can write each check of the intent with no guess. Each acceptance line has a concrete input and the exact output, and each failure line names an error code.",
+   "passRate": 58.3,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run asks the user only in the permitted form. Each message has one question, with two or three answers and one recommended answer. With `defaults`, the run asks nothing.",
+   "passRate": 100,
+   "stabilityWithin": 62.5,
+   "classesWithin": {
+    "P01": "identical",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R5",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "Each acceptance line and sentence that the run writes in a spec keeps the pdlc form.",
+   "passRate": 58.3,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent keeps a full record of this stage. The record is a new \"Handoff\" in the template form, and a line in \"Notes\" for each decision.",
+   "passRate": 91.7,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run ends in a commit on main with the subject `Ready IN-0001: wordfreq top option` and the trailer `Intent: IN-0001`.",
+   "passRate": 100,
+   "stabilityWithin": 75,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 83.4,
+   "stabilityCross": 90,
+   "classCross": "equivalent"
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The final reply gives the result first, then what changed. The reply says that `/pdlc:change` is next.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R9",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run examines the behaviour that the intent implies but does not state. The handoff holds the list of these items.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R10",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "When the run changes what a requirement does, no spec text still shows the old behaviour.",
+   "passRate": 66.7,
+   "stabilityWithin": 42.5,
+   "classesWithin": {
+    "P01": "major_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 66.7,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 3,
+   "quality": 76.5,
+   "stability": 50.2
+  },
+  {
+   "id": "P02",
+   "usableRuns": 3,
+   "quality": 84.8,
+   "stability": 52
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "outputs/P01-r01.md",
+   "status": "completed",
+   "note": "R5, R7 and R8 already showed `ready` and the intent was `specifying`. I re-checked them anyway and committed on main as a475a59.",
+   "quality": 75,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "+Status: ready · Ticket: none · Branch: none · Added: 2026-10-18 ... +- JOB-report-word-frequencies.R9: added ... ### JOB-report-word-frequencies.R9 · Order of the checks\n\nStatus: ready · Intents: IN-0001"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Given a file with `b a b c a b`, when the user runs `wordfreq --top abc --top 2 FILE`, then the command gives the usage error (`USAGE`)."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "Given the arguments `a.txt b.txt`, when the user runs `wordfreq a.txt b.txt`, then the command gives the usage error (`USAGE`)."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "IN-0001 (wordfreq top option) is `ready`. I committed the result on main as `Ready IN-0001: wordfreq top option`."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "then the command gives the usage error (`USAGE`). Standard error is `usage: wordfreq FILE`, standard output is empty, and the exit code is 2."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "IN-0001 · ready → change\n\nTime: 2026-10-27T12:09:27+00:00"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "I committed the result on main as `Ready IN-0001: wordfreq top option`."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "IN-0001 (wordfreq top option) is `ready`. ... Next: run `/pdlc:change` to plan the change."
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "JOB-report-word-frequencies.R7: can N have any number of digits? → yes, a very large N prints all words (assumed)"
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "If the number of files is not one, the command gives the usage error."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 77.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "+Status: ready · Ticket: none · Branch: none · Added: 2026-10-18"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Given a file with `b a b c a b`, when the user runs `wordfreq --top 0 --top 2 FILE`, then the result is `TOP_INVALID`, with exit code 2."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "Given any file, when the user runs `wordfreq --top -1 FILE`, then the result is `TOP_INVALID`, with exit code 2."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "IN-0001 (top option) is `ready`. `/pdlc:change` is next."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "then the result is `USAGE_INVALID`. Standard error is `usage: wordfreq FILE`, standard output is empty, and the exit code is 2."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Handoff · IN-0001 · ready → change\n\nTime: 2026-10-27T12:08:14+00:00"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "committed on main as \"Ready IN-0001: wordfreq top option\""
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "New code `USAGE_INVALID` in DES-errors (error codes), for the usage lines of R5 and R8."
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "Edge values of N: new lines for `00`, ` 3`, `1_0`, a full-width digit, and a very large N."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "If the number of files is not one, the command prints `usage: wordfreq FILE` to standard error (assumed)."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 77.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "IN-0001 (wordfreq top option) is now `ready`. Its three requirements are `ready`."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Given no file, when the user runs `wordfreq --top 0`, then the result is the `TOP_INVALID` error, with exit code 2."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "Given any file, when the user runs `wordfreq --top -1 FILE`, then the result is the `TOP_INVALID` error, with exit code 2."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "IN-0001 (wordfreq top option) is now `ready`. Its three requirements are `ready`. The next step is `/pdlc:change`."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "then standard error is `usage: wordfreq FILE` and the exit code is 2 (`USAGE_INVALID`). Standard output is empty."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Handoff · IN-0001 · ready → change\n\nTime: 2026-10-27T12:16:16+00:00"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "I committed the work as \"Ready IN-0001: wordfreq top option\"."
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "R1 is built and outside this intent, so I left it."
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "JOB-report-word-frequencies.R7: is there an upper limit for N? → no (assumed), because the intent says only \"greater than zero\""
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "If the number of files is not one, the command prints `usage: wordfreq FILE` to standard error (assumed) and nothing to standard output."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#1",
+   "prompt": "P02",
+   "repeat": 1,
+   "capture": "outputs/P02-r01.md",
+   "status": "completed",
+   "note": "The fixture's R5, R7 and R8 already said ready while IN-0001 said specifying, so I rechecked all three. The run used three of the five scripted replies; the fifth (\"Yes, go ahead.\") was never needed.",
+   "quality": 93.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "+Status: ready · Ticket: none · Branch: none · Added: 2026-10-18"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "when the user runs `wordfreq --top 0`, then standard error is `error: --top needs a whole number greater than zero`"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "when the user runs `wordfreq --top -1 FILE`, then standard error is `error: --top needs a whole number greater than zero` and the exit code is 2. The error code is `TOP_INVALID`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Recommended, because the intent shows only `--top N`, and A adds no new syntax."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "The error code is `USAGE_INVALID`. The command makes this check after the check of N in R7 (top option)."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "+Handoff · IN-0001 · ready → change"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "I committed the changes as \"Ready IN-0001: wordfreq top option\"."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "IN-0001 (wordfreq top option) is ready."
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "Ready added lines for the bad forms of N, a huge N, the order of the checks, and `--top=2`."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "The command checks the value of each `--top` first, as R7 (top option) says. Thus a bad value gives the `--top` error, not the usage line."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#2",
+   "prompt": "P02",
+   "repeat": 2,
+   "capture": "outputs/P02-r02.md",
+   "status": "completed",
+   "note": "The prepare command failed because proj already existed from an earlier attempt. I confirmed that proj matched a fresh prepare (same tree hash), and I used it.",
+   "quality": 79.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "+Status: ready · Ticket: none · Branch: none · Added: 2026-10-18"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "which error comes first when two things are wrong? → a bad N, then --top given more than one time, then the number of files, then the file read"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "when the user runs `wordfreq --top -1 FILE`, then the error is `TOP_INVALID` and the exit code is 2."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "A (recommended): only `--top` is an option. Every other argument is a file name, as now."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "If the user gives `--top` more than one time (assumed), the command gives the error `USAGE`."
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "DES-errors: new codes `USAGE` and `FILE_UNREADABLE`, for the usage line and for the unreadable file"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "I committed the changes as \"Ready IN-0001: wordfreq top option\"."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "IN-0001 (wordfreq top option) is `ready`."
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "R7 (top option) has no upper limit for N. Only `--top` is an option, and every other argument is a file name."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "- JOB-report-word-frequencies.R8: --top given twice → usage line, exit code 2 (assumed)"
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#3",
+   "prompt": "P02",
+   "repeat": 3,
+   "capture": "outputs/P02-r03.md",
+   "status": "completed",
+   "note": "Stale proj/, capture and scratch files from an earlier attempt were already in the worktree, so I moved them to .vet-scratch/previous-attempt/ and reran prepare on a clean proj. Three scripted replies were used. The fixture marked R5/R7/R8 ready already while the intent was still specifying, so I did the checks anyway.",
+   "quality": 81.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "+Status: ready · Ticket: none · Branch: none · Added: 2026-10-18"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "when the user runs `wordfreq --top abc`, then the error is `TOP_INVALID`, not `USAGE`."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "when the user runs `wordfreq --top 0 a.txt b.txt`, then the error is `TOP_INVALID`, not `USAGE`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "**A (recommended):** no. Only `--top 2` works. The intent writes `--top N` with a space."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "If the user gives `--top` more than one time and every N is valid, the command fails with `USAGE`."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "+Handoff · IN-0001 · ready → change"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "The commit is `7f95df0` (\"Ready IN-0001: wordfreq top option\")."
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "I added 17 lines. R5 has 4 lines, R7 has 31, and R8 has 4."
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "R7 (top N option) now has lines at the limits of N."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "A bad N comes first: R7 (top N option) gives its own error before `USAGE`."
+    }
+   ],
+   "excluded": null
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "Every run ends with the intent and all its requirements ready. P01#1 adds and lists a fourth requirement, R9 (order of the checks). The other two runs keep the three existing requirements.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Intent set to ready. A new requirement R9 (order of the checks) is added to the Requirements list with Intents: IN-0001 and Status: ready, next to R5, R7, R8."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Intent set to ready. No new requirement is added. R5, R7, R8 stay ready and the Requirements list is unchanged."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "contradictory",
+   "reason": "For a bad N together with a second --top, P01#1 gives the usage error, but P01#2 and P01#3 give TOP_INVALID. All three give TOP_INVALID for a bad N with no FILE.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "New R9 (order of the checks) puts a repeated --top first, then a bad N, then the file count. A bad N with no FILE gives TOP_INVALID, but `--top abc --top 2 FILE` gives the usage error."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "A bad N wins over the file count and over a repeated --top. Acceptance lines give TOP_INVALID for `--top` or `--top 0` with no file and for `--top 0 --top 2 FILE`, with a Notes line."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "Only P01#1 fixes the vague 'any file' givens. P01#2 leaves one failure line without a code and adds no read-error code, while P01#3 codes every line.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Replaces every 'Given any file' with concrete content (`b a b c a b`). Adds USAGE and FILE_UNREADABLE to DES-errors and names a code on each failure line. The 'then' refers to a named error ('the --top error (TOP_INVALID)') and does not repeat the exact text."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Keeps 'Given any file'. Adds only USAGE_INVALID. The 'then' gives a code but no exact text, and the missing.txt read-error line names no code."
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Keeps 'Given any file'. Adds USAGE_INVALID and FILE_UNREADABLE, so each failure line names a code. The 'then' says 'the TOP_INVALID error' with no exact text."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "identical",
+   "reason": "All three runs ask nothing and finish in a single message with no wait.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "With defaults, no question is asked. The run goes to the end in one final message."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "The three runs share the same pattern: the form is kept, but many acceptance lines run to two sentences. How often this happens, and which lines it affects, differs from run to run.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "New lines are mostly Given/when/then with plain (assumed) markers and described IDs. Many acceptance lines add a second sentence after the 'then' (stderr, stdout or exit code)."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "All runs write the same six-section handoff with a Time line and Notes entries. The title form differs in P01#1, and the number of listed decisions varies (4, 6 or 7).",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "New handoff titled 'IN-0001 · ready → change' (no 'Handoff ·' prefix), with a Time line and the six sections in order. Decided on defaults lists six (assumed) decisions plus a pointer to the intake Notes, and each decision has a Notes line."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "New handoff titled 'Handoff · IN-0001 · ready → change', with a Time line and the six sections in order. Decided on defaults lists this run's (assumed) decisions, each matched by a Notes line."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "Each run reports the same commit subject on main, and each changes only the intent, the job spec and DES-errors.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Commits on main as 'Ready IN-0001: wordfreq top option'. The diffs change only files under pdlc/inbox/ and pdlc/specs/."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "Every reply leads with ready and lists the changes and defaults. The place of the /pdlc:change pointer differs, and P01#2 names R5 and R8 once without a description.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Gives the result first, then the changes, the defaults and the open item. '/pdlc:change' comes last, as 'Next:'."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Gives the result first and names /pdlc:change as next in the opening lines. Then come the changes, the defaults and the open items."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "minor_drift",
+   "reason": "All runs examine similar edge cases and settle the very large N with an acceptance line. The exact items differ: P01#1 has --to and 5,000 nines, P01#2 has 00, 1_0 and a full-width digit, P01#3 has three or more --top. P01#2 records the large N only in Done.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Records specific implied-behaviour decisions (form of N, --top=2, which argument is N, order of errors, repeats) in Notes and the handoff, plus an acceptance line for a 20-digit N. Gives no category-by-category list."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "major_drift",
+   "reason": "P01#1 moves the changed behaviour into a separate new requirement and moves the old lines there. P01#2 and P01#3 change R7 and R8 in place.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Moves the order of the checks into a new R9 (order of the checks) and moves the matching Notes line and acceptance lines there. The R5 sentence states no exception, and R8 points to the R5 usage error."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Puts the 'bad N wins' order in R7 (top option), with a cross-reference in R8 (one option only). The R5 sentence keeps its plain rule with no exception noted."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "All three runs end with the intent and its requirements ready. P02#2 also adds R6 to the intent's scope and marks it ready. The other two leave R6 as built.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#3"
+     ],
+     "description": "Intent set to ready. R5, R7 and R8 stay ready. The Requirements list is unchanged and R6 stays built."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Intent set to ready. R6 (unreadable file) is also pulled in: it is added to the Requirements list as changed and set to ready with Intents: IN-0001, next to R5, R7 and R8."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "In all three runs the specs give the --top error for both conflict cases, with acceptance lines and Notes lines. P02#1 and P02#2 put the choice to the user. P02#3 decides it itself.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Asks the user which error comes first and recommends the --top error. Adds acceptance lines for a bad N with no file and a bad N with a second --top, and records the user's choice in Notes."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Settles the order without asking ('the newest words of the intent win'). Adds the same kinds of acceptance lines (--top abc with no file, --top 0 --top 2 FILE) and was/now lines in Notes. The R8 condition is marked (assumed)."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "P02#1 writes the exact message in every failure line. P02#2 and P02#3 drop the message from most R7 failure lines and keep only the code. The code names also differ (USAGE_INVALID against USAGE).",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Replaces each 'any file' with a concrete file. Each failure line gives the full stderr text, the exit code and a code. Adds the codes USAGE_INVALID and FILE_UNREADABLE to DES-errors."
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Replaces 'any file' with a concrete file and adds the codes USAGE and FILE_UNREADABLE. Most R7 failure lines give only the code and the exit code, with no exact stderr text. P02#3 also drops the exit code on a few lines."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R4",
+   "class": "major_drift",
+   "reason": "All three runs keep the permitted form. But they ask different sets of questions: 3, 5 and 3 questions on different topics. Only some runs ask about the order of the checks, the error codes, or the size of N.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Three questions, one per message, each with two options and a recommended option with a reason: --top=3 form, invalid UTF-8, then the R5/R7 contradiction."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Five questions, one per message, with two or three options and a recommended option each: order of errors, other hyphen arguments, error codes, size of N, invalid UTF-8."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Three questions, one per message, each with two options and a recommended option with a reason: error codes, --top=2 form, invalid UTF-8."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "All three runs use the same sentence style and add (assumed) markers. They differ in how many acceptance lines break into two sentences. P02#1 adds a second sentence to every failure line.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Short requirement sentences with described IDs. Every new failure acceptance line ends with an extra sentence ('The error code is ...'), so most lines are two sentences."
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Short requirement sentences with described IDs. The R5 and R8 lines are two sentences ('then the error is X. Standard error is ...'). The short R7 failure lines are one sentence."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "All three runs have the same handoff structure and Notes lines. The contents of Decided on defaults differ. P02#2 and P02#3 add a pointer to intake's assumptions, and P02#1 does not.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "New handoff with the 'ready → change' title, a Time line and six sections. Decided on defaults lists one (assumed) item (the code names). Notes has a line for each user decision."
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "New handoff with the title, a Time line and six sections. Decided on defaults lists two (assumed) items, one of them 'the value of --top is the next argument', plus a pointer line to intake's assumptions in Notes. Notes has a line for each decision."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "All three runs have the same subject, trailer, file set and clean status. P02#1 adds a body paragraph that the other two do not have.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "One commit on main with the exact subject, a body paragraph, then the trailer Intent: IN-0001. Only pdlc/inbox and pdlc/specs files change, and the tree is clean."
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "One commit on main with the exact subject and the trailer Intent: IN-0001, with no body. Only pdlc/inbox and pdlc/specs files change, and the tree is clean."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "All three runs give the result, the changes and the next step. P02#2 and P02#3 open with the echo of the last answer, not with the result. The place of the next-step line and the ID descriptions also differ.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "The final message opens with 'IN-0001 is ready' and names /pdlc:change in the first paragraph. Then it lists the answers, the spec changes and the open items."
+    },
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "The final message first repeats the last answer and says 'I will now write...'. Then it says IN-0001 is ready, lists what changed, the assumed details and the open items, and names /pdlc:change. P02#3 leaves a few IDs with no description."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R9",
+   "class": "minor_drift",
+   "reason": "All three runs cover a very large N with an acceptance line, and none gives a list by kind. They differ in whether the user was asked, in the example N, and in whether Notes records the decision.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Decides on its own that N has no largest value. A Notes line and an acceptance line cover the 20-digit N. Handoff Done mentions the bad forms and a huge N, with no list by kind."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Asks the user how large N can be. A Notes line and an acceptance line cover an N of 5,000 nines. No list by kind."
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Decides on its own, with an acceptance line for the 20-digit N and a 'however large N is' clause. No Notes line for it. Handoff Done lists the limits and bad forms of N, with no list by kind."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1
+    ],
+    "agreement": 33.3,
+    "split": "1 / 1 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "All three runs update R5 and R8 for the new check order. P02#2 uses a numbered order list in R7 and leaves the old R8 line in Notes unchanged.",
+   "groups": [
+    {
+     "runs": [
+      "P02#1",
+      "P02#3"
+     ],
+     "description": "Puts the bad-N exception into the sentences of R5, R7 and R8 and updates the R8 line in Notes. Adds Notes lines for the new order."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Adds a numbered check order to R7, with cross-references in R5 and R8. Replaces the old R7 Notes line with an order line, but the R8 line in Notes still says only 'usage line'."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R4",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Defaults run. It asks no question and goes to the end in one message, with each default marked (assumed)."
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Asks 3 numbered questions ('Question N of 3'), one for each message. Each has A/B options with 'Recommended, because …' at the end of the option and a 'skip' line. The contradiction is asked as 'Which requirement do you want to change?'"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Asks 5 bold numbered questions, one for each message. The options are A/B, A/B/C or yes/no, with '(recommended)' in the label and a reason. One question recommends B. The contradiction is asked as an ordinary 'which error comes first' question."
+    }
+   ],
+   "reason": "All runs keep the permitted form: no questions with defaults, and one question for each message with a recommended answer and a reason without defaults. The two interactive runs differ in the number of questions (3 or 5), in where the recommendation marker goes, in the option sets (A/B only, or A/B/C and yes/no), and in how they frame the contradiction.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R5",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Adds named concepts ('the usage error', 'the --top error'). Lines read 'then the command gives the X error (`CODE`).', and only the first line adds a second sentence with the full output. Adds a new R9 (order of checks) as a numbered list. Every guess is marked (assumed)."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P02#2"
+     ],
+     "description": "Lines read 'then the result/error is `CODE`.', often with a second sentence that gives stderr, stdout and the exit code. Guesses are marked (assumed). P01#2 puts the order of checks in prose, and P02#2 puts it in a numbered list inside R7 (top option)."
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Each line gives the full error message and then a second sentence 'The error code is `CODE`.' The order of checks is in prose. One guessed detail ('N has no largest value') has no (assumed) marker."
+    }
+   ],
+   "reason": "All runs write Given/when/then lines that often run past one sentence, and all describe IDs in brackets. Where the code goes in a line, how the order of checks is written (prose, a numbered list, or a new requirement), and whether every guess has its marker all differ between runs.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R6",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "The title is 'IN-0001 · ready → change' with no 'Handoff ·' prefix. 'Done' is in paragraphs. 'Decided on defaults' lists all 6 (assumed) decisions of this run and adds a pointer to the intake decisions in Notes. One existing Note moves from R7 to the new R9."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P02#2"
+     ],
+     "description": "The title is 'Handoff · IN-0001 · ready → change', with an ISO Time line. 'Done' is bullets (P02#2 adds a lead paragraph). 'Decided on defaults' lists this run's (assumed) decisions and a pointer to the earlier decisions in Notes. Each decision has a matching Notes line."
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "The title has the 'Handoff ·' prefix and there is an ISO Time line. 'Done' is bullets. 'Decided on defaults' lists only the one (assumed) decision (the code names), with no pointer. The Notes lines for user decisions carry an added '(the user took the recommended answer)' suffix."
+    }
+   ],
+   "reason": "Every run replaces the handoff with a ready → change title, a Time line and the six sections in order, and adds Notes lines for its decisions. The title prefix, the format of 'Done', the pointer to the intake decisions, and how user decisions are annotated in Notes differ.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R7",
+   "class": "equivalent",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P02#1",
+      "P02#2"
+     ],
+     "description": "Each run reports a commit on main with the subject 'Ready IN-0001: wordfreq top option'. Each changes only pdlc/inbox/IN-0001 and files under pdlc/specs/ (the job spec and DES-errors)."
+    }
+   ],
+   "reason": "All runs land on the same commit subject and the same set of changed files under pdlc/specs/ and pdlc/inbox/, and only the wording of the commit report differs. The captures show no trailer or git log, so no run differs on what can be seen.",
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R8",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Opens with the ready result and the commit. Then come bullets for the changes and for the defaults taken, a no-contradiction line, the open item, and 'Next: run /pdlc:change' at the end."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Opens with the ready result and '/pdlc:change is next' together. Then come bullets for the changes and the defaults, and a 'Not built' note. Some IDs (R5, R8) have no description."
+    },
+    {
+     "runs": [
+      "P02#1"
+     ],
+     "description": "Opens with the ready result, the commit and 'Run /pdlc:change next' in one paragraph. Then come headed lists for 'Your answers', 'What I changed in the specs' and 'Open items'."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "The last message opens by echoing the last answer ('Decided: …') before it gives the ready result. Then come the changes, the defaults decided without asking, and the open item, with '/pdlc:change is next' at the end."
+    }
+   ],
+   "reason": "All runs give the ready result, the spec changes, the decisions and the /pdlc:change next step. Where the next step goes (top or end), the order of the sections, whether the message starts with the result, and whether every ID has a description differ.",
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

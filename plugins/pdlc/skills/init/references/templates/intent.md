@@ -2,6 +2,10 @@
 
 Status: new · Ticket: none · Branch: none · Added: YYYY-MM-DD
 
+The pdlc scripts read each header field. Thus, a header field holds only its bare value.
+Do not add a name in brackets, and do not add backticks. For example, write
+`Branch: pdlc/IN-0001-reset`, not `Branch: pdlc/IN-0001-reset (the intent branch)`.
+
 ## What and why
 
 Write what you want to be true, and why, in your own words. A few sentences are
@@ -20,6 +24,16 @@ The change stage writes this section. The section lists the changes that deliver
 intent, in order.
 
 - none yet
+
+## Acceptance checks
+
+Acceptance-File: none
+Acceptance-Locked: none
+Acceptance-Passed: none
+
+The acceptance stage writes the path of the file and the lock. The `verify` stage of the
+last change writes the commit at which the checks passed. Each line holds only a bare
+value: a path, a commit hash, or `none`.
 
 ## Notes
 

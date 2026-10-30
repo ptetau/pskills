@@ -15,6 +15,12 @@ out of how many. Give each requirement a short description next to its ID, as in
 | Requirement | Checks | Result |
 |---|---|---|
 
+## Acceptance checks of the intent
+
+The acceptance file, its lock, and its review result. For the last change of the intent,
+also the commit at which the acceptance checks passed. For an earlier change, write that
+the checks pass at the last change.
+
 ## Reviews
 
 | Remit | Result |

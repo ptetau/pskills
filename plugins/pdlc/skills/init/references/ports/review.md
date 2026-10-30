@@ -8,7 +8,9 @@ each reviewer sees only its packet.
 - **review**: the input is a change and a list of remits. Build one packet for each remit.
   Give each packet to a separate, fresh reviewer to judge. Return the result of each
   remit: pass or fail, and its problems. Each result goes into
-  `review/<remit>/result.md` in the change folder.
+  `review/<remit>/result.md` in the change folder. A re-review (a later review of the same
+  remit) judges only whether the earlier problems are fixed, and what changed since the
+  earlier review.
 
 ## Remits
 
@@ -18,6 +20,10 @@ In `pdlc/config.md`, the project selects which remits run.
 
 The tests packet holds the spec and the checks, but not the code. Each other packet holds
 the spec and the code, but not the checks.
+
+The acceptance checks of an intent get one review, with the tests remit. Its packet holds
+the intent, its requirements, the interface of each of its changes, and the acceptance
+file. Its result goes into `pdlc/acceptance/<intent>/review/tests/result.md`.
 
 ## Success
 

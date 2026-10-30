@@ -1,62 +1,53 @@
 ---
 name: conventions
 description: >
-  Makes or changes a pdlc convention together with the user. Writes the agreed convention
-  as a design spec. When an existing convention changes, adds one migration intent for
-  each job or capability that the change has an effect on. Use when the user says
+  Makes or changes a pdlc convention together with the user, and writes it as a design
+  spec. When an existing convention changes, adds one migration intent for each job or
+  capability that the change has an effect on. Use when the user says
   "/pdlc:conventions", or wants to set or change how the project does a thing everywhere.
   Also use when a different pdlc skill finds a missing convention.
 ---
 
 # pdlc conventions
 
-This skill keeps the software consistent. The skill writes each convention, and gets the
-agreement of the user for each convention. The skill does not change a convention before
-it asks the user.
+## Goal
 
-Read `pdlc/README.md` first. Obey the instructions in that file, and start with its
-"Before any work" step.
+Conventions keeps the software consistent. Each convention is a design spec that the user
+agreed, and the code that does not obey it gets a migration intent.
 
-## 1. Tell the user what to decide
+## Constraints
 
-In one or two sentences, tell the user the subject of the convention, and why the
-convention is important now. For example: "This is the first table in the app. How do you
-want tables to sort and page?"
+- The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first. Each question
+  obeys "Questions".
+- No convention changes before the user agrees.
+- The user first hears the subject of the convention, and why it is important now, in one
+  or two sentences. For example: "This is the first table in the app. How do you want
+  tables to sort and page?"
+- The two or three options come from the current method in the code. Each option has a
+  short real example from this project, when one exists. The recommended option has one
+  line on why. With `defaults`, the skill takes it and does not ask.
+- A new convention is `pdlc/specs/design/DES-<name>.md` from the design template. A
+  changed convention edits its design spec, and a default gets `Default: no`.
+- A convention that a check can examine (for example, a lint rule) gets `proposed`
+  requirements, and an intent to build the check.
+- Code that does not obey the agreed convention occurs when a convention changes. It also
+  occurs when a new convention records a thing that the code does in more than one way.
+  The skill finds each such job and capability through the code maps.
+- Each such job or capability gets an intent through the inbox port. Its name is
+  "Migrate <spec> to <convention>". Its "What and why" gives what changed, and a link to
+  the design spec.
+- The skill does not start these intents. The user selects when each one runs.
 
-## 2. Give options
+## Inputs
 
-Examine the code to find the current method for the subject of the convention. Give two
-or three options. For each option, give a short real example from this project, if one
-exists. Mark the option that you recommend, and give one line about the reason. Obey
-"Asking questions" in `pdlc/README.md`. With `defaults`, use the recommended option, and
-do not ask the user.
+- `pdlc/README.md`, the specs and their code maps, and the code.
+- The subject of the convention, from the user or from the skill that sent the work here.
+- The design template in `pdlc/templates/`.
 
-## 3. Write the convention
+## Outputs
 
-- **New convention:** make `pdlc/specs/design/DES-<name>.md` from the design template.
-- **Changed convention:** edit the design spec. If the design spec was a default, set
-  `Default: no`.
-
-If a check can examine the convention (for example, a lint rule), add requirements for
-the convention. Mark the requirements `proposed`. Add an intent to build the check.
-
-## 4. Add the migration intents
-
-Find the jobs and capabilities whose code does not obey the agreed convention. Such code
-occurs when a convention changes. Such code also occurs when a new convention records a
-thing that the code does in more than one way. Search the code maps.
-
-For each job or capability that you find, add an intent through the inbox port:
-
-- Name: "Migrate <spec> to <convention>".
-- What and why: what changed, and a link to the design spec.
-
-Do not start these intents. Tell the user how many intents you added. The user selects
-when each intent runs.
-
-## 5. Finish
-
-Commit with the message "Convention DES-<name>" and, if a different skill sent you here,
-the `Intent` trailer of that skill.
-
-Then, if a different skill sent you here, go back to that skill.
+- The new or changed design spec, and each migration intent.
+- The commit "Convention DES-<name>". When a different skill sent the work here, the
+  commit has the `Intent` trailer of that skill.
+- For the user: how many migration intents the skill added.
+- When a different skill sent the work here, that skill continues.

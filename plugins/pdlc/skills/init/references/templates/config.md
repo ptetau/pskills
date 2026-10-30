@@ -21,6 +21,10 @@ checks yet keeps its checks in `tests/`.
 - one requirement: `...` (use {req} where the requirement ID goes)
 - check folders: `tests/` (where the checks live. Only the test writer is permitted to
   change the checks)
+- acceptance file: `...` (the acceptance checks of one intent. Use {intent} where the
+  intent ID goes. The "all" command must not run this file)
+- acceptance: `...` (the command that runs acceptance files. Use {files} where the files
+  go)
 - ID form in check names: `dotted` (`CAP-email.R3`) or `underscored` (`CAP_email_R3`). Use
   `underscored` for runners that do not accept `.` or `-` in names. Write only one of the
   two words.

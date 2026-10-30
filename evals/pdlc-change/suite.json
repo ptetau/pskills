@@ -1,0 +1,166 @@
+{
+  "skill": "pdlc:change",
+  "skillPath": "/tmp/claude-0/-home-user-pskills/ea747940-d227-5dc6-8b7c-95df4abfb5bf/scratchpad/v030/plugins/pdlc/skills/change/SKILL.md",
+  "skillSha256": "c50b050e9e1bad70311520e84034f23cfc4ecb719b34819caec4e8015564aaa2",
+  "createdAt": "2026-10-26T20:28:15Z",
+  "structure": {
+    "summary": "The run is one turn, with a short question to the user only when the run has no `defaults`. The run writes the change specs, updates the intent, commits once, and ends with a reply that gives the changes and the next step. If the intent is not ready, the reply says that `/pdlc:ready` comes first, and the run writes nothing.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The run writes one file `pdlc/changes/CH-xxxx-<short-name>/change.md` for each change, with the next free change number. The run starts each file from `pdlc/templates/change.md`. The title is `# CH-xxxx · <Short name>`. The header line is `Intent: IN-xxxx · Scope: <spec ID> · Status: planned · Ticket: <ticket> · Branch: none · Base: main`, with bare values. The next line is `Tests-Locked: none`. The sections are \"Delivers\", \"Requirements\", \"Relies on\", \"Interface\" (with \"Test seams\"), \"Files\", \"Check files\", \"Steps\", \"Manual checks\", and \"Progress log\", in that order."
+      },
+      {
+        "id": "S2",
+        "description": "The \"Steps\" section has one `### Step N · <short name> · [ ]` heading for each requirement. Each step has the lines \"Requirement\", \"Check\", and \"Done when\". If \"Files\" lists the README, a last step is for the README. The \"Manual checks\" section has one line for each manual check, or \"none\"."
+      },
+      {
+        "id": "S3",
+        "description": "The intent file changes in two sections. The \"Changes\" section lists the changes in order. The \"Handoff\" section holds a new handoff `change → acceptance`, with a `Time:` line and the `###` sections \"Done\", \"Decided on defaults\", \"Open\", \"Look here\", \"Don't redo\", and \"Next: do this first\". With `defaults`, the \"Notes\" section also records each answer that the run took."
+      },
+      {
+        "id": "S4",
+        "description": "The run makes one commit on main, or on the branch of the intent when the intent has a branch. The subject is `Plan IN-xxxx: <names of changes>`. The trailer `Intent: IN-xxxx` comes after a blank line. After the commit, `git status --porcelain` shows nothing."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "The change spec has the path, the header, and the sections of the template, and \"Relies on\" has the fixed entries.",
+      "pass": "The file is `pdlc/changes/CH-0001-<short-name>/change.md`, because CH-0001 (the first change) is the next free number. The title is `# CH-0001 · <Short name>`, and the header line is `Intent: IN-0001 · Scope: JOB-report-word-frequencies · Status: planned · Ticket: none · Branch: none · Base: main`, with bare values. The next line is `Tests-Locked: none`. The sections are the nine sections of the template, in the order of the template, with \"Test seams\" under \"Interface\" and no other section. No `<placeholder>` and no guide sentence of the template stays in the file. \"Relies on\" lists CAP-word-counting (the word counter) as \"used, not changed\", and lists DES-writing-style (the writing rules), DES-pdlc-check-tagging (the check names), and DES-errors (the error codes).",
+      "partial": "The path and the header are correct, but the file has one or two of these faults:\n- A header value has a name or backticks.\n- A section is missing, extra, or in the wrong place.\n- A guide sentence of the template stays.\n- \"Relies on\" does not list one of the four entries.",
+      "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
+      "source": "3. Write each change spec: \"write `change.md` from `pdlc/templates/change.md`\". Header. Relies on: \"Always list the design specs that apply.\""
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The user gets one change for each spec of IN-0001 (the --top option), and these changes cover the intent exactly.",
+      "pass": "The run plans exactly one change, CH-0001, with the scope JOB-report-word-frequencies (the wordfreq command). The change covers `JOB-report-word-frequencies.R5` (usage line), `JOB-report-word-frequencies.R7` (print only the N most common words), and `JOB-report-word-frequencies.R8` (one --top option only). The run plans no change for CAP-word-counting (the word counter), because the intent lists no requirement of that spec. The run does not divide the job into one change for each requirement.",
+      "partial": "The run plans one change for the job, but the change misses one of the three requirements. Or the change adds a requirement that the intent does not list, for example `JOB-report-word-frequencies.R1` (one line per word). Or the run adds a capability change with no requirement, before the job change.",
+      "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
+      "source": "2. Divide the intent into changes: \"Each group is one change. A change must not cover two specs.\" \"put design specs first, then capabilities, then jobs\""
+    },
+    {
+      "id": "R3",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The \"Requirements\" section copies each requirement of the change exactly, and copies nothing else.",
+      "pass": "The section has the three requirements in number order. Each requirement has its heading as in the spec, for example `### JOB-report-word-frequencies.R7 · Print only the N most common words`. Each acceptance line has the same words as in the spec. The section has all 18 acceptance lines of `JOB-report-word-frequencies.R7` (print only the N most common words). The section has no `Status:` line, no description paragraph, and no other requirement.",
+      "partial": "The three requirements are present, but one or two acceptance lines are missing or have different words. Or the section also copies a `Status:` line or a description paragraph.",
+      "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
+      "source": "Requirements: \"copy the heading and the acceptance lines of each requirement, in number order. Copy nothing else.\""
+    },
+    {
+      "id": "R4",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "A test writer who cannot see the code can write each check from the \"Interface\" section, through the command that the user runs.",
+      "pass": "The \"Interface\" section lists the command that the user runs, for example `python3 -m wordfreq [--top N] FILE`, in `wordfreq/__main__.py` or `wordfreq/cli.py`. The entry gives the inputs: FILE, and `--top N` before or after FILE. The entry gives the output: one `<word> <count>` line for each word on standard output, and the exit code 0. The entry gives each error with its text on standard error and the exit code 2: `TOP_INVALID` (bad --top value) with `error: --top needs a whole number greater than zero`, `usage: wordfreq FILE`, and `error: cannot read <path>`. Other entries, for example `main(argv, stdout, stderr) -> int` in `wordfreq/cli.py`, are permitted if the code exists already or this change builds it. \"Test seams\" says \"none\", or names only a seam that the command takes.",
+      "partial": "The \"Interface\" section is usable, but the section has one of these gaps:\n- The section has no command entry, only `main()` or a new helper.\n- An error text or an exit code is not there.\n- An entry has no file.\n- A test seam is only an argument deep in the code.",
+      "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
+      "source": "Interface: \"the interface must be sufficient to write each check\", \"list that surface. Then the checks drive that surface, and not only a helper below the surface.\" Test seams."
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "\"Files\" and \"Check files\" list only what this job change is permitted to touch.",
+      "pass": "\"Files\" lists `wordfreq/cli.py` and `README.md`. Any other entry in \"Files\" is a file from the code map of the job, `wordfreq/__main__.py` or `wordfreq/__init__.py`. \"Files\" does not list `wordfreq/counter.py` (the code of the word counter), a check file, or a file in `pdlc/`. \"Check files\" lists a new component check file in `tests/`, with the name of the spec in a form that unittest finds, for example `tests/test_JOB_report_word_frequencies.py`. \"Check files\" does not list an acceptance file.",
+      "partial": "\"Files\" lists `wordfreq/cli.py` and not `wordfreq/counter.py`, but \"Files\" does not list `README.md`, or lists a check file. Or \"Check files\" lists only a file with a different name, for example `tests/test_cli.py`.",
+      "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
+      "source": "Files: \"A job change must not list the files or the parts of a capability.\" \"A job change always lists the README of the project.\" Check files: \"Name a new check file after the spec\""
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "The \"Steps\" section has one step for each requirement and a last step for the README, and \"Manual checks\" says \"none\".",
+      "pass": "\"Steps\" has one `### Step N · <short name> · [ ]` heading for each of the three requirements, in number order. Each step has the lines \"Requirement\", \"Check\", and \"Done when\". Each \"Check\" starts with the requirement ID in the underscored form, for example `JOB_report_word_frequencies_R7`. A last step for `README.md` gives these conditions in its \"Done when\":\n- The README tells about `--top`.\n- The README changes the line that the \"Notes\" of the intent link to `JOB-report-word-frequencies.R7` (print only the N most common words).\n- The README names each seam that a user can set, or the step says that there is none.\n- The README says how to run the app, and gives `python3 -m unittest discover -s tests` for the checks.\n\n\"Manual checks\" says \"none\".",
+      "partial": "The steps are present, but one step has no \"Check\" or no \"Done when\", or a \"Check\" has the dotted ID form or no ID. Or the README step does not give one or two of the four conditions. Or \"Manual checks\" lists an item that a check can prove.",
+      "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
+      "source": "Steps: \"usually one step for each requirement\", \"If 'Files' lists the README, add a last step for the README.\" Manual checks: \"only what no check can see\""
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "The intent file lists the changes and holds a new handoff for the acceptance stage.",
+      "pass": "In `pdlc/inbox/IN-0001-wordfreq-top-option.md`, the \"Changes\" section lists CH-0001 with its name, in place of \"none yet\". The \"Handoff\" section replaces the old handoff with a handoff that names `change → acceptance` and has a `Time:` line in the form of `date -Iseconds`. The handoff has the six `###` sections of the handoff template in the order of the template, and each empty section says \"none\". \"Done\" names CH-0001 with a short description. The handoff gives the order of the changes and at least one note about the \"Interface\" for the test writer. \"Next: do this first\" tells the acceptance stage what to do first.",
+      "partial": "The run updates \"Changes\" and \"Handoff\", but the handoff has a fault. The handoff does not have one or two sections or the `Time:` line, or names a different next stage, for example `change → tests`.",
+      "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
+      "source": "4. Finish: \"In the 'Changes' section of the intent, list the changes in order.\" \"Write the 'Handoff' section of the intent for the acceptance stage.\""
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "The run leaves one Plan commit on main and changes nothing else.",
+      "pass": "After `start`, main has exactly one new commit, with the subject `Plan IN-0001: <names of changes>`. The message ends with the trailer `Intent: IN-0001`, and has no `Req:` trailer, because the commit changes only files in `pdlc/`. The commit holds only the new change folder and the intent file. The app code, the checks, `README.md`, the specs, and `pdlc/config.md` stay the same, and the run makes no new branch. The intent keeps `Status: ready` and `Branch: none`. The working tree is clean at the end.",
+      "partial": "The Plan commit is present, but one of these faults occurs:\n- The subject has a different form.\n- The `Intent:` trailer is not there, or a `Req:` trailer is there.\n- The intent status changes.\n- A second commit occurs, or a file stays out of the commits.",
+      "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
+      "source": "4. Finish: \"Commit with the message 'Plan IN-xxxx: <names of changes>' and the trailer `Intent: IN-xxxx`.\" pdlc/README.md, \"Where pdlc commits\""
+    },
+    {
+      "id": "R9",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The last message tells the user where the work stands and what to run next, and the message agrees with the files.",
+      "pass": "When IN-0001 (the --top option) is ready, the last message lists the changes in order, each with a short description, for example \"CH-0001 (the --top option)\". The message also says that `/pdlc:acceptance` is the next step. When IN-0001 is not ready, the message says that `/pdlc:ready` must come first. Then the run stops, with no change spec, no Plan commit, and no change to a spec or a status. A `change → user` handoff in the intent, with its own commit, is permitted. In each case, the message claims nothing that the files and the commits do not show.",
+      "partial": "The message gives the result, but does not give the next step, names a different next step (for example `/pdlc:tests`), or gives IDs with no description. Or, for an intent that is not ready, the run stops, but the message does not name `/pdlc:ready`.",
+      "source": "1. Collect the information: \"If the intent is not `ready`, tell the user that `/pdlc:ready` comes first. Then stop.\" 4. Finish: \"Tell the user the changes, in order. Also tell the user that `/pdlc:acceptance` is the next step.\""
+    },
+    {
+      "id": "R10",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each decision that the run makes without an instruction is visible to the user, and with `defaults` the run asks no question.",
+      "pass": "The change spec marks each new name with a plain `(assumed)` right after the name. An example is a new helper function in the \"Interface\" section. Each marker starts with `(assumed`, and no emphasis is around the marker. The handoff section \"Decided on defaults\" lists each such decision in the form `<requirement>: <question> → <answer> (assumed)`, or says \"none\" when the run made no decision. With `defaults`, the run asks the user no question. The \"Notes\" of the intent also record each answer that the run took under `defaults`, in the same form.",
+      "partial": "Most decisions are visible, but one new name has no marker, or a marker has a different form, for example `(name assumed)` or `*(assumed)*`. Or \"Decided on defaults\" does not list a decision that the change spec marks.",
+      "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
+      "source": "Interface: \"mark each new name `(assumed)`\". pdlc/README.md, \"Asking questions\": \"Mark each such decision `(assumed)`\", \"Also list the decision in the handoff.\", \"If the skill runs with `defaults`, do not ask.\""
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state change --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "typical",
+      "exercises": "The typical path with `defaults`: one job change, the full change spec, the intent records, one Plan commit, and no question.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "prompt": "IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state change --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "named intent, interactive",
+      "exercises": "A named intent with no `defaults`: the run plans IN-0001 (the --top option), and asks each question one at a time with a recommended answer.",
+      "replies": [
+        "skip"
+      ]
+    },
+    {
+      "id": "P03",
+      "prompt": "defaults IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "edge-but-valid: the intent is not ready",
+      "exercises": "The readiness gate: IN-0001 (the --top option) has the status `specifying`, thus the run must say that `/pdlc:ready` comes first and stop, also with `defaults`.",
+      "replies": []
+    },
+    {
+      "id": "P04",
+      "prompt": "plan the work for the --top option\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state change --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "ambiguous: plain words, no intent ID",
+      "exercises": "A request in plain words with no intent ID and no `defaults`: the run finds the oldest ready intent, IN-0001 (the --top option), and plans that intent.",
+      "replies": [
+        "skip"
+      ]
+    }
+  ]
+}

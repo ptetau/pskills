@@ -1,0 +1,13 @@
+Measure                                                         Baseline Candidate  Change
+quality                                                             89.6      93.1    +3.5
+stability                                                           60.4      63.5    +3.1
+overall                                                             73.6      76.9    +3.3
+R1 (weight 3) The user gets the true list of cards. The list h     100.0     100.0    +0.0
+R2 (weight 2) The dry-run table gives the card key, the curren     100.0     100.0    +0.0
+R3 (weight 3) The user can trust each statement about the boar      66.7      83.3   +16.6
+R4 (weight 3) pdlc stays the truth: the run changes no pdlc fi     100.0     100.0    +0.0
+R5 (weight 2) The user who set a tracker does not hear that th     100.0     100.0    +0.0
+R6 (weight 2) When the setup check finds a gap, the reply name      91.7      91.7    +0.0
+R8 (weight 2) The user knows what to do next: the reply names       75.0      75.0    +0.0
+R9 (weight 2) When the user asks for a dry-run, the run makes      100.0     100.0    +0.0
+NO REGRESSION

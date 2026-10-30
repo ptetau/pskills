@@ -1,0 +1,161 @@
+{
+  "skill": "pdlc:show",
+  "skillPath": "/tmp/claude-0/-home-user-pskills/ea747940-d227-5dc6-8b7c-95df4abfb5bf/scratchpad/v030/plugins/pdlc/skills/show/SKILL.md",
+  "skillSha256": "0fd54b344108ad777e6ebe748212b1fb13bc24fb0438c7dafa48fb5bbc164674",
+  "createdAt": "2026-10-26T20:26:27Z",
+  "structure": {
+    "summary": "Single turn with no questions. The run records CH-0001 (top option) on its branch. It writes a terminal script, records a GIF and frames, writes the handoff, makes one commit, and ends with a short reply.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "`pdlc/changes/CH-0001-top-option/visual.json`: a terminal script with `\"kind\": \"terminal\"`, a `title`, and `steps`. Each acceptance line gets one or more steps, in the order of the change spec. The first step of each line sets a caption: the requirement ID, then the line in a few words. Each input file or helper script is in the change folder, with paths relative to the project root. The last step runs all checks and shows that they pass."
+      },
+      {
+        "id": "S2",
+        "description": "`review.gif` and `frames/01.png`, `frames/02.png`, and so on, in the change folder. `node pdlc/bin/record_gif.mjs` writes these files, with one frame for each step."
+      },
+      {
+        "id": "S3",
+        "description": "`pdlc/changes/CH-0001-top-option/handoff.md`, replaced, from the handoff template. The title is `# Handoff · CH-0001 · show → verify`, and a `Time:` line follows. Then six sections follow in this order: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. `Done` tells what the GIF shows, frame by frame. `Done` also tells how many acceptance lines the GIF shows, out of how many."
+      },
+      {
+        "id": "S4",
+        "description": "One commit on `pdlc/CH-0001-top-option` with the subject `Visual review CH-0001`. The commit holds the script, any helper file, the GIF, the frames, and the handoff. The trailers are `Intent: IN-0001`, `Change: CH-0001`, and `Review: pdlc/changes/CH-0001-top-option/review.gif`, in this order, with no `Req`."
+      },
+      {
+        "id": "S5",
+        "description": "A final reply to the user that says that `/pdlc:verify` is next."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "A reviewer can find each acceptance line of CH-0001 (top option) in the recording, because each line has its own captioned step.",
+      "pass": "The change spec has 22 acceptance lines: 3 for R5 (usage line), 18 for R7 (top N words), and 1 for R8 (one --top option). `visual.json` has one or more steps for each of the 22 lines, in the order of the change spec. The first step of each line has a caption that starts with the full requirement ID, for example `JOB-report-word-frequencies.R7`. Then the caption gives that line in a few words.",
+      "partial": "18 to 21 lines have their own captioned step. Or all 22 lines show, but two lines share one step or one caption. Or the order differs from the change spec, or the captions omit the job name of the requirement ID.",
+      "source": "3. Write the script: \"Write one or more steps for each acceptance line, in order.\" and \"Each line gets a step. Compare the count of lines with the change spec.\""
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each step proves its acceptance line as a user meets the command. Thus, a reviewer can confirm the line from the frame alone.",
+      "pass": "Each acceptance step runs the real command, `python3 -m wordfreq`, with the arguments of its line, and not the unit tests or a Python function. The input file has the content that the Given names, for example `b a b c a b`, `pear apple fig`, or an empty file. The `missing.txt` lines use a file that does not exist. The output of each step shows the Then of its line, with the exit code when the line names one (for example from `echo \"exit $?\"`). A step can merge standard output and standard error. The judge uses the commands, the input files, and the output that the transcript, the frame reads, or the handoff quote.",
+      "partial": "All steps run the real command, but most steps whose line names an exit code do not show the exit code. Or one to three steps use an input or an argument that differs from their line. Or one to three steps show output that contradicts their line.",
+      "source": "3. Write the script: \"Show the behaviour as a user meets it\" and \"For a CLI, show commands and their output.\" 4. Record: \"A frame must show what its caption claims.\""
+    },
+    {
+      "id": "R3",
+      "kind": "structure",
+      "structureRef": "S1",
+      "weight": 2,
+      "criterion": "`visual.json` is a terminal script that anyone can record again from the project root, and the script ends with a step that runs all checks.",
+      "pass": "`pdlc/changes/CH-0001-top-option/visual.json` is valid JSON with `\"kind\": \"terminal\"`, a `title` that names CH-0001, and `run` commands that work from the project root with relative paths. Each input file or helper script that a step reads is in the change folder, in the commit or made there by an earlier step. No path goes to `/tmp`, to a home folder, or to another absolute location. Only a step whose line says that standard output is empty has `\"unchanged\": true`. The output of each acceptance step stays well under one screen. The last step runs the \"all\" command of `pdlc/config.md`, `python3 -m unittest discover -s tests` (a filter such as `| tail -n 3` is permitted), and its output shows that the checks pass.",
+      "partial": "One or two of these rules break. Examples are one absolute or `/tmp` path, an input file that the commit does not hold, or `unchanged` on a step whose line expects output. Other examples are one step whose output fills more than one screen, or a last step that runs only some of the checks.",
+      "source": "3. Write the script, and the visual-terminal adapter"
+    },
+    {
+      "id": "R4",
+      "kind": "structure",
+      "structureRef": "S2",
+      "weight": 2,
+      "criterion": "The change folder holds `review.gif` and its frames from a successful recording of the final `visual.json`.",
+      "pass": "`pdlc/changes/CH-0001-top-option/review.gif` and `frames/01.png`, `frames/02.png`, and so on, are on the branch of the change. The transcript shows `node pdlc/bin/record_gif.mjs` with the script and the change folder. The last run of the recorder ends with `wrote … review.gif and N frames`. N is equal to the number of steps in the committed `visual.json`. The run does not change `visual.json` after that last recording.",
+      "partial": "The GIF and the frames exist, but the frame count differs from the step count. Or `visual.json` changed after the last recording. Or a different tool or a different folder made the GIF.",
+      "source": "4. Record"
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The run looks at the recorded frames itself before the commit, and the run records again when a frame is wrong.",
+      "pass": "After the last recording, the transcript shows that the run opens the frame images. The run opens every frame, or at least the last frame of each acceptance line. The run says what the frames show. A recorder failure, or a frame with an error, wrong content, or the screen from before the step, makes the run correct `visual.json`. Then the run records again before the commit.",
+      "partial": "The run opens only some frames, for example three or four as a sample. Or the run opens the frames of an earlier recording, but not the frames of the last recording.",
+      "appliesWhen": "The run wrote `review.gif` at least one time.",
+      "source": "4. Record: \"Then read the last frame of each acceptance line yourself.\""
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The run changes only the records of the visual review. The app, the checks, the specs, and the statuses stay as they were.",
+      "pass": "Each file that the run adds or changes after `start` is in `pdlc/changes/CH-0001-top-option/`. A change to `.gitignore` that adds `pdlc/.tools/` is also permitted. The files in `wordfreq/`, `tests/`, `README.md`, `pdlc/specs/`, and `pdlc/inbox/` do not change. The pdlc files from the plugin (`pdlc/README.md`, `bin/`, `ports/`, `adapters/`, and `templates/`) also do not change. CH-0001 keeps `Status: building`, and `main` gets no new commit.",
+      "partial": "The app and the checks do not change. But the run leaves a stray file outside the change folder, such as a sample text file at the project root. Or the run changes a status or a spec line.",
+      "source": "4. Record: \"Do not correct the app in this skill.\" Also `pdlc/README.md`, \"Stages and handoffs\": \"The stage sets the statuses that it owns.\""
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "structureRef": "S3",
+      "weight": 2,
+      "criterion": "The handoff to `/pdlc:verify` obeys the template. The handoff tells what the GIF shows, frame by frame, and gives the count of acceptance lines shown.",
+      "pass": "`pdlc/changes/CH-0001-top-option/handoff.md` replaces the build handoff, with the title `# Handoff · CH-0001 · show → verify` (or `show → user` after a stop with no GIF). The `Time:` line holds a `date -Iseconds` value from this run. The six sections follow in the order of the template: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. Each empty section says \"none\". `Done` tells what each frame or step shows, by number. `Done` also gives the count of acceptance lines shown, out of the count in the change spec, for example \"22 of 22\".",
+      "partial": "The handoff has the right title, but one section is missing or out of order. Or the time is a placeholder or a typed value. Or `Done` puts the frames in groups, for example \"frames 4 to 21 show the R7 lines\", not one by one. Or `Done` gives no count of the lines shown.",
+      "source": "5. Finish, item 1, and `templates/handoff.md`"
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "structureRef": "S4",
+      "weight": 2,
+      "criterion": "One commit, `Visual review CH-0001`, holds all the files of the visual review, with the trailers `Intent`, `Change`, and `Review`.",
+      "pass": "After `start`, the branch `pdlc/CH-0001-top-option` has one new commit with the subject `Visual review CH-0001`. The commit holds `visual.json`, each helper or input file, `review.gif`, the frames, and `handoff.md`. The message ends with `Intent: IN-0001`, `Change: CH-0001`, and `Review: pdlc/changes/CH-0001-top-option/review.gif`, in this order, one on each line. Other trailers, such as `Co-Authored-By`, can follow. The message has no `Req` trailer. After the commit, `git status --porcelain` shows nothing.",
+      "partial": "The commit holds the GIF and the frames, but the subject differs. Or a trailer is missing or out of order, or a `Req` trailer is present. Or the files are in more than one commit, or some files of the run stay uncommitted.",
+      "appliesWhen": "The run wrote `review.gif`.",
+      "source": "5. Finish, item 2, and `DES-pdlc-commit-trailers`"
+    },
+    {
+      "id": "R9",
+      "kind": "structure",
+      "structureRef": "S5",
+      "weight": 1,
+      "criterion": "The final reply tells the user that `/pdlc:verify` is next.",
+      "pass": "The last message to the user names `/pdlc:verify` as the next step.",
+      "partial": "The reply tells the user that the `verify` stage is next, but does not name `/pdlc:verify`. Or the reply puts a different step before `/pdlc:verify`, with no reason.",
+      "appliesWhen": "The run wrote `review.gif`.",
+      "source": "5. Finish, item 3"
+    },
+    {
+      "id": "R10",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The user and the `verify` stage get a true account of the recording. Each claim in the final reply and in the handoff agrees with the files.",
+      "pass": "Each count and each frame description in the reply and the handoff agrees with `visual.json`, `frames/`, and the output in the transcript. This rule includes the count of acceptance lines shown, the frame count, and the count of checks that passed. The reply and the handoff name each acceptance line that the GIF does not show, and each frame that the run did not examine. If the run could not record, the reply and the handoff say that no `review.gif` exists, and give the error. Then the reply and the handoff do not say that the visual review is done.",
+      "partial": "One count or one frame description is wrong. Or a count is an estimate, such as \"about 20 lines\". Or the reply omits a known gap, for example a line with no step.",
+      "source": "`pdlc/README.md`, \"Stages and handoffs\": \"The handoff of the stage says only what the files show. Count the checks that ran and the acceptance lines shown. Do not estimate.\""
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "typical",
+      "exercises": "The run picks the change itself. Then the run makes the full visual review: a script for 22 acceptance lines, the recording, the frame check, the handoff, and the commit.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "prompt": "CH-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "change named by its ID, without defaults",
+      "exercises": "The run uses the change that the user names, without defaults. The outputs are the same as for P01 (typical run), so a question that the skill asks shows as drift.",
+      "replies": []
+    },
+    {
+      "id": "P03",
+      "prompt": "the top option change\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "ambiguous: the change is named in plain words",
+      "exercises": "The run finds CH-0001 (top option) from a name in plain words, and then makes the full visual review.",
+      "replies": []
+    },
+    {
+      "id": "P04",
+      "prompt": "defaults. R5 (usage line) and R8 (one --top option) look the same on screen as before, so a short GIF is fine.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "axis": "edge but valid: a push to skip the lines with nothing new on screen",
+      "exercises": "The run must keep a step for each acceptance line, also for the old behaviour. This prompt tests the rules \"Every change gets its show\" and \"Each line gets a step\".",
+      "replies": []
+    }
+  ]
+}
