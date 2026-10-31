@@ -13,8 +13,8 @@ the app and the intent. Each language has 1 run first.
 ## Rust, run 1
 
 The run finished, and passed 8 of 8 probes. pdlc planned 3 changes, not 2. The changes are
-the storage of the done state, the page, and the route that marks an item done. The merge check passed on
-each of the 3 branches, and the 54 checks of the app passed.
+the storage of the done state, the page, and the route that marks an item done. The merge
+check passed on each of the 3 branches, and the 54 checks of the app passed.
 
 | Measure | Rust to-do app | wordfreq, 0.5.0 (run W-1) |
 |---|---|---|
