@@ -149,6 +149,12 @@ class StageAgentTest(unittest.TestCase):
         stages = run_bench.analyse(self.events())["stages"]
         self.assertEqual(stages["acceptance"]["wall_s"], 12.0)
 
+    def test_the_visual_reviewer_counts_toward_show(self):
+        prompt = "/app/pdlc/changes/CH-0001-top/review/visual/packet.md"
+        self.assertEqual(run_bench.agent_stage("pdlc:reviewer", prompt, "verify"), "show")
+        self.assertEqual(run_bench.agent_stage("pdlc:reviewer", prompt.replace("visual", "quality"), "show"),
+                         "verify")
+
     def test_a_stage_line_that_names_no_stage_keeps_the_current_stage(self):
         self.assertEqual(run_bench.agent_stage("pdlc:stage", "Stage: lunch", "build"), "build")
 

@@ -43,8 +43,20 @@ $2.09 and $2.42, and each run passed 8 of 8 probes.
 - The higher mean ($2.03) comes from stages that this change does not touch. The
   acceptance stage cost $0.48 in place of $0.32, and one run needed 3 builder calls.
 
+## After 0.5.0: a separate visual review
+
 A separate `visual` review then took the place of the frame check of the specification
-review. It runs in show, after the recording, and its runs are not yet measured.
+review. It runs in show, after the recording, and before the proposal. The merge gate moved
+to show too. The 3 runs (`visual.json`) cost $1.86, $1.73 and $2.09, a mean of $1.89. Each
+run passed 8 of 8 probes, and the median time was 429 s.
+
+- The visual reviewer ran once in each run, and cost $0.08 to $0.10. Each review passed.
+- Show now costs about $0.41: the recording, the visual review, the gate, and the proposal.
+  `verify` costs about $0.43, with 2, 1 and 3 rounds.
+- Each reviewer counted the frames against the acceptance lines, and found the last frame
+  with all checks passing. Two reviewers put a weak frame under "Notes" as a wish. In one,
+  the exit code on screen came from `wc`, not from the app. In the other, the input file
+  was too small to show the limit of `--top`.
 
 ## A. One set of checks for an intent with one change
 
@@ -109,6 +121,7 @@ cover the other cases.
 - `b-plain.json`: the run of B without nested agents. `b-nested.json`: the run of B with them.
 - `v050.json`: the 3 runs of 0.5.0.
 - `reorder.json`: the 3 runs with the recording after `verify`.
+- `visual.json`: the 3 runs with the separate visual review.
 - `patches/`: the changes of B and D, which 0.5.0 does not have.
 
 The plugin commits in the files are local branches. Only the commits of A, C and E are on the

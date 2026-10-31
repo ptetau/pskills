@@ -236,15 +236,18 @@ def stage_name(skill):
 def agent_stage(label, prompt, current):
     """The stage that an agent call belongs to, or None.
 
-    A reviewer with a remit other than tests counts toward verify. For the test writer and the
-    tests reviewer, the prompt decides first: a change path is the tests stage, and an intent or
-    acceptance path is the acceptance stage. Otherwise a stage that uses the agent keeps it.
+    The visual reviewer counts toward show. A reviewer with another remit than tests counts
+    toward verify. For the test writer and the tests reviewer, the prompt decides first: a
+    change path is the tests stage, and an intent or acceptance path is the acceptance stage.
+    Otherwise a stage that uses the agent keeps it.
     A pdlc:stage agent runs the stage on the "Stage:" line of its prompt.
     """
     prompt = prompt or ""
     if label == "pdlc:stage":
         found = re.search(r"^Stage:\s*([a-z]+)\s*$", prompt, re.M)
         return found.group(1) if found and found.group(1) in STAGES else current
+    if label == "pdlc:reviewer" and "/review/visual/" in prompt:
+        return "show"
     if label == "pdlc:reviewer" and "/review/tests/" not in prompt:
         return "verify"
     if label in ("pdlc:reviewer", "pdlc:test-writer"):
