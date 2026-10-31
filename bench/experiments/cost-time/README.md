@@ -100,12 +100,12 @@ The `verify` time of 0.4.0 holds one slow run. Its median is 88 s.
 | Option | What changes | Estimated saving | Notes |
 |---|---|---|---|
 | A. One set of checks for a one-change intent | When an intent has one change, the acceptance checks are also the component checks. One test writer and one review. | $0.25 to $0.40 and 80 to 150 s a run | An intent with more changes keeps both sets. The 0.3.0 reason for acceptance checks (a check needs a later change) applies only there. |
-| B. A fresh context for each stage | Ship runs each stage in its own session, with the handoff as the link. | About 17%, $0.33 a run | An agent cannot start agents. So a stage that starts agents needs its own top-level session, for example one `claude -p` for each stage. This is the largest change. |
+| B. A fresh context for each stage | Ship runs each stage in its own session, with the handoff as the link. | About 17%, $0.33 a run | Each stage skill can run in its own fresh context with `context: fork`. A forked stage can still start its test writer and reviewer, because a subagent can start subagents, up to three layers deep. The stage then reads its inputs from the handoff files. |
 | C. One writing pass for each stage | A stage runs the checker once on all the files that it changed, and fixes all findings in one edit. Or the commit hook is the only check. | Part of the 23% (up to $0.45), and up to 50 s a run | The specification review fails writing problems, so the text must still pass. |
 | D. Fewer small turns in acceptance and `verify` | One script makes the packets, runs the checks and records the results. | Not measured | Each main turn of a late stage costs about $0.03. |
 | E. No command that waits for input | A rule, or a hook that stops a command such as `cat > file` with no input. | Rare, but 430 s in one run | Small. |
 
-Options A and C need only skill and script changes. Option B changes how ship runs.
+Options A and C need only skill and script changes. Option B needs a front-matter setting in each stage skill, and a check that each stage reads all its inputs from files.
 
 ## How the cost is split
 
