@@ -55,6 +55,11 @@ then marks it `ready`.
     a sent message), not a stored row.
   - Each failure line names its error code, and `DES-errors` has the code. A new code goes
     into `DES-errors` as part of this intent.
+  - The "Interface" of the spec has an entry for each surface that a line names. A surface
+    is a command, a flag, a route, a field, a page text, or a call. The entry lists each
+    error code of the lines that use it.
+  - Each line that depends on the clock, randomness, or a vendor has a seam. The seam is
+    under "Test seams" in the "Interface" of the spec that owns it.
   - Each rule that a sentence states has a line, also each `(assumed)` detail. A rule with
     no line has no check, so nothing enforces it.
   - Words like "fast", "easy", or "secure" have a number or a rule behind them.

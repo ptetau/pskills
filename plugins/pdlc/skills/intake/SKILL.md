@@ -33,7 +33,8 @@ its right spec, as `proposed`. Intake does not write code.
     line in its "Notes" goes.
   - A `.blueprint.md` file that the user names, read as the words of the intent. Its
     scope gives "What and why". Its other sections give the requirements, the error
-    codes, and the signatures. Each `(assumed)` mark stays. After intake, the pdlc specs
+    codes, and the signatures. Each signature becomes an entry in the "Interface" of its
+    spec. Each `(assumed)` mark stays. After intake, the pdlc specs
     lead, and nobody changes the file.
   - The oldest `new` intent with no `Awaits approval:`.
 - Each patch obeys "Spec patches" (where a behaviour belongs, the words of the intent, the
@@ -42,6 +43,14 @@ its right spec, as `proposed`. Intake does not write code.
 - A new requirement has the next free number in its spec, `Status: proposed`, and this
   intent in `Intents:`. It has one or two plain sentences, then "Given …, when …, then …"
   lines.
+- Each new or changed requirement gets the "Interface" entries that its acceptance lines
+  name, in the same spec ("Interfaces" in `pdlc/README.md`). A job gets what its user
+  touches. A capability gets the calls that jobs use.
+- Each new entry ends its first line with ` · proposed`. Each name that the intent does
+  not give has the mark `(assumed)`.
+- Each entry names each error code of the lines that use it, from `DES-errors`, and its
+  test seams go under "Test seams".
+- A spec with no "Interface" section gets one from its template, before "Requirements".
 - Each detail that the words of the intent do not give (a message, a limit, an order, a
   format) has the mark `(assumed)` where intake writes it.
 - An `(assumed)` detail adds to the words of the intent. It does not remove a value that
@@ -49,6 +58,8 @@ its right spec, as `proposed`. Intake does not write code.
   zero" also permits `+3`, so an assumed rule such as "digits only" is not correct.
 - A changed requirement changes in place, with `Status: proposed`, and this intent added
   to `Intents:`. A removed requirement gets `Status: retiring`, and this intent too.
+- An "Interface" entry that only a `retiring` requirement uses gets ` · retiring` at
+  the end of its first line.
 - Each changed requirement gets the Note `<ID>: was "<old>", now "<new>"` in the intent.
   This rule is for each reason of the change, not only for "The newest words win".
 - A new job lists the capabilities and the design specs that it relies on.
@@ -60,8 +71,9 @@ its right spec, as `proposed`. Intake does not write code.
 - A spec with `Status: stub` first gets a deep look from `pdlc:recon`. Recon gets three
   items only: the project root, the absolute path of the spec, and the words `deep look`.
   Recon gets no request for a summary, the template, or extra detail.
-- The requirements from recon go into the spec as `built`, with `Source: recon`. Then the
-  spec becomes `Status: active`.
+- The requirements from recon go into the spec as `built`, with `Source: recon`. The
+  "Interface" entries from recon go into the spec with no mark and no `Seen in` line.
+  Then the spec becomes `Status: active`.
 - The statuses on main can be out of date. Thus, intake lists the change branches first
   ("Where pdlc commits"). The handoff names each changed requirement that an unmerged
   change covers. The change of this intent for that spec stacks after the unmerged change.

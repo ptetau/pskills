@@ -84,9 +84,33 @@ For each requirement, add a line `Seen in: <file>:<line>` that points to the cod
 are not sure, say how sure you are. Write only what the code really does, not what the
 code must do.
 
-Reply with the requirements and their `Seen in` lines, and nothing else. Do not add a
-summary of the code, a list of the files that you read, or advice for the spec. The skill
-that started you reads the code map and the template itself.
+Then write the "Interface" of the area: each name that a caller can use today. For a
+job, list what its user touches. That is commands and flags, routes, form fields, and the
+page elements and page text that a check can read. For a capability, list the calls that
+jobs use, each with its file. Use this form, with one `Seen in` line for each entry:
+
+```
+## Interface
+
+- `<name or signature>` · <kind> · `<file>`
+  - in: what goes in
+  - out: what comes out
+  - errors: the code of each error, or its exact message and status, or none
+  - Seen in: <file>:<line>
+
+### Test seams
+
+- `<name>` · seam: <clock|randomness|outside vendor|store> · `<file>`
+  - in: what a caller sets
+  - Seen in: <file>:<line>
+```
+
+List a seam only if the code has one today. Write "none" under "Test seams" if there
+is none.
+
+Reply with the requirements, the Interface, and their `Seen in` lines, and nothing
+else. Do not add a summary of the code, a list of the files that you read, or advice for
+the spec. The skill that started you reads the code map and the template itself.
 
 Write the behaviour that a user or a caller can see, not how the code makes that
 behaviour. For example, write "saving replaces the whole list", not "save calls

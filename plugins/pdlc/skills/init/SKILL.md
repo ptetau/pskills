@@ -53,7 +53,7 @@ and adapters. All work then enters through the inbox.
 - An "Unsure" item of recon goes into the final summary, not into a spec.
 - Each job and capability that the user keeps gets a spec from its template. The spec has
   `Status: stub`, the summary, the code map, and only "None written yet." under the
-  requirements.
+  "Interface" and under the requirements.
 - Two patterns for the same thing are a question: which one is the convention? The answer
   becomes a design spec from the design template.
 - Each file in `references/defaults/` with `Ask at init: yes` is a question, one at a time,
