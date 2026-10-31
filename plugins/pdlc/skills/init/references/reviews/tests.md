@@ -75,5 +75,7 @@ differences:
   requirement that this intent changes or retires. Then a check in this file proves the
   new line. Any other removal is a problem.
 - Each check fails until the last change of the intent is built. That is not a problem.
+- When the intent lists one change, these checks are also the checks of that change. Then
+  each error code and each test seam in its "Interface" has a check.
 
 Write "Wrong versions" for the acceptance checks in the same way as for other checks.

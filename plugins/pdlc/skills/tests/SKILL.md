@@ -13,7 +13,8 @@ description: >
 
 The component checks of one change are written from the spec, by a test writer that does
 not see the code, before any app code. The checks are red, locked, and reviewed. The
-acceptance checks of the intent come earlier, from `/pdlc:acceptance`.
+acceptance checks of the intent come earlier, from `/pdlc:acceptance`. For the only change
+of an intent, the acceptance checks are its checks.
 
 ## Constraints
 
@@ -23,6 +24,10 @@ acceptance checks of the intent come earlier, from `/pdlc:acceptance`.
   order of the intent.
 - The first change of an intent needs the acceptance stage complete: the intent handoff
   has the title `acceptance → tests`. If not, `/pdlc:acceptance` runs first.
+- Suppose the intent lists only this change, "Check files" is `- none`, and the intent has
+  an `Acceptance-Locked` hash. Then the skill starts the branch as usual, and sets
+  `Tests-Locked: acceptance` and the status `building`. No test writer and no reviewer
+  run, and the skill makes no packet.
 - A change that has a branch already came back from `/pdlc:build` or `/pdlc:verify`. The
   skill works on that branch, keeps its `Base:`, starts from the reason of the send-back,
   and keeps the status until the finish.
@@ -43,9 +48,9 @@ acceptance checks of the intent come earlier, from `/pdlc:acceptance`.
 
 ## Outputs
 
-- The change spec has `Branch:`, `Base:`, and `Tests-Locked: <hash>` right under its
-  header. The change is `testing` while the checks are written, then `building`. The
-  intent is `building`.
+- The change spec has `Branch:`, `Base:`, and `Tests-Locked: <hash>` (or `acceptance`)
+  right under its header. The change is `testing` while the checks are written, then
+  `building`. The intent is `building`.
 - The commits, in this order, each with the trailers `Intent` and `Change`:
   - "Start CH-xxxx": the branch, the base, and the statuses. A send-back has no new start.
   - "Tests CH-xxxx", also with `Req`: the check files.
@@ -55,6 +60,12 @@ acceptance checks of the intent come earlier, from `/pdlc:acceptance`.
   - "Tests reviewed CH-xxxx": the status and the handoff.
 - The handoff `tests → build`: the checks and what each one proves, the lock, and what
   the builder must know.
+- For the only change of an intent, the commits are only these two, each with the trailers
+  `Intent` and `Change`:
+  - "Start CH-xxxx": the branch, the base, and the status `testing`.
+  - "Tests reviewed CH-xxxx": `Tests-Locked: acceptance`, the status `building`, and the
+    handoff. The handoff names the acceptance file and its lock.
 - For the user: `/pdlc:build` is next.
 - The stage is done when the tests review of the newest lock passes. The third failed
-  review stops the stage ("Rounds").
+  review stops the stage ("Rounds"). For the only change of an intent, the stage is done
+  when the handoff is committed.

@@ -9,6 +9,9 @@ Usage:
   python3 pdlc/bin/make_packets.py IN-0001            the tests packet for the acceptance
                                                       checks of an intent
 
+A change with "Tests-Locked: acceptance" has no tests packet. The acceptance checks of its
+intent are also its checks, and the packet of the intent is their review.
+
 Each packet is pdlc/changes/<change>/review/<remit>/packet.md. Writing a packet removes
 that remit's old result.md, so a result is always about the packet next to it. A packet
 holds:
@@ -45,8 +48,9 @@ full text of each requirement that the intent lists, the "Interface" of each cha
 the intent, the specs that those changes rely on (but not DES-writing-style), and the
 acceptance file that the intent names under "Acceptance-File:". It also holds the diff of
 each acceptance file of an earlier intent that the lock commit changed. It holds no app
-code and no component checks. A re-review starts from the lock in the earlier packet
-("Acceptance-Locked:").
+code and no component checks. When the intent lists one change, the packet says that these
+checks are also the checks of that change. A re-review starts from the lock in the earlier
+packet ("Acceptance-Locked:").
 
 Run it from the project root, on the change's branch. For an intent, run it on the newest
 branch of the intent.
@@ -128,6 +132,13 @@ def record(text, name):
     """The value of a line such as "Acceptance-Locked: 1a2b3c4" in the "Acceptance checks"
     section of an intent: the last such line, without backticks. None if there is none."""
     found = re.findall(r"^%s:[ \t]*`?([^`\s]+)`?" % re.escape(name), section(text, "Acceptance checks"), re.M)
+    return found[-1] if found else None
+
+
+def tests_lock(text):
+    """The value of the last "Tests-Locked:" line of a change spec (a hash, "none", or
+    "acceptance"), without backticks. None if there is none."""
+    found = re.findall(r"^Tests-Locked:[ \t]*`?([^`\s]+)`?", text, re.M)
     return found[-1] if found else None
 
 
@@ -296,6 +307,8 @@ def intent_packet(root, intent):
            "Acceptance-Locked: %s\n" % lock,
            "These are the acceptance checks of an intent. Judge them by the section \"Acceptance",
            "checks of an intent\" of the remit below, and by its \"Wrong versions\".\n"]
+    if len(changes) == 1:
+        out.append("The intent lists one change. These checks are also the checks of that change.\n")
     if earlier:
         out.append(re_review("tests", *earlier))
     out += [(remit.read_text() if remit.exists() else "# Remit: tests\n").strip() + "\n",
@@ -382,6 +395,11 @@ def main(argv, root=Path(".")):
         chosen = [r for r in remits(root) if r != "tests"] + args[1:]
     else:
         chosen = args[1:] or remits(root)
+    if tests_lock(change) == "acceptance" and "tests" in chosen:
+        chosen = [r for r in chosen if r != "tests"]
+        print("%s uses the acceptance checks of its intent (Tests-Locked: acceptance). Their packet "
+              "comes from python3 pdlc/bin/make_packets.py %s."
+              % (args[0], field(change, "Intent") or "IN-xxxx"))
     for remit in dict.fromkeys(chosen):
         remit_file = root / "pdlc" / "reviews" / (remit + ".md")
         remit_text = remit_file.read_text() if remit_file.exists() else "# Remit: %s\n" % remit

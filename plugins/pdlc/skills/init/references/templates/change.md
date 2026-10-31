@@ -63,7 +63,8 @@ builder changes only those parts.
 List the component check files for this change. Name each file after the spec, as
 `DES-pdlc-check-tagging` (check naming) tells you. Only the test writer writes these
 files. The acceptance checks of the intent are in a different file, and are not listed
-here.
+here. If this change is the only change of its intent, and the acceptance checks of the
+intent are also its checks, write `- none`.
 
 - path/to/check
 

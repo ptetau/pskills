@@ -228,7 +228,8 @@ simplified form of the `.plan.md` format that `/quiz-plan` uses.
   those parts change.
 - **Check files**: the component checks. Only the test writer is permitted to change these
   files.
-- **Tests-Locked**: the commit that locked the checks.
+- **Tests-Locked**: the commit that locked the checks. The value `acceptance` says that
+  the acceptance checks of the intent are the checks of this change.
 - **Steps**: small steps. Each step gives the requirement that it serves and the test that
   proves it.
 - **Progress log**: a record of what happened. New entries go at the end, as the work
@@ -343,6 +344,7 @@ are the decisions, one on each line:
 - **Regression:** after the intent merges, its acceptance checks stay, and each later change keeps them green.
 - **A changed requirement:** a later intent moves the old check of a changed requirement into its own acceptance file, and the review judges each move.
 - **Component checks:** the checks of a change test one spec through the interface of that change and of earlier changes only.
+- **One change:** the acceptance checks are also the checks of that change. The tests stage writes no checks, and the merge check reads the acceptance review.
 - **Fixtures:** a component check can prepare state directly, for example with a fixture file, but reads results through the interface.
 - **The guard:** the guard treats an acceptance file as a check, so the test writer writes it and the builder cannot.
 - **Init:** recon proposes the path and the command, and init makes sure that the "all" command skips that path.

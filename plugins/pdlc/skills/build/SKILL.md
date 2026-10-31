@@ -20,8 +20,8 @@ does not change the checks.
   obeys "Who does what".
 - The change is the one that the user names, or else the first `building` change in the
   order of the intent. Build works on the branch of the change.
-- A `Tests-Locked:` line with no hash stops the skill, and the user hears that
-  `/pdlc:tests` comes first.
+- A `Tests-Locked:` line with no hash and no `acceptance` stops the skill, and the user
+  hears that `/pdlc:tests` comes first.
 - When the base branch has new commits since this branch started (for example, a
   correction after a review), build first merges the base into this branch. The merge has
   the trailers `Intent` and `Change`.
@@ -39,7 +39,8 @@ does not change the checks.
 - After the builder, all checks and the acceptance checks of "Acceptance checks" pass,
   through the checks port.
 - No check changed since the lock:
-  `git diff --name-only <Tests-Locked hash> -- <check files>` shows nothing.
+  `git diff --name-only <Tests-Locked hash> -- <check files>` shows nothing. With
+  `Tests-Locked: acceptance`, the acceptance file did not change since `Acceptance-Locked`.
 
 ## Inputs
 

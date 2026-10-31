@@ -14,8 +14,9 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 5. A job change uses capabilities, but does not edit their code ("Code maps"). A missing
    capability gets its own change, before the job change.
 6. The test writer writes the checks from the spec, before the code. The acceptance checks
-   of the intent come first, then the component checks of each change. A writer of app
-   code does not change a locked check.
+   of the intent come first, then the component checks of each change. An intent with one
+   change usually has only its acceptance checks ("Acceptance checks"). A writer of app code does
+   not change a locked check.
 7. Each review remit gets one fresh reviewer, and the reviewer sees only its packet.
 8. A change merges only when all of these are true, as `bin/check_merge.py` confirms:
    - The requirements of the change are `verified`.
@@ -183,6 +184,12 @@ the intent, and each feature that exists already.
 - For an earlier change, a failure of **run acceptance** is expected, and is not reported.
 - After the intent merges, its acceptance checks stay, and each later change keeps them
   green.
+- The intent can list one change, with no requirement about the stored form of data. Then
+  its acceptance checks are also the checks of that change. That change has `- none` under
+  "Check files", and `Tests-Locked: acceptance`. Its tests stage starts the branch and
+  writes the handoff, with no test writer and no review.
+- For such a change, the acceptance review is also its tests review, and the merge check
+  reads it. A problem with one of its checks goes to the acceptance stage.
 
 ## Rounds
 

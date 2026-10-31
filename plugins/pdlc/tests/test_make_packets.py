@@ -1,8 +1,10 @@
 """Tests for pdlc's review packet builder. Run: python3 -m unittest discover plugins/pdlc/tests"""
 import importlib.util
+import io
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 
 SCRIPT = Path(__file__).parent.parent / "skills/init/references/bin/make_packets.py"
@@ -197,6 +199,34 @@ class Packets(PacketRepo):
     def test_can_make_a_single_remit(self):
         make_packets.main(["x", "CH-0001", "tests"], root=self.root)
         self.assertEqual([p.name for p in (self.folder / "review").iterdir()], ["tests"])
+
+    def test_a_change_with_tests_locked_acceptance_gets_no_tests_packet(self):
+        change = self.folder / "change.md"
+        change.write_text(change.read_text().replace(
+            "\n## Requirements", "Tests-Locked: acceptance\n\n## Requirements", 1)
+            .replace("## Check files\n\n- test/greet.test.js", "## Check files\n\n- none"))
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(make_packets.main(["x", "CH-0001"], root=self.root), 0)
+        made = sorted(p.name for p in (self.folder / "review").iterdir())
+        self.assertEqual(made, ["security", "specification"])
+        self.assertIn("CH-0001 uses the acceptance checks of its intent (Tests-Locked: acceptance). "
+                      "Their packet comes from python3 pdlc/bin/make_packets.py IN-0001.", out.getvalue())
+
+    def test_a_tests_remit_that_the_user_names_is_left_out_for_tests_locked_acceptance(self):
+        change = self.folder / "change.md"
+        change.write_text(change.read_text().replace(
+            "\n## Requirements", "Tests-Locked: acceptance\n\n## Requirements", 1))
+        with redirect_stdout(io.StringIO()):
+            make_packets.main(["x", "CH-0001", "tests"], root=self.root)
+        self.assertFalse((self.folder / "review").exists())
+
+    def test_a_hash_lock_still_gets_a_tests_packet(self):
+        change = self.folder / "change.md"
+        change.write_text(change.read_text().replace(
+            "\n## Requirements", "Tests-Locked: acceptance\nTests-Locked: abcdef1\n\n## Requirements", 1))
+        make_packets.main(["x", "CH-0001", "tests"], root=self.root)
+        self.assertTrue((self.folder / "review/tests/packet.md").exists())
 
     def test_a_new_packet_removes_the_old_result(self):
         old = self.folder / "review/tests/result.md"
@@ -406,6 +436,18 @@ class AcceptancePacket(PacketRepo):
         self.assertIn("Says hola.", text)
         self.assertIn("`greet(name, lang)` in `src/greet.js`", text)
         self.assertNotIn("Not this one.", text)
+
+    ONE_CHANGE = "The intent lists one change. These checks are also the checks of that change."
+
+    def test_an_intent_packet_with_one_change_says_its_checks_serve_the_change(self):
+        make_packets.main(["x", "IN-0001"], root=self.root)
+        self.assertIn(self.ONE_CHANGE, self.acceptance_packet())
+
+    def test_an_intent_packet_with_two_changes_does_not_say_so(self):
+        self.intent_file.write_text(INTENT.format(lock=self.lock).replace(
+            "- CH-0001 · Spanish greeting", "- CH-0001 · Spanish greeting\n- CH-0002 · More greetings"))
+        make_packets.main(["x", "IN-0001"], root=self.root)
+        self.assertNotIn("also the checks of that change", self.acceptance_packet())
 
     def test_the_acceptance_packet_has_no_code_and_no_component_checks(self):
         make_packets.main(["x", "IN-0001"], root=self.root)

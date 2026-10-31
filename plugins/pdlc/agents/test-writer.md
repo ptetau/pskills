@@ -47,6 +47,8 @@ An acceptance check proves one acceptance line as a user meets the line.
   or retires. Remove that check from the earlier file, and prove the new line in your
   file. Say so in your reply.
 - Each check fails until the last change of the intent is built. That is correct.
+- When the intent lists one change, your checks are also the checks of that change. Write
+  a check for each error code and each test seam in its "Interface".
 
 ## Component checks of a change
 
