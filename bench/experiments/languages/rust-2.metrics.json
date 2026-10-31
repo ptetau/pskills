@@ -1,0 +1,176 @@
+{
+ "time": {
+  "wall_s": 1257.1,
+  "api_s": 1268.7,
+  "main_session": {
+   "model": 572.0,
+   "agent": 548.6,
+   "recording": 44.1,
+   "other": 36.8,
+   "pdlc script": 31.2,
+   "checks": 14.4,
+   "git": 5.6,
+   "Read": 0.2
+  }
+ },
+ "context": {
+  "main_turns": 92,
+  "peak": 213019,
+  "mean": 142730
+ },
+ "tokens": {
+  "input": 184,
+  "cache_write": 213017,
+  "cache_read": 12917974,
+  "output": 69925,
+  "cost_usd": 4.932707599999997
+ },
+ "loops": {
+  "intake": {
+   "check runs": 1,
+   "check failures": 0,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 0,
+   "recording failures": 0
+  },
+  "acceptance": {
+   "check runs": 1,
+   "check failures": 1,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 0,
+   "recording failures": 0
+  },
+  "tests": {
+   "check runs": 3,
+   "check failures": 3,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 0,
+   "recording failures": 0
+  },
+  "build": {
+   "check runs": 8,
+   "check failures": 2,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 0,
+   "recording failures": 0
+  },
+  "show": {
+   "check runs": 0,
+   "check failures": 0,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 8,
+   "recording failures": 0
+  }
+ },
+ "builder_check_runs_until_green": [
+  1,
+  1,
+  3
+ ],
+ "agents": {
+  "acceptance/pdlc:reviewer": 2,
+  "acceptance/pdlc:test-writer": 3,
+  "build/pdlc:builder": 3,
+  "intake/pdlc:recon": 2,
+  "show/pdlc:reviewer": 4,
+  "tests/pdlc:reviewer": 4,
+  "tests/pdlc:test-writer": 4,
+  "verify/pdlc:reviewer": 12
+ },
+ "failures": {
+  "tool errors": {
+   "Edit (pdlc:test-writer)": 1
+  },
+  "hook blocks": {
+   "commits: writing": 6
+  },
+  "hook findings": {
+   "commits: writing": 24
+  },
+  "permission denials": 0,
+  "rate limits": 9,
+  "is_error": false
+ },
+ "git": {
+  "rounds": {
+   "acceptance locks": 2,
+   "tests locks": 4,
+   "verify rounds": 3,
+   "recordings": 4,
+   "send-backs": {},
+   "stops": 0
+  },
+  "reviews": {
+   "compliance": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "privacy": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "quality": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "security": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "specification": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "tests": {
+    "results": 6,
+    "failed": 2,
+    "problems": 2
+   },
+   "visual": {
+    "results": 4,
+    "failed": 1,
+    "problems": 1
+   }
+  },
+  "work": {
+   "changes": 3,
+   "commits": 50,
+   "intents awaiting approval": 0,
+   "requirement statuses": {
+    "built": 11,
+    "verified": 11
+   },
+   "lines": {
+    "app code added": 63,
+    "app code removed": 14,
+    "checks added": 1126,
+    "checks removed": 9,
+    "docs added": 10,
+    "docs removed": 4,
+    "pdlc records added": 2704,
+    "pdlc records removed": 46,
+    "review packets added": 13587,
+    "review packets removed": 0
+   },
+   "requirements with checks": 13
+  }
+ },
+ "outcome": {
+  "probes": "8 of 8",
+  "checks pass": true,
+  "checks": 59,
+  "finished": true,
+  "writing findings left": 0
+ },
+ "fixture": "todo-rust"
+}

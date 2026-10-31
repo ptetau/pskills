@@ -6,7 +6,7 @@ the app and the intent. Each language has 1 run first.
 
 | Language | Status |
 |---|---|
-| Rust | 1 run: `rust.json`, `rust-1.metrics.json` |
+| Rust | 2 runs: `rust.json` and `rust-1.metrics.json`, then `rust-2.json` and `rust-2.metrics.json` after the fixes of the test writer |
 | Clojure | Waits for the Clojure CLI in the setup script of the environment |
 | Lean 4 | Waits for Lean 4 (elan) in the setup script of the environment |
 
@@ -70,3 +70,41 @@ part of intake.
   wall time.
 - **Change status.** The status is on one header line with other fields, and the bench
   read it as "?". Now it reads the field.
+
+## Rust, run 2: after the fixes of the test writer
+
+Between the two runs, pdlc got three fixes of the test writer:
+
+- A Glob counts as a read of the folders that its pattern can list.
+- A stored-data line gets a component check, and no acceptance check.
+- The test writer gets one brief with each input.
+
+| Measure | Run 1 | Run 2 |
+|---|---|---|
+| Cost | $6.18 | $4.93 (-20%) |
+| Time | 1,433 s | 1,257 s (-12%) |
+| Tool calls of the test writer (reads) | 65 (33) | 46 (16) |
+| Guard blocks | 9 | 0 |
+| Tool errors | 13 | 1 |
+| Acceptance locks | 3 | 2 |
+| Acceptance stage | $1.18, 394 s | $0.73, 200 s |
+| Failed tests reviews (problems) | 3 (9) | 2 (2) |
+| `verify` rounds | 5 | 3 |
+| Recordings (failed visual reviews) | 9 (3) | 4 (1) |
+| Probes | 8 of 8 | 8 of 8 |
+
+Each fix shows in the run:
+
+- The skill made the brief 10 times, and each prompt of the test writer was only the path
+  of a brief.
+- The acceptance file starts with the list of its stored-data lines, each with its change.
+- The tests reviewer failed one entry of that list. The entry named a data path that is a
+  folder, and the interface can make that state. Thus, the guard against a wrong entry
+  works.
+- The other failed tests review found a real fault. A check of a write error returned
+  early when the process could still write, so it proved nothing.
+
+Each column is one run, and one run varies a lot. The guard blocks, the tool errors, the
+reads of the test writer and the acceptance stage follow from the fixes. The `verify`
+rounds and the recordings can also vary by chance. The tests stage took longer (342 s
+against 222 s), with 4 locks in each run.
