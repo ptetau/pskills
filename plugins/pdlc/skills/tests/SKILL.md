@@ -35,7 +35,8 @@ of an intent, the acceptance checks are its checks.
   or `merged`. If not, its `verify` and show stages finish first.
 - The delivery port starts the branch of the change ("Stacked changes").
 - The `pdlc:test-writer` agent gets the absolute path of the change spec and nothing else,
-  and writes the files under "Check files".
+  and writes the files under "Check files". After a failed review, the prompt also holds
+  the problems as text ("Checks before code").
 - The test writer cannot delete files. When it reports that a check file served only a
   `(retire)` requirement, the skill removes the file with `git rm` before the lock.
 - Red runs the checks of each requirement through the checks port.

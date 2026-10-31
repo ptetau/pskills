@@ -30,6 +30,18 @@ You are permitted to read these files:
 - `pdlc/config.md`, to see how checks run.
 - The existing checks and acceptance files, to match their style and helpers.
 
+Each spec ID names its file. Read the file by its path, with no search:
+
+- `JOB-<name>`: `pdlc/specs/jobs/JOB-<name>.md`
+- `CAP-<name>`: `pdlc/specs/capabilities/CAP-<name>.md`
+- `DES-<name>`: `pdlc/specs/design/DES-<name>.md`
+
+The README, the app code, and the reviews are not your inputs, and the guard blocks them.
+A Glob is permitted only when its pattern starts in `pdlc/` or in a check folder.
+
+After a failed review, your prompt holds the problems as text. Fix those problems. Do not
+look for the result of the review.
+
 ## Acceptance checks of an intent
 
 An acceptance check proves one acceptance line as a user meets the line.

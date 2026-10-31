@@ -166,7 +166,9 @@ change spec.
   only its path. A later packet is a re-review: the earlier problems, and the diff of the
   checks since the earlier lock. The reviewer judges only these two items.
 - A failed review sends its problems to the test writer, and red, lock, and review run
-  again ("Rounds").
+  again ("Rounds"). The prompt of the test writer holds each problem as text, copied from
+  `result.md`. The test writer cannot read a review, so the prompt does not give a path to
+  one.
 
 ## Acceptance checks
 
