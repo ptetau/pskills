@@ -404,6 +404,26 @@ class MergeCheck(unittest.TestCase):
         self.passed(["tests"], wrong="")
         self.assertEqual(self.run_check("CH-0001")[0], 0)
 
+    # A hash lock keeps its tests review
+
+    def test_a_hash_lock_still_needs_its_tests_review(self):
+        _, new = self.relocked_repo()
+        self.reviewed_lock(new)
+        (self.change / "review/tests/result.md").unlink()
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("tests review has no result", out)
+
+    def test_a_hash_lock_after_an_acceptance_lock_needs_its_tests_review(self):
+        _, new = self.relocked_repo()
+        self.write(checks="- test/email.test.js",
+                   lock="Tests-Locked: acceptance\nTests-Locked: %s\n" % new)
+        self.reviewed_lock(new)
+        (self.change / "review/tests/result.md").unlink()
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("tests review has no result", out)
+
     # The branch must merge into main
 
     def commit_all(self, message):
@@ -655,12 +675,15 @@ class AcceptanceGate(unittest.TestCase):
                  "# Review packet · IN-0002-password-reset · tests\n\nAcceptance-Locked: %s\n" % lock)
         self.put(ACCEPTANCE_REVIEW + "/result.md", "Result: %s\n\nProblems: none\n\n%s" % (result, wrong))
 
-    def change(self, change, status, branch, reqs):
+    def change(self, change, status, branch, reqs, lock="", tests_review=True, checks="none"):
+        """A change spec. A change with "Tests-Locked: acceptance" has no tests review of its
+        own, so a test passes tests_review=False for it."""
         folder = "pdlc/changes/%s" % self.NAMES[change]
         self.put(folder + "/change.md", CHANGE.format(status=status, reqs=reqs, branch=branch,
-                                                      lock="", checks="none")
+                                                      lock=lock, checks=checks)
                  .replace("# CH-0001 · Email templates", "# %s · %s" % (change, self.NAMES[change])))
-        self.put(folder + "/review/tests/result.md", "Result: pass\n\nProblems: none\n")
+        if tests_review:
+            self.put(folder + "/review/tests/result.md", "Result: pass\n\nProblems: none\n")
 
     def start(self, changes=("CH-0001",)):
         """main with the plan, then the intent branch with the acceptance checks, locked and
@@ -670,7 +693,8 @@ class AcceptanceGate(unittest.TestCase):
         self.put("pdlc/specs/capabilities/CAP-email.md", CAPABILITY.format(r1="ready", r2="ready"))
         self.put("src/email.js", "// sends email\n")
         for change in self.changes:
-            self.change(change, "planned", "none", "### CAP-email.R2 · Send from a template")
+            self.change(change, "planned", "none", "### CAP-email.R2 · Send from a template",
+                        tests_review=False)
         self.intent()
         git(self.root, "init", "-q", "-b", "main")
         self.commit("Plan IN-0002")
@@ -684,17 +708,17 @@ class AcceptanceGate(unittest.TestCase):
         self.lock = lock
         return lock
 
-    def build(self, change, branch, start, reqs, r1="ready", r2="verified"):
-        """The change on its own branch, in review, with its code."""
+    def build(self, change, branch, start, reqs, r1="ready", r2="verified", **options):
+        """The change on its own branch, in review, with its code. The options go to change()."""
         git(self.root, "switch", "-qc", branch, start)
-        self.change(change, "in review", branch, reqs)
+        self.change(change, "in review", branch, reqs, **options)
         self.put("pdlc/specs/capabilities/CAP-email.md", CAPABILITY.format(r1=r1, r2=r2))
         self.put("src/email.js", (self.root / "src/email.js").read_text() + "// %s\n" % change)
         return self.commit("Build " + change)
 
-    def build_first(self):
+    def build_first(self, **options):
         return self.build("CH-0001", self.FIRST, self.INTENT_BRANCH,
-                          "### CAP-email.R2 · Send from a template")
+                          "### CAP-email.R2 · Send from a template", **options)
 
     def record_pass(self, sha=None):
         sha = sha or git(self.root, "rev-parse", "HEAD")
@@ -865,6 +889,75 @@ class AcceptanceGate(unittest.TestCase):
         self.commit("Verified")
         code, out = self.run_check()
         self.assertEqual(code, 0, out)
+
+    # Tests-Locked: acceptance. The acceptance checks are also the checks of the only change.
+
+    BY_ACCEPTANCE = {"lock": "Tests-Locked: acceptance\n", "tests_review": False}
+
+    def test_the_only_change_can_use_the_acceptance_checks(self):
+        self.start()
+        self.build_first(**self.BY_ACCEPTANCE)
+        self.record_pass()
+        self.assertFalse((self.root / "pdlc/changes/CH-0001-email-templates/review/tests").exists())
+        code, out = self.run_check()
+        self.assertEqual(code, 0, out)
+
+    def test_tests_locked_acceptance_fails_for_an_intent_with_two_changes(self):
+        self.start(changes=("CH-0001", "CH-0002"))
+        self.build_first(**self.BY_ACCEPTANCE)
+        self.build("CH-0002", self.SECOND, self.FIRST, "### CAP-email.R1 · Send plain email",
+                   r1="verified")
+        self.record_pass()
+        git(self.root, "switch", "-q", self.FIRST)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("Tests-Locked: acceptance is only for the only change of an intent. "
+                      "IN-0002 lists CH-0001, CH-0002. Run /pdlc:tests", out)
+
+    def test_tests_locked_acceptance_fails_with_check_files(self):
+        self.start()
+        self.build_first(lock="Tests-Locked: acceptance\n", tests_review=False,
+                         checks="- test/email.test.js")
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn('Tests-Locked: acceptance needs "- none" under "Check files"', out)
+        self.assertNotIn("tests are not locked", out)
+
+    def test_tests_locked_acceptance_needs_an_acceptance_lock(self):
+        self.start()
+        self.build_first(**self.BY_ACCEPTANCE)
+        self.intent(lock="none")
+        self.commit("lock removed")
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("Tests-Locked: acceptance needs the acceptance checks of IN-0002 locked", out)
+
+    def test_tests_locked_acceptance_still_needs_a_passed_acceptance_review(self):
+        self.start()
+        self.build_first(**self.BY_ACCEPTANCE)
+        self.review(self.lock, result="fail")
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("acceptance review of IN-0002 did not pass", out)
+
+    def test_tests_locked_acceptance_still_needs_the_acceptance_pass_at_the_top(self):
+        self.start()
+        self.build_first(**self.BY_ACCEPTANCE)
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("no Acceptance-Passed at the top of the stack (CH-0001)", out)
+
+    def test_a_tests_review_result_is_not_needed_but_the_other_remits_are(self):
+        self.start()
+        self.put("pdlc/config.md", CONFIG.format(remits="tests, specification"))
+        self.build_first(**self.BY_ACCEPTANCE)
+        self.record_pass()
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("specification review has no result", out)
+        self.assertNotIn("tests review has no result", out)
 
 
 if __name__ == "__main__":

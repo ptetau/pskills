@@ -1,0 +1,200 @@
+{
+ "label": "B-plain",
+ "plugin_commit": "b8615db",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 106,
+     "cache_write": 192710,
+     "cache_read": 2153276,
+     "output": 26343
+    },
+    "cost_usd": 0.9915,
+    "duration_s": 251.9,
+    "turns": 11,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 5,
+    "models": {
+     "claude-sonnet-5-5": 0.9915
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 14209,
+      "cache_read": 145728,
+      "output": 61
+     },
+     "cost_usd": 0.0897,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 13.3
+    },
+    "intake": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 57811,
+      "cache_read": 410524,
+      "output": 149
+     },
+     "cost_usd": 0.2366,
+     "messages": 10,
+     "agents": {
+      "pdlc:stage": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 57624,
+        "cache_read": 368148,
+        "output": 114
+       },
+       "cost_usd": 0.2266,
+       "messages": 9,
+       "calls": 1,
+       "wall_s": 57.2
+      }
+     },
+     "wall_s": 61.2
+    },
+    "ready": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 24156,
+      "cache_read": 370930,
+      "output": 156
+     },
+     "cost_usd": 0.1427,
+     "messages": 10,
+     "agents": {
+      "pdlc:stage": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 23045,
+        "cache_read": 328367,
+        "output": 121
+       },
+       "cost_usd": 0.129,
+       "messages": 9,
+       "calls": 1,
+       "wall_s": 48.4
+      }
+     },
+     "wall_s": 50.9
+    },
+    "change": {
+     "tokens": {
+      "input": 22,
+      "cache_write": 33232,
+      "cache_read": 450236,
+      "output": 174
+     },
+     "cost_usd": 0.1832,
+     "messages": 11,
+     "agents": {
+      "pdlc:stage": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 31873,
+        "cache_read": 406562,
+        "output": 158
+       },
+       "cost_usd": 0.1684,
+       "messages": 10,
+       "calls": 1,
+       "wall_s": 52.1
+      }
+     },
+     "wall_s": 54.6
+    },
+    "acceptance": {
+     "tokens": {
+      "input": 36,
+      "cache_write": 63302,
+      "cache_read": 775858,
+      "output": 869
+     },
+     "cost_usd": 0.3393,
+     "messages": 18,
+     "agents": {
+      "pdlc:stage": {
+       "tokens": {
+        "input": 28,
+        "cache_write": 59634,
+        "cache_read": 588895,
+        "output": 179
+       },
+       "cost_usd": 0.2783,
+       "messages": 14,
+       "calls": 2,
+       "wall_s": 57.7
+      }
+     },
+     "wall_s": 69.7
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 252.9,
+   "outcome": {
+    "branches": [
+     "main"
+    ],
+    "changes": [
+     "CH-0001-top-option"
+    ],
+    "dirty": false,
+    "change_status": {},
+    "stops": [
+     "Stop IN-0001: acceptance needs agents"
+    ],
+    "verify_rounds": 0,
+    "proposed": false,
+    "tip": "main",
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/capabilities/CAP-word-counting.md",
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 8
+    },
+    "probes": {
+     "passed": 1,
+     "total": 8,
+     "failed": [
+      "top 2 keeps the two most common",
+      "top 1 keeps one",
+      "top larger than the word count keeps all",
+      "top 0 is an error",
+      "top -3 is an error",
+      "top abc is an error",
+      "top 2.5 is an error"
+     ],
+     "option_after_file_failed": [
+      "top 2 keeps the two most common",
+      "top 1 keeps one",
+      "top larger than the word count keeps all",
+      "top 0 is an error",
+      "top -3 is an error",
+      "top abc is an error",
+      "top 2.5 is an error"
+     ]
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-wi1jy06i/app"
+  }
+ ]
+}

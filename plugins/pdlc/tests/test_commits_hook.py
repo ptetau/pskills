@@ -235,6 +235,14 @@ class WritingHook(unittest.TestCase):
         self.assertIn("sentence length", err)
         self.assertIn("git commit --amend", err)
 
+    def test_the_writing_report_asks_for_one_edit_and_one_amend(self):
+        self.write("pdlc/specs/jobs/JOB-email.md", "\n" + LONG + "\n")
+        self.commit("Specify IN-0001: mail")
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        for text in ("in one edit", "one time", "--no-edit", "Do not run check_writing.py"):
+            self.assertIn(text, err)
+
     def test_the_same_findings_are_reported_once(self):
         self.write("pdlc/specs/jobs/JOB-email.md", "\n" + LONG + "\n")
         self.commit("Specify IN-0001: mail")

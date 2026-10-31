@@ -9,5 +9,10 @@ The visual-web adapter fills the visual port for web apps, in a real browser.
   - After a `click`, `type`, or `press` step, the recorder waits for the page to change
     and settle. The recorder fails the step if the page does not change.
   - Set `"unchanged": true` only if the acceptance line says that nothing changes.
+  - A `run` step shows a command and its output in a terminal, in a second tab. Use it for
+    what a page cannot show, for example a status code, a header, or a redirect.
+    For example, `curl -si {base_url}/items -d text=milk` shows the 303 and its `Location`.
+    In a command, `{base_url}` stands for `base_url`. The page keeps its state for the next
+    web step.
 - **record**: run `node pdlc/bin/record_gif.mjs <visual.json> <change folder>`. At the
   end, the recorder stops the app.

@@ -3,7 +3,8 @@
 
 It keeps pdlc's agents in their lanes:
   - pdlc:test-writer reads only pdlc/ specs and checks, and writes only checks. It does
-    not see app code or a review.
+    not see app code or a review. A Glob counts as a read of each folder that its pattern
+    can list, so a pattern from the project root that names only those folders is fine.
   - pdlc:builder never edits checks or pdlc/ files.
   - pdlc:reviewer reads only review packets and frames, and writes only its result.
   - pdlc:recon never writes.
@@ -84,13 +85,35 @@ def is_check(path, root, checks, acceptance):
             or bool(ACCEPTANCE_NAME.match(os.path.basename(path))))
 
 
+def expand_braces(pattern):
+    """Each pattern that a glob with {a,b} groups stands for."""
+    found = re.search(r"\{([^{}]*)\}", pattern)
+    if not found:
+        return [pattern]
+    head, tail = pattern[:found.start()], pattern[found.end():]
+    return [p for part in found.group(1).split(",") for p in expand_braces(head + part + tail)]
+
+
+def glob_folders(base, pattern):
+    """The folders that a Glob can list: for each alternative of the pattern, the part before
+    its first wildcard. A pattern with no wildcard names one file."""
+    out = []
+    for alternative in expand_braces(os.path.join(base, os.path.expanduser(pattern))):
+        literal = re.split(r"[*?\[]", alternative, 1)[0]
+        if literal != alternative and not literal.endswith(os.sep):
+            literal = os.path.dirname(literal)
+        out.append(os.path.realpath(literal))
+    return out
+
+
 def targets(cwd, tool, args):
-    """Every path this call could touch, made absolute."""
+    """Every path this call could touch, made absolute. A Glob only lists file names, so its
+    targets are the folders that its pattern can list, not the folder that it starts from."""
     base = args.get("file_path") or args.get("notebook_path") or args.get("path") or cwd
-    paths = [os.path.realpath(os.path.join(cwd, os.path.expanduser(base)))]
+    base = os.path.realpath(os.path.join(cwd, os.path.expanduser(base)))
     if tool == "Glob" and args.get("pattern"):
-        paths.append(os.path.realpath(os.path.join(paths[0], args["pattern"])))
-    return paths
+        return glob_folders(base, args["pattern"])
+    return [base]
 
 
 def inside(path, root, *folders):

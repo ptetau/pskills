@@ -48,6 +48,18 @@ class Guard(unittest.TestCase):
         self.assertFalse(self.ok("pdlc:test-writer", "Glob", pattern="src/**/*.js"))
         self.assertFalse(self.ok("pdlc:test-writer", "Read", file_path="test/../src/greet.js"))
 
+    def test_test_writer_globs_from_the_root_when_the_pattern_lists_only_its_folders(self):
+        root = str(self.cwd)
+        self.assertTrue(self.ok("pdlc:test-writer", "Glob", pattern=root + "/test/**"))
+        self.assertTrue(self.ok("pdlc:test-writer", "Glob",
+                                pattern=root + "/{pdlc/changes/*/change.md,pdlc/specs/**/*.md,pdlc/config.md}"))
+        self.assertTrue(self.ok("pdlc:test-writer", "Glob", pattern="pdlc/specs/design/DES-pdlc-ids.md"))
+
+    def test_test_writer_cannot_glob_a_pattern_that_lists_app_code(self):
+        self.assertFalse(self.ok("pdlc:test-writer", "Glob", pattern="*"))
+        self.assertFalse(self.ok("pdlc:test-writer", "Glob", pattern="{test,src}/*.js"))
+        self.assertFalse(self.ok("pdlc:test-writer", "Glob", pattern=str(self.cwd) + "/**/*.js"))
+
     def test_test_writer_cannot_read_reviews(self):
         self.assertFalse(self.ok("pdlc:test-writer", "Read",
                                  file_path="pdlc/changes/CH-0001-x/review/security/packet.md"))

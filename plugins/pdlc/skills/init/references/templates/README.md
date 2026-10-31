@@ -14,8 +14,9 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 5. A job change uses capabilities, but does not edit their code ("Code maps"). A missing
    capability gets its own change, before the job change.
 6. The test writer writes the checks from the spec, before the code. The acceptance checks
-   of the intent come first, then the component checks of each change. A writer of app
-   code does not change a locked check.
+   of the intent come first, then the component checks of each change. An intent with one
+   change usually has only its acceptance checks ("Acceptance checks"). A writer of app code does
+   not change a locked check.
 7. Each review remit gets one fresh reviewer, and the reviewer sees only its packet.
 8. A change merges only when all of these are true, as `bin/check_merge.py` confirms:
    - The requirements of the change are `verified`.
@@ -34,8 +35,10 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 - The trailers follow a blank line, one on each line: `Intent: IN-xxxx` first, then
   `Change: CH-xxxx` on the branch of a change. A commit that changes code, checks, or the
   README also has `Req: <IDs>`.
-- A hook examines each new commit on a pdlc branch. The skill fixes each problem that the
-  hook names at once, with `git commit --amend`.
+- A hook examines each new commit. On a pdlc branch, it examines the subject and the
+  trailers. On every branch, it examines the writing in the specs, the intents, and the
+  change folders. The skill fixes all the problems that the hook names in one edit, and
+  amends the commit one time.
 
 ## Writing
 
@@ -48,7 +51,9 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
   "then" part with a full stop and a second short sentence.
 - A skill reads the full rules before it writes or changes a spec or an intent. For a
   handoff, a proposal, a commit message, or a reply, the short form is sufficient.
-- `bin/check_writing.py <file>` finds the breaks that a script can find.
+- The commit hook runs `bin/check_writing.py` on the lines that each commit writes, and
+  shows every finding. Part 4 of `DES-writing-style` tells a writer to run the script. In
+  pdlc, the hook does this step, and a skill does not run the script.
 
 ## Layout
 
@@ -58,11 +63,12 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 - `reviews/`: one file for each remit, with what its reviewer judges.
 - `inbox/`: one file for each intent.
 - `specs/jobs/`, `specs/capabilities/`, `specs/design/`: the specs.
-- `acceptance/IN-xxxx-name/review/tests/`: `packet.md` and `result.md` of the review of the
-  acceptance checks of an intent.
-- `changes/CH-xxxx-name/`: one folder for each change, with `change.md` (the change spec),
-  `handoff.md`, `visual.json`, `review.gif`, `frames/`, `review/<remit>/packet.md` and
-  `result.md`, and `proposal.md` when there is no remote.
+- `acceptance/IN-xxxx-name/`: `brief.md` of the test writer, and in `review/tests/`, the
+  `packet.md` and `result.md` of the review of the acceptance checks of an intent.
+- `changes/CH-xxxx-name/`: one folder for each change. It holds `change.md` (the change
+  spec), `handoff.md`, `brief.md` of the test writer, `visual.json`, `review.gif`,
+  `frames/`, `review/<remit>/packet.md` and `result.md`, and `proposal.md` when there is no
+  remote.
 - `templates/`: blank documents. A filled document has real content in place of each
   `<placeholder>` and each guide sentence.
 - `bin/`: `check_merge.py`, `check_writing.py`, `make_packets.py`, `record_gif.mjs`,
@@ -111,7 +117,9 @@ A guard in the pdlc plugin keeps the roles in these lanes. For each agent:
 ## Stages and handoffs
 
 The intent stages are intake → ready → change → acceptance. The change stages are tests →
-build → show → `verify`. `/pdlc:ship` runs them all.
+build → `verify` → show. `/pdlc:ship` runs them all. Show records a change only after it
+passed `verify`. An independent reviewer judges the recording, and then show proposes the
+merge.
 
 - Each stage starts from the latest handoff, and ends with a new one from
   `templates/handoff.md`, which replaces the old one. Git keeps the history.
@@ -159,7 +167,9 @@ change spec.
   only its path. A later packet is a re-review: the earlier problems, and the diff of the
   checks since the earlier lock. The reviewer judges only these two items.
 - A failed review sends its problems to the test writer, and red, lock, and review run
-  again ("Rounds").
+  again ("Rounds"). The prompt of the test writer holds each problem as text, copied from
+  `result.md`. The test writer cannot read a review, so the prompt does not give a path to
+  one.
 
 ## Acceptance checks
 
@@ -171,6 +181,13 @@ the intent, and each feature that exists already.
   `Acceptance-File:` and `Acceptance-Locked:` in the intent record the file and the lock.
 - A component check (a check of a change) uses only the interface of its change and of
   earlier changes.
+- A **stored-data line** is an acceptance line that needs direct access to the stored data.
+  The line is about the stored form (how a file or a store holds the data), or it needs a
+  state that the interface cannot make (for example an old or a broken data file).
+- A stored-data line gets a component check of the change that lists its requirement, and
+  no acceptance check. At its top, the acceptance file lists each such line in a comment:
+  the requirement ID, the line, and that change. The acceptance checks still prove what a
+  user sees of the data, for example that it stays after a restart.
 - The "all" command does not run an acceptance file. Thus, the acceptance checks of an
   open intent can fail until its last change, and main stays green.
 - The build and `verify` stages run all checks and **run earlier acceptance**, and for the
@@ -179,12 +196,18 @@ the intent, and each feature that exists already.
 - For an earlier change, a failure of **run acceptance** is expected, and is not reported.
 - After the intent merges, its acceptance checks stay, and each later change keeps them
   green.
+- The intent can list one change, with no stored-data line. Then its acceptance checks
+  are also the checks of that change. That change has `- none` under
+  "Check files", and `Tests-Locked: acceptance`. Its tests stage starts the branch and
+  writes the handoff, with no test writer and no review.
+- For such a change, the acceptance review is also its tests review, and the merge check
+  reads it. A problem with one of its checks goes to the acceptance stage.
 
 ## Rounds
 
 A round is one failed tests or acceptance review, one failed `verify`, or one builder
-report that a check is wrong. A fix of a check before its lock is not a round. An agent
-blocked twice is one round. Each change has two rounds, and so does the acceptance stage
+report that a check is wrong. A failed visual review is also a round. A fix of a check
+before its lock is not a round. An agent blocked twice is one round. Each change has two rounds, and so does the acceptance stage
 of each intent. The third failure of the same stage stops the work, and the skill asks the
 user.
 

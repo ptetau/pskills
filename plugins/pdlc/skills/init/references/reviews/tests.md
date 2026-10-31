@@ -65,15 +65,23 @@ each of its changes. Judge the acceptance checks by the list at the top, with th
 differences:
 
 - Each acceptance line of each requirement that the intent lists has at least one check. A
-  `retiring` requirement has no check.
+  `retiring` requirement has no check. A stored-data line also has no check here.
 - Each check uses only what a user uses: commands, HTTP requests, pages, or the public
   functions of a library. A check can use each feature of the intent, and each feature
   that exists already.
 - No check reads or writes stored data directly. A check that opens a saved file or
   queries a store is a problem.
+- A stored-data line needs direct access to the stored data. The line is about the stored
+  form, or it needs a state that the interface cannot make. An example of such a state is
+  an old or a broken data file. The comment at the top of the file lists each such line, with a change of the
+  intent that lists its requirement. Such a line with no check is not a problem.
+- A line in that list that the interface can prove is a problem. So is a listed line whose
+  change does not list its requirement. The packet gives the requirements of each change.
 - A check can leave the acceptance file of an earlier intent only when the check proved a
   requirement that this intent changes or retires. Then a check in this file proves the
   new line. Any other removal is a problem.
 - Each check fails until the last change of the intent is built. That is not a problem.
+- When the intent lists one change, these checks are also the checks of that change. Then
+  each error code and each test seam in its "Interface" has a check.
 
 Write "Wrong versions" for the acceptance checks in the same way as for other checks.

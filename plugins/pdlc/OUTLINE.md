@@ -51,7 +51,7 @@ judge the change: one reviewer for each remit, and each reviewer sees only its p
 Then you approve the change. Only after these steps can the change merge.
 
 ```
- intent ─► spec patches ─► ready ─► change specs ─► acceptance ─► tests ─► build ─► show ─► verify ─► merge
+ intent ─► spec patches ─► ready ─► change specs ─► acceptance ─► tests ─► build ─► verify ─► show ─► merge
  (inbox)   (job/cap/design) (clarify, (one job or    (checks of   (written  (builder, (GIF)  (checks +   (you
                             contra-   cap each,       the intent,  first,    can't            6 inde-     approve)
                             dictions) stacked)        locked)      locked)   touch tests)     pendent
@@ -228,7 +228,8 @@ simplified form of the `.plan.md` format that `/quiz-plan` uses.
   those parts change.
 - **Check files**: the component checks. Only the test writer is permitted to change these
   files.
-- **Tests-Locked**: the commit that locked the checks.
+- **Tests-Locked**: the commit that locked the checks. The value `acceptance` says that
+  the acceptance checks of the intent are the checks of this change.
 - **Steps**: small steps. Each step gives the requirement that it serves and the test that
   proves it.
 - **Progress log**: a record of what happened. New entries go at the end, as the work
@@ -293,9 +294,10 @@ builds:
   after the checks are locked, before the builder writes code. The acceptance checks of an
   intent get their own tests review, before the first change starts.
 - **specification, security, quality, compliance, privacy**: the spec and the code, but
-  not the checks. These reviews run in parallel after the visual review. The
-  specification reviewer also examines the frames of the GIF and the output of
-  `check_writing.py`.
+  not the checks. These reviews run in parallel after the build. The specification
+  reviewer also examines the output of `check_writing.py`.
+- **visual**: the spec, the script of the recording, and its frames, but not the code.
+  This review runs in `show`, after the recording.
 
 A reviewer fails a change only for what the spec of the change covers, or for unsafe
 code. Anything new that the reviewer wants (another input check, another error) is a
@@ -343,6 +345,7 @@ are the decisions, one on each line:
 - **Regression:** after the intent merges, its acceptance checks stay, and each later change keeps them green.
 - **A changed requirement:** a later intent moves the old check of a changed requirement into its own acceptance file, and the review judges each move.
 - **Component checks:** the checks of a change test one spec through the interface of that change and of earlier changes only.
+- **One change:** the acceptance checks are also the checks of that change. The tests stage writes no checks, and the merge check reads the acceptance review.
 - **Fixtures:** a component check can prepare state directly, for example with a fixture file, but reads results through the interface.
 - **The guard:** the guard treats an acceptance file as a check, so the test writer writes it and the builder cannot.
 - **Init:** recon proposes the path and the command, and init makes sure that the "all" command skips that path.
@@ -350,9 +353,12 @@ are the decisions, one on each line:
 
 ### Visual review
 
-`show` plays each acceptance line in the real app: in a browser for web apps, and in a
-terminal for CLIs and libraries. Then `show` saves `review.gif` and its frames in the
-change folder. The commit gives the name of the GIF, and the pull request embeds the GIF.
+`show` runs after a passed `verify`. It plays each acceptance line in the real app: in a
+browser for web apps, and in a terminal for CLIs and libraries. Then `show` saves
+`review.gif` and its frames in the change folder. A fresh reviewer judges the frames, and
+then `show` proposes the merge. The commit gives
+the name of the GIF, and the pull request embeds the GIF.
+
 Each frame must show what its caption claims. The recorder fails a blank frame. The
 recorder also fails a step that must change the screen but does not.
 
@@ -534,8 +540,8 @@ pdlc is a Claude Code plugin. You call its skills as `/pdlc:<name>`.
 | `acceptance` | Tells the test writer to write the acceptance checks of the intent. Makes sure that the checks fail. Locks the checks on the intent branch, and gets a review of the checks. |
 | `tests` | Tells the test writer to write the component checks of a change from the spec. Makes sure that the checks fail. Locks the checks, and gets a review of the checks. |
 | `build` | Tells the builder to write app code until the locked checks pass. Marks the requirements `built`. |
-| `show` | Records the change as it works, as `review.gif` and frames. |
-| `verify` | Runs all the checks and the independent code reviews. Marks the requirements `verified`, and proposes the merge. |
+| `verify` | Runs all the checks and the independent code reviews. Marks the requirements `verified`. |
+| `show` | Records the verified change as it works, as `review.gif` and frames. A reviewer judges the frames. Then `show` proposes the merge. |
 | `ship` | Runs all the stages from start to end with the recommended answers, and stacks the changes. Continues from the point where it stopped. |
 | `conventions` | Establishes or changes a convention with you, and creates migration intents. |
 | `board` | Re-syncs each intent and each change to the tracker. |
@@ -583,7 +589,8 @@ You put "let users reset their password" into the inbox as `IN-0012`.
 5. **build** completes `CH-0031` (email templates), test first. Each commit carries its
    trailers. The acceptance checks of `IN-0012` still fail, as expected.
 6. **`verify`** runs the checks and the reviewer. The checks and the review pass. Thus,
-   `CAP-email.R3` (send from a template) is `verified`, and a PR opens.
+   `CAP-email.R3` (send from a template) is `verified`. Then **show** records the change,
+   and a PR opens.
 7. The same steps occur for `CH-0032` (the password reset job). Its `verify` stage also
    runs the acceptance checks of `IN-0012`, and they pass. You approve the two PRs, and
    they merge together. `IN-0012` is `done`, and the card on your board moves to Done.

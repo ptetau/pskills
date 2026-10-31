@@ -20,7 +20,7 @@ change of the intent is proposed. Ship stops only for a case that needs the user
   needs a Sonnet 5.5 class model or above.
 - The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first.
 - Each stage runs through its own skill, with `defaults`, in the order of
-  "Stages and handoffs". Each change gets every stage, also show and `verify` with
+  "Stages and handoffs". Each change gets every stage, also `verify` and show with
   nothing on screen.
 - Only the handoffs and the files carry information from one stage to the next.
 - Changes stack ("Stacked changes"). The tests of the next change start as soon as a
@@ -39,8 +39,10 @@ change of the intent is proposed. Ship stops only for a case that needs the user
 - Ship reads each intent and change where it lives ("Where pdlc commits"), and starts
   from the latest handoff. Thus, ship continues after a stop, a crash, or a new session.
 - A failed `verify` goes to the stage that its handoff names for each problem: tests,
-  acceptance, or build. A failed tests review goes to tests. Then build, show, and
-  `verify` run again. A failed acceptance review goes to acceptance.
+  acceptance, or build. A failed tests review goes to tests. Then build and `verify` run
+  again, and show runs after a passed `verify`. A failed acceptance review goes to
+  acceptance. A failed visual review goes to show for a wrong script, and to build for a
+  wrong app.
 - A failed review is not a question for the user. Each change, and the acceptance stage
   of each intent, has two rounds ("Rounds").
 - Ship stops only for these cases:

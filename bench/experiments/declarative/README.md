@@ -23,11 +23,27 @@ run of 0.4.0 reached the merge proposal.
 The cost rise is probably real. The one-sided test that 0.4.0 costs more gives a chance of 6% that
 the rise is luck. Most of the rise is in the main session, not in the agents:
 
-- The tests stage has 33 messages against 27.7, about $0.11 more a run.
-- The intake stage has 13.5 messages against 10, about $0.06 more a run. Intake also starts the
-  recon agent more often: 12 times in 6 runs, against 5 times.
-- The `verify` stage has fewer reviewer calls, because it has fewer `verify` rounds. But its main
-  session costs about $0.05 more a run.
+| Stage | 0.3.0 | 0.4.0 | Change |
+|---|---|---|---|
+| acceptance | $0.278 | $0.404 | +$0.126 |
+| intake | $0.168 | $0.253 | +$0.085 |
+| tests | $0.211 | $0.271 | +$0.060 |
+| verify | $0.541 | $0.574 | +$0.032 |
+| build | $0.179 | $0.143 | -$0.036 |
+| ready | $0.061 | $0.039 | -$0.023 |
+
+- The main session of acceptance costs about $0.10 more a run.
+- Intake also starts the recon agent more often: 12 times in 6 runs, against 5 times.
+- The `verify` stage has fewer reviewer calls, because it has fewer `verify` rounds.
+
+A first version of this note gave about $0.11 more for the tests stage. That number came from a
+fault in the bench. It counted the test writer and the reviewer of the acceptance stage under the
+tests stage. The bench now counts each agent call under the stage that made it, and the result
+files hold the corrected split.
+
+Run 6 of 0.4.0 lost about 430 s to one command. The command `cat > $TMPDIR/ed.sh` waited for
+input. The Bash tool moved it to the background after 120 s, and the session then waited for it
+after its work was done. Without this loss, a run of 0.4.0 takes about 556 s on average.
 
 The plain gate gives "NO GAIN", because the edit does not aim at cost. The gate with
 `--target writing` gives "REGRESSION", because a run costs 12% more.

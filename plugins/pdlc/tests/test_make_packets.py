@@ -1,8 +1,11 @@
 """Tests for pdlc's review packet builder. Run: python3 -m unittest discover plugins/pdlc/tests"""
 import importlib.util
+import shutil
+import io
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 
 SCRIPT = Path(__file__).parent.parent / "skills/init/references/bin/make_packets.py"
@@ -125,10 +128,10 @@ class Packets(PacketRepo):
             self.assertIn("SECRET-CODE", text)
             self.assertNotIn("SECRET-TEST", text)
 
-    def test_only_the_specification_packet_points_to_the_frames(self):
+    def test_no_packet_points_to_the_frames_of_an_earlier_recording(self):
         make_packets.main(["x", "CH-0001"], root=self.root)
-        self.assertIn("frames/01.png", self.packet("specification"))
-        self.assertNotIn("frames/01.png", self.packet("security"))
+        for remit in ("specification", "security"):
+            self.assertNotIn("frames/01.png", self.packet(remit))
 
     def test_only_the_specification_packet_has_the_writing_check(self):
         make_packets.main(["x", "CH-0001"], root=self.root)
@@ -197,6 +200,34 @@ class Packets(PacketRepo):
     def test_can_make_a_single_remit(self):
         make_packets.main(["x", "CH-0001", "tests"], root=self.root)
         self.assertEqual([p.name for p in (self.folder / "review").iterdir()], ["tests"])
+
+    def test_a_change_with_tests_locked_acceptance_gets_no_tests_packet(self):
+        change = self.folder / "change.md"
+        change.write_text(change.read_text().replace(
+            "\n## Requirements", "Tests-Locked: acceptance\n\n## Requirements", 1)
+            .replace("## Check files\n\n- test/greet.test.js", "## Check files\n\n- none"))
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(make_packets.main(["x", "CH-0001"], root=self.root), 0)
+        made = sorted(p.name for p in (self.folder / "review").iterdir())
+        self.assertEqual(made, ["security", "specification"])
+        self.assertIn("CH-0001 uses the acceptance checks of its intent (Tests-Locked: acceptance). "
+                      "Their packet comes from python3 pdlc/bin/make_packets.py IN-0001.", out.getvalue())
+
+    def test_a_tests_remit_that_the_user_names_is_left_out_for_tests_locked_acceptance(self):
+        change = self.folder / "change.md"
+        change.write_text(change.read_text().replace(
+            "\n## Requirements", "Tests-Locked: acceptance\n\n## Requirements", 1))
+        with redirect_stdout(io.StringIO()):
+            make_packets.main(["x", "CH-0001", "tests"], root=self.root)
+        self.assertFalse((self.folder / "review").exists())
+
+    def test_a_hash_lock_still_gets_a_tests_packet(self):
+        change = self.folder / "change.md"
+        change.write_text(change.read_text().replace(
+            "\n## Requirements", "Tests-Locked: acceptance\nTests-Locked: abcdef1\n\n## Requirements", 1))
+        make_packets.main(["x", "CH-0001", "tests"], root=self.root)
+        self.assertTrue((self.folder / "review/tests/packet.md").exists())
 
     def test_a_new_packet_removes_the_old_result(self):
         old = self.folder / "review/tests/result.md"
@@ -321,16 +352,6 @@ class ReReview(PacketRepo):
         self.assertNotIn('"color" is US spelling', writing)
         self.assertIn("+The box is gray.", text.split("## Re-review", 1)[1].split("# Remit:", 1)[0])
 
-    def test_a_specification_re_review_marks_the_frames_that_did_not_change(self):
-        self.review("specification", "Result: pass\n\nProblems:\n- none\n")
-        (self.folder / "frames/02.png").write_bytes(b"new frame")
-        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "new frame")
-        make_packets.main(["x", "CH-0001", "specification"], root=self.root)
-        text = self.packet("specification")
-        self.assertIn("frames/01.png (unchanged since the earlier review)", text)
-        self.assertIn("frames/02.png\n", text + "\n")
-        self.assertNotIn("frames/02.png (unchanged", text)
-
     def test_a_code_re_review_still_leaves_out_the_writing_rules(self):
         self.review("security", "Result: fail\n\nProblems:\n- src/greet.js:1 · unsafe · rule\n")
         make_packets.main(["x", "CH-0001", "security", "specification"], root=self.root)
@@ -373,6 +394,97 @@ Acceptance-Passed: none
 """
 
 
+class VisualPacket(PacketRepo):
+    """The show stage makes the visual packet after the recording. Verify makes none."""
+
+    def setUp(self):
+        super().setUp()
+        (self.root / "pdlc/config.md").write_text("## Reviews\n\n- remits: tests, specification, security, visual\n")
+        (self.root / "pdlc/reviews/visual.md").write_text("# Remit: visual\nJudge the frames.\n")
+        (self.folder / "visual.json").write_text('{"steps": [{"caption": "CAP-greeting.R2 · hola"}]} // SCRIPT\n')
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "visual review")
+
+    def test_the_visual_packet_has_the_script_and_the_frames_and_no_code(self):
+        make_packets.main(["x", "CH-0001", "visual"], root=self.root)
+        text = self.packet("visual")
+        self.assertIn("# Remit: visual", text)
+        self.assertIn("Says hola.", text)
+        self.assertIn("SCRIPT", text)
+        self.assertIn("frames/01.png", text)
+        self.assertNotIn("SECRET-CODE", text)
+        self.assertNotIn("SECRET-TEST", text)
+
+    def test_verify_makes_no_visual_packet(self):
+        make_packets.main(["x", "CH-0001", "--verify"], root=self.root)
+        self.assertFalse((self.folder / "review" / "visual").exists())
+        self.assertTrue((self.folder / "review" / "specification" / "packet.md").exists())
+
+    def test_a_change_with_no_frames_gets_no_visual_packet(self):
+        shutil.rmtree(self.folder / "frames")
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "no frames")
+        out = io.StringIO()
+        with redirect_stdout(out):
+            make_packets.main(["x", "CH-0001", "visual"], root=self.root)
+        self.assertFalse((self.folder / "review" / "visual").exists())
+        self.assertIn("/pdlc:show", out.getvalue())
+
+    def test_a_visual_re_review_marks_the_frames_that_did_not_change(self):
+        make_packets.main(["x", "CH-0001", "visual"], root=self.root)
+        (self.folder / "review/visual/result.md").write_text("Result: fail\n\nProblems:\n- frames/01.png · blank · rule · script\n")
+        (self.folder / "frames/02.png").write_bytes(b"new frame")
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "record again")
+        make_packets.main(["x", "CH-0001", "visual"], root=self.root)
+        text = self.packet("visual")
+        self.assertIn("## Re-review", text)
+        self.assertIn("frames/01.png (unchanged since the earlier review)", text)
+        self.assertIn("frames/02.png\n", text + "\n")
+        self.assertNotIn("frames/02.png (unchanged", text)
+
+
+class Brief(PacketRepo):
+    """The brief holds each input of the test writer in one file, and no app code or review."""
+
+    def setUp(self):
+        super().setUp()
+        r = self.root
+        (r / "pdlc/specs/design/DES-pdlc-check-tagging.md").write_text("# DES-pdlc-check-tagging\nThe ID starts the name.\n")
+        (r / "pdlc/config.md").write_text("## Checks\n\n- all: `node --test`\n- check folders: `test/`\n\n"
+                                          "## Reviews\n\n- remits: tests, specification, security\n")
+        (self.folder / "handoff.md").write_text("# Handoff · CH-0001 · change → tests\n\nHANDOFF-TEXT\n")
+        (self.folder / "review/tests").mkdir(parents=True)
+        (self.folder / "review/tests/result.md").write_text("Result: fail\nSECRET-REVIEW\n")
+        git(r, "add", "-A"); git(r, "commit", "-qm", "handoff")
+
+    def brief(self, work="CH-0001"):
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(make_packets.main(["x", work, "--brief"], root=self.root), 0)
+        return (self.folder / "brief.md").read_text()
+
+    def test_a_change_brief_holds_the_spec_the_handoff_the_rules_and_the_check_files(self):
+        text = self.brief()
+        for part in ("Write the component checks", "Given lang es", "HANDOFF-TEXT", "Says hola.",
+                     "The ID starts the name.", "- all: `node --test`", "- test/greet.test.js"):
+            self.assertIn(part, text)
+
+    def test_a_brief_holds_no_app_code_no_review_and_no_writing_rules(self):
+        text = self.brief()
+        for part in ("SECRET-CODE", "SECRET-TEST", "SECRET-REVIEW", "Write plainly."):
+            self.assertNotIn(part, text)
+
+    def test_an_intent_brief_holds_each_change_spec_of_the_intent(self):
+        r = self.root
+        (r / "pdlc/inbox").mkdir(parents=True)
+        (r / "pdlc/inbox/IN-0001-es.md").write_text(INTENT.format(lock="none"))
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(make_packets.main(["x", "IN-0001", "--brief"], root=r), 0)
+        text = (r / "pdlc/acceptance/IN-0001-es/brief.md").read_text()
+        self.assertIn("Write the acceptance checks", text)
+        self.assertIn("acceptance/IN-0001.acceptance.js", text)
+        self.assertIn("pdlc/changes/CH-0001-es/change.md", text)
+        self.assertIn("Says hola.", text)
+        self.assertNotIn("SECRET-CODE", text)
+
+
 class AcceptancePacket(PacketRepo):
     """The tests packet for the acceptance checks of an intent."""
 
@@ -406,6 +518,18 @@ class AcceptancePacket(PacketRepo):
         self.assertIn("Says hola.", text)
         self.assertIn("`greet(name, lang)` in `src/greet.js`", text)
         self.assertNotIn("Not this one.", text)
+
+    ONE_CHANGE = "The intent lists one change. These checks are also the checks of that change."
+
+    def test_an_intent_packet_with_one_change_says_its_checks_serve_the_change(self):
+        make_packets.main(["x", "IN-0001"], root=self.root)
+        self.assertIn(self.ONE_CHANGE, self.acceptance_packet())
+
+    def test_an_intent_packet_with_two_changes_does_not_say_so(self):
+        self.intent_file.write_text(INTENT.format(lock=self.lock).replace(
+            "- CH-0001 · Spanish greeting", "- CH-0001 · Spanish greeting\n- CH-0002 · More greetings"))
+        make_packets.main(["x", "IN-0001"], root=self.root)
+        self.assertNotIn("also the checks of that change", self.acceptance_packet())
 
     def test_the_acceptance_packet_has_no_code_and_no_component_checks(self):
         make_packets.main(["x", "IN-0001"], root=self.root)

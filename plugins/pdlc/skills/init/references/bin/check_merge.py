@@ -11,6 +11,9 @@ A change may merge only when:
   - the tests review names a wrong version of the code that each check fails on. A
     re-review (its packet says "Earlier review:") names one only for each check that
     changed since the earlier lock. If no check changed, it needs none;
+  - a change with "Tests-Locked: acceptance" is the only change of its intent, lists no check
+    files, and its intent has locked acceptance checks. The acceptance review then stands
+    for its tests review, and the tests remit needs no result of its own;
   - every review remit named in pdlc/config.md passed;
   - the branch merges into main without conflicts;
   - its intent is in pdlc/inbox, and every other change of the intent is "in review" or
@@ -41,7 +44,7 @@ from pathlib import Path
 
 REQ = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b(.*)$", re.M)
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
-DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
+DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy", "visual"]
 READY = ("in review", "merged")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
 # A marker with emphasis (*(assumed)*), or brackets that hold the word "assumed". A marker
@@ -357,6 +360,30 @@ def conflicts_with_main(root):
     return sorted(set(out.stdout.split()[1:]))
 
 
+def acceptance_serves(root, folder, text, checks):
+    """Problems with a change that has "Tests-Locked: acceptance". The acceptance checks of
+    its intent are also its checks. That holds only when the change lists no check files,
+    when it is the only change of its intent, and when the intent has locked acceptance
+    checks. The review and the pass of those checks come from acceptance_problems."""
+    problems = []
+    if checks:
+        problems.append('Tests-Locked: acceptance needs "- none" under "Check files"')
+    intent = field(text, "Intent")
+    found = sorted((root / "pdlc" / "inbox").glob("%s-*.md" % intent)) if intent else []
+    if not found:
+        return problems  # partners_not_ready names the missing intent
+    intent_text = found[0].read_text()
+    listed = list(dict.fromkeys(re.findall(r"\bCH-\d+\b", section(intent_text, "Changes"))))
+    if listed != [change_id(folder)]:
+        problems.append("Tests-Locked: acceptance is only for the only change of an intent. "
+                        "%s lists %s. Run /pdlc:tests" % (intent, ", ".join(listed) or "no changes"))
+    lock = record(intent_text, "Acceptance-Locked")
+    if not lock or not HASH.match(lock):
+        problems.append("Tests-Locked: acceptance needs the acceptance checks of %s locked"
+                        % intent)
+    return problems
+
+
 def check_change(root, folder):
     """A list of problems with one change. Empty means it may merge."""
     problems = []
@@ -380,10 +407,16 @@ def check_change(root, folder):
         problems += marker_problems(req_id, requirement_text(root, req_id))
 
     checks = check_files(text)
-    # A re-lock may leave the older line in place. The newest (last) line counts.
+    # A re-lock may leave the older line in place. The newest (last) line counts. The value
+    # "acceptance" says that the acceptance checks of the intent are also the checks of this
+    # change, so this change has no tests lock and no tests review of its own.
+    values = re.findall(r"^Tests-Locked:[ \t]*`?([^`\s]+)`?", text, re.M)
+    by_acceptance = bool(values) and values[-1] == "acceptance"
     locks = list(re.finditer(r"^Tests-Locked:\s*([0-9a-f]{7,40})\b", text, re.M))
-    lock = locks[-1] if locks else None
-    if checks and not lock:
+    lock = locks[-1] if locks and not by_acceptance else None
+    if by_acceptance:
+        problems += acceptance_serves(root, folder, text, checks)
+    elif checks and not lock:
         problems.append("tests are not locked (no Tests-Locked line)")
     elif checks:
         diff = git(root, "diff", "--name-only", lock.group(1), "HEAD", "--", *checks)
@@ -398,6 +431,8 @@ def check_change(root, folder):
                         % lock.group(1))
 
     for remit in wanted:
+        if remit == "tests" and by_acceptance:
+            continue  # acceptance_problems reads the acceptance review in its place
         result = folder / "review" / remit / "result.md"
         if not result.exists():
             problems.append("%s review has no result. Run python3 pdlc/bin/make_packets.py %s %s, "
@@ -406,7 +441,8 @@ def check_change(root, folder):
         elif not re.match(r"\s*Result:\s*pass\b", result.read_text(), re.I):
             problems.append("%s review did not pass" % remit)
 
-    if checks and "tests" in wanted and (folder / "review" / "tests" / "result.md").exists():
+    if (checks and not by_acceptance and "tests" in wanted
+            and (folder / "review" / "tests" / "result.md").exists()):
         lines = wrong_versions(folder)
         if not lines and not checks_unchanged_since_earlier_review(
                 root, folder, lock.group(1) if lock else None, checks):

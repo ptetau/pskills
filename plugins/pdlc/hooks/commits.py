@@ -18,6 +18,10 @@ the review packets and results. The findings go to Claude in the same way, so th
 can amend the commit. The hook reports one set of findings once for each parent commit, and
 at most three sets for one parent. So a finding that Claude cannot fix does not block the
 work.
+
+This hook is the only writing check of a pdlc stage. The message tells Claude to fix all the
+findings in one edit and to amend the commit one time. The message also tells Claude not to
+run check_writing.py itself.
 """
 import glob
 import hashlib
@@ -31,7 +35,8 @@ DES = os.path.join("pdlc", "specs", "design", "DES-pdlc-commit-trailers.md")
 WRITING_CHECK = os.path.join("pdlc", "bin", "check_writing.py")
 # The text that the stages write. The review folders hold packets (copies) and the results
 # of the reviewers. The other pdlc/ files come from the plugin.
-WRITTEN_TEXT = re.compile(r"^pdlc/(?:specs|inbox|changes)/(?!.*/review/).*\.md$")
+# The brief of the test writer only copies other files, so the writing check skips it too.
+WRITTEN_TEXT = re.compile(r"^pdlc/(?:specs|inbox|changes)/(?!.*/review/)(?!.*/brief\.md$).*\.md$")
 REPORTED = "pdlc-writing-reported"  # under .git: the sets of findings that this hook reported
 MAX_REPORTS = 3
 PLACEHOLDERS = {"<change>": r"CH-\d+", "<intent>": r"IN-\d+", "<n>": r"\d+",
@@ -230,9 +235,12 @@ def main():
               % (sha, len(findings), "" if len(findings) == 1 else "s"), file=sys.stderr)
         for line in findings:
             print("  - %s" % line, file=sys.stderr)
-        print("Fix each finding that you can now, with `git commit --amend`. The files stay as they "
-              "are. A finding that you cannot fix, for example in a quoted message, can stay: this "
-              "hook reports a set of findings once.", file=sys.stderr)
+        print("Fix all of these findings in one edit. Then amend the commit one time with "
+              "`git commit --amend -a --no-edit`. If the subject or a trailer also needs a fix, give "
+              "the full message with `-m` in place of `--no-edit`. Do not run check_writing.py "
+              "yourself, because this hook checks the amended commit. A finding that you cannot "
+              "fix, for example in a quoted message, can stay. This hook reports a set of findings "
+              "once.", file=sys.stderr)
     return 2
 
 
