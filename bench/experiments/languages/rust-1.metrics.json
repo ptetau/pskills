@@ -196,6 +196,8 @@
  "quality": {
   "main": 0,
   "tip": 0,
+  "new in app code": 0,
+  "new in checks": 0,
   "new": 0,
   "linter": "cargo clippy"
  },

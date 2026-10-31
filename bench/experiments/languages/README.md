@@ -6,7 +6,7 @@ the app and the intent. Each language has 1 run first.
 
 | Language | Status |
 |---|---|
-| Rust | 2 runs: `rust.json` and `rust-1.metrics.json`, then `rust-2.json` and `rust-2.metrics.json` after the fixes of the test writer |
+| Rust | 3 runs: `rust.json`, `rust-2.json` and `rust-3.json`, each with its `rust-N.metrics.json` |
 | Clojure | Waits for the Clojure CLI in the setup script of the environment |
 | Lean 4 | Waits for Lean 4 (elan) in the setup script of the environment |
 
@@ -108,3 +108,37 @@ Each column is one run, and one run varies a lot. The guard blocks, the tool err
 reads of the test writer and the acceptance stage follow from the fixes. The `verify`
 rounds and the recordings can also vary by chance. The tests stage took longer (342 s
 against 222 s), with 4 locks in each run.
+
+## Rust, run 3: status codes in a terminal frame
+
+Before this run, a web recording got `run` steps in a terminal tab. Show uses them for what
+a page cannot show, such as a status code. The bench also got four new measures: check
+strength, code quality, the time of checks and builds in each session, and the spread.
+
+| Measure | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| Cost | $6.18 | $4.93 | $4.99 |
+| Time | 1,433 s | 1,257 s | 1,251 s |
+| Failed reviews | 8 | 3 | 0 |
+| Recordings | 9 | 4 | 3 |
+| `verify` rounds | 5 | 3 | 3 |
+| Acceptance locks | 3 | 2 | 1 |
+| Faults that the checks catch | 19 of 20 | 20 of 20 | 20 of 20 |
+| Faults that a user sees and the checks miss | 0 | 0 | 0 |
+| New clippy findings: app code, checks | 0, 0 | 0, 0 | 0, 7 |
+| Check time in all sessions | 36 s | 22 s | 21 s |
+| Probes | 8 of 8 | 8 of 8 | 8 of 8 |
+
+- Each change got one recording, and each visual review passed at the first try. The
+  recordings show status codes, redirects and 404 answers with `curl -si`.
+- But show used the terminal too much. One web recording had 12 terminal steps of 17, and
+  some of them searched the HTML of a page with `grep`. Now show and the visual remit say
+  that what a user sees shows on the page. A terminal frame that shows the HTML of a page
+  is a `script` problem. No run measured this rule yet.
+- The 7 clippy findings are all one style warning in a check file: `assert_eq!` with a
+  literal `true` or `false`.
+- The guard blocked 3 calls. The test writer tried to write a temporary file outside the
+  project, and to search a file of app code. A reviewer tried to read a folder.
+
+The three runs had different versions of pdlc, so their spread is not the noise of one
+version.

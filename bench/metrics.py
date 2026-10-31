@@ -293,12 +293,18 @@ def tip_of(project):
     return max(branches, key=lambda b: git(project, "log", "-1", "--format=%ct", b).strip() or "0", default="main")
 
 
+CHECK_PATH = re.compile(r"(^|/)(tests?|spec|acceptance|__tests__)/|acceptance")
+
+
 def lint_count(folder, spec):
+    """The findings of the linter: (in app code, in checks). None when the linter fails."""
     try:
         proc = subprocess.run(spec["lint"], cwd=folder, capture_output=True, text=True, timeout=600)
     except (OSError, subprocess.TimeoutExpired):
         return None
-    return len(re.findall(spec["lint_pattern"], proc.stdout + proc.stderr, re.M))
+    lines = [line for line in (proc.stdout + proc.stderr).splitlines() if re.match(spec["lint_pattern"], line)]
+    checks = sum(1 for line in lines if CHECK_PATH.search(line.split(":", 1)[0]))
+    return len(lines) - checks, checks
 
 
 def measure_quality(project, fixture="wordfreq"):
@@ -315,7 +321,13 @@ def measure_quality(project, fixture="wordfreq"):
             out[name] = lint_count(folder, spec)
         finally:
             shutil.rmtree(folder.parent, ignore_errors=True)
-    out["new"] = out["tip"] - out["main"] if None not in (out["main"], out["tip"]) else None
+    if None in (out["main"], out["tip"]):
+        out["new"] = out["new in app code"] = out["new in checks"] = None
+    else:
+        out["new in app code"] = out["tip"][0] - out["main"][0]
+        out["new in checks"] = out["tip"][1] - out["main"][1]
+        out["new"] = out["new in app code"] + out["new in checks"]
+        out["main"], out["tip"] = sum(out["main"]), sum(out["tip"])
     out["linter"] = spec["lint"][0] if spec["lint"][0] != "cargo" else "cargo clippy"
     return out
 
@@ -506,7 +518,8 @@ def rows(data):
             ("build time s, all sessions", "%.0f" % sum(k.get("build", 0) for k in work.values()))]
     quality, strength = data.get("quality"), data.get("strength")
     if quality:
-        out.append(("new lint findings", quality.get("new")))
+        out.append(("new lint findings: app, checks", "%s, %s" % (quality.get("new in app code"),
+                                                                  quality.get("new in checks"))))
     if strength and "faults" in strength:
         out += [("faults caught", "%d of %d" % (strength["caught"], strength["faults"])),
                 ("faults a user sees, missed", strength["escapes"])]

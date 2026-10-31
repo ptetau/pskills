@@ -38,6 +38,8 @@ with the GIF to approve. The skill does not merge the change.
 - In a web app, a part of a line that a page cannot show gets a `run` step with
   `curl -si`. Examples are a status code, a header, a redirect, and the target of a form.
   The caption of a page step claims only what the page shows.
+- Each part that a user sees shows on the page, with `goto`, `click`, and `type`. A `run`
+  step that prints or searches the HTML of a page does not stand for the page.
 - A helper script lives in the change folder. Paths are relative to the project root, so
   that anyone can record again.
 - Show writes only in the change folder. Thus, the pass commit of `verify` stays valid.

@@ -20,6 +20,8 @@ The packet holds the acceptance lines of the change, the script of the recording
 - The frames show the behaviour as a user meets it:
   - A web app: pages and clicks. A page cannot show a status code, a header, a redirect,
     or the target of a form. These show in a terminal frame of `curl -si`.
+  - In a web app, a terminal frame that shows or searches the HTML of a page, in place of
+    the page, is a `script` problem.
   - A CLI: commands and their output.
   - A library: a short script that calls the interface.
 - An error on screen is a problem, unless its acceptance line asks for that error.
