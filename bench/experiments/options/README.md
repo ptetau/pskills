@@ -18,9 +18,18 @@ the same day (`k.json`) are the reference for each option.
 | C. The commit hook is the only writing check | 3 | $2.06 (-2%) | 505 s (-2%) | 8 of 8 | 1, 1, 1 | Keep |
 | D. A script for the fixed steps | 3 | $2.19 (+5%) | 548 s (+7%) | 8 of 8 | 2, 1, 1 | Drop |
 | E. A hook that stops a command that waits for input | 0 | | | | | Keep |
+| 0.5.0: A, C and E together | 3 | $1.69 (-19%) | 392 s (-24%) | 8 of 8 | 2, 1, 2 | |
 
 Three runs give only a rough result. In 6 runs of 0.4.0, the cost of a run went from $1.75 to
 $2.29. One extra review round costs about $0.40. The chance that the fall of A is luck is 15%.
+
+## 0.5.0: A, C and E together
+
+pdlc 0.5.0 has options A, C and E. Its 3 runs cost $1.73, $1.44 and $1.91, and each run passed
+8 of 8 probes. Against the 3 control runs, the cost falls by 19%, and the chance that the fall
+is luck is 10%. Against all 9 runs of 0.4.0, the cost falls by 15%, and that chance is 4%. Two
+of the 3 runs needed a second `verify` round, and they still cost less than the control. The
+stdin hook stopped no command in these runs.
 
 ## A. One set of checks for an intent with one change
 
@@ -83,6 +92,7 @@ cover the other cases.
 - `k.json`: the 3 control runs of 0.4.0.
 - `a.json`, `c.json`, `d.json`: the 3 runs of each option.
 - `b-plain.json`: the run of B without nested agents. `b-nested.json`: the run of B with them.
+- `v050.json`: the 3 runs of 0.5.0.
 - `patches/`: the changes of B and D, which 0.5.0 does not have.
 
 The plugin commits in the files are local branches. Only the commits of A, C and E are on the

@@ -105,6 +105,9 @@ The `verify` time of 0.4.0 holds one slow run. Its median is 88 s.
 | D. Fewer small turns in acceptance and `verify` | One script makes the packets, runs the checks and records the results. | Not measured | Each main turn of a late stage costs about $0.03. |
 | E. No command that waits for input | A rule, or a hook that stops a command such as `cat > file` with no input. | Rare, but 430 s in one run | Small. |
 
+`bench/experiments/options/README.md` gives the measured result of each option. pdlc 0.5.0 has
+options A, C and E.
+
 Options A and C need only skill and script changes. Option B needs a front-matter setting in each stage skill, and a check that each stage reads all its inputs from files.
 
 ## How the cost is split
