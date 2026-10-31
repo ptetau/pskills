@@ -40,6 +40,17 @@ INTENT = (
     "`error: --top needs a whole number greater than zero` to standard error and exit "
     "with code 2."
 )
+# The intent of the to-do web apps. It needs two changes: the storage keeps the done flag
+# (a capability), and the page shows it (a job).
+TODO_INTENT = (
+    "Let users mark a to-do item as done. Each item that is not done gets a Done button on "
+    "the page, in a form that sends `POST /items/<id>/done`, which answers 303 to `/`. A done "
+    "item stays done after the app restarts. A data file from before this change still loads, "
+    "and its items are not done. By default the page shows only the items that are not done. "
+    "A link \"Show all\" goes to `/?show=all`, which shows every item and puts \" (done)\" after "
+    "the text of each done item. `POST /items/<id>/done` for an id that does not exist answers "
+    "404 with `error: no item <id>`."
+)
 SECTIONS = HERE / "sections"
 SNAPSHOT = SECTIONS / "project.bundle"
 CHANGE_BRANCH = "pdlc/CH-0001-top-option"
@@ -122,10 +133,11 @@ def ensure_tools():
     return TOOLS_CACHE
 
 
-def make_project(dest, plugin, with_pdlc=True):
+def make_project(dest, plugin, with_pdlc=True, fixture="wordfreq"):
     """A fresh git repository from the fixture. With pdlc, the pdlc folder is in place."""
     dest = Path(dest)
-    shutil.copytree(FIXTURE, dest, ignore=shutil.ignore_patterns("__pycache__", "pdlc" if not with_pdlc else ""))
+    shutil.copytree(FIXTURES[fixture]["app"], dest,
+                    ignore=shutil.ignore_patterns("__pycache__", "target", "pdlc" if not with_pdlc else ""))
     if with_pdlc:
         sync_verbatim(dest, plugin)
         os.symlink(ensure_tools(), dest / "pdlc" / ".tools")
@@ -138,7 +150,8 @@ def make_project(dest, plugin, with_pdlc=True):
 # ---------------------------------------------------------------- running claude
 
 
-def claude_command(prompt, plugin, extra=()):
+def claude_command(prompt, plugin, extra=(), tools=()):
+    """The command of one headless session. `tools` adds Bash commands that the fixture needs."""
     return [
         "claude", "-p", prompt,
         "--model", MODEL, "--effort", EFFORT,
@@ -146,16 +159,16 @@ def claude_command(prompt, plugin, extra=()):
         "--setting-sources", "project,local",
         "--strict-mcp-config",
         "--permission-mode", "auto",
-        "--allowedTools", ALLOWED_TOOLS,
+        "--allowedTools", ALLOWED_TOOLS + "".join(" Bash(%s:*)" % name for name in tools),
         "--output-format", "stream-json", "--verbose",
         "--no-session-persistence",
         *extra,
     ]
 
 
-def run_claude(prompt, cwd, plugin, log_path, timeout=3600, budget_usd=None, extra=()):
+def run_claude(prompt, cwd, plugin, log_path, timeout=3600, budget_usd=None, extra=(), tools=()):
     """Run one headless session. Write each event with its arrival time. Return the events."""
-    command = claude_command(prompt, plugin, extra)
+    command = claude_command(prompt, plugin, extra, tools)
     if budget_usd:
         command += ["--max-budget-usd", str(budget_usd)]
     started = time.time()
@@ -488,6 +501,161 @@ def run_unit_checks(project):
     return {"ok": proc.returncode == 0, "ran": int(ran.group(1)) if ran else 0}
 
 
+def unit_checks(project, fixture):
+    """Run the checks of the fixture app. The count is the sum of each count that the runner prints."""
+    spec = FIXTURES[fixture]
+    if "unit" not in spec:
+        return run_unit_checks(project)
+    try:
+        proc = subprocess.run(spec["unit"], cwd=project, capture_output=True, text=True, timeout=900)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        return {"ok": False, "ran": 0, "error": repr(error)}
+    ran = sum(int(n) for n in re.findall(spec["count"], proc.stdout + proc.stderr, re.M))
+    return {"ok": proc.returncode == 0, "ran": ran}
+
+
+def free_port():
+    import socket
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+class WebApp:
+    """One run of a fixture web app, on a free port, with its own data file."""
+
+    def __init__(self, project, command, data_file):
+        self.port = free_port()
+        env = {**os.environ, "PORT": str(self.port), "DATA_FILE": str(data_file)}
+        self.proc = subprocess.Popen(command, cwd=project, env=env, stdin=subprocess.DEVNULL,
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        import socket
+        deadline = time.time() + 60
+        while time.time() < deadline and self.proc.poll() is None:
+            try:
+                socket.create_connection(("127.0.0.1", self.port), timeout=1).close()
+                return
+            except OSError:
+                time.sleep(0.2)
+        self.stop()
+        raise RuntimeError("the app did not start on port %d" % self.port)
+
+    def request(self, method, path, form=None):
+        """(status, Location header, body) of one request, with no redirect followed."""
+        import http.client
+        import urllib.parse
+        body = urllib.parse.urlencode(form) if form is not None else None
+        headers = {"Content-Type": "application/x-www-form-urlencoded"} if form is not None else {}
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        try:
+            conn.request(method, path, body=body, headers=headers)
+            response = conn.getresponse()
+            return response.status, response.getheader("Location") or "", response.read().decode("utf-8", "replace")
+        finally:
+            conn.close()
+
+    def stop(self):
+        if self.proc.poll() is None:
+            self.proc.terminate()
+            try:
+                self.proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                self.proc.kill()
+                self.proc.wait()
+
+
+def visible_text(html):
+    """The text of a page as a user reads it: no tags, and single spaces."""
+    import html as html_lib
+    return " ".join(html_lib.unescape(re.sub(r"<[^>]+>", " ", html)).split())
+
+
+def has_word(text, word):
+    return re.search(r"(?<!\w)%s(?!\w)" % re.escape(word), text) is not None
+
+
+def todo_probes(project, fixture):
+    """The acceptance probes of TODO_INTENT, over HTTP, against the app as it is checked out."""
+    spec = FIXTURES[fixture]
+    project = Path(project)
+    names = ["done hides the item", "show all marks each done item", "each open item has a done button",
+             "the page links to show all", "done stays done after a restart", "an old data file still loads",
+             "an unknown id is 404", "adding and the empty-text error still work"]
+    results = dict.fromkeys(names, False)
+    errors = []
+    work = Path(tempfile.mkdtemp(prefix="pdlc-bench-probe-"))
+    try:
+        if spec.get("build"):
+            subprocess.run(spec["build"], cwd=project, capture_output=True, timeout=900, check=True)
+        data = work / "items.txt"
+        app = WebApp(project, spec["start"], data)
+        try:
+            add = [app.request("POST", "/items", {"text": text})[0] for text in ("milk", "eggs")]
+            done = app.request("POST", "/items/1/done")
+            page = app.request("GET", "/")[2]
+            text = visible_text(page)
+            results["done hides the item"] = (add == [303, 303] and done[0] == 303 and done[1].endswith("/")
+                                              and has_word(text, "eggs") and not has_word(text, "milk"))
+            every = visible_text(app.request("GET", "/?show=all")[2])
+            results["show all marks each done item"] = "milk (done)" in every and has_word(every, "eggs") \
+                and "eggs (done)" not in every
+            results["each open item has a done button"] = (
+                re.search(r"<form[^>]*action=[\"']/items/2/done[\"']", page) is not None
+                and re.search(r"action=[\"']/items/1/done[\"']", page) is None)
+            results["the page links to show all"] = re.search(r"href=[\"']/?\?show=all[\"']", page) is not None
+            missing = app.request("POST", "/items/99/done")
+            results["an unknown id is 404"] = missing[0] == 404 and "error: no item 99" in missing[2]
+            empty = app.request("POST", "/items", {"text": "  "})
+            results["adding and the empty-text error still work"] = (
+                add == [303, 303] and empty[0] == 400 and "error: text is empty" in empty[2])
+        finally:
+            app.stop()
+        app = WebApp(project, spec["start"], data)
+        try:
+            text = visible_text(app.request("GET", "/")[2])
+            every = visible_text(app.request("GET", "/?show=all")[2])
+            results["done stays done after a restart"] = (has_word(text, "eggs") and not has_word(text, "milk")
+                                                          and "milk (done)" in every)
+        finally:
+            app.stop()
+        old = work / "old.txt"
+        old.write_text("1\tbread\n2\tjam\n")
+        app = WebApp(project, spec["start"], old)
+        try:
+            before = visible_text(app.request("GET", "/")[2])
+            done = app.request("POST", "/items/2/done")[0]
+            after = visible_text(app.request("GET", "/")[2])
+            results["an old data file still loads"] = (has_word(before, "bread") and has_word(before, "jam")
+                                                       and done == 303 and has_word(after, "bread")
+                                                       and not has_word(after, "jam"))
+        finally:
+            app.stop()
+    except Exception as error:  # a build or start failure fails each probe that did not run
+        errors.append(repr(error)[:300])
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    failed = [name for name, ok in results.items() if not ok]
+    out = {"passed": len(names) - len(failed), "total": len(names), "failed": failed}
+    if errors:
+        out["error"] = errors[0]
+    return out
+
+
+def fixture_probes(project, fixture):
+    return run_probes(project) if fixture == "wordfreq" else todo_probes(project, fixture)
+
+
+# Each fixture app: its source, its intent, and how the bench checks the result. "tools" are the
+# Bash commands that a run of pdlc needs beyond ALLOWED_TOOLS.
+FIXTURES = {
+    "wordfreq": {"app": FIXTURE, "intent": INTENT, "probes": len(PROBES), "tools": ()},
+    "todo-rust": {"app": HERE / "fixtures" / "todo-rust", "intent": TODO_INTENT, "probes": 8,
+                  "unit": ["cargo", "test", "--quiet"], "count": r"test result: \w+\. (\d+) passed",
+                  "build": ["cargo", "build", "--quiet", "--release"], "start": ["target/release/todo"],
+                  "tools": ("cargo", "rustc", "rustfmt")},
+}
+
+
 # The text whose writing the specification packet checks: the README and other docs outside
 # pdlc/, the specs, and the change spec. A finding elsewhere costs no review round.
 PACKET_TEXT = re.compile(r"^(?:pdlc/specs/.*\.md|pdlc/changes/[^/]+/change\.md|(?!pdlc/).*\.md)$")
@@ -518,7 +686,7 @@ def writing_findings(project, since):
     return {"count": len(findings), "files": files, "findings": findings}
 
 
-def inspect_project(project):
+def inspect_project(project, fixture="wordfreq"):
     """Read what a ship run left in the project. Check each change branch as the merge would."""
     project = Path(project)
     branches = [b.strip("* ").strip() for b in git(project, "branch", "--format=%(refname:short)").stdout.split()]
@@ -545,8 +713,8 @@ def inspect_project(project):
     out["tip"] = tip
     root = git(project, "rev-list", "--max-parents=0", "HEAD").stdout.split()[0]
     out["writing"] = writing_findings(project, root)
-    out["unit"] = run_unit_checks(project)
-    out["probes"] = run_probes(project)
+    out["unit"] = unit_checks(project, fixture)
+    out["probes"] = fixture_probes(project, fixture)
     git(project, "checkout", "-q", "main")
     return out
 
@@ -750,17 +918,19 @@ def command_e2e(args):
     runs = []
     for number in range(1, args.runs + 1):
         work = Path(tempfile.mkdtemp(prefix="pdlc-bench-"))
-        project = make_project(work / "app", plugin)
+        fixture = FIXTURES[args.fixture]
+        project = make_project(work / "app", plugin, fixture=args.fixture)
         log = out_dir / ("run%d.stream.jsonl" % number)
-        events, wall, err = run_claude("/pdlc:ship defaults " + INTENT, project, plugin, log,
+        events, wall, err = run_claude("/pdlc:ship defaults " + fixture["intent"], project, plugin, log,
                                        timeout=args.timeout, budget_usd=args.budget,
-                                       extra=("--forward-subagent-text",) if args.forward else ())
+                                       extra=("--forward-subagent-text",) if args.forward else (),
+                                       tools=fixture["tools"])
         analysis = analyse(events)
         analysis["wall_s"] = wall
         try:
-            analysis["outcome"] = inspect_project(project)
+            analysis["outcome"] = inspect_project(project, args.fixture)
         except Exception as error:  # keep the run: its stream and its cost are already paid for
-            analysis["outcome"] = {"error": repr(error), "probes": {"passed": 0, "total": len(PROBES), "failed": []},
+            analysis["outcome"] = {"error": repr(error), "probes": {"passed": 0, "total": fixture["probes"], "failed": []},
                                    "unit": {"ok": False, "ran": 0}}
         analysis["stderr"] = err[-500:]
         analysis["project"] = str(project)
@@ -769,7 +939,7 @@ def command_e2e(args):
         print("run %d: $%.2f, %ss, probes %s/%s" % (number, analysis["totals"]["cost_usd"], analysis["wall_s"],
               analysis["outcome"]["probes"]["passed"], analysis["outcome"]["probes"]["total"]))
     summary = {"label": args.label, "plugin_commit": git(plugin, "rev-parse", "--short", "HEAD").stdout.strip(),
-               "model": MODEL, "effort": EFFORT, "runs": runs}
+               "model": MODEL, "effort": EFFORT, "fixture": args.fixture, "runs": runs}
     (out_dir / "e2e.json").write_text(json.dumps(summary, indent=1))
     return summary
 
@@ -777,9 +947,10 @@ def command_e2e(args):
 def command_init_fixture(args):
     plugin = Path(args.plugin).resolve()
     work = Path(tempfile.mkdtemp(prefix="pdlc-bench-init-"))
-    project = make_project(work / "app", plugin, with_pdlc=False)
+    project = make_project(work / "app", plugin, with_pdlc=False, fixture=args.fixture)
     log = work / "init.stream.jsonl"
-    events, wall, err = run_claude("/pdlc:init defaults", project, plugin, log, timeout=args.timeout, budget_usd=args.budget)
+    events, wall, err = run_claude("/pdlc:init defaults", project, plugin, log, timeout=args.timeout, budget_usd=args.budget,
+                                   tools=FIXTURES[args.fixture]["tools"])
     analysis = analyse(events)
     print(json.dumps({"wall_s": wall, "totals": analysis["totals"], "stderr": err[-300:]}, indent=1))
     print("project:", project)
@@ -1298,6 +1469,8 @@ def main(argv=None):
         p.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
         p.add_argument("--timeout", type=int, default=3600)
         p.add_argument("--budget", type=float, default=20.0, help="stop a run at this many dollars")
+        p.add_argument("--fixture", default="wordfreq", choices=sorted(FIXTURES),
+                       help="the app to run pdlc on (bench/fixture-app, or a folder in bench/fixtures)")
         if name == "e2e":
             p.add_argument("--label", required=True)
             p.add_argument("--runs", type=int, default=1)

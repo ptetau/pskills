@@ -958,6 +958,41 @@ class ExperimentSpecTest(unittest.TestCase):
         self.assertIn("+" + long_sentence, diff)
 
 
+@unittest.skipUnless(shutil.which("cargo"), "needs cargo")
+class TodoProbeTest(unittest.TestCase):
+    """The probes of the to-do intent fail on the base app, and pass on the reference solution."""
+
+    def copy(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        app = folder / "app"
+        shutil.copytree(run_bench.FIXTURES["todo-rust"]["app"], app,
+                        ignore=shutil.ignore_patterns("target", "pdlc"))
+        run_bench.git(app, "init", "-q")
+        return app
+
+    def test_the_base_app_passes_only_the_probe_of_the_old_behaviour(self):
+        result = run_bench.todo_probes(self.copy(), "todo-rust")
+        self.assertEqual(result["passed"], 1)
+        self.assertNotIn("adding and the empty-text error still work", result["failed"])
+
+    def test_the_reference_solution_passes_each_probe(self):
+        app = self.copy()
+        patch = run_bench.HERE / "fixtures" / "solutions" / "todo-rust.patch"
+        run_bench.git(app, "apply", str(patch))
+        self.assertEqual(run_bench.todo_probes(app, "todo-rust"), {"passed": 8, "total": 8, "failed": []})
+        self.assertTrue(run_bench.unit_checks(app, "todo-rust")["ok"])
+
+    def test_the_bash_commands_of_the_fixture_are_allowed(self):
+        command = run_bench.claude_command("x", "/p", tools=run_bench.FIXTURES["todo-rust"]["tools"])
+        self.assertIn("Bash(cargo:*)", command[command.index("--allowedTools") + 1])
+
+    def test_the_visible_text_of_a_page_has_no_tags(self):
+        self.assertEqual(run_bench.visible_text("<li>milk <b>(done)</b></li>\n<li>a &amp; b</li>"),
+                         "milk (done) a & b")
+        self.assertFalse(run_bench.has_word("almilky", "milk"))
+
+
 class StageReplayTest(unittest.TestCase):
     def stage_project(self, stage, plugin=None):
         folder = Path(tempfile.mkdtemp())

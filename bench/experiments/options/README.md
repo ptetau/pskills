@@ -58,6 +58,18 @@ run passed 8 of 8 probes, and the median time was 429 s.
   the exit code on screen came from `wc`, not from the app. In the other, the input file
   was too small to show the limit of `--top`.
 
+## After 0.5.0: a stricter visual review
+
+The visual remit then made a frame that shows less than its caption a `script` problem,
+and show got the same rule. The 3 runs are in `strict-visual.json`.
+
+- Two runs reached show. Each recording printed the exit code right after the command of
+  the app, with no pipe. Each visual review passed at the first try, so no run recorded
+  again. Show cost $0.43 and $0.34, and the runs cost $1.56 and $2.12.
+- The third run stopped after intake, for $0.35. Ship ended its turn there with no stop
+  commit. It is the first such run in about 30 runs, and the stricter rule had no part in
+  it, because show did not run.
+
 ## A. One set of checks for an intent with one change
 
 The tests stage fell from $0.27 to $0.07 a run, as the plan expected ($0.18 to $0.24 less).
@@ -122,6 +134,7 @@ cover the other cases.
 - `v050.json`: the 3 runs of 0.5.0.
 - `reorder.json`: the 3 runs with the recording after `verify`.
 - `visual.json`: the 3 runs with the separate visual review.
+- `strict-visual.json`: the 3 runs with the stricter visual review.
 - `patches/`: the changes of B and D, which 0.5.0 does not have.
 
 The plugin commits in the files are local branches. Only the commits of A, C and E are on the
