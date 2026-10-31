@@ -21,6 +21,10 @@
 // Every step makes one frame. A caption stays until the next step sets a new one.
 // A terminal shows each command's output and errors in order, and scrolls like a real
 // one: every frame shows the newest lines.
+// A web script can also have "run" steps, for what a page cannot show: a status code, a
+// header, a redirect, or the target of a form, for example `curl -si {base_url}/items`.
+// Such a step shows a terminal in a second tab, and the page keeps its state for the next
+// web step. In a command, {base_url} stands for base_url with no slash at its end.
 //
 // A frame must show what its caption claims. The recording fails, naming the step, when:
 //   - a frame is blank: almost every pixel is one colour;
@@ -156,28 +160,35 @@ try {
   }
   browser = await launch();
   const page = await browser.newPage({ viewport: { width, height } });
+  // The terminal: the same tab in a terminal script, and a second tab in a web script.
+  let term = script.kind === "terminal" ? page : null;
+  const base = String(script.base_url || "").replace(/\/+$/, "");
   const steps = script.steps || [];
   for (const [i, step] of steps.entries()) {
     if (step.caption) caption = step.caption;
     const label = stepName(step, i + 1, caption);
     let view;
-    if (script.kind === "terminal") {
+    let shown = page;
+    if (script.kind === "terminal" || step.run !== undefined) {
+      if (!term) term = await browser.newPage({ viewport: { width, height } });
+      shown = term;
       if (step.run) {
         let out;
+        const run = step.run.replaceAll("{base_url}", base);
         // Errors go to the same stream, so a warning from a command that succeeds still shows.
-        const command = `{ ${step.run}\n} 2>&1`;
+        const command = `{ ${run}\n} 2>&1`;
         try { out = execSync(command, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }); }
         catch (e) { out = (e.stdout || "") + (e.stderr || ""); }
-        lines.push(`<span style="color:#34d399">$</span> ${escape(step.run)}`, escape(out.trimEnd()));
+        lines.push(`<span style="color:#34d399">$</span> ${escape(run)}`, escape(out.trimEnd()));
         if (!out.trim() && !step.unchanged) {
           problems.push(`${label}: the command printed nothing, so its frame shows no result. ` +
             "Show its effect (print it, or run a command that reads it), or join it to the next step.");
         }
       }
-      await page.setContent(terminalPage(lines));
-      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-      if (step.wait) await page.waitForTimeout(step.wait);
-      view = await look(page);
+      await term.setContent(terminalPage(lines));
+      await term.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      if (step.wait) await term.waitForTimeout(step.wait);
+      view = await look(term);
     } else {
       await page.evaluate(() => document.getElementById("pdlc-banner")?.remove());
       if (step.goto) await page.goto(new URL(step.goto, script.base_url).href);
@@ -201,11 +212,11 @@ try {
       problems.push(`${label}: the frame is blank (almost all one colour). Show what the ` +
         "caption claims: the page or output it describes.");
     }
-    await page.evaluate(({ html }) => {
+    await shown.evaluate(({ html }) => {
       document.getElementById("pdlc-banner")?.remove();
       document.body.insertAdjacentHTML("beforeend", html);
     }, { html: banner(script.title, caption, i + 1, steps.length) });
-    const shot = await page.screenshot();
+    const shot = await shown.screenshot();
     const name = path.join(outDir, "frames", String(i + 1).padStart(2, "0") + ".png");
     fs.writeFileSync(name, shot);
     frames.push(shot);

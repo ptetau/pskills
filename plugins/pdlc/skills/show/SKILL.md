@@ -35,11 +35,13 @@ with the GIF to approve. The skill does not merge the change.
   - A web app: pages and clicks.
   - A CLI: commands and their output.
   - A library: a short script that calls the interface.
+- In a web app, a part of a line that a page cannot show gets a `run` step with
+  `curl -si`. Examples are a status code, a header, a redirect, and the target of a form.
+  The caption of a page step claims only what the page shows.
 - A helper script lives in the change folder. Paths are relative to the project root, so
   that anyone can record again.
 - Show writes only in the change folder. Thus, the pass commit of `verify` stays valid.
-- A terminal script ends with a step that runs all checks and shows them pass. The
-  recorder runs commands only in terminal scripts, so a web script has no such step.
+- Each script ends with a `run` step that runs all checks and shows them pass.
 - A terminal frame scrolls like a real terminal, and shows the newest lines, also errors.
   The output of each step stays under one screen, so that its command stays in view.
 - The recorder is `node pdlc/bin/record_gif.mjs pdlc/changes/CH-xxxx-…/visual.json

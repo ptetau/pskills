@@ -18,11 +18,12 @@ The packet holds the acceptance lines of the change, the script of the recording
   - The input is too small to show the effect, for example a limit of 7 on a file with 3
     words.
 - The frames show the behaviour as a user meets it:
-  - A web app: pages and clicks.
+  - A web app: pages and clicks. A page cannot show a status code, a header, a redirect,
+    or the target of a form. These show in a terminal frame of `curl -si`.
   - A CLI: commands and their output.
   - A library: a short script that calls the interface.
 - An error on screen is a problem, unless its acceptance line asks for that error.
-- A terminal recording ends with a frame that shows all checks pass.
+- Each recording ends with a frame that shows all checks pass.
 
 Write each problem as `<frame> · <what is wrong> · <the acceptance line or rule> · <kind>`.
 The kind is one of these:
