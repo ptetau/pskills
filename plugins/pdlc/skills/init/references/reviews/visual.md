@@ -12,6 +12,11 @@ The packet holds the acceptance lines of the change, the script of the recording
   frame starts with the requirement ID.
 - Each frame shows what its caption claims, after its step. A blank frame, or a frame with
   the screen from before the step, is a problem.
+- Each part of a caption is visible on screen. A frame that shows less than its caption
+  claims is a problem, also when the claim is probably true. Examples:
+  - An exit code on screen comes from a different command, for example `wc` after a pipe.
+  - The input is too small to show the effect, for example a limit of 7 on a file with 3
+    words.
 - The frames show the behaviour as a user meets it:
   - A web app: pages and clicks.
   - A CLI: commands and their output.
@@ -23,10 +28,12 @@ Write each problem as `<frame> · <what is wrong> · <the acceptance line or rul
 The kind is one of these:
 
 - `script`: the recording is wrong. Examples are a wrong selector, a missing step, and a
-  step that shows the screen from before the change.
+  step that shows the screen from before the change. A frame that shows less than its
+  caption claims is also a `script` problem.
 - `app`: the step does what its acceptance line says, but the app does not meet the line.
 
-Do not write follow-ups. Put a wish for new behaviour under "Notes".
+Do not write follow-ups. Put a wish for new behaviour of the app under "Notes". A frame
+that shows less than its caption claims is not a wish. It is a `script` problem.
 
 On a re-review, judge only the frames that do not have the mark "unchanged since the
 earlier review".

@@ -51,6 +51,9 @@ with the GIF to approve. The skill does not merge the change.
 - Each frame shows what its caption claims. The recorder fails, and names the step, for a
   blank frame. It also fails for a click, typing, a key, or a command that changes nothing
   on screen.
+- Each part of a caption is visible on screen. An exit code comes from the command that
+  the caption names, not from a later command of a pipe. The input is large enough to show
+  the effect, for example more words than a limit.
 - A failed recording means a wrong script: a wrong selector, a missing step, or a command
   that prints nothing. Such a command prints its result, or the next command reads it.
 - A step has `"unchanged": true` only when its acceptance line says that nothing changes.
