@@ -164,6 +164,11 @@ each new commit on a pdlc branch against `DES-pdlc-commit-trailers`. The hook do
 block a commit. The hook tells you what to correct with `git commit --amend`, while the
 commit is still the newest commit. The hook ignores other branches.
 
+The plugin also includes a third hook. The hook stops a Bash command that waits for input
+that does not come, for example `cat > FILE` with no heredoc. Such a command hangs until the
+Bash tool stops it. The hook shows how to write the file with the Write tool or a heredoc.
+The hook acts only in a pdlc project, and lets a command run when it cannot parse the command.
+
 ## Share pdlc with your team
 
 When you install with the project scope, `.claude/settings.json` contains this text:
