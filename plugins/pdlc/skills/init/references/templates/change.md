@@ -27,27 +27,36 @@ Add ` (retire)` to the heading of a requirement that this change removes.
 
 - CAP-... (used, not changed)
 - DES-... (conventions to follow)
+- JOB-... (used, not changed: the checks call its Interface)
 
 ## Interface
 
-List what the checks can call, so that the test writer can write the checks without the
-code. Give the file of each entry. Give what goes in and what comes out, with types where
-the language has them. Give each error that the entry can give, by its code from
-`DES-errors`.
+Copy each entry that the checks call from the "Interface" of its spec, as you copy the
+requirements. Copy each line word for word, but not the ` · proposed` mark. An entry
+comes from the spec of this change, or from a job or capability under "Relies on". If no
+spec has the entry, add the entry to its spec first. `bin/check_merge.py` fails the change
+when an entry is not in its spec. See "Interfaces" in `pdlc/README.md`.
 
-- `send(template: TemplateName, to: Email) -> SentId` in `src/email.js`
+- `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
+  - in: the name of a template, and an email address
+  - out: the ID of the sent email
   - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`
 
 ### Test seams
 
-Say how a check controls what it cannot wait for or reach: the clock, randomness, and
+Copy each seam that the checks use from "Test seams" of its spec, in the same way. A seam
+says how a check controls what it cannot wait for or reach: the clock, randomness, and
 outside vendors or stores. A test seam can also be a stand-in for a surface that the
 runner cannot drive, such as a page with no browser. The checks reach each test seam
 through the outermost interface that they call. The test seam is an argument for a library
 function, or an environment variable or a flag for a command. The README of the project
-names each test seam. Write "none" only if no acceptance line needs a test seam.
+also names each seam that a user can set. Write "none" only if no acceptance line needs a
+test seam.
 
-- clock: `send(..., { now })` takes the current time
+- `EMAIL_OUTBOX_DIR` · seam: outside vendor · `src/email.js`
+  - in: a folder. When it is set, `send` writes each email there as a file, and sends
+    nothing.
+  - errors: none
 
 ## Files
 

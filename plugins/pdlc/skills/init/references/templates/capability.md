@@ -17,6 +17,32 @@ uses this list to set the scope of changes.
 
 - path/to/folder/
 
+## Interface
+
+List the calls that jobs use, each with its file. A check calls the capability only
+through these entries, so a rebuild from the specs must keep each name. See "Interfaces"
+in `pdlc/README.md`.
+
+The first line of an entry gives the name in backticks, the kind, and the file. Under it,
+give what goes in, what comes out, and each error code from `DES-errors`. A new entry ends
+its first line with ` · proposed`.
+
+- `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
+  - in: the name of a template, and an email address
+  - out: the ID of the sent email
+  - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`
+
+### Test seams
+
+List each seam that this capability gives to checks. A seam controls the clock,
+randomness, or an outside vendor or store. Write "none" if no acceptance line needs a
+seam.
+
+- `EMAIL_OUTBOX_DIR` · seam: outside vendor · `src/email.js`
+  - in: a folder. When it is set, `send` writes each email there as a file, and sends
+    nothing.
+  - errors: none
+
 ## Requirements
 
 What it offers to jobs: a call and what it returns, a stored record, a shared reply or
