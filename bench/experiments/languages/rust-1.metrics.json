@@ -277,7 +277,7 @@
     "line": 12,
     "fault": "a letter of a text",
     "caught": true,
-    "user_sees": false
+    "user_sees": true
    },
    {
     "file": "src/page.rs",
@@ -287,18 +287,18 @@
     "user_sees": false
    },
    {
-    "file": "src/page.rs",
-    "line": 28,
-    "fault": "a letter of a text",
-    "caught": true,
-    "user_sees": true
-   },
-   {
     "file": "src/store.rs",
     "line": 27,
     "fault": "a letter of a text",
     "caught": false,
     "user_sees": false
+   },
+   {
+    "file": "src/store.rs",
+    "line": 60,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
    },
    {
     "file": "src/store.rs",

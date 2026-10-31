@@ -31,6 +31,10 @@ with the GIF to approve. The skill does not merge the change.
 - Each acceptance line gets one or more steps, in order. The first step of a line sets the
   caption: the requirement ID, then the line in a few words. The count of lines matches
   the change spec.
+- A step that only prepares a state, for example a data file, has its own caption with
+  `setup:` after the ID. The caption of the line goes on the step whose frame shows the
+  result. A caption stays until the next step sets one. Thus, a setup step does not carry
+  the claim of a line.
 - The steps show the behaviour as a user meets it:
   - A web app: pages and clicks.
   - A CLI: commands and their output.

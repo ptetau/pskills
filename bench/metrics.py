@@ -342,8 +342,27 @@ MUTATIONS = [
     ("+ 1 to + 2", r"\+ 1\b", "+ 2"), ("- 1 to - 2", r"- 1\b", "- 2"),
     ("(= to (not=", r"\(= ", "(not= "), ("(inc to (dec", r"\(inc\b", "(dec"),
     ("(when to (when-not", r"\(when ", "(when-not "),
-    ("a letter of a text", r'"([^"\\]*?)([A-Za-z])', None),
+    ("a letter of a text", None, None),
 ]
+
+
+def text_letter(line):
+    """The place of the first letter that a reader sees in a string literal: not in an HTML
+    tag, and not in an escape such as \\n. None when the line has no such letter."""
+    for found in re.finditer(r'"((?:[^"\\]|\\.)*)"', line):
+        depth, i, body = 0, 0, found.group(1)
+        while i < len(body):
+            c = body[i]
+            if c == "\\":
+                i += 2
+                continue
+            depth += c == "<"
+            if c == ">" and depth:
+                depth -= 1
+            elif c.isalpha() and not depth:
+                return found.start(1) + i
+            i += 1
+    return None
 
 
 def mutants(lines):
@@ -354,20 +373,34 @@ def mutants(lines):
         if not stripped or stripped.startswith(("//", "#", ";", "--")):
             continue
         for name, pattern, replacement in MUTATIONS:
+            if pattern is None:  # change the first letter that a reader sees in a text
+                place = text_letter(text)
+                if place is None:
+                    continue
+                new = text[:place] + ("Y" if text[place] == "X" else "X") + text[place + 1:]
+                out.append((path, number, name, new))
+                continue
             found = re.search(pattern, text)
             if not found:
                 continue
-            if replacement is None:  # change the first letter inside a string literal
-                letter = found.group(2)
-                swap = "Y" if letter == "X" else "X"
-                new = text[:found.start(2)] + swap + text[found.end(2):]
-            else:
-                new = text[:found.start()] + replacement + text[found.end():]
+            new = text[:found.start()] + replacement + text[found.end():]
             out.append((path, number, name, new))
         if stripped.endswith(";") or (not stripped.endswith((":", "{", "(", "[", ",")) and "=" not in stripped):
             indent = text[:len(text) - len(text.lstrip())]
             out.append((path, number, "remove the line", None))
     return out
+
+
+def is_docstring(lines, index):
+    """True for a line of a docstring, which is a comment and not code. A Python docstring
+    starts with three quotes. A Clojure docstring follows the name of a defn, def or ns."""
+    line = lines[index].strip()
+    if line.startswith(('"""', "'''")):
+        return True
+    if not line.startswith('"'):
+        return False
+    before = next((lines[i].strip() for i in range(index - 1, -1, -1) if lines[i].strip()), "")
+    return re.match(r"\((defn-?|def|ns|defmacro)\s+\S+\s*$", before) is not None
 
 
 def run_ok(command, folder, timeout=300):
@@ -423,7 +456,8 @@ def measure_strength(project, fixture="wordfreq", limit=20):
                 start, count = int(hunk[0]), int(hunk[1] or 1)
                 numbers.update(range(start, start + count))
             text = (folder / path).read_text().splitlines()
-            added += [(path, n, text[n - 1]) for n in sorted(numbers) if 0 < n <= len(text)]
+            added += [(path, n, text[n - 1]) for n in sorted(numbers)
+                      if 0 < n <= len(text) and not is_docstring(text, n - 1)]
         candidates = mutants(added)
         def checks_pass():
             return run_ok(all_checks, folder) and (acceptance is None or run_ok(acceptance, folder))

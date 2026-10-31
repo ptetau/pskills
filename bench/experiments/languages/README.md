@@ -7,8 +7,8 @@ the app and the intent. Each language has 1 run first.
 | Language | Status |
 |---|---|
 | Rust | 3 runs: `rust.json`, `rust-2.json` and `rust-3.json`, each with its `rust-N.metrics.json` |
-| Clojure | Waits for the Clojure CLI in the setup script of the environment |
-| Lean 4 | Waits for Lean 4 (elan) in the setup script of the environment |
+| Clojure | 1 run: `clojure-1.json`, `clojure-1.metrics.json` |
+| Lean 4 | Waits for Lean 4. The session blocks its installer, and Ubuntu has no package of it. |
 
 ## Rust, run 1
 
@@ -142,3 +142,46 @@ strength, code quality, the time of checks and builds in each session, and the s
 
 The three runs had different versions of pdlc, so their spread is not the noise of one
 version.
+
+## Clojure, run 1
+
+The Clojure app runs on Clojure 1.11 from the Ubuntu package. This run had the same version
+of pdlc as Rust run 3, and the rule that keeps what a user sees on the page.
+
+| Measure | Rust, run 3 | Clojure, run 1 |
+|---|---|---|
+| Cost | $4.99 | $6.28 |
+| Time | 1,251 s | 1,754 s |
+| Main turns | 92 | 115 |
+| Check runs (failed) | 16 (7) | 21 (4) |
+| Check time in all sessions | 21 s | 71 s |
+| `verify` rounds | 3 | 4 |
+| Recordings | 3 | 10 |
+| Failed reviews | 0 | 4 |
+| Faults that the checks catch | 20 of 20 | 17 of 20 |
+| Faults that a user sees and the checks miss | 0 | 0 |
+| Probes | 8 of 8 | 8 of 8 |
+
+The run finished, with 3 changes, and passed 8 of 8 probes.
+
+- **Show cost the most: $1.98, 471 s, and 10 recordings.** The visual review failed 2
+  times, with 8 problems. Most problems were a frame that showed a setup step under the
+  caption of the result. Show sets the caption at the first step of a line, and a caption
+  stays until the next one. Thus, each setup frame carried the claim of the line. Now a
+  setup step gets its own `setup:` caption, and the last frame of a caption shows its
+  claim.
+- **The checks miss the heading.** A change of the title, a change of the heading, and the
+  removal of the heading all pass the checks. The probes do not read the heading either.
+- **Each check run starts a JVM.** The check runs took 71 s in all sessions, against 21 s in
+  Rust.
+- **No linter.** The session has no Clojure linter, so the run has no code-quality measure.
+
+### Faults in the measures
+
+- The check strength changed a docstring as if it were code. Now it skips docstrings.
+- The fault that changes a text changed a letter of an HTML tag, such as `<h1>` to `<X1>`.
+  A user does not see that. Now it changes the first letter that a reader sees.
+- The probe of the "Show all" link read only its target. Now it also reads its text.
+
+The Rust runs got the same new faults and the same probe again. Their results stay the
+same, except one fault in run 1 that the checks miss: a letter of a text in the storage.

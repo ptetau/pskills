@@ -195,7 +195,7 @@
   "caught": 20,
   "missed": 0,
   "escapes": 0,
-  "candidates": 59,
+  "candidates": 58,
   "score": 1.0,
   "details": [
    {
@@ -301,7 +301,7 @@
     "line": 11,
     "fault": "a letter of a text",
     "caught": true,
-    "user_sees": false
+    "user_sees": true
    },
    {
     "file": "src/page.rs",
@@ -318,13 +318,6 @@
     "user_sees": false
    },
    {
-    "file": "src/page.rs",
-    "line": 24,
-    "fault": "a letter of a text",
-    "caught": true,
-    "user_sees": true
-   },
-   {
     "file": "src/store.rs",
     "line": 37,
     "fault": "remove the line",
@@ -335,6 +328,13 @@
     "file": "src/store.rs",
     "line": 38,
     "fault": "== to !=",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 38,
+    "fault": "a letter of a text",
     "caught": true,
     "user_sees": true
    }

@@ -12,6 +12,10 @@ The packet holds the acceptance lines of the change, the script of the recording
   frame starts with the requirement ID.
 - Each frame shows what its caption claims, after its step. A blank frame, or a frame with
   the screen from before the step, is a problem.
+- A caption with `setup:` after the ID only prepares a state. Its frame shows that state,
+  and nothing more is necessary.
+- When several frames share one caption, the last of them shows the claim. The frames
+  before it show the steps toward it.
 - Each part of a caption is visible on screen. A frame that shows less than its caption
   claims is a problem, also when the claim is probably true. Examples:
   - An exit code on screen comes from a different command, for example `wc` after a pipe.

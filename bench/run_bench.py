@@ -606,7 +606,8 @@ def todo_probes(project, fixture):
             results["each open item has a done button"] = (
                 re.search(r"<form[^>]*action=[\"']/items/2/done[\"']", page) is not None
                 and re.search(r"action=[\"']/items/1/done[\"']", page) is None)
-            results["the page links to show all"] = re.search(r"href=[\"']/?\?show=all[\"']", page) is not None
+            link = re.search(r"<a\b[^>]*href=[\"']/?\?show=all[\"'][^>]*>(.*?)</a>", page, re.S | re.I)
+            results["the page links to show all"] = link is not None and visible_text(link.group(1)) == "Show all"
             missing = app.request("POST", "/items/99/done")
             results["an unknown id is 404"] = missing[0] == 404 and "error: no item 99" in missing[2]
             empty = app.request("POST", "/items", {"text": "  "})

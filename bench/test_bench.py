@@ -1087,6 +1087,13 @@ class MetricsTest(unittest.TestCase):
         self.assertIsNone(found[4][3])
         self.assertEqual(metrics.mutants([("a.py", 1, "# a comment with true")]), [])
 
+    def test_a_docstring_is_not_code(self):
+        lines = ['(defn render [items]', '(defn page', '  "The page of the list."', '  [items]',
+                 '  (str "<h1>To-do</h1>"))', '    """A python docstring."""']
+        self.assertTrue(metrics.is_docstring(lines, 2))
+        self.assertTrue(metrics.is_docstring(lines, 5))
+        self.assertFalse(metrics.is_docstring(lines, 4))
+
     def test_the_spread_gives_the_range_of_each_measure(self):
         columns = [("a", {"cost $": "2.00", "probes": "8 of 8", "finished": True}),
                    ("b", {"cost $": "1.00", "probes": "6 of 8", "finished": True})]

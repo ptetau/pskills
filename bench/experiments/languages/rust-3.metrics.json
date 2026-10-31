@@ -212,7 +212,7 @@
   "caught": 20,
   "missed": 0,
   "escapes": 0,
-  "candidates": 53,
+  "candidates": 51,
   "score": 1.0,
   "details": [
    {
@@ -287,17 +287,10 @@
    },
    {
     "file": "src/page.rs",
-    "line": 16,
-    "fault": "a letter of a text",
-    "caught": true,
-    "user_sees": true
-   },
-   {
-    "file": "src/page.rs",
     "line": 25,
     "fault": "a letter of a text",
     "caught": true,
-    "user_sees": false
+    "user_sees": true
    },
    {
     "file": "src/page.rs",
@@ -352,6 +345,13 @@
     "file": "src/store.rs",
     "line": 62,
     "fault": "false to true",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 64,
+    "fault": "remove the line",
     "caught": true,
     "user_sees": true
    }

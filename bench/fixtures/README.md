@@ -8,7 +8,7 @@ Thus, the results of the languages compare directly.
 |---|---|---|
 | `todo-rust` | Rust, standard library only | Ready |
 | `todo-clojure` | Clojure 1.11 (the Ubuntu package), with the Java standard library | Ready |
-| `todo-lean` | Lean 4 | Not written yet: the session needs Lean 4 (elan) |
+| `todo-lean` | Lean 4 | Not written yet: the session blocks the Lean installer, and Ubuntu has no package |
 
 ## The app
 
