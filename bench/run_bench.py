@@ -327,7 +327,7 @@ def analyse(items):
     messages = {}
     order = []
     stage = "ship"
-    stage_start = {}
+    visits = [(0.0, "ship")]  # (time, stage) each time the main session moves to another stage
     stage_end = {}
     agent_of = {}
     agent_remit = {}
@@ -355,8 +355,9 @@ def analyse(items):
                 if parent is None:
                     started = stage_from_call(name, args, stage)
                     if started:
+                        if started != stage:
+                            visits.append((t, started))
                         stage = started
-                        stage_start.setdefault(stage, t)
                         stage_end[stage] = t
                 if name in ("Agent", "Task"):
                     label = args.get("subagent_type") or "general-purpose"
@@ -378,7 +379,6 @@ def analyse(items):
                     span = agent_span.get(block.get("tool_use_id"))
                     if span and span[1] == span[0]:
                         span[1] = t
-    stage_start.setdefault("ship", 0.0)
 
     per_model_weight = {}
     for key in order:
@@ -428,12 +428,14 @@ def analyse(items):
             part["calls"] += 1
             part["wall_s"] = round(part.get("wall_s", 0) + (end - start), 1)
 
-    names = sorted(stage_start, key=stage_start.get)
-    for index, name in enumerate(names):
-        if name not in stages:
-            continue
-        end = stage_start[names[index + 1]] if index + 1 < len(names) else stage_end.get(name, stage_start[name])
-        stages[name]["wall_s"] = round(max(0.0, end - stage_start[name]), 1)
+    # A stage runs again for each change, so its time is the sum of its visits.
+    last = max(stage_end.values(), default=0.0)
+    spent = {}
+    for (start, name), (end, _) in zip(visits, visits[1:] + [(last, None)]):
+        spent[name] = spent.get(name, 0.0) + max(0.0, end - start)
+    for name, data in stages.items():
+        if name in spent:
+            data["wall_s"] = round(spent[name], 1)
     for data in stages.values():
         data["cost_usd"] = round(data["cost_usd"], 4)
         for agent in data["agents"].values():
@@ -704,7 +706,7 @@ def inspect_project(project, fixture="wordfreq"):
         git(project, "checkout", "-q", branch)
         for change in sorted((project / "pdlc" / "changes").glob("CH-*")):
             text = (change / "change.md").read_text() if (change / "change.md").exists() else ""
-            match = re.search(r"^\**Status:?\**:?\s*(.+)$", text, re.M | re.I)
+            match = re.search(r"(?:^|·)\s*\**Status:?\**:?\s*([a-z ]+?)\s*(?:·|$)", text, re.M | re.I)
             status.setdefault(change.name, {})[branch] = match.group(1).strip() if match else "?"
         merge = subprocess.run([sys.executable, "pdlc/bin/check_merge.py"], cwd=project, capture_output=True, text=True, timeout=120)
         out.setdefault("merge_check", {})[branch] = (merge.stdout + merge.stderr).strip().splitlines()[:3]
@@ -1459,12 +1461,14 @@ def command_report(args):
 
 def command_freeze(args):
     """Merge the runs of several e2e result files into one baseline file."""
-    runs, commits = [], set()
+    runs, commits, fixtures = [], set(), set()
     for path in args.results:
         data = json.loads(Path(path).read_text())
         runs += data["runs"]
         commits.add(data["plugin_commit"])
-    baseline = {"label": args.label, "plugin_commit": ",".join(sorted(commits)), "model": MODEL, "effort": EFFORT, "runs": runs}
+        fixtures.add(data.get("fixture", "wordfreq"))
+    baseline = {"label": args.label, "plugin_commit": ",".join(sorted(commits)), "model": MODEL, "effort": EFFORT,
+                "fixture": ",".join(sorted(fixtures)), "runs": runs}
     if args.seeds:
         seeds = json.loads(Path(args.seeds).read_text())
         baseline["seeds"] = {key: seeds[key] for key in ("reviewer_model", "caught", "missed", "false_fails", "cost_usd")}

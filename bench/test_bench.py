@@ -107,6 +107,24 @@ class AnalyseTest(unittest.TestCase):
         self.assertEqual(result["stages"]["intake"]["wall_s"], 9.0)
 
 
+class RepeatedStageTest(unittest.TestCase):
+    """With two changes, each change stage runs twice. Its time is the sum of both visits."""
+
+    def test_a_stage_that_runs_twice_gets_the_time_of_both_visits(self):
+        events = [
+            assistant(10, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:build"})]),
+            assistant(20, "m2", usage(10, 0, 0, 5), [("s2", "Skill", {"skill": "pdlc:verify"})]),
+            assistant(25, "m3", usage(10, 0, 0, 5), [("s3", "Skill", {"skill": "pdlc:build"})]),
+            assistant(40, "m4", usage(10, 0, 0, 5), [("s4", "Skill", {"skill": "pdlc:verify"})]),
+            assistant(42, "m5", usage(10, 0, 0, 5)),
+            {"t": 43, "e": {"type": "result", "total_cost_usd": 1.0, "duration_ms": 43000, "num_turns": 5,
+                            "is_error": False, "modelUsage": {"m": {"costUSD": 1.0}}, "subagent_stats": {}}},
+        ]
+        stages = run_bench.analyse(events)["stages"]
+        self.assertEqual(stages["build"]["wall_s"], 25.0)
+        self.assertEqual(stages["verify"]["wall_s"], 7.0)
+
+
 class StageAgentTest(unittest.TestCase):
     """Ship can run each stage in a pdlc:stage agent. The agents of that stage run inside it."""
 
