@@ -11,6 +11,15 @@
    "checks": 14.4,
    "git": 5.6,
    "Read": 0.2
+  },
+  "work_by_session": {
+   "main": {
+    "checks": 14.4,
+    "recording": 44.1
+   },
+   "pdlc:builder": {
+    "checks": 8.0
+   }
   }
  },
  "context": {
@@ -172,5 +181,161 @@
   "finished": true,
   "writing findings left": 0
  },
- "fixture": "todo-rust"
+ "fixture": "todo-rust",
+ "quality": {
+  "main": 0,
+  "tip": 0,
+  "new": 0,
+  "linter": "cargo clippy"
+ },
+ "strength": {
+  "faults": 20,
+  "caught": 20,
+  "missed": 0,
+  "escapes": 0,
+  "candidates": 59,
+  "score": 1.0,
+  "details": [
+   {
+    "file": "src/lib.rs",
+    "line": 15,
+    "fault": "== to !=",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 15,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 31,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 33,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 34,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 34,
+    "fault": "remove the line",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 35,
+    "fault": "&& to ||",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 37,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 40,
+    "fault": "remove the line",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 44,
+    "fault": "false to true",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 48,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 49,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/page.rs",
+    "line": 8,
+    "fault": "|| to &&",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/page.rs",
+    "line": 8,
+    "fault": "remove the line",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/page.rs",
+    "line": 11,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/page.rs",
+    "line": 14,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/page.rs",
+    "line": 21,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/page.rs",
+    "line": 24,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 37,
+    "fault": "remove the line",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 38,
+    "fault": "== to !=",
+    "caught": true,
+    "user_sees": true
+   }
+  ]
+ }
 }

@@ -1061,6 +1061,30 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(time["main_session"]["build"], 1.0)
         self.assertEqual(time["api_s"], 9.0)
 
+    def test_the_time_of_checks_and_builds_counts_in_each_session(self):
+        work = metrics.measure_stream(self.events(), "todo-rust")["time"]["work_by_session"]
+        self.assertEqual(work["pdlc:builder"], {"checks": 2.0})
+        self.assertEqual(work["main"], {"build": 1.0})
+
+    def test_each_fault_changes_one_place_of_an_added_line(self):
+        found = metrics.mutants([("src/a.rs", 3, '    if done == true { return "Done"; }'),
+                                 ("src/a.rs", 4, "    item.done = true;")])
+        names = [name for _, _, name, _ in found]
+        self.assertEqual(names, ["true to false", "== to !=", "a letter of a text", "true to false",
+                                 "remove the line"])
+        self.assertEqual(found[0][3], '    if done == false { return "Done"; }')
+        self.assertEqual(found[2][3], '    if done == true { return "Xone"; }')
+        self.assertIsNone(found[4][3])
+        self.assertEqual(metrics.mutants([("a.py", 1, "# a comment with true")]), [])
+
+    def test_the_spread_gives_the_range_of_each_measure(self):
+        columns = [("a", {"cost $": "2.00", "probes": "8 of 8", "finished": True}),
+                   ("b", {"cost $": "1.00", "probes": "6 of 8", "finished": True})]
+        found = dict((row[0], row[1:]) for row in metrics.spread(columns))
+        self.assertEqual(found["cost $"], ("1", "1.50", "2", "67%"))
+        self.assertEqual(found["probes"], ("6", "7", "8", "29%"))
+        self.assertEqual(found["finished"], ("", "", "", ""))
+
     def test_a_requirement_id_in_a_check_name_is_found_in_each_form(self):
         found = metrics.REQ.findall("fn test_CAP_store_R2_keeps_done() {} // JOB-view-list.R10")
         self.assertEqual(found, [("CAP_store", "R2"), ("JOB-view-list", "R10")])

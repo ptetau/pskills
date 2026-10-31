@@ -653,13 +653,19 @@ def fixture_probes(project, fixture):
 # Bash commands that a run of pdlc needs beyond ALLOWED_TOOLS.
 FIXTURES = {
     "wordfreq": {"app": FIXTURE, "intent": INTENT, "probes": len(PROBES), "tools": (),
-                 "check_pattern": r"unittest|pytest"},
+                 "check_pattern": r"unittest|pytest",
+                 "lint": ["ruff", "check", "--no-cache", "--output-format", "concise", "--extend-exclude", "pdlc", "."],
+                 "lint_pattern": r"^\S+:\d+:\d+: ", "compile": [sys.executable, "-m", "compileall", "-q", "wordfreq"],
+                 "noop": "pass"},
     "todo-rust": {"app": HERE / "fixtures" / "todo-rust", "intent": TODO_INTENT, "probes": 8,
                   "check_pattern": r"cargo test|rustc[^|;&]*--test|acceptance-bin",
                   "build_pattern": r"cargo (build|run|check)|\brustc\b",
                   "unit": ["cargo", "test", "--quiet"], "count": r"test result: \w+\. (\d+) passed",
                   "build": ["cargo", "build", "--quiet", "--release"], "start": ["target/release/todo"],
-                  "tools": ("cargo", "rustc", "rustfmt")},
+                  "tools": ("cargo", "rustc", "rustfmt"),
+                  "lint": ["cargo", "clippy", "--quiet", "--all-targets", "--message-format=short"],
+                  "lint_pattern": r"^\S+:\d+:\d+: (warning|error)", "compile": ["cargo", "build", "--quiet"],
+                  "noop": ""},
 }
 
 
@@ -945,6 +951,8 @@ def command_e2e(args):
             import metrics
             analysis["metrics"] = metrics.measure_stream(events, args.fixture)
             analysis["metrics"]["git"] = metrics.measure_project(project, args.fixture)
+            analysis["metrics"]["quality"] = metrics.measure_quality(project, args.fixture)
+            analysis["metrics"]["strength"] = metrics.measure_strength(project, args.fixture)
         except Exception as error:  # the measures add detail; a fault in them must not lose the run
             analysis["metrics"] = {"error": repr(error)}
         runs.append(analysis)

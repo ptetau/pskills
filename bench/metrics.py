@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """The full measures of one pdlc run: time, loops, failures, tokens, and the work it made.
 
-Usage:
-  metrics.py RUN_DIR [RUN_DIR ...]      measure each saved run, write metrics.json next to it,
-                                       and print one column for each run
+Usage: metrics.py [--slow] [--spread] RUN_DIR ...
+
+The script measures each saved run, and writes metrics.json next to it. Then it prints one
+column for each run. The flag --slow adds the code quality and the check strength. The flag
+--spread prints the range of each measure over the runs.
 
 RUN_DIR holds run1.json and run1.stream.jsonl, as `run_bench.py e2e --runs 1` writes them. The
 project of the run must still exist for the measures from git. When it is gone, those
@@ -123,7 +125,7 @@ def measure_stream(items, fixture="wordfreq"):
                 else:
                     work = name
                 calls[block["id"]] = {"stage": here, "kind": work, "tool": name, "main": parent is None,
-                                      "parent": parent,
+                                      "parent": parent, "t": t,
                                       "agent": agent_of.get(parent, (None, "main" if parent is None else "?"))[1]}
         elif kind == "user":
             for block in (event.get("message", {}).get("content") or []):
@@ -133,11 +135,19 @@ def measure_stream(items, fixture="wordfreq"):
                     if tool_id in calls and calls[tool_id]["kind"] in ("checks", "build", "recording"):
                         failed = failed or FAILED.search(result_text(block)) is not None
                     results[tool_id] = failed
+                    if tool_id in calls:
+                        calls[tool_id]["seconds"] = max(0.0, t - calls[tool_id]["t"])
                     if tool_id in calls and event.get("parent_tool_use_id") is None:
                         main_events.append((t, tool_id))
                     if block.get("is_error") and tool_id in calls:
                         tool_errors["%s (%s)" % (calls[tool_id]["tool"], calls[tool_id]["agent"])] += 1
 
+    # The time of each kind of work in every session, the agents too. Agents can run at the same
+    # time, so these times can add up to more than the wall time.
+    tool_time = collections.defaultdict(lambda: collections.defaultdict(float))
+    for call in calls.values():
+        if call["kind"] in ("checks", "build", "recording") and "seconds" in call:
+            tool_time[call["agent"]][call["kind"]] += call["seconds"]
     # The time of the main session: each gap goes to the model, or to the work whose result ends it.
     time_by_kind = collections.Counter()
     main_events.sort(key=lambda pair: pair[0])
@@ -171,7 +181,9 @@ def measure_stream(items, fixture="wordfreq"):
     return {
         "time": {"wall_s": round(main_events[-1][0], 1) if main_events else 0.0,
                  "api_s": round((result.get("duration_api_ms") or 0) / 1000, 1),
-                 "main_session": {k: round(v, 1) for k, v in time_by_kind.most_common()}},
+                 "main_session": {k: round(v, 1) for k, v in time_by_kind.most_common()},
+                 "work_by_session": {agent: {k: round(v, 1) for k, v in kinds.items()}
+                                     for agent, kinds in sorted(tool_time.items())}},
         "context": {"main_turns": len(contexts),
                     "peak": max((c for _, c in contexts), default=0),
                     "mean": round(statistics.mean(c for _, c in contexts)) if contexts else 0},
@@ -264,8 +276,180 @@ def measure_project(project, fixture="wordfreq"):
     }
 
 
-def measure(run_dir, fixture=None):
-    """The measures of one saved run folder."""
+def clone_at(project, ref):
+    """A throwaway clone of the project, checked out at ref. The caller removes it."""
+    import tempfile
+    folder = Path(tempfile.mkdtemp(prefix="pdlc-bench-measure-")) / "app"
+    subprocess.run(["git", "clone", "-q", str(project), str(folder)], check=True)
+    subprocess.run(["git", "checkout", "-q", ref], cwd=folder, check=True)
+    tools = Path(project) / "pdlc" / ".tools"
+    if tools.exists() and not (folder / "pdlc" / ".tools").exists():
+        (folder / "pdlc" / ".tools").symlink_to(tools.resolve())
+    return folder
+
+
+def tip_of(project):
+    branches = [b for b in git(project, "branch", "--format=%(refname:short)").split() if b != "main"]
+    return max(branches, key=lambda b: git(project, "log", "-1", "--format=%ct", b).strip() or "0", default="main")
+
+
+def lint_count(folder, spec):
+    try:
+        proc = subprocess.run(spec["lint"], cwd=folder, capture_output=True, text=True, timeout=600)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return len(re.findall(spec["lint_pattern"], proc.stdout + proc.stderr, re.M))
+
+
+def measure_quality(project, fixture="wordfreq"):
+    """The findings of the linter of the language on main, and on the tip of the run."""
+    import shutil
+    spec = rb.FIXTURES[fixture]
+    project = Path(project)
+    if not spec.get("lint") or not (project / ".git").exists():
+        return None
+    out = {}
+    for name, ref in (("main", "main"), ("tip", tip_of(project))):
+        folder = clone_at(project, ref)
+        try:
+            out[name] = lint_count(folder, spec)
+        finally:
+            shutil.rmtree(folder.parent, ignore_errors=True)
+    out["new"] = out["tip"] - out["main"] if None not in (out["main"], out["tip"]) else None
+    out["linter"] = spec["lint"][0] if spec["lint"][0] != "cargo" else "cargo clippy"
+    return out
+
+
+# Small faults for the check strength. Each operator changes one place in one added line.
+MUTATIONS = [
+    ("true to false", r"\btrue\b", "false"), ("false to true", r"\bfalse\b", "true"),
+    ("True to False", r"\bTrue\b", "False"), ("False to True", r"\bFalse\b", "True"),
+    ("== to !=", r"==", "!="), ("!= to ==", r"!=", "=="),
+    ("&& to ||", r"&&", "||"), ("|| to &&", r"\|\|", "&&"),
+    (">= to >", r">=", ">"), ("<= to <", r"<=", "<"),
+    ("+ 1 to + 2", r"\+ 1\b", "+ 2"), ("- 1 to - 2", r"- 1\b", "- 2"),
+    ("a letter of a text", r'"([^"\\]*?)([A-Za-z])', None),
+]
+
+
+def mutants(lines):
+    """Each fault: (file, line number, name, new line). `lines` is (file, number, text)."""
+    out = []
+    for path, number, text in lines:
+        stripped = text.strip()
+        if not stripped or stripped.startswith(("//", "#", ";", "--")):
+            continue
+        for name, pattern, replacement in MUTATIONS:
+            found = re.search(pattern, text)
+            if not found:
+                continue
+            if replacement is None:  # change the first letter inside a string literal
+                letter = found.group(2)
+                swap = "Y" if letter == "X" else "X"
+                new = text[:found.start(2)] + swap + text[found.end(2):]
+            else:
+                new = text[:found.start()] + replacement + text[found.end():]
+            out.append((path, number, name, new))
+        if stripped.endswith(";") or (not stripped.endswith((":", "{", "(", "[", ",")) and "=" not in stripped):
+            indent = text[:len(text) - len(text.lstrip())]
+            out.append((path, number, "remove the line", None))
+    return out
+
+
+def run_ok(command, folder, timeout=300):
+    try:
+        return subprocess.run(command, cwd=folder, shell=isinstance(command, str), capture_output=True,
+                              timeout=timeout).returncode == 0
+    except subprocess.TimeoutExpired:
+        return False
+
+
+def check_commands(folder):
+    """The "all" command and the acceptance command of the project, from pdlc/config.md."""
+    config = (folder / "pdlc" / "config.md").read_text()
+    get = lambda name: (re.search(r"^- %s:\s*`([^`]+)`" % name, config, re.M) or [None, None])[1]  # noqa: E731
+    acceptance, pattern = get("acceptance"), get("acceptance file")
+    files = []
+    if pattern and "{intent}" in pattern:
+        rx = re.compile("^%s$" % r"IN[-_]?\d+".join(re.escape(part) for part in pattern.split("{intent}")), re.I)
+        files = [f for f in git(folder, "ls-files").split() if rx.match(f)]
+    if acceptance and files:
+        acceptance = acceptance.replace("{files}", " ".join(files))
+    else:
+        acceptance = None
+    return get("all"), acceptance
+
+
+def measure_strength(project, fixture="wordfreq", limit=20):
+    """How many small faults in the code that the run added the checks of pdlc catch.
+
+    For each fault, the checks of the project run: its "all" command and its acceptance
+    command. The probes of the bench run too. A fault that the probes catch but the checks
+    miss is an escape: a user would see it, and pdlc did not catch it. A fault that does not
+    compile is not counted.
+    """
+    import shutil
+    spec = rb.FIXTURES[fixture]
+    project = Path(project)
+    if not (project / ".git").exists():
+        return None
+    tip = tip_of(project)
+    folder = clone_at(project, tip)
+    try:
+        all_checks, acceptance = check_commands(folder)
+        # The diffs come from the project, because the clone has only the branch of the tip.
+        code = [f for f in git(project, "diff", "--name-only", "main..." + tip).split()
+                if not f.startswith("pdlc/") and not f.endswith(".md")
+                and not re.search(r"(^|/)(tests?|spec|acceptance|__tests__)/|acceptance", f)
+                and (folder / f).is_file()]
+        added = []
+        for path in code:
+            numbers = set()
+            for hunk in re.findall(r"^@@ -\S+ \+(\d+)(?:,(\d+))? @@", git(project, "diff", "-U0", "main..." + tip, "--", path), re.M):
+                start, count = int(hunk[0]), int(hunk[1] or 1)
+                numbers.update(range(start, start + count))
+            text = (folder / path).read_text().splitlines()
+            added += [(path, n, text[n - 1]) for n in sorted(numbers) if 0 < n <= len(text)]
+        candidates = mutants(added)
+        def checks_pass():
+            return run_ok(all_checks, folder) and (acceptance is None or run_ok(acceptance, folder))
+        if not all_checks or not checks_pass():
+            return {"error": "the checks of the run do not pass at its tip", "candidates": len(candidates)}
+        step = max(1, len(candidates) // (limit * 2)) if candidates else 1
+        results = []
+        for path, number, name, new in candidates[::step]:
+            if len(results) >= limit:
+                break
+            file = folder / path
+            original = file.read_text()
+            lines = original.splitlines(keepends=True)
+            ending = "\n" if lines[number - 1].endswith("\n") else ""
+            if new is None:
+                indent = lines[number - 1][:len(lines[number - 1]) - len(lines[number - 1].lstrip())]
+                new = indent + spec.get("noop", "")
+            lines[number - 1] = new + ending
+            file.write_text("".join(lines))
+            try:
+                if spec.get("compile") and not run_ok(spec["compile"], folder):
+                    continue  # a fault that does not compile proves nothing
+                caught = not checks_pass()
+                probes = rb.fixture_probes(folder, fixture)
+                seen = probes["passed"] < probes["total"]
+                results.append({"file": path, "line": number, "fault": name, "caught": caught, "user_sees": seen})
+            finally:
+                file.write_text(original)
+        caught = sum(r["caught"] for r in results)
+        return {"faults": len(results), "caught": caught, "missed": len(results) - caught,
+                "escapes": sum(1 for r in results if r["user_sees"] and not r["caught"]),
+                "candidates": len(candidates), "score": round(caught / len(results), 2) if results else None,
+                "details": results}
+    finally:
+        shutil.rmtree(folder.parent, ignore_errors=True)
+
+
+def measure(run_dir, fixture=None, slow=False):
+    """The measures of one saved run folder. With slow, also the code quality and the check
+    strength, which build and test the app again (about a minute)."""
     run_dir = Path(run_dir)
     run = json.loads((run_dir / "run1.json").read_text())
     summary_path = run_dir / "e2e.json"
@@ -280,6 +464,15 @@ def measure(run_dir, fixture=None):
                       "finished": rb.completed(run) if outcome.get("merge_check") is not None else False,
                       "writing findings left": (outcome.get("writing") or {}).get("count")}
     out["fixture"] = fixture
+    if slow:
+        out["quality"] = measure_quality(run.get("project", ""), fixture)
+        strength = measure_strength(run.get("project", ""), fixture)
+    else:
+        saved = run_dir / "metrics.json"
+        old = json.loads(saved.read_text()) if saved.exists() else {}
+        out["quality"] = old.get("quality") or (run.get("metrics") or {}).get("quality")
+        strength = old.get("strength") or (run.get("metrics") or {}).get("strength")
+    out["strength"] = strength
     return out
 
 
@@ -308,25 +501,75 @@ def rows(data):
                 ("app lines added", work["lines"].get("app code added", 0)),
                 ("check lines added", work["lines"].get("checks added", 0)),
                 ("requirements with checks", work["requirements with checks"])]
+    work = data["time"].get("work_by_session", {})
+    out += [("check time s, all sessions", "%.0f" % sum(k.get("checks", 0) for k in work.values())),
+            ("build time s, all sessions", "%.0f" % sum(k.get("build", 0) for k in work.values()))]
+    quality, strength = data.get("quality"), data.get("strength")
+    if quality:
+        out.append(("new lint findings", quality.get("new")))
+    if strength and "faults" in strength:
+        out += [("faults caught", "%d of %d" % (strength["caught"], strength["faults"])),
+                ("faults a user sees, missed", strength["escapes"])]
     outcome = data["outcome"]
     out += [("probes", outcome["probes"]), ("finished", outcome["finished"]),
             ("writing findings left", outcome["writing findings left"])]
     return out
 
 
-def main(folders):
+def number(value):
+    """The number in a table value, or None: "3 (1)" gives 3, "8 of 8" gives 8."""
+    found = re.match(r"\s*(-?\d+(?:\.\d+)?)", str(value))
+    return float(found.group(1)) if found and not isinstance(value, bool) else None
+
+
+def spread(columns):
+    """For each measure, the lowest, the mean and the highest value of the runs, and the
+    range as a share of the mean."""
+    out = []
+    for name in columns[0][1]:
+        values = [number(values.get(name)) for _, values in columns]
+        values = [v for v in values if v is not None]
+        if len(values) < len(columns) or not values:
+            out.append((name, "", "", "", ""))
+            continue
+        mean = statistics.mean(values)
+        share = "%.0f%%" % (100 * (max(values) - min(values)) / mean) if mean else ""
+        show = lambda v: "%.0f" % v if abs(v) >= 100 or v == int(v) else "%.2f" % v  # noqa: E731
+        out.append((name, show(min(values)), show(mean), show(max(values)), share))
+    return out
+
+
+def main(argv):
+    """metrics.py [--slow] [--spread] RUN_DIR ...
+
+    The flag --slow also measures the code quality and the check strength of each run. The
+    flag --spread prints the lowest, the mean and the highest value of each measure. It
+    prints them in place of one column for each run.
+    """
+    slow, show_spread = "--slow" in argv, "--spread" in argv
+    folders = [a for a in argv if not a.startswith("--")]
+    if not folders:
+        print(main.__doc__)
+        return 1
     columns = []
     for folder in folders:
-        data = measure(folder)
+        data = measure(folder, slow=slow)
         (Path(folder) / "metrics.json").write_text(json.dumps(data, indent=1))
         columns.append((Path(folder).name, dict(rows(data))))
-    names = [name for name, _ in rows(measure(folders[0]))] if folders else []
-    width = max([len(n) for n in names] + [0])
-    print(" " * width + "".join("%14s" % label[:13] for label, _ in columns))
-    for name in names:
-        print(name.ljust(width) + "".join("%14s" % str(values.get(name, ""))[:13] for _, values in columns))
+    names = list(dict.fromkeys(name for _, values in columns for name in values))
+    columns = [(label, {name: values.get(name, "") for name in names}) for label, values in columns]
+    width = max(len(n) for n in names)
+    if show_spread:
+        print(" " * width + "%12s%12s%12s%8s" % ("lowest", "mean", "highest", "range"))
+        for name, low, mean, high, share in spread(columns):
+            print(name.ljust(width) + "%12s%12s%12s%8s" % (low, mean, high, share))
+    else:
+        print(" " * width + "".join("%14s" % label[:13] for label, _ in columns))
+        for name in names:
+            print(name.ljust(width) + "".join("%14s" % str(values[name])[:13] for _, values in columns))
     print("wrote metrics.json in each folder")
+    return 0
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    sys.exit(main(sys.argv[1:]))
