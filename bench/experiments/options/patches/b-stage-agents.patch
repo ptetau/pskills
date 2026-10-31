@@ -1,0 +1,531 @@
+From b8615dbb83e74d7e9f00de64470474f64eeed627 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 06:59:48 +0000
+Subject: [PATCH] pdlc: run each stage of ship in a new pdlc:stage agent
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Before this change, ship ran every stage in one conversation, and the context grew from
+stage to stage. Now ship starts a new pdlc:stage agent for each stage. The prompt of the
+agent has four lines: the project root, the stage, the path of the skill file, and the
+work. The agent reads the skill file and does the stage with the recommended answers.
+
+The stage skills stay unforked. Each skill still works alone, with and without defaults.
+
+Each fact that a stage took from the conversation now comes from a file:
+- Build writes the reason for a wrong check in the handoff of the change. The title is
+  build to tests, or build to acceptance.
+- Acceptance finds a send-back in the handoff of the change at the top of the stack.
+- The rounds come from the commits of the branch. A stop commit starts a new count.
+- A stage takes the recommended answer of an earlier stop from the latest handoff.
+- Ship reads the link and the GIF of each change from the handoff `verify → user`.
+
+The agent stops for two cases that take no default: a contradiction between requirements,
+and a file outside the Files of a change. Ship keeps its stop list, its rounds, the order
+of its changes, and its merge proposal.
+
+The guard needs no code change, because the role stage matches no lane. A test shows this.
+The e2e bench and the vet eval did not run for this change.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01ASzNnMDKqvNhtDTixAPnvD
+---
+ plugins/pdlc/OUTLINE.md                       |   3 +-
+ plugins/pdlc/agents/stage.md                  |  56 ++++++
+ plugins/pdlc/hooks/guard.py                   |   2 +-
+ plugins/pdlc/skills/acceptance/SKILL.md       |   6 +-
+ plugins/pdlc/skills/build/SKILL.md            |   3 +
+ .../init/references/templates/README.md       |  18 +-
+ .../init/references/templates/handoff.md      |   7 +-
+ plugins/pdlc/skills/ship/SKILL.md             |  26 ++-
+ plugins/pdlc/tests/test_guard.py              |  12 ++
+ plugins/pdlc/tests/test_stage_agent.py        | 190 ++++++++++++++++++
+ 10 files changed, 308 insertions(+), 15 deletions(-)
+ create mode 100644 plugins/pdlc/agents/stage.md
+ create mode 100644 plugins/pdlc/tests/test_stage_agent.py
+
+diff --git a/plugins/pdlc/OUTLINE.md b/plugins/pdlc/OUTLINE.md
+index 5548518..bff555d 100644
+--- a/plugins/pdlc/OUTLINE.md
++++ b/plugins/pdlc/OUTLINE.md
+@@ -536,7 +536,7 @@ pdlc is a Claude Code plugin. You call its skills as `/pdlc:<name>`.
+ | `build` | Tells the builder to write app code until the locked checks pass. Marks the requirements `built`. |
+ | `show` | Records the change as it works, as `review.gif` and frames. |
+ | `verify` | Runs all the checks and the independent code reviews. Marks the requirements `verified`, and proposes the merge. |
+-| `ship` | Runs all the stages from start to end with the recommended answers, and stacks the changes. Continues from the point where it stopped. |
++| `ship` | Runs all the stages from start to end with the recommended answers, each in a new `stage` agent, and stacks the changes. Continues from the point where it stopped. |
+ | `conventions` | Establishes or changes a convention with you, and creates migration intents. |
+ | `board` | Re-syncs each intent and each change to the tracker. |
+ | `trace` | Answers "why does this code exist?" and "what did this intent change?" |
+@@ -559,6 +559,7 @@ skills share, and a skill names the section of a shared rule.
+ | `test-writer` | Writes checks from the spec only. Does not read app code. |
+ | `builder` | Writes app code until the locked checks pass. Does not change checks. |
+ | `reviewer` | Judges one packet for one remit. Sees nothing else. |
++| `stage` | Runs one stage for `ship`, in a new context, with the recommended answers. Reads all its inputs from files. |
+ 
+ Each agent has `model: inherit`, so that the agent runs on the model of the session. An
+ agent on a model below the Sonnet 5.5 class does no work, and reports this.
+diff --git a/plugins/pdlc/agents/stage.md b/plugins/pdlc/agents/stage.md
+new file mode 100644
+index 0000000..92523eb
+--- /dev/null
++++ b/plugins/pdlc/agents/stage.md
+@@ -0,0 +1,56 @@
++---
++name: stage
++description: >
++  Runs one pdlc stage for /pdlc:ship in a new context, with the recommended answers.
++  Reads all its inputs from the files of the project.
++model: inherit
++---
++
++pdlc needs a Sonnet 5.5 class model or above. If you run on a lower model, for example a
++Haiku model, do no work. Reply only that pdlc needs a Sonnet 5.5 class model or above.
++
++You run one pdlc stage alone, for `/pdlc:ship`. You do not see the conversation that
++started you. The files of the project hold all that the stage needs.
++
++Your prompt has four lines:
++
++- `Project root:` the absolute path of the project.
++- `Stage:` the name of the stage: `intake`, `ready`, `change`, `acceptance`, `tests`,
++  `build`, `show`, or `verify`.
++- `Skill file:` the absolute path of the `SKILL.md` file of the stage.
++- `Work:` the ID of the intent or the change. For intake, the words of the user can stand
++  here, and can run over more than one line.
++
++Do these steps:
++
++1. Work in the project root.
++2. Read the skill file. Do what it says for the work, with `defaults`.
++3. Ask the user nothing. Each question takes its recommended answer ("Questions" in
++   `pdlc/README.md`). Two cases take no default, and stop the stage: a contradiction
++   between requirements, and a file that the change needs outside its "Files".
++4. Read the "Open" section of the latest handoff of the work. It can hold a stop of an
++   earlier run, with a recommended answer. Take that answer.
++5. Run only this stage. If the skill says that another stage must run first, do not run
++   that stage. Reply that the work is sent back to that stage.
++6. A stop of the skill ends your work. Before you reply, commit all that the stage wrote,
++   so that `git status --porcelain` shows nothing.
++
++Reply in at most five lines, in this form:
++
++```
++Stage: <stage> <ID> <result>
++Handoff: <the title of the latest handoff>
++Next: <the next stage and its ID, or end>
++Commit: <the output of git log -1 --format='%h %s'>
++Stop: <the reason and the recommended answer, or none>
++```
++
++On the `Stage:` line, the result is `done`, `sent back to <stage>`, or `stopped`. The ID is
++the ID that you worked on. For intake of new words, it is the ID of the new intent. After a
++stop, `Next:` names the stage that stopped. The `Stop:`
++line holds all that the user must know, in one line. The form of the reply has priority
++over the writing rules.
++
++Write each spec, comment, or message that you write, to the rules in
++`pdlc/specs/design/DES-writing-style.md`. If that file does not exist yet, write short
++sentences in the active voice. Give each ID a short description.
+diff --git a/plugins/pdlc/hooks/guard.py b/plugins/pdlc/hooks/guard.py
+index 365b8e4..b3feb0e 100644
+--- a/plugins/pdlc/hooks/guard.py
++++ b/plugins/pdlc/hooks/guard.py
+@@ -7,7 +7,7 @@ It keeps pdlc's agents in their lanes:
+   - pdlc:builder never edits checks or pdlc/ files.
+   - pdlc:reviewer reads only review packets and frames, and writes only its result.
+   - pdlc:recon never writes.
+-It leaves everyone else alone, including the main session.
++It leaves everyone else alone, including the main session and pdlc:stage.
+ 
+ The project is the nearest folder holding pdlc/config.md. The guard looks for that folder
+ from the file first, then from the agent's working folder. So the lanes hold wherever the
+diff --git a/plugins/pdlc/skills/acceptance/SKILL.md b/plugins/pdlc/skills/acceptance/SKILL.md
+index d64f090..7007581 100644
+--- a/plugins/pdlc/skills/acceptance/SKILL.md
++++ b/plugins/pdlc/skills/acceptance/SKILL.md
+@@ -20,10 +20,12 @@ change of the intent is built ("Acceptance checks" in `pdlc/README.md`).
+ - The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first. Red, lock, and
+   review obey "Checks before code". The test writer and the reviewer obey "Who does what".
+ - The intent is the one that the user names, or else the oldest `ready` intent that lists
+-  changes and has `Acceptance-Locked: none`. After a send-back from `/pdlc:build` or
+-  `/pdlc:verify`, the reason is in the `handoff.md` of that change, and app code exists.
++  changes and has `Acceptance-Locked: none`.
+ - The work is at the top of the stack of the intent. The top is the branch of its newest
+   change that has a branch, or the intent branch before the first change.
++- The `handoff.md` of the change at the top of the stack can have the title
++  `build → acceptance` or `verify → acceptance`. Then the intent came back from
++  `/pdlc:build` or `/pdlc:verify`. App code exists, and that file gives the reason.
+ - With `Branch: none`, the delivery port starts the intent branch ("Where pdlc commits"),
+   from the newest unmerged pdlc branch, or else from main.
+ - When each requirement of the intent is `retiring`, there is nothing to prove.
+diff --git a/plugins/pdlc/skills/build/SKILL.md b/plugins/pdlc/skills/build/SKILL.md
+index 16f16ee..71687dd 100644
+--- a/plugins/pdlc/skills/build/SKILL.md
++++ b/plugins/pdlc/skills/build/SKILL.md
+@@ -33,6 +33,9 @@ does not change the checks.
+ - A check that the builder calls incorrect stays as it is. The reason goes to
+   `/pdlc:tests`, which asks the test writer and locks again, and then build runs again. For
+   an acceptance check, the reason goes to `/pdlc:acceptance`.
++- Build writes that reason in the `handoff.md` of the change. The title is
++  `build → tests` or `build → acceptance`. The commit is "Send back CH-xxxx: <stage>"
++  (`Intent`, `Change`). Then build stops, and the next stage reads the reason from the file.
+ - A file that the builder needs outside "Files" is a question for the user. On a yes, the
+   file goes into "Files", and the builder runs again.
+ - The same problem a third time stops the skill, and build asks the user ("Rounds").
+diff --git a/plugins/pdlc/skills/init/references/templates/README.md b/plugins/pdlc/skills/init/references/templates/README.md
+index 76fcff8..61bdf2b 100644
+--- a/plugins/pdlc/skills/init/references/templates/README.md
++++ b/plugins/pdlc/skills/init/references/templates/README.md
+@@ -96,6 +96,7 @@ change.
+ | `pdlc:builder` | writes app code until the checks pass | changes checks or `pdlc/` files |
+ | `pdlc:reviewer` | judges one packet for one remit | sees anything other than its packet |
+ | `pdlc:recon` | maps existing code | writes anything |
++| `pdlc:stage` | runs one stage for /pdlc:ship, as the main session does | asks the user a question |
+ 
+ A guard in the pdlc plugin keeps the roles in these lanes. For each agent:
+ 
+@@ -111,7 +112,7 @@ A guard in the pdlc plugin keeps the roles in these lanes. For each agent:
+ ## Stages and handoffs
+ 
+ The intent stages are intake → ready → change → acceptance. The change stages are tests →
+-build → show → `verify`. `/pdlc:ship` runs them all.
++build → show → `verify`. `/pdlc:ship` runs them all, each in a new `pdlc:stage` agent.
+ 
+ - Each stage starts from the latest handoff, and ends with a new one from
+   `templates/handoff.md`, which replaces the old one. Git keeps the history.
+@@ -121,6 +122,10 @@ build → show → `verify`. `/pdlc:ship` runs them all.
+   empty one. The time comes from the real clock (`date -Iseconds`).
+ - A handoff says only what the files show, with real counts of the checks that ran and of
+   the acceptance lines shown.
++- Each stage reads all its inputs from files: the intent and its "Handoff", the specs, and
++  the change spec and its `handoff.md`. A stage takes nothing from the conversation.
++- A stop leaves the reason and a recommended answer under "Open" in the latest handoff.
++  The next run of that stage asks the user, or with `defaults` takes that answer.
+ 
+ At the end of each stage, and at each stop:
+ 
+@@ -188,6 +193,17 @@ blocked twice is one round. Each change has two rounds, and so does the acceptan
+ of each intent. The third failure of the same stage stops the work, and the skill asks the
+ user.
+ 
++The files hold the count. A round leaves one of these marks in the log of the branch:
++
++- A failed review: a commit "Review tests CH-xxxx" or "Review acceptance IN-xxxx" with
++  `Result: fail`.
++- A commit "Send back CH-xxxx: <stage>".
++- A commit "Verify CH-xxxx: round <n>" for a failed run.
++
++One failure that leaves two marks is one round. After a commit "Stop CH-xxxx: <why>" (or
++"Stop IN-xxxx: <why>"), each stage counts the rounds of that change (or intent) only after
++that commit.
++
+ ## Where pdlc commits
+ 
+ - Init commits on main. So do intake, ready, and change while no pdlc branch is unmerged.
+diff --git a/plugins/pdlc/skills/init/references/templates/handoff.md b/plugins/pdlc/skills/init/references/templates/handoff.md
+index ee420f1..9f1ddff 100644
+--- a/plugins/pdlc/skills/init/references/templates/handoff.md
++++ b/plugins/pdlc/skills/init/references/templates/handoff.md
+@@ -5,10 +5,11 @@ Time: <the output of `date -Iseconds`; never typed by hand>
+ The title is one of these, and nothing else: `intake → ready`, `ready → change`,
+ `change → acceptance`, `acceptance → tests`, `tests → build`, `build → show` or
+ `show → verify`. After a failed round, the title is `verify → tests`, `verify → build` or
+-`verify → acceptance`. After the acceptance stage corrects a check for a change, the title
+-is `acceptance → build`.
++`verify → acceptance`. After the build stage finds a wrong check, the title is
++`build → tests` or `build → acceptance`. After the acceptance stage corrects a check for a
++change, the title is `acceptance → build`.
+ 
+-Once verify proposes the change, the title is `verify → user`. When a stage stops, the
++Once `verify` proposes the change, the title is `verify → user`. When a stage stops, the
+ title is `<this stage> → user`. Keep every section below, in this order. Write "none"
+ under one with nothing in it.
+ 
+diff --git a/plugins/pdlc/skills/ship/SKILL.md b/plugins/pdlc/skills/ship/SKILL.md
+index b80bf37..04f23df 100644
+--- a/plugins/pdlc/skills/ship/SKILL.md
++++ b/plugins/pdlc/skills/ship/SKILL.md
+@@ -19,18 +19,28 @@ change of the intent is proposed. Ship stops only for a case that needs the user
+   `pdlc/README.md`). On a lower model, ship does no work. Ship tells the user that pdlc
+   needs a Sonnet 5.5 class model or above.
+ - The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first.
+-- Each stage runs through its own skill, with `defaults`, in the order of
++- Each stage runs in a new `pdlc:stage` agent, one at a time, in the order of
+   "Stages and handoffs". Each change gets every stage, also show and `verify` with
+   nothing on screen.
++- The prompt of that agent has these four lines and nothing else:
++  - `Project root: <absolute path>`
++  - `Stage: <stage>`
++  - `Skill file: ${CLAUDE_SKILL_DIR}/../<stage>/SKILL.md`
++  - `Work: <the ID, or for intake the words of the user, exactly>`. This line is last, so
++    that the words of the user can run over more than one line.
++- Ship does not run a stage in this conversation, and does not read a `SKILL.md` file.
++  The reply of the agent and the latest handoff give the next stage.
++- A reply with `sent back to <stage>` runs that stage next, for the same work. A reply
++  with `stopped` is a stop. Ship counts the rounds from the files ("Rounds").
+ - Only the handoffs and the files carry information from one stage to the next.
+ - Changes stack ("Stacked changes"). The tests of the next change start as soon as a
+   change is `in review`, with no wait for a merge.
+ - After each stage, the dashboard and the tracker show the new state, if the project has
+   them.
+ - The work to take is the first of these that exists, in this order:
+-  - An unmerged change where an earlier run stopped. With `defaults`, ship takes the
+-    recommended answer of its stop handoff, and gives the change two new rounds. A
+-    contradiction still waits for the user.
++  - An unmerged change where an earlier run stopped. The agent of the stage takes the
++    recommended answer under "Open" in the latest handoff ("Stages and handoffs"), and
++    the change gets two new rounds ("Rounds"). A contradiction still waits for the user.
+   - New words of the user: intake, with those words.
+   - An intent or a change that the user names, from its current status.
+   - The oldest intent that is not `in review`, `done`, `paused`, or `cancelled`, and has
+@@ -61,21 +71,23 @@ change of the intent is proposed. Ship stops only for a case that needs the user
+ 
+ ## Inputs
+ 
+-- `pdlc/README.md`, and the skills of the stages, from `pdlc:intake` to `pdlc:verify`.
++- `pdlc/README.md`.
+ - The words of the user, or the name of an intent or a change.
+ - The intents, the changes, their branches, and their latest handoffs.
++- The reply of each `pdlc:stage` agent.
+ 
+ ## Outputs
+ 
+ - The outputs of each stage that ran.
+-- At a stop:
++- At a stop, from the `Stop:` line of the reply:
+   - Under "Open" in the latest handoff: the reason in one sentence, what the user must
+     decide, and the recommended answer, which the next run takes.
+   - The commit "Stop CH-xxxx: <why>", or "Stop IN-xxxx: <why>" for an intent stage, with
+     the trailers of "Commits". Then `git status --porcelain` shows nothing.
+   - The same reason, for the user.
+ - At the end, a few lines for the user, from a one-line note on each stage:
+-  - The changes and their pull requests, in stack order, each with its GIF.
++  - The changes and their pull requests, in stack order, each with its GIF. The link and
++    the GIF come from the handoff `verify → user` of each change.
+   - Each answer that ship took by default, so that the user can change it.
+   - The new behaviour that waits for approval, with the intent filed for each item.
+   - What waits for the user: the merge of the pull requests of each intent together, from
+diff --git a/plugins/pdlc/tests/test_guard.py b/plugins/pdlc/tests/test_guard.py
+index a8be534..bec0223 100644
+--- a/plugins/pdlc/tests/test_guard.py
++++ b/plugins/pdlc/tests/test_guard.py
+@@ -169,6 +169,18 @@ class Guard(unittest.TestCase):
+         self.assertTrue(self.ok(None, "Edit", file_path="test/cli.test.js"))
+         self.assertTrue(self.ok("general-purpose", "Read", file_path="src/cli.js"))
+ 
++    def test_a_stage_agent_has_the_lanes_of_the_main_session(self):
++        self.with_acceptance_line()
++        self.assertTrue(self.ok("pdlc:stage", "Read", file_path="src/cli.js"))
++        self.assertTrue(self.ok("pdlc:stage", "Grep", pattern="greet"))
++        self.assertTrue(self.ok("pdlc:stage", "Read", file_path="pdlc/changes/CH-0001-x/review/security/packet.md"))
++        self.assertTrue(self.ok("pdlc:stage", "Write", file_path="test/cli.test.js"))
++        self.assertTrue(self.ok("pdlc:stage", "Edit", file_path="acceptance/IN-0001.acceptance.js"))
++        self.assertTrue(self.ok("pdlc:stage", "Write", file_path="pdlc/changes/CH-0001-x/handoff.md"))
++        self.assertTrue(self.ok("pdlc:stage", "Edit", file_path="pdlc/specs/jobs/JOB-x.md"))
++        with tempfile.TemporaryDirectory() as elsewhere:
++            self.assertTrue(self.ok("pdlc:stage", "Read", file_path=str(Path(elsewhere) / "skills/tests/SKILL.md")))
++
+     def test_default_check_folders_without_config(self):
+         (self.cwd / "pdlc/config.md").unlink()
+         self.assertTrue(self.ok("pdlc:test-writer", "Write", file_path="tests/test_x.py"))
+diff --git a/plugins/pdlc/tests/test_stage_agent.py b/plugins/pdlc/tests/test_stage_agent.py
+new file mode 100644
+index 0000000..9b9554f
+--- /dev/null
++++ b/plugins/pdlc/tests/test_stage_agent.py
+@@ -0,0 +1,190 @@
++"""Tests for the pdlc:stage agent and the ship skill. Run: python3 -m unittest discover plugins/pdlc/tests"""
++import re
++import unittest
++from pathlib import Path
++
++PLUGIN = Path(__file__).parent.parent
++AGENT = PLUGIN / "agents/stage.md"
++SKILLS = PLUGIN / "skills"
++SHIP = SKILLS / "ship/SKILL.md"
++README = SKILLS / "init/references/templates/README.md"
++HANDOFF = SKILLS / "init/references/templates/handoff.md"
++STAGES = ["intake", "ready", "change", "acceptance", "tests", "build", "show", "verify"]
++MODEL_RULE = "pdlc needs a Sonnet 5.5 class model or above."
++
++
++def split(path):
++    """(front matter keys, body) of a Markdown file with front matter."""
++    text = path.read_text()
++    head, body = re.match(r"---\n(.*?)\n---\n(.*)", text, re.S).groups()
++    keys = dict(re.findall(r"^([a-z-]+):[ \t]*(.*)$", head, re.M))
++    return keys, body
++
++
++def section(text, heading):
++    """The text under a "## heading" line, up to the next "## " line."""
++    return text.split("## %s\n" % heading, 1)[1].split("\n## ", 1)[0]
++
++
++class StageAgent(unittest.TestCase):
++    def test_the_front_matter_names_the_agent_and_lets_it_inherit_the_model(self):
++        keys, _ = split(AGENT)
++        self.assertEqual(keys["name"], "stage")
++        self.assertEqual(keys["model"], "inherit")
++        self.assertIn("description", keys)
++
++    def test_the_description_says_what_the_agent_does(self):
++        text = AGENT.read_text()
++        description = re.search(r"^description: >\n((?:  .*\n)+)", text, re.M).group(1)
++        flat = " ".join(description.split())
++        self.assertIn("Runs one pdlc stage for /pdlc:ship in a new context", flat)
++        self.assertIn("Reads all its inputs from the files of the project.", flat)
++
++    def test_the_agent_has_no_tools_line_so_that_it_can_start_agents(self):
++        keys, _ = split(AGENT)
++        self.assertNotIn("tools", keys)
++
++    def test_every_agent_starts_with_the_model_rule(self):
++        for path in sorted((PLUGIN / "agents").glob("*.md")):
++            with self.subTest(agent=path.name):
++                keys, body = split(path)
++                self.assertEqual(keys["model"], "inherit")
++                self.assertTrue(body.lstrip().startswith(MODEL_RULE))
++
++    def test_the_body_names_the_four_prompt_lines(self):
++        _, body = split(AGENT)
++        for line in ("Project root:", "Stage:", "Skill file:", "Work:"):
++            with self.subTest(line=line):
++                self.assertIn("- `%s`" % line, body)
++
++    def test_the_body_gives_the_five_lines_of_the_reply(self):
++        _, body = split(AGENT)
++        reply = body.split("```", 2)[1]
++        self.assertEqual([line.split(":")[0] for line in reply.strip().splitlines()],
++                         ["Stage", "Handoff", "Next", "Commit", "Stop"])
++        for word in ("`done`", "`sent back to <stage>`", "`stopped`"):
++            self.assertIn(word, body)
++
++    def test_the_agent_asks_nothing_and_runs_only_its_stage(self):
++        _, body = split(AGENT)
++        flat = " ".join(body.split())
++        self.assertIn("with `defaults`", flat)
++        self.assertIn("Ask the user nothing.", flat)
++        self.assertIn("Run only this stage.", flat)
++        self.assertIn("a contradiction between requirements", flat)
++        self.assertIn('a file that the change needs outside its "Files"', flat)
++
++    def test_the_agent_takes_the_answer_of_an_earlier_stop_from_the_newest_handoff(self):
++        _, body = split(AGENT)
++        flat = " ".join(body.split())
++        self.assertIn('"Open" section of the latest handoff', flat)
++        self.assertIn("recommended answer", flat)
++
++
++class ShipUsesTheAgent(unittest.TestCase):
++    def setUp(self):
++        self.ship = SHIP.read_text()
++        self.flat = " ".join(self.ship.split())
++
++    def test_ship_starts_each_stage_in_a_new_stage_agent(self):
++        self.assertIn("Each stage runs in a new `pdlc:stage` agent", self.flat)
++
++    def test_ship_gives_the_four_prompt_lines_and_nothing_else(self):
++        self.assertIn("these four lines and nothing else", self.flat)
++        for line in ("Project root: <absolute path>",
++                     "Stage: <stage>",
++                     "Skill file: ${CLAUDE_SKILL_DIR}/../<stage>/SKILL.md",
++                     "Work: <the ID, or for intake the words of the user, exactly>"):
++            with self.subTest(line=line):
++                self.assertIn("`%s`" % line, self.ship)
++
++    def test_the_prompt_lines_are_the_lines_that_the_agent_reads(self):
++        _, body = split(AGENT)
++        for line in ("Project root:", "Stage:", "Skill file:", "Work:"):
++            self.assertIn("`%s " % line, self.ship)
++            self.assertIn("- `%s`" % line, body)
++
++    def test_each_stage_has_the_skill_file_that_ship_names(self):
++        for stage in STAGES:
++            with self.subTest(stage=stage):
++                path = (SHIP.parent / ".." / stage / "SKILL.md").resolve()
++                self.assertTrue(path.is_file(), path)
++
++    def test_ship_does_not_run_a_stage_or_read_a_skill_file_itself(self):
++        self.assertIn("Ship does not run a stage in this conversation, and does not read a "
++                      "`SKILL.md` file.", self.flat)
++        self.assertNotIn("the skills of the stages", self.ship)
++        inputs = section(self.ship, "Inputs")
++        self.assertIn("- `pdlc/README.md`.\n", inputs)
++        self.assertIn("- The reply of each `pdlc:stage` agent.", inputs)
++
++    def test_ship_keeps_its_rules(self):
++        for text in ("Ship stops only for these cases:",
++                     "A contradiction between requirements.",
++                     "A change that needs a file outside its \"Files\".",
++                     "The third failure of the same stage.",
++                     "Changes stack (\"Stacked changes\").",
++                     "A failed `verify` goes to the stage that its handoff names",
++                     "two rounds (\"Rounds\")",
++                     "the merge of the pull requests of each intent together"):
++            with self.subTest(text=text):
++                self.assertIn(text, self.flat)
++
++    def test_ship_reads_the_replies_for_sent_back_work_and_stops(self):
++        self.assertIn("A reply with `sent back to <stage>` runs that stage next", self.flat)
++        self.assertIn("A reply with `stopped` is a stop.", self.flat)
++        self.assertIn("from the `Stop:` line of the reply", self.flat)
++
++    def test_the_end_summary_takes_the_link_from_the_handoff(self):
++        self.assertIn("handoff `verify → user` of each change", self.flat)
++
++
++class StagesTakeTheirInputsFromFiles(unittest.TestCase):
++    def test_no_stage_skill_forks_its_context(self):
++        for stage in STAGES:
++            with self.subTest(stage=stage):
++                keys, _ = split(SKILLS / stage / "SKILL.md")
++                self.assertNotIn("context", keys)
++                self.assertNotIn("agent", keys)
++
++    def test_the_readme_lists_the_stage_agent_and_its_rules(self):
++        text = README.read_text()
++        self.assertIn("| `pdlc:stage` | runs one stage for /pdlc:ship, as the main session does | "
++                      "asks the user a question |", text)
++        self.assertIn("`/pdlc:ship` runs them all, each in a new `pdlc:stage` agent.", text)
++        flat = " ".join(section(text, "Stages and handoffs").split())
++        self.assertIn("A stage takes nothing from the conversation.", flat)
++        self.assertIn('under "Open" in the latest handoff', flat)
++
++    def test_the_readme_counts_the_rounds_from_the_files(self):
++        flat = " ".join(section(README.read_text(), "Rounds").split())
++        self.assertIn("The files hold the count.", flat)
++        self.assertIn('After a commit "Stop CH-xxxx: <why>" (or "Stop IN-xxxx: <why>"), each stage '
++                      "counts the rounds of that change (or intent) only after that commit.", flat)
++
++    def test_a_check_sent_back_by_build_leaves_its_reason_in_a_file(self):
++        build = " ".join((SKILLS / "build/SKILL.md").read_text().split())
++        self.assertIn("Build writes that reason in the `handoff.md` of the change.", build)
++        self.assertIn("`build → tests` or `build → acceptance`", build)
++        self.assertIn('"Send back CH-xxxx: <stage>"', build)
++        self.assertIn("`build → tests` or `build → acceptance`", " ".join(HANDOFF.read_text().split()))
++
++    def test_an_acceptance_send_back_is_found_from_the_files(self):
++        acceptance = " ".join((SKILLS / "acceptance/SKILL.md").read_text().split())
++        self.assertIn("The `handoff.md` of the change at the top of the stack can have the title "
++                      "`build \u2192 acceptance` or `verify \u2192 acceptance`. Then the intent came "
++                      "back from `/pdlc:build` or `/pdlc:verify`.", acceptance)
++        self.assertIn("that file gives the reason", acceptance)
++
++    def test_every_handoff_title_that_a_skill_writes_is_in_the_template(self):
++        template = " ".join(HANDOFF.read_text().split())
++        for skill in sorted(SKILLS.glob("*/SKILL.md")):
++            for title in re.findall(r"`((?:intake|ready|change|acceptance|tests|build|show|verify) → "
++                                    r"(?:ready|change|acceptance|tests|build|show|verify|user))`",
++                                    skill.read_text()):
++                with self.subTest(skill=skill.parent.name, title=title):
++                    self.assertIn("`%s`" % title, template)
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.43.0
+
