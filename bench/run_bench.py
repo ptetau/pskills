@@ -4,6 +4,8 @@
 Commands:
   run_bench.py init-fixture      run /pdlc:init once and keep its pdlc/ folder in the fixture
   run_bench.py e2e --label L     run the scripted intent through /pdlc:ship, one run
+  metrics.py RUN_DIR ...          the full measures of saved runs: time, loops, failures,
+                                 tokens, rounds, reviews and the work, in one table
   run_bench.py gate BASELINE CANDIDATE
                                  compare two result files and print the verdict
                                  With `--target writing`, the gate judges the writing findings
@@ -648,8 +650,11 @@ def fixture_probes(project, fixture):
 # Each fixture app: its source, its intent, and how the bench checks the result. "tools" are the
 # Bash commands that a run of pdlc needs beyond ALLOWED_TOOLS.
 FIXTURES = {
-    "wordfreq": {"app": FIXTURE, "intent": INTENT, "probes": len(PROBES), "tools": ()},
+    "wordfreq": {"app": FIXTURE, "intent": INTENT, "probes": len(PROBES), "tools": (),
+                 "check_pattern": r"unittest|pytest"},
     "todo-rust": {"app": HERE / "fixtures" / "todo-rust", "intent": TODO_INTENT, "probes": 8,
+                  "check_pattern": r"cargo test|rustc[^|;&]*--test|acceptance-bin",
+                  "build_pattern": r"cargo (build|run|check)|\brustc\b",
                   "unit": ["cargo", "test", "--quiet"], "count": r"test result: \w+\. (\d+) passed",
                   "build": ["cargo", "build", "--quiet", "--release"], "start": ["target/release/todo"],
                   "tools": ("cargo", "rustc", "rustfmt")},
@@ -934,6 +939,12 @@ def command_e2e(args):
                                    "unit": {"ok": False, "ran": 0}}
         analysis["stderr"] = err[-500:]
         analysis["project"] = str(project)
+        try:
+            import metrics
+            analysis["metrics"] = metrics.measure_stream(events, args.fixture)
+            analysis["metrics"]["git"] = metrics.measure_project(project, args.fixture)
+        except Exception as error:  # the measures add detail; a fault in them must not lose the run
+            analysis["metrics"] = {"error": repr(error)}
         runs.append(analysis)
         (out_dir / ("run%d.json" % number)).write_text(json.dumps(analysis, indent=1))
         print("run %d: $%.2f, %ss, probes %s/%s" % (number, analysis["totals"]["cost_usd"], analysis["wall_s"],

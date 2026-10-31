@@ -10,6 +10,7 @@ from argparse import Namespace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import metrics  # noqa: E402
 import run_bench  # noqa: E402
 import run_experiment  # noqa: E402
 
@@ -991,6 +992,60 @@ class TodoProbeTest(unittest.TestCase):
         self.assertEqual(run_bench.visible_text("<li>milk <b>(done)</b></li>\n<li>a &amp; b</li>"),
                          "milk (done) a & b")
         self.assertFalse(run_bench.has_word("almilky", "milk"))
+
+
+class MetricsTest(unittest.TestCase):
+    """The measures of the stream: loops, failures and time, by stage."""
+
+    def bash(self, t, tool_id, command, parent=None):
+        return assistant(t, "b" + tool_id, usage(10, 0, 100, 5), [(tool_id, "Bash", {"command": command})],
+                         parent=parent)
+
+    def result(self, t, tool_id, text, error=False, parent=None):
+        return {"t": t, "e": {"type": "user", "parent_tool_use_id": parent, "message": {"content": [
+            {"type": "tool_result", "tool_use_id": tool_id, "content": text, "is_error": error}]}}}
+
+    def events(self):
+        return [
+            assistant(1, "m1", usage(10, 0, 1000, 5), [("s1", "Skill", {"skill": "pdlc:build"})]),
+            assistant(2, "m2", usage(10, 0, 2000, 5), [("a1", "Agent", {"subagent_type": "pdlc:builder"})]),
+            self.bash(3, "c1", "cargo test 2>&1 | tail -3", parent="a1"),
+            self.result(4, "c1", "test result: FAILED. 1 passed; 2 failed", parent="a1"),
+            self.bash(5, "c2", "cargo test", parent="a1"),
+            self.result(6, "c2", "test result: ok. 3 passed", parent="a1"),
+            self.result(7, "a1", "done"),
+            self.bash(8, "c3", "cargo build --release"),
+            self.result(9, "c3", "error[E0425]: cannot find value", error=True),
+            {"t": 10, "e": {"type": "system", "subtype": "hook_response", "hook_name": "PostToolUse:Bash",
+                            "exit_code": "2", "stderr": "pdlc: commit x has 2 writing findings\n  - a\n  - b"}},
+            {"t": 11, "e": {"type": "result", "total_cost_usd": 1.0, "duration_api_ms": 9000,
+                            "permission_denials": [{"tool_name": "Bash"}], "usage": {"output_tokens": 15}}},
+        ]
+
+    def test_a_failed_check_run_counts_also_when_a_pipe_hides_the_exit_code(self):
+        loops = metrics.measure_stream(self.events(), "todo-rust")["loops"]["build"]
+        self.assertEqual((loops["check runs"], loops["check failures"]), (2, 1))
+        self.assertEqual((loops["builds"], loops["build failures"]), (1, 1))
+
+    def test_a_builder_call_counts_its_check_runs_until_green(self):
+        self.assertEqual(metrics.measure_stream(self.events(), "todo-rust")["builder_check_runs_until_green"], [2])
+
+    def test_failures_count_hooks_tools_and_denials(self):
+        failures = metrics.measure_stream(self.events(), "todo-rust")["failures"]
+        self.assertEqual(failures["hook blocks"], {"commits: writing": 1})
+        self.assertEqual(failures["hook findings"], {"commits: writing": 2})
+        self.assertEqual(failures["tool errors"], {"Bash (main)": 1})
+        self.assertEqual(failures["permission denials"], 1)
+
+    def test_the_main_session_time_goes_to_the_model_or_the_work(self):
+        time = metrics.measure_stream(self.events(), "todo-rust")["time"]
+        self.assertEqual(time["main_session"]["agent"], 5.0)
+        self.assertEqual(time["main_session"]["build"], 1.0)
+        self.assertEqual(time["api_s"], 9.0)
+
+    def test_a_requirement_id_in_a_check_name_is_found_in_each_form(self):
+        found = metrics.REQ.findall("fn test_CAP_store_R2_keeps_done() {} // JOB-view-list.R10")
+        self.assertEqual(found, [("CAP_store", "R2"), ("JOB-view-list", "R10")])
 
 
 class StageReplayTest(unittest.TestCase):
