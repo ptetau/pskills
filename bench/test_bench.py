@@ -977,30 +977,40 @@ class ExperimentSpecTest(unittest.TestCase):
         self.assertIn("+" + long_sentence, diff)
 
 
-@unittest.skipUnless(shutil.which("cargo"), "needs cargo")
-class TodoProbeTest(unittest.TestCase):
+class TodoProbes:
     """The probes of the to-do intent fail on the base app, and pass on the reference solution."""
+    fixture = None
 
     def copy(self):
         folder = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, folder, True)
         app = folder / "app"
-        shutil.copytree(run_bench.FIXTURES["todo-rust"]["app"], app,
+        shutil.copytree(run_bench.FIXTURES[self.fixture]["app"], app,
                         ignore=shutil.ignore_patterns("target", "pdlc"))
         run_bench.git(app, "init", "-q")
         return app
 
     def test_the_base_app_passes_only_the_probe_of_the_old_behaviour(self):
-        result = run_bench.todo_probes(self.copy(), "todo-rust")
-        self.assertEqual(result["passed"], 1)
+        result = run_bench.todo_probes(self.copy(), self.fixture)
+        self.assertEqual(result["passed"], 1, result)
         self.assertNotIn("adding and the empty-text error still work", result["failed"])
 
     def test_the_reference_solution_passes_each_probe(self):
         app = self.copy()
-        patch = run_bench.HERE / "fixtures" / "solutions" / "todo-rust.patch"
+        patch = run_bench.HERE / "fixtures" / "solutions" / (self.fixture + ".patch")
         run_bench.git(app, "apply", str(patch))
-        self.assertEqual(run_bench.todo_probes(app, "todo-rust"), {"passed": 8, "total": 8, "failed": []})
-        self.assertTrue(run_bench.unit_checks(app, "todo-rust")["ok"])
+        self.assertEqual(run_bench.todo_probes(app, self.fixture), {"passed": 8, "total": 8, "failed": []})
+        self.assertTrue(run_bench.unit_checks(app, self.fixture)["ok"])
+
+
+@unittest.skipUnless(shutil.which("clojure"), "needs clojure")
+class TodoClojureProbeTest(TodoProbes, unittest.TestCase):
+    fixture = "todo-clojure"
+
+
+@unittest.skipUnless(shutil.which("cargo"), "needs cargo")
+class TodoProbeTest(TodoProbes, unittest.TestCase):
+    fixture = "todo-rust"
 
     def test_the_bash_commands_of_the_fixture_are_allowed(self):
         command = run_bench.claude_command("x", "/p", tools=run_bench.FIXTURES["todo-rust"]["tools"])

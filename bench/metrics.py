@@ -340,6 +340,8 @@ MUTATIONS = [
     ("&& to ||", r"&&", "||"), ("|| to &&", r"\|\|", "&&"),
     (">= to >", r">=", ">"), ("<= to <", r"<=", "<"),
     ("+ 1 to + 2", r"\+ 1\b", "+ 2"), ("- 1 to - 2", r"- 1\b", "- 2"),
+    ("(= to (not=", r"\(= ", "(not= "), ("(inc to (dec", r"\(inc\b", "(dec"),
+    ("(when to (when-not", r"\(when ", "(when-not "),
     ("a letter of a text", r'"([^"\\]*?)([A-Za-z])', None),
 ]
 

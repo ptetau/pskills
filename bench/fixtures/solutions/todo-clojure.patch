@@ -1,0 +1,168 @@
+From 01628e4144bd3cd7f1810529a1b77880f1320dd1 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Sat, 31 Oct 2026 13:31:57 +0000
+Subject: [PATCH] reference
+
+---
+ src/todo/app.clj         | 11 +++++++++--
+ src/todo/page.clj        | 14 +++++++++++---
+ src/todo/store.clj       | 20 +++++++++++++++-----
+ test/todo/app_test.clj   |  2 +-
+ test/todo/page_test.clj  |  8 ++++----
+ test/todo/store_test.clj |  4 ++--
+ 6 files changed, 42 insertions(+), 17 deletions(-)
+
+diff --git a/src/todo/app.clj b/src/todo/app.clj
+index 38a2dd9..121541b 100644
+--- a/src/todo/app.clj
++++ b/src/todo/app.clj
+@@ -7,11 +7,12 @@
+ 
+ (defn handle
+   "Answers one request. The data file holds the items between requests."
+-  [data-file {:keys [method path body]}]
++  [data-file {:keys [method path query body]}]
+   (try
+     (cond
+       (and (= method "GET") (= path "/"))
+-      (http/html 200 (page/render (store/load-items data-file)))
++      (http/html 200 (page/render (store/load-items data-file)
++                                  (some #{"show=all"} (str/split (or query "") #"&"))))
+ 
+       (and (= method "POST") (= path "/items"))
+       (let [text (str/trim (or (http/form-value body "text") ""))]
+@@ -19,6 +20,12 @@
+           (http/text 400 "error: text is empty")
+           (do (store/add! data-file text) (http/redirect "/"))))
+ 
++      (and (= method "POST") (re-matches #"/items/[^/]+/done" path))
++      (let [id (second (re-matches #"/items/([^/]+)/done" path))]
++        (if (and (re-matches #"\d+" id) (store/mark-done! data-file (parse-long id)))
++          (http/redirect "/")
++          (http/text 404 (str "error: no item " id))))
++
+       :else (http/text 404 "error: not found"))
+     (catch java.io.IOException e
+       (http/text 500 (str "error: " (.getMessage e))))))
+diff --git a/src/todo/page.clj b/src/todo/page.clj
+index 83d9fd1..45b5ee6 100644
+--- a/src/todo/page.clj
++++ b/src/todo/page.clj
+@@ -7,12 +7,20 @@
+   [text]
+   (str/escape text {\& "&amp;" \< "&lt;" \> "&gt;" \" "&quot;"}))
+ 
+-(defn render [items]
++(defn render [items show-all]
++  (let [items (filter #(or show-all (not (:done %))) items)]
+   (str "<!doctype html>\n<html><head><meta charset=\"utf-8\"><title>To-do</title></head>\n<body>\n"
+        "<h1>To-do</h1>\n"
+        (if (empty? items)
+          "<p>Nothing to do.</p>\n"
+-         (str "<ul>\n" (apply str (map #(str "<li>" (escape (:text %)) "</li>\n") items)) "</ul>\n"))
++         (str "<ul>\n"
++              (apply str (map #(if (:done %)
++                                 (str "<li>" (escape (:text %)) " (done)</li>\n")
++                                 (str "<li>" (escape (:text %)) " <form method=\"post\" action=\"/items/" (:id %)
++                                      "/done\"><button>Done</button></form></li>\n"))
++                              items))
++              "</ul>\n"))
+        "<form method=\"post\" action=\"/items\">"
+        "<input name=\"text\" aria-label=\"New item\"> <button>Add</button></form>\n"
+-       "</body></html>\n"))
++       "<p><a href=\"/?show=all\">Show all</a></p>\n"
++       "</body></html>\n")))
+diff --git a/src/todo/store.clj b/src/todo/store.clj
+index 0cc0941..71ebdc6 100644
+--- a/src/todo/store.clj
++++ b/src/todo/store.clj
+@@ -6,9 +6,11 @@
+             [clojure.string :as str]))
+ 
+ (defn- parse-line [line]
+-  (let [[id text] (str/split line #"\t" 2)]
+-    (when (and text (re-matches #"\d+" id))
+-      {:id (Long/parseLong id) :text text})))
++  (let [[id second text] (str/split line #"\t" 3)]
++    (when (and second (re-matches #"\d+" id))
++      (if text
++        {:id (Long/parseLong id) :text text :done (= second "done")}
++        {:id (Long/parseLong id) :text second :done false}))))
+ 
+ (defn load-items
+   "Each item, in the order in which it was added."
+@@ -19,13 +21,21 @@
+       [])))
+ 
+ (defn- save! [path items]
+-  (spit path (apply str (map #(str (:id %) "\t" (:text %) "\n") items))))
++  (spit path (apply str (map #(str (:id %) "\t" (if (:done %) "done" "open") "\t" (:text %) "\n") items))))
++
++(defn mark-done!
++  "Marks the item done. False when no item has the id."
++  [path id]
++  (let [items (load-items path)]
++    (if (some #(= id (:id %)) items)
++      (do (save! path (mapv #(if (= id (:id %)) (assoc % :done true) %) items)) true)
++      false)))
+ 
+ (defn add!
+   "Adds an item with the next free id. Tabs and line breaks in the text become spaces."
+   [path text]
+   (let [items (load-items path)
+         id (inc (reduce max 0 (map :id items)))
+-        item {:id id :text (str/replace text #"[\t\r\n]" " ")}]
++        item {:id id :text (str/replace text #"[\t\r\n]" " ") :done false}]
+     (save! path (conj items item))
+     item))
+diff --git a/test/todo/app_test.clj b/test/todo/app_test.clj
+index 871674a..1d7b806 100644
+--- a/test/todo/app_test.clj
++++ b/test/todo/app_test.clj
+@@ -20,7 +20,7 @@
+     (is (= 303 (:status added)))
+     (is (= "/" (:location added)))
+     (is (= 200 (:status page)))
+-    (is (str/includes? (:body page) "<li>oat milk!</li>"))))
++    (is (str/includes? (:body page) "<li>oat milk! "))))
+ 
+ (deftest empty-text-is-an-error
+   (let [response (app/handle (data-file "empty") (request "POST" "/items" "text=++"))]
+diff --git a/test/todo/page_test.clj b/test/todo/page_test.clj
+index 4ad8631..a053cc2 100644
+--- a/test/todo/page_test.clj
++++ b/test/todo/page_test.clj
+@@ -4,11 +4,11 @@
+             [todo.page :as page]))
+ 
+ (deftest an-empty-list-says-nothing-to-do
+-  (let [html (page/render [])]
++  (let [html (page/render [] false)]
+     (is (str/includes? html "<p>Nothing to do.</p>"))
+     (is (str/includes? html "<form method=\"post\" action=\"/items\">"))))
+ 
+ (deftest each-item-is-a-list-entry-with-escaped-text
+-  (let [html (page/render [{:id 1 :text "milk"} {:id 2 :text "<b>&"}])]
+-    (is (str/includes? html "<li>milk</li>"))
+-    (is (str/includes? html "<li>&lt;b&gt;&amp;</li>"))))
++  (let [html (page/render [{:id 1 :text "milk"} {:id 2 :text "<b>&"}] false)]
++    (is (str/includes? html "<li>milk "))
++    (is (str/includes? html "<li>&lt;b&gt;&amp; "))))
+diff --git a/test/todo/store_test.clj b/test/todo/store_test.clj
+index 0fc1d6c..4241b6a 100644
+--- a/test/todo/store_test.clj
++++ b/test/todo/store_test.clj
+@@ -15,8 +15,8 @@
+   (let [path (temp-file "order")]
+     (store/add! path "milk")
+     (store/add! path "eggs")
+-    (is (= [{:id 1 :text "milk"} {:id 2 :text "eggs"}] (store/load-items path)))
+-    (is (= "1\tmilk\n2\teggs\n" (slurp path)))))
++    (is (= [{:id 1 :text "milk" :done false} {:id 2 :text "eggs" :done false}] (store/load-items path)))
++    (is (= "1\topen\tmilk\n2\topen\teggs\n" (slurp path)))))
+ 
+ (deftest tabs-and-line-breaks-become-spaces
+   (is (= "a b c" (:text (store/add! (temp-file "tabs") "a\tb\nc")))))
+-- 
+2.43.0
+

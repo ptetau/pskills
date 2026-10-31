@@ -666,6 +666,13 @@ FIXTURES = {
                   "lint": ["cargo", "clippy", "--quiet", "--all-targets", "--message-format=short"],
                   "lint_pattern": r"^\S+:\d+:\d+: (warning|error)", "compile": ["cargo", "build", "--quiet"],
                   "noop": ""},
+    "todo-clojure": {"app": HERE / "fixtures" / "todo-clojure", "intent": TODO_INTENT, "probes": 8,
+                     "check_pattern": r"todo\.run-tests|clojure\.test|run-tests",
+                     "unit": ["clojure", "-cp", "src:test", "-m", "todo.run-tests"],
+                     "count": r"^Ran (\d+) tests containing",
+                     "start": ["clojure", "-cp", "src", "-m", "todo.main"],
+                     "compile": ["clojure", "-cp", "src", "-e", "(require 'todo.main)"],
+                     "tools": ("clojure", "java"), "noop": ""},
 }
 
 

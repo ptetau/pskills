@@ -7,7 +7,7 @@ Thus, the results of the languages compare directly.
 | Folder | Language | Status |
 |---|---|---|
 | `todo-rust` | Rust, standard library only | Ready |
-| `todo-clojure` | Clojure | Not written yet: the session needs the Clojure CLI |
+| `todo-clojure` | Clojure 1.11 (the Ubuntu package), with the Java standard library | Ready |
 | `todo-lean` | Lean 4 | Not written yet: the session needs Lean 4 (elan) |
 
 ## The app
@@ -38,7 +38,7 @@ a capability (the item storage) and a job (the page).
 `todo_probes` in `bench/run_bench.py` builds the app, and starts it on a free port with its
 own data file. Then it sends 8 groups of requests, and reads the page as a user reads it,
 with no tags. The base app passes only the probe of the old behaviour. The reference
-solution in `solutions/todo-rust.patch` passes all 8. `bench/test_bench.py` tests both.
+solution of each app, in `solutions/`, passes all 8. `bench/test_bench.py` tests both.
 
 ## Run
 
