@@ -35,7 +35,7 @@ If you do not have GitHub access, push the branch and then stop. Tell the user t
 the branch.
 
 If the repository has no remote, do not push. **propose** writes the description to
-`pdlc/changes/<folder>/proposal.md`. The verify stage commits that file with its handoff
+`pdlc/changes/<folder>/proposal.md`. The show stage commits that file with its handoff
 ("Propose CH-xxxx"). The change then counts as proposed. The user merges the branches of
 the intent into main locally, together, with the bottom branch first. **merged?** then
 uses `merge-base`.

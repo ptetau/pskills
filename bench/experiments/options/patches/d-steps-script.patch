@@ -1,0 +1,1206 @@
+From cdc2d4940f401ee6ad5588810a70f35a9df47328 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 07:10:32 +0000
+Subject: [PATCH] pdlc: add steps.py for the fixed sequences of a stage
+
+A new script, pdlc/bin/steps.py, does the fixed sequences that the acceptance, tests, and
+`verify` skills make by hand. It has three subcommands.
+
+- lock (IN-xxxx or CH-xxxx) makes the commit of the checks, writes the lock hash, makes
+  the lock commit, and makes the tests packet. It also runs the writing check on the text
+  of the two commits, because the commit hook does not see the commits of a script.
+- checks (CH-xxxx) runs each item that `verify` needs. It prints one line for each item,
+  and the pass commit.
+- verified (CH-xxxx) sets the statuses of a passed round, and makes the commit
+  "Verified CH-xxxx".
+
+The script reuses the functions of check_merge.py, make_packets.py and record_merges.py.
+Each refusal prints one line and commits nothing.
+
+The README gets the form of the acceptance lines of config.md, and a bullet about lock.
+The acceptance skill points to that form. The `verify` skill names the checks and verified
+subcommands.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01ASzNnMDKqvNhtDTixAPnvD
+---
+ plugins/pdlc/skills/acceptance/SKILL.md       |   5 +-
+ .../pdlc/skills/init/references/bin/steps.py  | 458 +++++++++++++
+ .../init/references/templates/README.md       |  10 +-
+ plugins/pdlc/skills/verify/SKILL.md           |   4 +
+ plugins/pdlc/tests/test_steps.py              | 625 ++++++++++++++++++
+ 5 files changed, 1099 insertions(+), 3 deletions(-)
+ create mode 100644 plugins/pdlc/skills/init/references/bin/steps.py
+ create mode 100644 plugins/pdlc/tests/test_steps.py
+
+diff --git a/plugins/pdlc/skills/acceptance/SKILL.md b/plugins/pdlc/skills/acceptance/SKILL.md
+index d64f090..2ffb6f1 100644
+--- a/plugins/pdlc/skills/acceptance/SKILL.md
++++ b/plugins/pdlc/skills/acceptance/SKILL.md
+@@ -28,8 +28,9 @@ change of the intent is built ("Acceptance checks" in `pdlc/README.md`).
+   from the newest unmerged pdlc branch, or else from main.
+ - When each requirement of the intent is `retiring`, there is nothing to prove.
+   `Acceptance-File:` and `Acceptance-Locked:` stay `none`, and only the finish remains.
+-- A `pdlc/config.md` with no "acceptance file" line or no "acceptance" line gets them, as
+-  `/pdlc:init` writes them, in the commit of the acceptance file.
++- A `pdlc/config.md` with no "acceptance file" line or no "acceptance" line gets them, in
++  the commit of the acceptance file. The form of the lines is in "Acceptance checks" in
++  `pdlc/README.md`.
+ - `Acceptance-File:` holds the "acceptance file" path of `pdlc/config.md`, with the intent
+   ID for `{intent}`, in the ID form of the project.
+ - The `pdlc:test-writer` agent gets the absolute path of the intent file and nothing else,
+diff --git a/plugins/pdlc/skills/init/references/bin/steps.py b/plugins/pdlc/skills/init/references/bin/steps.py
+new file mode 100644
+index 0000000..2e81e67
+--- /dev/null
++++ b/plugins/pdlc/skills/init/references/bin/steps.py
+@@ -0,0 +1,458 @@
++#!/usr/bin/env python3
++"""pdlc steps. Does the fixed sequence of a stage in one call.
++
++Usage, from the project root:
++  python3 pdlc/bin/steps.py lock IN-0001                    lock the acceptance checks
++  python3 pdlc/bin/steps.py lock CH-0001                    lock the checks of a change
++  python3 pdlc/bin/steps.py checks CH-0001                  run the checks that verify needs
++  python3 pdlc/bin/steps.py verified CH-0001 [PASS_COMMIT]  record a passed verify round
++
++lock runs after the red run. It does these steps:
++  - Commits all changes as "Acceptance IN-xxxx" or "Tests CH-xxxx". The trailers are
++    Intent, Change (on the branch of a change), and Req.
++  - Writes the hash of that commit on the last "Acceptance-Locked:" or "Tests-Locked:" line.
++    Commits the line as "Lock acceptance IN-xxxx" or "Lock tests CH-xxxx".
++  - Runs make_packets.py for the tests packet.
++  - Runs check_writing.py on the text that the two commits wrote. The commit hook does not
++    see a commit that a script makes, so this script runs the check.
++The files outside pdlc/ must be check files. If not, lock commits nothing.
++
++checks runs these items, in this order. Each run has a time limit of 300 s.
++  - all.
++  - one requirement, for each requirement that is not "(retire)".
++  - earlier acceptance, and the acceptance of this intent.
++  - A diff of the check files against their locks.
++It prints one line for each item, the pass commit, and the verdict. The acceptance run of a
++change before the last one is expected to fail. Exit code 0 means that each required item
++passes.
++
++verified runs after the reviewers passed. It does these steps:
++  - Sets "Status: verified" on each requirement of the change that is not "(retire)".
++  - Sets the change to "in review".
++  - For the last change, writes the pass commit on "Acceptance-Passed:".
++  - Sets the intent to "in review" when each other change is "in review" or "merged".
++  - Commits all as "Verified CH-xxxx", with the trailers Intent and Change.
++It refuses when a remit has no passed result, or when the last change gets no pass commit.
++
++Each refusal prints one line, commits nothing, and exits with code 1.
++"""
++import importlib.util
++import os
++import re
++import shlex
++import signal
++import subprocess
++import sys
++from pathlib import Path
++
++HERE = Path(__file__).resolve().parent
++LIMIT = 300  # seconds for one check run
++# The text that the stages write, as the commit hook reads it. The review folders hold
++# packets and results, so they stay out.
++WRITTEN = re.compile(r"^pdlc/(?:specs|inbox|changes)/(?!.*/review/).*\.md$")
++# How a test runner reports its count: unittest, TAP (node --test), and pytest.
++COUNTS = [r"^Ran (\d+) tests?\b", r"^[#\u2139]\s*pass (\d+)\b", r"\b(\d+) passed\b"]
++CHECK_FOLDERS = ["test", "tests", "spec", "__tests__"]
++REQ_ID = r"\b(?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+\b"
++USAGE = ("Usage: steps.py lock IN-0001|CH-0001, steps.py checks CH-0001, "
++         "or steps.py verified CH-0001 [PASS_COMMIT]")
++
++
++def load(name):
++    """A script of this folder as a module."""
++    spec = importlib.util.spec_from_file_location(name, HERE / (name + ".py"))
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++
++merge = load("check_merge")
++packets = load("make_packets")
++records = load("record_merges")
++
++
++class Refused(Exception):
++    """A step stops before it changes anything. The message is the one line to print."""
++
++
++def out(root, *args):
++    """The output of a git command. A failed command refuses."""
++    done = merge.git(root, *args)
++    if done.returncode:
++        why = (done.stderr or done.stdout).strip().splitlines()
++        raise Refused("git failed: %s" % (why[0] if why else "no message"))
++    return done.stdout.strip()
++
++
++def count_of(number, word):
++    return "%d %s%s" % (number, word, "" if number == 1 else "s")
++
++
++def lines(root, *args):
++    return out(root, "-c", "core.quotePath=false", *args).splitlines()
++
++
++def find(root, target):
++    """(path, text) of the intent or the change spec that the ID names."""
++    if target.startswith("IN-"):
++        found, what = sorted((root / "pdlc" / "inbox").glob(target + "-*.md")), "intent"
++    else:
++        found = sorted((root / "pdlc" / "changes").glob(target + "-*/change.md"))
++        what = "change spec"
++    if not found:
++        raise Refused("No %s found for %s" % (what, target))
++    return found[0], found[0].read_text()
++
++
++def intent_of(root, text):
++    """(ID, path, text) of the intent that a change spec names."""
++    intent = merge.field(text, "Intent")
++    if not intent or not intent.startswith("IN-"):
++        raise Refused("The change spec names no intent.")
++    return (intent, *find(root, intent))
++
++
++def branch_owner(root):
++    """(branch, ID, text) of the change or intent whose Branch: is the current branch. The
++    ID and the text are None when no spec names the branch."""
++    here = out(root, "rev-parse", "--abbrev-ref", "HEAD")
++    for pattern in ("changes/CH-*/change.md", "inbox/IN-*.md"):
++        for path in sorted((root / "pdlc").glob(pattern)):
++            text = path.read_text()
++            if merge.field(text, "Branch") == here:
++                folder = path.parent if path.name == "change.md" else path
++                return here, merge.change_id(folder), text
++    return here, None, None
++
++
++def changed_paths(root):
++    """(changed, deleted): the paths that differ from HEAD, and the ones that are gone."""
++    changed = lines(root, "diff", "--name-only", "--no-renames", "HEAD")
++    changed += lines(root, "ls-files", "--others", "--exclude-standard")
++    deleted = lines(root, "diff", "--name-only", "--no-renames", "--diff-filter=D", "HEAD")
++    return list(dict.fromkeys(changed)), set(deleted)
++
++
++def check_folders(root):
++    config = (root / "pdlc" / "config.md").read_text()
++    line = re.search(r"^- check folders:\s*(.+)$", config, re.M)
++    names = re.findall(r"`([^`]+)`", line.group(1)) if line else []
++    return [name.strip("/") for name in names] or CHECK_FOLDERS
++
++
++def under(path, places):
++    return any(path == place or path.startswith(place.rstrip("/") + "/") for place in places)
++
++
++def read(path):
++    """The text of a file, or "" when the file is not there."""
++    return path.read_text() if path.exists() else ""
++
++
++def last_change(intent_text):
++    """The last change under "Changes" in an intent, or None when it lists none."""
++    listed = re.findall(r"\bCH-\d+\b", merge.section(intent_text, "Changes"))
++    return listed[-1] if listed else None
++
++
++def set_record(text, name, value, title=None):
++    """The text with the last "<name>:" line set to the value. With a title, the line is
++    the last one in that "## " section. None when the text has no such line."""
++    body = merge.section(text, title) if title else text
++    found = list(re.finditer(r"^%s:.*$" % re.escape(name), body, re.M))
++    if not found:
++        return None
++    new = body[:found[-1].start()] + "%s: %s" % (name, value) + body[found[-1].end():]
++    return text.replace(body, new, 1) if title else new
++
++
++def commit(root, subject, intent, change=None, reqs=()):
++    """Commit the staged files, with the trailers of DES-pdlc-commit-trailers. Gives the
++    short hash of the new commit."""
++    trailers = ["Intent: " + intent]
++    if change:
++        trailers.append("Change: " + change)
++    if reqs:
++        trailers.append("Req: " + ", ".join(reqs))
++    out(root, "commit", "-q", "-m", subject + "\n\n" + "\n".join(trailers))
++    return out(root, "rev-parse", "--short", "HEAD")
++
++
++def writing_findings(root, first):
++    """The findings of check_writing.py in the text that the commits since first wrote."""
++    files = [f for f in lines(root, "diff", "--name-only", first + "~1", "HEAD")
++             if WRITTEN.match(f) and (root / f).is_file()]
++    if not files:
++        return []
++    done = subprocess.run([sys.executable, str(HERE / "check_writing.py"), "--since",
++                           first + "~1", *files], cwd=root, capture_output=True, text=True)
++    return [line for line in done.stdout.splitlines() if " \u00b7 " in line]
++
++
++def lock(root, target):
++    path, text = find(root, target)
++    changed, deleted = changed_paths(root)
++    branch, owner, owner_text = branch_owner(root)
++    if target.startswith("IN-"):
++        name, title, intent = "Acceptance-Locked", "Acceptance checks", target
++        packet_args = [target]
++        subjects = ("Acceptance " + target, "Lock acceptance " + target)
++        reqs = list(dict.fromkeys(re.findall(REQ_ID, merge.section(text, "Requirements"))))
++        wanted = merge.record(text, "Acceptance-File")
++        if not wanted or wanted == "none":
++            raise Refused("%s names no Acceptance-File. Write it in the intent first." % target)
++        pattern = packets.acceptance_file(root)
++        mine = owner == target or bool(owner and owner.startswith("CH-")
++                                       and merge.field(owner_text, "Intent") == target)
++
++        def is_check(p):
++            return p == wanted or packets.is_acceptance(p, pattern)
++    else:
++        name, title, packet_args = "Tests-Locked", None, [target, "tests"]
++        subjects = ("Tests " + target, "Lock tests " + target)
++        intent = intent_of(root, text)[0]
++        reqs = [rid for rid, _ in merge.REQ.findall(merge.section(text, "Requirements"))]
++        listed, folders = merge.check_files(text), check_folders(root)
++        mine = owner == target
++
++        def is_check(p):
++            return under(p, listed) or (p in deleted and under(p, folders))
++    if not reqs:
++        raise Refused("%s lists no requirements." % target)
++    if set_record(text, name, "x", title) is None:
++        raise Refused("%s has no %s line." % (target, name))
++    if not mine:
++        raise Refused("You are on %s. That is not a branch of %s. Switch to its branch first."
++                      % (branch, target))
++    change = owner if owner.startswith("CH-") else None
++
++    outside = [p for p in changed if not p.startswith("pdlc/")]
++    for other in outside:
++        if not is_check(other):
++            raise Refused("%s is not a check file and not under pdlc/. Commit or delete it first."
++                          % other)
++    if not outside:
++        raise Refused("No check file changed. Write the checks first.")
++
++    out(root, "add", "-A")
++    first = commit(root, subjects[0], intent, change, reqs)
++    path.write_text(set_record(text, name, first, title))
++    out(root, "add", str(path.relative_to(root)))
++    commit(root, subjects[1], intent, change)
++    print("%s: %s (%s)" % (subjects[0], first, count_of(len(outside), "check file")))
++    print("%s: %s: %s" % (subjects[1], name, first))
++
++    code = packets.main(["make_packets.py", *packet_args], root)
++    found = writing_findings(root, first)
++    if found:
++        print("writing: " + count_of(len(found), "finding"))
++        for line in found:
++            print("  " + line)
++        print("Fix all of them in one edit, in the next commit of this stage.")
++    else:
++        print("writing: none")
++    return code
++
++
++def command(root, name):
++    """The command on the line "- <name>: `...`" in the Checks section of config.md, or None."""
++    config = (root / "pdlc" / "config.md").read_text()
++    line = re.search(r"^- %s:\s*`([^`]+)`" % re.escape(name), merge.section(config, "Checks"), re.M)
++    return line.group(1) if line else None
++
++
++def run(root, shell_command):
++    """(ok, note, last lines) of one check run. A count of 0 is a failure."""
++    proc = subprocess.Popen(shell_command, shell=True, cwd=root, stdout=subprocess.PIPE,
++                            stderr=subprocess.STDOUT, encoding="utf-8", errors="replace",
++                            start_new_session=True)
++    try:
++        text = proc.communicate(timeout=LIMIT)[0]
++    except subprocess.TimeoutExpired:
++        try:
++            os.killpg(proc.pid, signal.SIGKILL)
++        except OSError:
++            proc.kill()
++        return False, "timed out after %d s" % LIMIT, proc.communicate()[0].splitlines()[-15:]
++    tail = text.splitlines()[-15:]
++    found = [re.findall(p, text, re.M) for p in COUNTS]
++    count = next((int(f[-1]) for f in found if f), None)
++    if proc.returncode:
++        return False, "exit code %d" % proc.returncode, tail
++    if count == 0:
++        return False, "no checks found", tail
++    return True, "count unknown" if count is None else count_of(count, "check"), tail
++
++
++def with_files(shell_command, files):
++    return shell_command.replace("{files}", " ".join(shlex.quote(f) for f in files))
++
++
++def checks(root, target):
++    if not target.startswith("CH-"):
++        raise Refused("checks needs a change ID, for example CH-0001.")
++    path, text = find(root, target)
++    intent, intent_path, intent_text = intent_of(root, text)
++    is_last = last_change(intent_text) in (None, target)
++    reqs = merge.REQ.findall(merge.section(text, "Requirements"))
++    config = (root / "pdlc" / "config.md").read_text()
++    form = re.search(r"^- ID form in check names:\s*`?(\w+)", config, re.M)
++    accept = command(root, "acceptance")
++    items = []  # (label, required, ok, note, last lines)
++
++    def add(label, ok, note, required=True, tail=()):
++        items.append((label, required, ok, note, [] if ok else list(tail)))
++
++    def run_item(label, shell_command, required=True):
++        ok, note, tail = (run(root, shell_command) if shell_command
++                          else (False, "pdlc/config.md has no such command", []))
++        add(label, ok, note, required, tail)
++
++    def unchanged(label, lock, files):
++        """An item that passes when no file changed since the lock."""
++        if not files:
++            return add(label, True, "no check files")
++        if not merge.HASH.match(lock or ""):
++            return add(label, False, "no lock hash")
++        diff = merge.git(root, "diff", "--name-only", lock, "--", *files)
++        if diff.returncode:
++            return add(label, False, "can't compare with the lock %s" % lock)
++        names = diff.stdout.split()
++        add(label, not names, "changed: " + ", ".join(names) if names else "lock %s" % lock)
++
++    run_item("all", command(root, "all"))
++    one = command(root, "one requirement")
++    for rid, rest in reqs:
++        if "(retire)" not in rest:
++            shown = re.sub(r"[-.]", "_", rid) if form and form.group(1) == "underscored" else rid
++            run_item("one requirement " + rid, one and one.replace("{req}", shown))
++    earlier = []
++    for other in sorted((root / "pdlc" / "inbox").glob("IN-*.md")):
++        theirs = other.read_text()
++        passed = merge.record(theirs, "Acceptance-Passed") or ""
++        if other != intent_path and merge.HASH.match(passed):
++            earlier.append(merge.record(theirs, "Acceptance-File"))
++    if earlier:
++        run_item("earlier acceptance", accept and with_files(accept, earlier))
++    else:
++        add("earlier acceptance", True, "none")
++    file = merge.record(intent_text, "Acceptance-File")
++    lock = merge.record(intent_text, "Acceptance-Locked")
++    locked = file not in (None, "none") and bool(merge.HASH.match(lock or ""))
++    if locked:
++        run_item("acceptance " + intent, accept and with_files(accept, [file]), is_last)
++    elif reqs and all("(retire)" in rest for _, rest in reqs):
++        add("acceptance " + intent, True, "none, because the change only retires requirements")
++    else:
++        add("acceptance " + intent, False, "no locked acceptance checks")
++    tests = re.findall(r"^Tests-Locked:\s*([0-9a-f]{7,40})\b", text, re.M)
++    unchanged("check files since the tests lock", tests[-1] if tests else None,
++              merge.check_files(text))
++    if locked:
++        unchanged("acceptance file since its lock", lock, [file])
++
++    for label, required, ok, note, _ in items:
++        verdict = "pass" if ok else "FAIL" if required else "fail, expected before the last change"
++        print("%s: %s (%s)" % (label, verdict, note))
++    for label, required, ok, _, tail in items:
++        if required and not ok and tail:
++            print("Last lines of %s:" % label)
++            print("\n".join("  " + line for line in tail))
++    failed = sum(1 for _, required, ok, _, _ in items if required and not ok)
++    print("pass commit: " + out(root, "rev-parse", "--short", "HEAD"))
++    print("all required items pass" if not failed else
++          "%d required item%s" % (failed, " fails" if failed == 1 else "s fail"))
++    return 1 if failed else 0
++
++
++def verified(root, target, passed=None):
++    if not target.startswith("CH-"):
++        raise Refused("verified needs a change ID, for example CH-0001.")
++    path, text = find(root, target)
++    intent, intent_path, intent_text = intent_of(root, text)
++    branch, owner, _ = branch_owner(root)
++    if owner != target:
++        raise Refused("You are on %s. That is not the branch of %s. Switch to it first."
++                      % (branch, target))
++    outside = [p for p in changed_paths(root)[0] if not p.startswith("pdlc/")]
++    if outside:
++        raise Refused("%s is outside pdlc/. Commit or delete it first." % outside[0])
++    unpassed = [remit for remit in merge.remits(root)
++                if not re.match(r"\s*Result:\s*pass\b",
++                                read(path.parent / "review" / remit / "result.md"), re.I)]
++    if unpassed:
++        raise Refused("These remits have no passed result: %s." % ", ".join(unpassed))
++
++    lock = merge.record(intent_text, "Acceptance-Locked") or ""
++    needs = last_change(intent_text) in (None, target) and bool(merge.HASH.match(lock))
++    if needs:
++        if not passed:
++            raise Refused("%s is the last change of %s. Give the pass commit that checks printed."
++                          % (target, intent))
++        full = merge.git(root, "rev-parse", "--verify", "-q", passed + "^{commit}").stdout.strip()
++        if not full or not merge.is_ancestor(root, full, "HEAD"):
++            raise Refused("%s is not a commit on this branch." % passed)
++        passed = out(root, "rev-parse", "--short", full)
++
++    specs, done = {}, []
++    for rid, rest in merge.REQ.findall(merge.section(text, "Requirements")):
++        if "(retire)" in rest:
++            continue
++        spec = packets.spec_file(root, rid.rsplit(".", 1)[0])
++        body = specs.get(spec) or read(spec)
++        head = re.search(r"^### %s\b.*$" % re.escape(rid), body, re.M)
++        if not head:
++            raise Refused("%s is not in its spec." % rid)
++        end = re.search(r"^##", body[head.end():], re.M)
++        stop = head.end() + end.start() if end else len(body)
++        if not re.search(r"^Status:", body[head.end():stop], re.M):
++            raise Refused("%s has no Status line." % rid)
++        specs[spec] = (body[:head.end()] + records.with_status(body[head.end():stop], "verified")
++                       + body[stop:])
++        done.append(rid)
++
++    new_intent = intent_text
++    if needs:
++        new_intent = set_record(new_intent, "Acceptance-Passed", passed, "Acceptance checks")
++        if new_intent is None:
++            raise Refused("%s has no Acceptance-Passed line." % intent)
++    ready = not merge.partners_not_ready(root, path.parent, text)
++    if ready:
++        new_intent = records.with_status(new_intent, "in review")
++    for spec, body in specs.items():
++        spec.write_text(body)
++    path.write_text(records.with_status(text, "in review"))
++    intent_path.write_text(new_intent)
++    out(root, "add", "-A")
++    sha = commit(root, "Verified " + target, intent, target)
++    for rid in done:
++        print("%s: verified" % rid)
++    print("%s: in review" % target)
++    print("%s: %s" % (intent, "in review" if ready else "not changed, a change is not ready"))
++    if needs:
++        print("Acceptance-Passed: " + passed)
++    print("Verified %s: %s" % (target, sha))
++    return 0
++
++
++STEPS = {"lock": lock, "checks": checks, "verified": verified}
++
++
++def main(argv, root=Path(".")):
++    args = argv[1:]
++    if args[:1] in (["-h"], ["--help"]):
++        print(__doc__)
++        return 0
++    if (len(args) < 2 or args[0] not in STEPS or not re.fullmatch(r"(?:IN|CH)-\d+", args[1])
++            or len(args) > (3 if args[0] == "verified" else 2)):
++        print(USAGE)
++        return 1
++    try:
++        return STEPS[args[0]](Path(root), *args[1:])
++    except Refused as why:
++        print(why)
++        return 1
++
++
++if __name__ == "__main__":
++    sys.exit(main(sys.argv))
+diff --git a/plugins/pdlc/skills/init/references/templates/README.md b/plugins/pdlc/skills/init/references/templates/README.md
+index 76fcff8..a8eaaca 100644
+--- a/plugins/pdlc/skills/init/references/templates/README.md
++++ b/plugins/pdlc/skills/init/references/templates/README.md
+@@ -66,7 +66,7 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
+ - `templates/`: blank documents. A filled document has real content in place of each
+   `<placeholder>` and each guide sentence.
+ - `bin/`: `check_merge.py`, `check_writing.py`, `make_packets.py`, `record_gif.mjs`,
+-  `record_merges.py`.
++  `record_merges.py`, `steps.py`.
+ - `.tools/`: the tools of the visual review. This folder is not committed.
+ 
+ ## Code maps
+@@ -152,6 +152,9 @@ change spec.
+   change spec itself (it can see the code). Then the test writer runs again.
+ - Lock: the commit of the checks. Its hash goes on the lock line, and replaces an older
+   hash.
++- After the red run, `python3 pdlc/bin/steps.py lock <IN-xxxx or CH-xxxx>` makes the commit
++  of the checks, the lock commit, and the tests packet. A skill does not make these two
++  commits by hand.
+ - After the lock, only the test writer changes the checks, and only through the skill of
+   the stage. Each change makes a new lock, and each lock gets its own review. The merge
+   check refuses a tests review of an older lock.
+@@ -179,6 +182,11 @@ the intent, and each feature that exists already.
+ - For an earlier change, a failure of **run acceptance** is expected, and is not reported.
+ - After the intent merges, its acceptance checks stay, and each later change keeps them
+   green.
++- `config.md` names the acceptance file and its command in the "Checks" section:
++  - Python `unittest`: ``- acceptance file: `tests/acceptance_{intent}.py` `` and
++    ``- acceptance: `python3 -m unittest {files}` ``.
++  - `node --test`: ``- acceptance file: `acceptance/{intent}.acceptance.js` `` and
++    ``- acceptance: `node --test {files}` ``.
+ 
+ ## Rounds
+ 
+diff --git a/plugins/pdlc/skills/verify/SKILL.md b/plugins/pdlc/skills/verify/SKILL.md
+index 91c4927..a6123b3 100644
+--- a/plugins/pdlc/skills/verify/SKILL.md
++++ b/plugins/pdlc/skills/verify/SKILL.md
+@@ -29,6 +29,8 @@ The `verify` skill decides if a change is good enough to merge. When it is, the
+   - For the last change under "Changes" of the intent, **run acceptance**. Its commit
+     (`git rev-parse HEAD`) is the pass commit. For an earlier change, a failure is
+     expected.
++- `python3 pdlc/bin/steps.py checks CH-xxxx` runs each item of that list. It prints one
++  line for each item, and the pass commit.
+ - `python3 pdlc/bin/make_packets.py CH-xxxx --verify` makes the packets, for the remits
+   under "Reviews" in `pdlc/config.md` except `tests`, whose result stays. The skill does
+   not list the remits itself.
+@@ -100,6 +102,8 @@ The `verify` skill decides if a change is good enough to merge. When it is, the
+   - Each requirement of the change is `verified` in its spec file, and the change is
+     `in review`. For the last change, the pass commit is on `Acceptance-Passed:`.
+   - The commit "Verified CH-xxxx" (`Intent`, `Change`): the results and the statuses.
++  - `python3 pdlc/bin/steps.py verified CH-xxxx <pass commit>` writes these statuses, and
++    sets the intent to `in review` when each other change is ready. It makes that commit.
+   - Each gate correction is a commit "Update CH-xxxx: <what>". A merge of main has the
+     trailers `Intent` and `Change`.
+   - The proposal. When each change of the intent is `in review` or `merged`, the intent is
+diff --git a/plugins/pdlc/tests/test_steps.py b/plugins/pdlc/tests/test_steps.py
+new file mode 100644
+index 0000000..6202460
+--- /dev/null
++++ b/plugins/pdlc/tests/test_steps.py
+@@ -0,0 +1,625 @@
++"""Tests for pdlc's steps script. Run: python3 -m unittest discover plugins/pdlc/tests"""
++import importlib.util
++import io
++import json
++import re
++import shlex
++import shutil
++import subprocess
++import sys
++import tempfile
++import unittest
++from contextlib import redirect_stdout
++from pathlib import Path
++from unittest import mock
++
++PLUGIN = Path(__file__).parent.parent
++BIN = PLUGIN / "skills/init/references/bin"
++HOOK = PLUGIN / "hooks/commits.py"
++TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
++
++
++def load(name, path):
++    spec = importlib.util.spec_from_file_location(name, path)
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++
++steps = load("steps", BIN / "steps.py")
++check_merge = load("check_merge", BIN / "check_merge.py")
++
++CONFIG = """# pdlc config
++
++## Checks
++
++- all: `PY -m unittest discover -s tests`
++- one requirement: `PY -m unittest discover -s tests -k {req}`
++- check folders: `tests/`
++- acceptance file: `tests/acceptance_{intent}.py`
++- acceptance: `PY -m unittest {files}`
++- ID form in check names: `underscored`
++
++## Reviews
++
++- remits: tests, specification
++""".replace("PY", shlex.quote(sys.executable))
++
++CAPABILITY = """# CAP-greeting · Greets people
++
++Status: active
++
++## Requirements
++
++### CAP-greeting.R1 · Greets in English
++
++Status: built · Intents: IN-0001
++
++- Given a name, when we greet, then the text says hello.
++
++### CAP-greeting.R2 · Greets in Spanish
++
++Status: built · Intents: IN-0001
++
++- Given lang es, when we greet, then the text says hola.
++"""
++
++INTENT = """# IN-0001 · Greeting
++
++Status: building · Ticket: none · Branch: pdlc/IN-0001-greeting · Added: 2026-10-10
++
++## What and why
++
++The greeter says hello in two languages.
++
++## Requirements
++
++- CAP-greeting.R1 · Greets in English
++- CAP-greeting.R2 · Greets in Spanish
++
++## Changes
++
++{changes}
++
++## Acceptance checks
++
++Acceptance-File: tests/acceptance_IN_0001.py
++Acceptance-Locked: none
++Acceptance-Passed: none
++
++## Notes
++
++- The greeter keeps its old output.
++
++## Handoff
++
++none
++"""
++
++CHANGE = """# {id} · Greetings
++
++Intent: IN-0001 · Scope: CAP-greeting · Status: planned · Ticket: none · Branch: none · Base: main
++Tests-Locked: none
++
++## Delivers
++
++The greeter says hello.
++
++## Requirements
++
++{reqs}
++
++## Relies on
++
++- DES-writing-style
++
++## Interface
++
++- `greet(name, lang)` in `src/greet.py`
++
++## Files
++
++- src/greet.py
++
++## Check files
++
++{checks}
++"""
++
++R1 = "### CAP-greeting.R1 · Greets in English\n\n- Given a name, when we greet, then the text says hello.\n"
++R2 = "### CAP-greeting.R2 · Greets in Spanish\n\n- Given lang es, when we greet, then the text says hola.\n"
++R3 = "### CAP-greeting.R3 · Greets at night\n\n- Given night, when we greet, then the text says night.\n"
++
++ACCEPTANCE = """import unittest
++
++
++class IN_0001(unittest.TestCase):
++    def test_CAP_greeting_R1_says_hello(self):
++        self.assertTrue(True)
++"""
++
++TESTS = """import unittest
++
++
++class CAP_greeting_R1(unittest.TestCase):
++    def test_CAP_greeting_R1_says_hello(self):
++        self.assertTrue(True)
++
++
++class CAP_greeting_R2(unittest.TestCase):
++    def test_CAP_greeting_R2_says_hola(self):
++        self.assertTrue(True)
++"""
++
++WRONG_VERSIONS = "Wrong versions:\n- CAP-greeting.R1 says hello · says goodbye · fails\n"
++LONG = "- " + " ".join(["word"] * 30) + ".\n"
++INTENT_FILE = "pdlc/inbox/IN-0001-greeting.md"
++CHANGE_FILE = "pdlc/changes/CH-0001-greeting/change.md"
++SPEC_FILE = "pdlc/specs/capabilities/CAP-greeting.md"
++ACCEPTANCE_FILE = "tests/acceptance_IN_0001.py"
++TESTS_FILE = "tests/test_CAP_greeting.py"
++
++
++def git(root, *args):
++    return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True,
++                          check=True).stdout.strip()
++
++
++# The built project takes many git calls. The first test builds it, and later tests copy it.
++BUILT = []
++
++
++class Project(unittest.TestCase):
++    """A project with an intent of one change, on the branch of the intent."""
++
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.tmp.cleanup)
++        self.root = Path(self.tmp.name)
++        self.put("pdlc/config.md", CONFIG)
++        self.put("pdlc/specs/design/DES-pdlc-commit-trailers.md", TRAILERS.read_text())
++        self.put(SPEC_FILE, CAPABILITY)
++        self.put(".gitignore", "__pycache__/\n")
++        self.put("src/greet.py", "def greet(name):\n    return 'Hello, %s!' % name\n")
++        self.plan()
++        git(self.root, "init", "-q", "-b", "main")
++        git(self.root, "config", "user.email", "t@t")
++        git(self.root, "config", "user.name", "t")
++        self.commit("Plan IN-0001")
++        git(self.root, "switch", "-qc", "pdlc/IN-0001-greeting")
++
++    def plan(self):
++        self.put(INTENT_FILE, INTENT.format(changes="- CH-0001 · Greetings"))
++        self.put(CHANGE_FILE, CHANGE.format(id="CH-0001", reqs=R1 + "\n" + R2,
++                                            checks="- " + TESTS_FILE))
++
++    def put(self, path, text):
++        (self.root / path).parent.mkdir(parents=True, exist_ok=True)
++        (self.root / path).write_text(text)
++
++    def read(self, path):
++        return (self.root / path).read_text()
++
++    def commit(self, message):
++        git(self.root, "add", "-A")
++        git(self.root, "commit", "-qm", message)
++
++    def steps(self, *args):
++        out = io.StringIO()
++        with redirect_stdout(out):
++            code = steps.main(["steps.py", *args], root=self.root)
++        return code, out.getvalue()
++
++    def head(self, ref="HEAD"):
++        return git(self.root, "rev-parse", "--short", ref)
++
++    def message(self, ref="HEAD"):
++        """(subject, trailers) of a commit."""
++        return git(self.root, "log", "-1", "--format=%s", ref), git(self.root, "log", "-1", "--format=%b", ref)
++
++    def hook(self):
++        """(exit code, report) of the commit hook for the newest commit."""
++        call = {"tool_name": "Bash", "tool_input": {"command": "git commit -m x"}, "cwd": str(self.root)}
++        run = subprocess.run([sys.executable, str(HOOK)], input=json.dumps(call),
++                             capture_output=True, text=True, timeout=30)
++        return run.returncode, run.stderr
++
++    def lock_acceptance(self, text=ACCEPTANCE):
++        self.put(ACCEPTANCE_FILE, text)
++        code, out = self.steps("lock", "IN-0001")
++        self.assertEqual(code, 0, out)
++        return out
++
++    def review_acceptance(self):
++        folder = "pdlc/acceptance/IN-0001-greeting/review/tests/"
++        self.put(folder + "result.md", "Result: pass\n\nProblems: none\n\n" + WRONG_VERSIONS)
++        self.commit("Review acceptance IN-0001\n\nIntent: IN-0001")
++
++    def start_change(self, change="CH-0001"):
++        git(self.root, "switch", "-qc", "pdlc/%s-greeting" % change)
++        path = "pdlc/changes/%s-greeting/change.md" % change
++        self.put(path, self.read(path).replace("Status: planned", "Status: testing")
++                 .replace("Branch: none", "Branch: pdlc/%s-greeting" % change))
++        self.commit("Start %s\n\nIntent: IN-0001\nChange: %s" % (change, change))
++
++    def lock_tests(self, text=TESTS):
++        self.put(TESTS_FILE, text)
++        code, out = self.steps("lock", "CH-0001")
++        self.assertEqual(code, 0, out)
++        return out
++
++    def review_tests(self, specification="pass"):
++        folder = "pdlc/changes/CH-0001-greeting/review/"
++        self.put(folder + "tests/result.md", "Result: pass\n\nProblems: none\n\n" + WRONG_VERSIONS)
++        self.put(folder + "specification/result.md", "Result: %s\n\nProblems: none\n" % specification)
++        self.commit("Review tests CH-0001\n\nIntent: IN-0001\nChange: CH-0001")
++
++    def built(self):
++        """The acceptance checks locked and reviewed, then the change with its tests locked
++        and reviewed."""
++        if BUILT:
++            shutil.rmtree(self.root)
++            shutil.copytree(BUILT[0].name + "/project", self.root, symlinks=True)
++            return
++        self.lock_acceptance()
++        self.review_acceptance()
++        self.start_change()
++        self.lock_tests()
++        self.review_tests()
++        BUILT.append(tempfile.TemporaryDirectory())
++        shutil.copytree(self.root, BUILT[0].name + "/project", symlinks=True)
++
++    def pass_commit(self):
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 0, out)
++        return re.search(r"^pass commit: (\w+)$", out, re.M).group(1)
++
++
++class TwoChanges(Project):
++    """The same intent with two changes: CH-0001 has R1 and CH-0002 has R2."""
++
++    def plan(self):
++        self.put(INTENT_FILE, INTENT.format(changes="- CH-0001 · Greetings\n- CH-0002 · Greetings"))
++        self.put(CHANGE_FILE, CHANGE.format(id="CH-0001", reqs=R1, checks="- " + TESTS_FILE))
++        self.put("pdlc/changes/CH-0002-greeting/change.md",
++                 CHANGE.format(id="CH-0002", reqs=R2, checks="- none"))
++
++    def test_an_acceptance_failure_before_the_last_change_is_expected(self):
++        self.lock_acceptance(ACCEPTANCE.replace("self.assertTrue(True)", "self.fail('later')"))
++        self.review_acceptance()
++        self.start_change()
++        self.lock_tests(TESTS.replace("CAP_greeting_R2", "Other"))
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 0, out)
++        self.assertIn("acceptance IN-0001: fail, expected before the last change (exit code 1)\n", out)
++        self.assertNotIn("Last lines", out)
++        self.assertEqual(out.splitlines()[-1], "all required items pass")
++        # The last change gets no such exception.
++        code, out = self.steps("checks", "CH-0002")
++        self.assertEqual(code, 1)
++        self.assertIn("acceptance IN-0001: FAIL (exit code 1)\n", out)
++
++    def test_verified_of_the_first_change_leaves_the_intent_until_the_other_is_ready(self):
++        self.lock_acceptance()
++        self.review_acceptance()
++        self.start_change()
++        self.lock_tests(TESTS.replace("CAP_greeting_R2", "Other"))
++        self.review_tests()
++        code, out = self.steps("verified", "CH-0001")
++        self.assertEqual(code, 0, out)
++        self.assertIn("IN-0001: not changed, a change is not ready\n", out)
++        self.assertNotIn("Acceptance-Passed", out)
++        intent = self.read(INTENT_FILE)
++        self.assertIn("Status: building", intent)
++        self.assertIn("Acceptance-Passed: none", intent)
++
++
++class Lock(Project):
++    def test_lock_commits_the_acceptance_checks_then_the_lock_and_makes_the_packet(self):
++        out = self.lock_acceptance()
++        self.assertEqual(git(self.root, "log", "-3", "--format=%s"),
++                         "Lock acceptance IN-0001\nAcceptance IN-0001\nPlan IN-0001")
++        self.assertEqual(self.message("HEAD~1")[1], "Intent: IN-0001\nReq: CAP-greeting.R1, CAP-greeting.R2")
++        self.assertEqual(self.message(), ("Lock acceptance IN-0001", "Intent: IN-0001"))
++        lock = self.head("HEAD~1")
++        self.assertIn("Acceptance-Locked: %s\n" % lock, self.read(INTENT_FILE))
++        packet = self.read("pdlc/acceptance/IN-0001-greeting/review/tests/packet.md")
++        self.assertIn("Acceptance-Locked: %s" % lock, packet)
++        self.assertEqual(out, "Acceptance IN-0001: %s (1 check file)\n"
++                              "Lock acceptance IN-0001: Acceptance-Locked: %s\n"
++                              "wrote pdlc/acceptance/IN-0001-greeting/review/tests/packet.md\n"
++                              "writing: none\n" % (lock, lock))
++
++    def test_lock_of_a_change_writes_tests_locked_and_the_tests_packet(self):
++        self.lock_acceptance()
++        self.start_change()
++        out = self.lock_tests()
++        self.assertEqual(git(self.root, "log", "-2", "--format=%s"), "Lock tests CH-0001\nTests CH-0001")
++        self.assertEqual(self.message("HEAD~1")[1],
++                         "Intent: IN-0001\nChange: CH-0001\nReq: CAP-greeting.R1, CAP-greeting.R2")
++        self.assertEqual(self.message(), ("Lock tests CH-0001", "Intent: IN-0001\nChange: CH-0001"))
++        lock = self.head("HEAD~1")
++        self.assertEqual(re.findall(r"^Tests-Locked: (.*)$", self.read(CHANGE_FILE), re.M), [lock])
++        packet = self.read("pdlc/changes/CH-0001-greeting/review/tests/packet.md")
++        self.assertIn("Tests-Locked: %s" % lock, packet)
++        self.assertIn("test_CAP_greeting_R2_says_hola", packet)
++        self.assertEqual(out.splitlines()[0], "Tests CH-0001: %s (1 check file)" % lock)
++        self.assertIn("wrote pdlc/changes/CH-0001-greeting/review/tests/packet.md\n", out)
++
++    def test_a_new_lock_replaces_the_old_hash(self):
++        self.lock_acceptance()
++        self.start_change()
++        self.lock_tests()
++        self.lock_tests(TESTS + "\n# a corrected check\n")
++        self.assertEqual(re.findall(r"^Tests-Locked: (.*)$", self.read(CHANGE_FILE), re.M), [self.head("HEAD~1")])
++
++    def test_an_acceptance_lock_on_a_change_branch_has_the_change_trailer(self):
++        self.lock_acceptance()
++        self.start_change()
++        self.lock_acceptance(ACCEPTANCE + "\n# a corrected check\n")
++        self.assertEqual(self.message("HEAD~1")[1],
++                         "Intent: IN-0001\nChange: CH-0001\nReq: CAP-greeting.R1, CAP-greeting.R2")
++        self.assertEqual(self.message(), ("Lock acceptance IN-0001", "Intent: IN-0001\nChange: CH-0001"))
++
++    def test_lock_commits_follow_the_commit_trailers(self):
++        found = []
++        real = steps.commit
++
++        def spy(*args, **kwargs):
++            sha = real(*args, **kwargs)
++            found.append((git(self.root, "log", "-1", "--format=%s"), self.hook()))
++            return sha
++
++        with mock.patch.object(steps, "commit", spy):
++            self.lock_acceptance()
++            self.start_change()
++            self.lock_tests()
++        self.assertEqual(found, [("Acceptance IN-0001", (0, "")), ("Lock acceptance IN-0001", (0, "")),
++                                 ("Tests CH-0001", (0, "")), ("Lock tests CH-0001", (0, ""))])
++
++    def test_lock_refuses_a_changed_file_outside_the_checks_and_pdlc(self):
++        self.put(ACCEPTANCE_FILE, ACCEPTANCE)
++        self.put("src/greet.py", "def greet(name):\n    return 'Hi'\n")
++        before = self.head()
++        code, out = self.steps("lock", "IN-0001")
++        self.assertEqual(code, 1)
++        self.assertEqual(out, "src/greet.py is not a check file and not under pdlc/. "
++                              "Commit or delete it first.\n")
++        self.assertEqual(self.head(), before)
++
++    def test_lock_of_a_change_refuses_a_check_file_that_the_change_does_not_list(self):
++        self.lock_acceptance()
++        self.start_change()
++        self.put("tests/test_other.py", TESTS)
++        code, out = self.steps("lock", "CH-0001")
++        self.assertEqual(code, 1)
++        self.assertIn("tests/test_other.py is not a check file", out)
++
++    def test_lock_refuses_when_no_check_changed(self):
++        self.put(INTENT_FILE, self.read(INTENT_FILE) + "\nA note.\n")
++        before = self.head()
++        code, out = self.steps("lock", "IN-0001")
++        self.assertEqual((code, out), (1, "No check file changed. Write the checks first.\n"))
++        self.assertEqual(self.head(), before)
++
++    def test_lock_refuses_on_a_branch_that_is_not_a_branch_of_the_work(self):
++        self.put(ACCEPTANCE_FILE, ACCEPTANCE)
++        git(self.root, "switch", "-q", "main")
++        code, out = self.steps("lock", "IN-0001")
++        self.assertEqual((code, out), (1, "You are on main. That is not a branch of IN-0001. "
++                                          "Switch to its branch first.\n"))
++        git(self.root, "switch", "-q", "pdlc/IN-0001-greeting")
++        code, out = self.steps("lock", "CH-0001")
++        self.assertEqual(code, 1)
++        self.assertIn("You are on pdlc/IN-0001-greeting. That is not a branch of CH-0001.", out)
++
++    def test_lock_refuses_an_unknown_target(self):
++        self.assertEqual(self.steps("lock", "IN-0009"), (1, "No intent found for IN-0009\n"))
++        self.assertEqual(self.steps("lock", "CH-0009"), (1, "No change spec found for CH-0009\n"))
++
++    def test_lock_commits_a_deleted_check_file(self):
++        self.lock_acceptance()
++        self.start_change()
++        self.lock_tests()
++        (self.root / TESTS_FILE).unlink()
++        code, out = self.steps("lock", "CH-0001")
++        self.assertEqual(code, 0, out)
++        self.assertEqual(git(self.root, "log", "-2", "--format=%s"), "Lock tests CH-0001\nTests CH-0001")
++
++    def test_lock_shows_the_writing_findings_of_the_text_that_it_committed(self):
++        self.put(INTENT_FILE, self.read(INTENT_FILE).replace("## Handoff", LONG + "\n## Handoff"))
++        out = self.lock_acceptance()
++        self.assertIn("writing: 1 finding\n", out)
++        self.assertIn("sentence length", out)
++        self.assertTrue(out.endswith("Fix all of them in one edit, in the next commit of this stage.\n"), out)
++
++
++class Checks(Project):
++    def test_checks_prints_one_line_for_each_item_and_the_pass_commit(self):
++        self.built()
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 0, out)
++        lines = out.splitlines()
++        self.assertEqual(lines[:5], ["all: pass (2 checks)",
++                                     "one requirement CAP-greeting.R1: pass (1 check)",
++                                     "one requirement CAP-greeting.R2: pass (1 check)",
++                                     "earlier acceptance: pass (none)",
++                                     "acceptance IN-0001: pass (1 check)"])
++        self.assertTrue(lines[5].startswith("check files since the tests lock: pass (lock "), lines[5])
++        self.assertTrue(lines[6].startswith("acceptance file since its lock: pass (lock "), lines[6])
++        self.assertEqual(lines[7:], ["pass commit: %s" % self.head(), "all required items pass"])
++
++    def test_a_requirement_with_no_checks_fails(self):
++        self.built()
++        self.put(CHANGE_FILE, self.read(CHANGE_FILE).replace("## Relies on", R3 + "\n## Relies on"))
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 1)
++        self.assertIn("one requirement CAP-greeting.R3: FAIL (no checks found)\n", out)
++        self.assertIn("Last lines of one requirement CAP-greeting.R3:\n", out)
++        self.assertEqual(out.splitlines()[-1], "1 required item fails")
++
++    def test_a_retired_requirement_needs_no_checks(self):
++        self.built()
++        retired = R3.replace("Greets at night", "Greets at night (retire)")
++        self.put(CHANGE_FILE, self.read(CHANGE_FILE).replace("## Relies on", retired + "\n## Relies on"))
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 0, out)
++        self.assertNotIn("R3", out)
++
++    def test_a_failed_run_shows_its_last_lines(self):
++        self.built()
++        self.put(TESTS_FILE, TESTS.replace("self.assertTrue(True)", "self.fail('boom')", 1))
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 1)
++        self.assertIn("all: FAIL (exit code 1)\n", out)
++        self.assertIn("boom", out)
++
++    def test_a_check_file_changed_since_the_lock_fails(self):
++        self.built()
++        self.put(TESTS_FILE, TESTS + "\n# weakened\n")
++        self.commit("Weaken the checks")
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 1)
++        self.assertIn("check files since the tests lock: FAIL (changed: tests/test_CAP_greeting.py)\n", out)
++
++    def test_an_acceptance_file_changed_since_the_lock_fails(self):
++        self.built()
++        self.put(ACCEPTANCE_FILE, ACCEPTANCE + "\n# weakened\n")
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 1)
++        self.assertIn("acceptance file since its lock: FAIL (changed: tests/acceptance_IN_0001.py)\n", out)
++
++    def test_earlier_acceptance_runs_the_files_of_the_intents_that_passed(self):
++        self.built()
++        old = INTENT.format(changes="- CH-0000 · Old").replace("IN-0001", "IN-0000")
++        self.put("pdlc/inbox/IN-0000-old.md", old.replace("IN_0001", "IN_0000").replace(
++            "Acceptance-Passed: none", "Acceptance-Passed: abcdef1"))
++        self.put("tests/acceptance_IN_0000.py", ACCEPTANCE.replace("IN_0001", "IN_0000"))
++        self.commit("Add an older intent")
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 0, out)
++        self.assertIn("earlier acceptance: pass (1 check)\n", out)
++
++    def test_a_run_that_hangs_fails_at_the_time_limit(self):
++        self.built()
++        self.put("pdlc/config.md", self.read("pdlc/config.md").replace("- all: `", "- all: `sleep 30 && ", 1))
++        with mock.patch.object(steps, "LIMIT", 1):
++            code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 1)
++        self.assertIn("all: FAIL (timed out after 1 s)\n", out)
++
++    def test_a_missing_command_fails_with_a_reason(self):
++        self.built()
++        self.put("pdlc/config.md", re.sub(r"^- one requirement:.*\n", "", self.read("pdlc/config.md"), flags=re.M))
++        code, out = self.steps("checks", "CH-0001")
++        self.assertEqual(code, 1)
++        self.assertIn("one requirement CAP-greeting.R1: FAIL (pdlc/config.md has no such command)\n", out)
++
++    def test_a_count_in_the_tap_form_and_the_pytest_form_counts(self):
++        for output, count in (("# tests 3\n# pass 3\n# fail 0\n", 3), ("=== 4 passed in 0.1s ===\n", 4),
++                              ("Ran 1 test in 0.0s\n\nOK\n", 1), ("done\n", None), ("Ran 0 tests in 0.0s\n", 0)):
++            with self.subTest(output=output):
++                command = "printf %s" % shlex.quote(output)
++                ok, note, _ = steps.run(self.root, command)
++                self.assertEqual(note, {3: "3 checks", 4: "4 checks", 1: "1 check", None: "count unknown",
++                                        0: "no checks found"}[count])
++                self.assertEqual(ok, count != 0)
++
++
++class Verified(Project):
++    def test_verified_sets_the_statuses_and_commits(self):
++        self.built()
++        passed = self.pass_commit()
++        code, out = self.steps("verified", "CH-0001", passed)
++        self.assertEqual(code, 0, out)
++        spec = self.read(SPEC_FILE)
++        self.assertEqual(re.findall(r"^Status: (\w+) · Intents: IN-0001$", spec, re.M), ["verified", "verified"])
++        self.assertIn("Status: in review", self.read(CHANGE_FILE))
++        intent = self.read(INTENT_FILE)
++        self.assertIn("Status: in review", intent)
++        self.assertIn("Acceptance-Passed: %s\n" % passed, intent)
++        self.assertEqual(self.message(), ("Verified CH-0001", "Intent: IN-0001\nChange: CH-0001"))
++        self.assertEqual(out, "CAP-greeting.R1: verified\nCAP-greeting.R2: verified\nCH-0001: in review\n"
++                              "IN-0001: in review\nAcceptance-Passed: %s\nVerified CH-0001: %s\n"
++                              % (passed, self.head()))
++        self.assertEqual(git(self.root, "status", "--porcelain"), "")
++        self.assertEqual(self.hook(), (0, ""))
++
++    def test_verified_leaves_a_retired_requirement_alone(self):
++        self.built()
++        self.put(CHANGE_FILE, self.read(CHANGE_FILE).replace("Greets in Spanish", "Greets in Spanish (retire)"))
++        self.commit("Update CH-0001: retire R2\n\nIntent: IN-0001\nChange: CH-0001")
++        code, out = self.steps("verified", "CH-0001", "HEAD")
++        self.assertEqual(code, 0, out)
++        spec = self.read(SPEC_FILE)
++        self.assertEqual(re.findall(r"^Status: (\w+) · Intents: IN-0001$", spec, re.M), ["verified", "built"])
++
++    def test_verified_refuses_when_a_remit_did_not_pass(self):
++        self.built()
++        self.put("pdlc/changes/CH-0001-greeting/review/specification/result.md", "Result: fail\n")
++        self.commit("A failed round\n\nIntent: IN-0001\nChange: CH-0001")
++        before = self.head()
++        code, out = self.steps("verified", "CH-0001", "HEAD")
++        self.assertEqual((code, out), (1, "These remits have no passed result: specification.\n"))
++        self.assertEqual(self.head(), before)
++        self.assertNotIn("Status: verified", self.read(SPEC_FILE))
++
++    def test_verified_of_the_last_change_needs_a_pass_commit_on_this_branch(self):
++        self.built()
++        code, out = self.steps("verified", "CH-0001")
++        self.assertEqual(code, 1)
++        self.assertIn("CH-0001 is the last change of IN-0001. Give the pass commit", out)
++        side = self.head()
++        git(self.root, "switch", "-q", "main")
++        git(self.root, "switch", "-qc", "side")
++        self.put("side.txt", "x\n")
++        self.commit("Side work")
++        elsewhere = self.head()
++        git(self.root, "switch", "-q", "pdlc/CH-0001-greeting")
++        self.assertEqual(self.steps("verified", "CH-0001", elsewhere),
++                         (1, "%s is not a commit on this branch.\n" % elsewhere))
++        self.assertEqual(self.steps("verified", "CH-0001", "no-such-commit")[0], 1)
++
++    def test_verified_refuses_a_file_outside_pdlc(self):
++        self.built()
++        self.put("src/greet.py", "def greet(name):\n    return 'Hi'\n")
++        code, out = self.steps("verified", "CH-0001", "HEAD")
++        self.assertEqual((code, out), (1, "src/greet.py is outside pdlc/. Commit or delete it first.\n"))
++
++    def test_verified_refuses_on_the_wrong_branch(self):
++        self.built()
++        git(self.root, "switch", "-q", "pdlc/IN-0001-greeting")
++        code, out = self.steps("verified", "CH-0001", "HEAD")
++        self.assertEqual(code, 1)
++        self.assertIn("That is not the branch of CH-0001", out)
++
++    def test_after_checks_and_verified_the_merge_check_passes(self):
++        self.built()
++        self.assertEqual(self.steps("verified", "CH-0001", self.pass_commit())[0], 0)
++        shown = io.StringIO()
++        with redirect_stdout(shown):
++            code = check_merge.main(["check_merge.py", "CH-0001"], root=self.root)
++        self.assertEqual(code, 0, shown.getvalue())
++
++
++class Usage(unittest.TestCase):
++    def test_a_wrong_call_prints_the_usage_line(self):
++        for args in ([], ["lock"], ["lock", "x"], ["finish", "CH-0001"], ["lock", "IN-0001", "extra"],
++                     ["checks", "CH-0001", "x"]):
++            with self.subTest(args=args):
++                out = io.StringIO()
++                with redirect_stdout(out):
++                    code = steps.main(["steps.py", *args])
++                self.assertEqual(code, 1)
++                self.assertTrue(out.getvalue().startswith("Usage: steps.py"))
++
++    def test_checks_and_verified_need_a_change(self):
++        out = io.StringIO()
++        with redirect_stdout(out):
++            self.assertEqual(steps.main(["steps.py", "checks", "IN-0001"]), 1)
++            self.assertEqual(steps.main(["steps.py", "verified", "IN-0001"]), 1)
++        self.assertIn("needs a change ID", out.getvalue())
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.43.0
+

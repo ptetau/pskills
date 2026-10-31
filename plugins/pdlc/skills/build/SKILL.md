@@ -20,8 +20,8 @@ does not change the checks.
   obeys "Who does what".
 - The change is the one that the user names, or else the first `building` change in the
   order of the intent. Build works on the branch of the change.
-- A `Tests-Locked:` line with no hash stops the skill, and the user hears that
-  `/pdlc:tests` comes first.
+- A `Tests-Locked:` line with no hash and no `acceptance` stops the skill, and the user
+  hears that `/pdlc:tests` comes first.
 - When the base branch has new commits since this branch started (for example, a
   correction after a review), build first merges the base into this branch. The merge has
   the trailers `Intent` and `Change`.
@@ -32,14 +32,16 @@ does not change the checks.
 - The builder changes only the app files under "Files", runs the checks, and reports.
 - A check that the builder calls incorrect stays as it is. The reason goes to
   `/pdlc:tests`, which asks the test writer and locks again, and then build runs again. For
-  an acceptance check, the reason goes to `/pdlc:acceptance`.
+  an acceptance check, the reason goes to `/pdlc:acceptance`. With `Tests-Locked:
+  acceptance`, each check is an acceptance check.
 - A file that the builder needs outside "Files" is a question for the user. On a yes, the
   file goes into "Files", and the builder runs again.
 - The same problem a third time stops the skill, and build asks the user ("Rounds").
 - After the builder, all checks and the acceptance checks of "Acceptance checks" pass,
   through the checks port.
 - No check changed since the lock:
-  `git diff --name-only <Tests-Locked hash> -- <check files>` shows nothing.
+  `git diff --name-only <Tests-Locked hash> -- <check files>` shows nothing. With
+  `Tests-Locked: acceptance`, the acceptance file did not change since `Acceptance-Locked`.
 
 ## Inputs
 
@@ -55,8 +57,8 @@ does not change the checks.
 - Each requirement of the change is `built` in its spec file. A `(retire)` requirement
   leaves its spec, with the code that served only that requirement. The test writer
   removed its checks before.
-- The handoff `build → show`: what build made, how to run it, and anything unexpected.
+- The handoff `build → verify`: what build made, how to run it, and anything unexpected.
 - The commit "Built CH-xxxx" with the trailers `Intent` and `Change`: the specs, the
   change spec, and the handoff.
-- For the user: `/pdlc:show` is next.
+- For the user: `/pdlc:verify` is next.
 - Build is done when every check that it runs passes, and no check changed since the lock.

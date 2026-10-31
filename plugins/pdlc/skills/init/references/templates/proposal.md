@@ -1,6 +1,6 @@
 # Proposal · CH-0000 · Short name
 
-Intent: IN-0000 · Base: <the branch it merges into> · Tests-Locked: <hash>
+Intent: IN-0000 · Base: <the branch it merges into> · Tests-Locked: <hash, or acceptance>
 
 Keep these sections, in this order. Write "none" under one with nothing in it.
 
@@ -20,6 +20,7 @@ out of how many. Give each requirement a short description next to its ID, as in
 The acceptance file, its lock, and its review result. For the last change of the intent,
 also the commit at which the acceptance checks passed. For an earlier change, write that
 the checks pass at the last change.
+With `Tests-Locked: acceptance`, these checks are also the checks of the change.
 
 ## Reviews
 

@@ -1,0 +1,190 @@
+From 853cdeab2d2bbe371a7dd1a81eaf59571fcfc9e7 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Sat, 31 Oct 2026 09:27:10 +0000
+Subject: [PATCH] reference
+
+---
+ src/lib.rs     | 10 +++++++++-
+ src/page.rs    | 18 +++++++++++++++---
+ src/store.rs   | 26 ++++++++++++++++++++++----
+ tests/app.rs   |  2 +-
+ tests/page.rs  |  8 ++++----
+ tests/store.rs |  4 ++--
+ 6 files changed, 53 insertions(+), 15 deletions(-)
+
+diff --git a/src/lib.rs b/src/lib.rs
+index 7a1dcb4..847a0b1 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -11,7 +11,7 @@ use store::Store;
+ pub fn handle(store: &Store, request: &Request) -> Response {
+     match (request.method.as_str(), request.path.as_str()) {
+         ("GET", "/") => match store.load() {
+-            Ok(items) => Response::html(200, page::render(&items)),
++            Ok(items) => Response::html(200, page::render(&items, request.query.split('&').any(|p| p == "show=all"))),
+             Err(error) => Response::text(500, &format!("error: {}", error)),
+         },
+         ("POST", "/items") => {
+@@ -25,6 +25,14 @@ pub fn handle(store: &Store, request: &Request) -> Response {
+                 Err(error) => Response::text(500, &format!("error: {}", error)),
+             }
+         }
++        ("POST", path) if path.starts_with("/items/") && path.ends_with("/done") => {
++            let id = &path["/items/".len()..path.len() - "/done".len()];
++            match id.parse::<u64>().ok().map(|n| store.mark_done(n)) {
++                Some(Ok(true)) => Response::redirect("/"),
++                Some(Err(error)) => Response::text(500, &format!("error: {}", error)),
++                _ => Response::text(404, &format!("error: no item {}", id)),
++            }
++        }
+         _ => Response::text(404, "error: not found"),
+     }
+ }
+diff --git a/src/page.rs b/src/page.rs
+index a615fe8..28611bc 100644
+--- a/src/page.rs
++++ b/src/page.rs
+@@ -2,17 +2,29 @@
+ 
+ use crate::store::Item;
+ 
+-pub fn render(items: &[Item]) -> String {
++pub fn render(items: &[Item], show_all: bool) -> String {
++    let items: Vec<&Item> = items.iter().filter(|item| show_all || !item.done).collect();
+     let list = if items.is_empty() {
+         "<p>Nothing to do.</p>\n".to_string()
+     } else {
+-        let rows: String = items.iter().map(|item| format!("<li>{}</li>\n", escape(&item.text))).collect();
++        let rows: String = items
++            .iter()
++            .map(|item| {
++                if item.done {
++                    format!("<li>{} (done)</li>\n", escape(&item.text))
++                } else {
++                    format!("<li>{} <form method=\"post\" action=\"/items/{}/done\"><button>Done</button></form></li>\n",
++                            escape(&item.text), item.id)
++                }
++            })
++            .collect();
+         format!("<ul>\n{}</ul>\n", rows)
+     };
+     format!(
+         "<!doctype html>\n<html><head><meta charset=\"utf-8\"><title>To-do</title></head>\n<body>\n\
+          <h1>To-do</h1>\n{}<form method=\"post\" action=\"/items\">\
+-         <input name=\"text\" aria-label=\"New item\"> <button>Add</button></form>\n</body></html>\n",
++         <input name=\"text\" aria-label=\"New item\"> <button>Add</button></form>\n\
++         <p><a href=\"/?show=all\">Show all</a></p>\n</body></html>\n",
+         list
+     )
+ }
+diff --git a/src/store.rs b/src/store.rs
+index 2a82ee5..e100b62 100644
+--- a/src/store.rs
++++ b/src/store.rs
+@@ -10,6 +10,7 @@ use std::path::PathBuf;
+ pub struct Item {
+     pub id: u64,
+     pub text: String,
++    pub done: bool,
+ }
+ 
+ pub struct Store {
+@@ -31,8 +32,13 @@ impl Store {
+         Ok(text
+             .lines()
+             .filter_map(|line| {
+-                let (id, text) = line.split_once('\t')?;
+-                Some(Item { id: id.parse().ok()?, text: text.to_string() })
++                let mut fields = line.splitn(3, '\t');
++                let id = fields.next()?.parse().ok()?;
++                let second = fields.next()?;
++                match fields.next() {
++                    Some(text) => Some(Item { id, text: text.to_string(), done: second == "done" }),
++                    None => Some(Item { id, text: second.to_string(), done: false }),
++                }
+             })
+             .collect())
+     }
+@@ -42,14 +48,26 @@ impl Store {
+         let mut items = self.load()?;
+         let id = items.iter().map(|item| item.id).max().unwrap_or(0) + 1;
+         let text: String = text.chars().map(|c| if c == '\t' || c == '\n' || c == '\r' { ' ' } else { c }).collect();
+-        let item = Item { id, text };
++        let item = Item { id, text, done: false };
+         items.push(item.clone());
+         self.save(&items)?;
+         Ok(item)
+     }
+ 
++    /// Marks the item done. False when no item has the id.
++    pub fn mark_done(&self, id: u64) -> io::Result<bool> {
++        let mut items = self.load()?;
++        let Some(item) = items.iter_mut().find(|item| item.id == id) else { return Ok(false) };
++        item.done = true;
++        self.save(&items)?;
++        Ok(true)
++    }
++
+     fn save(&self, items: &[Item]) -> io::Result<()> {
+-        let text: String = items.iter().map(|item| format!("{}\t{}\n", item.id, item.text)).collect();
++        let text: String = items
++            .iter()
++            .map(|item| format!("{}\t{}\t{}\n", item.id, if item.done { "done" } else { "open" }, item.text))
++            .collect();
+         fs::write(&self.path, text)
+     }
+ }
+diff --git a/tests/app.rs b/tests/app.rs
+index 7c0ceba..5eedb8e 100644
+--- a/tests/app.rs
++++ b/tests/app.rs
+@@ -20,7 +20,7 @@ fn adding_an_item_redirects_to_the_page_that_lists_it() {
+     assert_eq!(added.location.as_deref(), Some("/"));
+     let page = handle(&store, &Request::new("GET", "/", ""));
+     assert_eq!(page.status, 200);
+-    assert!(page.body.contains("<li>oat milk!</li>"));
++    assert!(page.body.contains("<li>oat milk! "));
+ }
+ 
+ #[test]
+diff --git a/tests/page.rs b/tests/page.rs
+index e6ded91..b810219 100644
+--- a/tests/page.rs
++++ b/tests/page.rs
+@@ -3,14 +3,14 @@ use todo::store::Item;
+ 
+ #[test]
+ fn an_empty_list_says_nothing_to_do() {
+-    let html = render(&[]);
++    let html = render(&[], false);
+     assert!(html.contains("<p>Nothing to do.</p>"));
+     assert!(html.contains("<form method=\"post\" action=\"/items\">"));
+ }
+ 
+ #[test]
+ fn each_item_is_a_list_entry_with_escaped_text() {
+-    let html = render(&[Item { id: 1, text: "milk".into() }, Item { id: 2, text: "<b>&".into() }]);
+-    assert!(html.contains("<li>milk</li>"));
+-    assert!(html.contains("<li>&lt;b&gt;&amp;</li>"));
++    let html = render(&[Item { id: 1, text: "milk".into(), done: false }, Item { id: 2, text: "<b>&".into(), done: false }], false);
++    assert!(html.contains("<li>milk "));
++    assert!(html.contains("<li>&lt;b&gt;&amp; "));
+ }
+diff --git a/tests/store.rs b/tests/store.rs
+index 78fae41..b3664ff 100644
+--- a/tests/store.rs
++++ b/tests/store.rs
+@@ -23,8 +23,8 @@ fn items_keep_their_order_and_get_the_next_id() {
+     store.add("milk").unwrap();
+     store.add("eggs").unwrap();
+     let items = store.load().unwrap();
+-    assert_eq!(items, vec![Item { id: 1, text: "milk".into() }, Item { id: 2, text: "eggs".into() }]);
+-    assert_eq!(fs::read_to_string(&path).unwrap(), "1\tmilk\n2\teggs\n");
++    assert_eq!(items, vec![Item { id: 1, text: "milk".into(), done: false }, Item { id: 2, text: "eggs".into(), done: false }]);
++    assert_eq!(fs::read_to_string(&path).unwrap(), "1\topen\tmilk\n2\topen\teggs\n");
+ }
+ 
+ #[test]
+-- 
+2.43.0
+

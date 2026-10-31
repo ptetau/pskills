@@ -1,6 +1,6 @@
 {
   "name": "pdlc",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A development lifecycle harness: intents become specs, specs become small changes, changes become verified, traceable code.",
   "author": {
     "name": "Patrick Te Tau"

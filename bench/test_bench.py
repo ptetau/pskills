@@ -10,6 +10,7 @@ from argparse import Namespace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import metrics  # noqa: E402
 import run_bench  # noqa: E402
 import run_experiment  # noqa: E402
 
@@ -104,6 +105,136 @@ class AnalyseTest(unittest.TestCase):
     def test_stage_time_runs_to_the_next_stage(self):
         result = run_bench.analyse(self.events())
         self.assertEqual(result["stages"]["intake"]["wall_s"], 9.0)
+
+
+class RepeatedStageTest(unittest.TestCase):
+    """With two changes, each change stage runs twice. Its time is the sum of both visits."""
+
+    def test_a_stage_that_runs_twice_gets_the_time_of_both_visits(self):
+        events = [
+            assistant(10, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:build"})]),
+            assistant(20, "m2", usage(10, 0, 0, 5), [("s2", "Skill", {"skill": "pdlc:verify"})]),
+            assistant(25, "m3", usage(10, 0, 0, 5), [("s3", "Skill", {"skill": "pdlc:build"})]),
+            assistant(40, "m4", usage(10, 0, 0, 5), [("s4", "Skill", {"skill": "pdlc:verify"})]),
+            assistant(42, "m5", usage(10, 0, 0, 5)),
+            {"t": 43, "e": {"type": "result", "total_cost_usd": 1.0, "duration_ms": 43000, "num_turns": 5,
+                            "is_error": False, "modelUsage": {"m": {"costUSD": 1.0}}, "subagent_stats": {}}},
+        ]
+        stages = run_bench.analyse(events)["stages"]
+        self.assertEqual(stages["build"]["wall_s"], 25.0)
+        self.assertEqual(stages["verify"]["wall_s"], 7.0)
+
+
+class StageAgentTest(unittest.TestCase):
+    """Ship can run each stage in a pdlc:stage agent. The agents of that stage run inside it."""
+
+    def events(self):
+        def stage_call(stage, work):
+            return {"subagent_type": "pdlc:stage",
+                    "prompt": "Project root: /app\nStage: %s\nSkill file: /p/skills/%s/SKILL.md\nWork: %s"
+                              % (stage, stage, work)}
+        return [
+            assistant(1, "m1", usage(10, 0, 100, 5), [("g1", "Agent", stage_call("acceptance", "IN-0001"))]),
+            assistant(2, "m2", usage(20, 0, 50, 5), [("a1", "Agent", {"subagent_type": "pdlc:test-writer",
+                                                                      "prompt": "Write pdlc/acceptance/IN-0001"})],
+                      parent="g1"),
+            assistant(3, "m3", usage(20, 0, 50, 40), parent="a1"),
+            tool_result(10, "a1"),
+            tool_result(12, "g1"),
+            assistant(13, "m4", usage(10, 0, 100, 5), [("g2", "Agent", stage_call("tests", "CH-0001"))]),
+            assistant(14, "m5", usage(20, 0, 50, 5), [("a2", "Agent", {"subagent_type": "pdlc:test-writer",
+                                                                       "prompt": "Write the checks of CH-0001"})],
+                      parent="g2"),
+            assistant(15, "m6", usage(20, 0, 50, 10), parent="a2"),
+            tool_result(20, "a2"),
+            tool_result(25, "g2"),
+            assistant(26, "m7", usage(10, 0, 100, 5)),
+            {"t": 27, "e": {"type": "result", "total_cost_usd": 1.0, "duration_ms": 27000, "num_turns": 7,
+                            "is_error": False, "modelUsage": {"m": {"costUSD": 1.0}},
+                            "subagent_stats": {"spawned": 4}}},
+        ]
+
+    def test_a_stage_agent_starts_the_stage_that_its_prompt_names(self):
+        stages = run_bench.analyse(self.events())["stages"]
+        self.assertEqual(stages["acceptance"]["agents"]["pdlc:stage"]["calls"], 1)
+        self.assertEqual(stages["tests"]["agents"]["pdlc:stage"]["calls"], 1)
+
+    def test_agents_that_a_stage_agent_starts_count_under_its_stage(self):
+        stages = run_bench.analyse(self.events())["stages"]
+        self.assertEqual(stages["acceptance"]["agents"]["pdlc:test-writer"]["tokens"]["output"], 40)
+        self.assertEqual(stages["tests"]["agents"]["pdlc:test-writer"]["tokens"]["output"], 10)
+
+    def test_stage_time_runs_from_one_stage_agent_to_the_next(self):
+        stages = run_bench.analyse(self.events())["stages"]
+        self.assertEqual(stages["acceptance"]["wall_s"], 12.0)
+
+    def test_the_visual_reviewer_counts_toward_show(self):
+        prompt = "/app/pdlc/changes/CH-0001-top/review/visual/packet.md"
+        self.assertEqual(run_bench.agent_stage("pdlc:reviewer", prompt, "verify"), "show")
+        self.assertEqual(run_bench.agent_stage("pdlc:reviewer", prompt.replace("visual", "quality"), "show"),
+                         "verify")
+
+    def test_a_stage_line_that_names_no_stage_keeps_the_current_stage(self):
+        self.assertEqual(run_bench.agent_stage("pdlc:stage", "Stage: lunch", "build"), "build")
+
+    def test_the_forward_flag_streams_the_messages_of_agents(self):
+        command = run_bench.claude_command("x", "/p", ("--forward-subagent-text",))
+        self.assertIn("--forward-subagent-text", command)
+        self.assertNotIn("--forward-subagent-text", run_bench.claude_command("x", "/p"))
+
+
+class AcceptanceStageTest(unittest.TestCase):
+    """The acceptance stage starts the same agents as the tests stage, so its stage decides."""
+
+    def events(self):
+        return [
+            assistant(1, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:acceptance"})]),
+            assistant(2, "m2", usage(10, 0, 100, 5), [("a1", "Agent", {"subagent_type": "pdlc:test-writer"})]),
+            assistant(3, "m3", usage(20, 0, 50, 40), parent="a1"),
+            tool_result(10, "a1"),
+            assistant(11, "m4", usage(10, 0, 100, 5), [
+                ("a2", "Agent", {"subagent_type": "pdlc:reviewer",
+                                 "prompt": "Review /app/pdlc/inbox/IN-0001-x/review/tests/packet.md"})]),
+            assistant(12, "m5", usage(20, 0, 50, 30), parent="a2"),
+            tool_result(20, "a2"),
+            assistant(21, "m6", usage(10, 0, 100, 5), [("s2", "Skill", {"skill": "pdlc:tests"})]),
+            assistant(22, "m7", usage(10, 0, 100, 5), [("a3", "Agent", {"subagent_type": "pdlc:test-writer"})]),
+            assistant(23, "m8", usage(20, 0, 50, 10), parent="a3"),
+            tool_result(30, "a3"),
+            {"t": 31, "e": {"type": "result", "total_cost_usd": 1.0, "duration_ms": 31000, "num_turns": 8,
+                            "is_error": False, "modelUsage": {"m": {"costUSD": 1.0}},
+                            "subagent_stats": {"spawned": 3}}},
+        ]
+
+    def test_the_agents_of_acceptance_stay_in_acceptance(self):
+        stages = run_bench.analyse(self.events())["stages"]
+        self.assertEqual(sorted(stages["acceptance"]["agents"]),
+                         ["pdlc:reviewer", "pdlc:reviewer/tests", "pdlc:test-writer"])
+        self.assertEqual(stages["acceptance"]["wall_s"], 20.0)
+        self.assertEqual(stages["tests"]["agents"]["pdlc:test-writer"]["tokens"]["output"], 10)
+
+    def test_an_agent_with_no_stage_skill_starts_its_own_stage(self):
+        events = [assistant(1, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:change"})]),
+                  assistant(2, "m2", usage(10, 0, 0, 5), [("a1", "Agent", {"subagent_type": "pdlc:test-writer"})])]
+        self.assertIn("tests", run_bench.analyse(events)["stages"])
+
+    def test_the_prompt_names_the_stage_of_a_check_writer(self):
+        self.assertEqual(run_bench.agent_stage(
+            "pdlc:test-writer", "Write the acceptance checks of the intent /app/pdlc/inbox/IN-0001-x.md", "intake"),
+            "acceptance")
+        self.assertEqual(run_bench.agent_stage(
+            "pdlc:test-writer", "Write the component checks of /app/pdlc/changes/CH-0001-x/change.md", "acceptance"),
+            "tests")
+        self.assertEqual(run_bench.agent_stage(
+            "pdlc:reviewer", "Read /app/pdlc/acceptance/IN-0001-x/review/tests/packet.md", "init"), "acceptance")
+        self.assertEqual(run_bench.agent_stage(
+            "pdlc:reviewer", "Read /app/pdlc/changes/CH-0001-x/review/quality/packet.md", "acceptance"), "verify")
+
+    def test_recon_in_init_stays_in_init(self):
+        events = [assistant(1, "m1", usage(10, 0, 0, 5), [("s1", "Skill", {"skill": "pdlc:init"})]),
+                  assistant(2, "m2", usage(10, 0, 0, 5), [("a1", "Agent", {"subagent_type": "pdlc:recon"})]),
+                  assistant(3, "m3", usage(20, 0, 0, 7), parent="a1")]
+        self.assertIn("pdlc:recon", run_bench.analyse(events)["stages"]["init"]["agents"])
 
 
 def reviewer_events():
@@ -846,6 +977,136 @@ class ExperimentSpecTest(unittest.TestCase):
         self.assertIn("+" + long_sentence, diff)
 
 
+class TodoProbes:
+    """The probes of the to-do intent fail on the base app, and pass on the reference solution."""
+    fixture = None
+
+    def copy(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        app = folder / "app"
+        shutil.copytree(run_bench.FIXTURES[self.fixture]["app"], app,
+                        ignore=shutil.ignore_patterns("target", "pdlc"))
+        run_bench.git(app, "init", "-q")
+        return app
+
+    def test_the_base_app_passes_only_the_probe_of_the_old_behaviour(self):
+        result = run_bench.todo_probes(self.copy(), self.fixture)
+        self.assertEqual(result["passed"], 1, result)
+        self.assertNotIn("adding and the empty-text error still work", result["failed"])
+
+    def test_the_reference_solution_passes_each_probe(self):
+        app = self.copy()
+        patch = run_bench.HERE / "fixtures" / "solutions" / (self.fixture + ".patch")
+        run_bench.git(app, "apply", str(patch))
+        self.assertEqual(run_bench.todo_probes(app, self.fixture), {"passed": 8, "total": 8, "failed": []})
+        self.assertTrue(run_bench.unit_checks(app, self.fixture)["ok"])
+
+
+@unittest.skipUnless(shutil.which("clojure"), "needs clojure")
+class TodoClojureProbeTest(TodoProbes, unittest.TestCase):
+    fixture = "todo-clojure"
+
+
+@unittest.skipUnless(shutil.which("cargo"), "needs cargo")
+class TodoProbeTest(TodoProbes, unittest.TestCase):
+    fixture = "todo-rust"
+
+    def test_the_bash_commands_of_the_fixture_are_allowed(self):
+        command = run_bench.claude_command("x", "/p", tools=run_bench.FIXTURES["todo-rust"]["tools"])
+        self.assertIn("Bash(cargo:*)", command[command.index("--allowedTools") + 1])
+
+    def test_the_visible_text_of_a_page_has_no_tags(self):
+        self.assertEqual(run_bench.visible_text("<li>milk <b>(done)</b></li>\n<li>a &amp; b</li>"),
+                         "milk (done) a & b")
+        self.assertFalse(run_bench.has_word("almilky", "milk"))
+
+
+class MetricsTest(unittest.TestCase):
+    """The measures of the stream: loops, failures and time, by stage."""
+
+    def bash(self, t, tool_id, command, parent=None):
+        return assistant(t, "b" + tool_id, usage(10, 0, 100, 5), [(tool_id, "Bash", {"command": command})],
+                         parent=parent)
+
+    def result(self, t, tool_id, text, error=False, parent=None):
+        return {"t": t, "e": {"type": "user", "parent_tool_use_id": parent, "message": {"content": [
+            {"type": "tool_result", "tool_use_id": tool_id, "content": text, "is_error": error}]}}}
+
+    def events(self):
+        return [
+            assistant(1, "m1", usage(10, 0, 1000, 5), [("s1", "Skill", {"skill": "pdlc:build"})]),
+            assistant(2, "m2", usage(10, 0, 2000, 5), [("a1", "Agent", {"subagent_type": "pdlc:builder"})]),
+            self.bash(3, "c1", "cargo test 2>&1 | tail -3", parent="a1"),
+            self.result(4, "c1", "test result: FAILED. 1 passed; 2 failed", parent="a1"),
+            self.bash(5, "c2", "cargo test", parent="a1"),
+            self.result(6, "c2", "test result: ok. 3 passed", parent="a1"),
+            self.result(7, "a1", "done"),
+            self.bash(8, "c3", "cargo build --release"),
+            self.result(9, "c3", "error[E0425]: cannot find value", error=True),
+            {"t": 10, "e": {"type": "system", "subtype": "hook_response", "hook_name": "PostToolUse:Bash",
+                            "exit_code": "2", "stderr": "pdlc: commit x has 2 writing findings\n  - a\n  - b"}},
+            {"t": 11, "e": {"type": "result", "total_cost_usd": 1.0, "duration_api_ms": 9000,
+                            "permission_denials": [{"tool_name": "Bash"}], "usage": {"output_tokens": 15}}},
+        ]
+
+    def test_a_failed_check_run_counts_also_when_a_pipe_hides_the_exit_code(self):
+        loops = metrics.measure_stream(self.events(), "todo-rust")["loops"]["build"]
+        self.assertEqual((loops["check runs"], loops["check failures"]), (2, 1))
+        self.assertEqual((loops["builds"], loops["build failures"]), (1, 1))
+
+    def test_a_builder_call_counts_its_check_runs_until_green(self):
+        self.assertEqual(metrics.measure_stream(self.events(), "todo-rust")["builder_check_runs_until_green"], [2])
+
+    def test_failures_count_hooks_tools_and_denials(self):
+        failures = metrics.measure_stream(self.events(), "todo-rust")["failures"]
+        self.assertEqual(failures["hook blocks"], {"commits: writing": 1})
+        self.assertEqual(failures["hook findings"], {"commits: writing": 2})
+        self.assertEqual(failures["tool errors"], {"Bash (main)": 1})
+        self.assertEqual(failures["permission denials"], 1)
+
+    def test_the_main_session_time_goes_to_the_model_or_the_work(self):
+        time = metrics.measure_stream(self.events(), "todo-rust")["time"]
+        self.assertEqual(time["main_session"]["agent"], 5.0)
+        self.assertEqual(time["main_session"]["build"], 1.0)
+        self.assertEqual(time["api_s"], 9.0)
+
+    def test_the_time_of_checks_and_builds_counts_in_each_session(self):
+        work = metrics.measure_stream(self.events(), "todo-rust")["time"]["work_by_session"]
+        self.assertEqual(work["pdlc:builder"], {"checks": 2.0})
+        self.assertEqual(work["main"], {"build": 1.0})
+
+    def test_each_fault_changes_one_place_of_an_added_line(self):
+        found = metrics.mutants([("src/a.rs", 3, '    if done == true { return "Done"; }'),
+                                 ("src/a.rs", 4, "    item.done = true;")])
+        names = [name for _, _, name, _ in found]
+        self.assertEqual(names, ["true to false", "== to !=", "a letter of a text", "true to false",
+                                 "remove the line"])
+        self.assertEqual(found[0][3], '    if done == false { return "Done"; }')
+        self.assertEqual(found[2][3], '    if done == true { return "Xone"; }')
+        self.assertIsNone(found[4][3])
+        self.assertEqual(metrics.mutants([("a.py", 1, "# a comment with true")]), [])
+
+    def test_a_docstring_is_not_code(self):
+        lines = ['(defn render [items]', '(defn page', '  "The page of the list."', '  [items]',
+                 '  (str "<h1>To-do</h1>"))', '    """A python docstring."""']
+        self.assertTrue(metrics.is_docstring(lines, 2))
+        self.assertTrue(metrics.is_docstring(lines, 5))
+        self.assertFalse(metrics.is_docstring(lines, 4))
+
+    def test_the_spread_gives_the_range_of_each_measure(self):
+        columns = [("a", {"cost $": "2.00", "probes": "8 of 8", "finished": True}),
+                   ("b", {"cost $": "1.00", "probes": "6 of 8", "finished": True})]
+        found = dict((row[0], row[1:]) for row in metrics.spread(columns))
+        self.assertEqual(found["cost $"], ("1", "1.50", "2", "67%"))
+        self.assertEqual(found["probes"], ("6", "7", "8", "29%"))
+        self.assertEqual(found["finished"], ("", "", "", ""))
+
+    def test_a_requirement_id_in_a_check_name_is_found_in_each_form(self):
+        found = metrics.REQ.findall("fn test_CAP_store_R2_keeps_done() {} // JOB-view-list.R10")
+        self.assertEqual(found, [("CAP_store", "R2"), ("JOB-view-list", "R10")])
+
+
 class StageReplayTest(unittest.TestCase):
     def stage_project(self, stage, plugin=None):
         folder = Path(tempfile.mkdtemp())
@@ -878,7 +1139,7 @@ class StageReplayTest(unittest.TestCase):
         self.assertFalse(result["ok"])
 
     def test_the_snapshot_passes_the_checks_of_earlier_stages(self):
-        project, _ = self.stage_project("verify")
+        project, _ = self.stage_project("show")
         self.assertTrue(run_bench.check_stage(project, "show", run_bench.entry_commit(project, "Built CH-0001"))["ok"])
         self.assertTrue(run_bench.check_stage(project, "build", run_bench.entry_commit(project, "Tests reviewed CH-0001"))["ok"])
         project, _ = self.stage_project("build")
@@ -955,7 +1216,7 @@ class StageReplayTest(unittest.TestCase):
         self.assertIn("pdlc/specs/jobs/JOB-report-word-frequencies.md", writing["files"])
 
     def test_recheck_reads_a_stage_folder_again(self):
-        project, _ = self.stage_project("verify")
+        project, _ = self.stage_project("show")
         shown = run_bench.entry_commit(project, "Built CH-0001")
         folder = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, folder, True)

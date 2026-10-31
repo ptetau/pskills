@@ -14,12 +14,13 @@ each reviewer sees only its packet.
 
 ## Remits
 
-The remits are tests, specification, security, quality, compliance, and privacy. Each
+The remits are tests, specification, security, quality, compliance, privacy, and visual. Each
 remit has a description in `pdlc/reviews/`. The project is permitted to edit the remits.
 In `pdlc/config.md`, the project selects which remits run.
 
-The tests packet holds the spec and the checks, but not the code. Each other packet holds
-the spec and the code, but not the checks.
+The tests packet holds the spec and the checks, but not the code. The visual packet holds
+the spec, the script of the recording, and its frames. Each other packet holds the spec
+and the code, but not the checks.
 
 The acceptance checks of an intent get one review, with the tests remit. Its packet holds
 the intent, its requirements, the interface of each of its changes, and the acceptance

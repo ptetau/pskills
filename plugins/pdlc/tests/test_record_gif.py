@@ -102,15 +102,15 @@ class Recording(unittest.TestCase):
                 if (Path(root) / name).is_dir() and not (tools / name).exists():
                     (tools / name).symlink_to(Path(root) / name)
 
-    def run_recorder(self, steps, kind="terminal", height=300):
+    def run_recorder(self, steps, kind="terminal", height=300, **more):
         (self.tmp / "visual.json").write_text(json.dumps(
             {"kind": kind, "title": "CH-0001 · test", "width": 600, "height": height,
-             "steps": steps}))
+             "steps": steps, **more}))
         return subprocess.run(["node", str(SCRIPT), "visual.json", "out"], cwd=self.tmp,
                               capture_output=True, text=True, timeout=180)
 
-    def record(self, steps, kind="terminal", height=300):
-        run = self.run_recorder(steps, kind, height)
+    def record(self, steps, kind="terminal", height=300, **more):
+        run = self.run_recorder(steps, kind, height, **more)
         self.assertEqual(run.returncode, 0, run.stderr)
         return self.tmp / "out/frames"
 
@@ -197,6 +197,24 @@ class WebRecording(Recording):
         _, _, rows = read_png(frames / "02.png")
         dark = [px for row in rows[150:210] for px in row[20:200] if max(px) < 80]
         self.assertGreater(len(dark), 200, "frame 2 was taken before the answer appeared")
+
+    def test_a_web_script_shows_a_command_in_a_terminal_and_keeps_the_page(self):
+        url = self.page("count.html", "<h1 id='n' style='font-size:80px'>0</h1>"
+                                      "<button id='go' onclick=\"n.textContent='12345'\">Go</button>")
+        frames = self.record([{"caption": "JOB-x.R1 · open", "goto": url},
+                              {"caption": "JOB-x.R2 · the status", "run": "echo 'HTTP/1.1 200 at {base_url}/'"},
+                              {"caption": "JOB-x.R3 · the click still works", "click": "#go"}],
+                             "web", base_url="http://127.0.0.1:9/")
+        _, _, terminal = read_png(frames / "02.png")
+        self.assertTrue(bands(terminal, green, self.BANNER), "frame 2 shows no terminal prompt")
+        _, _, after = read_png(frames / "03.png")
+        self.assertFalse(bands(after, green, self.BANNER), "frame 3 shows the terminal, not the page")
+
+    def test_a_web_command_that_prints_nothing_fails(self):
+        url = self.page("plain.html", "<h1>Plain</h1>")
+        err = self.refused([{"caption": "JOB-x.R1 · open", "goto": url},
+                            {"caption": "JOB-x.R2 · quiet", "run": "true"}], "web")
+        self.assertIn('step 2 · run "true"', err)
 
     def test_a_step_marked_unchanged_may_leave_the_page_as_it_was(self):
         url = self.page("same.html", "<h1>Reset</h1><button id='go' style='all:unset'>Go</button>")

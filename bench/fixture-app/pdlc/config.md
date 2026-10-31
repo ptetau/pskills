@@ -27,7 +27,7 @@ checks yet keeps its checks in `tests/`.
 Each remit is a separate, independent review. The files in `pdlc/reviews/` give the
 details of each remit.
 
-- remits: tests, specification, security, quality, compliance, privacy
+- remits: tests, specification, security, quality, compliance, privacy, visual
 
 ## Visual
 

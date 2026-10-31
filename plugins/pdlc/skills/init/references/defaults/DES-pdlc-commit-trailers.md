@@ -55,9 +55,9 @@ with `git commit --amend`.
 - `Built <change>` (build: steps, statuses and handoff)
 - `Visual review <change>` (show)
 - `Verify <change>: round <n>` (verify: packets, results, new intents)
-- `Send back <change>: <stage>` (verify: the handoff after a failed round)
+- `Send back <change>: <stage>` (verify or show: the handoff after a failed round)
 - `Verified <change>` (verify)
-- `Propose <change>` (verify)
+- `Propose <change>` (show)
 - `Update <change>: <what>` or `Update <intent>: <what>` (any other record: a base, a
   "Files" entry, a fix that the merge check requests)
 - `Stop <change>: <why>` or `Stop <intent>: <why>` (ship, when it stops)

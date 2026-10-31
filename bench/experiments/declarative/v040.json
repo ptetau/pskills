@@ -86,64 +86,101 @@
     },
     "acceptance": {
      "tokens": {
-      "input": 6,
-      "cache_write": 6503,
-      "cache_read": 247921,
-      "output": 76
+      "input": 42,
+      "cache_write": 45515,
+      "cache_read": 927521,
+      "output": 287
      },
-     "cost_usd": 0.0804,
-     "messages": 3,
-     "agents": {},
-     "wall_s": 17.0
-    },
-    "tests": {
-     "tokens": {
-      "input": 56,
-      "cache_write": 69151,
-      "cache_read": 1118609,
-      "output": 311
-     },
-     "cost_usd": 0.4458,
-     "messages": 28,
+     "cost_usd": 0.3415,
+     "messages": 21,
      "agents": {
       "pdlc:test-writer": {
        "tokens": {
-        "input": 26,
-        "cache_write": 24985,
-        "cache_read": 144861,
-        "output": 195
+        "input": 18,
+        "cache_write": 16900,
+        "cache_read": 110529,
+        "output": 133
        },
-       "cost_usd": 0.0984,
-       "messages": 13,
-       "calls": 2,
-       "wall_s": 86.9
+       "cost_usd": 0.0692,
+       "messages": 9,
+       "calls": 1,
+       "wall_s": 51.1
       },
       "pdlc:reviewer": {
        "tokens": {
-        "input": 10,
-        "cache_write": 28440,
-        "cache_read": 28162,
-        "output": 62
+        "input": 6,
+        "cache_write": 13882,
+        "cache_read": 20265,
+        "output": 43
        },
-       "cost_usd": 0.0815,
-       "messages": 5,
-       "calls": 2,
-       "wall_s": 34.3
+       "cost_usd": 0.0413,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 18.1
       },
       "pdlc:reviewer/tests": {
        "tokens": {
-        "input": 10,
-        "cache_write": 28440,
-        "cache_read": 28162,
-        "output": 62
+        "input": 6,
+        "cache_write": 13882,
+        "cache_read": 20265,
+        "output": 43
        },
-       "cost_usd": 0.0815,
-       "messages": 5,
-       "calls": 2,
-       "wall_s": 34.3
+       "cost_usd": 0.0413,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 18.1
       }
      },
-     "wall_s": 195.6
+     "wall_s": 125.9
+    },
+    "tests": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 30139,
+      "cache_read": 439009,
+      "output": 100
+     },
+     "cost_usd": 0.1847,
+     "messages": 10,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 8085,
+        "cache_read": 34332,
+        "output": 62
+       },
+       "cost_usd": 0.0292,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 35.8
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 14558,
+        "cache_read": 7897,
+        "output": 19
+       },
+       "cost_usd": 0.0402,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 16.2
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 14558,
+        "cache_read": 7897,
+        "output": 19
+       },
+       "cost_usd": 0.0402,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 16.2
+      }
+     },
+     "wall_s": 86.7
     },
     "build": {
      "tokens": {
@@ -394,64 +431,101 @@
     },
     "acceptance": {
      "tokens": {
-      "input": 8,
-      "cache_write": 8687,
-      "cache_read": 339118,
-      "output": 114
+      "input": 34,
+      "cache_write": 48868,
+      "cache_read": 1056494,
+      "output": 264
      },
-     "cost_usd": 0.1049,
-     "messages": 4,
-     "agents": {},
-     "wall_s": 25.5
-    },
-    "tests": {
-     "tokens": {
-      "input": 52,
-      "cache_write": 75857,
-      "cache_read": 1383341,
-      "output": 348
-     },
-     "cost_usd": 0.505,
-     "messages": 26,
+     "cost_usd": 0.3661,
+     "messages": 17,
      "agents": {
       "pdlc:test-writer": {
        "tokens": {
-        "input": 18,
-        "cache_write": 29527,
-        "cache_read": 100798,
-        "output": 141
+        "input": 8,
+        "cache_write": 19929,
+        "cache_read": 53427,
+        "output": 60
        },
-       "cost_usd": 0.0965,
-       "messages": 9,
-       "calls": 2,
-       "wall_s": 68.8
+       "cost_usd": 0.0618,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 40.7
       },
       "pdlc:reviewer": {
        "tokens": {
-        "input": 8,
-        "cache_write": 26741,
-        "cache_read": 15828,
-        "output": 38
+        "input": 4,
+        "cache_write": 11724,
+        "cache_read": 7915,
+        "output": 19
        },
-       "cost_usd": 0.0712,
-       "messages": 4,
-       "calls": 2,
-       "wall_s": 38.2
+       "cost_usd": 0.0314,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 18.7
       },
       "pdlc:reviewer/tests": {
        "tokens": {
-        "input": 8,
-        "cache_write": 26741,
-        "cache_read": 15828,
-        "output": 38
+        "input": 4,
+        "cache_write": 11724,
+        "cache_read": 7915,
+        "output": 19
        },
-       "cost_usd": 0.0712,
-       "messages": 4,
-       "calls": 2,
-       "wall_s": 38.2
+       "cost_usd": 0.0314,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 18.7
       }
      },
-     "wall_s": 184.4
+     "wall_s": 124.7
+    },
+    "tests": {
+     "tokens": {
+      "input": 26,
+      "cache_write": 35676,
+      "cache_read": 665965,
+      "output": 198
+     },
+     "cost_usd": 0.2437,
+     "messages": 13,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 10,
+        "cache_write": 9598,
+        "cache_read": 47371,
+        "output": 81
+       },
+       "cost_usd": 0.0347,
+       "messages": 5,
+       "calls": 1,
+       "wall_s": 28.1
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 15017,
+        "cache_read": 7913,
+        "output": 19
+       },
+       "cost_usd": 0.0398,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 19.5
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 15017,
+        "cache_read": 7913,
+        "output": 19
+       },
+       "cost_usd": 0.0398,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 19.5
+      }
+     },
+     "wall_s": 85.2
     },
     "build": {
      "tokens": {
@@ -701,64 +775,101 @@
     },
     "acceptance": {
      "tokens": {
-      "input": 10,
-      "cache_write": 10441,
-      "cache_read": 443775,
-      "output": 73
+      "input": 36,
+      "cache_write": 42841,
+      "cache_read": 1088272,
+      "output": 234
      },
-     "cost_usd": 0.1331,
-     "messages": 5,
-     "agents": {},
-     "wall_s": 32.0
-    },
-    "tests": {
-     "tokens": {
-      "input": 90,
-      "cache_write": 109564,
-      "cache_read": 2252570,
-      "output": 635
-     },
-     "cost_usd": 0.7797,
-     "messages": 45,
+     "cost_usd": 0.3572,
+     "messages": 18,
      "agents": {
       "pdlc:test-writer": {
        "tokens": {
-        "input": 40,
-        "cache_write": 41651,
-        "cache_read": 213971,
-        "output": 285
+        "input": 10,
+        "cache_write": 13920,
+        "cache_read": 54306,
+        "output": 66
        },
-       "cost_usd": 0.152,
-       "messages": 20,
-       "calls": 4,
-       "wall_s": 133.2
+       "cost_usd": 0.047,
+       "messages": 5,
+       "calls": 1,
+       "wall_s": 40.0
       },
       "pdlc:reviewer": {
        "tokens": {
-        "input": 12,
-        "cache_write": 42647,
-        "cache_read": 25182,
-        "output": 68
+        "input": 4,
+        "cache_write": 12208,
+        "cache_read": 7896,
+        "output": 23
        },
-       "cost_usd": 0.1139,
-       "messages": 6,
-       "calls": 3,
-       "wall_s": 44.3
+       "cost_usd": 0.0328,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 17.6
       },
       "pdlc:reviewer/tests": {
        "tokens": {
-        "input": 12,
-        "cache_write": 42647,
-        "cache_read": 25182,
-        "output": 68
+        "input": 4,
+        "cache_write": 12208,
+        "cache_read": 7896,
+        "output": 23
        },
-       "cost_usd": 0.1139,
-       "messages": 6,
-       "calls": 3,
-       "wall_s": 44.3
+       "cost_usd": 0.0328,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 17.6
       }
      },
-     "wall_s": 296.6
+     "wall_s": 131.8
+    },
+    "tests": {
+     "tokens": {
+      "input": 64,
+      "cache_write": 77164,
+      "cache_read": 1608073,
+      "output": 474
+     },
+     "cost_usd": 0.5556,
+     "messages": 32,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 30,
+        "cache_write": 27731,
+        "cache_read": 159665,
+        "output": 219
+       },
+       "cost_usd": 0.105,
+       "messages": 15,
+       "calls": 3,
+       "wall_s": 93.2
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 30439,
+        "cache_read": 17286,
+        "output": 45
+       },
+       "cost_usd": 0.0811,
+       "messages": 4,
+       "calls": 2,
+       "wall_s": 26.7
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 30439,
+        "cache_read": 17286,
+        "output": 45
+       },
+       "cost_usd": 0.0811,
+       "messages": 4,
+       "calls": 2,
+       "wall_s": 26.7
+      }
+     },
+     "wall_s": 196.8
     },
     "build": {
      "tokens": {
@@ -994,54 +1105,103 @@
      "agents": {},
      "wall_s": 10.6
     },
-    "tests": {
+    "acceptance": {
      "tokens": {
-      "input": 48,
-      "cache_write": 76511,
-      "cache_read": 1136075,
-      "output": 268
+      "input": 28,
+      "cache_write": 40865,
+      "cache_read": 663083,
+      "output": 147
      },
-     "cost_usd": 0.4885,
-     "messages": 24,
+     "cost_usd": 0.2756,
+     "messages": 14,
      "agents": {
       "pdlc:test-writer": {
        "tokens": {
-        "input": 18,
-        "cache_write": 26112,
-        "cache_read": 100093,
-        "output": 133
+        "input": 10,
+        "cache_write": 14983,
+        "cache_read": 59126,
+        "output": 66
        },
-       "cost_usd": 0.0939,
-       "messages": 9,
-       "calls": 2,
-       "wall_s": 77.2
+       "cost_usd": 0.0541,
+       "messages": 5,
+       "calls": 1,
+       "wall_s": 41.5
       },
       "pdlc:reviewer": {
        "tokens": {
-        "input": 10,
-        "cache_write": 30574,
-        "cache_read": 31140,
-        "output": 62
+        "input": 6,
+        "cache_write": 13819,
+        "cache_read": 23181,
+        "output": 43
        },
-       "cost_usd": 0.0902,
-       "messages": 5,
-       "calls": 2,
-       "wall_s": 32.2
+       "cost_usd": 0.0429,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 17.8
       },
       "pdlc:reviewer/tests": {
        "tokens": {
-        "input": 10,
-        "cache_write": 30574,
-        "cache_read": 31140,
-        "output": 62
+        "input": 6,
+        "cache_write": 13819,
+        "cache_read": 23181,
+        "output": 43
        },
-       "cost_usd": 0.0902,
-       "messages": 5,
-       "calls": 2,
-       "wall_s": 32.2
+       "cost_usd": 0.0429,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 17.8
       }
      },
-     "wall_s": 175.6
+     "wall_s": 100.8
+    },
+    "tests": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 35646,
+      "cache_read": 472992,
+      "output": 121
+     },
+     "cost_usd": 0.213,
+     "messages": 10,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 11129,
+        "cache_read": 40967,
+        "output": 67
+       },
+       "cost_usd": 0.0398,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 35.7
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 16755,
+        "cache_read": 7959,
+        "output": 19
+       },
+       "cost_usd": 0.0473,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 14.4
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 16755,
+        "cache_read": 7959,
+        "output": 19
+       },
+       "cost_usd": 0.0473,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 14.4
+      }
+     },
+     "wall_s": 74.8
     },
     "build": {
      "tokens": {
@@ -1291,64 +1451,101 @@
     },
     "acceptance": {
      "tokens": {
-      "input": 10,
-      "cache_write": 10829,
-      "cache_read": 387421,
-      "output": 56
+      "input": 72,
+      "cache_write": 78335,
+      "cache_read": 1700303,
+      "output": 474
      },
-     "cost_usd": 0.13,
-     "messages": 5,
-     "agents": {},
-     "wall_s": 24.9
-    },
-    "tests": {
-     "tokens": {
-      "input": 88,
-      "cache_write": 105510,
-      "cache_read": 1798880,
-      "output": 624
-     },
-     "cost_usd": 0.7081,
-     "messages": 44,
+     "cost_usd": 0.6187,
+     "messages": 36,
      "agents": {
       "pdlc:test-writer": {
        "tokens": {
-        "input": 40,
-        "cache_write": 44115,
-        "cache_read": 205443,
-        "output": 275
+        "input": 28,
+        "cache_write": 31429,
+        "cache_read": 143463,
+        "output": 191
        },
-       "cost_usd": 0.1651,
-       "messages": 20,
-       "calls": 4,
-       "wall_s": 113.0
+       "cost_usd": 0.117,
+       "messages": 14,
+       "calls": 3,
+       "wall_s": 71.8
       },
       "pdlc:reviewer": {
        "tokens": {
-        "input": 14,
-        "cache_write": 40525,
-        "cache_read": 44853,
-        "output": 83
+        "input": 8,
+        "cache_write": 22220,
+        "cache_read": 17310,
+        "output": 38
        },
-       "cost_usd": 0.119,
-       "messages": 7,
-       "calls": 3,
-       "wall_s": 47.9
+       "cost_usd": 0.0636,
+       "messages": 4,
+       "calls": 2,
+       "wall_s": 28.6
       },
       "pdlc:reviewer/tests": {
        "tokens": {
-        "input": 14,
-        "cache_write": 40525,
-        "cache_read": 44853,
-        "output": 83
+        "input": 8,
+        "cache_write": 22220,
+        "cache_read": 17310,
+        "output": 38
        },
-       "cost_usd": 0.119,
-       "messages": 7,
-       "calls": 3,
-       "wall_s": 47.9
+       "cost_usd": 0.0636,
+       "messages": 4,
+       "calls": 2,
+       "wall_s": 28.6
       }
      },
-     "wall_s": 251.7
+     "wall_s": 192.5
+    },
+    "tests": {
+     "tokens": {
+      "input": 26,
+      "cache_write": 38004,
+      "cache_read": 485998,
+      "output": 206
+     },
+     "cost_usd": 0.2193,
+     "messages": 13,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 12,
+        "cache_write": 12686,
+        "cache_read": 61980,
+        "output": 84
+       },
+       "cost_usd": 0.0482,
+       "messages": 6,
+       "calls": 1,
+       "wall_s": 41.2
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 18305,
+        "cache_read": 27543,
+        "output": 45
+       },
+       "cost_usd": 0.0554,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 19.3
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 18305,
+        "cache_read": 27543,
+        "output": 45
+       },
+       "cost_usd": 0.0554,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 19.3
+      }
+     },
+     "wall_s": 84.1
     },
     "build": {
      "tokens": {
@@ -1600,64 +1797,101 @@
     },
     "acceptance": {
      "tokens": {
-      "input": 10,
-      "cache_write": 10025,
-      "cache_read": 391343,
-      "output": 121
+      "input": 50,
+      "cache_write": 47141,
+      "cache_read": 1540345,
+      "output": 385
      },
-     "cost_usd": 0.1208,
-     "messages": 5,
-     "agents": {},
-     "wall_s": 20.0
-    },
-    "tests": {
-     "tokens": {
-      "input": 62,
-      "cache_write": 71543,
-      "cache_read": 1680703,
-      "output": 408
-     },
-     "cost_usd": 0.5525,
-     "messages": 31,
+     "cost_usd": 0.4662,
+     "messages": 25,
      "agents": {
       "pdlc:test-writer": {
        "tokens": {
-        "input": 20,
-        "cache_write": 24513,
-        "cache_read": 105767,
-        "output": 159
+        "input": 12,
+        "cache_write": 15092,
+        "cache_read": 70616,
+        "output": 95
        },
-       "cost_usd": 0.0849,
-       "messages": 10,
-       "calls": 2,
-       "wall_s": 58.7
+       "cost_usd": 0.0534,
+       "messages": 6,
+       "calls": 1,
+       "wall_s": 28.3
       },
       "pdlc:reviewer": {
        "tokens": {
-        "input": 8,
-        "cache_write": 28550,
-        "cache_read": 15790,
-        "output": 45
+        "input": 4,
+        "cache_write": 10929,
+        "cache_read": 7896,
+        "output": 24
        },
-       "cost_usd": 0.0758,
-       "messages": 4,
-       "calls": 2,
-       "wall_s": 37.7
+       "cost_usd": 0.0294,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 16.7
       },
       "pdlc:reviewer/tests": {
        "tokens": {
-        "input": 8,
-        "cache_write": 28550,
-        "cache_read": 15790,
-        "output": 45
+        "input": 4,
+        "cache_write": 10929,
+        "cache_read": 7896,
+        "output": 24
        },
-       "cost_usd": 0.0758,
-       "messages": 4,
-       "calls": 2,
-       "wall_s": 37.7
+       "cost_usd": 0.0294,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 16.7
       }
      },
-     "wall_s": 324.0
+     "wall_s": 251.0
+    },
+    "tests": {
+     "tokens": {
+      "input": 22,
+      "cache_write": 34427,
+      "cache_read": 531701,
+      "output": 144
+     },
+     "cost_usd": 0.207,
+     "messages": 11,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 9421,
+        "cache_read": 35151,
+        "output": 64
+       },
+       "cost_usd": 0.0316,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 30.4
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 17621,
+        "cache_read": 7894,
+        "output": 21
+       },
+       "cost_usd": 0.0463,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 21.0
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 17621,
+        "cache_read": 7894,
+        "output": 21
+       },
+       "cost_usd": 0.0463,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 21.0
+      }
+     },
+     "wall_s": 93.0
     },
     "build": {
      "tokens": {

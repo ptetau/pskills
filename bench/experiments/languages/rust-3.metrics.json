@@ -1,0 +1,360 @@
+{
+ "time": {
+  "wall_s": 1251.0,
+  "api_s": 1246.3,
+  "main_session": {
+   "model": 569.9,
+   "agent": 539.2,
+   "git": 57.1,
+   "recording": 41.8,
+   "other": 17.7,
+   "checks": 13.1,
+   "pdlc script": 9.4,
+   "Read": 0.4,
+   "Skill": 0.2
+  },
+  "work_by_session": {
+   "main": {
+    "checks": 13.1,
+    "recording": 42.7
+   },
+   "pdlc:builder": {
+    "checks": 7.9
+   }
+  }
+ },
+ "context": {
+  "main_turns": 92,
+  "peak": 238410,
+  "mean": 152148
+ },
+ "tokens": {
+  "input": 184,
+  "cache_write": 207664,
+  "cache_read": 13789767,
+  "output": 76818,
+  "cost_usd": 4.994610599999999
+ },
+ "loops": {
+  "change": {
+   "check runs": 1,
+   "check failures": 0,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 0,
+   "recording failures": 0
+  },
+  "acceptance": {
+   "check runs": 1,
+   "check failures": 1,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 0,
+   "recording failures": 0
+  },
+  "tests": {
+   "check runs": 4,
+   "check failures": 3,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 0,
+   "recording failures": 0
+  },
+  "build": {
+   "check runs": 8,
+   "check failures": 3,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 0,
+   "recording failures": 0
+  },
+  "verify": {
+   "check runs": 2,
+   "check failures": 0,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 0,
+   "recording failures": 0
+  },
+  "show": {
+   "check runs": 0,
+   "check failures": 0,
+   "builds": 0,
+   "build failures": 0,
+   "recordings": 7,
+   "recording failures": 0
+  }
+ },
+ "builder_check_runs_until_green": [
+  1,
+  null,
+  1
+ ],
+ "agents": {
+  "acceptance/pdlc:reviewer": 1,
+  "acceptance/pdlc:test-writer": 1,
+  "build/pdlc:builder": 3,
+  "intake/pdlc:recon": 2,
+  "show/pdlc:reviewer": 3,
+  "tests/pdlc:reviewer": 5,
+  "tests/pdlc:test-writer": 4,
+  "verify/pdlc:reviewer": 12
+ },
+ "failures": {
+  "tool errors": {
+   "Read (pdlc:reviewer)": 2,
+   "Write (pdlc:test-writer)": 1,
+   "Bash (main)": 1,
+   "Grep (pdlc:test-writer)": 1,
+   "Grep (pdlc:builder)": 1
+  },
+  "hook blocks": {
+   "commits: writing": 9,
+   "guard": 3,
+   "commits: subject or trailers": 1
+  },
+  "hook findings": {
+   "commits: writing": 59,
+   "commits: subject or trailers": 1,
+   "guard": 0
+  },
+  "permission denials": 3,
+  "rate limits": 8,
+  "is_error": false
+ },
+ "git": {
+  "rounds": {
+   "acceptance locks": 1,
+   "tests locks": 4,
+   "verify rounds": 3,
+   "recordings": 3,
+   "send-backs": {},
+   "stops": 0
+  },
+  "reviews": {
+   "compliance": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "privacy": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "quality": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "security": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "specification": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   },
+   "tests": {
+    "results": 5,
+    "failed": 0,
+    "problems": 0
+   },
+   "visual": {
+    "results": 3,
+    "failed": 0,
+    "problems": 0
+   }
+  },
+  "work": {
+   "changes": 3,
+   "commits": 49,
+   "intents awaiting approval": 1,
+   "requirement statuses": {
+    "verified": 13,
+    "built": 9
+   },
+   "lines": {
+    "app code added": 64,
+    "app code removed": 9,
+    "checks added": 1052,
+    "checks removed": 6,
+    "docs added": 18,
+    "docs removed": 4,
+    "pdlc records added": 2765,
+    "pdlc records removed": 47,
+    "review packets added": 13302,
+    "review packets removed": 0
+   },
+   "requirements with checks": 13
+  }
+ },
+ "outcome": {
+  "probes": "8 of 8",
+  "checks pass": true,
+  "checks": 64,
+  "finished": true,
+  "writing findings left": 0
+ },
+ "fixture": "todo-rust",
+ "quality": {
+  "main": 0,
+  "tip": 7,
+  "new in app code": 0,
+  "new in checks": 7,
+  "new": 7,
+  "linter": "cargo clippy"
+ },
+ "strength": {
+  "faults": 20,
+  "caught": 20,
+  "missed": 0,
+  "escapes": 0,
+  "candidates": 51,
+  "score": 1.0,
+  "details": [
+   {
+    "file": "src/lib.rs",
+    "line": 15,
+    "fault": "== to !=",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 15,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 31,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 34,
+    "fault": "== to !=",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 36,
+    "fault": "true to false",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 37,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 38,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/lib.rs",
+    "line": 47,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/page.rs",
+    "line": 7,
+    "fault": "|| to &&",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/page.rs",
+    "line": 7,
+    "fault": "remove the line",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/page.rs",
+    "line": 25,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/page.rs",
+    "line": 28,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": false
+   },
+   {
+    "file": "src/store.rs",
+    "line": 37,
+    "fault": "a letter of a text",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 38,
+    "fault": "true to false",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 39,
+    "fault": "false to true",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 51,
+    "fault": "false to true",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 60,
+    "fault": "== to !=",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 61,
+    "fault": "true to false",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 62,
+    "fault": "false to true",
+    "caught": true,
+    "user_sees": true
+   },
+   {
+    "file": "src/store.rs",
+    "line": 64,
+    "fault": "remove the line",
+    "caught": true,
+    "user_sees": true
+   }
+  ]
+ }
+}
