@@ -106,6 +106,58 @@ class AnalyseTest(unittest.TestCase):
         self.assertEqual(result["stages"]["intake"]["wall_s"], 9.0)
 
 
+class StageAgentTest(unittest.TestCase):
+    """Ship can run each stage in a pdlc:stage agent. The agents of that stage run inside it."""
+
+    def events(self):
+        def stage_call(stage, work):
+            return {"subagent_type": "pdlc:stage",
+                    "prompt": "Project root: /app\nStage: %s\nSkill file: /p/skills/%s/SKILL.md\nWork: %s"
+                              % (stage, stage, work)}
+        return [
+            assistant(1, "m1", usage(10, 0, 100, 5), [("g1", "Agent", stage_call("acceptance", "IN-0001"))]),
+            assistant(2, "m2", usage(20, 0, 50, 5), [("a1", "Agent", {"subagent_type": "pdlc:test-writer",
+                                                                      "prompt": "Write pdlc/acceptance/IN-0001"})],
+                      parent="g1"),
+            assistant(3, "m3", usage(20, 0, 50, 40), parent="a1"),
+            tool_result(10, "a1"),
+            tool_result(12, "g1"),
+            assistant(13, "m4", usage(10, 0, 100, 5), [("g2", "Agent", stage_call("tests", "CH-0001"))]),
+            assistant(14, "m5", usage(20, 0, 50, 5), [("a2", "Agent", {"subagent_type": "pdlc:test-writer",
+                                                                       "prompt": "Write the checks of CH-0001"})],
+                      parent="g2"),
+            assistant(15, "m6", usage(20, 0, 50, 10), parent="a2"),
+            tool_result(20, "a2"),
+            tool_result(25, "g2"),
+            assistant(26, "m7", usage(10, 0, 100, 5)),
+            {"t": 27, "e": {"type": "result", "total_cost_usd": 1.0, "duration_ms": 27000, "num_turns": 7,
+                            "is_error": False, "modelUsage": {"m": {"costUSD": 1.0}},
+                            "subagent_stats": {"spawned": 4}}},
+        ]
+
+    def test_a_stage_agent_starts_the_stage_that_its_prompt_names(self):
+        stages = run_bench.analyse(self.events())["stages"]
+        self.assertEqual(stages["acceptance"]["agents"]["pdlc:stage"]["calls"], 1)
+        self.assertEqual(stages["tests"]["agents"]["pdlc:stage"]["calls"], 1)
+
+    def test_agents_that_a_stage_agent_starts_count_under_its_stage(self):
+        stages = run_bench.analyse(self.events())["stages"]
+        self.assertEqual(stages["acceptance"]["agents"]["pdlc:test-writer"]["tokens"]["output"], 40)
+        self.assertEqual(stages["tests"]["agents"]["pdlc:test-writer"]["tokens"]["output"], 10)
+
+    def test_stage_time_runs_from_one_stage_agent_to_the_next(self):
+        stages = run_bench.analyse(self.events())["stages"]
+        self.assertEqual(stages["acceptance"]["wall_s"], 12.0)
+
+    def test_a_stage_line_that_names_no_stage_keeps_the_current_stage(self):
+        self.assertEqual(run_bench.agent_stage("pdlc:stage", "Stage: lunch", "build"), "build")
+
+    def test_the_forward_flag_streams_the_messages_of_agents(self):
+        command = run_bench.claude_command("x", "/p", ("--forward-subagent-text",))
+        self.assertIn("--forward-subagent-text", command)
+        self.assertNotIn("--forward-subagent-text", run_bench.claude_command("x", "/p"))
+
+
 class AcceptanceStageTest(unittest.TestCase):
     """The acceptance stage starts the same agents as the tests stage, so its stage decides."""
 

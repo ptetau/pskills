@@ -237,8 +237,12 @@ def agent_stage(label, prompt, current):
     A reviewer with a remit other than tests counts toward verify. For the test writer and the
     tests reviewer, the prompt decides first: a change path is the tests stage, and an intent or
     acceptance path is the acceptance stage. Otherwise a stage that uses the agent keeps it.
+    A pdlc:stage agent runs the stage on the "Stage:" line of its prompt.
     """
     prompt = prompt or ""
+    if label == "pdlc:stage":
+        found = re.search(r"^Stage:\s*([a-z]+)\s*$", prompt, re.M)
+        return found.group(1) if found and found.group(1) in STAGES else current
     if label == "pdlc:reviewer" and "/review/tests/" not in prompt:
         return "verify"
     if label in ("pdlc:reviewer", "pdlc:test-writer"):
@@ -744,7 +748,8 @@ def command_e2e(args):
         project = make_project(work / "app", plugin)
         log = out_dir / ("run%d.stream.jsonl" % number)
         events, wall, err = run_claude("/pdlc:ship defaults " + INTENT, project, plugin, log,
-                                       timeout=args.timeout, budget_usd=args.budget)
+                                       timeout=args.timeout, budget_usd=args.budget,
+                                       extra=("--forward-subagent-text",) if args.forward else ())
         analysis = analyse(events)
         analysis["wall_s"] = wall
         try:
@@ -1292,6 +1297,9 @@ def main(argv=None):
             p.add_argument("--label", required=True)
             p.add_argument("--runs", type=int, default=1)
             p.add_argument("--out", default=str(HERE / "results"))
+            p.add_argument("--forward", action="store_true",
+                           help="stream the text of agents and the messages of nested agents. The split of the "
+                                "cost then differs from runs without this flag")
     sd = sub.add_parser("seeds")
     sd.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
     sd.add_argument("--label", required=True)
