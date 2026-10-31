@@ -4,7 +4,8 @@
 Usage:
   python3 pdlc/bin/make_packets.py CH-0001            every remit in pdlc/config.md
   python3 pdlc/bin/make_packets.py CH-0001 --verify   every remit in pdlc/config.md except
-                                                      tests, for the verify stage
+                                                      tests and visual, for the verify stage
+  python3 pdlc/bin/make_packets.py CH-0001 visual     the visual packet, for the show stage
   python3 pdlc/bin/make_packets.py CH-0001 tests      one remit
   python3 pdlc/bin/make_packets.py IN-0001            the tests packet for the acceptance
                                                       checks of an intent
@@ -22,15 +23,22 @@ holds:
     - the full text of each requirement it lists;
     - every spec it relies on. DES-writing-style goes only to the specification remit,
       because only that remit judges writing;
-  - the material: for the tests remit, the check files and nothing else; for every other
-    remit, the changed app files and nothing else. The acceptance files of an intent are
+  - the material: for the tests remit, the check files and nothing else; for the visual
+    remit, visual.json and the frames; for every other remit, the changed app files and
+    nothing else. The acceptance files of an intent are
     checks, so no packet of a change holds them.
 The compliance remit gets a result in place of a packet when its remit file still says
 "Rules: none listed yet." and the change touches no dependency file. Then the script
 writes result.md with "Result: pass" and the reason, and no reviewer is needed.
 The specification packet also holds the writing check. The writing check is the output of
 check_writing.py for the lines this change wrote in its .md files: README, docs, specs and
-the change spec. The visual review comes after verify, so no packet points to its frames.
+the change spec.
+
+The visual packet holds the remit, the change spec and its requirements, visual.json, and
+the list of the frames. It holds no code and no checks. The recording comes after verify,
+so only the visual packet points to the frames. A change with no frames gets no visual
+packet. On a re-review, each frame that did not change has the mark "unchanged since the
+earlier review".
 
 Each packet records the commit that it was made at ("Made at:"). If this remit already
 has a result for this change, the new packet is a re-review. The script finds the newest
@@ -60,7 +68,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
+DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy", "visual"]
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
 WRITING_CHECK = Path(__file__).parent / "check_writing.py"
 # Files that declare dependencies. When a project lists no compliance rules, a change that
@@ -251,6 +259,14 @@ def diff_since(root, sha, files):
     return out.stdout if out.returncode == 0 else None
 
 
+def unchanged_since(root, sha, path):
+    """True when the file is the same now as at the commit."""
+    then = subprocess.run(["git", "rev-parse", "-q", "--verify", "%s:%s" % (sha, path)],
+                          cwd=root, capture_output=True, text=True).stdout.strip()
+    now = git(root, "hash-object", path).strip()
+    return bool(then) and then == now
+
+
 def writing_check(root, base, files):
     """The packet section with the writing check of the lines this change wrote."""
     title = "## Writing check\n\n"
@@ -381,9 +397,11 @@ def main(argv, root=Path(".")):
         parts = [text for spec_id, text in relied if kind == "specification" or spec_id != "DES-writing-style"]
         spec_for[kind] = "\n".join(spec + parts)
 
+    frames = sorted((folder / "frames").glob("*.png")) if (folder / "frames").exists() else []
+    script = (folder / "visual.json").relative_to(root).as_posix()
     head = git(root, "rev-parse", "HEAD").strip()
     if verify:
-        chosen = [r for r in remits(root) if r != "tests"] + args[1:]
+        chosen = [r for r in remits(root) if r not in ("tests", "visual")] + args[1:]
     else:
         chosen = args[1:] or remits(root)
     if tests_lock(change) == "acceptance" and "tests" in chosen:
@@ -405,9 +423,15 @@ def main(argv, root=Path(".")):
             print("wrote %s (compliance does not apply: no rules and no dependency file. Start no reviewer for it.)"
                   % (target / "result.md").relative_to(root).as_posix())
             continue
+        if remit == "visual" and not frames:
+            print("%s has no frames yet. The visual review runs in /pdlc:show, after the recording."
+                  % args[0])
+            continue
         judged = tests if remit == "tests" else code
         if remit == "specification":
             judged = list(dict.fromkeys(code + text_files))
+        if remit == "visual":
+            judged = [script] if (root / script).exists() else []
         earlier = earlier_review(root, target, remit)
         diff = diff_since(root, earlier[0], judged) if earlier else None
         earlier = earlier + (diff,) if diff is not None else None
@@ -416,9 +440,20 @@ def main(argv, root=Path(".")):
                "Made at: %s\n" % head]
         if earlier:
             out.append(re_review(remit, *earlier))
-        out += [remit_text.strip() + "\n", spec_for["specification" if remit == "specification" else "other"]]
+        if remit == "visual":
+            out += [remit_text.strip() + "\n", "\n".join(spec)]
+        else:
+            out += [remit_text.strip() + "\n", spec_for["specification" if remit == "specification" else "other"]]
         if remit == "tests":
             out.append(material(root, base, tests, "The checks"))
+        elif remit == "visual":
+            out.append("## The script of the recording\n")
+            out.append(fence((root / script).read_text()) if (root / script).exists() else "(no visual.json)")
+            out.append("\n## The frames\n\nRead each frame:\n")
+            for frame in frames:
+                path = frame.relative_to(root).as_posix()
+                same = earlier and unchanged_since(root, earlier[0], path)
+                out.append("- %s%s" % (path, " (unchanged since the earlier review)" if same else ""))
         else:
             out.append(material(root, base, code, "The code"))
         if remit == "specification":

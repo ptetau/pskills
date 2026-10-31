@@ -34,7 +34,8 @@ the change.
     (`git rev-parse HEAD`) is the pass commit. For an earlier change, a failure is
     expected.
 - `python3 pdlc/bin/make_packets.py CH-xxxx --verify` makes the packets, for the remits
-  under "Reviews" in `pdlc/config.md` except `tests`, whose result stays. With
+  under "Reviews" in `pdlc/config.md` except `tests` and `visual`. The result of `tests`
+  stays, and show runs the `visual` review after the recording. With
   `Tests-Locked: acceptance`, the tests remit has no result, because the acceptance review
   stands for it. The skill does not list the remits itself.
 - The script writes the `result.md` of a remit that does not apply, which gets no
@@ -68,17 +69,6 @@ the change.
 - The build stage only makes the code meet an existing acceptance line, design spec, or
   remit rule, inside "Files", with the plainest fix (for example, a clearer message). No
   requirement, acceptance line, or error code changes on the branch of a change.
-- The gate of the delivery port passes, except for lines that say `not ready`. These lines
-  clear when the last change of the intent is `verified`. For the last change, the gate
-  passes with no exception.
-- The skill corrects each other problem that the gate names:
-  - A conflict with main: a merge of main into this branch. The merge keeps the text of
-    main, and the statuses of this branch for its own requirements.
-  - A mark that the gate names: the mark becomes `(assumed)`, with the reason outside the
-    brackets, and the same meaning.
-  - A correction of app files after the acceptance run: the acceptance checks run again,
-    and the new commit goes on `Acceptance-Passed:`.
-
 ## Inputs
 
 - `pdlc/README.md`, the change spec, its `handoff.md`, and the intent.
@@ -101,7 +91,5 @@ the change.
     commit, and the intents filed for new behaviour.
   - The commit "Verified CH-xxxx" (`Intent`, `Change`): the results, the statuses, and the
     handoff.
-  - Each gate correction is a commit "Update CH-xxxx: <what>". A merge of main has the
-    trailers `Intent` and `Change`.
   - For the user: `/pdlc:show` is next.
 - The skill is done when the change is `verified`, or when a failed round goes back.

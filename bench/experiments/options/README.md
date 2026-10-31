@@ -31,6 +31,21 @@ is luck is 10%. Against all 9 runs of 0.4.0, the cost falls by 15%, and that cha
 of the 3 runs needed a second `verify` round, and they still cost less than the control. The
 stdin hook stopped no command in these runs.
 
+## After 0.5.0: the recording after `verify`
+
+The change stages then became tests → build → `verify` → show. Show records the GIF only
+after `verify` passes, and then proposes the merge. The 3 runs (`reorder.json`) cost $1.59,
+$2.09 and $2.42, and each run passed 8 of 8 probes.
+
+- `verify` and show together cost $0.73, against $0.77 in 0.5.0. Show costs more, because
+  it now makes the proposal. The specification reviewer costs about half as much, because
+  it no longer reads the frames.
+- The higher mean ($2.03) comes from stages that this change does not touch. The
+  acceptance stage cost $0.48 in place of $0.32, and one run needed 3 builder calls.
+
+A separate `visual` review then took the place of the frame check of the specification
+review. It runs in show, after the recording, and its runs are not yet measured.
+
 ## A. One set of checks for an intent with one change
 
 The tests stage fell from $0.27 to $0.07 a run, as the plan expected ($0.18 to $0.24 less).
@@ -93,6 +108,7 @@ cover the other cases.
 - `a.json`, `c.json`, `d.json`: the 3 runs of each option.
 - `b-plain.json`: the run of B without nested agents. `b-nested.json`: the run of B with them.
 - `v050.json`: the 3 runs of 0.5.0.
+- `reorder.json`: the 3 runs with the recording after `verify`.
 - `patches/`: the changes of B and D, which 0.5.0 does not have.
 
 The plugin commits in the files are local branches. Only the commits of A, C and E are on the

@@ -41,8 +41,8 @@ change of the intent is proposed. Ship stops only for a case that needs the user
 - A failed `verify` goes to the stage that its handoff names for each problem: tests,
   acceptance, or build. A failed tests review goes to tests. Then build and `verify` run
   again, and show runs after a passed `verify`. A failed acceptance review goes to
-  acceptance. A recording that shows the app does not meet an acceptance line goes to
-  build.
+  acceptance. A failed visual review goes to show for a wrong script, and to build for a
+  wrong app.
 - A failed review is not a question for the user. Each change, and the acceptance stage
   of each intent, has two rounds ("Rounds").
 - Ship stops only for these cases:

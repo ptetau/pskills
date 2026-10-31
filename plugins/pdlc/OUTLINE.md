@@ -296,6 +296,8 @@ builds:
 - **specification, security, quality, compliance, privacy**: the spec and the code, but
   not the checks. These reviews run in parallel after the build. The specification
   reviewer also examines the output of `check_writing.py`.
+- **visual**: the spec, the script of the recording, and its frames, but not the code.
+  This review runs in `show`, after the recording.
 
 A reviewer fails a change only for what the spec of the change covers, or for unsafe
 code. Anything new that the reviewer wants (another input check, another error) is a
@@ -353,7 +355,8 @@ are the decisions, one on each line:
 
 `show` runs after a passed `verify`. It plays each acceptance line in the real app: in a
 browser for web apps, and in a terminal for CLIs and libraries. Then `show` saves
-`review.gif` and its frames in the change folder, and proposes the merge. The commit gives
+`review.gif` and its frames in the change folder. A fresh reviewer judges the frames, and
+then `show` proposes the merge. The commit gives
 the name of the GIF, and the pull request embeds the GIF.
 
 Each frame must show what its caption claims. The recorder fails a blank frame. The
@@ -538,7 +541,7 @@ pdlc is a Claude Code plugin. You call its skills as `/pdlc:<name>`.
 | `tests` | Tells the test writer to write the component checks of a change from the spec. Makes sure that the checks fail. Locks the checks, and gets a review of the checks. |
 | `build` | Tells the builder to write app code until the locked checks pass. Marks the requirements `built`. |
 | `verify` | Runs all the checks and the independent code reviews. Marks the requirements `verified`. |
-| `show` | Records the verified change as it works, as `review.gif` and frames, and proposes the merge. |
+| `show` | Records the verified change as it works, as `review.gif` and frames. A reviewer judges the frames. Then `show` proposes the merge. |
 | `ship` | Runs all the stages from start to end with the recommended answers, and stacks the changes. Continues from the point where it stopped. |
 | `conventions` | Establishes or changes a convention with you, and creates migration intents. |
 | `board` | Re-syncs each intent and each change to the tracker. |

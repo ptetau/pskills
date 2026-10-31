@@ -44,7 +44,7 @@ from pathlib import Path
 
 REQ = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b(.*)$", re.M)
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
-DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy"]
+DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy", "visual"]
 READY = ("in review", "merged")
 HASH = re.compile(r"^[0-9a-f]{7,40}$")
 # A marker with emphasis (*(assumed)*), or brackets that hold the word "assumed". A marker

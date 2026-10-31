@@ -1,5 +1,6 @@
 """Tests for pdlc's review packet builder. Run: python3 -m unittest discover plugins/pdlc/tests"""
 import importlib.util
+import shutil
 import io
 import subprocess
 import tempfile
@@ -391,6 +392,53 @@ Acceptance-Passed: none
 
 - none
 """
+
+
+class VisualPacket(PacketRepo):
+    """The show stage makes the visual packet after the recording. Verify makes none."""
+
+    def setUp(self):
+        super().setUp()
+        (self.root / "pdlc/config.md").write_text("## Reviews\n\n- remits: tests, specification, security, visual\n")
+        (self.root / "pdlc/reviews/visual.md").write_text("# Remit: visual\nJudge the frames.\n")
+        (self.folder / "visual.json").write_text('{"steps": [{"caption": "CAP-greeting.R2 · hola"}]} // SCRIPT\n')
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "visual review")
+
+    def test_the_visual_packet_has_the_script_and_the_frames_and_no_code(self):
+        make_packets.main(["x", "CH-0001", "visual"], root=self.root)
+        text = self.packet("visual")
+        self.assertIn("# Remit: visual", text)
+        self.assertIn("Says hola.", text)
+        self.assertIn("SCRIPT", text)
+        self.assertIn("frames/01.png", text)
+        self.assertNotIn("SECRET-CODE", text)
+        self.assertNotIn("SECRET-TEST", text)
+
+    def test_verify_makes_no_visual_packet(self):
+        make_packets.main(["x", "CH-0001", "--verify"], root=self.root)
+        self.assertFalse((self.folder / "review" / "visual").exists())
+        self.assertTrue((self.folder / "review" / "specification" / "packet.md").exists())
+
+    def test_a_change_with_no_frames_gets_no_visual_packet(self):
+        shutil.rmtree(self.folder / "frames")
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "no frames")
+        out = io.StringIO()
+        with redirect_stdout(out):
+            make_packets.main(["x", "CH-0001", "visual"], root=self.root)
+        self.assertFalse((self.folder / "review" / "visual").exists())
+        self.assertIn("/pdlc:show", out.getvalue())
+
+    def test_a_visual_re_review_marks_the_frames_that_did_not_change(self):
+        make_packets.main(["x", "CH-0001", "visual"], root=self.root)
+        (self.folder / "review/visual/result.md").write_text("Result: fail\n\nProblems:\n- frames/01.png · blank · rule · script\n")
+        (self.folder / "frames/02.png").write_bytes(b"new frame")
+        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "record again")
+        make_packets.main(["x", "CH-0001", "visual"], root=self.root)
+        text = self.packet("visual")
+        self.assertIn("## Re-review", text)
+        self.assertIn("frames/01.png (unchanged since the earlier review)", text)
+        self.assertIn("frames/02.png\n", text + "\n")
+        self.assertNotIn("frames/02.png (unchanged", text)
 
 
 class AcceptancePacket(PacketRepo):

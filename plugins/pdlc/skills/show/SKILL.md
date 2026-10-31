@@ -1,11 +1,11 @@
 ---
 name: show
 description: >
-  Records a verified pdlc change, and proposes its merge. Plays each acceptance check in
-  the real app: a browser for web apps, and a terminal for CLIs and libraries. Saves
-  review.gif and the key frames in the folder of the change, and puts the GIF in the
-  proposal. Does not merge. Use when the user says "/pdlc:show", or when a change is
-  verified.
+  Records a verified pdlc change, has the recording reviewed, and proposes its merge.
+  Plays each acceptance check in the real app: a browser for web apps, and a terminal for
+  CLIs and libraries. Saves review.gif and the key frames in the folder of the change. A
+  fresh, independent reviewer judges the frames. Then the proposal shows the GIF. Does not
+  merge. Use when the user says "/pdlc:show", or when a change is verified.
 ---
 
 # pdlc show
@@ -14,8 +14,8 @@ description: >
 
 Show makes a short GIF, `review.gif`, and its frames, after the change passed `verify`.
 They show the change do what its spec says, one acceptance line after the other, as a user
-meets the change. Then the user gets a proposal with the GIF to approve. The skill does
-not merge the change.
+meets the change. An independent reviewer judges the frames. Then the user gets a proposal
+with the GIF to approve. The skill does not merge the change.
 
 ## Constraints
 
@@ -57,9 +57,24 @@ not merge the change.
 - Show reads the last frame of each acceptance line itself. A frame with an error,
   incorrect content, or the screen from before the step means a wrong script.
 - Show corrects the script and records again. Show does not correct the app.
-- Suppose that a correct script still shows that the app does not meet an acceptance line.
-  Then the change goes back to build, and that counts as a round ("Rounds"). The change
-  is `building` again, and its requirements are `built`.
+- After the recording, `python3 pdlc/bin/make_packets.py CH-xxxx visual` makes the packet
+  of the `visual` remit, when "Reviews" in `pdlc/config.md` lists that remit. One fresh
+  `pdlc:reviewer` gets only the path of the packet. The reviewer obeys "Who does what".
+- A failed visual review counts as a round ("Rounds"). Each problem goes by its kind:
+  - `script`: show corrects the script, records again, and makes a new packet. The new
+    reviewer judges only the frames that changed.
+  - `app`: the change goes back to build. The change is `building` again, and its
+    requirements are `built`. Then `verify` runs again.
+- The gate of the delivery port passes, except for lines that say `not ready`. These lines
+  clear when the last change of the intent is `verified`. For the last change, the gate
+  passes with no exception.
+- The skill corrects each other problem that the gate names:
+  - A conflict with main: a merge of main into this branch. The merge keeps the text of
+    main, and the statuses of this branch for its own requirements.
+  - A mark that the gate names: the mark becomes `(assumed)`, with the reason outside the
+    brackets, and the same meaning.
+  - A correction of app files after the acceptance run: the acceptance checks run again,
+    and the new commit goes on `Acceptance-Passed:`.
 - The proposal goes through the delivery port, with the base of the change as its target.
   Its description fills each section of `pdlc/templates/proposal.md`:
   - The embedded GIF (the adapter says how), and a table of each requirement, its checks,
@@ -76,20 +91,23 @@ not merge the change.
 - `pdlc/README.md`, the shared rules.
 - The change spec, its `handoff.md`, its review results, and the intent.
 - The visual port, its adapter, and the "Visual" section of `pdlc/config.md`.
-- `pdlc/templates/proposal.md`.
+- The "Reviews" of `pdlc/config.md`, and `pdlc/templates/proposal.md`.
 
 ## Outputs
 
 - `visual.json`, any helper script, `review.gif`, and `frames/` in the change folder.
 - One commit of all these files, "Visual review CH-xxxx", with the trailers `Intent`,
-  `Change`, and `Review: pdlc/changes/CH-xxxx-…/review.gif`.
+  `Change`, and `Review: pdlc/changes/CH-xxxx-…/review.gif`. The packet and the result of
+  the visual review go into the next commit of show.
+- Each gate correction is a commit "Update CH-xxxx: <what>". A merge of main has the
+  trailers `Intent` and `Change`.
 - The proposal. When each change of the intent is `in review` or `merged`, the intent is
   `in review`, on the branch of the change.
 - The handoff `show → user`: the link, and what the user must confirm. It also says what
   the GIF shows frame by frame, and how many acceptance lines it shows, out of how many.
 - The commit "Propose CH-xxxx" (`Intent`, `Change`): the handoff and the intent.
 - The user gets the link.
-- When the app does not meet an acceptance line:
+- When the visual review finds an `app` problem:
   - The handoff `show → build` names each such line, and its frame.
   - The commit "Send back CH-xxxx: <stage>" (`Intent`, `Change`), with build as the stage.
   - The user hears that build is next, and the skill stops.
