@@ -34,8 +34,10 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 - The trailers follow a blank line, one on each line: `Intent: IN-xxxx` first, then
   `Change: CH-xxxx` on the branch of a change. A commit that changes code, checks, or the
   README also has `Req: <IDs>`.
-- A hook examines each new commit on a pdlc branch. The skill fixes each problem that the
-  hook names at once, with `git commit --amend`.
+- A hook examines each new commit. On a pdlc branch, it examines the subject and the
+  trailers. On every branch, it examines the writing in the specs, the intents, and the
+  change folders. The skill fixes all the problems that the hook names in one edit, and
+  amends the commit one time.
 
 ## Writing
 
@@ -48,7 +50,9 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
   "then" part with a full stop and a second short sentence.
 - A skill reads the full rules before it writes or changes a spec or an intent. For a
   handoff, a proposal, a commit message, or a reply, the short form is sufficient.
-- `bin/check_writing.py <file>` finds the breaks that a script can find.
+- The commit hook runs `bin/check_writing.py` on the lines that each commit writes, and
+  shows every finding. Part 4 of `DES-writing-style` tells a writer to run the script. In
+  pdlc, the hook does this step, and a skill does not run the script.
 
 ## Layout
 
