@@ -32,7 +32,8 @@ does not change the checks.
 - The builder changes only the app files under "Files", runs the checks, and reports.
 - A check that the builder calls incorrect stays as it is. The reason goes to
   `/pdlc:tests`, which asks the test writer and locks again, and then build runs again. For
-  an acceptance check, the reason goes to `/pdlc:acceptance`.
+  an acceptance check, the reason goes to `/pdlc:acceptance`. With `Tests-Locked:
+  acceptance`, each check is an acceptance check.
 - A file that the builder needs outside "Files" is a question for the user. On a yes, the
   file goes into "Files", and the builder runs again.
 - The same problem a third time stops the skill, and build asks the user ("Rounds").

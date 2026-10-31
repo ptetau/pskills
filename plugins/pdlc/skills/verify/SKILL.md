@@ -33,8 +33,9 @@ The `verify` skill decides if a change is good enough to merge. When it is, the 
     (`git rev-parse HEAD`) is the pass commit. For an earlier change, a failure is
     expected.
 - `python3 pdlc/bin/make_packets.py CH-xxxx --verify` makes the packets, for the remits
-  under "Reviews" in `pdlc/config.md` except `tests`, whose result stays. The skill does
-  not list the remits itself.
+  under "Reviews" in `pdlc/config.md` except `tests`, whose result stays. With
+  `Tests-Locked: acceptance`, the tests remit has no result, because the acceptance review
+  stands for it. The skill does not list the remits itself.
 - The script writes the `result.md` of a remit that does not apply, which gets no
   reviewer. In a later round, the script makes re-review packets: the earlier problems and
   the diff since the earlier review. The reviewer judges only these two items.

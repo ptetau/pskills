@@ -162,7 +162,11 @@ To see each decision of the guard, start Claude Code with
 The plugin also includes a second hook. The hook examines the subject and the trailers of
 each new commit on a pdlc branch against `DES-pdlc-commit-trailers`. The hook does not
 block a commit. The hook tells you what to correct with `git commit --amend`, while the
-commit is still the newest commit. The hook ignores other branches.
+commit is still the newest commit. The hook ignores the subject and the trailers on other
+branches.
+
+On every branch, the same hook also runs the writing check on the specs, the intents, and
+the change folders that the commit wrote. This hook is the only writing check of a stage.
 
 The plugin also includes a third hook. The hook stops a Bash command that waits for input
 that does not come, for example `cat > FILE` with no heredoc. Such a command hangs until the
