@@ -63,11 +63,12 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 - `reviews/`: one file for each remit, with what its reviewer judges.
 - `inbox/`: one file for each intent.
 - `specs/jobs/`, `specs/capabilities/`, `specs/design/`: the specs.
-- `acceptance/IN-xxxx-name/review/tests/`: `packet.md` and `result.md` of the review of the
-  acceptance checks of an intent.
-- `changes/CH-xxxx-name/`: one folder for each change, with `change.md` (the change spec),
-  `handoff.md`, `visual.json`, `review.gif`, `frames/`, `review/<remit>/packet.md` and
-  `result.md`, and `proposal.md` when there is no remote.
+- `acceptance/IN-xxxx-name/`: `brief.md` of the test writer, and in `review/tests/`, the
+  `packet.md` and `result.md` of the review of the acceptance checks of an intent.
+- `changes/CH-xxxx-name/`: one folder for each change. It holds `change.md` (the change
+  spec), `handoff.md`, `brief.md` of the test writer, `visual.json`, `review.gif`,
+  `frames/`, `review/<remit>/packet.md` and `result.md`, and `proposal.md` when there is no
+  remote.
 - `templates/`: blank documents. A filled document has real content in place of each
   `<placeholder>` and each guide sentence.
 - `bin/`: `check_merge.py`, `check_writing.py`, `make_packets.py`, `record_gif.mjs`,
@@ -180,6 +181,13 @@ the intent, and each feature that exists already.
   `Acceptance-File:` and `Acceptance-Locked:` in the intent record the file and the lock.
 - A component check (a check of a change) uses only the interface of its change and of
   earlier changes.
+- A **stored-data line** is an acceptance line that needs direct access to the stored data.
+  The line is about the stored form (how a file or a store holds the data), or it needs a
+  state that the interface cannot make (for example an old or a broken data file).
+- A stored-data line gets a component check of the change that lists its requirement, and
+  no acceptance check. At its top, the acceptance file lists each such line in a comment:
+  the requirement ID, the line, and that change. The acceptance checks still prove what a
+  user sees of the data, for example that it stays after a restart.
 - The "all" command does not run an acceptance file. Thus, the acceptance checks of an
   open intent can fail until its last change, and main stays green.
 - The build and `verify` stages run all checks and **run earlier acceptance**, and for the
@@ -188,8 +196,8 @@ the intent, and each feature that exists already.
 - For an earlier change, a failure of **run acceptance** is expected, and is not reported.
 - After the intent merges, its acceptance checks stay, and each later change keeps them
   green.
-- The intent can list one change, with no requirement about the stored form of data. Then
-  its acceptance checks are also the checks of that change. That change has `- none` under
+- The intent can list one change, with no stored-data line. Then its acceptance checks
+  are also the checks of that change. That change has `- none` under
   "Check files", and `Tests-Locked: acceptance`. Its tests stage starts the branch and
   writes the handoff, with no test writer and no review.
 - For such a change, the acceptance review is also its tests review, and the merge check
@@ -198,8 +206,8 @@ the intent, and each feature that exists already.
 ## Rounds
 
 A round is one failed tests or acceptance review, one failed `verify`, or one builder
-report that a check is wrong. A failed visual review is also a round. A fix of a check before its lock is not a round. An agent
-blocked twice is one round. Each change has two rounds, and so does the acceptance stage
+report that a check is wrong. A failed visual review is also a round. A fix of a check
+before its lock is not a round. An agent blocked twice is one round. Each change has two rounds, and so does the acceptance stage
 of each intent. The third failure of the same stage stops the work, and the skill asks the
 user.
 

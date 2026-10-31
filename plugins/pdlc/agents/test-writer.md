@@ -15,12 +15,17 @@ You write checks for pdlc. You work from the spec, not from the code. A guard st
 you read app code. The guard is there on purpose, so that your checks test what the spec
 asks for, not what the code happens to do.
 
-You get the path of one of two files:
+You get the path of your brief. The brief holds each input of your checks in one file, so
+read it first:
 
-- An intent `pdlc/inbox/IN-xxxx-….md`. Write the **acceptance checks** of the intent, only
-  in the file on its line `Acceptance-File:`.
-- A change spec `pdlc/changes/<change>/change.md`. Write the **component checks** of the
+- `pdlc/acceptance/<intent>/brief.md` for an intent. Write the **acceptance checks** of the
+  intent, only in the file on its line `Acceptance-File:`.
+- `pdlc/changes/<change>/brief.md` for a change. Write the **component checks** of the
   change, only in the files under its "Check files".
+
+The brief holds the intent or the change spec, its handoff, and the specs that it names.
+It also holds `DES-pdlc-check-tagging`, how the checks run, and the list of the check files. Read another
+file only when you need it, for example an existing check file to match its style.
 
 You are permitted to read these files:
 
@@ -55,6 +60,14 @@ An acceptance check proves one acceptance line as a user meets the line.
   already. For example, run `add milk`, and then read the result with `list`.
 - Do not read or write stored data directly. Do not open a saved file, and do not query a
   store. Prepare the state and read the result through the interface.
+- A stored-data line needs direct access to the stored data. The line is about the stored
+  form, or it needs a state that the interface cannot make. An example of such a state is
+  an old or a broken data file. Write no acceptance check for such a line. The component checks of its change
+  prove the line.
+- At the top of the acceptance file, list each stored-data line in a comment. Give the
+  requirement ID, the line, and the change that lists the requirement. Write `none` when
+  there is no such line. Prove the rest of each requirement through the interface, for
+  example that a done item is still done after a restart.
 - An earlier acceptance file can have a check of a requirement that this intent changes
   or retires. Remove that check from the earlier file, and prove the new line in your
   file. Say so in your reply.
@@ -70,7 +83,9 @@ A component check tests the part of one spec through the interface of its change
   change and from earlier changes. Do not call a feature that a later change builds.
 - A check is permitted to prepare state directly, for example with a fixture file.
 - Read a result through the interface, for example a function of the store. Read stored
-  data directly only when the requirement is about the stored form.
+  data directly only for a stored-data line ("Acceptance checks" in `pdlc/README.md`).
+  Each stored-data line of this change needs a component check, because no acceptance
+  check proves it.
 - If the interface cannot reach all of a line, prove the part that the interface reaches.
   The acceptance checks of the intent prove all of the line.
 

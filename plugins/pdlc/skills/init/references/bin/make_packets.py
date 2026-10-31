@@ -9,6 +9,8 @@ Usage:
   python3 pdlc/bin/make_packets.py CH-0001 tests      one remit
   python3 pdlc/bin/make_packets.py IN-0001            the tests packet for the acceptance
                                                       checks of an intent
+  python3 pdlc/bin/make_packets.py CH-0001 --brief    the brief of the test writer: each
+  python3 pdlc/bin/make_packets.py IN-0001 --brief    input of its checks, in one file
 
 A change with "Tests-Locked: acceptance" has no tests packet. The acceptance checks of its
 intent are also its checks, and the packet of the intent is their review.
@@ -59,6 +61,12 @@ each acceptance file of an earlier intent that the lock commit changed. It holds
 code and no component checks. When the intent lists one change, the packet says that these
 checks are also the checks of that change. A re-review starts from the lock in the earlier
 packet ("Acceptance-Locked:").
+
+A brief is pdlc/changes/<change>/brief.md, or pdlc/acceptance/<intent>/brief.md. It holds
+the intent or the change spec, its handoff, the full text of each spec that it names,
+DES-pdlc-check-tagging, the "Checks" section of pdlc/config.md, and the list of the check
+files that exist. For an intent, it also holds each change spec of the intent. It holds no
+app code and no review. The test writer reads the brief in place of these files.
 
 Run it from the project root, on the change's branch. For an intent, run it on the newest
 branch of the intent.
@@ -299,8 +307,10 @@ def intent_packet(root, intent):
         specs = sorted((root / "pdlc" / "changes").glob(change + "-*/change.md"))
         spec = specs[0].read_text() if specs else ""
         title = re.search(r"^# .*$", spec, re.M)
-        changes.append("### %s\n\n%s\n" % (title.group(0)[2:] if title else change,
-                                            fence(section(spec, "Interface").strip() or "(no Interface)")))
+        listed = ", ".join(re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)", section(spec, "Requirements"), re.M))
+        changes.append("### %s\n\nRequirements: %s\n\n%s\n" % (title.group(0)[2:] if title else change,
+                                                              listed or "none",
+                                                              fence(section(spec, "Interface").strip() or "(no Interface)")))
         relies += re.findall(r"\b((?:JOB|CAP|DES)-[a-z0-9-]+)\b", section(spec, "Relies on"))
 
     target = root / "pdlc" / "acceptance" / found[0].stem / "review" / "tests"
@@ -346,8 +356,87 @@ def intent_packet(root, intent):
     return 0
 
 
+def check_files_now(root):
+    """Each check file and acceptance file in the project now, outside pdlc/."""
+    config = root / "pdlc" / "config.md"
+    line = re.search(r"^- check folders:\s*(.+)$", config.read_text() if config.exists() else "", re.M)
+    folders = [f.strip(" `/") for f in re.findall(r"`([^`]+)`", line.group(1))] if line else ["tests"]
+    pattern = acceptance_file(root)
+    tracked = git(root, "ls-files", "--cached", "--others", "--exclude-standard").splitlines()
+    return [f for f in tracked if not f.startswith("pdlc/")
+            and (any(f.startswith(folder + "/") for folder in folders) or is_acceptance(f, pattern))]
+
+
+def brief(root, work):
+    """The brief of the test writer for an intent (IN-xxxx) or a change (CH-xxxx)."""
+    if work.startswith("IN-"):
+        found = sorted((root / "pdlc" / "inbox").glob(work + "-*.md"))
+        if not found:
+            print("No intent found for %s" % work)
+            return 1
+        source, text = found[0], found[0].read_text()
+        target = root / "pdlc" / "acceptance" / found[0].stem / "brief.md"
+        task = ("Write the acceptance checks of this intent, only in the file on its line "
+                "`Acceptance-File:` (%s)." % (record(text, "Acceptance-File") or "none"))
+        reqs = re.findall(r"\b((?:JOB|CAP|DES)-[a-z0-9-]+)\.R\d+\b", section(text, "Requirements"))
+        changes = [sorted((root / "pdlc" / "changes").glob(c + "-*/change.md"))
+                   for c in dict.fromkeys(re.findall(r"\bCH-\d+\b", section(text, "Changes")))]
+        changes = [c[0] for c in changes if c]
+        handoff = ""  # the intent holds its own "Handoff" section
+    else:
+        found = sorted((root / "pdlc" / "changes").glob(work + "-*/change.md"))
+        if not found:
+            print("No change spec found for %s" % work)
+            return 1
+        source, text = found[0], found[0].read_text()
+        target = found[0].parent / "brief.md"
+        task = "Write the component checks of this change, only in the files under its \"Check files\"."
+        reqs = re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+)\.R\d+", section(text, "Requirements"), re.M)
+        changes = []
+        handoff_file = found[0].parent / "handoff.md"
+        handoff = handoff_file.read_text() if handoff_file.exists() else ""
+    names = list(reqs)
+    for change in changes:
+        names += re.findall(r"\b((?:JOB|CAP|DES)-[a-z0-9-]+)\b", section(change.read_text(), "Relies on"))
+    names += re.findall(r"\b((?:JOB|CAP|DES)-[a-z0-9-]+)\b", section(text, "Relies on"))
+    names += [field(text, "Scope") or "", "DES-pdlc-check-tagging"]
+    config = root / "pdlc" / "config.md"
+    out = ["# Brief for the test writer · %s\n" % source.stem if work.startswith("IN-") else
+           "# Brief for the test writer · %s\n" % source.parent.name,
+           task + "\n",
+           "This brief holds each input of the checks. Read another file only when this brief names",
+           "it, for example an existing check file to match its style.\n",
+           "Made at: %s\n" % git(root, "rev-parse", "HEAD").strip(),
+           "## The %s\n" % ("intent" if work.startswith("IN-") else "change spec"),
+           "Path: %s\n" % source.relative_to(root).as_posix(), fence(text), ""]
+    if handoff.strip():
+        out += ["## The handoff\n", fence(handoff.strip()), ""]
+    if changes:
+        out.append("## The change specs of the intent\n")
+        for change in changes:
+            out += ["### %s\n" % change.relative_to(root).as_posix(), fence(change.read_text()), ""]
+    out.append("## The specs\n")
+    for spec_id in dict.fromkeys(n for n in names if re.match(r"(?:JOB|CAP|DES)-", n)):
+        if spec_id == "DES-writing-style":
+            continue
+        path = spec_file(root, spec_id)
+        out += ["### %s\n" % path.relative_to(root).as_posix(),
+                fence(path.read_text()) if path.exists() else "(not found)", ""]
+    out += ["## How the checks run (pdlc/config.md)\n",
+            fence(section(config.read_text(), "Checks").strip()) if config.exists() else "(no config)", "",
+            "## The check files that exist now\n"]
+    out += ["- %s" % f for f in check_files_now(root)] or ["None."]
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(out) + "\n")
+    print("wrote %s" % target.relative_to(root).as_posix())
+    return 0
+
+
 def main(argv, root=Path(".")):
     verify = "--verify" in argv[1:]
+    if "--brief" in argv[1:]:
+        rest = [a for a in argv[1:] if a != "--brief"]
+        return brief(root, rest[0]) if rest else 1
     args = [a for a in argv[1:] if a != "--verify"]
     if not args:
         print(__doc__)

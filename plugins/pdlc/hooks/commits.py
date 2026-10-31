@@ -35,7 +35,8 @@ DES = os.path.join("pdlc", "specs", "design", "DES-pdlc-commit-trailers.md")
 WRITING_CHECK = os.path.join("pdlc", "bin", "check_writing.py")
 # The text that the stages write. The review folders hold packets (copies) and the results
 # of the reviewers. The other pdlc/ files come from the plugin.
-WRITTEN_TEXT = re.compile(r"^pdlc/(?:specs|inbox|changes)/(?!.*/review/).*\.md$")
+# The brief of the test writer only copies other files, so the writing check skips it too.
+WRITTEN_TEXT = re.compile(r"^pdlc/(?:specs|inbox|changes)/(?!.*/review/)(?!.*/brief\.md$).*\.md$")
 REPORTED = "pdlc-writing-reported"  # under .git: the sets of findings that this hook reported
 MAX_REPORTS = 3
 PLACEHOLDERS = {"<change>": r"CH-\d+", "<intent>": r"IN-\d+", "<n>": r"\d+",

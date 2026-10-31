@@ -32,8 +32,9 @@ change of the intent is built ("Acceptance checks" in `pdlc/README.md`).
   `/pdlc:init` writes them, in the commit of the acceptance file.
 - `Acceptance-File:` holds the "acceptance file" path of `pdlc/config.md`, with the intent
   ID for `{intent}`, in the ID form of the project.
-- The `pdlc:test-writer` agent gets the absolute path of the intent file and nothing else,
-  and writes the acceptance file. After a failed review, the prompt also holds the
+- The `pdlc:test-writer` agent gets the absolute path of its brief and nothing else, and
+  writes the acceptance file. `python3 pdlc/bin/make_packets.py IN-xxxx --brief` makes the
+  brief again before each call. After a failed review, the prompt also holds the
   problems as text ("Checks before code").
 - The test writer can remove a check from the acceptance file of an earlier intent, when
   this intent changes or retires its requirement. This intent proves the new line.

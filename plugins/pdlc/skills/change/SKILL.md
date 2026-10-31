@@ -71,9 +71,9 @@ change spec is sufficient for the test writer and the builder.
     the folders that the checks write.
   - Check files: the component check files that the change adds or changes, in the check
     folders of `pdlc/config.md`. A new file has the name of its spec, as
-    `DES-pdlc-check-tagging` says. When the intent has one change, and no requirement is
-    about the stored form of data, the list is `- none`. Then the "Check" of each step is
-    an acceptance check ("Acceptance checks").
+    `DES-pdlc-check-tagging` says. When the intent has one change and no stored-data line
+    ("Acceptance checks"), the list is `- none`. Then the "Check" of each step is an
+    acceptance check. A stored-data line always gets a component check.
   - Steps: one for each requirement, in number order, with its requirement, the check
     that proves it (with the requirement ID in its name), and "Done when". A `(retire)`
     requirement gets no check. Its step removes the code and the checks that only it used.

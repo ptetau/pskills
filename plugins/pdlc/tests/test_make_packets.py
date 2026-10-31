@@ -441,6 +441,50 @@ class VisualPacket(PacketRepo):
         self.assertNotIn("frames/02.png (unchanged", text)
 
 
+class Brief(PacketRepo):
+    """The brief holds each input of the test writer in one file, and no app code or review."""
+
+    def setUp(self):
+        super().setUp()
+        r = self.root
+        (r / "pdlc/specs/design/DES-pdlc-check-tagging.md").write_text("# DES-pdlc-check-tagging\nThe ID starts the name.\n")
+        (r / "pdlc/config.md").write_text("## Checks\n\n- all: `node --test`\n- check folders: `test/`\n\n"
+                                          "## Reviews\n\n- remits: tests, specification, security\n")
+        (self.folder / "handoff.md").write_text("# Handoff · CH-0001 · change → tests\n\nHANDOFF-TEXT\n")
+        (self.folder / "review/tests").mkdir(parents=True)
+        (self.folder / "review/tests/result.md").write_text("Result: fail\nSECRET-REVIEW\n")
+        git(r, "add", "-A"); git(r, "commit", "-qm", "handoff")
+
+    def brief(self, work="CH-0001"):
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(make_packets.main(["x", work, "--brief"], root=self.root), 0)
+        return (self.folder / "brief.md").read_text()
+
+    def test_a_change_brief_holds_the_spec_the_handoff_the_rules_and_the_check_files(self):
+        text = self.brief()
+        for part in ("Write the component checks", "Given lang es", "HANDOFF-TEXT", "Says hola.",
+                     "The ID starts the name.", "- all: `node --test`", "- test/greet.test.js"):
+            self.assertIn(part, text)
+
+    def test_a_brief_holds_no_app_code_no_review_and_no_writing_rules(self):
+        text = self.brief()
+        for part in ("SECRET-CODE", "SECRET-TEST", "SECRET-REVIEW", "Write plainly."):
+            self.assertNotIn(part, text)
+
+    def test_an_intent_brief_holds_each_change_spec_of_the_intent(self):
+        r = self.root
+        (r / "pdlc/inbox").mkdir(parents=True)
+        (r / "pdlc/inbox/IN-0001-es.md").write_text(INTENT.format(lock="none"))
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(make_packets.main(["x", "IN-0001", "--brief"], root=r), 0)
+        text = (r / "pdlc/acceptance/IN-0001-es/brief.md").read_text()
+        self.assertIn("Write the acceptance checks", text)
+        self.assertIn("acceptance/IN-0001.acceptance.js", text)
+        self.assertIn("pdlc/changes/CH-0001-es/change.md", text)
+        self.assertIn("Says hola.", text)
+        self.assertNotIn("SECRET-CODE", text)
+
+
 class AcceptancePacket(PacketRepo):
     """The tests packet for the acceptance checks of an intent."""
 
