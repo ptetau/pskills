@@ -116,7 +116,8 @@ A guard in the pdlc plugin keeps the roles in these lanes. For each agent:
 ## Stages and handoffs
 
 The intent stages are intake → ready → change → acceptance. The change stages are tests →
-build → show → `verify`. `/pdlc:ship` runs them all.
+build → `verify` → show. `/pdlc:ship` runs them all. Show records a change only after it
+passed `verify`, and then proposes the merge.
 
 - Each stage starts from the latest handoff, and ends with a new one from
   `templates/handoff.md`, which replaces the old one. Git keeps the history.
@@ -194,7 +195,8 @@ the intent, and each feature that exists already.
 ## Rounds
 
 A round is one failed tests or acceptance review, one failed `verify`, or one builder
-report that a check is wrong. A fix of a check before its lock is not a round. An agent
+report that a check is wrong. A recording that shows a missed acceptance line is also a
+round. A fix of a check before its lock is not a round. An agent
 blocked twice is one round. Each change has two rounds, and so does the acceptance stage
 of each intent. The third failure of the same stage stops the work, and the skill asks the
 user.

@@ -1,24 +1,28 @@
 ---
 name: show
 description: >
-  Records a built pdlc change for its visual review. Plays each acceptance check in the
-  real app: a browser for web apps, and a terminal for CLIs and libraries. Saves
-  review.gif and the key frames in the folder of the change, for the reviewers and the
-  pull request. Use when the user says "/pdlc:show", or when a change is built.
+  Records a verified pdlc change, and proposes its merge. Plays each acceptance check in
+  the real app: a browser for web apps, and a terminal for CLIs and libraries. Saves
+  review.gif and the key frames in the folder of the change, and puts the GIF in the
+  proposal. Does not merge. Use when the user says "/pdlc:show", or when a change is
+  verified.
 ---
 
 # pdlc show
 
 ## Goal
 
-Show makes a short GIF, `review.gif`, and its frames. They show the change do what its
-spec says, one acceptance line after the other, as a user meets the change.
+Show makes a short GIF, `review.gif`, and its frames, after the change passed `verify`.
+They show the change do what its spec says, one acceptance line after the other, as a user
+meets the change. Then the user gets a proposal with the GIF to approve. The skill does
+not merge the change.
 
 ## Constraints
 
 - The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first.
-- The change is the one that the user names, or else the first `building` change whose
-  requirements are all `built`. Show works on the branch of the change.
+- The change is the one that the user names, or else the first `in review` change whose
+  latest handoff is `verify → show`. Show works on the branch of the change.
+- A change that did not pass `verify` goes to `/pdlc:verify` first.
 - Every change gets its show, also with nothing new on screen, and show does not wait for
   later changes. A capability shows its interface in a terminal (`"kind": "terminal"`),
   also in a web app.
@@ -33,6 +37,7 @@ spec says, one acceptance line after the other, as a user meets the change.
   - A library: a short script that calls the interface.
 - A helper script lives in the change folder. Paths are relative to the project root, so
   that anyone can record again.
+- Show writes only in the change folder. Thus, the pass commit of `verify` stays valid.
 - A terminal script ends with a step that runs all checks and shows them pass. The
   recorder runs commands only in terminal scripts, so a web script has no such step.
 - A terminal frame scrolls like a real terminal, and shows the newest lines, also errors.
@@ -52,20 +57,42 @@ spec says, one acceptance line after the other, as a user meets the change.
 - Show reads the last frame of each acceptance line itself. A frame with an error,
   incorrect content, or the screen from before the step means a wrong script.
 - Show corrects the script and records again. Show does not correct the app.
+- Suppose that a correct script still shows that the app does not meet an acceptance line.
+  Then the change goes back to build, and that counts as a round ("Rounds"). The change
+  is `building` again, and its requirements are `built`.
+- The proposal goes through the delivery port, with the base of the change as its target.
+  Its description fills each section of `pdlc/templates/proposal.md`:
+  - The embedded GIF (the adapter says how), and a table of each requirement, its checks,
+    and their result.
+  - A table of each remit and its result, with a link to each `result.md`.
+  - The acceptance file, its lock, and its review. For the last change, the pass commit.
+  - The lock commit (with `Tests-Locked: acceptance`, the acceptance lock), and each
+    "Manual checks" item for the user to confirm.
+  - Each `(assumed)` detail of the change spec and its requirements, one line each.
+  - The changes that merge together, and the intents filed for new behaviour.
 
 ## Inputs
 
 - `pdlc/README.md`, the shared rules.
-- The change spec and its `handoff.md`.
+- The change spec, its `handoff.md`, its review results, and the intent.
 - The visual port, its adapter, and the "Visual" section of `pdlc/config.md`.
+- `pdlc/templates/proposal.md`.
 
 ## Outputs
 
 - `visual.json`, any helper script, `review.gif`, and `frames/` in the change folder.
-- The handoff `show → verify`: what the GIF shows, frame by frame, and how many acceptance
-  lines it shows, out of how many.
 - One commit of all these files, "Visual review CH-xxxx", with the trailers `Intent`,
   `Change`, and `Review: pdlc/changes/CH-xxxx-…/review.gif`.
-- For the user: `/pdlc:verify` is next.
-- Show is done when the GIF shows each acceptance line, and each last frame shows what its
-  caption claims.
+- The proposal. When each change of the intent is `in review` or `merged`, the intent is
+  `in review`, on the branch of the change.
+- The handoff `show → user`: the link, and what the user must confirm. It also says what
+  the GIF shows frame by frame, and how many acceptance lines it shows, out of how many.
+- The commit "Propose CH-xxxx" (`Intent`, `Change`): the handoff and the intent.
+- The user gets the link.
+- When the app does not meet an acceptance line:
+  - The handoff `show → build` names each such line, and its frame.
+  - The commit "Send back CH-xxxx: <stage>" (`Intent`, `Change`), with build as the stage.
+  - The user hears that build is next, and the skill stops.
+- Show is done when the change is proposed, or when the change goes back to build. The
+  GIF of a proposal shows each acceptance line, and each last frame shows what its caption
+  claims.

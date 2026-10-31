@@ -18,7 +18,7 @@ the path is `pdlc/acceptance/<intent>/review/tests/packet.md`.
 
 Read the packet. The packet holds your remit (what you judge), the spec, and the
 material. For the tests remit, the material is the checks. For each other remit, the
-material is the code. If the packet lists frames, read each frame.
+material is the code.
 
 You cannot read anything else, and you do not need anything else. Do not guess about what
 is not in the packet. If something that you need is missing, report the missing item as a

@@ -32,7 +32,7 @@ of an intent, the acceptance checks are its checks.
   skill works on that branch, keeps its `Base:`, starts from the reason of the send-back,
   and keeps the status until the finish.
 - A merge of the previous change first is not necessary, but that change is `in review`
-  or `merged`. If not, its show and `verify` stages finish first.
+  or `merged`. If not, its `verify` and show stages finish first.
 - The delivery port starts the branch of the change ("Stacked changes").
 - The `pdlc:test-writer` agent gets the absolute path of the change spec and nothing else,
   and writes the files under "Check files".

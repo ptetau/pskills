@@ -50,8 +50,10 @@ STAGE_REPLAY = {
     "change": ("Ready IN-0001", "main", "/pdlc:change defaults", "Plan IN-"),
     "tests": ("Plan IN-0001", "main", "/pdlc:tests defaults", "Tests reviewed CH-"),
     "build": ("Tests reviewed CH-0001", CHANGE_BRANCH, "/pdlc:build defaults", "Built CH-"),
-    "show": ("Built CH-0001", CHANGE_BRANCH, "/pdlc:show defaults", "Visual review CH-"),
-    "verify": ("Visual review CH-0001", CHANGE_BRANCH, "/pdlc:verify defaults", "Verified CH-"),
+    "verify": ("Built CH-0001", CHANGE_BRANCH, "/pdlc:verify defaults", "Verified CH-"),
+    # The snapshot comes from an early pdlc, with show before verify and no acceptance stage.
+    # So a replay of verify or show needs a new snapshot.
+    "show": ("Verified CH-0001", CHANGE_BRANCH, "/pdlc:show defaults", "Visual review CH-"),
 }
 ALLOWED_TOOLS = (
     "Read Write Edit Glob Grep Agent Skill "
@@ -216,7 +218,7 @@ def add_tokens(total, more):
         total[key] = total.get(key, 0) + value
 
 
-STAGES = ("init", "intake", "ready", "change", "acceptance", "tests", "build", "show", "verify", "ship")
+STAGES = ("init", "intake", "ready", "change", "acceptance", "tests", "build", "verify", "show", "ship")
 # The stages that use each agent. The first one is the stage of a call from any other stage.
 AGENT_STAGES = {"pdlc:recon": ("intake", "init"), "pdlc:test-writer": ("tests", "acceptance"),
                 "pdlc:builder": ("build",)}

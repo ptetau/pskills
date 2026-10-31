@@ -1,11 +1,11 @@
 ---
 name: verify
 description: >
-  Examines a built and recorded pdlc change before the merge. Runs each check, and sends
-  one packet for each review remit (specification, security, quality, compliance,
-  privacy) to a fresh, independent reviewer, all at the same time. When all pass, marks
-  the requirements verified, and proposes the merge with the GIF. Does not merge. Use
-  when the user says "/pdlc:verify", or when a change has its visual review.
+  Examines a built pdlc change before the merge. Runs each check, and sends one packet
+  for each review remit (specification, security, quality, compliance, privacy) to a
+  fresh, independent reviewer, all at the same time. When all pass, marks the
+  requirements verified. Then /pdlc:show records the change and proposes the merge. Does
+  not merge. Use when the user says "/pdlc:verify", or when a change is built.
 ---
 
 # pdlc verify
@@ -13,14 +13,15 @@ description: >
 ## Goal
 
 The `verify` skill decides if a change is good enough to merge. When it is, the change is
-`verified`, and the user gets a proposal to approve. The skill does not merge the change.
+`verified`, and `/pdlc:show` records it and proposes the merge. The skill does not merge
+the change.
 
 ## Constraints
 
 - The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first. The reviewers
   obey "Who does what".
-- The change is the one that the user names, or else the first `building` change that has
-  a `review.gif`. The skill works on the branch of the change.
+- The change is the one that the user names, or else the first `building` change whose
+  requirements are all `built`. The skill works on the branch of the change.
 - Through the checks port, all of these pass:
   - The checks of each requirement. Each requirement has at least one check.
     "No checks found" is a failure, except for a `(retire)` requirement. With
@@ -77,21 +78,11 @@ The `verify` skill decides if a change is good enough to merge. When it is, the 
     brackets, and the same meaning.
   - A correction of app files after the acceptance run: the acceptance checks run again,
     and the new commit goes on `Acceptance-Passed:`.
-- The proposal goes through the delivery port, with the base of the change as its target.
-  Its description fills each section of `pdlc/templates/proposal.md`:
-  - The embedded GIF (the adapter says how), and a table of each requirement, its checks,
-    and their result.
-  - A table of each remit and its result, with a link to each `result.md`.
-  - The acceptance file, its lock, and its review. For the last change, the pass commit.
-  - The lock commit (with `Tests-Locked: acceptance`, the acceptance lock), and each
-    "Manual checks" item for the user to confirm.
-  - Each `(assumed)` detail of the change spec and its requirements, one line each.
-  - The changes that merge together, and the intents filed for new behaviour.
 
 ## Inputs
 
-- `pdlc/README.md`, the change spec, its `handoff.md`, `review.gif`, and the intent.
-- The "Reviews" of `pdlc/config.md`, and `pdlc/templates/proposal.md`.
+- `pdlc/README.md`, the change spec, its `handoff.md`, and the intent.
+- The "Reviews" of `pdlc/config.md`.
 
 ## Outputs
 
@@ -106,12 +97,11 @@ The `verify` skill decides if a change is good enough to merge. When it is, the 
 - After a passed round:
   - Each requirement of the change is `verified` in its spec file, and the change is
     `in review`. For the last change, the pass commit is on `Acceptance-Passed:`.
-  - The commit "Verified CH-xxxx" (`Intent`, `Change`): the results and the statuses.
+  - The handoff `verify → show`: the result of each check and each remit, the pass
+    commit, and the intents filed for new behaviour.
+  - The commit "Verified CH-xxxx" (`Intent`, `Change`): the results, the statuses, and the
+    handoff.
   - Each gate correction is a commit "Update CH-xxxx: <what>". A merge of main has the
     trailers `Intent` and `Change`.
-  - The proposal. When each change of the intent is `in review` or `merged`, the intent is
-    `in review`, on the branch of the change.
-  - The handoff `verify → user`: the link, and what the user must confirm.
-  - The commit "Propose CH-xxxx" (`Intent`, `Change`): the handoff and the intent.
-  - The user gets the link.
-- The skill is done when the change is proposed, or when a failed round goes back.
+  - For the user: `/pdlc:show` is next.
+- The skill is done when the change is `verified`, or when a failed round goes back.

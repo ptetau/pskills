@@ -77,8 +77,8 @@ changes. `/pdlc:ship` stops only when it needs you. Or, do one stage at a time:
 /pdlc:acceptance   a test writer writes the checks of the intent, then pdlc locks them
 /pdlc:tests        a test writer writes the checks of a change, then pdlc locks them
 /pdlc:build        a builder writes code until the locked checks pass
-/pdlc:show         record a GIF of the change as it works
-/pdlc:verify       run the checks and the independent reviews, then propose the merge
+/pdlc:verify       run the checks and the independent reviews
+/pdlc:show         record a GIF of the verified change, then propose the merge
 ```
 
 The visual review needs Node. The first time that `show` runs, `show` installs its tools

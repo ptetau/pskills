@@ -127,10 +127,10 @@ class Packets(PacketRepo):
             self.assertIn("SECRET-CODE", text)
             self.assertNotIn("SECRET-TEST", text)
 
-    def test_only_the_specification_packet_points_to_the_frames(self):
+    def test_no_packet_points_to_the_frames_of_an_earlier_recording(self):
         make_packets.main(["x", "CH-0001"], root=self.root)
-        self.assertIn("frames/01.png", self.packet("specification"))
-        self.assertNotIn("frames/01.png", self.packet("security"))
+        for remit in ("specification", "security"):
+            self.assertNotIn("frames/01.png", self.packet(remit))
 
     def test_only_the_specification_packet_has_the_writing_check(self):
         make_packets.main(["x", "CH-0001"], root=self.root)
@@ -350,16 +350,6 @@ class ReReview(PacketRepo):
         self.assertIn('"gray" is US spelling', writing)
         self.assertNotIn('"color" is US spelling', writing)
         self.assertIn("+The box is gray.", text.split("## Re-review", 1)[1].split("# Remit:", 1)[0])
-
-    def test_a_specification_re_review_marks_the_frames_that_did_not_change(self):
-        self.review("specification", "Result: pass\n\nProblems:\n- none\n")
-        (self.folder / "frames/02.png").write_bytes(b"new frame")
-        git(self.root, "add", "-A"); git(self.root, "commit", "-qm", "new frame")
-        make_packets.main(["x", "CH-0001", "specification"], root=self.root)
-        text = self.packet("specification")
-        self.assertIn("frames/01.png (unchanged since the earlier review)", text)
-        self.assertIn("frames/02.png\n", text + "\n")
-        self.assertNotIn("frames/02.png (unchanged", text)
 
     def test_a_code_re_review_still_leaves_out_the_writing_rules(self):
         self.review("security", "Result: fail\n\nProblems:\n- src/greet.js:1 · unsafe · rule\n")

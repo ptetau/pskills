@@ -984,7 +984,7 @@ class StageReplayTest(unittest.TestCase):
         self.assertFalse(result["ok"])
 
     def test_the_snapshot_passes_the_checks_of_earlier_stages(self):
-        project, _ = self.stage_project("verify")
+        project, _ = self.stage_project("show")
         self.assertTrue(run_bench.check_stage(project, "show", run_bench.entry_commit(project, "Built CH-0001"))["ok"])
         self.assertTrue(run_bench.check_stage(project, "build", run_bench.entry_commit(project, "Tests reviewed CH-0001"))["ok"])
         project, _ = self.stage_project("build")
@@ -1061,7 +1061,7 @@ class StageReplayTest(unittest.TestCase):
         self.assertIn("pdlc/specs/jobs/JOB-report-word-frequencies.md", writing["files"])
 
     def test_recheck_reads_a_stage_folder_again(self):
-        project, _ = self.stage_project("verify")
+        project, _ = self.stage_project("show")
         shown = run_bench.entry_commit(project, "Built CH-0001")
         folder = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, folder, True)

@@ -57,8 +57,8 @@ does not change the checks.
 - Each requirement of the change is `built` in its spec file. A `(retire)` requirement
   leaves its spec, with the code that served only that requirement. The test writer
   removed its checks before.
-- The handoff `build → show`: what build made, how to run it, and anything unexpected.
+- The handoff `build → verify`: what build made, how to run it, and anything unexpected.
 - The commit "Built CH-xxxx" with the trailers `Intent` and `Change`: the specs, the
   change spec, and the handoff.
-- For the user: `/pdlc:show` is next.
+- For the user: `/pdlc:verify` is next.
 - Build is done when every check that it runs passes, and no check changed since the lock.
