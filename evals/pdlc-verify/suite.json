@@ -1,0 +1,130 @@
+{
+  "skill": "pdlc:verify",
+  "skillPath": "/home/user/pskills/plugins/pdlc/skills/verify/SKILL.md",
+  "skillSha256": "805932a3b8238e509ef140eb99ab8fd0ab1f26a7616898d717347d1c0dfd48bb",
+  "createdAt": "2026-11-01T05:03:48Z",
+  "structure": {
+    "summary": "Single turn with no questions. The run runs each check, makes one packet for each review remit, and has a separate reviewer judge each packet. On a pass, it marks the requirements verified. On a failure, it sends the change back to one stage. It ends with a short reply.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The commit `Verify CH-0001: round <n>` with the trailers `Intent` and `Change`. It holds each packet, each result, and each new intent filed for new behaviour."
+      },
+      {
+        "id": "S2",
+        "description": "One packet for each remit under \"Reviews\" in `pdlc/config.md` (except `tests` and `visual`) from `make_packets.py CH-0001 --verify`. One `result.md` for each remit from a separate reviewer."
+      },
+      {
+        "id": "S3",
+        "description": "After a pass: each requirement is `verified` and the change is `in review`. Each Interface entry of the change loses its ` · proposed` mark in the scope spec. `Acceptance-Passed:` holds the pass commit for the last change."
+      },
+      {
+        "id": "S4",
+        "description": "After a pass: the handoff `verify → show` with the result of each check and each remit, the pass commit, and the new intents. The commit `Verified CH-0001` with `Intent` and `Change`."
+      },
+      {
+        "id": "S5",
+        "description": "After a failure: the handoff `verify → tests`, `verify → build`, or `verify → acceptance`, and the commit `Send back CH-0001: <stage>` with `Intent` and `Change`."
+      },
+      {
+        "id": "S6",
+        "description": "A final reply to the user that says that `/pdlc:show` is next, or which stage is next after a send-back."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The verdict is true. The change is `in review` with each requirement `verified` only when each check and each remit passes. Else the run sends the change back, with each problem given to one stage.",
+      "pass": "The handoff or the reply gives a result for each check set that the skill names, and a result for each remit. If all pass, the change is `in review` and each requirement is `verified`. If one fails, the change is not `verified`. The handoff gives each problem to one stage by the rules of the skill, and the commit `Send back CH-0001: <stage>` exists. The verdict agrees with the results in the files.",
+      "partial": "The verdict is right, but one problem goes to a stage that the rules do not name for it. Or a send-back gives all problems to one stage without a reason.",
+      "source": "Goal: \"decides if a change is good enough to merge\"; Constraints: \"Each problem of a failed round goes to the stage that fixes it\""
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each remit in `config.md` gets its own packet from `make_packets.py` and its own `result.md` from a separate reviewer.",
+      "pass": "Each remit under \"Reviews\" except `tests` and `visual` has a packet from `make_packets.py` for CH-0001 (the change under review), made with `--verify`. Each remit also has a `result.md` with a verdict. The findings cite the files of the change. The run did not write its own list of remits.",
+      "partial": "Each remit has a packet and a result, but a finding cites no file of the change. Or the run listed the remits itself, and the list is right.",
+      "source": "Constraints: \"Each remit with a packet gets one fresh `pdlc:reviewer`, all in one message\""
+    },
+    {
+      "id": "R3",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The handoff `verify → show` gives the real result of each check run and of each remit, and the pass commit.",
+      "pass": "The handoff has the title `# Handoff · CH-0001 · verify → show`. It gives the result of each check set and of each remit as the files show them. It names the pass commit (for the last change) and any intent filed for new behaviour. No count is an estimate, and each claim agrees with the files. After a send-back, the handoff names the stage and the problem, and this item judges the true account of the failure.",
+      "partial": "The handoff is right, but one remit or one check set is missing from it, or one count is wrong.",
+      "source": "Outputs: \"The handoff `verify → show`: the result of each check and each remit, the pass commit\""
+    },
+    {
+      "id": "R4",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each Interface entry of the change loses its ` · proposed` mark in the scope spec only.",
+      "pass": "In the scope spec, each Interface entry that this change adds has no ` · proposed` mark after the pass. An entry in another spec keeps its mark.",
+      "partial": "The marks leave the scope spec, but one entry of the change keeps its mark. Or the run also removes a mark in another spec.",
+      "source": "Outputs: \"Each \\\"Interface\\\" entry of the change loses its ` · proposed` mark in the scope spec\"",
+      "appliesWhen": "The round passed, and the change has Interface entries."
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "New behaviour that a reviewer finds becomes a new intent with `Awaits approval:`, and the run builds nothing for it.",
+      "pass": "Each point under \"Follow-ups\", and each problem that only new behaviour can fix, becomes a `new` intent in the inbox. Its Notes start with `Awaits approval: found reviewing CH-0001 (<remit>)`. The run does not approve or build it. A remit that failed only for new behaviour sends nothing to build.",
+      "partial": "The intent exists, but the Notes lack the `Awaits approval:` start, or the run files one point twice. Or the run files the intent and also sends the change to build for it.",
+      "source": "Constraints: \"New behaviour (\\\"New behaviour needs approval\\\")\"",
+      "appliesWhen": "A reviewer finds new behaviour."
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "For a change that is not the last, a failure of \"run acceptance\" does not count as a problem.",
+      "pass": "If the run runs the acceptance file of IN-0001 (the intent of the change), the run does not count a failure as a problem. The change can pass, and `Acceptance-Passed:` stays unchanged.",
+      "partial": "The run does not count the failure as a problem. But it writes a note that suggests a problem, or it runs the acceptance file more than needed.",
+      "source": "Constraints: \"For an earlier change, a failure is expected.\"",
+      "appliesWhen": "The change is not the last change under \"Changes\" of its intent."
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "\"Verify CH-0001: round 1\", then \"Verified CH-0001\" or \"Send back CH-0001: <stage>\", each with `Intent` and `Change`. For the last change, `Acceptance-Passed:` holds the pass commit.",
+      "pass": "The commit list in the capture shows `Verify CH-0001: round 1` and then `Verified CH-0001` or `Send back CH-0001: <stage>`, each with the trailers `Intent` and `Change`. For the last change, a pass writes the pass commit (`git rev-parse HEAD` of the passing run) on `Acceptance-Passed:` in the intent.",
+      "partial": "The subjects are right, but a trailer is missing. Or the pass commit on `Acceptance-Passed:` is not the commit of the passing run.",
+      "source": "Outputs: \"In every round, the commit \\\"Verify CH-xxxx: round <n>\\\"\"",
+      "structureRef": "S1"
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "weight": 1,
+      "criterion": "The final reply says that `/pdlc:show` is next, or which stage is next after a send-back.",
+      "pass": "The final reply names `/pdlc:show` as the next step after a pass, or the stage of the send-back after a failure, in one sentence.",
+      "partial": "The reply names a next step, but the wrong one. Or the reply buries it in a long text.",
+      "source": "Outputs: \"For the user: `/pdlc:show` is next\"",
+      "structureRef": "S6"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot todo-rust --state verify --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "edge: not the last change, so its acceptance can fail",
+      "exercises": "The run checks the first change of a two-change intent. The acceptance file can fail for the later change, and that failure must not count as a problem.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "prompt": "CH-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot wordfreq --state verify --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "typical: the last change of the intent",
+      "exercises": "The run checks the only change of its intent, so it runs acceptance and writes the pass commit.",
+      "replies": []
+    }
+  ]
+}

@@ -50,6 +50,23 @@ python3 bench/run_bench.py e2e --fixture todo-rust --label todo-rust --runs 1 --
 `init-fixture` runs `/pdlc:init defaults` on a copy of the app. Its `pdlc/` folder then goes
 into the folder of the app, as for `bench/fixture-app`.
 
+## Keep a fixture up to date
+
+A fixture keeps only the specs, `config.md`, and `version.json` in its `pdlc/` folder. The
+bench adds the other pdlc files at each run, with `upgrade.py` of the plugin under test.
+`version.json` lists the hash of each file that pdlc wrote. Thus the upgrade sees each default
+spec of the fixture as unedited, and refreshes it. To bring a fixture up to the current plugin:
+
+1. Copy the fixture to a temporary folder, run `git init`, and commit it as "Set up pdlc".
+2. Run `python3 plugins/pdlc/skills/upgrade/scripts/upgrade.py plan` in the copy. Read the diff
+   of each file that it calls `edited`. If the diff shows only plugin text, run `apply
+   --no-intent --no-commit --take pdlc/<path>` for that file. If it shows a rule of the fixture,
+   keep the file.
+3. Copy `pdlc/specs/design/*` and `pdlc/version.json` back into the fixture.
+
+The fixtures keep no "Interface" section in their job and capability specs. The upgrade only
+reports them. Intake adds each section that it needs.
+
 `rebuild` tests rule 10 (the specs can rebuild the project). It takes the project that an `e2e`
 run left, and keeps only the specs and the config. A builder with no plugin then writes the app
 again from these files. The bench runs the original acceptance checks and the probes on the new

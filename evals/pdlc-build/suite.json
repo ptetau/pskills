@@ -1,0 +1,129 @@
+{
+  "skill": "pdlc:build",
+  "skillPath": "/home/user/pskills/plugins/pdlc/skills/build/SKILL.md",
+  "skillSha256": "1c9ede4b674f17342e354364c003322037911b95c52bf36038bb43839f17813d",
+  "createdAt": "2026-11-01T05:03:48Z",
+  "structure": {
+    "summary": "Single turn with no questions. The builder writes app code until the locked checks pass. The run makes two commits, ticks the steps, marks the requirements built, and writes the handoff. It ends with a short reply.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The app files under \"Files\" in the change spec, in the commit `Build CH-0001: <what changed>` with the trailers `Intent`, `Change`, and `Req`."
+      },
+      {
+        "id": "S2",
+        "description": "The change spec with its steps ticked and a new line in its progress log. Each requirement of the change is `built` in its spec file."
+      },
+      {
+        "id": "S3",
+        "description": "The handoff `build → verify` in the template form: what build made, how to run it, and anything unexpected."
+      },
+      {
+        "id": "S4",
+        "description": "The commit `Built CH-0001` with the trailers `Intent` and `Change`. It holds the specs, the change spec, and the handoff."
+      },
+      {
+        "id": "S5",
+        "description": "No change to the locked check files since the lock."
+      },
+      {
+        "id": "S6",
+        "description": "A final reply to the user that says that `/pdlc:verify` is next."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "After the last app change, all checks and each acceptance file that build must run pass, and the run reports the result.",
+      "pass": "The final reply or the handoff gives the result of the last run, after the last app change. The run covers all checks (for example `cargo test` or `python3 -m unittest`) and each earlier acceptance file. When this change is the last of its intent, it also covers the acceptance file of the intent. Every set passes. The run does not claim a pass that a reported failure contradicts.",
+      "partial": "The sets pass, but the report gives a run older than the last app change. Or the report leaves out one set (for example the earlier acceptance).",
+      "source": "Constraints: \"After the builder, all checks and the acceptance checks of \\\"Acceptance checks\\\" pass\"; Outputs: \"Build is done when every check that it runs passes\""
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "No locked check changed. The diff since `start` touches no check file.",
+      "pass": "The diff since `start` touches no file under \"Check files\" and not the acceptance file. The run does not skip, comment out, or weaken a check. It does not add a special case that only the checks trigger.",
+      "partial": "No locked file changed, but the app has a special case that exists only to satisfy one check. Or a check file changed in a way that does not change the result (for example white space).",
+      "source": "Constraints: \"No check changed since the lock\""
+    },
+    {
+      "id": "R3",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The app does what the requirements say and nothing more. The README states the new behaviour when \"Files\" lists it.",
+      "pass": "Each requirement of CH-0001 (the change to build) shows in the app. When \"Files\" lists the README, the README states the new behaviour. The diff adds nothing that no requirement of this change asks for.",
+      "partial": "The behaviour is right, but the README does not state it. Or one small extra (for example one added input check) has no requirement.",
+      "source": "Goal: \"Build makes the locked checks of one change pass\"; \"New behaviour needs approval\" in `pdlc/README.md`"
+    },
+    {
+      "id": "R4",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The run changes only the files under \"Files\", the change folder, and the specs.",
+      "pass": "After `start`, the run adds or changes only these files. They are files under \"Files\" in the change spec, files in the change folder, and spec files of the requirements of this change. A needed file outside \"Files\" leads to a question and to a change of \"Files\" first.",
+      "partial": "One stray file lies outside these places (for example a scratch file), but no app file outside \"Files\" changes.",
+      "source": "Constraints: \"The builder changes only the app files under \\\"Files\\\"\""
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "\"Build CH-0001: <what>\" (`Intent`, `Change`, `Req`) holds the app files, then \"Built CH-0001\" (`Intent`, `Change`) holds the records.",
+      "pass": "The commit list in the capture shows `Build CH-0001: <what changed>` with the trailers `Intent`, `Change`, and `Req`. It holds the app files. Then it shows `Built CH-0001` with `Intent` and `Change`. This commit holds the specs, the change spec, and the handoff.",
+      "partial": "Both subjects exist in order, but a trailer is missing, or app files and records share one commit.",
+      "source": "Outputs: \"The commit \\\"Build CH-xxxx: <what changed>\\\"\" and \"The commit \\\"Built CH-xxxx\\\"\"",
+      "structureRef": "S1"
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The steps are ticked, the progress log has a new line, and each requirement of the change is `built` in its spec.",
+      "pass": "Each step of the change spec is ticked. The progress log has a new line for build. Each requirement of the change has the status `built` in its spec file. A `(retire)` requirement is gone from its spec.",
+      "partial": "The statuses are right, but one step is not ticked, or the progress log has no new line.",
+      "source": "Outputs: \"The ticked steps of the change, and a new line in its progress log\"",
+      "structureRef": "S2"
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The handoff `build → verify` is in the template form.",
+      "pass": "The `handoff.md` of the change has the title `# Handoff · CH-0001 · build → verify`, a `Time:` line, and the sections of the handoff template. It tells what build made and how to run it, and it names anything unexpected.",
+      "partial": "The title and the sections are right, but the handoff lacks the way to run the app.",
+      "source": "Outputs: \"The handoff `build → verify`\"",
+      "structureRef": "S3"
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "weight": 1,
+      "criterion": "The final reply says that `/pdlc:verify` is next.",
+      "pass": "The final reply names `/pdlc:verify` as the next step, in one sentence.",
+      "partial": "The reply names a next step, but not `/pdlc:verify`. Or the reply buries it in a long text.",
+      "source": "Outputs: \"For the user: `/pdlc:verify` is next\"",
+      "structureRef": "S6"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot todo-rust --state build --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "different language and checks: Rust, component checks",
+      "exercises": "The run builds the first change of a two-change intent in Rust, against locked component checks. It covers the compile and test loop, the earlier acceptance, the lock check, and the records.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "prompt": "CH-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot wordfreq --state build --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "typical: Python, the acceptance checks are the checks",
+      "exercises": "The run builds the only change of its intent. Its checks are the acceptance checks, and it is the last change, so build also runs the acceptance of this intent.",
+      "replies": []
+    }
+  ]
+}

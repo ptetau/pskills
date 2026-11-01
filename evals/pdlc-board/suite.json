@@ -116,28 +116,28 @@
     {
       "id": "P01",
       "axis": "typical",
-      "prompt": "dry-run\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state board --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "dry-run\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state board --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "The prompt runs a dry-run at a tracker that the run cannot reach. The prompt tests the table with `unknown` current columns, the statuses from the newest branch, and no change to the board or to pdlc.",
       "replies": []
     },
     {
       "id": "P02",
       "axis": "sync without dry-run, with defaults",
-      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state board --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state board --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "The prompt runs a sync, and the board cannot be reached. The prompt tests a stop at the setup gap or at the board, no made-up card key, and no `Ticket` write. The prompt also tests no commit \"Board: record card keys\" and an honest report. With `defaults`, the run asks no question.",
       "replies": []
     },
     {
       "id": "P03",
       "axis": "edge-but-valid: no tracker",
-      "prompt": "dry-run\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "dry-run\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "The stop when the tracker is `none`: the reply says that there is no tracker, shows no table, makes no board call, and changes nothing.",
       "replies": []
     },
     {
       "id": "P04",
       "axis": "natural phrasing: a dry-run without the word",
-      "prompt": "I connected our GitHub project to pdlc today. Before anything goes on the board, show me what the board needs. Do not change anything yet.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state board --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "I connected our GitHub project to pdlc today. Before anything goes on the board, show me what the board needs. Do not change anything yet.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state board --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "The prompt asks for a dry-run in plain words. The run must treat the request as a dry-run, and make no board write and no file change. The run gives the same honest table or stop as with `dry-run`.",
       "replies": []
     }

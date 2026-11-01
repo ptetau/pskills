@@ -36,6 +36,8 @@ and adapters. All work then enters through the inbox.
     in `references/`.
   - The empty folders `inbox/`, `changes/`, `specs/jobs/`, `specs/capabilities/`, and
     `specs/design/`, each with a `.gitkeep` file, so that git keeps the folder.
+- After the copy, init runs `python3 <the upgrade skill>/scripts/upgrade.py record`. The
+  script writes `pdlc/version.json`, which the commit "Set up pdlc" holds.
 - A project with no code yet has nothing to map. If `/decompose` is installed, init
   recommends `/decompose`, then `/blueprint`, then `/pdlc:intake <name>.blueprint.md`.
   `/decompose` decides where the main parts go, and `/blueprint` gives types, error codes,

@@ -1,0 +1,134 @@
+{
+  "skill": "pdlc:acceptance",
+  "skillPath": "/home/user/pskills/plugins/pdlc/skills/acceptance/SKILL.md",
+  "skillSha256": "ff71b7345d745637197366bd3e8ce475db40d4cc42f535a270ae75ca14582158",
+  "createdAt": "2026-11-01T05:03:48Z",
+  "structure": {
+    "summary": "Single turn with no questions. The run writes the acceptance file of IN-0001 (the intent in the request), shows it red, locks it, and has it reviewed. Then it records the handoff. It makes four commits on the intent branch and ends with a short reply.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The acceptance file named by `Acceptance-File:`. It holds black-box checks that drive the app as a user does, one or more for each acceptance line, tagged with the requirement ID."
+      },
+      {
+        "id": "S2",
+        "description": "Four commits in this order on the intent branch: `Acceptance IN-0001` (trailers `Intent`, `Req`), `Lock acceptance IN-0001` (`Intent`), `Review acceptance IN-0001` (`Intent`), and `Acceptance reviewed IN-0001` (`Intent`)."
+      },
+      {
+        "id": "S3",
+        "description": "The intent file with `Status: building`, `Branch:`, `Acceptance-File:`, and the commit hash on `Acceptance-Locked:`. It also holds the handoff `acceptance → tests` in the form of the handoff template: the checks, the lock, and what each change must give the checks."
+      },
+      {
+        "id": "S4",
+        "description": "The review folder `pdlc/acceptance/IN-0001-…/review/tests/` with the packet from `make_packets.py IN-0001` and the result of a separate reviewer."
+      },
+      {
+        "id": "S5",
+        "description": "A final reply to the user that says that `/pdlc:tests` is next."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each acceptance line of IN-0001 (the intent in the request) that is not a stored-data line has a check. The check drives the app as a user does (the command, or HTTP) and expects the exact output, message, and code of the line.",
+      "pass": "Every acceptance line of IN-0001 (the intent in the request) that is not a stored-data line has a check in the acceptance file. The check carries its requirement ID. Each check starts the real app through its command or its HTTP interface, and not through an internal function. Each check expects the exact output, error message, and exit code or status code that its line names. The judge compares the lines of the intent with the checks one by one.",
+      "partial": "Every line that needs a check has one. But one to three checks call an internal function, or expect only part of the output or code of the line. Or one to three lines have no check.",
+      "source": "Goal: \"They prove each acceptance line as a user meets it\"."
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Before the lock, each check of new behaviour fails because the behaviour is missing, and no check fails because it is broken. The run reports the red run.",
+      "pass": "The final reply or the handoff reports the red run. It gives how many checks failed, and says that each failure is missing behaviour (a missing route, option or status). No report of a broken check (syntax, path, time-out) remains at the lock. A check of behaviour that exists already can pass.",
+      "partial": "The red run is reported. But one check fails for a reason that is not the missing behaviour (for example a wrong path), and the run does not correct it. Or the run says that the checks are red and gives no count.",
+      "source": "Constraints: \"Red, lock, and review obey \\\"Checks before code\\\"\"."
+    },
+    {
+      "id": "R3",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "`Acceptance-Locked` names the commit that holds the final acceptance file, and the file does not change after that commit.",
+      "pass": "`Acceptance-Locked:` in the intent holds a commit hash that exists. The commit list in the capture shows that this hash is the newest commit that changes the acceptance file. After a failed review and new checks, `Acceptance-Locked:` names the newest lock.",
+      "partial": "The hash exists, but a later commit changes the file (for example a late fix with no new lock). Or the lock names the commit before the final checks.",
+      "source": "Outputs: \"the lock hash on `Acceptance-Locked:`\"; Constraints: \"Red, lock, and review obey \\\"Checks before code\\\"\"."
+    },
+    {
+      "id": "R4",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "A separate reviewer judges the checks from the packet that `make_packets.py` makes for IN-0001 (the intent in the request). The result names a wrong version for each check. A failed review goes back to the test writer, and the run locks again.",
+      "pass": "The review folder holds the packet that `make_packets.py` makes for IN-0001 (the intent in the request). It also holds a `result.md` that gives, for each check, a wrong version of the app that the check catches. A failed result is followed by a new lock and a new review.",
+      "partial": "A `result.md` exists, but it gives wrong versions for only some checks. Or a failed review does not lead to a new lock.",
+      "source": "Outputs: \"Review acceptance IN-xxxx\"; Constraints: \"The test writer and the reviewer obey \\\"Who does what\\\"\"."
+    },
+    {
+      "id": "R5",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The four commits come in order on the intent branch, each with its trailers.",
+      "pass": "The commit list in the capture shows `Acceptance IN-0001` (trailers `Intent` and `Req`), `Lock acceptance IN-0001`, `Review acceptance IN-0001`, and `Acceptance reviewed IN-0001` (each with `Intent` only), in this order. After a failed review, the extra rounds add more commits of the same kinds before the last one.",
+      "partial": "The four subjects exist in order. But one commit lacks a needed trailer, or has an extra trailer such as `Req` on a lock commit. Or the work sits in fewer commits.",
+      "source": "Outputs: \"The commits, in this order\"",
+      "structureRef": "S2"
+    },
+    {
+      "id": "R6",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The intent has `Status: building`, `Branch:`, `Acceptance-File:`, and `Acceptance-Locked:`, and a handoff `acceptance → tests` in the template form.",
+      "pass": "The intent file shows `Status: building`, a `Branch:` value, an `Acceptance-File:` path that exists, and `Acceptance-Locked:` with a hash. Each header field holds only the bare value. The intent has a handoff with the title `acceptance → tests`, a `Time:` line, and the sections of the handoff template. It lists the checks, the lock, and what each change must give the checks.",
+      "partial": "One header field is missing or holds more than the bare value. Or the handoff has the title but lacks one section of the template, or does not say what each change must give the checks.",
+      "source": "Outputs: \"The intent is `building`\" and \"The handoff `acceptance → tests`\"",
+      "structureRef": "S3"
+    },
+    {
+      "id": "R7",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each stored-data line sits in a comment at the top of the acceptance file, with its requirement ID and change. It has no acceptance check.",
+      "pass": "The acceptance file has a comment block at its top. The block lists each acceptance line that is about stored data, with its requirement ID and the change that proves it. No check in the file tests such a line.",
+      "partial": "The comment exists, but it omits the requirement ID or the change for some lines. Or one stored-data line also has a check.",
+      "source": "\"Acceptance checks\" in `pdlc/README.md`",
+      "appliesWhen": "The intent has a stored-data line (a line that needs direct access to the stored data, for example an old data file)."
+    },
+    {
+      "id": "R8",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The run writes no app code and changes no requirement text.",
+      "pass": "After `start`, the run adds or changes only these files. They are an acceptance file, a review file, the intent, the scope spec of a new \"Interface\" item, or `pdlc/config.md`. No app file changes. No requirement or acceptance line changes.",
+      "partial": "The run changes one line of requirement text, but the app code stays as it was.",
+      "source": "Goal: \"before its first change starts\"; \"Acceptance checks\" in `pdlc/README.md`"
+    },
+    {
+      "id": "R9",
+      "kind": "structure",
+      "weight": 1,
+      "criterion": "The final reply says that `/pdlc:tests` is next.",
+      "pass": "The final reply names `/pdlc:tests` as the next step, in one sentence.",
+      "partial": "The reply names a next step, but not `/pdlc:tests`. Or the reply buries it in a long text.",
+      "source": "Outputs: \"For the user: `/pdlc:tests` is next\"",
+      "structureRef": "S5"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot todo-rust --state acceptance --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "rich: two changes, stored-data lines",
+      "exercises": "The run writes the acceptance file for an intent with two changes and lines about stored data. It covers the comment block, the red run, the lock, the review, and the handoff.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "prompt": "IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot wordfreq --state acceptance --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "typical: one change, the intent named by its ID",
+      "exercises": "The run uses the intent that the user names. It has one change and no stored-data line, so the stored-data item is n/a.",
+      "replies": []
+    }
+  ]
+}

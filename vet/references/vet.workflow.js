@@ -455,12 +455,17 @@ const S = Object.fromEntries(
   PROMPTS.map((p) => [p.id, { p, recs: [], groups: {}, nextGroup: {}, classHist: {}, waveDone: 0, finished: false }]),
 )
 const repsOfWave = (k) => Array.from({ length: Math.min(R, k * W) - (k - 1) * W }, (_, i) => (k - 1) * W + i + 1)
-const baseOf = (p, r) => ({ prompt: p.id, repeat: r, label: labelOf(p, r), capture: null })
+// A run whose agent died, or whose capture is missing or not verbatim, runs once more before it is
+// excluded. This is a fixed constant, not an argument, so each eval runs the same evaluator.
+const CAPTURE_RETRIES = 1
+const baseOf = (p, r, attempt = 1) => ({ prompt: p.id, repeat: r, label: labelOf(p, r), capture: null, attempts: attempt })
+const exclude = (rec, reason) => ({ ...rec, excluded: rec.attempts > 1 ? `${reason} (after ${rec.attempts} attempts)` : reason })
 const withGrade = (rec, grade, lostReason) => {
-  if (!grade) return { ...rec, excluded: lostReason }
-  if (!grade.captureOk) return { ...rec, grade, excluded: 'capture missing or not verbatim' }
+  if (!grade) return exclude(rec, lostReason)
+  if (!grade.captureOk) return exclude({ ...rec, grade }, 'capture missing or not verbatim')
   return { ...rec, grade }
 }
+const canRetry = (rec) => rec.attempts <= CAPTURE_RETRIES
 const verdictOf = (g, id) => {
   const hit = g.grade && g.grade.items.find((x) => x.id === id)
   return hit ? hit.verdict : null
@@ -510,15 +515,22 @@ function applyPlacement(st, job, ans, k, label) {
 
 // ── Run, grade, compare one wave ────────────────────────────────────────────
 
-async function runOne(p, r) {
-  const base = baseOf(p, r)
+async function runOne(p, r, attempt = 1) {
+  const base = baseOf(p, r, attempt)
+  const again = (reason) => {
+    log(`${base.label}: ${reason}; run again (attempt ${attempt + 1})`)
+    return runOne(p, r, attempt + 1)
+  }
   const run = await agent(
     runPrompt(p, r),
     optsFor('run', { label: `run:${base.label}`, phase: 'Run', isolation: 'worktree', schema: RUN_SCHEMA }),
   ).catch(() => null)
-  if (!run) return { ...base, excluded: 'run agent died' }
+  if (!run) return base.attempts <= CAPTURE_RETRIES ? again('run agent died') : exclude(base, 'run agent died')
+  // A not_run status is not retried, because the run agent decided it.
   if (run.status === 'not_run') return { ...base, run, excluded: `skill not run: ${run.note || 'no reason given'}` }
-  if (!run.capture || !run.capture.startsWith('/')) return { ...base, run, excluded: 'capture path not reported' }
+  if (!run.capture || !run.capture.startsWith('/')) {
+    return base.attempts <= CAPTURE_RETRIES ? again('capture path not reported') : exclude({ ...base, run }, 'capture path not reported')
+  }
   CAPTURES[base.label] = run.capture
   base.capture = run.capture
   if (AGENTS.grade.batch !== 'run') return { ...base, run }
@@ -526,6 +538,7 @@ async function runOne(p, r) {
     gradePrompt(p, base.capture),
     optsFor('grade', { label: `grade:${base.label}`, phase: 'Grade', schema: GRADE_SCHEMA }),
   ).catch(() => null)
+  if (grade && !grade.captureOk && canRetry(base)) return again('capture missing or not verbatim')
   return withGrade({ ...base, run }, grade, 'grader died')
 }
 
@@ -534,8 +547,35 @@ const startWave = (p, k) =>
     xs.map((x, i) => x || { ...baseOf(p, repsOfWave(k)[i]), excluded: 'lost' }),
   )
 
+// Batch grade only: run again each record that lost its capture or that the grader skipped, then
+// grade the new run alone. Returns the records with the new ones in place, and the retried labels.
+async function retryLost(p, k, recs) {
+  const lost = recs.filter(
+    (x) => canRetry(x) && (x.excluded === 'capture missing or not verbatim' || x.excluded === 'grader skipped this run'),
+  )
+  if (!lost.length) return { recs, retried: new Set() }
+  const fresh = new Map(
+    (
+      await parallel(
+        lost.map((x) => async () => {
+          log(`${x.label}: ${x.excluded}; run again (attempt ${x.attempts + 1})`)
+          const rec = await runOne(p, x.repeat, x.attempts + 1)
+          if (rec.excluded) return rec
+          const grade = await agent(
+            gradePrompt(p, rec.capture),
+            optsFor('grade', { label: `grade:${rec.label}`, phase: 'Grade', schema: GRADE_SCHEMA }),
+          ).catch(() => null)
+          return withGrade(rec, grade, 'grader died')
+        }),
+      )
+    ).map((rec, i) => [lost[i].label, rec || exclude({ ...lost[i], attempts: lost[i].attempts + 1 }, 'lost')]),
+  )
+  return { recs: recs.map((x) => fresh.get(x.label) || x), retried: new Set(fresh.keys()) }
+}
+
 async function judgeWave(p, k, recs) {
   const st = S[p.id]
+  let retried = new Set()
   if (AGENTS.grade.batch === 'prompt') {
     const alive = recs.filter((x) => !x.excluded).map((x) => x.label)
     if (alive.length) {
@@ -547,8 +587,12 @@ async function judgeWave(p, k, recs) {
       ).catch(() => null)
       const byLabel = new Map(((out && out.runs) || []).map((g) => [g.label, g]))
       recs = recs.map((x) => (x.excluded ? x : withGrade(x, byLabel.get(x.label) || null, out ? 'grader skipped this run' : 'grader died')))
+      const retry = await retryLost(p, k, recs)
+      recs = retry.recs
+      retried = retry.retried
       if (MERGED) {
-        const usable = new Set(usableOf(st).concat(recs.filter((x) => !x.excluded)).map((x) => x.label))
+        // A retried run was not in the merged judgement, so a compare call places it after this block.
+        const usable = new Set(usableOf(st).concat(recs.filter((x) => !x.excluded && !retry.retried.has(x.label))).map((x) => x.label))
         const answers = new Map(((out && out.items) || []).map((a) => [a.item, a]))
         for (const job of jobs) {
           const unplaced = job.unplaced.filter((l) => usable.has(l))
@@ -558,13 +602,13 @@ async function judgeWave(p, k, recs) {
     }
   }
   st.recs.push(...recs)
-  if (MERGED) return
+  if (MERGED && !recs.some((x) => retried.has(x.label) && !x.excluded)) return
 
   const usable = usableOf(st)
   if (usable.length < 2) return
   const jobs = jobsFor(st, usable.map((x) => x.label), applicable(usable))
   if (!jobs.length) return
-  if (AGENTS.compare.batch === 'prompt') {
+  if (AGENTS.compare.batch !== 'item') {
     const label = `compare:${p.id}@w${k}`
     const out = await agent(placePrompt(p, jobs, k), optsFor('compare', { label, phase: 'Compare', schema: PLACE_SCHEMA })).catch(() => null)
     const answers = new Map(((out && out.items) || []).map((a) => [a.item, a]))
@@ -809,6 +853,7 @@ const runs = allRuns.map((g) => ({
   quality: g.excluded ? null : pct(wmean(qualityPairs(g))),
   verdicts: g.grade ? g.grade.items : [],
   excluded: g.excluded || null,
+  attempts: g.attempts || 1,
 }))
 const runQualities = runs.filter((x) => x.quality !== null).map((x) => x.quality).sort((a, b) => a - b)
 const median = (xs) => (xs.length ? (xs.length % 2 ? xs[(xs.length - 1) / 2] : round1((xs[xs.length / 2 - 1] + xs[xs.length / 2]) / 2)) : null)

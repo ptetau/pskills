@@ -19,6 +19,8 @@ change of the intent is proposed. Ship stops only for a case that needs the user
   `pdlc/README.md`). On a lower model, ship does no work. Ship tells the user that pdlc
   needs a Sonnet 5.5 class model or above.
 - The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first.
+- Ship reads `pdlc/version.json` and compares it with the plugin version. If the project
+  files are older, ship runs `/pdlc:upgrade` first, or stops and says why.
 - Each stage runs through its own skill, with `defaults`, in the order of
   "Stages and handoffs". Each change gets every stage, also `verify` and show with
   nothing on screen.
