@@ -8,8 +8,8 @@ With no file, the script checks plugins/pdlc/skills/<name>/SKILL.md for each nam
 
 Exit 0: no problems. Exit 1: problems (one line each). Exit 2: usage error.
 The budget of a skill is the entry for the name of its folder in the budgets file
-(default: skill_budgets.json next to this script). A skill with no entry only gets
-the form check.
+(default: skill_budgets.json next to this script), plus the words of its "earned" entries.
+A skill with no entry only gets the form check. A bad "earned" object gives exit 2.
 """
 
 import json
@@ -106,6 +106,40 @@ def check_stage(title, blk):  # blk: the lines of the stage, fenced lines remove
     return problems
 
 
+def effective_budget(budgets, skill):
+    """Return (budget, earned words): the base budget plus the earned words of the skill."""
+    entries = budgets.get("earned", {}).get(skill, [])
+    earned = sum(e["words"] for e in entries)
+    return budgets[skill] + earned, earned
+
+
+def validate_budgets(budgets):
+    """Return a list of problems in the "earned" object of the budgets file."""
+    earned = budgets.get("earned", {})
+    if not isinstance(earned, dict):
+        return ['"earned" must be an object']
+    problems = []
+    for skill, entries in earned.items():
+        if skill not in budgets or skill in ("enforced", "earned"):
+            problems.append(f'earned: "{skill}" has no budget entry')
+        if not isinstance(entries, list):
+            problems.append(f'earned "{skill}": must be a list')
+            continue
+        for n, e in enumerate(entries, 1):
+            where = f'earned "{skill}" #{n}'
+            if not isinstance(e, dict):
+                problems.append(f"{where}: must be an object")
+                continue
+            for key in ("rule", "evidence"):
+                v = e.get(key)
+                if not isinstance(v, str) or not v.strip():
+                    problems.append(f'{where}: "{key}" must be non-empty text')
+            w = e.get("words")
+            if isinstance(w, bool) or not isinstance(w, int) or w <= 0:
+                problems.append(f'{where}: "words" must be an integer above 0')
+    return problems
+
+
 def check(path, text, budgets):
     problems = []
     fm, body = split_front_matter(text)
@@ -164,8 +198,9 @@ def check(path, text, budgets):
     skill = os.path.basename(os.path.dirname(os.path.abspath(path)))
     if skill in budgets:
         words = len(body.split())
-        if words > budgets[skill]:
-            problems.append(f"body has {words} words, budget {budgets[skill]} ({skill})")
+        total, earned = effective_budget(budgets, skill)
+        if words > total:
+            problems.append(f"body has {words} words, budget {total} ({budgets[skill]} + earned {earned})")
     return problems
 
 
@@ -202,6 +237,11 @@ def main(argv):
             budgets = json.load(f)
     except (OSError, ValueError) as e:
         print(f"cannot read budgets {budgets_path}: {e}", file=sys.stderr)
+        return 2
+    bad_file = validate_budgets(budgets)
+    if bad_file:
+        for p in bad_file:
+            print(f"bad budgets file {budgets_path}: {p}", file=sys.stderr)
         return 2
     if not files:
         try:

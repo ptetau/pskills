@@ -51,13 +51,13 @@ Do not put these in the text:
 Keep each hard contract exact. A hard contract is a file name, a commit subject, a header
 field, or a format that a script reads. Write each commit subject in double quotes.
 
-A skill with a word budget must stay inside the budget. `scripts/skill_budgets.json`
-holds each budget: 50% of the body of the skill, rounded up to 10 words, with a minimum of
-170 words. The budget of `ready` is 50% of its body before commit 426551f. A fix must
-not grow the body. If a fix needs words, remove the same number of words. Only the user
-can raise a budget.
+A skill body targets 200 words and holds only critical rules. A critical rule is a
+contract that a script or another skill reads, or a rule that a model gets wrong without
+being told. A body above 200 words must earn each extra rule: a vet shows the failure,
+and the rule fixes it. Record the rule under "earned" in `scripts/skill_budgets.json`,
+with its words and its evidence. Only the user can raise the 200 target.
 
-`scripts/check_skill_form.py` checks the form and the budget. It checks each skill in the
+`scripts/check_skill_form.py` checks the form and the budget (200 plus the earned words). It checks each skill in the
 `enforced` list of `scripts/skill_budgets.json`, and the list is empty now. Each rewrite
 adds its skill to the `enforced` list. The check does not run on the other skills yet.
 
