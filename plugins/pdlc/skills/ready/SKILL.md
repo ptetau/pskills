@@ -38,8 +38,9 @@ then marks it `ready`.
 - A requirement is clear when all of these are true:
   - The requirement says what must be true, not how to build it.
   - Each acceptance line is "Given …, when …, then …", and a check can prove it with a
-    pass or a fail. Each line uses concrete values ("Ana", "80", "15%"), not "a user" or
-    "some amount".
+    pass or a fail. Each line uses concrete values ("Ana", "80", "15%"), not "a user",
+    "some amount", or "any file". Its "then" gives the exact output, not "the same
+    error".
   - The words of the intent bind ("Spec patches"): each example is a line, exactly.
   - Where the requirement says how something looks, a line gives the exact text and where
     the user sees it. Other lines do the same for each edge value: zero, empty, or an
@@ -57,7 +58,8 @@ then marks it `ready`.
     into `DES-errors` as part of this intent.
   - The "Interface" of the spec has an entry for each surface that a line names. A surface
     is a command, a flag, a route, a field, a page text, or a call. The entry lists each
-    error code of the lines that use it.
+    error code of the lines that use it. An entry does not make a line exact: each line
+    still gives its own exact output and error code.
   - Each line that depends on the clock, randomness, or a vendor has a seam. The seam is
     under "Test seams" in the "Interface" of the spec that owns it.
   - Each rule that a sentence states has a line, also each `(assumed)` detail. A rule with

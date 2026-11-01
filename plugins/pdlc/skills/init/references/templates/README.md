@@ -113,7 +113,8 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
 - The first line of an entry gives the name in backticks, the kind, and the file. The
   merge check matches entries by the first text in backticks.
 - Under the first line, "in" and "out" give what goes in and what comes out. "errors"
-  gives each error code from `DES-errors`, or "none".
+  gives each error code from `DES-errors`, or "none". An error that the app gives today,
+  with no code in `DES-errors`, gives its exact message and status in place of a code.
 - A new entry ends its first line with ` · proposed`. The `verify` stage removes the
   mark in the scope spec when the change that builds the entry passes.
 - When a requirement retires, each entry that only it used gets ` · retiring`. The
