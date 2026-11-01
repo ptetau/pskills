@@ -24,7 +24,7 @@ The change that the user names, else the first `planned` one. Its `handoff.md`.
 - Commits, each with `Intent` and `Change`. Order: "Start CH-xxxx", "Tests CH-xxxx"
   (also `Req`), "Lock tests CH-xxxx", "Review tests CH-xxxx" (packet from
   `python3 pdlc/bin/make_packets.py CH-xxxx tests`), "Tests reviewed CH-xxxx".
-- Handoff `tests → build`. Next: `/pdlc:build`.
+- Handoff `tests → build` names each check, the requirement it proves, and the lock hash. Next: `/pdlc:build`.
 
 ## Constraints
 
