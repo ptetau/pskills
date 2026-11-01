@@ -107,6 +107,15 @@ class Pure(unittest.TestCase):
                                  "    - `INVALID_ADDRESS` · `error: bad email` · status 400\n")
         self.assertEqual(upgrade.format_problems(new), [])
 
+    def test_format_problems_reports_a_command_error_with_no_stream(self):
+        entry = ("\n## Interface\n\n- `tool FILE` · command · `tool.py`\n  - in: a path\n"
+                 "  - errors:\n    - no code · `usage: tool FILE` · exit 2%s\n")
+        problems = upgrade.format_problems(JOB_NO_INTERFACE + entry % "")
+        self.assertEqual(len(problems), 1)
+        self.assertIn("`tool FILE`", problems[0])
+        self.assertIn("gives no stream", problems[0])
+        self.assertEqual(upgrade.format_problems(JOB_NO_INTERFACE + entry % " · stderr"), [])
+
     def test_next_intent_id(self):
         with tempfile.TemporaryDirectory() as tmp:
             inbox = Path(tmp, "pdlc/inbox")

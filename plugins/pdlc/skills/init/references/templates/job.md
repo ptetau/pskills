@@ -32,14 +32,21 @@ route, form field, and page element or page text that a check reads. See "Interf
 
 The first line of an entry gives the name in backticks, the kind, and the file. Under it,
 give what goes in, what comes out, and each error on its own line. An error line has the
-code from `DES-errors`, the exact message, and `exit <n>` or `status <n>`. See "Interfaces"
-in `pdlc/README.md`. A new entry ends its first line with ` · proposed`.
+code from `DES-errors`, the exact message, and `exit <n>` or `status <n>`. A command error
+then gives `stderr` or `stdout`: the stream that gets the message. See "Interfaces" in
+`pdlc/README.md`. A new entry ends its first line with ` · proposed`.
 
 - `POST /reset` · route · `path/to/server.py`
   - in: the form field `email`, an email address
   - out: status 303 to `/reset/sent`, a page that shows "Check your email"
   - errors:
     - `INVALID_ADDRESS` · `error: the email address is not valid` · status 400
+
+- `tool [--limit N] FILE` · command · `path/to/cli.py`
+  - in: the path of a file, and an optional number N, greater than zero
+  - out: on standard output, one line for each item. The exit code is 0.
+  - errors:
+    - `LIMIT_INVALID` · `error: --limit needs a whole number greater than zero` · exit 2 · stderr
 
 ### Test seams
 

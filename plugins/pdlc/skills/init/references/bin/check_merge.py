@@ -9,8 +9,10 @@ A change may merge only when:
     "Interface" of its scope spec, or of a JOB or CAP spec under "Relies on". The first
     text in backticks names an entry. Its "errors:" line is "errors: none", or has one
     line under it for each error: the code, the exact message, and the result, as in
-    "- `TOP_INVALID` · `error: --top needs a whole number` · exit 2". The code, message, and
-    result of each error match those of the spec entry, a code in backticks is a row of
+    "- `TOP_INVALID` · `error: --top needs a whole number` · exit 2 · stderr". A command
+    error ("exit <n>") ends with the stream that gets the message, stderr or stdout, and a
+    route or function error has no stream. The code, message, and result (with its stream)
+    of each error match those of the spec entry, a code in backticks is a row of
     DES-errors, and the spec entry does not end with "· proposed". A change whose scope
     spec has no "## Interface" heading, or a change with no candidate spec that has one
     (a spec from before this rule), skips this check;
@@ -103,25 +105,36 @@ def marker_problems(where, text):
             if not found.group(0).startswith("(assumed")]
 
 
-# An (assumed) mark can follow the code, the message, and the result. The compared triple
-# leaves the marks out.
+# An (assumed) mark can follow the code, the message, the result, and the stream. The
+# compared triple leaves the marks out. A command error ("exit <n>") names the stream that
+# gets the message: "stderr" or "stdout". A route or function error names no stream.
 ASSUMED = r"(?:\s+\(assumed[^)]*\))?"
 ERROR_ITEM = re.compile(
-    r"^\s+- (?P<code>`[A-Z][A-Z0-9_]*`|no code)" + ASSUMED
+    r"^\s+- (?P<code>`[A-Z][A-Z0-9_]*`|`?no code`?)" + ASSUMED
     + r" · (?P<message>``.+?``|`[^`]+`|no message)" + ASSUMED
-    + r" · (?P<result>exit \d+|status \d{3}|raises `?[A-Za-z_][\w.:]*`?)" + ASSUMED + r"\s*$")
+    + r" · (?P<result>exit \d+|status \d{3}|raises `?[A-Za-z_][\w.:]*`?)" + ASSUMED
+    + r"(?: · (?P<stream>`?(?:stderr|stdout)`?))?" + ASSUMED + r"\s*$")
 NEW_FORM = ("write `errors: none`, or `errors:` with one line under it for each error, "
-            "for example - `CODE` · `exact message` · exit 2 (or status <n>, or raises <Name>)")
+            "for example - `CODE` · `exact message` · exit 2 · stderr (or status <n>, or "
+            "raises <Name>, with no stream)")
 
 
 def error_triple(item):
-    """(code, message, result) of one error line, or None if the line is not in the form."""
+    """(code, message, result) of one error line. The result of a command error ends with
+    its stream, as in "exit 2 · stderr". A str says what is wrong with a line that is nearly
+    in the form, and None means that the line is not in the form."""
     match = ERROR_ITEM.match(" " + item)
     if not match:
         return None
-    code, message, result = match.group("code", "message", "result")
+    code, message, result, stream = match.group("code", "message", "result", "stream")
+    result, stream = result.replace("`", ""), (stream or "").strip("`")
+    if result.startswith("exit") and not stream:
+        return ("gives no stream. Add ` · stderr` or ` · stdout` after `%s`: the stream "
+                "that gets the message" % result)
+    if stream and not result.startswith("exit"):
+        return "names a stream, but only a command error (`exit <n>`) has one. Remove ` · %s`" % stream
     message = message if message == "no message" else message.strip("`")
-    return code.strip("`"), message, result.replace("`", "")
+    return code.strip("`"), message, result + (" · " + stream if stream else "")
 
 
 class _Entry:
@@ -139,8 +152,10 @@ class _Entry:
         if self.item is not None:
             text = " ".join(self.item)
             triple = error_triple(text)
-            if triple:
+            if isinstance(triple, tuple):
                 self.errors.add(triple)
+            elif triple:
+                self.problems.append("the error line `%s` %s" % (text[2:], triple))
             else:
                 self.problems.append("the error line `%s` is not in the form (%s)"
                                      % (text[2:], NEW_FORM))

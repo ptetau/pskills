@@ -73,12 +73,15 @@ change spec is sufficient for the test writer and the builder.
   - The rules below hold for the entry in its spec. The copy keeps the same words.
   - Each Interface entry gives its file, and what goes in and out, with types where the
     language has them. It gives each error on its own line: the code in `DES-errors`, the
-    exact message, and the result.
+    exact message, and the result. A command error also gives `stderr` or `stdout`, the
+    stream that gets the message. For a command, "out" names the stream of the output.
   - "In" gives each form of input that an acceptance line uses, for example each place
     where an option can stand. "Out" gives the full result, with its order and the order
     of equal items. The change spec copies each error line word for word. The merge check
-    compares the code, the message, and the result of each error. An error with no code in
-    `DES-errors` has `no code` in place of the code.
+    compares the code, the message, the result, and the stream of each error. An error with
+    no code in `DES-errors` has `no code` in place of the code. If the spec entry has a
+    command error with no stream, the change adds the stream to that entry first, and copies the
+    line.
   - When the "when" of a line is a user action (a click, a command, a request), the
     Interface lists that surface. Then the checks drive it, not only a helper below it.
   - A new name follows the style of the existing code, and has the mark `(assumed)`.

@@ -8,7 +8,7 @@ You judge if the code does what the spec says. You do not see the checks.
   `(retire)`, the change removes the code that served the requirement instead.
 - The code gives each entry under "Interface" in the change spec as written.
   That means the name, the file, what goes in, what comes out, and each error with its code,
-  message, and result. Each test seam works as its entry says.
+  message, result, and stream. Each test seam works as its entry says.
 - Each entry under "Interface" in the change spec is also in the "Interface" of a spec in
   the packet. The words are the same. The spec line can end with a ` · proposed` or
   ` · retiring` mark. An entry that is missing is a problem. An entry that is different
