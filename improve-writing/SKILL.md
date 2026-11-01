@@ -153,8 +153,9 @@ compare the two results.
    for each run of `/vet`. Ask the model question of `/vet` one time for all skills in the
    request.
 3. **Run the baseline.** Give `/vet` the path of the baseline copy. If an earlier result
-   has the same suite, settings, and models, and its `skillSha256` is the hash of the
-   baseline `SKILL.md`, use that result.
+   has the same suite, settings, and models, use that result. Its `skillSha256`,
+   `skillTreeSha256`, and `workflowSha256` must all match the baseline skill and the
+   current workflow script.
 4. **Run the rewrite.** Give `/vet` the path of the rewritten skill.
 5. **Compare.** Run the compare script:
 
@@ -167,8 +168,12 @@ compare the two results.
    - The pass rate of a weight-3 rubric item is more than 20 points lower.
    - Fewer runs are usable.
 
+   If the two results have a different `workflowSha256`, the script shows "NOT COMPARABLE"
+   and exits with code 2. Run `/vet` again with the same workflow script.
+
    The thresholds are defaults, not measured noise. To measure the noise of the judges,
-   run `/vet` on the baseline two times and compare the two results.
+   run `/vet` on the baseline two times and compare the two results. For this check, the
+   script prints the warning "measure the same skill text". This warning is expected.
 6. **If there is a regression,** read the captures of the failed items in the two runs.
    Find the change in the text that caused the regression. Correct that text. Then run
    `/vet` on the rewrite again.

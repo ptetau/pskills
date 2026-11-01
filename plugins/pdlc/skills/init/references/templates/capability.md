@@ -24,13 +24,16 @@ through these entries, so a rebuild from the specs must keep each name. See "Int
 in `pdlc/README.md`.
 
 The first line of an entry gives the name in backticks, the kind, and the file. Under it,
-give what goes in, what comes out, and each error code from `DES-errors`. A new entry ends
-its first line with ` · proposed`.
+give what goes in, what comes out, and each error on its own line: the code from
+`DES-errors`, the exact message, and `raises <Name>`. A new entry ends its first line with
+` · proposed`.
 
 - `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
   - in: the name of a template, and an email address
   - out: the ID of the sent email
-  - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`
+  - errors:
+    - `TEMPLATE_NOT_FOUND` · `no template named <name>` · raises `TemplateNotFound`
+    - `INVALID_ADDRESS` · `not a valid email address: <address>` · raises `InvalidAddress`
 
 ### Test seams
 

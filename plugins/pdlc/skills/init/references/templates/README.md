@@ -42,9 +42,12 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 - The trailers follow a blank line, one on each line: `Intent: IN-xxxx` first, then
   `Change: CH-xxxx` on the branch of a change. A commit that changes code, checks, or the
   README also has `Req: <IDs>`.
+- The pdlc trailers are the last paragraph of the message. Any other trailer, such as
+  `Co-Authored-By`, goes directly under them, with no blank line between them.
 - A hook examines each new commit. On a pdlc branch, it examines the subject and the
-  trailers. On every branch, it examines the writing in the specs, the intents, and the
-  change folders. The skill fixes all the problems that the hook names in one edit, and
+  trailers. On every branch, it examines the trailers of a commit with a pdlc subject.
+  Also on every branch, it examines the writing in the specs, the intents, and the change
+  folders. The skill fixes all the problems that the hook names in one edit, and
   amends the commit one time.
 
 ## Writing
@@ -78,11 +81,15 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
   remote.
 - `templates/`: blank documents. A filled document has real content in place of each
   `<placeholder>` and each guide sentence.
-- `bin/`: `check_merge.py`, `check_writing.py`, `make_packets.py`, `record_gif.mjs`,
-  `record_merges.py`.
+- `bin/`: `check_handoff.py`, `check_merge.py`, `check_order.py`, `check_writing.py`,
+  `make_packets.py`, `record_gif.mjs`, `record_merges.py`.
 - `version.json`: the pdlc version of these files, and the hash of each file that pdlc wrote.
   Only `/pdlc:upgrade` and init write it.
 - `.tools/`: the tools of the visual review. This folder is not committed.
+- `.logs/`: the debug log of each ship run, `ship-<UTC start>.jsonl`, one JSON object on
+  each line. A hook of the pdlc plugin writes it. This folder is not committed. After an
+  interruption or an API error, type `/pdlc:ship` to continue, because a normal prompt ends
+  the run.
 
 ## Code maps
 
@@ -114,11 +121,24 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
   A seam controls the clock, randomness, or an outside vendor or store.
 - The first line of an entry gives the name in backticks, the kind, and the file. The
   merge check matches entries by the first text in backticks.
-- Under the first line, "in" and "out" give what goes in and what comes out. "errors"
-  gives each error code from `DES-errors`, or "none". An error that the app gives today,
-  with no code in `DES-errors`, gives its exact message and status in place of a code.
-  When a line of an intent uses that error, the error gets a code, as each failure line
-  does.
+- Under the first line, "in" and "out" give what goes in and what comes out. For a
+  command, "out" names the stream, for example "on standard output", and the exit code.
+- "errors" is `errors: none`, or `errors:` with one line under it for each error. Each line
+  gives the code, the exact message, and the result, with ` · ` between them:
+  `` - `TOP_INVALID` · `error: --top needs a whole number greater than zero` · exit 2 · stderr ``.
+  The result is `exit <n>` for a command, `status <n>` for a route, or `raises <Name>` for a
+  function.
+- A command error ends with the stream that gets the message: `stderr` or `stdout`. On
+  an error, a command writes only the message to that stream, and the other stream is
+  empty, unless "out" says otherwise. A route error and a function error have no stream.
+- The code comes from `DES-errors`. An error that the app gives today, with no code in
+  `DES-errors`, has `no code`. When a line of an intent uses that error, the error gets a
+  code, as each failure line does. A function error with no message has `no message`.
+- Each entry has an `errors:` line. An `(assumed)` mark goes after the code, the message,
+  or the result that is a guess: `` - `USAGE` (assumed) · `usage: …` (assumed) · exit 2 · stderr ``.
+  The merge check leaves the marks out when it compares.
+- `errors: none` has nothing after it. The merge check compares the code, the message,
+  the result, and the stream of each error, and refuses any other form.
 - A new entry ends its first line with ` · proposed`. The `verify` stage removes the
   mark in the scope spec when the change that builds the entry passes.
 - When a requirement retires, each entry that only it used gets ` · retiring`. The
@@ -134,13 +154,21 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
 - Suppose the spec that owns the item is not the scope of this change (at the change
   stage: of a change of this intent). Then the item goes into the scope spec of this
   change, or becomes a question for the user.
+- The changes of an intent go in the order of their entries. A change comes after each
+  change that builds an entry that its acceptance lines or its Interface use. It also
+  comes after the change of each spec under its "Relies on". `bin/check_order.py`
+  checks the order at the change stage.
 
 ```
 - `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
   - in: the name of a template, and an email address
   - out: the ID of the sent email
-  - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`
+  - errors:
+    - `TEMPLATE_NOT_FOUND` · `no template named <name>` · raises `TemplateNotFound`
+    - `INVALID_ADDRESS` · `not a valid email address: <address>` · raises `InvalidAddress`
 ```
+
+A `<placeholder>` in a message is permitted only in a template. A spec gives the real message.
 
 ## Who does what
 
@@ -174,7 +202,7 @@ merge.
   `templates/handoff.md`, which replaces the old one. Git keeps the history.
 - An intent stage writes the "Handoff" of the intent, with the template sections as `###`
   headings. A change stage writes `changes/CH-xxxx-name/handoff.md`.
-- The title comes from the list in the template. Every section stays, with "none" under an
+- The title comes from the list in the template. Every section stays, with "- none" under an
   empty one. The time comes from the real clock (`date -Iseconds`).
 - A handoff says only what the files show, with real counts of the checks that ran and of
   the acceptance lines shown.
@@ -325,14 +353,15 @@ Its `Base:` names that branch, and its pull request targets that branch.
   answer has a mark and one line on why. The reply `skip` takes it.
 - A decision that a skill makes without an instruction (a name, a limit, a message, an
   order, a default answer) has the mark `(assumed)` where the spec or change spec states
-  it. The handoff lists it too. Thus, no guess stays hidden.
+  it. The handoff lists it too. `bin/check_handoff.py` makes sure that the list names each
+  new mark. Thus, no guess stays hidden.
 - The mark is plain, right after the words that it marks, with any reason outside the
   brackets: "at most 20 items (assumed), to keep the list short". In a change, the merge
   check rejects `(limit assumed)`, `*(assumed)*`, and each mark that does not start with
   `(assumed`.
 - With `defaults`, a skill asks nothing, and takes its recommended answer. Each answer goes
-  as `<question> → <answer> (assumed)` in "Decided on defaults" in the handoff and in the
-  intent "Notes", so that the user can change it.
+  as `- <requirement>: <question> → <answer> (assumed)` in "Decided on defaults" in the
+  handoff and in the intent "Notes", so that the user can change it.
 
 ## Spec patches
 

@@ -114,11 +114,14 @@ For each acceptance line that you prove, do these steps:
      or flag.
    - Do not use the real clock. Do not set the time on a helper below the surface.
    - If the Interface gives no such seam, stop and say so.
-5. For a failure, make the check expect the exact error code, not only "something went
-   wrong". A check that passes for any error also passes for a typo. If the caller cannot
-   see the code, make the check expect the exact message and status instead. See
-   `DES-errors` (the error codes of the project). Write one such check for each error code
-   or message that the Interface lists.
+5. For a failure, make the check expect the exact error, not only "something went
+   wrong". A check that passes for any error also passes for a typo. Make the check expect
+   the code when the caller can see it. See `DES-errors` (the error codes of the
+   project). Write one such check for each error that the Interface lists. Always make it
+   expect the exact message and the result of the entry:
+   - For a command: the exit code, and the message on the stream that the entry names. Also
+     expect that the other stream is empty, unless "out" says otherwise.
+   - For a route: the status.
 6. Make sure that the check fails if the behaviour is incorrect, and passes if the
    behaviour is correct. A fake that stands in for something real (a page, a server, a
    file) must use the names and the behaviour of the real thing. For example, a fake page

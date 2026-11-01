@@ -265,6 +265,8 @@ Skill: ${SKILL.name}
 Instructions: ${SKILL.file}
 Read that file first, then any files it points to (resolve relative paths against ${SKILL.dir}). Follow it exactly as if the harness had just loaded it for you. Do not invoke it through the Skill tool. Do not read anything under an evals/ directory.
 
+Other runs work at the same time. Keep each file that you make for yourself (a script, a note, a temporary output) in .vet-tmp/ inside your working directory. Do not use a shared scratchpad directory or /tmp for it.
+
 The user's message is:
 ${invocation(p)}
 
@@ -290,7 +292,7 @@ When the run is over, write the capture file ${captureName(p, r)} inside your wo
 ### assistant 2
 ...and so on, alternating, until your last message.
 ## Files
-For every file the run created or changed in your worktree (check git status, including untracked files, but leave out .vet-capture/ and your own scratch files): a "### <path>" heading, then the full content of a new file or the git diff of a changed one, inside a fence longer than any fence it contains. Write "None." if there were none.
+For every file the run created or changed in your worktree (check git status, including untracked files, but leave out .vet-capture/, .vet-tmp/ and your own scratch files): a "### <path>" heading, then the full content of a new file or the git diff of a changed one, inside a fence longer than any fence it contains. Write "None." if there were none.
 
 Then return the structured result, with capture set to the capture file's absolute path.`
 

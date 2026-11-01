@@ -95,6 +95,27 @@ class Pure(unittest.TestCase):
         self.assertEqual(upgrade.format_problems(JOB_WITH_INTERFACE), [])
         self.assertEqual(len(upgrade.format_problems(JOB_NO_INTERFACE)), 1)
 
+    def test_format_problems_reports_an_error_entry_in_the_old_form(self):
+        old = JOB_NO_INTERFACE + ("\n## Interface\n\n- `POST /reset` · route · `server.py`\n"
+                                 "  - in: an email\n  - errors: `INVALID_ADDRESS`, `USAGE`\n")
+        problems = upgrade.format_problems(old)
+        self.assertEqual(len(problems), 1)
+        self.assertIn("`POST /reset`", problems[0])
+        self.assertIn("old form", problems[0])
+        new = JOB_NO_INTERFACE + ("\n## Interface\n\n- `POST /reset` · route · `server.py`\n"
+                                 "  - in: an email\n  - errors:\n"
+                                 "    - `INVALID_ADDRESS` · `error: bad email` · status 400\n")
+        self.assertEqual(upgrade.format_problems(new), [])
+
+    def test_format_problems_reports_a_command_error_with_no_stream(self):
+        entry = ("\n## Interface\n\n- `tool FILE` · command · `tool.py`\n  - in: a path\n"
+                 "  - errors:\n    - no code · `usage: tool FILE` · exit 2%s\n")
+        problems = upgrade.format_problems(JOB_NO_INTERFACE + entry % "")
+        self.assertEqual(len(problems), 1)
+        self.assertIn("`tool FILE`", problems[0])
+        self.assertIn("gives no stream", problems[0])
+        self.assertEqual(upgrade.format_problems(JOB_NO_INTERFACE + entry % " · stderr"), [])
+
     def test_next_intent_id(self):
         with tempfile.TemporaryDirectory() as tmp:
             inbox = Path(tmp, "pdlc/inbox")
@@ -335,6 +356,7 @@ class Apply(Project):
     def test_gitignore_line_is_added_on_main_only(self):
         data = self.apply()
         self.assertIn("pdlc/.tools/", (self.root / ".gitignore").read_text().splitlines())
+        self.assertIn("pdlc/.logs/", (self.root / ".gitignore").read_text().splitlines())
         self.assertEqual(self.subjects()[0], "Upgrade pdlc")
         self.assertTrue(data["gitignore"])
 

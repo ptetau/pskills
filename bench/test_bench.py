@@ -1186,6 +1186,12 @@ class StageReplayTest(unittest.TestCase):
                 self.assertEqual(run_bench.git(project, "rev-parse", "start").stdout,
                                  run_bench.git(project, "rev-parse", "HEAD").stdout)
 
+    def test_a_prepared_project_has_a_clean_working_tree(self):
+        for state in run_bench.prepare_states("r5"):
+            with self.subTest(state=state):
+                project = self.prepare(state)
+                self.assertEqual(run_bench.git(project, "status", "--porcelain").stdout.strip(), "")
+
     def test_prepare_init_has_no_pdlc_folder(self):
         self.assertFalse((self.prepare("init") / "pdlc").exists())
 
@@ -1492,9 +1498,9 @@ class SnapshotTest(unittest.TestCase):
         entry = run_bench.entry_commit(clone / "x", "Specify IN-0001")
         self.assertEqual(run_bench.git(project, "rev-parse", head + "^{tree}").stdout,
                          run_bench.git(clone / "x", "rev-parse", entry + "^{tree}").stdout)
-        # What differs from the bundle is the upgrade, and only inside pdlc/.
+        # What differs from the bundle is the upgrade: pdlc/ and the .gitignore line.
         changed = run_bench.git(project, "diff", "--name-only", entry, "HEAD").stdout.split()
-        self.assertTrue(changed and all(name.startswith("pdlc/") for name in changed), changed)
+        self.assertTrue(changed and all(name.startswith("pdlc/") or name == ".gitignore" for name in changed), changed)
         self.assertIn("pdlc/version.json", changed)
         for name in ("check-tagging", "commit-trailers", "review-checklist"):
             self.assertIn("pdlc/specs/design/DES-pdlc-%s.md" % name, changed)
@@ -1648,6 +1654,54 @@ class SnapshotTest(unittest.TestCase):
         self.assertEqual(args.intent, "Do a thing.")
         args = run_bench.build_parser().parse_args(["e2e", "--label", "x"])
         self.assertIsNone(args.intent)
+
+
+class ShipLogCopyTest(unittest.TestCase):
+    ENTRY = {"t": "2031-01-01T00:00:01+00:00", "run": "ship-x", "session": "s", "event": "run_start",
+             "branch": "main", "head": "abc", "plugin": "0.6.0"}
+
+    def setUp(self):
+        self.work = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.work, True)
+        self.project, self.out = self.work / "app", self.work / "out"
+        (self.project / "pdlc/.logs").mkdir(parents=True)
+        self.out.mkdir()
+
+    def test_the_log_is_copied_and_summarised(self):
+        (self.project / "pdlc/.logs/ship-20310101T000001Z.jsonl").write_text(json.dumps(self.ENTRY) + "\n")
+        summary = run_bench.collect_shiplog(self.project, self.out, 2, run_bench.HERE.parent / "plugins/pdlc")
+        copied = self.out / "run2.shiplog.jsonl"
+        self.assertEqual(json.loads(copied.read_text().splitlines()[0])["event"], "run_start")
+        self.assertIn("the log ends with no turn_end", summary)
+
+    def test_the_newest_log_by_modified_time_is_copied(self):
+        old, new = (self.project / ("pdlc/.logs/ship-%s.jsonl" % n) for n in ("20310101T000009Z", "20300101T000001Z"))
+        old.write_text(json.dumps({**self.ENTRY, "run": "old"}) + "\n")
+        new.write_text(json.dumps({**self.ENTRY, "run": "new"}) + "\n")
+        os.utime(old, (1000, 1000))
+        os.utime(new, (2000, 2000))
+        run_bench.collect_shiplog(self.project, self.out, 1, run_bench.HERE.parent / "plugins/pdlc")
+        self.assertIn('"new"', (self.out / "run1.shiplog.jsonl").read_text())
+
+    def test_no_log_gives_none(self):
+        self.assertIsNone(run_bench.collect_shiplog(self.project, self.out, 1, run_bench.HERE.parent / "plugins/pdlc"))
+        self.assertFalse((self.out / "run1.shiplog.jsonl").exists())
+
+    def test_e2e_stores_the_summary_under_shiplog(self):
+        (self.project / "pdlc/.logs/ship-20310101T000001Z.jsonl").write_text(json.dumps(self.ENTRY) + "\n")
+        args = Namespace(plugin=str(run_bench.HERE.parent / "plugins/pdlc"), out=str(self.out), label="x", runs=1,
+                         fixture="wordfreq", intent=None, timeout=1, budget=1, forward=False)
+        project = self.project
+        with mock.patch.object(run_bench, "make_project", return_value=project), \
+                mock.patch.object(run_bench, "run_claude", return_value=([], 1, "")), \
+                mock.patch.object(run_bench, "analyse", return_value={"totals": {"cost_usd": 0.0}}), \
+                mock.patch.object(run_bench, "inspect_project",
+                                  return_value={"probes": {"passed": 0, "total": 0, "failed": []}}), \
+                contextlib.redirect_stdout(io.StringIO()):
+            run_bench.command_e2e(args)
+        saved = json.loads((self.out / "x/run1.json").read_text())
+        self.assertIn("run_start", (self.out / "x/run1.shiplog.jsonl").read_text())
+        self.assertIn("end", saved["shiplog"])
 
 
 class RebuildCopyTest(unittest.TestCase):

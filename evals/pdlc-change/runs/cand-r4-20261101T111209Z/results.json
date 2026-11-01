@@ -1,0 +1,610 @@
+{
+ "skill": "pdlc:change",
+ "skillSha256": "998e651d64bfc872cf09c1e4443269ea8eb71a9ba2400df06ba30acabe103450",
+ "suiteSha256": "c3d5c738955e13bf35addd66a3c0e6561b3e69f2448fc3cc39c87c8408de5157",
+ "runId": "cand-r4-20261101T111209Z",
+ "generatedAt": "2026-11-01T11:12:09Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 82.6,
+  "stability": 70.7,
+  "overall": 76.4,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 2,
+  "totalRuns": 2
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 82.6,
+   "stability": 70.7,
+   "overall": 76.4,
+   "grade": "C",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 82.6,
+  "median": 82.6,
+  "max": 82.6
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The change spec has the path, the header, and the sections of the template, and \"Relies on\" has the fixed entries.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user gets one change for each spec of IN-0001 (the --top option), and these changes cover the intent exactly.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The \"Requirements\" section copies each requirement of the change exactly, and copies nothing else.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A test writer who cannot see the code can write each check from the \"Interface\" section, through the command that the user runs.",
+   "passRate": 100,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "\"Files\" and \"Check files\" list only what this job change is permitted to touch.",
+   "passRate": 50,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The \"Steps\" section has one step for each requirement and a last step for the README, and \"Manual checks\" says \"none\".",
+   "passRate": 50,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent file lists the changes and holds a new handoff for the acceptance stage.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run leaves one Plan commit on main and changes nothing else.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The last message tells the user where the work stands and what to run next, and the message agrees with the files.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R10",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each decision that the run makes without an instruction is visible to the user, and with `defaults` the run asks no question.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 82.6,
+   "stability": 70.7
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-change/runs/cand-r4-20261101T111209Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 82.6,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Tests-Locked: acceptance"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "CH-0001 (top option). It covers R5 (usage line), R7 (top option), and R8 (one option only) of JOB-report-word-frequencies."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R7 \u00b7 Print only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`TOP_INVALID` \u00b7 `error: --top needs a whole number greater than zero` \u00b7 exit 2 \u00b7 stderr"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "## Check files\n\n- none"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "- Check: the acceptance check JOB_report_word_frequencies_R5"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Handoff \u00b7 IN-0001 \u00b7 change \u2192 acceptance"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "pdlc/specs/design/DES-errors.md                |   2 +"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "CH-0001 (top option)... Next: `/pdlc:acceptance`."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "`USAGE` and `FILE_UNREADABLE` (assumed), because acceptance lines of R5 and R7 use these errors"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-change/runs/cand-r4-20261101T111209Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "The shared scratchpad mk.py was overwritten by another agent. My first run executed that script and wrote /home/user/pskills/.claude/worktrees/wf_59ff41ed-bf3-2/.vet-capture/P01-r02.md in another worktree. I reran from my own worktree.",
+   "quality": 82.6,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "- CAP-word-counting (used, not changed)"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "CH-0001 covers R5 (usage line), R7 (print only the N most common words), and R8 (one --top option only) of JOB-report-word-frequencies."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R7 \u00b7 Print only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`wordfreq [--top N] FILE` \u00b7 command \u00b7 `wordfreq/cli.py`"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "## Check files\n\n- none"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "- Check: the acceptance check named JOB_report_word_frequencies_R5"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Handoff \u00b7 IN-0001 \u00b7 change \u2192 acceptance\nTime: 2026-11-01T11:10:11+00:00"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "pdlc/specs/jobs/JOB-report-word-frequencies.md |  14 ++++"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "CH-0001 (wordfreq top option) is planned for IN-0001... Next: run `/pdlc:acceptance`."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "### Decided on defaults\n\n-- see \"Notes\" of this intent\n+- none"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "major_drift",
+   "reason": "Run 1 sets Tests-Locked to acceptance and leaves CAP-word-counting out of Relies on. Run 2 follows the template on both points.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Tests-Locked: acceptance; Relies on lists only the three DES entries, no CAP-word-counting"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Tests-Locked: none; Relies on lists CAP-word-counting plus the three DES entries"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "identical",
+   "reason": "Both runs plan the same single change with the same three requirements.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "One change CH-0001 for the job, covering R5, R7, R8, no capability change"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "identical",
+   "reason": "The Requirements sections are word for word the same in both runs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Copies R5, R7, R8 headings and all 22 acceptance lines word for word"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "major_drift",
+   "reason": "Both runs give a command entry with the same error texts and exit codes. Run 1 invents codes and adds them to DES-errors, and run 2 uses `no code`. These are opposite choices about the error codes.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Command entry in cli.py with new assumed codes USAGE and FILE_UNREADABLE for the usage and read errors"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Command entry in cli.py with `no code` for the usage and read errors, and a fuller output description"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "identical",
+   "reason": "Both runs list the same Files and write none for Check files.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Files: wordfreq/cli.py and README.md; Check files: none"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "equivalent",
+   "reason": "The structure and the conditions are the same. Only the step names and the wording differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Three requirement steps whose Check is 'the acceptance check <underscored ID>', plus a README step with --top, the changed line, no seam, and unittest; Manual checks none"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "Both runs write the same handoff structure and content in different words. Run 2 changes Look here to the code file.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Changes lists CH-0001; change \u2192 acceptance handoff with Time, six sections, an order note, and Next to write acceptance checks through the command"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "Both runs make one Plan commit that also changes a spec. Run 1 also edits DES-errors, and run 2 adds extra trailers.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "One Plan commit on main that also changes the job spec and DES-errors; clean trailer"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "One Plan commit on main that also changes the job spec; extra Co-Authored-By trailers after Intent"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "Both messages give the same result and the same next step in different words.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Names CH-0001 with a description and gives /pdlc:acceptance as the next step"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "major_drift",
+   "reason": "Run 1 records its assumed codes as decisions. Run 2 records no decision in Decided on defaults. The content differs because the two runs made different choices about the codes.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Marks the new error codes (assumed) and lists them in Decided on defaults and Notes"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Makes no new names, writes Decided on defaults: none, and records the no-code choice only in Don't redo"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

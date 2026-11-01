@@ -1,0 +1,604 @@
+{
+ "skill": "pdlc:change",
+ "skillSha256": "998e651d64bfc872cf09c1e4443269ea8eb71a9ba2400df06ba30acabe103450",
+ "suiteSha256": "c3d5c738955e13bf35addd66a3c0e6561b3e69f2448fc3cc39c87c8408de5157",
+ "runId": "cand-r3-20261101T110822Z",
+ "generatedAt": "2026-11-01T11:08:22Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 85.9,
+  "stability": 79.1,
+  "overall": 82.4,
+  "grade": "B",
+  "confidence": "normal",
+  "usableRuns": 2,
+  "totalRuns": 2
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 85.9,
+   "stability": 79.1,
+   "overall": 82.4,
+   "grade": "B",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 84.8,
+  "median": 85.9,
+  "max": 87
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The change spec has the path, the header, and the sections of the template, and \"Relies on\" has the fixed entries.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user gets one change for each spec of IN-0001 (the --top option), and these changes cover the intent exactly.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The \"Requirements\" section copies each requirement of the change exactly, and copies nothing else.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A test writer who cannot see the code can write each check from the \"Interface\" section, through the command that the user runs.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "\"Files\" and \"Check files\" list only what this job change is permitted to touch.",
+   "passRate": 50,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The \"Steps\" section has one step for each requirement and a last step for the README, and \"Manual checks\" says \"none\".",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent file lists the changes and holds a new handoff for the acceptance stage.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run leaves one Plan commit on main and changes nothing else.",
+   "passRate": 50,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The last message tells the user where the work stands and what to run next, and the message agrees with the files.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R10",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each decision that the run makes without an instruction is visible to the user, and with `defaults` the run asks no question.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 85.9,
+   "stability": 79.1
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-change/runs/cand-r3-20261101T110822Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 87,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "- DES-writing-style (conventions to follow)\n- DES-pdlc-check-tagging (conventions to follow)\n- DES-errors (conventions to follow)"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Planned one change for IN-0001 (wordfreq top option): CH-0001 (top option), for JOB-report-word-frequencies (R5, R7, R8)."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R7 \u00b7 Print only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`TOP_INVALID` \u00b7 `error: --top needs a whole number greater than zero` \u00b7 exit 2 \u00b7 stderr"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "## Check files\n\n- none"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "It tells how to run the app and the checks, with `python3 -m unittest discover -s tests`."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Handoff \u00b7 IN-0001 \u00b7 change \u2192 acceptance\nTime: 2026-11-01T11:06:25+00:00"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "pdlc/specs/jobs/JOB-report-word-frequencies.md |  14 ++++"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:acceptance`."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "- JOB-report-word-frequencies: which error code has the usage line and the read error? \u2192 `no code` (assumed)"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-change/runs/cand-r3-20261101T110822Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 84.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "- CAP-word-counting (used, not changed)"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "CH-0001 covers JOB-report-word-frequencies: R5 (usage line), R7 (top option), and R8 (one option only)."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R7 \u00b7 Print only the N most common words"
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "out: on standard output, one line for each word, or the first N lines with `--top N`. The exit code is 0."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "## Check files\n\n- none"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Check: the acceptance check `JOB_report_word_frequencies_R5`"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Handoff \u00b7 IN-0001 \u00b7 change \u2192 acceptance"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "pdlc/specs/jobs/JOB-report-word-frequencies.md |  14 ++++"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I planned one change: CH-0001 (top option), for IN-0001 (wordfreq top option)."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "- JOB-report-word-frequencies: which message does the usage error have in the Interface? \u2192 `usage: wordfreq FILE` (assumed), copied from R5"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "major_drift",
+   "reason": "One run omits CAP-word-counting from Relies on; the other lists all four entries.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Correct path/header/sections; Relies on lists only the three DES entries, no CAP-word-counting"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Correct path/header/sections; Relies on lists CAP-word-counting plus the three DES entries"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "identical",
+   "reason": "Both plan the same single change with the same three requirements.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "One change CH-0001 for the job, covering R5, R7, R8"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "identical",
+   "reason": "Both Requirements sections are word for word the same copy of the spec.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Copies the three requirement headings and all 22 acceptance lines verbatim, nothing else"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "minor_drift",
+   "reason": "Same command entry and errors; the output description differs in whether it gives the line format, and error order differs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Command entry in cli.py; output says word, space, count per line; three errors with stderr/exit 2; no seams"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Same command entry and errors, but output omits the word-count line format; TOP_INVALID listed first"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "identical",
+   "reason": "Both list the same two files and 'none' for check files.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Files: wordfreq/cli.py and README.md; Check files: none"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "Same steps and README conditions; the check names differ (test_ prefix vs bare underscored ID) and step 3 name differs slightly.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Three requirement steps plus README step with all four conditions; Manual checks none"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "Same handoff structure and content; wording of Done, Don't redo, and Next differs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Changes lists CH-0001; change \u2192 acceptance handoff with Time, six sections, order note, and interface note in Next"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "identical",
+   "reason": "Both make the same commit with the same subject, trailer, and three files including the spec.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "One Plan IN-0001: top option commit on main with Intent trailer, but it also changes the job spec (adds Interface)"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "Same content and next step, in different words and bullet points.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Lists CH-0001 (top option) with R5/R7/R8 and names /pdlc:acceptance as next"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "Same approach; the second recorded decision differs (test seam vs usage message).",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Asks nothing; records the no-code and no-test-seam decisions as (assumed) in handoff and Notes"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Asks nothing; records the no-code and usage-message decisions as (assumed) in handoff and Notes"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

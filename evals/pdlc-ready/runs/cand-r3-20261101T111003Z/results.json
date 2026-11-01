@@ -1,0 +1,628 @@
+{
+ "skill": "pdlc:ready",
+ "skillSha256": "63c4b646a417d23574a8446f4d8e5ecf2b4985a87ac78bbe65b8f00e4da71f73",
+ "suiteSha256": "a4f9f39db5ccb65e3e396eaafd4c60b7b55fd850cc120256d0fc2e697e9ecd27",
+ "runId": "cand-r3-20261101T111003Z",
+ "generatedAt": "2026-11-01T11:10:03Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 79.5,
+  "stability": 63.2,
+  "overall": 70.9,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 2,
+  "totalRuns": 2
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 79.5,
+   "stability": 63.2,
+   "overall": 70.9,
+   "grade": "C",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 77.3,
+  "median": 79.6,
+  "max": 81.8
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user can go straight to the plan: at the end, IN-0001 (the --top option) and each of its requirements are `ready`.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "After the run, the specs give one result for each command line. This includes a bad N together with a wrong number of files or a second --top.",
+   "passRate": 75,
+   "stabilityWithin": 0,
+   "classesWithin": {
+    "P01": "contradictory"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A test writer can write each check of the intent with no guess. Each acceptance line has a concrete input and the exact output, and each failure line names an error code.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run asks the user only in the permitted form. Each message has one question, with two or three answers and one recommended answer. With `defaults`, the run asks nothing.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "Each acceptance line and sentence that the run writes in a spec keeps the pdlc form.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent keeps a full record of this stage. The record is a new \"Handoff\" in the template form, and a line in \"Notes\" for each decision.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run ends in a commit on main with the subject `Ready IN-0001: wordfreq top option` and the trailer `Intent: IN-0001`.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The final reply gives the result first, then what changed. The reply says that `/pdlc:change` is next.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run examines the behaviour that the intent implies but does not state. The handoff holds the list of these items.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R10",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "When the run changes what a requirement does, no spec text still shows the old behaviour.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 79.5,
+   "stability": 63.2
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ready/runs/cand-r3-20261101T111003Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 77.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Status: ready \u00b7 Ticket: none \u00b7 Branch: none \u00b7 Added: 2026-10-18"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Given the arguments `--top 0` with no file, when the user runs `wordfreq --top 0`, then standard error is `error: --top needs a whole number greater than zero`"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "Given a file with `pear apple fig`, when the user runs `wordfreq --top 2 FILE`, then the lines are `apple 1` and `fig 1`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "IN-0001 (wordfreq top option) is ready. `/pdlc:change` is next."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "then standard error is `usage: wordfreq FILE` and standard output is empty. The exit code is 2."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Handoff \u00b7 IN-0001 \u00b7 ready \u2192 change\n\nTime: 2026-11-01T11:07:32+00:00"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Ready IN-0001: wordfreq top option\n\nIntent: IN-0001"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "- R7: a `--top` error comes before the usage line of R5."
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "concrete lines for each bad form of N, including \" 3\", \"\u0663\", and a very large N"
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "- JOB-report-word-frequencies.R8: --top given twice \u2192 usage line, exit code 2 (assumed)"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ready/runs/cand-r3-20261101T111003Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "A parallel run overwrote a shared scratchpad script and applied its edit to the spec. I reset the spec with git checkout and redid the work. The capture's first message was written after the run, not shown live.",
+   "quality": 81.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Status: ready \u00b7 Ticket: none \u00b7 Branch: none \u00b7 Added: 2026-10-18"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "when the user runs `wordfreq --top 0 --top 2 FILE`, then standard error is `usage: wordfreq FILE`"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Given a file with `b a b c a b`, when the user runs `wordfreq --top -1 FILE`, then standard error is `error: --top needs a whole number greater than zero`. Standard output is empty. The exit code is 2."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "I found no contradiction. The handoff lists the new guess. `/pdlc:change` is next."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "then standard error is `usage: wordfreq FILE`. Standard output is empty. The exit code is 2."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Handoff \u00b7 IN-0001 \u00b7 ready \u2192 change\n\nTime: 2026-11-01T11:08:08+00:00"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Ready IN-0001: wordfreq top option\n\nIntent: IN-0001"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "IN-0001 is ready."
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "Ready added lines for N equal to the word count, a very large N, `00`, a space, and `--top` before FILE."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "Exception: a bad value of `--top` comes first and gives `TOP_INVALID` (see R7 (top option))."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "Both runs mark the intent ready with the same requirement list and statuses.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Intent set to ready; R5, R7, R8 stay ready; no new requirements added"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "contradictory",
+   "reason": "For `--top 0 --top 2 FILE` run 1 gives the --top error and run 2 gives the usage line.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Bad N wins over both the usage line (no FILE) and a second --top; acceptance lines and Notes for both"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Bad N wins over a missing FILE, but a second --top gives the usage line before a bad N"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "minor_drift",
+   "reason": "Same approach of concretizing lines and adding USAGE/FILE_UNREADABLE codes; run 1 leaves exit codes off some success lines.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Replaces 'any file' and 'the same error' with concrete text and codes, but several success lines still lack an exit code"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Replaces 'any file' and 'the same error', adds codes, and gives an exit code on every line"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "identical",
+   "reason": "Neither run asks the user anything.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "No question asked; runs to the end with defaults"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "Both break the one-sentence form by appending sentences, with a different split.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Acceptance lines split into two sentences, exit code as a separate sentence"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Acceptance lines split into three sentences (stderr, stdout, exit code)"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "Same handoff structure; the content of Decided on defaults differs in scope.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Full template handoff; Decided on defaults lists only this run's three assumed decisions"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Full template handoff; Decided on defaults repeats intake's assumed decisions plus the one new one"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "identical",
+   "reason": "Both commits have the same subject, trailer and file scope.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Single commit on main with exact subject and Intent trailer, clean tree"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "Same structure; different details and different undescribed IDs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Result first with described intent, change list, defaults list with some undescribed IDs, /pdlc:change next"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Result first with undescribed IN-0001, change list, notes no contradiction, /pdlc:change next"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "minor_drift",
+   "reason": "Both add a very-large-N line without a categorized list; the extra edge cases differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "No kind-by-kind list; adds very large N, \" 3\", Arabic digit, --top FILE lines"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "No kind-by-kind list; adds very large N, 00, \" 3\", --top before FILE, N equal to word count lines"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "Both rewrite the requirement sentences for the new error order; run 1 leaves one older Notes line unqualified.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Updates R5, R7, R8 sentences for --top-first order; old R8 Notes line left unqualified"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Updates R5, R7, R8 sentences consistently with R8-before-R7 order; old Notes stay consistent"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

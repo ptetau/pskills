@@ -48,16 +48,35 @@ its right spec, as `proposed`. Intake does not write code.
   touches. A capability gets the calls that jobs use.
 - Each new entry ends its first line with ` · proposed`. Each name that the intent does
   not give has the mark `(assumed)`.
-- Each entry names each error code of the lines that use it, from `DES-errors`, and its
-  test seams go under "Test seams".
-- An error that the app gives today, with no code in `DES-errors`, keeps its exact message
-  and status in the entry. If no line of this intent uses that error, intake makes no
-  code for it.
-- A new code that intake makes has the mark `(assumed)` in its `DES-errors` row and in
-  each entry that names it.
+- Each entry gives each error of the lines that use it, one error on each line. An error
+  line has the code, the exact message, and the result. A command error also gives `stderr`
+  or `stdout`, the stream that gets the message ("Interfaces" in `pdlc/README.md`).
+  Test seams go under "Test seams".
+- Each failure acceptance line gives the exact message and the result (exit code or status)
+  from the words of the user, not "the error".
+- An error that the app gives today, with no code in `DES-errors`, gets `no code` and its
+  exact message and result. If no line of this intent uses that error, intake makes no code
+  for it.
+- A new code that intake makes has the mark `(assumed)` in its `DES-errors` row and in each
+  entry that names it.
 - A spec with no "Interface" section gets one from its template, before "Requirements".
-- Each detail that the words of the intent do not give (a message, a limit, an order, a
-  format) has the mark `(assumed)` where intake writes it.
+- Each detail that the words of the intent do not give has the mark `(assumed)`. Such a
+  detail is a message, a limit, an order, or a format. It can also be the result of an edge
+  case, for example N larger than the number of items. The mark goes where intake writes it, also in
+  a "Given ..., then ..." line.
+- Before `check_handoff.py`, read each new Given line again. If the words of the intent do
+  not give its result, end the line with `(assumed)`. Common cases are a value past a limit, a
+  value in an odd form (a sign, a leading zero, a decimal), and a missing value. Others are
+  a missing necessary argument, the output of each stream on an error, and which of two
+  errors shows first. A result that the words of the
+  intent decide has no mark.
+- A detail that intake adds to a `built` requirement from recon also has the mark `(assumed)`.
+- "Decided on defaults" in the handoff lists each `(assumed)` decision that intake wrote, one line
+  for each, in the form of the template. The same lines go into the intent "Notes".
+- Before the commit, intake runs `python3 pdlc/bin/check_handoff.py IN-xxxx --stage intake`,
+  and fixes each problem that the script names. Then intake runs the script again. If the
+  script still fails after three runs, intake puts the problems under "Open", stops with
+  `intake → user`, and commits.
 - An `(assumed)` detail adds to the words of the intent. It does not remove a value that
   the plain reading of those words permits. For example, "a whole number greater than
   zero" also permits `+3`, so an assumed rule such as "digits only" is not correct.
@@ -79,6 +98,10 @@ its right spec, as `proposed`. Intake does not write code.
 - The requirements from recon go into the spec as `built`, with `Source: recon`. The
   "Interface" entries from recon go into the spec with no mark and no `Seen in` line.
   Then the spec becomes `Status: active`.
+- Each `built` requirement gives the rule of the code in the exact terms of the code, not in
+  the words of the stub summary. For example, `[a-z']+` is "the letters a to z and the
+  apostrophe", and `len(argv) != 1` is "not exactly one argument". When `pdlc:recon` cannot
+  start, intake does the deep look itself, by the same rule.
 - The statuses on main can be out of date. Thus, intake lists the change branches first
   ("Where pdlc commits"). The handoff names each changed requirement that an unmerged
   change covers. The change of this intent for that spec stacks after the unmerged change.
@@ -86,7 +109,8 @@ its right spec, as `proposed`. Intake does not write code.
   the two intents fit? With `defaults`, this intent wins where they differ, and its changes
   come after the changes of the other intent.
 - An intent with two possible meanings is a question before intake goes on. With
-  `defaults`, intake takes the more likely meaning, and writes a note. Only two possible
+  `defaults`, intake takes the more likely meaning, marks the detail `(assumed)` in the
+  spec, and writes the Note `<ID>: <question> → <answer> (assumed)`. Only two possible
   meanings make a point a question for ready.
 
 ## Inputs
@@ -102,11 +126,15 @@ its right spec, as `proposed`. Intake does not write code.
 - In the intent:
   - `Status: specifying`.
   - "Requirements": each requirement whose text intake touched, with one word for each:
-    added, changed, or retiring.
+    added, changed, or retiring. A `built` requirement from recon is not listed,
+    unless intake changed its text (for example with an `(assumed)` detail). Then it is
+    listed as changed.
   - The "Notes" lines of "Spec patches".
   - The handoff `intake → ready`: what intake wrote, what it assumed, and what looks
     unclear.
 - The commit "Specify IN-xxxx: <name>" with the trailer `Intent`: the specs and the
-  intent. Intake commits also when it stops early.
+  intent. Intake commits also when it stops early. The commit comes after `check_handoff.py`
+  exits 0. Put `Intent: IN-xxxx` in the last paragraph of the message. Any `Co-Authored-By` or
+  other trailer goes directly under it, with no blank line between them.
 - For the user: what intake wrote, and that `/pdlc:ready` is next.
 - Intake is done when the commit holds each requirement that the intent needs.

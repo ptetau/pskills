@@ -82,7 +82,8 @@ One or two sentences saying what is true today.
 
 For each requirement, add a line `Seen in: <file>:<line>` that points to the code. If you
 are not sure, say how sure you are. Write only what the code really does, not what the
-code must do.
+code must do. Use the exact terms of the code (a character class, a count, a condition).
+Do not use a looser word such as "letters".
 
 Then write the "Interface" of the area: each name that a caller can use today. For a
 job, list what its user touches. That is commands and flags, routes, form fields, and the
@@ -95,7 +96,9 @@ jobs use, each with its file. Use this form, with one `Seen in` line for each en
 - `<name or signature>` · <kind> · `<file>`
   - in: what goes in
   - out: what comes out
-  - errors: the code of each error, or its exact message and status, or none
+  - errors: none, or one line for each error: the code or `no code`, the exact message, and
+    `exit <n> · stderr` (or `· stdout`), `status <n>`, or `raises <Name>`, with ` · `
+    between them
   - Seen in: <file>:<line>
 
 ### Test seams

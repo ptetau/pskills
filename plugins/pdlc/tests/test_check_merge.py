@@ -68,9 +68,22 @@ Status: building · Ticket: none · Branch: none · Added: 2026-10-10
 
 ALL = ["tests", "specification", "security", "quality", "compliance", "privacy"]
 
+NOT_FOUND = "    - `TEMPLATE_NOT_FOUND` · `no template named <name>` · raises `TemplateNotFound`\n"
+INVALID = "    - `INVALID_ADDRESS` · `not a valid email address: <address>` · raises `InvalidAddress`\n"
 SEND = ("- `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`\n"
         "  - in: a template and an address\n"
-        "  - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`\n")
+        "  - errors:\n" + NOT_FOUND + INVALID)
+
+DES_ERRORS = """# DES-errors · The project's error codes
+
+Status: agreed
+
+| Code | Meaning | Whose fault | Retry helps? |
+|---|---|---|---|
+| `TEMPLATE_NOT_FOUND` | no such template | caller | no |
+| `INVALID_ADDRESS` | bad address | caller | no |
+| `TOP_INVALID` | bad --top | caller | no |
+"""
 
 WRONG_VERSIONS = "Wrong versions:\n- CAP-email.R2 fills values · leaves the values out · fails\n"
 
@@ -230,6 +243,8 @@ class MergeCheck(unittest.TestCase):
 
         add(self.change / "change.md", change)
         add(self.root / "pdlc/specs/capabilities/CAP-email.md", spec)
+        (self.root / "pdlc/specs/design").mkdir(parents=True, exist_ok=True)
+        (self.root / "pdlc/specs/design/DES-errors.md").write_text(DES_ERRORS)
         if job is not None:
             jobs = self.root / "pdlc/specs/jobs"
             jobs.mkdir(parents=True, exist_ok=True)
@@ -289,11 +304,13 @@ class MergeCheck(unittest.TestCase):
 
     def test_fails_when_the_error_codes_differ(self):
         self.write()
-        self.interface(change=SEND.replace(", `INVALID_ADDRESS`", ""), spec=SEND)
+        self.interface(change=SEND.replace(INVALID, ""), spec=SEND)
         code, out = self.run_check("CH-0001")
         self.assertEqual(code, 1)
-        self.assertIn("has the errors TEMPLATE_NOT_FOUND, but CAP-email has "
-                      "INVALID_ADDRESS, TEMPLATE_NOT_FOUND", out)
+        self.assertEqual(out.count("\n  - "), 1, out)
+        self.assertIn("Interface entry `send(template: TemplateName, to: Email) -> SentId` lacks "
+                      "the error `INVALID_ADDRESS` ·", out)
+        self.assertIn("that CAP-email has", out)
 
     def test_fails_when_the_spec_entry_is_still_proposed(self):
         self.write()
@@ -326,19 +343,25 @@ class MergeCheck(unittest.TestCase):
         code, out = self.run_check("CH-0001")
         self.assertEqual(code, 0, out)
 
-    def test_reads_entries_with_their_error_codes(self):
+    def test_reads_entries_with_their_errors(self):
         text = ("# CAP-email\n\n## Interface\n\n"
                 + SEND + "- `ping()` · function · `src/ping.js`\n  - out: nothing\n\n"
                 "### Test seams\n\n"
                 "- `EMAIL_OUTBOX_DIR` · seam: outside vendor · `src/email.js`\n"
-                "  - Errors: `OUTBOX_MISSING`\n\n## Requirements\n\n- `later()` is not an entry.\n")
+                "  - Errors:\n"
+                "    - `OUTBOX_MISSING` · `no outbox` · raises `OutboxMissing`\n\n"
+                "## Requirements\n\n- `later()` is not an entry.\n")
         found = check_merge.interface_entries(text)
         self.assertEqual(list(found), ["send(template: TemplateName, to: Email) -> SentId",
                                        "ping()", "EMAIL_OUTBOX_DIR"])
-        self.assertEqual(found["send(template: TemplateName, to: Email) -> SentId"][1],
-                         {"TEMPLATE_NOT_FOUND", "INVALID_ADDRESS"})
+        first, triples, problems = found["send(template: TemplateName, to: Email) -> SentId"]
+        self.assertEqual(triples, {
+            ("TEMPLATE_NOT_FOUND", "no template named <name>", "raises TemplateNotFound"),
+            ("INVALID_ADDRESS", "not a valid email address: <address>", "raises InvalidAddress")})
+        self.assertEqual(problems, [])
         self.assertEqual(found["ping()"][1], frozenset())
-        self.assertEqual(found["EMAIL_OUTBOX_DIR"][1], {"OUTBOX_MISSING"})
+        self.assertEqual(found["EMAIL_OUTBOX_DIR"][1],
+                         {("OUTBOX_MISSING", "no outbox", "raises OutboxMissing")})
 
     def test_a_proposed_mark_before_other_text_still_counts(self):
         self.write()
@@ -347,14 +370,204 @@ class MergeCheck(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("is still proposed in CAP-email", out)
 
-    def test_error_codes_on_wrapped_lines_count(self):
-        wrapped = SEND.replace("`TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`", "`TEMPLATE_NOT_FOUND`,\n    `INVALID_ADDRESS`")
+    def test_an_error_line_wrapped_onto_a_deeper_line_is_one_item(self):
+        wrapped = SEND.replace("`no template named <name>` · raises", "`no template named <name>` ·\n"
+                               "      raises")
         self.write()
         self.interface(change=SEND, spec=wrapped)
         self.assertEqual(self.run_check("CH-0001")[0], 0)
         self.write()
-        self.interface(change=SEND.replace(", `INVALID_ADDRESS`", ""), spec=wrapped)
+        self.interface(change=SEND.replace(INVALID, ""), spec=wrapped)
         self.assertEqual(self.run_check("CH-0001")[0], 1)
+
+    # The strict error form
+
+    TOOL_ERRORS = ("  - errors:\n"
+                   "    - `TOP_INVALID` · `error: --top needs a whole number greater than zero` · exit 2 · stderr\n"
+                   "    - no code · `usage: wordfreq [--top N] FILE` · exit 2 · stderr\n"
+                   "    - no code · `error: cannot read FILE` · exit 1 · stderr\n")
+
+    def tool(self, errors, name="`wordfreq [--top N] FILE`", kind="command"):
+        return "- %s · %s · `wordfreq/cli.py`\n  - in: a path\n%s" % (name, kind, errors)
+
+    def both(self, change_errors, spec_errors=None, **kw):
+        self.write()
+        self.interface(change=self.tool(change_errors, **kw),
+                       spec=self.tool(self.TOOL_ERRORS if spec_errors is None else spec_errors, **kw))
+        return self.run_check("CH-0001")
+
+    def test_three_errors_pass_when_the_change_and_the_spec_agree(self):
+        code, out = self.both(self.TOOL_ERRORS)
+        self.assertEqual(code, 0, out)
+
+    def test_a_different_message_is_one_problem_that_names_the_entry_and_the_field(self):
+        code, out = self.both(self.TOOL_ERRORS.replace("greater than zero", "above zero"))
+        self.assertEqual(code, 1)
+        self.assertEqual(out.count("\n  - "), 1, out)
+        self.assertIn("`wordfreq [--top N] FILE`", out)
+        self.assertIn("the message `error: --top needs a whole number above zero`", out)
+        self.assertIn("CAP-email has `error: --top needs a whole number greater than zero`", out)
+
+    def test_a_different_exit_is_one_problem_that_names_the_entry_and_the_field(self):
+        code, out = self.both(self.TOOL_ERRORS.replace("cannot read FILE` · exit 1",
+                                                       "cannot read FILE` · exit 3"))
+        self.assertEqual(code, 1)
+        self.assertEqual(out.count("\n  - "), 1, out)
+        self.assertIn("the result exit 3", out)
+        self.assertIn("CAP-email has exit 1", out)
+
+    def test_a_missing_error_is_one_problem(self):
+        errors = "".join(self.TOOL_ERRORS.splitlines(True)[:-1])
+        code, out = self.both(errors)
+        self.assertEqual(code, 1)
+        self.assertEqual(out.count("\n  - "), 1, out)
+        self.assertIn("lacks the error", out)
+        self.assertIn("error: cannot read FILE", out)
+
+    def test_an_extra_error_is_one_problem(self):
+        code, out = self.both(self.TOOL_ERRORS, "".join(self.TOOL_ERRORS.splitlines(True)[:-1]))
+        self.assertEqual(code, 1)
+        self.assertEqual(out.count("\n  - "), 1, out)
+        self.assertIn("has the error", out)
+
+    def test_errors_none_passes(self):
+        code, out = self.both("  - errors: none\n", "  - errors: none\n")
+        self.assertEqual(code, 0, out)
+
+    def test_errors_none_with_prose_is_a_form_problem(self):
+        prose = "  - errors: none. A wrong argument count gives a usage line.\n"
+        code, out = self.both(prose, "  - errors: none\n")
+        self.assertEqual(code, 1)
+        self.assertIn("`wordfreq [--top N] FILE`", out)
+        self.assertIn("not in the form", out)
+
+    def test_errors_none_with_lines_under_it_is_a_form_problem(self):
+        code, out = self.both("  - errors: none\n    - `TOP_INVALID` · `x` · exit 2\n",
+                              "  - errors: none\n")
+        self.assertEqual(code, 1)
+        self.assertIn("not in the form", out)
+
+    def test_the_old_form_is_a_form_problem_that_shows_the_new_form(self):
+        code, out = self.both("  - errors: `TOP_INVALID`, `USAGE`\n")
+        self.assertEqual(code, 1)
+        self.assertIn("`wordfreq [--top N] FILE`", out)
+        self.assertIn("old form", out)
+        self.assertIn("- `CODE` · `exact message` · exit 2", out)
+
+    def test_the_old_form_in_the_spec_is_a_form_problem_too(self):
+        code, out = self.both(self.TOOL_ERRORS, "  - errors: `TOP_INVALID`, `USAGE`\n")
+        self.assertEqual(code, 1)
+        self.assertIn("CAP-email", out)
+        self.assertIn("old form", out)
+
+    def test_an_errors_line_with_no_items_is_a_form_problem(self):
+        code, out = self.both("  - errors:\n", "  - errors:\n")
+        self.assertEqual(code, 1)
+        self.assertIn("no error lines", out)
+
+    def test_an_item_that_is_not_in_the_form_is_a_form_problem(self):
+        code, out = self.both("  - errors:\n    - `TOP_INVALID` · exit 2\n")
+        self.assertEqual(code, 1)
+        self.assertIn("not in the form", out)
+
+    def test_a_result_that_is_not_exit_status_or_raises_is_a_form_problem(self):
+        code, out = self.both("  - errors:\n    - `TOP_INVALID` · `x` · fails\n")
+        self.assertEqual(code, 1)
+        self.assertIn("not in the form", out)
+
+    def test_no_code_passes_and_a_code_that_des_errors_lacks_fails(self):
+        code, out = self.both(self.TOOL_ERRORS)
+        self.assertEqual(code, 0, out)
+        unknown = self.TOOL_ERRORS.replace("TOP_INVALID", "TOP_BOGUS")
+        code, out = self.both(unknown, unknown)
+        self.assertEqual(code, 1)
+        self.assertIn("error code `TOP_BOGUS`, which is not a row of DES-errors", out)
+
+    def test_status_for_a_route_and_raises_for_a_function_pass(self):
+        route = ("  - errors:\n"
+                 "    - `INVALID_ADDRESS` · `error: the email address is not valid` · status 400\n"
+                 "    - no code · `not found` · status 404\n")
+        code, out = self.both(route, route, name="`POST /reset`", kind="route")
+        self.assertEqual(code, 0, out)
+        func = ("  - errors:\n"
+                "    - no code · no message · raises `KeyError`\n"
+                "    - no code · `bad key` · raises KeyError\n")
+        code, out = self.both(func, func, name="`lookup(key)`", kind="function")
+        self.assertEqual(code, 0, out)
+
+    def test_a_message_with_a_backtick_uses_a_double_backtick_span(self):
+        errors = "  - errors:\n    - `TOP_INVALID` · ``error: use `--top 3` here`` · exit 2 · stderr\n"
+        code, out = self.both(errors, errors)
+        self.assertEqual(code, 0, out)
+        code, out = self.both(errors, errors.replace("use `--top 3` here", "use `--top 4` here"))
+        self.assertEqual(code, 1)
+
+    def test_the_assumed_mark_is_allowed_after_the_code_the_message_and_the_result(self):
+        marked = ("  - errors:\n"
+                  "    - `TOP_INVALID` (assumed) · `error: bad top` (assumed: a guess) · exit 2 (assumed) · stderr\n")
+        plain = "  - errors:\n    - `TOP_INVALID` · `error: bad top` · exit 2 · stderr\n"
+        code, out = self.both(marked, plain)
+        self.assertEqual(code, 0, out)
+        found = check_merge.interface_entries("## Interface\n\n" + self.tool(marked))
+        self.assertEqual(list(found.values())[0][1], {("TOP_INVALID", "error: bad top", "exit 2 · stderr")})
+
+    def test_a_command_error_with_no_stream_is_a_form_problem(self):
+        no_stream = self.TOOL_ERRORS.replace("exit 1 · stderr", "exit 1")
+        code, out = self.both(no_stream, no_stream)
+        self.assertEqual(code, 1)
+        self.assertIn("`wordfreq [--top N] FILE`", out)
+        self.assertIn("gives no stream", out)
+        self.assertIn("` · stderr` or ` · stdout`", out)
+
+    def test_a_route_or_function_error_with_a_stream_is_a_form_problem(self):
+        route = "  - errors:\n    - no code · `not found` · status 404 · stderr\n"
+        code, out = self.both(route, route, name="`POST /reset`", kind="route")
+        self.assertEqual(code, 1)
+        self.assertIn("only a command error", out)
+        func = "  - errors:\n    - no code · `bad key` · raises KeyError · stdout\n"
+        code, out = self.both(func, func, name="`lookup(key)`", kind="function")
+        self.assertEqual(code, 1)
+        self.assertIn("only a command error", out)
+
+    def test_a_different_stream_is_one_problem_that_names_the_entry_and_the_field(self):
+        code, out = self.both(self.TOOL_ERRORS.replace("exit 1 · stderr", "exit 1 · stdout"))
+        self.assertEqual(code, 1)
+        self.assertEqual(out.count("\n  - "), 1, out)
+        self.assertIn("the result exit 1 · stdout", out)
+        self.assertIn("CAP-email has exit 1 · stderr", out)
+
+    def test_the_stream_may_be_in_backticks_and_may_have_the_assumed_mark(self):
+        marked = self.TOOL_ERRORS.replace("exit 1 · stderr", "exit 1 · `stderr` (assumed)")
+        code, out = self.both(marked)
+        self.assertEqual(code, 0, out)
+
+    def test_no_code_in_backticks_is_the_same_as_no_code(self):
+        ticked = self.TOOL_ERRORS.replace("- no code ·", "- `no code` ·")
+        code, out = self.both(ticked)
+        self.assertEqual(code, 0, out)
+        found = check_merge.interface_entries("## Interface\n\n" + self.tool(ticked))
+        self.assertIn(("no code", "error: cannot read FILE", "exit 1 · stderr"),
+                      list(found.values())[0][1])
+
+    def test_an_entry_with_no_errors_line_is_a_form_problem(self):
+        bare = "- `ping()` · function · `src/ping.js`\n  - out: nothing\n"
+        self.write()
+        self.interface(change=bare, spec=bare)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("`ping()`", out)
+        self.assertIn("has no `errors:` line", out)
+
+    def test_the_legacy_skips_still_return_no_problem(self):
+        old = "  - errors: `TOP_INVALID`, `USAGE`\n"
+        self.write()
+        self.interface(change=self.tool(old))  # the scope spec has no Interface heading
+        self.assertEqual(self.run_check("CH-0001")[0], 0)
+        self.write()
+        path = self.change / "change.md"
+        path.write_text(path.read_text().replace("Scope: CAP-email", "Scope: DES-errors"))
+        self.interface(change=self.tool(old))  # no candidate spec has an Interface heading
+        self.assertEqual(self.run_check("CH-0001")[0], 0)
 
     def test_skips_the_check_when_no_candidate_spec_has_an_interface_section(self):
         self.write()
@@ -655,6 +868,54 @@ class MergeCheck(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("CH-0002 of IN-0002 is not ready (status: building)", out)
 
+    def test_a_cancelled_change_of_the_intent_does_not_have_to_be_ready(self):
+        self.stacked_repo()
+        self.write_second("cancelled", "none")
+        self.commit_all("CH-0002 cancelled")
+        code, out = self.run_check("CH-0001")
+        self.assertNotIn("CH-0002", out)
+
+    def test_a_cancelled_change_on_its_own_branch_does_not_have_to_be_ready(self):
+        self.stacked_repo()
+        self.stack_second("cancelled")
+        git(self.root, "switch", "-q", self.FIRST)
+        code, out = self.run_check("CH-0001")
+        self.assertNotIn("CH-0002", out)
+
+    def test_a_change_of_the_intent_that_its_list_leaves_out_still_has_to_be_ready(self):
+        self.stacked_repo()
+        (self.root / "pdlc/inbox/IN-0002-password-reset.md").write_text(
+            INTENT.replace("- CH-0002 · Send the reset\n", ""))
+        self.commit_all("a stale list")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("CH-0002 of IN-0002 is not ready (no branch)", out)
+
+    def second_status(self, status="cancelled"):
+        """CH-0002 on main at this status, with no branch of its own."""
+        self.stacked_repo()
+        git(self.root, "switch", "-q", "main")
+        self.write_second(status, "none")
+        self.commit_all("CH-0002 " + status)
+        return "pdlc/changes/CH-0002-send-reset/change.md"
+
+    def test_a_change_with_no_branch_counts_as_cancelled_from_main(self):
+        path = self.second_status("cancelled")
+        self.assertEqual(check_merge.status_on_own_branch(self.root, path, check_merge.branches(self.root)),
+                         "cancelled")
+
+    def test_a_change_with_no_branch_and_another_status_on_main_has_no_status(self):
+        path = self.second_status("building")
+        self.assertIsNone(check_merge.status_on_own_branch(self.root, path, check_merge.branches(self.root)))
+
+    def test_a_cancelled_change_in_the_working_tree_wins_over_another_status_on_its_branch(self):
+        self.stacked_repo()
+        self.stack_second("building")
+        git(self.root, "switch", "-q", self.FIRST)
+        self.write_second("cancelled", self.SECOND)
+        code, out = self.run_check("CH-0001")
+        self.assertNotIn("CH-0002", out)
+
     def test_a_header_field_is_its_value_without_a_name_in_brackets_or_backticks(self):
         header = ("Intent: IN-0001 (poll-input-errors) · Scope: CAP-http-plumbing · "
                   "Status: in review · Ticket: none · Branch: `pdlc/CH-0001-x` · Base: main")
@@ -799,7 +1060,9 @@ class AcceptanceGate(unittest.TestCase):
     INTENT_BRANCH = "pdlc/IN-0002-password-reset"
     FIRST = "pdlc/CH-0001-email-templates"
     SECOND = "pdlc/CH-0002-send-reset"
-    NAMES = {"CH-0001": "CH-0001-email-templates", "CH-0002": "CH-0002-send-reset"}
+    THIRD = "pdlc/CH-0003-show-all"
+    NAMES = {"CH-0001": "CH-0001-email-templates", "CH-0002": "CH-0002-send-reset",
+             "CH-0003": "CH-0003-show-all"}
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -825,13 +1088,15 @@ class AcceptanceGate(unittest.TestCase):
                  "# Review packet · IN-0002-password-reset · tests\n\nAcceptance-Locked: %s\n" % lock)
         self.put(ACCEPTANCE_REVIEW + "/result.md", "Result: %s\n\nProblems: none\n\n%s" % (result, wrong))
 
-    def change(self, change, status, branch, reqs, lock="", tests_review=True, checks="none"):
+    def change(self, change, status, branch, reqs, lock="", tests_review=True, checks="none",
+               base="main"):
         """A change spec. A change with "Tests-Locked: acceptance" has no tests review of its
         own, so a test passes tests_review=False for it."""
         folder = "pdlc/changes/%s" % self.NAMES[change]
         self.put(folder + "/change.md", CHANGE.format(status=status, reqs=reqs, branch=branch,
                                                       lock=lock, checks=checks)
-                 .replace("# CH-0001 · Email templates", "# %s · %s" % (change, self.NAMES[change])))
+                 .replace("# CH-0001 · Email templates", "# %s · %s" % (change, self.NAMES[change]))
+                 .replace("Base: main", "Base: %s" % base))
         if tests_review:
             self.put(folder + "/review/tests/result.md", "Result: pass\n\nProblems: none\n")
 
@@ -1023,6 +1288,57 @@ class AcceptanceGate(unittest.TestCase):
                       (self.root / "pdlc/inbox/IN-0002-password-reset.md").read_text())
         code, out = self.run_check("CH-0001")
         self.assertEqual(code, 0, out)
+
+    def out_of_order_stack(self, passed=True):
+        """CH-0001, then CH-0003 on top of it, then CH-0002 on top of that. The branch of
+        CH-0001 still lists the changes in number order. The list is right only on the top
+        branch, which also holds the pass."""
+        self.start(changes=("CH-0001", "CH-0002", "CH-0003"))
+        self.build_first(base=self.INTENT_BRANCH)
+        self.build("CH-0003", self.THIRD, self.FIRST, "### CAP-email.R1 · Send plain email",
+                   r1="verified", base=self.FIRST)
+        self.build("CH-0002", self.SECOND, self.THIRD, "### CAP-email.R1 · Send plain email",
+                   r1="verified", base=self.THIRD)
+        self.changes = ["CH-0001", "CH-0003", "CH-0002"]
+        if passed:
+            self.record_pass()
+        git(self.root, "switch", "-q", self.FIRST)
+
+    def test_the_top_of_the_stack_follows_the_base_links_not_the_number_order(self):
+        self.out_of_order_stack()
+        listed = (self.root / "pdlc/inbox/IN-0002-password-reset.md").read_text()
+        self.assertLess(listed.index("CH-0002"), listed.index("CH-0003"))  # the stale list
+        for change in ("CH-0001", "CH-0003"):
+            git(self.root, "switch", "-q", {"CH-0001": self.FIRST, "CH-0003": self.THIRD}[change])
+            code, out = self.run_check(change)
+            self.assertEqual(code, 0, out)
+
+    def test_a_top_with_a_branch_wins_over_a_change_with_no_branch(self):
+        """CH-0003 is planned and has no branch. It is no top, though no change has it as a base."""
+        self.out_of_order_stack()
+        git(self.root, "switch", "-q", self.SECOND)
+        folder = "pdlc/changes/" + self.NAMES["CH-0003"]
+        text = (self.root / folder / "change.md").read_text()
+        self.put(folder + "/change.md", text.replace("Status: in review", "Status: planned")
+                 .replace("Branch: " + self.THIRD, "Branch: none")
+                 .replace("Base: " + self.FIRST, "Base: main"))
+        self.commit("CH-0003 has no branch")
+        git(self.root, "branch", "-q", "-D", self.THIRD)
+        git(self.root, "switch", "-q", self.FIRST)
+        top_id, top = check_merge.stack_top(self.root, ["CH-0001", "CH-0002", "CH-0003"], "CH-0001")
+        self.assertEqual(top_id, "CH-0002")
+
+    def test_the_stack_includes_a_change_whose_intent_matches_but_the_list_omits(self):
+        self.out_of_order_stack()
+        git(self.root, "switch", "-q", self.FIRST)
+        top_id, top = check_merge.stack_top(self.root, ["CH-0001"], "CH-0001")
+        self.assertEqual(top_id, "CH-0002")
+
+    def test_an_out_of_order_stack_is_not_ready_until_its_top_passed(self):
+        self.out_of_order_stack(passed=False)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("no Acceptance-Passed at the top of the stack (CH-0002)", out)
 
     def test_a_lower_change_is_not_ready_until_the_top_of_the_stack_passed(self):
         self.stack(passed=False)

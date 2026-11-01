@@ -22,13 +22,29 @@ change spec is sufficient for the test writer and the builder.
   that is not `ready` stops the skill, and the user hears that `/pdlc:ready` comes first.
 - If the intent has a `Branch:`, change works and commits on that branch.
 - Each change holds the requirements of one spec, and does not cover two specs.
-- A change whose acceptance lines use the interface or the output of a second change comes
-  after that change. For example, a line of `JOB-pay-invoice` (pay an invoice) says "then
-  `invoices` shows invoice 7 as paid", so the change that builds `invoices` comes first.
-- Where that rule gives no order, design specs come first, then capabilities, then jobs.
-  A capability that relies on a second capability comes after it.
-- Each change has the next free number, and `pdlc/changes/CH-xxxx-<short-name>/change.md`
-  from `pdlc/templates/change.md`, with these sections:
+- Change plans in this sequence. First, it writes the "Requirements", "Relies on", and
+  "Interface" of each change. Then it puts the changes in order. Then it writes the other
+  sections.
+- Change A comes after change B when one of these is true:
+  - An acceptance line of A uses an item that B builds: a route, a command and its flags,
+    a function, or a seam. B builds each entry that has ` · proposed` in its scope spec.
+  - The Interface of A lists an entry that B builds.
+  - "Relies on" of A names the scope spec of B.
+- For example, a line of `JOB-mark-done` (mark an item as done) says "then
+  `GET /?show=all` shows "(done)" after its text". `JOB-view-list` (the list page)
+  proposes `GET /?show=all`. Thus, the change of `JOB-view-list` comes first.
+- Where these rules give no order, design specs come first, then capabilities, then jobs.
+- Suppose that two changes need each other. Usually, one of them uses the item of the
+  other only to prepare a "Given". That change prepares the "Given" with an item of an
+  earlier change or of existing code. An example is a store function in place of a
+  route. Then it removes the copied entry and the "Relies on" line that it no longer
+  needs.
+- If no change can do this, the intent needs a different split. Stop, and ask the user.
+- Before the commit, change runs `python3 pdlc/bin/check_order.py IN-xxxx`. It fixes
+  each problem that the script names, and runs the script again.
+- Each change has the next free number in the final order, and
+  `pdlc/changes/CH-xxxx-<short-name>/change.md` from `pdlc/templates/change.md`, with
+  these sections:
   - Header: the intent, the one spec as `Scope`, `Status: planned`, the ticket of the
     intent, `Branch: none`, and `Base: main`. The tests stage sets the real base.
   - Requirements: the heading and the acceptance lines of each requirement, in number
@@ -56,17 +72,23 @@ change spec is sufficient for the test writer and the builder.
     there.
   - The rules below hold for the entry in its spec. The copy keeps the same words.
   - Each Interface entry gives its file, and what goes in and out, with types where the
-    language has them. It gives each error by its code in `DES-errors`.
+    language has them. It gives each error on its own line: the code in `DES-errors`, the
+    exact message, and the result. A command error also gives `stderr` or `stdout`, the
+    stream that gets the message. For a command, "out" names the stream of the output.
   - "In" gives each form of input that an acceptance line uses, for example each place
     where an option can stand. "Out" gives the full result, with its order and the order
-    of equal items. Each error gives its exact text, where the text shows, and the exit
-    code or status. An error with no code in `DES-errors` also gives these items.
+    of equal items. The change spec copies each error line word for word. The merge check
+    compares the code, the message, the result, and the stream of each error. An error with
+    no code in `DES-errors` has `no code` in place of the code. If the spec entry has a
+    command error with no stream, the change adds the stream to that entry first, and copies
+    the line.
   - When the "when" of a line is a user action (a click, a command, a request), the
     Interface lists that surface. Then the checks drive it, not only a helper below it.
   - A new name follows the style of the existing code, and has the mark `(assumed)`.
   - The Interface holds only items of this change, of earlier changes, and of existing
-    code, not of a later change. The component checks call only these items. The
-    acceptance checks read the Interface of every change.
+    code, not of a later change. `check_order.py` finds an entry of a later change. The
+    component checks call only these items. The acceptance checks read the Interface of
+    every change.
   - Test seams: a copy of the seams that the checks use, from "Test seams" of their specs.
     A seam says how a check controls the clock (for each line that depends on the date or
     time), randomness, and outside vendors or stores. "None" only when no line needs one.
@@ -124,6 +146,7 @@ change spec is sufficient for the test writer and the builder.
 - The handoff `change → acceptance`: the changes, their order, and what about the
   interface helps the test writer.
 - The commit "Plan IN-xxxx: <names of changes>" with the trailer `Intent`: the change
-  specs, the intent, and each patched spec.
+  specs, the intent, and each patched spec. The commit comes after `check_order.py` exits 0.
+  Keep the trailers in one block, as README "Commits" says.
 - The tracker port knows each new change.
 - For the user: the changes in order, and that `/pdlc:acceptance` is next.
