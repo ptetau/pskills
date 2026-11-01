@@ -1687,6 +1687,22 @@ def command_rebuild(args, builder=None):
 # ---------------------------------------------------------------- the commands
 
 
+def collect_shiplog(project, out_dir, number, plugin):
+    """Copy the ship log of a run to <out_dir>/run<N>.shiplog.jsonl, and return the output of
+    `shiplog.py summary`. Returns None when the project has no ship log."""
+    logs = sorted(Path(project, "pdlc", ".logs").glob("ship-*.jsonl"), key=lambda p: p.stat().st_mtime)
+    if not logs:
+        return None
+    target = Path(out_dir) / ("run%d.shiplog.jsonl" % number)
+    shutil.copyfile(logs[-1], target)
+    try:
+        done = subprocess.run([sys.executable, str(Path(plugin) / "hooks" / "shiplog.py"), "summary", str(target)],
+                              capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as error:
+        return "summary failed: %r" % error
+    return done.stdout.strip() or done.stderr.strip() or None
+
+
 def command_e2e(args):
     plugin = Path(args.plugin).resolve()
     out_dir = Path(args.out) / args.label
@@ -1718,6 +1734,10 @@ def command_e2e(args):
             analysis["metrics"]["strength"] = metrics.measure_strength(project, args.fixture)
         except Exception as error:  # the measures add detail; a fault in them must not lose the run
             analysis["metrics"] = {"error": repr(error)}
+        try:
+            analysis["shiplog"] = collect_shiplog(project, out_dir, number, plugin)
+        except Exception as error:  # the log adds detail; a fault here must not lose the run
+            analysis["shiplog"] = "copy failed: %r" % error
         runs.append(analysis)
         (out_dir / ("run%d.json" % number)).write_text(json.dumps(analysis, indent=1))
         print("run %d: $%.2f, %ss, probes %s/%s" % (number, analysis["totals"]["cost_usd"], analysis["wall_s"],

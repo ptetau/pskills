@@ -33,7 +33,7 @@ PLUGIN = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path
 ERRORS = "specs/design/DES-errors.md"
 SPEC_FORMAT_SLUG = "pdlc-spec-format"
 # Lines that .gitignore needs. The upgrade adds a missing line on main only.
-REQUIRED_IGNORES = ["pdlc/.tools/"]
+REQUIRED_IGNORES = ["pdlc/.tools/", "pdlc/.logs/"]
 FOLDERS = ["templates", "ports", "adapters", "bin", "reviews", "specs/design"]
 SKIP_NAMES = {".gitkeep", "__pycache__", ".DS_Store"}
 

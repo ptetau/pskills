@@ -83,6 +83,10 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 - `version.json`: the pdlc version of these files, and the hash of each file that pdlc wrote.
   Only `/pdlc:upgrade` and init write it.
 - `.tools/`: the tools of the visual review. This folder is not committed.
+- `.logs/`: the debug log of each ship run, `ship-<UTC start>.jsonl`, one JSON object on
+  each line. A hook of the pdlc plugin writes it. This folder is not committed. After an
+  interruption or an API error, type `/pdlc:ship` to continue, because a normal prompt ends
+  the run.
 
 ## Code maps
 
