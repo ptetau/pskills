@@ -1186,6 +1186,12 @@ class StageReplayTest(unittest.TestCase):
                 self.assertEqual(run_bench.git(project, "rev-parse", "start").stdout,
                                  run_bench.git(project, "rev-parse", "HEAD").stdout)
 
+    def test_a_prepared_project_has_a_clean_working_tree(self):
+        for state in run_bench.prepare_states("r5"):
+            with self.subTest(state=state):
+                project = self.prepare(state)
+                self.assertEqual(run_bench.git(project, "status", "--porcelain").stdout.strip(), "")
+
     def test_prepare_init_has_no_pdlc_folder(self):
         self.assertFalse((self.prepare("init") / "pdlc").exists())
 
@@ -1492,9 +1498,9 @@ class SnapshotTest(unittest.TestCase):
         entry = run_bench.entry_commit(clone / "x", "Specify IN-0001")
         self.assertEqual(run_bench.git(project, "rev-parse", head + "^{tree}").stdout,
                          run_bench.git(clone / "x", "rev-parse", entry + "^{tree}").stdout)
-        # What differs from the bundle is the upgrade, and only inside pdlc/.
+        # What differs from the bundle is the upgrade: pdlc/ and the .gitignore line.
         changed = run_bench.git(project, "diff", "--name-only", entry, "HEAD").stdout.split()
-        self.assertTrue(changed and all(name.startswith("pdlc/") for name in changed), changed)
+        self.assertTrue(changed and all(name.startswith("pdlc/") or name == ".gitignore" for name in changed), changed)
         self.assertIn("pdlc/version.json", changed)
         for name in ("check-tagging", "commit-trailers", "review-checklist"):
             self.assertIn("pdlc/specs/design/DES-pdlc-%s.md" % name, changed)

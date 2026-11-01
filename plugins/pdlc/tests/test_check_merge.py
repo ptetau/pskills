@@ -383,9 +383,9 @@ class MergeCheck(unittest.TestCase):
     # The strict error form
 
     TOOL_ERRORS = ("  - errors:\n"
-                   "    - `TOP_INVALID` · `error: --top needs a whole number greater than zero` · exit 2\n"
-                   "    - no code · `usage: wordfreq [--top N] FILE` · exit 2\n"
-                   "    - no code · `error: cannot read FILE` · exit 1\n")
+                   "    - `TOP_INVALID` · `error: --top needs a whole number greater than zero` · exit 2 · stderr\n"
+                   "    - no code · `usage: wordfreq [--top N] FILE` · exit 2 · stderr\n"
+                   "    - no code · `error: cannot read FILE` · exit 1 · stderr\n")
 
     def tool(self, errors, name="`wordfreq [--top N] FILE`", kind="command"):
         return "- %s · %s · `wordfreq/cli.py`\n  - in: a path\n%s" % (name, kind, errors)
@@ -496,7 +496,7 @@ class MergeCheck(unittest.TestCase):
         self.assertEqual(code, 0, out)
 
     def test_a_message_with_a_backtick_uses_a_double_backtick_span(self):
-        errors = "  - errors:\n    - `TOP_INVALID` · ``error: use `--top 3` here`` · exit 2\n"
+        errors = "  - errors:\n    - `TOP_INVALID` · ``error: use `--top 3` here`` · exit 2 · stderr\n"
         code, out = self.both(errors, errors)
         self.assertEqual(code, 0, out)
         code, out = self.both(errors, errors.replace("use `--top 3` here", "use `--top 4` here"))
@@ -504,12 +504,50 @@ class MergeCheck(unittest.TestCase):
 
     def test_the_assumed_mark_is_allowed_after_the_code_the_message_and_the_result(self):
         marked = ("  - errors:\n"
-                  "    - `TOP_INVALID` (assumed) · `error: bad top` (assumed: a guess) · exit 2 (assumed)\n")
-        plain = "  - errors:\n    - `TOP_INVALID` · `error: bad top` · exit 2\n"
+                  "    - `TOP_INVALID` (assumed) · `error: bad top` (assumed: a guess) · exit 2 (assumed) · stderr\n")
+        plain = "  - errors:\n    - `TOP_INVALID` · `error: bad top` · exit 2 · stderr\n"
         code, out = self.both(marked, plain)
         self.assertEqual(code, 0, out)
         found = check_merge.interface_entries("## Interface\n\n" + self.tool(marked))
-        self.assertEqual(list(found.values())[0][1], {("TOP_INVALID", "error: bad top", "exit 2")})
+        self.assertEqual(list(found.values())[0][1], {("TOP_INVALID", "error: bad top", "exit 2 · stderr")})
+
+    def test_a_command_error_with_no_stream_is_a_form_problem(self):
+        no_stream = self.TOOL_ERRORS.replace("exit 1 · stderr", "exit 1")
+        code, out = self.both(no_stream, no_stream)
+        self.assertEqual(code, 1)
+        self.assertIn("`wordfreq [--top N] FILE`", out)
+        self.assertIn("gives no stream", out)
+        self.assertIn("` · stderr` or ` · stdout`", out)
+
+    def test_a_route_or_function_error_with_a_stream_is_a_form_problem(self):
+        route = "  - errors:\n    - no code · `not found` · status 404 · stderr\n"
+        code, out = self.both(route, route, name="`POST /reset`", kind="route")
+        self.assertEqual(code, 1)
+        self.assertIn("only a command error", out)
+        func = "  - errors:\n    - no code · `bad key` · raises KeyError · stdout\n"
+        code, out = self.both(func, func, name="`lookup(key)`", kind="function")
+        self.assertEqual(code, 1)
+        self.assertIn("only a command error", out)
+
+    def test_a_different_stream_is_one_problem_that_names_the_entry_and_the_field(self):
+        code, out = self.both(self.TOOL_ERRORS.replace("exit 1 · stderr", "exit 1 · stdout"))
+        self.assertEqual(code, 1)
+        self.assertEqual(out.count("\n  - "), 1, out)
+        self.assertIn("the result exit 1 · stdout", out)
+        self.assertIn("CAP-email has exit 1 · stderr", out)
+
+    def test_the_stream_may_be_in_backticks_and_may_have_the_assumed_mark(self):
+        marked = self.TOOL_ERRORS.replace("exit 1 · stderr", "exit 1 · `stderr` (assumed)")
+        code, out = self.both(marked)
+        self.assertEqual(code, 0, out)
+
+    def test_no_code_in_backticks_is_the_same_as_no_code(self):
+        ticked = self.TOOL_ERRORS.replace("- no code ·", "- `no code` ·")
+        code, out = self.both(ticked)
+        self.assertEqual(code, 0, out)
+        found = check_merge.interface_entries("## Interface\n\n" + self.tool(ticked))
+        self.assertIn(("no code", "error: cannot read FILE", "exit 1 · stderr"),
+                      list(found.values())[0][1])
 
     def test_an_entry_with_no_errors_line_is_a_form_problem(self):
         bare = "- `ping()` · function · `src/ping.js`\n  - out: nothing\n"

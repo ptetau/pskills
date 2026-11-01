@@ -945,7 +945,7 @@ def finish_snapshot_project(dest, plugin):
     if not tools.exists():
         os.symlink(ensure_tools(), tools)
     if git(dest, "status", "--porcelain").stdout.strip():
-        git(dest, "add", "-A", "pdlc")
+        git(dest, "add", "-A", "pdlc", *([".gitignore"] if (Path(dest) / ".gitignore").exists() else []))
         git(dest, "commit", "-q", "-m", "Upgrade pdlc")
     return Path(dest)
 
