@@ -103,10 +103,23 @@ stay comparable over time.
    matches, stop and ask.
 2. **Find the repo root** with `git rev-parse --show-toplevel`. The isolated worktrees
    need git. If this is not a git repo, stop and say so.
-3. **Fingerprint the skill:** get the `sha256sum` of the SKILL.md of the skill.
+3. **Fingerprint the skill and the workflow.** `<vet dir>` is the directory of this skill.
+   Run this command:
+
+   ```
+   python3 <vet dir>/scripts/fingerprint.py <SKILL.md of the skill> --workflow <vet dir>/references/vet.workflow.js
+   ```
+
+   Keep the JSON output. The output has these fields:
+   - `skillSha256`: the hash of SKILL.md.
+   - `skillTreeSha256`: the hash of each file in the tree of the skill.
+   - `skillTree`: the root of that tree.
+   - `workflowSha256`: the hash of the workflow script that Phase 4 runs.
+
+   The tree is the skill folder. For a skill in a plugin, the tree is all of the plugin folder.
 4. **Check for a saved suite** at `evals/<skill>/suite.json`. If the suite exists and
    there is no `--regen`, load the suite. Then go directly to Phase 3b (models). If the
-   `skillSha256` of the suite is different from the hash of step 3, say so in one line.
+   `skillSha256` of the suite is different from the `skillSha256` of step 3, say so in one line.
    Then continue. The suite still works, and the same suite keeps the scores comparable.
    `--regen` builds the suite again, but it also starts a new baseline.
 
@@ -221,9 +234,9 @@ setting comes from `evals/agents.json`, or is `session`.
   stability and makes the grade less clear.
 
 Put the answers into the agent roles for this run. Offer one time to save the answers to
-`evals/agents.json` as the default of the repo. Record the meaning of `session` in the
-results as follows. When you know the model name of the session, set
-`config.sessionModel` to that name. Scores from runs with different models are not
+`evals/agents.json` as the default of the repo. Always set `config.sessionModel` to the
+exact model ID of this session (for example `claude-opus-5-5`), not a display name. When a
+role model is an alias, write the full model ID. Scores from runs with different models are not
 comparable.
 
 ## Phase 4: Run and judge
@@ -344,7 +357,10 @@ run or a lost judgement as a pass or as a fail.
    the path in `runs[].capture`. Copy each capture to `outputs/<P01-r03>.md` with a
    shell loop. Do not read the captures into your context. Then point `runs[].capture`
    at the copy.
-3. Write `results.json` as `{ skill, skillSha256, suiteSha256, runId, generatedAt, ...workflowResult }`.
+3. Write `results.json` as `{ skill, skillSha256, skillTreeSha256, skillTree, workflowSha256, suiteSha256, runId, generatedAt, ...workflowResult }`.
+   Take `skillSha256`, `skillTreeSha256`, `skillTree`, and `workflowSha256` from the
+   output of `fingerprint.py` in Phase 0. Hash the same workflow script file that you gave
+   to the Workflow tool in Phase 4.
    Do not change the return value of the workflow, except the capture paths. Add
    `config.sessionModel` from Phase 3b. If a validator is available (for example, the
    `jsonschema` package of Python), check `results.json` against
@@ -364,8 +380,8 @@ run or a lost judgement as a pass or as a fail.
    - The weakest item and the least stable item, in plain words.
    - The path to `report.md`.
 
-   If an earlier run has the same `suiteSha256`, agent roles, and models, also give the
-   change in each score since that run. Do not use a run with a different suite version
+   If an earlier run has the same `suiteSha256`, `workflowSha256`, agent roles, and models,
+   also give the change in each score since that run. Do not use a run with a different suite version
    as a baseline.
 
 ## Agent roles
@@ -373,7 +389,8 @@ run or a lost judgement as a pass or as a fail.
 Four roles do the work. Each role can have its own settings:
 
 - `model`: `session` (the default) uses the model of the session. Any other value is a
-  model alias or a model id that the harness accepts.
+  model alias or a model id that the harness accepts. Prefer a full model ID. An alias
+  gives the "models not pinned" WARN when you compare results.
 - `effort`: a value from `low` to `max`, or `session`.
 - `agentType`: a custom subagent type.
 
@@ -466,6 +483,7 @@ cross-prompt check.
 Scores are comparable only between runs with these same items:
 
 - The same `suiteSha256`.
+- The same `workflowSha256`. The workflow script builds the prompts that the agents get.
 - The same agent roles and models (`config.agents` and `config.sessionModel` in
   results.json).
 - The same wave size.
