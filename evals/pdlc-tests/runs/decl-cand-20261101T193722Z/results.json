@@ -1,0 +1,541 @@
+{
+ "skill": "pdlc:tests",
+ "skillSha256": "1e90f1c3cf5c32f88b3d53cde64f7d0e32221beb872b86e04cb0887fb8da5d05",
+ "skillTreeSha256": "5c913dcd9f5c531bc046cf6be7e880969b53fdc2a15099820f5d8ddf8fcb75ce",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "8c7562e892d757bb5fe3542e4a5a6131ed2b771106ef105c5e27f503e26d8db3",
+ "suiteSha256": "1699da63f48fb640a4ff7af270d5662da6366cc6c635906ff0241d83ba4cb4a9",
+ "runId": "decl-cand-20261101T193722Z",
+ "generatedAt": "2026-11-01T19:37:22Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 79.2,
+  "stability": 64.7,
+  "overall": 71.6,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 2,
+  "totalRuns": 2
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 79.2,
+   "stability": 64.7,
+   "overall": 71.6,
+   "grade": "C",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 72.2,
+  "median": 79.2,
+  "max": 86.1
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Each requirement of the change has component checks. They call only the Interface of this change and of earlier changes, and they expect the exact codes and messages.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The builder can start at once. Each new check fails for the missing behaviour, and no check is broken.",
+   "passRate": 50,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The lock is sound. `Tests-Locked:` is the hash of the commit of the final checks. The tests review of that lock passed with a wrong version for each check.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "For the only change of an intent, the run writes no check and starts no review. It records `Tests-Locked: acceptance`, and the handoff names the acceptance file and its lock.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "`Branch:` and `Base:` follow \"Stacked changes\". The first change starts from the intent branch, and the base is in its history.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run writes no app code, and only the files under \"Check files\" hold checks.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The commits come in the order of the skill, each with `Intent` and `Change`, and `Req` only on \"Tests\".",
+   "passRate": 50,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The handoff `tests \u2192 build` is in the template form, and lists each check and what it proves.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply says that `/pdlc:build` is next.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 79.2,
+   "stability": 64.7
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-tests/runs/decl-cand-20261101T193722Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 72.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Checks: 18 in `tests/store.rs`, for CAP-store.R1 (load in added order), R8 (done state), R9 (mark done), and R10 (old file loads as not done)."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Red: the checks fail first. `Item.done` and `Store::mark_done` do not exist yet, so the checks do not compile."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "Wrong versions:\n- CAP_store_R1_load_keeps_file_order_not_alphabetical_order \u00b7 load sorts items by text \u00b7 fails (13 lines for 19 checks; none for CAP_store_R1_a_missing_file_holds_no_items or CAP_store_R8_a_new_item_is_not_done)"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "Check files\n\n- tests/store.rs"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Branch: `pdlc/CH-0001-store-done`, started from the intent branch. Base: main."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "The two `Item` literals in `tests/page.rs` now have the `done` field."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Commits: Start CH-0001, Tests CH-0001, Lock tests CH-0001, Review tests CH-0001, Tests reviewed CH-0001. (no git log with trailers in the capture)"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "The test writer wrote 18 checks for CAP-store (keep items in a file) in `tests/store.rs`. (the file holds 19 #[test] checks)"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: `/pdlc:build`."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-tests/runs/decl-cand-20261101T193722Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 86.1,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "The test writer wrote 21 checks in `tests/store.rs` for CAP-store.R1, R8, R9 and R10."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "The checks fail first. `Item.done` and `Store::mark_done` do not exist yet, so the test build does not compile."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "The second review passed. The lock is `e09cff4f00c013cb582372afbca14e22b1c684ab`."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "Check files\n\n- tests/store.rs"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Branch: `pdlc/CH-0001-store-done`. Base: `main`."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "tests/page.rs                            |   2 +-\n tests/store.rs                           | 160 +++++++++++++-"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Intent: IN-0001\nChange: CH-0001\n\nCo-Authored-By: Claude Sonnet 5.5 (Intent and Change sit in a separate paragraph, not one trailer block)"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "`CAP_store_R8_*` (7 checks): a new item is open, the done state survives a new Store and an add, the `*` stored form, and the errors of add."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: `/pdlc:build` for CH-0001."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "Both runs cover every requirement through the Interface only. Run 2 adds four io::Error checks and tags the R4/R5 checks as R1, so the check set differs in detail.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "19 checks in tests/store.rs for R1, R8, R9, R10, with no checks for the io::Error items of the Interface"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "21 checks in tests/store.rs for R1, R8, R9, R10, including io::Error checks added after a failed review"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "equivalent",
+   "reason": "Both runs report red the same way, as a compile error about the missing items, and give no failure count.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Reports red as a compile failure on the missing Item.done and Store::mark_done, with no count of failures"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "Run 1 passes review at once with incomplete wrong versions. Run 2 goes through a failed review, a relock and a second review.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "One lock and one review that passed in round 1, with wrong versions for only 13 of 19 checks"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "First review failed with 3 problems; the run fixed the checks, locked again on the newest Tests commit, and the re-review passed"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "identical",
+   "reason": "Both runs start the same branch from the intent branch and keep Base: main.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Branch pdlc/CH-0001-store-done from the intent branch, Base: main"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "equivalent",
+   "reason": "Both runs change the same set of files and no app file.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Changes only tests/store.rs, the Item literals in tests/page.rs, and pdlc change files; no app code"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "major_drift",
+   "reason": "Run 2 has an extra review cycle, and its Intent and Change lines are not in one trailer block, so git does not parse them as trailers.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Five commits in skill order, Intent and Change as real git trailers, Req only on Tests"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Eight commits with a second Tests/Lock/Review cycle; Intent and Change sit in a paragraph apart from the Co-Authored-By block"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "Both use the same template and list proofs by requirement. The layout of the proofs, where the lock appears, and the accuracy of the count differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Template handoff with proofs listed by requirement, the lock in Don't redo, and a check count that does not match the file"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Template handoff with a 'Checks and what they prove' subsection by requirement group with correct counts, and the lock in Done"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "Both final replies end with one line that names /pdlc:build. Run 2 adds 'for CH-0001'.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Ends with a one-line 'Next: /pdlc:build'"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}
