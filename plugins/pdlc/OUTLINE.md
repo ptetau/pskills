@@ -106,6 +106,7 @@ pdlc/
     jobs/               one file per job to be done
     capabilities/       one file per capability
     design/             one file per convention, including pdlc's own defaults
+  version.json          the pdlc version of the files, and the hash of each file that pdlc wrote
   changes/              one change spec per milestone
   acceptance/           the review of the acceptance checks of each intent
 ```
@@ -557,6 +558,7 @@ pdlc is a Claude Code plugin. You call its skills as `/pdlc:<name>`.
 | `conventions` | Establishes or changes a convention with you, and creates migration intents. |
 | `board` | Re-syncs each intent and each change to the tracker. |
 | `trace` | Answers "why does this code exist?" and "what did this intent change?" |
+| `upgrade` | Brings the pdlc files of a project up to the installed version. Refreshes each file that the project did not edit, keeps and shows each edited file, and lists the specs that need a newer form. |
 | `dashboard` | Optional. After it asks you, installs a `dashboard-builder` agent and a CLAUDE.md rule for a live status page. |
 
 `ready`, `build`, and `verify` are simplified versions of `/quiz` and `/argue`,

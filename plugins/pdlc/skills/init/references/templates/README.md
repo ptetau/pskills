@@ -80,6 +80,8 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
   `<placeholder>` and each guide sentence.
 - `bin/`: `check_merge.py`, `check_writing.py`, `make_packets.py`, `record_gif.mjs`,
   `record_merges.py`.
+- `version.json`: the pdlc version of these files, and the hash of each file that pdlc wrote.
+  Only `/pdlc:upgrade` and init write it.
 - `.tools/`: the tools of the visual review. This folder is not committed.
 
 ## Code maps
@@ -386,11 +388,16 @@ branch.
 
 ## pdlc's own files
 
-`README.md`, `ports/`, `adapters/`, `templates/`, and `bin/` come from the pdlc plugin.
-They change only in a pdlc upgrade, on main, in a commit of their own, and not on the
-branch of a change. An upgrade can also refresh the `DES-pdlc-*` design specs and the
-`reviews/` files that say `Default: yes`. A file that the project changes says
-`Default: no`, and belongs to the project.
+`README.md`, `ports/`, `adapters/`, `templates/`, `bin/`, and the `reviews/` and
+`specs/design/` files that say `Default: yes` come from the pdlc plugin. `/pdlc:upgrade`
+refreshes each of these files that the project did not change, and keeps each changed file.
+`version.json` records the version and the content that pdlc wrote. A file that the project
+changes on purpose says `Default: no`, and belongs to the project.
+
+- The upgrade commits "Upgrade pdlc" on main, or on the newest unmerged pdlc branch, as the
+  intent stages do ("Where pdlc commits").
+- The upgrade does not write a spec. A spec that needs a newer form goes into one intent that
+  waits for approval.
 
 ## Ports
 
