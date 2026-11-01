@@ -60,10 +60,10 @@ its right spec, as `proposed`. Intake does not write code.
 - A new code that intake makes has the mark `(assumed)` in its `DES-errors` row and in each
   entry that names it.
 - A spec with no "Interface" section gets one from its template, before "Requirements".
-- Each detail that the words of the intent do not give (a message, a limit, an order, a
-  format, the result of an edge case such as N larger than the number of items) has the
-  mark `(assumed)`. The mark goes where intake writes it, also in a "Given ..., then ..."
-  line.
+- Each detail that the words of the intent do not give has the mark `(assumed)`. Such a
+  detail is a message, a limit, an order, or a format. It can also be the result of an edge
+  case, for example N larger than the number of items. The mark goes where intake writes it, also in
+  a "Given ..., then ..." line.
 - A detail that intake adds to a `built` requirement from recon also has the mark `(assumed)`.
 - "Decided on defaults" in the handoff lists each `(assumed)` decision that intake wrote, one line
   for each, in the form of the template. The same lines go into the intent "Notes".
