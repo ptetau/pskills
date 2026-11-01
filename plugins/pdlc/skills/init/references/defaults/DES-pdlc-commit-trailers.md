@@ -24,8 +24,7 @@ Ticket: PROJ-88
   checks, the README). A commit that changes only files in `pdlc/` has no `Req`.
   Examples are a commit that starts a branch, logs progress, or sets statuses.
 
-The trailers must be the last paragraph of the message, with no text between them. Keep all
-trailers in one block at the end of the message. Put the trailers in this order:
+Keep all trailers in one block at the end of the message. Put the trailers in this order:
 `Intent`, `Change`, `Req`, `Ticket`, `Review` (the GIF of the visual review), and then
 any other trailers (for example `Co-Authored-By`). Then git shows them all as trailers.
 For the trace, the important point is that the lines are in the message.
@@ -38,8 +37,8 @@ The first line of each commit must be one of the subjects below, exactly. In a s
 subject that git gives. On a pdlc branch, a hook in the pdlc plugin checks each new commit
 against this list and the trailers above.
 
-On any branch, the hook of the pdlc plugin also checks that a commit with one of these subjects has its pdlc
-trailers in the last paragraph. Fix each problem that the hook names at once,
+On any branch, the hook also checks each commit with one of these subjects. Its pdlc
+trailers must be in the last paragraph. Fix each problem that the hook names at once,
 with `git commit --amend`.
 
 - `Specify <intent>: <intent name>` (intake)

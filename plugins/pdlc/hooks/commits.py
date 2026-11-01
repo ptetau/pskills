@@ -169,9 +169,9 @@ def block_problems(root):
         found = re.match(r"^(Intent|Change|Req|Ticket):[ \t]*(\S.*?)\s*$", line)
         if found and (found.group(1) != "Ticket" or len(found.group(2).split()) == 1):
             last[found.group(1)] = line.strip()
-    block = {line.strip() for line in
-             (git(root, "log", "-1", "--format=%(trailers:only,unfold)") or "").splitlines()}
-    if any(line not in block for line in last.values()):
+    block = set(re.findall(r"^(Intent|Change|Req|Ticket):",
+                           git(root, "log", "-1", "--format=%(trailers:only,unfold)") or "", re.M))
+    if set(last) - block:
         return ["the pdlc trailers are not in the last paragraph, so git does not read them as "
                 "trailers. Put Intent, Change and Req in the last paragraph. Put Co-Authored-By "
                 "and any other trailer directly under them, with no blank line and no other "

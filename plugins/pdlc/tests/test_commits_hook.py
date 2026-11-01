@@ -148,6 +148,11 @@ class CommitHook(unittest.TestCase):
                     "Co-Authored-By: S <s@e.com>")
         self.assertEqual(self.hook(), (0, ""))
 
+    def test_folded_and_unspaced_trailers_pass(self):
+        self.commit("Build CH-0001: x", "Intent:IN-0001\nChange: CH-0001\nReq: CAP-email.R1,\n CAP-email.R2\n"
+                    "Co-Authored-By: S <s@e.com>", path="src/a.py")
+        self.assertEqual(self.hook(), (0, ""))
+
     def test_other_trailers_directly_under_the_pdlc_trailers_pass(self):
         self.commit("Start CH-0001", "Intent: IN-0001\nChange: CH-0001\nCo-Authored-By: Someone <s@example.com>\n"
                     "Claude-Session: https://example.com/s")
