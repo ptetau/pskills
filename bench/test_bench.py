@@ -3,6 +3,7 @@ import contextlib
 import io
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -1429,6 +1430,427 @@ class RebuildCopyTest(unittest.TestCase):
         with self.assertRaises(RuntimeError) as caught:
             run_bench.rebuild_source(folder)
         self.assertIn("gone", str(caught.exception))
+
+
+UNITTEST_OUTPUT = """\
+.F
+======================================================================
+FAIL: test_b (tests.test_a.ATest.test_b)
+----------------------------------------------------------------------
+AssertionError: 1 != 2
+
+======================================================================
+ERROR: test_c (tests.test_a.ATest.test_c)
+----------------------------------------------------------------------
+Ran 3 tests in 0.002s
+
+FAILED (failures=1, errors=1)
+"""
+CARGO_OUTPUT = """\
+running 3 tests
+test store::tests::adds ... ok
+test store::tests::removes ... FAILED
+test page::tests::escapes ... ok
+
+failures:
+
+---- store::tests::removes stdout ----
+panicked at src/store.rs:9
+
+failures:
+    store::tests::removes
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out
+
+running 1 test
+test src_lib_doc ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+"""
+CLOJURE_OUTPUT = """\
+Testing todo.store-test
+
+FAIL in (adds-an-item) (store_test.clj:9)
+expected: (= 1 2)
+
+ERROR in (removes-an-item) (store_test.clj:14)
+
+Ran 4 tests containing 6 assertions.
+1 failures, 1 errors.
+"""
+
+ACCEPTANCE_FILE = """\
+import io
+import unittest
+
+from wordfreq.cli import main
+
+
+def run(argv):
+    out, err = io.StringIO(), io.StringIO()
+    return main(argv, stdout=out, stderr=err), out.getvalue(), err.getvalue()
+
+
+class JOB_top_option_R1(unittest.TestCase):
+    def test_JOB_top_option_R1_keeps_the_most_common(self):
+        import os, tempfile
+        handle, path = tempfile.mkstemp(suffix=".txt")
+        with os.fdopen(handle, "w") as file:
+            file.write("the the cat")
+        self.addCleanup(os.remove, path)
+        self.assertEqual(run(["--top", "1", path]), (0, "the 2\\n", ""))
+
+
+class JOB_top_option_R2(unittest.TestCase):
+    def test_JOB_top_option_R2_zero_is_an_error(self):
+        code, out, err = run(["--top", "0", "x.txt"])
+        self.assertEqual((code, out), (2, ""))
+        self.assertEqual(err, "error: --top needs a whole number greater than zero\\n")
+"""
+SPEC_TEXT = "# JOB-top-option · Keep the top words\\n\\nR1. The command can run `main` with --top.\\n"
+
+
+class RebuildScoreTest(unittest.TestCase):
+    branch = "pdlc/CH-0001-x"
+    acceptance_names = ["test_JOB_top_option_R1_keeps_the_most_common", "test_JOB_top_option_R2_zero_is_an_error"]
+
+    def setUp(self):
+        self.app = rebuild_project(self)
+        self.work = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.work, True)
+        self.tree = run_bench.export_tree(self.app, self.branch, self.work / "tree")
+        (self.tree / "tests" / "acceptance_IN-0001.py").write_text(ACCEPTANCE_FILE)
+        (self.tree / "pdlc" / "specs" / "jobs" / "JOB-top-option.md").write_text(SPEC_TEXT)
+        # The usage line changes with the option, so pdlc changed this check too.
+        cli_check = self.tree / "tests" / "test_cli.py"
+        cli_check.write_text(cli_check.read_text().replace("usage: wordfreq FILE", "usage: wordfreq [--top N] FILE"))
+        self.config = run_bench.config_checks((self.tree / "pdlc" / "config.md").read_text())
+        self.count = 0
+
+    def rebuilt(self, oracle=False):
+        self.count += 1
+        dest = self.work / ("rebuilt%d" % self.count)
+        run_bench.clean_copy(self.tree, dest)
+        if oracle:
+            shutil.copytree(self.tree / "wordfreq", dest / "wordfreq", ignore=shutil.ignore_patterns("__pycache__"))
+        return dest
+
+    def score(self, rebuilt):
+        return run_bench.score_rebuild(self.tree, rebuilt, self.config, "wordfreq")
+
+    def basic(self, text):
+        found = run_bench.parse_check_output(text)
+        return {"ran": found["ran"], "failed": found["failed"]}
+
+    def test_parse_unittest_output(self):
+        found = self.basic(UNITTEST_OUTPUT)
+        self.assertEqual(found, {"ran": 3, "failed": ["test_b (tests.test_a.ATest.test_b)",
+                                                      "test_c (tests.test_a.ATest.test_c)"]})
+
+    def test_parse_unittest_output_of_one_test(self):
+        self.assertEqual(self.basic("Ran 1 test in 0.001s\n\nOK\n"), {"ran": 1, "failed": []})
+
+    def test_parse_rust_output_sums_each_harness(self):
+        found = self.basic(CARGO_OUTPUT)
+        self.assertEqual(found, {"ran": 4, "failed": ["store::tests::removes"]})
+
+    def test_parse_clojure_output(self):
+        found = self.basic(CLOJURE_OUTPUT)
+        self.assertEqual(found, {"ran": 4, "failed": ["adds-an-item store_test.clj", "removes-an-item store_test.clj"]})
+
+    def test_parse_output_with_no_runner_gives_nothing(self):
+        self.assertEqual(self.basic("Traceback: boom\n"), {"ran": 0, "failed": []})
+
+    def test_run_checks_fills_in_the_files_and_reports_the_exit_code(self):
+        done = run_bench.run_checks(self.work, "echo {files}; exit 3", ["a.py", "b.py"])
+        self.assertFalse(done["ok"])
+        self.assertIn("a.py b.py", done["output"])
+        self.assertTrue(run_bench.run_checks(self.work, "true")["ok"])
+
+    def test_run_checks_runs_in_the_project_and_keeps_the_last_2000_characters(self):
+        done = run_bench.run_checks(self.work, "pwd; python3 -c \"print('x' * 3000 + 'END')\"")
+        self.assertEqual(len(done["output"]), 2000)
+        self.assertTrue(done["output"].endswith("END\n"))
+        self.assertEqual(run_bench.run_checks(self.work, "pwd")["output"].strip(), str(self.work.resolve()))
+
+    def test_run_checks_stops_at_the_timeout(self):
+        done = run_bench.run_checks(self.work, "sleep 5", timeout=1)
+        self.assertFalse(done["ok"])
+        self.assertEqual(done["ran"], 0)
+
+    def test_score_counts_every_original_check_when_the_run_crashed(self):
+        names = ["test_a", "test_b", "test_c"]
+        crashed = {"ran": 1, "failed": ["tests.test_a (unittest.loader._FailedTest)"]}
+        self.assertEqual(run_bench.score(3, crashed, names), {"total": 3, "passed": 0, "failed": names})
+        nothing = {"ran": 0, "failed": []}
+        self.assertEqual(run_bench.score(3, nothing, names), {"total": 3, "passed": 0, "failed": names})
+
+    def test_score_counts_the_checks_that_did_not_run_as_not_passed(self):
+        partial = {"ran": 4, "failed": ["load error"]}
+        found = run_bench.score(8, partial, ["a", "b"])
+        self.assertEqual(found, {"total": 8, "passed": 3, "failed": ["load error"]})
+
+    def test_score_with_a_full_run_uses_the_failures_only(self):
+        found = run_bench.score(5, {"ran": 5, "failed": ["x", "y"]}, ["a"])
+        self.assertEqual(found, {"total": 5, "passed": 3, "failed": ["x", "y"]})
+
+    def test_score_never_goes_below_zero_or_above_the_total(self):
+        self.assertEqual(run_bench.score(2, {"ran": 9, "failed": ["x"]}, [])["passed"], 1)
+        self.assertEqual(run_bench.score(2, {"ran": 1, "failed": ["x", "y", "z"]}, [])["passed"], 0)
+        self.assertEqual(run_bench.score(0, {"ran": 3, "failed": []}, [])["passed"], 0)
+
+    def test_an_oracle_rebuild_scores_every_check_as_passed(self):
+        got = self.score(self.rebuilt(oracle=True))
+        self.assertEqual(got["acceptance"]["total"], 2)
+        self.assertEqual(got["acceptance"]["passed"], 2)
+        self.assertEqual(got["acceptance"]["failed"], [])
+        self.assertGreaterEqual(got["component"]["total"], 8)
+        self.assertEqual(got["component"]["passed"], got["component"]["total"])
+        self.assertEqual(got["component"]["failed"], [])
+        self.assertEqual(got["probes"]["passed"], got["probes"]["total"])
+        self.assertEqual(got["probes"]["total"], len(run_bench.PROBES))
+        self.assertEqual(got["gaps"], [])
+        self.assertTrue(got["original"]["acceptance"]["ok"])
+        self.assertTrue(got["original"]["component"]["ok"])
+
+    def test_the_totals_come_from_the_original_run(self):
+        oracle = self.score(self.rebuilt(oracle=True))
+        empty = self.score(self.rebuilt())
+        self.assertEqual(empty["component"]["total"], oracle["component"]["total"])
+        self.assertEqual(empty["acceptance"]["total"], 2)
+
+    def test_an_empty_rebuild_fails_each_acceptance_check_by_name(self):
+        got = self.score(self.rebuilt())
+        self.assertEqual(got["acceptance"]["passed"], 0)
+        self.assertEqual(got["acceptance"]["total"], 2)
+        self.assertEqual(sorted(got["acceptance"]["failed"]), sorted(self.acceptance_names))
+        self.assertEqual(got["component"]["passed"], 0)
+        self.assertEqual(got["probes"]["passed"], 0)
+
+    def test_an_empty_rebuild_names_the_requirement_and_spec_of_each_gap(self):
+        got = self.score(self.rebuilt())
+        gaps = {gap["check"]: gap for gap in got["gaps"]}
+        gap = gaps[self.acceptance_names[0]]
+        self.assertEqual(gap["requirement"], "JOB-top-option.R1")
+        self.assertEqual(gap["spec"], "pdlc/specs/jobs/JOB-top-option.md")
+        self.assertEqual(gaps[self.acceptance_names[1]]["requirement"], "JOB-top-option.R2")
+        # The spec gives `main`, so only the names that the spec leaves out are gaps.
+        self.assertNotIn("main", gap["missing_names"])
+        self.assertIn("main", run_bench.missing_names("main(argv)", "def main(argv): pass", "no names"))
+
+    def test_a_renamed_function_fails_its_check_and_is_a_gap(self):
+        rebuilt = self.rebuilt(oracle=True)
+        counter = rebuilt / "wordfreq" / "counter.py"
+        counter.write_text(counter.read_text().replace("def count_words", "def tally"))
+        cli = rebuilt / "wordfreq" / "cli.py"
+        cli.write_text(cli.read_text().replace("import count_words", "import tally as count_words"))
+        got = self.score(rebuilt)
+        self.assertTrue(any("test_counter" in name for name in got["component"]["failed"]))
+        self.assertLess(got["component"]["passed"], got["component"]["total"])
+        self.assertEqual(got["acceptance"]["passed"], 2)
+        self.assertEqual(got["component"]["failed_files"], {got["component"]["failed"][0]: "tests/test_counter.py"})
+        gap = next(g for g in got["gaps"] if "test_counter" in g["check"])
+        self.assertIn("count_words", gap["missing_names"])
+        self.assertNotIn("assertEqual", gap["missing_names"])
+        self.assertNotIn("tally", gap["missing_names"])
+
+    def test_a_check_that_the_builder_wrote_is_removed_before_the_originals_are_copied(self):
+        rebuilt = self.rebuilt(oracle=True)
+        (rebuilt / "tests").mkdir(exist_ok=True)
+        (rebuilt / "tests" / "test_builder.py").write_text(
+            "import unittest\n\nclass B(unittest.TestCase):\n    def test_fails(self):\n        self.fail('x')\n")
+        (rebuilt / "tests" / "test_counter.py").write_text("import unittest\n")
+        (rebuilt / "tests" / "acceptance_IN-0001.py").write_text("import unittest\n")
+        original = self.score(self.rebuilt(oracle=True))
+        got = self.score(rebuilt)
+        self.assertFalse((rebuilt / "tests" / "test_builder.py").exists())
+        self.assertEqual((rebuilt / "tests" / "test_counter.py").read_text(),
+                         (self.tree / "tests" / "test_counter.py").read_text())
+        for key in ("total", "passed", "failed"):
+            self.assertEqual(got["component"][key], original["component"][key])
+        self.assertEqual(got["acceptance"]["passed"], 2)
+        self.assertEqual(got["component"]["passed"], got["component"]["total"])
+
+    def test_install_checks_keeps_files_outside_the_check_folders(self):
+        rebuilt = self.rebuilt(oracle=True)
+        (rebuilt / "tests").mkdir(exist_ok=True)
+        (rebuilt / "tests" / "extra.txt").write_text("x\n")
+        run_bench.install_checks(self.tree, rebuilt, self.config)
+        self.assertFalse((rebuilt / "tests" / "extra.txt").exists())
+        self.assertTrue((rebuilt / "wordfreq" / "cli.py").exists())
+        self.assertTrue((rebuilt / "pdlc" / "config.md").exists())
+
+    def test_the_origin_of_each_check_file_goes_in_the_result(self):
+        origin = {"tests/test_counter.py": "pre-pdlc"}
+        got = run_bench.score_rebuild(self.tree, self.rebuilt(oracle=True), self.config, "wordfreq", origin)
+        self.assertEqual(got["component"]["origin"], origin)
+
+    def test_no_acceptance_command_means_acceptance_is_not_measured(self):
+        config = dict(self.config, acceptance=None)
+        got = run_bench.score_rebuild(self.tree, self.rebuilt(oracle=True), config, "wordfreq")
+        self.assertEqual(got["acceptance"], {"measured": False})
+        self.assertEqual(got["component"]["passed"], got["component"]["total"])
+
+    def test_missing_names_keeps_only_names_in_the_check_and_the_code_but_not_the_spec(self):
+        check = "from app import load_items, SPEC_NAME, ab\nself.assertEqual(load_items(x), None)\nlocal_only(1)"
+        code = "def load_items(): pass\nSPEC_NAME = 1\nab = 2\nself.x = unused_name\nimport os"
+        spec = "The function SPEC_NAME is described here."
+        self.assertEqual(run_bench.missing_names(check, code, spec), ["load_items"])
+
+    def test_missing_names_matches_whole_words_in_the_spec(self):
+        check = "load_items()"
+        self.assertEqual(run_bench.missing_names(check, "def load_items(): pass", "load_items_all"), ["load_items"])
+        self.assertEqual(run_bench.missing_names(check, "def load_items(): pass", "Call `load_items()`"), [])
+
+    def test_missing_names_leaves_out_keywords_and_builtins(self):
+        check = "import unittest\nself.assertEqual(len(x), 1)\nfor item in range(3): print(item, None, True)"
+        code = "import unittest\nself.x = 1\nfor item in range(3): print(item, None, True)\nlen(x)"
+        self.assertEqual(run_bench.missing_names(check, code, ""), ["item", "unittest"])
+
+    def test_checks_that_never_ran_are_not_counted_as_passed(self):
+        # Six unit tests in src/ pass. The first failing binary stops cargo, so two checks never run.
+        text = ("running 6 tests\n" + "".join("test tests::u%d ... ok\n" % n for n in range(6)) +
+                "\ntest result: ok. 6 passed; 0 failed; 0 ignored\n\nrunning 2 tests\n"
+                "test adds ... ok\ntest removes ... FAILED\n\nfailures:\n    removes\n\n"
+                "test result: FAILED. 1 passed; 1 failed; 0 ignored\n")
+        found = run_bench.parse_check_output(text)
+        names = ["adds", "removes", "lists", "pages"]
+        got = run_bench.score(len(names), found, names)
+        self.assertEqual(got["total"], 4)
+        self.assertEqual(got["passed"], 1)
+        self.assertEqual(sorted(got["failed"]), ["lists", "pages", "removes"])
+
+    def test_a_rust_unit_test_with_the_name_of_no_original_check_does_not_pass_one(self):
+        found = run_bench.parse_check_output("running 1 test\ntest tests::adds ... ok\n\n"
+                                             "test result: ok. 1 passed; 0 failed; 0 ignored\n")
+        self.assertEqual(run_bench.score(2, found, ["adds", "lists"])["passed"], 1)
+        self.assertEqual(run_bench.score(2, found, ["lists", "pages"])["passed"], 0)
+
+    def test_a_unit_test_with_the_leaf_name_of_an_original_check_does_not_pass_it(self):
+        text = ("     Running unittests src/lib.rs (target/debug/deps/todo-1)\n\nrunning 1 test\n"
+                "test leaf::x ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored\n\n"
+                "     Running tests/app.rs (target/debug/deps/app-2)\n\nrunning 1 test\n"
+                "test x ... FAILED\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored\n\n"
+                "   Doc-tests todo\n\nrunning 1 test\ntest src/lib.rs - x (line 1) ... ok\n")
+        found = run_bench.parse_check_output(text)
+        self.assertEqual(found["passed_names"], [("src/lib.rs", "leaf::x"), ("doc", "src/lib.rs - x (line 1)")])
+        got = run_bench.score(1, found, ["x"], files=["tests/app.rs"])
+        self.assertEqual(got, {"total": 1, "passed": 0, "failed": ["x"]})
+        ok = run_bench.parse_check_output(text.replace("x ... FAILED", "x ... ok"))
+        self.assertEqual(run_bench.score(1, ok, ["x"], files=["tests/app.rs"])["passed"], 1)
+
+    def test_a_name_before_any_binary_header_counts(self):
+        found = run_bench.parse_check_output("running 1 test\ntest x ... ok\n")
+        self.assertEqual(found["passed_names"], [(None, "x")])
+        self.assertEqual(run_bench.score(1, found, ["x"], files=["acceptance/IN-1.rs"])["passed"], 1)
+
+    def test_same_named_rust_failures_in_two_binaries_both_count(self):
+        text = ("test adds ... FAILED\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored\n\n"
+                "test adds ... FAILED\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored\n")
+        found = run_bench.parse_check_output(text)
+        self.assertEqual(found["failed"], ["adds", "adds"])
+        self.assertEqual(run_bench.score(2, found, ["adds", "adds"])["passed"], 0)
+
+    def test_same_named_clojure_failures_in_two_files_both_count(self):
+        text = ("FAIL in (adds) (a_test.clj:3)\nFAIL in (adds) (b_test.clj:5)\n"
+                "Ran 4 tests containing 4 assertions.\n2 failures, 0 errors.\n")
+        found = run_bench.parse_check_output(text)
+        self.assertEqual(len(found["failed"]), 2)
+        self.assertEqual(run_bench.score(4, found)["passed"], 2)
+
+    def test_a_rust_doc_test_name_has_spaces(self):
+        found = run_bench.parse_check_output("test src/lib.rs - add (line 3) ... FAILED\n")
+        self.assertEqual(found["failed"], ["src/lib.rs - add (line 3)"])
+
+    def test_the_failure_count_of_the_summary_counts_when_no_name_is_found(self):
+        text = "Ran 3 tests in 0.1s\n\nFAILED (failures=2, errors=1)\n"
+        found = run_bench.parse_check_output(text)
+        self.assertEqual(found["failed"], [])
+        self.assertEqual(run_bench.score(3, found)["passed"], 0)
+        self.assertEqual(run_bench.score(5, run_bench.parse_check_output(
+            "Ran 5 tests in 0.1s\n\nFAILED (failures=2)\n"))["passed"], 3)
+
+    def test_skipped_checks_do_not_count_as_passed(self):
+        found = run_bench.parse_check_output("Ran 5 tests in 0.1s\n\nOK (skipped=2)\n")
+        self.assertEqual(found["skipped"], 2)
+        self.assertEqual(run_bench.score(5, found)["passed"], 3)
+        self.assertEqual(run_bench.score(5, found, skipped_original=2)["passed"], 5)
+        both = run_bench.parse_check_output("Ran 5 tests in 0.1s\n\nOK (skipped=1, expected failures=1)\n")
+        self.assertEqual(run_bench.score(5, both)["passed"], 3)
+
+    def test_a_check_that_fails_in_the_original_run_makes_the_section_not_measured(self):
+        (self.tree / "tests" / "test_bad.py").write_text(
+            "import unittest\n\nclass B(unittest.TestCase):\n    def test_bad(self):\n        self.fail('x')\n")
+        got = self.score(self.rebuilt(oracle=True))
+        self.assertEqual(got["component"], {"measured": False, "reason": "the original checks did not pass"})
+        self.assertTrue(got["acceptance"]["measured"])
+        self.assertEqual(got["acceptance"]["passed"], 2)
+
+    def test_an_original_run_with_no_checks_is_not_measured(self):
+        config = dict(self.config, all="true")
+        got = run_bench.score_rebuild(self.tree, self.rebuilt(oracle=True), config, "wordfreq")
+        self.assertEqual(got["component"]["measured"], False)
+        self.assertIn("reason", got["component"])
+
+    def test_the_code_is_read_before_the_checks_run(self):
+        with open(self.tree / "tests" / "test_counter.py", "a") as handle:
+            handle.write("# leaked_name\n")
+        command = ("python3 -m unittest discover -s tests && mkdir -p gen && "
+                   "echo 'def leaked_name(): pass' > gen/out.py")
+        config = dict(self.config, all=command)
+        got = run_bench.score_rebuild(self.tree, self.rebuilt(), config, "wordfreq")
+        gap = next(g for g in got["gaps"] if g["file"] == "tests/test_counter.py")
+        self.assertNotIn("leaked_name", gap["missing_names"])
+        self.assertIn("count_words", gap["missing_names"])
+
+    def test_code_text_leaves_out_build_folders(self):
+        for name in ("target/debug/x.rs", ".cpcache/y.clj", "wordfreq/__pycache__/z.py"):
+            (self.tree / name).parent.mkdir(parents=True, exist_ok=True)
+            (self.tree / name).write_text("def build_only(): pass\n")
+        text = run_bench.code_text_of(self.tree, self.config)
+        self.assertNotIn("build_only", text)
+        self.assertIn("count_words", text)
+
+    def test_a_symlinked_check_folder_is_replaced_and_not_followed(self):
+        rebuilt = self.rebuilt(oracle=True)
+        outside = self.work / "outside"
+        outside.mkdir()
+        (outside / "keep.txt").write_text("keep\n")
+        (rebuilt / "tests").symlink_to(outside)
+        run_bench.install_checks(self.tree, rebuilt, self.config)
+        self.assertTrue((outside / "keep.txt").exists())
+        self.assertEqual(list(outside.iterdir()), [outside / "keep.txt"])
+        self.assertFalse((rebuilt / "tests").is_symlink())
+        self.assertTrue((rebuilt / "tests" / "test_counter.py").is_file())
+
+    def test_a_symlinked_check_file_is_replaced_and_not_written_through(self):
+        rebuilt = self.rebuilt(oracle=True)
+        outside = self.work / "target.py"
+        outside.write_text("untouched\n")
+        (rebuilt / "tests").mkdir(exist_ok=True)
+        (rebuilt / "tests" / "test_counter.py").symlink_to(outside)
+        run_bench.install_checks(self.tree, rebuilt, self.config)
+        self.assertEqual(outside.read_text(), "untouched\n")
+        self.assertFalse((rebuilt / "tests" / "test_counter.py").is_symlink())
+
+    def test_a_timeout_stops_the_children_and_keeps_the_partial_output(self):
+        started = run_bench.time.time()
+        done = run_bench.run_checks(self.work, "echo started; (sleep 20 &); sleep 20", timeout=1)
+        self.assertLess(run_bench.time.time() - started, 10)
+        self.assertFalse(done["ok"])
+        self.assertIn("started", done["output"])
+        self.assertIn("timeout", done["output"])
+
+    @unittest.skipUnless(shutil.which("cargo"), "cargo is not installed")
+    def test_parse_check_output_reads_the_real_output_of_cargo_test(self):
+        copy = self.work / "todo-rust"
+        shutil.copytree(run_bench.HERE / "fixtures" / "todo-rust", copy, ignore=shutil.ignore_patterns("target"))
+        proc = subprocess.run(["cargo", "test"], cwd=copy, capture_output=True, text=True, timeout=900)
+        found = run_bench.parse_check_output(proc.stdout + proc.stderr)
+        self.assertEqual(proc.returncode, 0)
+        self.assertEqual(found["failed"], [])
+        self.assertEqual(found["ran"], run_bench.unit_checks(copy, "todo-rust")["ran"])
+        self.assertGreater(found["ran"], 0)
 
 
 if __name__ == "__main__":

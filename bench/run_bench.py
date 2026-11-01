@@ -15,16 +15,21 @@ A run uses `claude -p` with the plugin folder given by --plugin, in a throwaway 
 bench/fixture-app. Nothing in the copy comes back into the repository.
 """
 import argparse
+import builtins
 import json
+import keyword
 import os
 import re
+import shlex
 import shutil
+import signal
 import statistics
 import subprocess
 import sys
 import tempfile
 import threading
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -1073,6 +1078,272 @@ def check_origin(project, ref, files):
         status[path] = letter
     names = {"A": "added by pdlc", "M": "changed by pdlc"}
     return {path: names.get(status.get(path), "pre-pdlc") for path in files}
+
+
+# ---------------------------------------------------------------- scoring a rebuilt project
+
+IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+# A name that every check uses and no spec has to give.
+COMMON_NAMES = set(keyword.kwlist) | set(dir(builtins)) | {"self", "cls"}
+# The kinds of file that hold no app code, when the bench reads the code of a project.
+NOT_CODE = (".md", ".lock", ".txt", ".json", ".toml")
+
+
+def parse_check_output(text):
+    """Read the output of a check runner.
+
+    It reads Python unittest, the Rust test harness (cargo test, or a rustc --test binary) and
+    clojure.test. Output of another runner gives ran 0. The result has:
+    - ran: how many checks ran.
+    - failed: the name of each failure that the output gives. Two failures with one name
+      stay two. A clojure name has the file after it.
+    - failed_count: the number of failures that the summary lines give.
+    - skipped: skipped checks and expected failures (unittest). They ran, but did not pass.
+    - passed_names: (binary, name) of each check that the runner shows as passed (Rust). The
+      binary is the path in the "Running" line, "doc" for doc tests, None before any header.
+    - named: true when the runner prints the name of each check (Rust).
+    """
+    ran = sum(int(n) for n in re.findall(r"^Ran (\d+) tests? in ", text, re.M))
+    failed = re.findall(r"^(?:FAIL|ERROR): (\S+ \(\S+\))", text, re.M)
+    count = sum(int(n) for line in re.findall(r"^FAILED \((.*)\)", text, re.M)
+                for n in re.findall(r"(?:failures|errors)=(\d+)", line))
+    skipped = sum(int(n) for line in re.findall(r"^(?:OK|FAILED) \((.*)\)", text, re.M)
+                  for n in re.findall(r"(?:skipped|expected failures)=(\d+)", line))
+    results = re.findall(r"^test result: \w+\. (\d+) passed; (\d+) failed", text, re.M)
+    ran += sum(int(passed) + int(bad) for passed, bad in results)
+    count += sum(int(bad) for _, bad in results)
+    rust = re.findall(r"^test (.+?) \.\.\. FAILED$", text, re.M)
+    failed += rust or re.findall(r"^---- (.+?) stdout ----$", text, re.M)
+    passed_names, binary = [], None
+    for line in text.splitlines():
+        header = re.match(r"\s*Running (?:unittests )?(\S+)", line)
+        if header:
+            binary = header.group(1)
+        elif re.match(r"\s*Doc-tests ", line):
+            binary = "doc"
+        done = re.match(r"test (.+?) \.\.\. ok$", line)
+        if done:
+            passed_names.append((binary, done.group(1)))
+    ran += sum(int(n) for n in re.findall(r"^Ran (\d+) tests containing", text, re.M))
+    count += sum(int(a) + int(b) for a, b in re.findall(r"^(\d+) failures, (\d+) errors", text, re.M))
+    for name, where in re.findall(r"^(?:FAIL|ERROR) in \((\S+)\)(?: \(([^:)]+))?", text, re.M):
+        failed.append(name + (" " + where if where else ""))
+    return {"ran": ran, "failed": failed, "failed_count": count, "skipped": skipped,
+            "passed_names": passed_names, "named": bool(rust or passed_names)}
+
+
+def run_checks(project, command, files=None, timeout=900):
+    """Run a check command with bash in `project`. `{files}` stands for the quoted `files`.
+
+    Returns ok (exit code 0), the fields of parse_check_output, and the last 2,000 characters
+    of the output. At the timeout it kills the whole process group and keeps the output so far.
+    """
+    if files is not None:
+        command = command.replace("{files}", " ".join(shlex.quote(f) for f in files))
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    proc = subprocess.Popen(["bash", "-c", command], cwd=project, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True, env=env, start_new_session=True)
+    try:
+        output = proc.communicate(timeout=timeout)[0]
+        ok = proc.returncode == 0
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except OSError:
+            pass
+        output = (proc.communicate()[0] or "") + "\ntimeout after %d s\n" % timeout
+        ok = False
+    return {"ok": ok, **parse_check_output(output), "output": output[-2000:]}
+
+
+def real_folder(root, relative):
+    """Make the folder `relative` under `root` a real folder. A link on the way is removed."""
+    path = Path(root)
+    for part in Path(relative).parts:
+        path = path / part
+        if path.is_symlink() or (path.exists() and not path.is_dir()):
+            path.unlink()
+        path.mkdir(exist_ok=True)
+    return path
+
+
+def install_checks(tree, rebuilt, config):
+    """Put the original checks in the rebuilt project, in place of the checks of the builder.
+
+    It removes each file in the check folders, and each acceptance file, so that a check that
+    the builder wrote cannot count. It never follows a link: a link is replaced. Then it copies
+    the original checks from `tree`.
+    """
+    tree, rebuilt = Path(tree), Path(rebuilt)
+    for folder in config.get("check_folders") or []:
+        real_folder(rebuilt, folder)
+        for here, dirs, names in os.walk(rebuilt / folder):
+            for name in names + [d for d in dirs if (Path(here) / d).is_symlink()]:
+                (Path(here) / name).unlink()
+    for relative in acceptance_matches(rebuilt, config):
+        (rebuilt / relative).unlink()
+    for relative in check_files(tree, config) + acceptance_matches(tree, config):
+        real_folder(rebuilt, Path(relative).parent)
+        if (rebuilt / relative).is_symlink():
+            (rebuilt / relative).unlink()
+        shutil.copy2(tree / relative, rebuilt / relative)
+
+
+def check_names(tree, files):
+    """The names of the checks that the files define: unittest, the Rust harness, clojure.test."""
+    names = []
+    for relative in files:
+        text = (Path(tree) / relative).read_text(errors="replace")
+        names += re.findall(r"^\s*(?:async\s+)?def\s+(test\w*)", text, re.M)
+        names += re.findall(r"#\[test\]\s*(?:#\[[^\]]*\]\s*)*(?:pub\s+)?fn\s+(\w+)", text)
+        names += re.findall(r"\(deftest\s+([^\s()]+)", text)
+    return list(dict.fromkeys(names))
+
+
+def score(ran_original, result, names=(), skipped_original=0, files=None):
+    """Score one run of the original checks against the rebuilt project.
+
+    `names` are the original checks. When the runner prints the name of each check (Rust), only
+    an original check that the output shows as passed counts: a unit test in src/, a doc test,
+    and a check that never ran (cargo stops at the first failing binary) do not. Else `total`
+    is the number of checks in the original run. A run that crashed reports fewer checks. When
+    every check that ran failed, none passed, so each name in `names` goes in `failed`. When
+    some passed, the checks that did not run count as not passed, but their names are not
+    known. A skipped check does not pass, unless the original run skipped it too. With `files`
+    (the original check files), a name counts only when its binary is one of them or unknown.
+    """
+    ran, failed = result["ran"], list(result["failed"])
+    if result.get("named") and names:
+        passed = Counter(name.split("::")[-1] for binary, name in result.get("passed_names", [])
+                         if files is None or binary is None or binary in files)
+        failed = []
+        for name in names:
+            if passed[name]:
+                passed[name] -= 1
+            else:
+                failed.append(name)
+        return {"total": len(names), "passed": len(names) - len(failed), "failed": failed}
+    total = ran_original
+    bad = max(len(failed), result.get("failed_count", 0))
+    if ran < total and ran == bad and names:
+        return {"total": total, "passed": 0, "failed": list(names)}
+    not_run = max(0, total - ran)
+    skipped = max(0, result.get("skipped", 0) - skipped_original)
+    return {"total": total, "passed": max(0, total - bad - not_run - skipped), "failed": failed}
+
+
+def missing_names(check_text, code_text, spec_text):
+    """The names that a check uses and the original code has, but no spec gives.
+
+    A spec has to give each such name in an "Interface" entry, or a builder cannot know it.
+    Keywords and built-in names do not count, and nor do names of fewer than 3 characters.
+    """
+    wanted = {n for n in IDENTIFIER.findall(check_text) if len(n) >= 3 and n not in COMMON_NAMES}
+    return sorted(wanted & set(IDENTIFIER.findall(code_text)) - set(IDENTIFIER.findall(spec_text)))
+
+
+def failing_file(name, tree, files):
+    """The check file that holds the failing check `name`, or None."""
+    tokens = set(re.findall(r"[\w-]+", name))
+    for relative in files:
+        if Path(relative).stem in tokens:
+            return relative
+    for relative in files:
+        if tokens & set(check_names(tree, [relative])):
+            return relative
+    return None
+
+
+def requirement_of(name, specs):
+    """The requirement ID in the name of a check, and the spec file that holds it.
+
+    `specs` maps a spec file to its text. The ID form (dots or underscores) does not matter.
+    """
+    flat = re.sub(r"[-.]", "_", name)
+    for relative in sorted(specs, key=lambda r: -len(Path(r).stem)):
+        stem = Path(relative).stem
+        found = re.search(re.escape(stem.replace("-", "_")) + r"_R(\d+)", flat)
+        if found:
+            return "%s.R%s" % (stem, found.group(1)), relative
+    return None, None
+
+
+def code_text_of(tree, config):
+    """The text of the app code in `tree`: no spec, no check, no build folder, no doc file."""
+    tree = Path(tree)
+    checks = set(check_files(tree, config) + acceptance_matches(tree, config))
+    skip = {"target", ".cpcache", "__pycache__", "node_modules", ".git"}
+    text = ""
+    for here, dirs, names in os.walk(tree):
+        dirs[:] = sorted(d for d in dirs if d not in skip)
+        for name in sorted(names):
+            path = Path(here) / name
+            relative = path.relative_to(tree).as_posix()
+            if (not path.is_symlink() and not relative.startswith("pdlc/") and relative not in checks
+                    and not relative.endswith(NOT_CODE)):
+                text += path.read_text(errors="replace") + "\n"
+    return text
+
+
+def spec_gaps(tree, config, failed, code_text=None):
+    """For each failing check: its requirement and spec, and the names that the specs lack.
+
+    `code_text` is the app code. Pass it from before the checks ran, so that no file that a
+    check run wrote counts as code.
+    """
+    tree = Path(tree)
+    specs = {p.relative_to(tree).as_posix(): p.read_text(errors="replace")
+             for p in sorted((tree / "pdlc" / "specs").rglob("*.md")) if p.is_file()}
+    spec_text = "\n".join(specs.values())
+    checks = check_files(tree, config) + acceptance_matches(tree, config)
+    if code_text is None:
+        code_text = code_text_of(tree, config)
+    gaps = []
+    for name in failed:
+        file = failing_file(name, tree, checks)
+        requirement, spec = requirement_of(name, specs)
+        names = missing_names((tree / file).read_text(errors="replace"), code_text, spec_text) if file else []
+        gaps.append({"check": name, "file": file, "requirement": requirement, "spec": spec, "missing_names": names})
+    return gaps
+
+
+def score_rebuild(tree, rebuilt, config, fixture, origin=None):
+    """Score the rebuilt project with the original checks and the probes of the fixture.
+
+    `tree` is the original project. It runs the checks on `tree` first, to get the totals.
+    Then it installs the original checks in `rebuilt` and runs them there. Returns acceptance,
+    component, probes, gaps, and original. `origin` (from check_origin) goes in `component`.
+    """
+    tree, rebuilt = Path(tree), Path(rebuilt)
+    acceptance = acceptance_files(tree, config) if config.get("acceptance") else []
+    sections = {"acceptance": (config.get("acceptance"), acceptance, check_names(tree, acceptance)),
+                "component": (config.get("all"), None, check_names(tree, check_files(tree, config)))}
+    code_text = code_text_of(tree, config)  # before any run: a run can write files
+    owned = {"acceptance": acceptance, "component": check_files(tree, config)}
+    original = {key: run_checks(tree, command, files) for key, (command, files, _) in sections.items()
+                if command and (files is None or files)}
+    install_checks(tree, rebuilt, config)
+    out = {"original": {key: {k: v for k, v in done.items() if k != "output"} for key, done in original.items()}}
+    gaps = []
+    for key, (command, files, names) in sections.items():
+        if key not in original:
+            out[key] = {"measured": False}
+            continue
+        if not original[key]["ok"] or not original[key]["ran"]:
+            out[key] = {"measured": False, "reason": "the original checks did not pass"}
+            continue
+        done = run_checks(rebuilt, command, files)
+        out[key] = {"measured": True, **score(original[key]["ran"], done, names, original[key]["skipped"], owned[key]),
+                    "ok": done["ok"], "output": done["output"]}
+        gaps += out[key]["failed"]
+    if out["component"].get("measured"):
+        out["component"]["origin"] = origin or {}
+        files = check_files(tree, config)
+        out["component"]["failed_files"] = {n: failing_file(n, tree, files)
+                                            for n in out["component"]["failed"]}
+    out["probes"] = fixture_probes(rebuilt, fixture)
+    out["gaps"] = spec_gaps(tree, config, gaps, code_text)
+    return out
 
 
 # ---------------------------------------------------------------- the commands
