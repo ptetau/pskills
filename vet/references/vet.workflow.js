@@ -265,7 +265,7 @@ Skill: ${SKILL.name}
 Instructions: ${SKILL.file}
 Read that file first, then any files it points to (resolve relative paths against ${SKILL.dir}). Follow it exactly as if the harness had just loaded it for you. Do not invoke it through the Skill tool. Do not read anything under an evals/ directory.
 
-Other runs work at the same time. Keep each file that you make for yourself (a script, a note, a temporary output) in .vet-tmp/ inside your working directory. Do not use a shared scratchpad directory or /tmp for it.
+Other runs work at the same time. Keep each file that you make for yourself (a script, a note, a temporary output) in .vet-tmp/ at the root of your working directory. Never put it inside a project that the skill works on, and do not use a shared scratchpad directory or /tmp for it.
 
 The user's message is:
 ${invocation(p)}
