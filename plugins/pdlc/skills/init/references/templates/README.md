@@ -121,8 +121,8 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
   mark in the scope spec when the change that builds the entry passes.
 - When a requirement retires, each entry that only it used gets ` · retiring`. The
   build stage removes that entry with its code.
-- Intake writes the entries that the acceptance lines need. Ready corrects the error
-  codes of an entry. Recon writes the entries of existing code, with no mark.
+- Intake writes the entries that the acceptance lines need. Recon writes the entries of
+  existing code, with no mark.
 - A change spec copies each entry that its checks call, word for word, as it copies
   the requirements, but without the mark. A job change that calls an entry of another
   job lists that job under "Relies on".
