@@ -53,8 +53,9 @@ field, or a format that a script reads. Write each commit subject in double quot
 
 A skill with a word budget must stay inside the budget. `scripts/skill_budgets.json`
 holds each budget: 50% of the body of the skill, rounded up to 10 words, with a minimum of
-170 words. The budget of `ready` is 50% of its body before commit 426551f. A fix must not grow the body. If a fix needs words, remove the same number of
-words. Only the user can raise a budget.
+170 words. The budget of `ready` is 50% of its body before commit 426551f. A fix must
+not grow the body. If a fix needs words, remove the same number of words. Only the user
+can raise a budget.
 
 `scripts/check_skill_form.py` checks the form and the budget. It checks each skill in the
 `enforced` list of `scripts/skill_budgets.json`, and the list is empty now. Each rewrite

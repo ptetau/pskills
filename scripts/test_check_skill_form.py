@@ -122,6 +122,12 @@ class Form(unittest.TestCase):
         stage = "```\n- Goal: x\n- Goal: y\n```\n"
         self.assertEqual(problems(STAGES.replace(STAGE_BLOCK, STAGE_BLOCK + stage)), [])
 
+    def test_other_fence_marker_does_not_close_fence(self):
+        text = GOOD + "\n```\n~~~\n## Notes\n```\n"
+        self.assertEqual(problems(text), [])
+        text = GOOD + "\n~~~\n```\n## Notes\n~~~\n"
+        self.assertEqual(problems(text), [])
+
     def test_tilde_fence_hides_headings(self):
         self.assertEqual(problems(GOOD + "\n~~~\n## Notes\n~~~\n"), [])
 
@@ -184,6 +190,13 @@ class Cli(unittest.TestCase):
         self.assertEqual(self.run_cli("/no/such/file").returncode, 2)
         self.assertEqual(self.run_cli("--budgets", "/no/such.json", "x").returncode, 2)
         self.assertEqual(self.run_cli("--budgets").returncode, 2)
+
+    def test_no_argument_run_uses_enforced_list(self):
+        with tempfile.TemporaryDirectory() as d:
+            b = os.path.join(d, "b.json")
+            with open(b, "w") as f:
+                json.dump({"trace": 1, "enforced": ["trace"]}, f)
+            self.assertEqual(self.run_cli("--budgets", b).returncode, 1)
 
     def test_no_argument_checks_enforced_skills(self):
         with tempfile.TemporaryDirectory() as d:

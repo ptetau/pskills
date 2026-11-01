@@ -214,8 +214,8 @@ reason:
 | B (other behaviour) | Any other limit, default, stop, ban, or question. | keep, or move to a README section that states it. |
 | P (procedure) | An order or a method that a capable model finds alone. | drop as procedure, with a one-line reason. |
 
-A place of "move to README section X" names the section. The Phase 3 inventory check reads that section
-to make sure that it states the item. Only class P can be "drop as procedure".
+A place of "move to README section X" names the section. The Phase 3 inventory check
+reads that section to make sure that it states the item. Only class P can be "drop as procedure".
 
 Contracts to keep exactly:
 
