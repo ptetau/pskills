@@ -1,6 +1,7 @@
 """Tests of the parts of run_bench.py that do not call a model."""
 import contextlib
 import io
+import json
 import os
 import shutil
 import subprocess
@@ -1851,6 +1852,310 @@ class RebuildScoreTest(unittest.TestCase):
         self.assertEqual(found["failed"], [])
         self.assertEqual(found["ran"], run_bench.unit_checks(copy, "todo-rust")["ran"])
         self.assertGreater(found["ran"], 0)
+
+
+def scored_project(test):
+    """The project of rebuild_project, with the spec and the acceptance file that the score tests use,
+    committed on the change branch. Main stays checked out."""
+    app = rebuild_project(test)
+    run_bench.git(app, "checkout", "-q", "pdlc/CH-0001-x")
+    (app / "tests" / "acceptance_IN-0001.py").write_text(ACCEPTANCE_FILE)
+    (app / "pdlc" / "specs" / "jobs" / "JOB-top-option.md").write_text(SPEC_TEXT)
+    cli_check = app / "tests" / "test_cli.py"
+    cli_check.write_text(cli_check.read_text().replace("usage: wordfreq FILE", "usage: wordfreq [--top N] FILE"))
+    run_bench.git(app, "add", "-A")
+    run_bench.git(app, "commit", "-q", "-m", "Acceptance reviewed")
+    run_bench.git(app, "checkout", "-q", "main")
+    return app
+
+
+def init_event(plugins):
+    return {"t": 0.1, "e": {"type": "system", "subtype": "init", "plugins": plugins}}
+
+
+class RebuildCommandTest(unittest.TestCase):
+    branch = "pdlc/CH-0001-x"
+
+    def setUp(self):
+        self.app = scored_project(self)
+        self.work = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.work, True)
+        self.tree = run_bench.export_tree(self.app, self.branch, self.work / "tree")
+        self.seen = []
+
+    def args(self, **more):
+        values = dict(source=str(self.app), run=1, ref=self.branch, fixture="wordfreq", keep=[], label="rb",
+                      out=str(self.work / "out"), budget=5.0, timeout=60, plugin=str(run_bench.DEFAULT_PLUGIN))
+        values.update(more)
+        return Namespace(**values)
+
+    def oracle(self, dest):
+        """A builder that writes the original code back."""
+        self.seen.append(Path(dest))
+        shutil.copytree(self.tree / "wordfreq", Path(dest) / "wordfreq", ignore=shutil.ignore_patterns("__pycache__"))
+        return [], 1.5, ""
+
+    def idle(self, dest):
+        self.seen.append(Path(dest))
+        return [], 0.5, ""
+
+    def peeking(self, path):
+        def builder(dest):
+            self.oracle(dest)
+            return [assistant(1.0, "m1", usage(), [("t1", "Read", {"file_path": path})])], 2.0, ""
+        return builder
+
+    def run_command(self, builder, **more):
+        try:
+            with contextlib.redirect_stdout(io.StringIO()) as printed:
+                found = run_bench.command_rebuild(self.args(**more), builder=builder)
+        finally:
+            for folder in self.seen:
+                self.addCleanup(shutil.rmtree, folder.parent, True)
+        self.printed = printed.getvalue()
+        return found
+
+    def test_claude_command_leaves_out_the_plugin_when_there_is_none(self):
+        self.assertNotIn("--plugin-dir", run_bench.claude_command("x", None))
+        command = run_bench.claude_command("x", "/p")
+        self.assertEqual(command[command.index("--plugin-dir") + 1], "/p")
+
+    def test_loaded_plugins_reads_the_init_event(self):
+        plugins = [{"name": "pdlc", "path": "/p", "source": "pdlc@inline"}]
+        events = [{"t": 0, "e": {"type": "system", "subtype": "hook"}}, init_event(plugins), init_event([])]
+        self.assertEqual(run_bench.loaded_plugins(events), plugins)
+        self.assertEqual(run_bench.loaded_plugins([]), [])
+
+    def test_peeked_finds_a_read_of_the_repository_and_a_command_on_a_bench_folder(self):
+        forbidden = ["/tmp/pdlc-bench-src/app", str(run_bench.REPO), "pdlc-bench-"]
+        events = [assistant(1, "m1", usage(), [("a", "Read", {"file_path": str(run_bench.FIXTURE / "wordfreq" / "cli.py")}),
+                                              ("b", "Bash", {"command": "cat /tmp/pdlc-bench-x/app/wordfreq/cli.py"}),
+                                              ("c", "Grep", {"pattern": "main", "path": "/tmp/pdlc-bench-src/app"}),
+                                              ("d", "Read", {"file_path": "pdlc/specs/jobs/JOB-x.md"})])]
+        found = run_bench.peeked(events, forbidden)
+        self.assertEqual(len(found), 3)
+        self.assertIn("cat /tmp/pdlc-bench-x/app/wordfreq/cli.py", found)
+        self.assertEqual(run_bench.peeked(events[:0], forbidden), [])
+
+    def test_peeked_ignores_a_call_in_its_own_folder(self):
+        events = [assistant(1, "m1", usage(), [("a", "Read", {"file_path": "pdlc/specs/jobs/JOB-x.md"}),
+                                              ("b", "Bash", {"command": "cd /tmp/pdlc-rebuild-q/app && ls"})])]
+        self.assertEqual(run_bench.peeked(events, ["/tmp/pdlc-bench-src/app", str(run_bench.REPO), "pdlc-bench-"]), [])
+
+    def test_verdict_holds_only_for_a_measured_pass_without_peeking(self):
+        good = {"acceptance": {"measured": True, "total": 2, "passed": 2, "failed": [], "ok": True},
+                "component": {"measured": True, "total": 3, "passed": 2, "failed": ["x"]},
+                "probes": {"passed": 8, "total": 8, "failed": []}, "peeked": []}
+        self.assertEqual(run_bench.rebuild_verdict(good), "holds")
+        self.assertEqual(run_bench.rebuild_verdict({**good, "peeked": ["cat x"]}), "invalid")
+        self.assertEqual(run_bench.rebuild_verdict({**good, "acceptance": {"measured": False}}), "broken")
+        self.assertEqual(run_bench.rebuild_verdict({**good, "acceptance": {"measured": True, "total": 0, "passed": 0, "failed": []}}), "broken")
+        self.assertEqual(run_bench.rebuild_verdict({**good, "acceptance": {"measured": True, "total": 2, "passed": 1, "failed": ["a"]}}), "broken")
+        self.assertEqual(run_bench.rebuild_verdict({**good, "probes": {"passed": 7, "total": 8, "failed": ["p"]}}), "broken")
+
+    def test_verdict_is_invalid_when_the_original_checks_did_not_pass(self):
+        base = {"probes": {"passed": 8, "total": 8, "failed": []}, "peeked": []}
+        bad = {"measured": False, "reason": "the original checks did not pass"}
+        passed = {"measured": True, "total": 2, "passed": 2, "failed": []}
+        self.assertEqual(run_bench.rebuild_verdict({**base, "acceptance": bad, "component": passed}), "invalid")
+        self.assertEqual(run_bench.rebuild_verdict({**base, "acceptance": passed, "component": bad}), "invalid")
+
+    def test_verdict_is_not_holds_when_the_acceptance_command_failed_with_no_failing_check(self):
+        result = {"acceptance": {"measured": True, "total": 2, "passed": 2, "failed": [], "ok": False},
+                  "component": {"measured": True, "total": 3, "passed": 3, "failed": []},
+                  "probes": {"passed": 8, "total": 8, "failed": []}, "peeked": []}
+        self.assertEqual(run_bench.rebuild_verdict(result), "broken")
+
+    def test_peeked_finds_a_forbidden_path_in_the_output_of_a_tool(self):
+        forbidden = ["/tmp/pdlc-bench-src/app"]
+        text = {"type": "user", "message": {"content": [
+            {"type": "tool_result", "tool_use_id": "a", "content": "OLDPWD=/tmp/pdlc-bench-src/app\n"},
+            {"type": "tool_result", "tool_use_id": "b", "content": [{"type": "text", "text": "in /tmp/pdlc-bench-src/app/x"}]},
+            {"type": "tool_result", "tool_use_id": "c", "content": "fine"}]}}
+        self.assertEqual(len(run_bench.peeked([{"t": 1, "e": text}], forbidden)), 2)
+
+    def test_the_session_of_the_builder_starts_in_its_own_folder(self):
+        env = run_bench.session_env("/tmp/pdlc-rebuild-q/app")
+        self.assertEqual((env["PWD"], env["OLDPWD"]), ("/tmp/pdlc-rebuild-q/app",) * 2)
+        fake = self.work / "bin"
+        fake.mkdir()
+        (fake / "claude").write_text("#!/bin/sh\necho \"{\\\"type\\\": \\\"system\\\", \\\"pwd\\\": \\\"$PWD $OLDPWD\\\"}\"\n")
+        (fake / "claude").chmod(0o755)
+        folder = self.work / "cwd"
+        folder.mkdir()
+        old = os.environ["PATH"]
+        os.environ["PATH"] = "%s:%s" % (fake, old)
+        try:
+            events, _, _ = run_bench.run_claude("x", folder, None, self.work / "log", env=run_bench.session_env(folder))
+            plain, _, _ = run_bench.run_claude("x", folder, None, self.work / "log")
+        finally:
+            os.environ["PATH"] = old
+        self.assertEqual(events[0]["e"]["pwd"], "%s %s" % (folder, folder))
+        self.assertNotEqual(plain[0]["e"]["pwd"], "%s %s" % (folder, folder))
+
+    def test_the_original_tree_is_not_beside_the_app_while_the_builder_runs(self):
+        seen = {}
+
+        def builder(dest):
+            seen["beside"] = (Path(dest).parent / "original").exists()
+            return self.oracle(dest)
+        found = self.run_command(builder)
+        self.assertFalse(seen["beside"])
+        self.assertEqual(found["verdict"], "holds")
+
+    def test_kept_extra_lists_only_a_file_that_the_copy_has(self):
+        found = self.run_command(self.oracle, keep=["Cargo.toml", "nothing.txt"])
+        self.assertEqual(found["kept_extra"], ["Cargo.toml"])
+
+    def test_the_report_says_what_the_peek_check_cannot_see(self):
+        self.run_command(self.oracle)
+        report = (Path(self.args().out) / "rb" / "rebuild.md").read_text()
+        self.assertIn("Peek check: tool inputs and outputs only. A relative path, a glob or a command "
+                      "substitution can get past it.", report)
+
+    def test_the_original_tree_is_gone_when_the_command_returns(self):
+        self.run_command(self.oracle)
+        self.assertTrue(self.seen[0].parent.is_dir())
+        self.assertFalse((self.seen[0].parent / "original").exists())
+
+    def test_the_original_tree_is_gone_when_scoring_fails(self):
+        real = run_bench.score_rebuild
+
+        def boom(*a, **k):
+            raise ValueError("boom")
+        run_bench.score_rebuild = boom
+        try:
+            with self.assertRaises(ValueError):
+                self.run_command(self.oracle)
+        finally:
+            run_bench.score_rebuild = real
+        self.assertFalse((self.seen[0].parent / "original").exists())
+
+    def test_a_branch_that_moves_during_the_build_does_not_change_what_is_scored(self):
+        def builder(dest):
+            events = self.oracle(dest)
+            run_bench.git(self.app, "branch", "-f", self.branch, "main")  # main has no acceptance file
+            return events
+        found = self.run_command(builder)
+        self.assertEqual(found["verdict"], "holds")
+        self.assertEqual(found["acceptance"]["total"], 2)
+        self.assertNotEqual(found["source"]["commit"], run_bench.git(self.app, "rev-parse", self.branch).stdout.strip())
+
+    def test_a_builder_that_writes_the_original_code_holds(self):
+        found = self.run_command(self.oracle)
+        self.assertEqual(found["verdict"], "holds")
+        self.assertEqual(found["acceptance"]["passed"], 2)
+        self.assertEqual(found["acceptance"]["total"], 2)
+        self.assertEqual(found["probes"]["passed"], found["probes"]["total"])
+        self.assertEqual(found["peeked"], [])
+        out = Path(self.args().out) / "rb"
+        saved = json.loads((out / "rebuild.json").read_text())
+        self.assertEqual(saved["verdict"], "holds")
+        self.assertTrue((out / "rebuild.md").read_text().startswith("#"))
+        self.assertIn("holds", (out / "rebuild.md").read_text())
+        self.assertIn("acceptance 2/2", self.printed)
+        self.assertIn("probes 8/8", self.printed)
+
+    def test_the_result_names_the_source_the_cost_and_the_builder_files(self):
+        events = [{"t": 3.0, "e": {"type": "result", "total_cost_usd": 1.25, "duration_ms": 3000}}]
+        found = self.run_command(lambda dest: (self.oracle(dest)[0] + events, 3.0, ""))
+        self.assertEqual(found["cost_usd"], 1.25)
+        self.assertEqual(found["wall_s"], 3.0)
+        self.assertEqual(found["source"]["ref"], self.branch)
+        self.assertEqual(found["source"]["project"], str(self.app))
+        self.assertEqual(found["source"]["fixture"], "wordfreq")
+        self.assertEqual(found["source"]["commit"], run_bench.git(self.app, "rev-parse", self.branch).stdout.strip())
+        self.assertIn("plugin_commit", found["source"])
+        self.assertIn("plugin_status", found["source"])
+        self.assertIn("wordfreq/cli.py", found["builder_files"])
+        self.assertTrue(all("__pycache__" not in name for name in found["builder_files"]))
+        self.assertIn("pdlc/specs/jobs/JOB-branch-only.md", found["kept"])
+        self.assertEqual(found["kept_extra"], [])
+
+    def test_keep_adds_a_file_and_the_result_records_it(self):
+        found = self.run_command(self.oracle, keep=["Cargo.toml"])
+        self.assertEqual(found["kept_extra"], ["Cargo.toml"])
+        self.assertTrue((self.seen[0] / "Cargo.toml").exists())
+
+    def test_the_builder_folder_is_a_clean_copy_without_the_name_of_a_bench_folder(self):
+        looked = {}
+
+        def builder(dest):
+            looked.update(name=str(dest), tests=(Path(dest) / "tests").exists(),
+                          changes=(Path(dest) / "pdlc" / "changes").exists(),
+                          commits=run_bench.git(dest, "rev-list", "--count", "HEAD").stdout.strip())
+            return self.idle(dest)
+        self.run_command(builder)
+        self.assertNotIn("pdlc-bench-", looked["name"])
+        self.assertEqual((looked["tests"], looked["changes"], looked["commits"]), (False, False, "1"))
+
+    def test_a_builder_that_does_nothing_is_broken_and_the_report_names_each_acceptance_check(self):
+        found = self.run_command(self.idle)
+        self.assertEqual(found["verdict"], "broken")
+        self.assertEqual(found["acceptance"]["passed"], 0)
+        report = (Path(self.args().out) / "rb" / "rebuild.md").read_text()
+        self.assertIn("broken", report)
+        for name in RebuildScoreTest.acceptance_names:
+            self.assertIn(name, report)
+        self.assertIn("JOB-top-option", report)
+
+    def test_a_builder_that_reads_the_source_project_is_invalid(self):
+        found = self.run_command(self.peeking(str(self.app / "wordfreq" / "cli.py")))
+        self.assertEqual(found["verdict"], "invalid")
+        self.assertEqual(len(found["peeked"]), 1)
+        self.assertEqual(found["acceptance"]["passed"], 2)
+        report = (Path(self.args().out) / "rb" / "rebuild.md").read_text()
+        self.assertIn("invalid", report)
+        self.assertIn(str(self.app / "wordfreq" / "cli.py"), report)
+
+    def test_a_builder_that_reads_the_repository_is_invalid(self):
+        found = self.run_command(self.peeking(str(run_bench.FIXTURE / "wordfreq" / "cli.py")))
+        self.assertEqual(found["verdict"], "invalid")
+
+    def test_the_verdict_is_invalid_when_the_original_acceptance_checks_fail(self):
+        def breaker(dest):
+            return self.oracle(dest)
+        run_bench.git(self.app, "checkout", "-q", self.branch)
+        (self.app / "wordfreq" / "cli.py").write_text("import sys\n\ndef main(argv=None, stdout=None, stderr=None):\n    return 1\n")
+        run_bench.git(self.app, "commit", "-qam", "Break the original")
+        run_bench.git(self.app, "checkout", "-q", "main")
+        found = self.run_command(breaker)
+        self.assertEqual(found["verdict"], "invalid")
+        self.assertFalse(found["acceptance"]["measured"])
+
+    def test_the_stream_of_the_e2e_run_gives_the_loaded_plugins_and_a_warning(self):
+        results = self.work / "results"
+        results.mkdir()
+        (results / "run1.json").write_text(json.dumps({"project": str(self.app), "outcome": {"tip": self.branch}}))
+        other = [{"name": "pdlc", "path": "/elsewhere/pdlc", "source": "pdlc@pskills"}]
+        (results / "run1.stream.jsonl").write_text(json.dumps(init_event(other)) + "\n")
+        found = self.run_command(self.oracle, source=str(results), ref=None, fixture=None)
+        self.assertEqual(found["source"]["plugins"], other)
+        self.assertIn("plugin_warning", found)
+        self.assertEqual(found["source"]["fixture"], "wordfreq")
+        self.assertEqual(found["source"]["ref"], self.branch)
+
+    def test_no_warning_when_the_plugin_path_matches(self):
+        results = self.work / "results"
+        results.mkdir()
+        (results / "run1.json").write_text(json.dumps({"project": str(self.app), "outcome": {"tip": self.branch}}))
+        mine = [{"name": "pdlc", "path": str(run_bench.DEFAULT_PLUGIN.resolve()), "source": "pdlc@inline"}]
+        (results / "run1.stream.jsonl").write_text(json.dumps(init_event(mine)) + "\n")
+        found = self.run_command(self.oracle, source=str(results), ref=None)
+        self.assertNotIn("plugin_warning", found)
+
+    def test_a_missing_project_stops_with_a_clear_error(self):
+        results = self.work / "results"
+        results.mkdir()
+        (results / "run1.json").write_text(json.dumps({"project": "/nonexistent/app", "outcome": {"tip": "x"}}))
+        with self.assertRaises(RuntimeError):
+            self.run_command(self.oracle, source=str(results))
+
+    def test_the_command_takes_the_options(self):
+        with contextlib.redirect_stdout(io.StringIO()) as printed, self.assertRaises(SystemExit):
+            run_bench.main(["rebuild", "--help"])
+        for option in ("--run", "--ref", "--fixture", "--keep", "--label", "--out", "--budget", "--timeout", "--plugin"):
+            self.assertIn(option, printed.getvalue())
 
 
 if __name__ == "__main__":

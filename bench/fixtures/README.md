@@ -50,6 +50,15 @@ python3 bench/run_bench.py e2e --fixture todo-rust --label todo-rust --runs 1 --
 `init-fixture` runs `/pdlc:init defaults` on a copy of the app. Its `pdlc/` folder then goes
 into the folder of the app, as for `bench/fixture-app`.
 
+`rebuild` tests rule 10 (the specs can rebuild the project). It takes the project that an `e2e`
+run left, and keeps only the specs and the config. A builder with no plugin then writes the app
+again from these files. The bench runs the original acceptance checks and the probes on the new
+app. The verdict is `holds`, `broken`, or `invalid` (the builder read the original).
+
+```
+python3 bench/run_bench.py rebuild <folder>/todo-rust --budget 5
+```
+
 ## Add a language
 
 1. Write the app in a new folder `todo-<language>`, with the behaviour above and its own
