@@ -30,6 +30,11 @@
     "evidence": "evals/pdlc-ready/runs/decl200-20261101T200131Z: R2 (one result for a bad N with no FILE) and R10 (no spec text shows old behaviour)"
    },
    {
+    "rule": "The sentences of both requirements name the exception",
+    "words": 8,
+    "evidence": "evals/pdlc-ready/runs/decl-earn1-20261101T201419Z: R10 (no spec text shows old behaviour: the sentence of each requirement names the exception)"
+   },
+   {
     "rule": "Settle implied behaviour: missing, empty, wrong-type, and too-large input, limits, order, existing data, unsafe input, and business rules",
     "words": 18,
     "evidence": "evals/pdlc-ready/runs/decl200-20261101T200131Z: R9 (implied behaviour examined, including a very large N)"
