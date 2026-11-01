@@ -21,6 +21,9 @@ it before its commit. These rules hold:
      "## Notes" that holds "(assumed" and is not on HEAD is also a line of "Decided on
      defaults".
 
+  7. A new line in pdlc/specs/** does not hold a wrong form of the mark: "(more likely",
+     "*(assumed", or "assumed" inside other brackets. The mark is "(assumed)".
+
 Usage:
   python3 pdlc/bin/check_handoff.py IN-0001 --stage intake
   python3 pdlc/bin/check_handoff.py CH-0001 --stage build
@@ -53,6 +56,8 @@ HEADING = re.compile(r"^#{2,4}\s+(.*?)\s*$")
 LINE = re.compile(r"^- ((?:JOB|CAP|DES)-[a-z0-9-]+(?:\.R\d+)?): (.+)$")
 REQ_HEADING = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+) ·")
 MARK = "(assumed"
+# Wrong forms of the mark: "(more likely", "*(assumed", and "assumed" inside other brackets.
+BAD_MARK = re.compile(r"\(more likely|\*\(assumed|\((?!assumed)[^()]*\bassumed\b[^()]*\)")
 
 
 def section(text, title):
@@ -109,6 +114,18 @@ def new_marks(root):
                 owner = owner_spec if (design or in_interface or not requirement) else requirement
                 owners[owner] = owners.get(owner, 0) + 1
     return owners
+
+
+def bad_marks(root):
+    """One problem for each new line in pdlc/specs/** that holds a wrong form of the mark."""
+    problems = []
+    for path in sorted((root / "pdlc" / "specs").rglob("*.md")):
+        rel = path.relative_to(root)
+        old = set(head_text(root, rel).splitlines())
+        for number, line in enumerate(path.read_text().splitlines(), 1):
+            if BAD_MARK.search(line) and line not in old:
+                problems.append('%s:%d: write the mark as "(assumed)"' % (rel.as_posix(), number))
+    return problems
 
 
 def find_handoff(root, item):
@@ -233,6 +250,7 @@ def main(argv, root=Path(".")):
         notes = {line.strip() for line in
                  (section(intent_path.read_text(), "Notes") or "").splitlines() if line.strip()}
     problems += section_problems + check_decided(item, decided, new_marks(root), notes, old_notes)
+    problems += bad_marks(root)
     for problem in problems:
         print(problem)
     return 1 if problems else 0

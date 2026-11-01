@@ -64,6 +64,11 @@ its right spec, as `proposed`. Intake does not write code.
   detail is a message, a limit, an order, or a format. It can also be the result of an edge
   case, for example N larger than the number of items. The mark goes where intake writes it, also in
   a "Given ..., then ..." line.
+- Before `check_handoff.py`, read each new Given line again. If the words of the intent do
+  not give its result, end the line with `(assumed)`. Common examples are N larger than the
+  count, a sign such as `+3`, and a missing value. Others are the option with no FILE, empty
+  standard output on an error, and which of two errors shows. A result that the words of the
+  intent decide has no mark.
 - A detail that intake adds to a `built` requirement from recon also has the mark `(assumed)`.
 - "Decided on defaults" in the handoff lists each `(assumed)` decision that intake wrote, one line
   for each, in the form of the template. The same lines go into the intent "Notes".
