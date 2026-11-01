@@ -34,8 +34,8 @@ A change may merge only when:
     top change says "Acceptance-Passed: <hash>", that commit comes after the lock, and only
     pdlc/ files changed after it. The top change is the one that no other change of the
     intent has as its "Base:" branch. The "Changes" list on a lower branch can be stale, so
-    the check reads the list from the top branch. A change that only retires requirements is permitted
-    to have "Acceptance-Locked: none";
+    the check reads the list from the top branch. A change that only retires requirements
+    is permitted to have "Acceptance-Locked: none";
   - it hasn't merged already: a merged change's branch takes no new commits.
 
 Usage:
@@ -103,9 +103,13 @@ def marker_problems(where, text):
             if not found.group(0).startswith("(assumed")]
 
 
+# An (assumed) mark can follow the code, the message, and the result. The compared triple
+# leaves the marks out.
+ASSUMED = r"(?:\s+\(assumed[^)]*\))?"
 ERROR_ITEM = re.compile(
-    r"^\s+- (?P<code>`[A-Z][A-Z0-9_]*`|no code) · (?P<message>``.+?``|`[^`]+`|no message)"
-    r" · (?P<result>exit \d+|status \d{3}|raises `?[A-Za-z_][\w.:]*`?)\s*$")
+    r"^\s+- (?P<code>`[A-Z][A-Z0-9_]*`|no code)" + ASSUMED
+    + r" · (?P<message>``.+?``|`[^`]+`|no message)" + ASSUMED
+    + r" · (?P<result>exit \d+|status \d{3}|raises `?[A-Za-z_][\w.:]*`?)" + ASSUMED + r"\s*$")
 NEW_FORM = ("write `errors: none`, or `errors:` with one line under it for each error, "
             "for example - `CODE` · `exact message` · exit 2 (or status <n>, or raises <Name>)")
 
@@ -126,7 +130,7 @@ class _Entry:
     def __init__(self, first):
         self.first, self.errors, self.problems = first, set(), []
         self.indent = None  # the indent of the open "errors:" line, None when none is open
-        self.none = self.bad = False
+        self.none = self.bad = self.has_errors = False
         self.count = 0  # the error lines under the open "errors:" line
         self.item, self.item_indent = None, 0  # the lines of the open error item
 
@@ -154,7 +158,7 @@ class _Entry:
         """Open an "errors:" line."""
         self.close()
         rest = re.match(r"^\s+-\s*errors?:(.*)$", line, re.I).group(1).strip()
-        self.indent, self.none = indent, rest.lower() == "none"
+        self.indent, self.none, self.has_errors = indent, rest.lower() == "none", True
         if rest and not self.none:
             self.bad = True
             kind = "in the old form" if "`" in rest else "not in the form"
@@ -212,6 +216,10 @@ def interface_entries(text):
                 entry.close()
     if current:
         found[current].close()
+    for entry in found.values():
+        if not entry.has_errors:
+            entry.problems.append("the entry has no `errors:` line, so it is not in the form (%s)"
+                                  % NEW_FORM)
     return {key: (e.first, frozenset(e.errors), e.problems) for key, e in found.items()}
 
 
@@ -426,6 +434,17 @@ def status_on_own_branch(root, path, refs):
     return status if status in READY else None
 
 
+def intent_changes(root, intent, listed):
+    """The change IDs of an intent: the listed IDs, then each other change spec whose
+    "Intent:" is this intent. A stale "Changes" list on a branch leaves out some changes."""
+    ids = list(dict.fromkeys(listed))
+    for path in sorted((root / "pdlc" / "changes").glob("CH-*/change.md")):
+        other = change_id(path.parent)
+        if other not in ids and field(path.read_text(), "Intent") == intent:
+            ids.append(other)
+    return ids
+
+
 def partners_not_ready(root, folder, text):
     """Problems with the other changes of this change's intent: each must be ready too."""
     intent = field(text, "Intent")
@@ -437,7 +456,7 @@ def partners_not_ready(root, folder, text):
                 "intent" % intent]
     listed = re.findall(r"\bCH-\d+\b", section(found[0].read_text(), "Changes"))
     problems, refs = [], branches(root)
-    for other in dict.fromkeys(listed):
+    for other in intent_changes(root, intent, listed):
         if other == change_id(folder):
             continue
         specs = sorted((root / "pdlc" / "changes").glob(other + "-*/change.md"))
@@ -468,13 +487,20 @@ def is_ancestor(root, old, new):
     return git(root, "merge-base", "--is-ancestor", old, new).returncode == 0
 
 
-def stack_top(root, listed, here):
+def stack_top(root, listed, here, intent=None):
     """(change ID, branch) of the top of the stack of an intent. The top is the change that
     no other change of the intent has as its "Base:" branch. When the links do not pick one
     change (every change has the base main, for example), the last change in the list is the
-    top. The branch is as git knows it. In CI, HEAD can be a merge of the pull request into
-    main, so HEAD stands in only when the top is this change and git knows no such branch."""
+    top. A change with a branch is preferred as the top. The changes are the listed IDs and
+    each change spec whose "Intent:" is this intent. The branch is as git knows it. In CI,
+    HEAD can be a merge of the pull request into main, so HEAD stands in only when the top
+    is this change and git knows no such branch."""
     ids = list(listed) or [here]
+    if intent is None:
+        mine = sorted((root / "pdlc" / "changes").glob(here + "-*/change.md"))
+        intent = field(mine[0].read_text(), "Intent") if mine else None
+    if intent:
+        ids = intent_changes(root, intent, ids)
     refs = branches(root)
     named, bases = {}, set()
     for change in ids:
@@ -487,6 +513,7 @@ def stack_top(root, listed, here):
         base = field(text, "Base") or ""
         bases.add(base[len("origin/"):] if base.startswith("origin/") else base)
     tops = [c for c in ids if not named[c][1] or named[c][1] == "none" or named[c][1] not in bases]
+    tops = [c for c in tops if named[c][0] or c == here] or tops
     top_id = tops[-1] if tops else ids[-1]
     top = named[top_id][0]
     if not top and top_id == here:

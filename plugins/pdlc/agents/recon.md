@@ -95,8 +95,8 @@ jobs use, each with its file. Use this form, with one `Seen in` line for each en
 - `<name or signature>` · <kind> · `<file>`
   - in: what goes in
   - out: what comes out
-  - errors: none, or one line for each error: the code or "no code", the exact message, and
-    the exit code or status
+  - errors: none, or one line for each error: the code or `no code`, the exact message, and
+    `exit <n>`, `status <n>`, or `raises <Name>`, with ` · ` between them
   - Seen in: <file>:<line>
 
 ### Test seams

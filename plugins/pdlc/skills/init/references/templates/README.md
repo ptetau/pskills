@@ -123,6 +123,9 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
 - The code comes from `DES-errors`. An error that the app gives today, with no code in
   `DES-errors`, has `no code`. When a line of an intent uses that error, the error gets a
   code, as each failure line does. A function error with no message has `no message`.
+- Each entry has an `errors:` line. An `(assumed)` mark goes after the code, the message,
+  or the result that is a guess: `` - `USAGE` (assumed) · `usage: …` (assumed) · exit 2 ``.
+  The merge check leaves the marks out when it compares.
 - `errors: none` has nothing after it. The merge check compares the code, the message, and
   the result of each error, and refuses any other form.
 - A new entry ends its first line with ` · proposed`. The `verify` stage removes the

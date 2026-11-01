@@ -502,6 +502,24 @@ class MergeCheck(unittest.TestCase):
         code, out = self.both(errors, errors.replace("use `--top 3` here", "use `--top 4` here"))
         self.assertEqual(code, 1)
 
+    def test_the_assumed_mark_is_allowed_after_the_code_the_message_and_the_result(self):
+        marked = ("  - errors:\n"
+                  "    - `TOP_INVALID` (assumed) · `error: bad top` (assumed: a guess) · exit 2 (assumed)\n")
+        plain = "  - errors:\n    - `TOP_INVALID` · `error: bad top` · exit 2\n"
+        code, out = self.both(marked, plain)
+        self.assertEqual(code, 0, out)
+        found = check_merge.interface_entries("## Interface\n\n" + self.tool(marked))
+        self.assertEqual(list(found.values())[0][1], {("TOP_INVALID", "error: bad top", "exit 2")})
+
+    def test_an_entry_with_no_errors_line_is_a_form_problem(self):
+        bare = "- `ping()` · function · `src/ping.js`\n  - out: nothing\n"
+        self.write()
+        self.interface(change=bare, spec=bare)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("`ping()`", out)
+        self.assertIn("has no `errors:` line", out)
+
     def test_the_legacy_skips_still_return_no_problem(self):
         old = "  - errors: `TOP_INVALID`, `USAGE`\n"
         self.write()
@@ -811,6 +829,15 @@ class MergeCheck(unittest.TestCase):
         code, out = self.run_check("CH-0001")
         self.assertEqual(code, 1)
         self.assertIn("CH-0002 of IN-0002 is not ready (status: building)", out)
+
+    def test_a_change_of_the_intent_that_its_list_leaves_out_still_has_to_be_ready(self):
+        self.stacked_repo()
+        (self.root / "pdlc/inbox/IN-0002-password-reset.md").write_text(
+            INTENT.replace("- CH-0002 · Send the reset\n", ""))
+        self.commit_all("a stale list")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("CH-0002 of IN-0002 is not ready (no branch)", out)
 
     def test_a_header_field_is_its_value_without_a_name_in_brackets_or_backticks(self):
         header = ("Intent: IN-0001 (poll-input-errors) · Scope: CAP-http-plumbing · "
@@ -1208,6 +1235,27 @@ class AcceptanceGate(unittest.TestCase):
             git(self.root, "switch", "-q", {"CH-0001": self.FIRST, "CH-0003": self.THIRD}[change])
             code, out = self.run_check(change)
             self.assertEqual(code, 0, out)
+
+    def test_a_top_with_a_branch_wins_over_a_change_with_no_branch(self):
+        """CH-0003 is planned and has no branch. It is no top, though no change has it as a base."""
+        self.out_of_order_stack()
+        git(self.root, "switch", "-q", self.SECOND)
+        folder = "pdlc/changes/" + self.NAMES["CH-0003"]
+        text = (self.root / folder / "change.md").read_text()
+        self.put(folder + "/change.md", text.replace("Status: in review", "Status: planned")
+                 .replace("Branch: " + self.THIRD, "Branch: none")
+                 .replace("Base: " + self.FIRST, "Base: main"))
+        self.commit("CH-0003 has no branch")
+        git(self.root, "branch", "-q", "-D", self.THIRD)
+        git(self.root, "switch", "-q", self.FIRST)
+        top_id, top = check_merge.stack_top(self.root, ["CH-0001", "CH-0002", "CH-0003"], "CH-0001")
+        self.assertEqual(top_id, "CH-0002")
+
+    def test_the_stack_includes_a_change_whose_intent_matches_but_the_list_omits(self):
+        self.out_of_order_stack()
+        git(self.root, "switch", "-q", self.FIRST)
+        top_id, top = check_merge.stack_top(self.root, ["CH-0001"], "CH-0001")
+        self.assertEqual(top_id, "CH-0002")
 
     def test_an_out_of_order_stack_is_not_ready_until_its_top_passed(self):
         self.out_of_order_stack(passed=False)
