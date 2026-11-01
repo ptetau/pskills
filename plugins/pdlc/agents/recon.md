@@ -82,7 +82,8 @@ One or two sentences saying what is true today.
 
 For each requirement, add a line `Seen in: <file>:<line>` that points to the code. If you
 are not sure, say how sure you are. Write only what the code really does, not what the
-code must do.
+code must do. Use the exact terms of the code (a character class, a count, a condition).
+Do not use a looser word such as "letters".
 
 Then write the "Interface" of the area: each name that a caller can use today. For a
 job, list what its user touches. That is commands and flags, routes, form fields, and the

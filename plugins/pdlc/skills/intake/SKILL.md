@@ -61,7 +61,9 @@ its right spec, as `proposed`. Intake does not write code.
   entry that names it.
 - A spec with no "Interface" section gets one from its template, before "Requirements".
 - Each detail that the words of the intent do not give (a message, a limit, an order, a
-  format) has the mark `(assumed)` where intake writes it.
+  format, the result of an edge case such as N larger than the number of items) has the
+  mark `(assumed)`. The mark goes where intake writes it, also in a "Given ..., then ..."
+  line.
 - A detail that intake adds to a `built` requirement from recon also has the mark `(assumed)`.
 - "Decided on defaults" in the handoff lists each `(assumed)` decision that intake wrote, one line
   for each, in the form of the template. The same lines go into the intent "Notes".
@@ -90,6 +92,10 @@ its right spec, as `proposed`. Intake does not write code.
 - The requirements from recon go into the spec as `built`, with `Source: recon`. The
   "Interface" entries from recon go into the spec with no mark and no `Seen in` line.
   Then the spec becomes `Status: active`.
+- Each `built` requirement gives the rule of the code in the exact terms of the code, not in
+  the words of the stub summary. For example, `[a-z']+` is "the letters a to z and the
+  apostrophe", and `len(argv) != 1` is "not exactly one argument". When `pdlc:recon` cannot
+  start, intake does the deep look itself, by the same rule.
 - The statuses on main can be out of date. Thus, intake lists the change branches first
   ("Where pdlc commits"). The handoff names each changed requirement that an unmerged
   change covers. The change of this intent for that spec stacks after the unmerged change.
