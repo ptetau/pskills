@@ -30,13 +30,14 @@ skill also runs `/vet` on the two versions and compares the scores.
 ## Usage
 
 ```
-/improve-writing <path> [<path> …] [--no-eval] [--dictionary PATH]
+/improve-writing <path> [<path> …] [--no-eval] [--declarative] [--dictionary PATH]
 ```
 
 | Argument | Default | Meaning |
 |---|---|---|
 | `<path>` | necessary | A file, or a skill folder. A skill folder includes `SKILL.md` and its Markdown references. |
 | `--no-eval` | off | For a skill, do not run `/vet`. The report then says that the effectiveness is not measured. |
+| `--declarative` | off | For a skill, rewrite it in the declarative form of `AGENTS.md`, inside its word budget. The section "Declarative mode" gives the changes. |
 | `--dictionary PATH` | `STE100_DICTIONARY` | Your copy of the ASD-STE100 standard, as a PDF or a text file. |
 
 ## What changes and what stays
@@ -198,6 +199,60 @@ Under the table, give:
 
 Do not commit. The user examines the change first.
 
+## Declarative mode
+
+With `--declarative`, the target is one `SKILL.md`. The default mode stays as it is. The
+phases below change as follows. Each other phase runs as before.
+
+**Phase 1: the inventory has four classes.** Give each item a class, a place, and a
+reason:
+
+| Class | Meaning | Place |
+|---|---|---|
+| C (contract) | A literal string that a script, a hook, a test, or another skill reads. | keep: the rewrite states the string exactly. |
+| R (rubric-tested) | A behaviour that a rubric item of the `/vet` suite of the skill tests. | keep, or move to a README section that states it. |
+| B (other behaviour) | Any other limit, default, stop, ban, or question. | keep, or move to a README section that states it. |
+| P (procedure) | An order or a method that a capable model finds alone. | drop as procedure, with a one-line reason. |
+
+A place of "move to README section X" names the section. The checker reads that section
+to make sure that it states the item. Only class P can be "drop as procedure".
+
+Contracts to keep exactly:
+
+- Each commit subject, in double quotes. The pdlc test
+  `test_every_subject_a_skill_names_is_in_the_list` needs more than 10 quoted subjects
+  across all skills. A README pointer alone breaks the test.
+- Each trailer name, handoff title, header field, file name, status, and script command.
+- The front matter, unchanged.
+
+**Phase 2: the form and the budget replace the length rule.** Do not use the 0.9 to 1.3
+length rule.
+
+- Write the skill in the form of `AGENTS.md`: Goal, Inputs, Outputs, Constraints,
+  optional Stages, and Done when.
+- Take the word budget of the skill from `scripts/skill_budgets.json` in the repository.
+- Do not add a step-by-step procedure, a rule that a README states, or an example that a
+  README has.
+- Stay inside the budget. If a fix needs more words, remove the same number of words
+  elsewhere.
+- Do not raise a budget. Ask the user.
+
+**Phase 3: add the form check.** Run the checker from the root of the repository:
+
+```
+python3 scripts/check_skill_form.py <path>/SKILL.md
+```
+
+Correct each problem that the checker prints. Then run the pdlc tests. Then mark each
+inventory item "kept", "moved", "dropped as procedure", "changed", or "lost". Correct each
+changed or lost item. Refuse a drop that is not class P.
+
+**Phase 5: report.** Add these items to the table:
+
+- The body words before and after, and the budget.
+- The inventory counts for each class and each place.
+- The result of the form check.
+
 ## Rules
 
 - Obey `references/writing-guidelines.md` in your replies and in the report.
@@ -213,6 +268,8 @@ Do not commit. The user examines the change first.
 - `scripts/check_writing.py`: the linter.
 - `scripts/test_check_writing.py`: the tests of the linter.
 - `scripts/compare_vet.py`: compares two `/vet` results.
+- `scripts/check_skill_form.py` and `scripts/skill_budgets.json`: at the root of the
+  repository. The checker and the budgets of the declarative mode.
 
 ## Example
 
