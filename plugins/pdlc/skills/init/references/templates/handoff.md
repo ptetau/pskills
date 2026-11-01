@@ -21,10 +21,11 @@ Keep each sentence at 25 words or fewer.
 
 ## Decided on defaults
 
-List each `(assumed)` decision that this stage wrote, so that the user can change the
-decisions. Write one line for each decision, in the form of the "Notes" section of the
-intent: `<requirement>: <question> → <answer> (assumed)`. Write "none" only if this stage
-wrote no such decision.
+List each `(assumed)` decision that this stage wrote. Write one line for each decision:
+`- <requirement>: <question> → <answer> (assumed)`. `<requirement>` is the ID of the
+requirement or spec that holds the mark. Copy the same line into the "Notes" of the intent.
+A pointer such as "see Notes" is not a list. Write "- none" only if this stage wrote no
+`(assumed)` mark.
 
 - none
 

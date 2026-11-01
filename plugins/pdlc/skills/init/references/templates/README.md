@@ -78,8 +78,8 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
   remote.
 - `templates/`: blank documents. A filled document has real content in place of each
   `<placeholder>` and each guide sentence.
-- `bin/`: `check_merge.py`, `check_writing.py`, `make_packets.py`, `record_gif.mjs`,
-  `record_merges.py`.
+- `bin/`: `check_handoff.py`, `check_merge.py`, `check_writing.py`, `make_packets.py`,
+  `record_gif.mjs`, `record_merges.py`.
 - `version.json`: the pdlc version of these files, and the hash of each file that pdlc wrote.
   Only `/pdlc:upgrade` and init write it.
 - `.tools/`: the tools of the visual review. This folder is not committed.
@@ -325,7 +325,8 @@ Its `Base:` names that branch, and its pull request targets that branch.
   answer has a mark and one line on why. The reply `skip` takes it.
 - A decision that a skill makes without an instruction (a name, a limit, a message, an
   order, a default answer) has the mark `(assumed)` where the spec or change spec states
-  it. The handoff lists it too. Thus, no guess stays hidden.
+  it. The handoff lists it too. `bin/check_handoff.py` makes sure that the list names each
+  new mark. Thus, no guess stays hidden.
 - The mark is plain, right after the words that it marks, with any reason outside the
   brackets: "at most 20 items (assumed), to keep the list short". In a change, the merge
   check rejects `(limit assumed)`, `*(assumed)*`, and each mark that does not start with
