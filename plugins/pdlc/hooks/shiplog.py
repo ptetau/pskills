@@ -63,10 +63,11 @@ def project_root(path):
         path = parent
 
 
-def git(root, *args):
+def git(root, *args, stdin=None):
     """git's output, stripped, or None when it fails."""
     try:
-        out = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=20)
+        out = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=20,
+                             input=stdin)
     except (OSError, subprocess.SubprocessError):
         return None
     return out.stdout.strip() if out.returncode == 0 else None
@@ -185,9 +186,15 @@ class Run:
 # Git facts
 
 def tips(root):
-    out = git(root, "for-each-ref", "--format=%(objectname)") or ""
+    """The hashes of the local branches and HEAD."""
+    out = git(root, "for-each-ref", "--format=%(objectname)", "refs/heads/") or ""
     head = git(root, "rev-parse", "HEAD")
     return sorted(set(out.split() + ([head] if head else [])))
+
+
+def excluding(base):
+    """The stdin text that makes a git command skip each commit that base reaches."""
+    return "".join("^%s\n" % h for h in base)
 
 
 def where(root):
@@ -203,7 +210,8 @@ def new_commits(run):
     """(hash, subject) of each commit on any branch that the run made, oldest first."""
     start = run.of("run_start")[0]
     base = start.get("tips") or []
-    out = git(run.root, "log", "--all", "--reverse", "--format=%H%x1f%s", "--not", *base)
+    out = git(run.root, "log", "--branches", "--reverse", "--format=%H%x1f%s", "--stdin",
+              stdin=excluding(base))
     pairs = [tuple(line.split("\x1f", 1)) for line in (out or "").splitlines() if "\x1f" in line]
     seen = {h for h, _ in pairs}
     for entry in run.of("commit"):
@@ -212,36 +220,46 @@ def new_commits(run):
     return pairs
 
 
-def proposed(root):
-    """True when the newest pdlc branch ends with a Propose commit and its intent is in review."""
-    branches = (git(root, "for-each-ref", "--sort=-committerdate", "--format=%(refname:short)",
-                    "refs/heads/pdlc/") or "").split()
-    if not branches:
-        return False
-    branch = branches[0]
-    subject = git(root, "log", "-1", "--format=%s", branch) or ""
-    if not subject.startswith("Propose "):
-        return False
-    intent = trailers(git(root, "log", "-1", "--format=%b", branch)).get("Intent")
-    names = (git(root, "ls-tree", "--name-only", branch, "pdlc/inbox/") or "").split()
-    for name in names:
-        base = os.path.basename(name)
-        if not re.match(r"IN-\d+.*\.md$", base) or (intent and not base.startswith(intent)):
+def intent_of(root, rev):
+    return trailers(git(root, "log", "-1", "--format=%b", rev)).get("Intent")
+
+
+def proposed(run, pairs):
+    """True when a pdlc branch ends with a Propose commit that this run made, and the intent
+    of that commit is the intent of the newest commit of the run, and is in review there."""
+    root = run.root
+    made = {h for h, _ in pairs}
+    wanted = intent_of(root, pairs[-1][0])
+    branches = (git(root, "for-each-ref", "--format=%(refname:short) %(objectname)",
+                    "refs/heads/pdlc/") or "").splitlines()
+    for line in branches:
+        branch, _, tip = line.partition(" ")
+        if tip not in made or not (git(root, "log", "-1", "--format=%s", tip) or "").startswith("Propose "):
             continue
-        text = git(root, "show", "%s:%s" % (branch, name)) or ""
-        if re.search(r"\bStatus:[ \t]*in review\b", text):
-            return True
+        intent = intent_of(root, tip)
+        if wanted and intent and wanted != intent:
+            continue
+        names = (git(root, "ls-tree", "--name-only", branch, "pdlc/inbox/") or "").split()
+        for name in names:
+            base = os.path.basename(name)
+            if not re.match(r"IN-\d+.*\.md$", base) or (intent and not base.startswith(intent)):
+                continue
+            text = git(root, "show", "%s:%s" % (branch, name)) or ""
+            if re.search(r"\bStatus:[ \t]*in review\b", text):
+                return True
     return False
 
 
 def end_state(run):
     """(state, allowed): the end state of the run, and whether the turn may end."""
     pairs = new_commits(run)
-    if any(subject.startswith("Stop ") for _, subject in pairs):
+    logged = {e.get("hash") for e in run.of("commit")}
+    newest = pairs[-1][0] if pairs else None
+    if any(subject.startswith("Stop ") and (h in logged or h == newest) for h, subject in pairs):
         return "stopped", True
     if not pairs:
         return "no work", True
-    if proposed(run.root):
+    if proposed(run, pairs):
         return "proposed", True
     return "unrecorded", False
 
@@ -250,6 +268,15 @@ def end_state(run):
 
 def on_prompt(data, root, session):
     if not START.match(data.get("prompt") or ""):
+        # A normal prompt in a session with a current run: the user left the run (Esc, or a
+        # resume after an API error). The run is over, so the Stop rule must not hold this turn.
+        run = Run.current(root, session)
+        if run:
+            pairs = new_commits(run)
+            run.add("turn_end", session, end_state="left by user", blocks=len(run.of("stop_blocked")),
+                    last_subject=pairs[-1][1] if pairs else None, commits=len(pairs),
+                    prompt=clip(data.get("prompt"), 300), **where(root))
+            run.end()
         return None
     Run.begin(root, session, prompt=clip(data.get("prompt"), 300), plugin=plugin_version(),
               cwd=data.get("cwd"), tips=tips(root), **where(root))
@@ -275,7 +302,7 @@ def on_bash(data, root, session):
     if not head or any(e.get("hash") == head for e in run.of("commit")):
         return
     start = run.of("run_start")[0].get("tips") or []
-    if not git(root, "rev-list", "-1", "HEAD", "--not", *start):
+    if not git(root, "rev-list", "-1", "HEAD", "--stdin", stdin=excluding(start)):
         return  # a commit from before the run
     subject = git(root, "log", "-1", "--format=%s") or ""
     body = git(root, "log", "-1", "--format=%b") or ""
@@ -342,6 +369,19 @@ def on_subagent_stop(data, root, session):
         run.add("agent_stop", session, agent=data.get("agent_type"), agent_id=data.get("agent_id"))
 
 
+def on_stop_failure(data, root, session):
+    """The turn ended on an API error. The run stays current, so a resume continues the log."""
+    run = Run.current(root, session)
+    if not run:
+        return None
+    error, details = data.get("error"), data.get("error_details")
+    text = "%s %s" % (error, details)
+    run.add("turn_failed", session, error=clip(error), error_details=clip(details),
+            last_message=clip(data.get("last_assistant_message")),
+            rate_limit=bool(re.search(r"rate|429|529|overloaded", text, re.I)), **where(root))
+    return None
+
+
 def on_stop(data, root, session):
     """Returns the JSON to print, or None."""
     run = Run.current(root, session)
@@ -386,6 +426,8 @@ def dispatch(data):
         return on_failure(data, root, session)
     elif event == "SubagentStop":
         return on_subagent_stop(data, root, session)
+    elif event == "StopFailure":
+        return on_stop_failure(data, root, session)
     elif event == "Stop":
         return on_stop(data, root, session)
     return None
@@ -470,7 +512,12 @@ def summary(path):
     if ended:
         lines.append("end state: %s (%d block%s, last subject: %s)" % (
             ended[-1].get("end_state"), blocks, "" if blocks == 1 else "s", ended[-1].get("last_subject")))
-    else:
+    failed = [e for e in entries if e.get("event") == "turn_failed"]
+    if failed and not ended:
+        lines.append("the turn failed: %s%s (rate limit: %s); the log ends there" % (
+            failed[-1].get("error"), " - %s" % failed[-1]["error_details"] if failed[-1].get("error_details") else "",
+            "yes" if failed[-1].get("rate_limit") else "no"))
+    elif not ended:
         lines.append(NO_END + ("" if not blocks else " (%d stop block%s logged)" % (blocks, "" if blocks == 1 else "s")))
     if bad:
         lines.append("hook errors: %d (see the hook_error entries)" % bad)

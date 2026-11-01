@@ -1,5 +1,6 @@
 """Tests for pdlc's ship log hook. Run: python3 -m unittest discover plugins/pdlc/tests"""
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -54,12 +55,17 @@ class ShipLog(unittest.TestCase):
     def events(self, name):
         return [e for e in self.log() if e["event"] == name]
 
-    def commit(self, subject, status=None):
+    def commit(self, subject, status=None, intent="IN-0001"):
         (self.root / "pdlc/inbox/note.md").write_text(subject + "\n" + str(len(subject)))
         if status:
             (self.root / "pdlc/inbox/IN-0001-reset.md").write_text(INTENT % status)
         git(self.root, "add", "-A")
-        git(self.root, "commit", "-qm", "%s\n\nIntent: IN-0001" % subject)
+        # a rising commit date, so that "newest" has one answer
+        self.tick = getattr(self, "tick", 0) + 1
+        date = "2031-01-01T00:%02d:%02d +0000" % divmod(self.tick, 60)
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm",
+                        "%s\n\nIntent: %s" % (subject, intent)], cwd=self.root, check=True,
+                       env={**os.environ, "GIT_COMMITTER_DATE": date, "GIT_AUTHOR_DATE": date})
 
     def after_bash(self):
         return self.hook("PostToolUse", tool_name="Bash",
@@ -346,6 +352,70 @@ class ShipLog(unittest.TestCase):
         self.assertTrue(any("version.py" in c for c in prompt))
         matchers = {e.get("matcher") for e in hooks["PostToolUse"]}
         self.assertTrue(any("Skill" in (m or "") and "Agent" in (m or "") for m in matchers))
+
+    # review fixes
+    def test_old_propose_on_another_branch_is_not_this_runs_end(self):
+        self.commit("Propose CH-0001: old", status="in review")
+        git(self.root, "switch", "-qc", "pdlc/IN-0002-next")
+        self.start()
+        self.commit("Specify IN-0002: next", intent="IN-0002")
+        self.after_bash()
+        self.blocked(self.stop())
+
+    def test_propose_of_another_intent_is_not_this_runs_end(self):
+        self.start()
+        self.commit("Propose CH-0009: other", status="in review", intent="IN-0001")
+        git(self.root, "switch", "-qc", "pdlc/IN-0002-next")
+        self.commit("Specify IN-0002: next", intent="IN-0002")
+        self.blocked(self.stop())
+
+    def test_next_normal_prompt_ends_the_run(self):
+        self.start()
+        self.commit("Specify IN-0001: x")
+        run = self.hook("UserPromptSubmit", prompt="thanks, now fix the css")
+        self.assertEqual((run.returncode, run.stdout), (0, ""))
+        self.assertEqual(self.last_turn_end()["end_state"], "left by user")
+        self.assertFalse((self.root / "pdlc/.logs/current").exists())
+        self.assertEqual(self.stop().stdout, "")
+
+    def test_stop_failure_is_logged_and_the_run_stays_current(self):
+        self.start()
+        self.hook("StopFailure", error="rate_limit", error_details="429 slow down",
+                  last_assistant_message="working " * 200)
+        (entry,) = self.events("turn_failed")
+        self.assertEqual(entry["error"], "rate_limit")
+        self.assertEqual(entry["error_details"], "429 slow down")
+        self.assertTrue(entry["rate_limit"])
+        self.assertEqual(len(entry["last_message"]), 500)
+        self.assertEqual(entry["branch"], "pdlc/IN-0001-reset")
+        self.assertTrue((self.root / "pdlc/.logs/current").exists())
+        log = next((self.root / "pdlc/.logs").glob("ship-*.jsonl"))
+        out = subprocess.run([sys.executable, str(HOOK), "summary", str(log)],
+                             capture_output=True, text=True).stdout
+        self.assertIn("rate_limit", out)
+        self.assertNotIn("no turn_end", out)
+
+    def test_stop_failure_without_a_run_is_silent(self):
+        run = self.hook("StopFailure", error="x")
+        self.assertEqual((run.returncode, run.stdout, run.stderr), (0, "", ""))
+        self.assertFalse((self.root / "pdlc/.logs").exists())
+
+    def test_old_stop_commit_that_the_run_did_not_log_does_not_count(self):
+        self.start()
+        self.commit("Stop IN-0001: old")
+        self.commit("Specify IN-0001: x")  # newest; the Stop commit was never logged
+        self.blocked(self.stop())
+
+    def test_tips_hold_only_branches_and_head(self):
+        git(self.root, "update-ref", "refs/tags/t1", "HEAD")
+        git(self.root, "update-ref", "refs/remotes/origin/main", "HEAD")
+        self.start()
+        self.assertEqual(len(self.events("run_start")[0]["tips"]), 1)
+
+    def test_stop_and_stop_failure_have_a_timeout(self):
+        hooks = json.loads(HOOKS_JSON.read_text())["hooks"]
+        for event in ("Stop", "StopFailure"):
+            self.assertEqual(hooks[event][0]["hooks"][0].get("timeout"), 30, event)
 
 
 if __name__ == "__main__":

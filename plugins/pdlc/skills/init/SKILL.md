@@ -84,9 +84,9 @@ and adapters. All work then enters through the inbox.
   tests again.
 - The visual adapter is `visual-web` for a project that serves pages, with `start` and
   `url` from recon in "Visual". Else it is `visual-terminal`.
-- `.gitignore` lists `pdlc/.tools/` and `pdlc/.logs/`, and the folders that the language and the tools write
-  when checks run, for example `__pycache__/` and `node_modules/`. With no code yet, the
-  first change adds those folders.
+- `.gitignore` lists `pdlc/.tools/` and `pdlc/.logs/`, and the folders that the language
+  and the tools write when checks run, for example `__pycache__/` and `node_modules/`.
+  With no code yet, the first change adds those folders.
 - A project with no way to run checks gets a recommendation: the first intent adds one.
 - The user confirms the adapters in `pdlc/config.md`. The defaults are `inbox-files`,
   `checks-command`, `review-agent`, `delivery-github`, `visual-web` or `visual-terminal`,

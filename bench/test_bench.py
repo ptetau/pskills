@@ -1650,6 +1650,45 @@ class SnapshotTest(unittest.TestCase):
         self.assertIsNone(args.intent)
 
 
+class ShipLogCopyTest(unittest.TestCase):
+    ENTRY = {"t": "2031-01-01T00:00:01+00:00", "run": "ship-x", "session": "s", "event": "run_start",
+             "branch": "main", "head": "abc", "plugin": "0.6.0"}
+
+    def setUp(self):
+        self.work = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.work, True)
+        self.project, self.out = self.work / "app", self.work / "out"
+        (self.project / "pdlc/.logs").mkdir(parents=True)
+        self.out.mkdir()
+
+    def test_the_log_is_copied_and_summarised(self):
+        (self.project / "pdlc/.logs/ship-20310101T000001Z.jsonl").write_text(json.dumps(self.ENTRY) + "\n")
+        summary = run_bench.collect_shiplog(self.project, self.out, 2, run_bench.HERE.parent / "plugins/pdlc")
+        copied = self.out / "run2.shiplog.jsonl"
+        self.assertEqual(json.loads(copied.read_text().splitlines()[0])["event"], "run_start")
+        self.assertIn("the log ends with no turn_end", summary)
+
+    def test_no_log_gives_none(self):
+        self.assertIsNone(run_bench.collect_shiplog(self.project, self.out, 1, run_bench.HERE.parent / "plugins/pdlc"))
+        self.assertFalse((self.out / "run1.shiplog.jsonl").exists())
+
+    def test_e2e_stores_the_summary_under_shiplog(self):
+        (self.project / "pdlc/.logs/ship-20310101T000001Z.jsonl").write_text(json.dumps(self.ENTRY) + "\n")
+        args = Namespace(plugin=str(run_bench.HERE.parent / "plugins/pdlc"), out=str(self.out), label="x", runs=1,
+                         fixture="wordfreq", intent=None, timeout=1, budget=1, forward=False)
+        project = self.project
+        with mock.patch.object(run_bench, "make_project", return_value=project), \
+                mock.patch.object(run_bench, "run_claude", return_value=([], 1, "")), \
+                mock.patch.object(run_bench, "analyse", return_value={"totals": {"cost_usd": 0.0}}), \
+                mock.patch.object(run_bench, "inspect_project",
+                                  return_value={"probes": {"passed": 0, "total": 0, "failed": []}}), \
+                contextlib.redirect_stdout(io.StringIO()):
+            run_bench.command_e2e(args)
+        saved = json.loads((self.out / "x/run1.json").read_text())
+        self.assertIn("run_start", (self.out / "x/run1.shiplog.jsonl").read_text())
+        self.assertIn("end", saved["shiplog"])
+
+
 class RebuildCopyTest(unittest.TestCase):
     branch = "pdlc/CH-0001-x"
 
