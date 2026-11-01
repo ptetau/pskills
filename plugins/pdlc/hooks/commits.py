@@ -122,10 +122,15 @@ def problems(root):
     found = owner(root, branch) if branch and branch != "HEAD" else None
     newest = git(root, "reflog", "-1", "--format=%gs") or ""
     parents = (git(root, "rev-list", "--parents", "-n", "1", "HEAD") or "").split()
-    if not found or not newest.startswith("commit") or len(parents) > 2:
+    if not newest.startswith("commit") or len(parents) > 2:
+        return []
+    subject = git(root, "log", "-1", "--format=%s") or ""
+    if not found:
+        # Off a pdlc branch (for example intake on main), only a pdlc subject makes it pdlc's.
+        if any(regex.match(subject) for _, regex in shapes(text)):
+            return block_problems(root)
         return []
     kind, spec_id = found
-    subject = git(root, "log", "-1", "--format=%s") or ""
     # Trailer lines count wherever they sit in the message, as the trace finds them.
     body = git(root, "log", "-1", "--format=%b") or ""
     trailers = dict(re.findall(r"^(Intent|Change|Req|Ticket):[ \t]*(\S.*?)\s*$", body, re.M))
@@ -147,7 +152,20 @@ def problems(root):
         wrong.append("it changes %s, outside pdlc/, so it needs a Req trailer" % outside[0])
     if not outside and "Req" in trailers:
         wrong.append("it changes only pdlc/ files, so it carries no Req trailer")
-    return wrong
+    return wrong + block_problems(root)
+
+
+def block_problems(root):
+    """The problem when a pdlc trailer of the commit is not in the last trailer
+    block, which is the only block that `git interpret-trailers` reads. Another problem
+    already names a trailer that is missing from the whole message."""
+    body = git(root, "log", "-1", "--format=%b") or ""
+    anywhere = set(re.findall(r"^(Intent|Change|Req|Ticket):[ \t]*\S", body, re.M))
+    last = git(root, "log", "-1", "--format=%(trailers:only,unfold)") or ""
+    block = set(re.findall(r"^([A-Za-z][\w-]*):", last, re.M))
+    if anywhere - block:
+        return ["the pdlc trailers are not in the last trailer block"]
+    return []
 
 
 def fresh_commit(root):

@@ -58,7 +58,7 @@ change of the intent is built ("Acceptance checks" in `pdlc/README.md`).
 
 - The intent is `building`, with `Branch:`, `Acceptance-File:`, and the lock hash on
   `Acceptance-Locked:`.
-- The commits, in this order:
+- The commits, in this order. Keep the trailers in one block, as README "Commits" says:
   - "Acceptance IN-xxxx" with the trailers `Intent` and `Req`: the acceptance files, the
     intent, and any new `config.md` lines.
   - "Lock acceptance IN-xxxx" with the trailer `Intent`: the lock line.

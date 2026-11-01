@@ -52,7 +52,7 @@ does not change the checks.
 ## Outputs
 
 - The commit "Build CH-xxxx: <what changed>": the app files. Its trailers are `Intent`,
-  `Change`, `Req` (the requirements of the commit), and `Ticket` when there is a ticket.
+  `Change`, `Req` (the requirements of the commit), and `Ticket` when there is a ticket. Keep the trailers in one block, as README "Commits" says.
 - The ticked steps of the change, and a new line in its progress log.
 - Each requirement of the change is `built` in its spec file. A `(retire)` requirement
   leaves its spec, with the code that served only that requirement. The test writer
