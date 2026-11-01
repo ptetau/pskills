@@ -138,7 +138,7 @@ testable, and consistent, and is marked `ready`.
   defaults" holds each `(assumed)` line that ready adds or changes in the "Notes", with the
   same words, as the template says.
 - The commit "Ready IN-xxxx: <name>" with the trailer `Intent`. Ready commits also when it
-  stops for a contradiction.
+  stops for a contradiction. Keep the trailers in one block, as README "Commits" says.
 - For the user: what changed, and that `/pdlc:change` is next. After a contradiction, the
   two statements, and the fact that both requirements stay `proposed`.
 

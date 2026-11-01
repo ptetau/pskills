@@ -2,15 +2,17 @@
 """pdlc commit check. Claude Code runs this after every Bash call.
 
 A pdlc branch is one that a change spec or an intent names as its Branch. When the call
-made a commit on a pdlc branch, this checks the commit against the project's
-DES-pdlc-commit-trailers (commit subjects and trailers):
-  - its subject is one of the shapes under "Subjects", and a change it names is this
-    branch's change;
-  - it carries Intent; on a change's branch, Change with that change; and Req exactly
-    when it changes files outside pdlc/.
+made a commit, this checks the commit against the project's DES-pdlc-commit-trailers
+(commit subjects and trailers):
+  - on a pdlc branch, its subject is one of the shapes under "Subjects", and a change it
+    names is this branch's change;
+  - on a pdlc branch, it carries Intent; on a change's branch, Change with that change; and
+    Req exactly when it changes files outside pdlc/;
+  - on any branch, a commit with a pdlc subject (for example intake on main) has its pdlc
+    trailers in the last paragraph of the message. Only that paragraph is read as trailers.
 It runs while the commit is still the newest, so `git commit --amend` fixes the commit at
-once. It leaves merge commits, other branches and projects without pdlc alone. Exit 2
-shows the problems to Claude.
+once. It leaves merge commits, other subjects off a pdlc branch, and projects without pdlc
+alone. Exit 2 shows the problems to Claude.
 
 On any branch, it also runs the writing check of the project (pdlc/bin/check_writing.py) on
 the lines that the commit wrote in the specs, the intents, and the change folders. It skips
@@ -122,10 +124,15 @@ def problems(root):
     found = owner(root, branch) if branch and branch != "HEAD" else None
     newest = git(root, "reflog", "-1", "--format=%gs") or ""
     parents = (git(root, "rev-list", "--parents", "-n", "1", "HEAD") or "").split()
-    if not found or not newest.startswith("commit") or len(parents) > 2:
+    if not newest.startswith("commit") or len(parents) > 2:
+        return []
+    subject = git(root, "log", "-1", "--format=%s") or ""
+    if not found:
+        # Off a pdlc branch (for example intake on main), only a pdlc subject makes it pdlc's.
+        if any(regex.match(subject) for _, regex in shapes(text)):
+            return block_problems(root)
         return []
     kind, spec_id = found
-    subject = git(root, "log", "-1", "--format=%s") or ""
     # Trailer lines count wherever they sit in the message, as the trace finds them.
     body = git(root, "log", "-1", "--format=%b") or ""
     trailers = dict(re.findall(r"^(Intent|Change|Req|Ticket):[ \t]*(\S.*?)\s*$", body, re.M))
@@ -147,7 +154,29 @@ def problems(root):
         wrong.append("it changes %s, outside pdlc/, so it needs a Req trailer" % outside[0])
     if not outside and "Req" in trailers:
         wrong.append("it changes only pdlc/ files, so it carries no Req trailer")
-    return wrong
+    return wrong + block_problems(root)
+
+
+def block_problems(root):
+    """The problem when a pdlc trailer of the commit is not in the last trailer block, which
+    is the only block that `git interpret-trailers` reads. A trailer line counts only by its
+    last occurrence in the message, so prose earlier in the message does not matter. A Ticket
+    line with more than one word is prose. Another
+    problem already names a trailer that is missing from the whole message."""
+    body = git(root, "log", "-1", "--format=%b") or ""
+    last = {}
+    for line in body.splitlines():
+        found = re.match(r"^(Intent|Change|Req|Ticket):[ \t]*(\S.*?)\s*$", line)
+        if found and (found.group(1) != "Ticket" or len(found.group(2).split()) == 1):
+            last[found.group(1)] = line.strip()
+    block = set(re.findall(r"^(Intent|Change|Req|Ticket):",
+                           git(root, "log", "-1", "--format=%(trailers:only,unfold)") or "", re.M))
+    if set(last) - block:
+        return ["the pdlc trailers are not in the last paragraph, so git does not read them as "
+                "trailers. Put Intent, Change and Req in the last paragraph. Put Co-Authored-By "
+                "and any other trailer directly under them, with no blank line and no other "
+                "text in that paragraph"]
+    return []
 
 
 def fresh_commit(root):

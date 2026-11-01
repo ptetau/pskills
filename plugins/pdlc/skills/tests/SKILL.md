@@ -58,7 +58,8 @@ of an intent, the acceptance checks are its checks.
 - The change spec has `Branch:`, `Base:`, and `Tests-Locked: <hash>` (or `acceptance`)
   right under its header. The change is `testing` while the checks are written, then
   `building`. The intent is `building`.
-- The commits, in this order, each with the trailers `Intent` and `Change`:
+- The commits, in this order, each with the trailers `Intent` and `Change` in one block, as
+  README "Commits" says:
   - "Start CH-xxxx": the branch, the base, and the statuses. A send-back has no new start.
   - "Tests CH-xxxx", also with `Req`: the check files.
   - "Lock tests CH-xxxx": the lock line.

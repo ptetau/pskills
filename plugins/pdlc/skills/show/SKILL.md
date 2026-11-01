@@ -108,7 +108,8 @@ with the GIF to approve. The skill does not merge the change.
 
 - `visual.json`, any helper script, `review.gif`, and `frames/` in the change folder.
 - One commit of all these files, "Visual review CH-xxxx", with the trailers `Intent`,
-  `Change`, and `Review: pdlc/changes/CH-xxxx-…/review.gif`. The packet and the result of
+  `Change`, and `Review: pdlc/changes/CH-xxxx-…/review.gif`. Keep them in one block, as README
+  "Commits" says. The packet and the result of
   the visual review go into the next commit of show.
 - Each gate correction is a commit "Update CH-xxxx: <what>". A merge of main has the
   trailers `Intent` and `Change`.

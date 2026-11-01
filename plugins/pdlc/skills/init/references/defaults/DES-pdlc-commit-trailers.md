@@ -5,7 +5,7 @@ Status: agreed · Default: yes · Ask at init: no
 ## Rule
 
 Each commit that pdlc makes has a subject from the list below. The commit ends with these
-lines, after a blank line:
+lines, in the last paragraph of the message, after a blank line:
 
 ```
 Intent: IN-0012
@@ -35,7 +35,10 @@ The first line of each commit must be one of the subjects below, exactly. In a s
 `<change>` is the ID of the change (`CH-0031`), `<intent>` is the ID of the intent
 (`IN-0012`), and `<n>` is a number. Any other `<...>` is a few words. A merge keeps the
 subject that git gives. On a pdlc branch, a hook in the pdlc plugin checks each new commit
-against this list and the trailers above. Fix each problem that the hook names at once,
+against this list and the trailers above.
+
+On any branch, the hook also checks each commit with one of these subjects. Its pdlc
+trailers must be in the last paragraph. Fix each problem that the hook names at once,
 with `git commit --amend`.
 
 - `Specify <intent>: <intent name>` (intake)

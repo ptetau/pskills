@@ -147,5 +147,6 @@ change spec is sufficient for the test writer and the builder.
   interface helps the test writer.
 - The commit "Plan IN-xxxx: <names of changes>" with the trailer `Intent`: the change
   specs, the intent, and each patched spec. The commit comes after `check_order.py` exits 0.
+  Keep the trailers in one block, as README "Commits" says.
 - The tracker port knows each new change.
 - For the user: the changes in order, and that `/pdlc:acceptance` is next.

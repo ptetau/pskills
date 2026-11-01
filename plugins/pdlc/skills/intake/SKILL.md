@@ -64,6 +64,12 @@ its right spec, as `proposed`. Intake does not write code.
   detail is a message, a limit, an order, or a format. It can also be the result of an edge
   case, for example N larger than the number of items. The mark goes where intake writes it, also in
   a "Given ..., then ..." line.
+- Before `check_handoff.py`, read each new Given line again. If the words of the intent do
+  not give its result, end the line with `(assumed)`. Common cases are a value past a limit, a
+  value in an odd form (a sign, a leading zero, a decimal), and a missing value. Others are
+  a missing necessary argument, the output of each stream on an error, and which of two
+  errors shows first. A result that the words of the
+  intent decide has no mark.
 - A detail that intake adds to a `built` requirement from recon also has the mark `(assumed)`.
 - "Decided on defaults" in the handoff lists each `(assumed)` decision that intake wrote, one line
   for each, in the form of the template. The same lines go into the intent "Notes".
@@ -128,6 +134,7 @@ its right spec, as `proposed`. Intake does not write code.
     unclear.
 - The commit "Specify IN-xxxx: <name>" with the trailer `Intent`: the specs and the
   intent. Intake commits also when it stops early. The commit comes after `check_handoff.py`
-  exits 0.
+  exits 0. Put `Intent: IN-xxxx` in the last paragraph of the message. Any `Co-Authored-By` or
+  other trailer goes directly under it, with no blank line between them.
 - For the user: what intake wrote, and that `/pdlc:ready` is next.
 - Intake is done when the commit holds each requirement that the intent needs.

@@ -340,6 +340,32 @@ class HandoffCheck(unittest.TestCase):
         self.assertEqual(len(lines), 4, out)
         self.assertTrue(all(line.strip() for line in lines))
 
+    def test_a_bad_form_of_the_mark_in_a_new_line_is_named(self):
+        self.start()
+        for bad in (" (more likely)", " *(assumed)*", " (the limit, assumed)", " (a limit assumed)"):
+            with self.subTest(bad=bad):
+                self.put("pdlc/specs/jobs/JOB-x.md", job(r3=bad))
+                number = next(n for n, line in enumerate(
+                    (self.root / "pdlc/specs/jobs/JOB-x.md").read_text().splitlines(), 1)
+                    if line.startswith("Sort by name"))
+                code, out = self.intake(["- none"])
+                self.assertEqual(code, 1)
+                self.assertIn('pdlc/specs/jobs/JOB-x.md:%d: write the mark as "(assumed)"' % number, out)
+
+    def test_the_right_mark_and_a_bad_form_on_head_are_not_named(self):
+        self.start(job(r3=" (more likely)"))
+        self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (more likely)", r4=" (assumed)"))
+        code, out = self.intake([L4])
+        self.assertEqual((code, out), (0, ""))
+
+    def test_a_bad_mark_does_not_hide_the_other_problems(self):
+        self.start()
+        self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (more likely)", r4=" (assumed)"))
+        code, out = self.intake(["- none"])
+        self.assertEqual(code, 1)
+        self.assertIn('write the mark as "(assumed)"', out)
+        self.assertIn("JOB-x.R4", out)
+
     def test_a_missing_handoff_fails(self):
         self.start()
         code, out = self.run_check("IN-0001", "--stage", "intake")

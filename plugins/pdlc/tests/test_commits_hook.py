@@ -124,9 +124,57 @@ class CommitHook(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("Intent", err)
 
-    def test_trailers_count_when_another_paragraph_follows_them(self):
+    def test_trailers_do_not_count_when_another_paragraph_follows_them(self):
         self.commit("Start CH-0001", "Intent: IN-0001\nChange: CH-0001\n\nGenerated with a tool\n\n"
                     "Co-Authored-By: Someone <s@example.com>")
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        self.assertIn("the pdlc trailers are not in the last paragraph", err)
+
+    def test_a_blank_line_before_co_authored_by_is_named(self):
+        self.commit("Start CH-0001", "Intent: IN-0001\nChange: CH-0001\n\nCo-Authored-By: Someone <s@example.com>")
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        self.assertIn("the pdlc trailers are not in the last paragraph", err)
+
+    def test_a_pdlc_trailer_above_a_blank_line_is_named(self):
+        self.commit("Start CH-0001", "Change: CH-0001\n\nIntent: IN-0001\nCo-Authored-By: S <s@e.com>")
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        self.assertIn("not in the last paragraph", err)
+
+    def test_prose_that_looks_like_a_trailer_does_not_block_correct_trailers(self):
+        self.commit("Start CH-0001", "Ticket: none yet, see below.\n\nIntent: IN-0001\nChange: CH-0001\n"
+                    "Co-Authored-By: S <s@e.com>")
+        self.assertEqual(self.hook(), (0, ""))
+
+    def test_folded_and_unspaced_trailers_pass(self):
+        self.commit("Build CH-0001: x", "Intent:IN-0001\nChange: CH-0001\nReq: CAP-email.R1,\n CAP-email.R2\n"
+                    "Co-Authored-By: S <s@e.com>", path="src/a.py")
+        self.assertEqual(self.hook(), (0, ""))
+
+    def test_other_trailers_directly_under_the_pdlc_trailers_pass(self):
+        self.commit("Start CH-0001", "Intent: IN-0001\nChange: CH-0001\nCo-Authored-By: Someone <s@example.com>\n"
+                    "Claude-Session: https://example.com/s")
+        self.assertEqual(self.hook(), (0, ""))
+
+    def test_a_pdlc_subject_on_main_needs_its_trailers_in_the_last_block(self):
+        git(self.root, "switch", "-q", "main")
+        self.commit("Specify IN-0001: password reset", "Intent: IN-0001\n\nCo-Authored-By: Someone <s@example.com>",
+                    path="pdlc/inbox/IN-0001-reset.md")
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        self.assertIn("the pdlc trailers are not in the last paragraph", err)
+
+    def test_a_pdlc_subject_on_main_with_one_block_passes(self):
+        git(self.root, "switch", "-q", "main")
+        self.commit("Specify IN-0001: password reset", "Intent: IN-0001\nCo-Authored-By: Someone <s@example.com>",
+                    path="pdlc/inbox/IN-0001-reset.md")
+        self.assertEqual(self.hook(), (0, ""))
+
+    def test_a_commit_on_main_with_another_subject_is_left_alone(self):
+        git(self.root, "switch", "-q", "main")
+        self.commit("Fix a typo", "Intent: IN-0001\n\nCo-Authored-By: Someone <s@example.com>")
         self.assertEqual(self.hook(), (0, ""))
 
     def test_a_commit_that_changes_code_needs_req(self):
