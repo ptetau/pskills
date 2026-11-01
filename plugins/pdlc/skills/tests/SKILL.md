@@ -32,8 +32,8 @@ The change that the user names, else the first `planned` one. Its `handoff.md`.
   and "Stacked changes".
 - The first change needs the handoff `acceptance → tests`, else run `/pdlc:acceptance`.
 - Short path: the intent lists only this change, "Check files" is `- none`, and the
-  intent has `Acceptance-Locked`. Then no writer, reviewer, or packet; only "Start
-  CH-xxxx" and "Tests reviewed CH-xxxx"; `Tests-Locked: acceptance`.
+  intent has `Acceptance-Locked`. Then no writer, reviewer, or packet. Only "Start
+  CH-xxxx" and "Tests reviewed CH-xxxx", with `Tests-Locked: acceptance`.
 - `pdlc:test-writer` gets only the absolute path of the brief from
   `python3 pdlc/bin/make_packets.py CH-xxxx --brief`, and writes only "Check files".
   `git rm` a file that served only a `(retire)` requirement.
