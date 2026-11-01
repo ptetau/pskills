@@ -389,7 +389,8 @@ run or a lost judgement as a pass or as a fail.
 Four roles do the work. Each role can have its own settings:
 
 - `model`: `session` (the default) uses the model of the session. Any other value is a
-  model alias or a model id that the harness accepts.
+  model alias or a model id that the harness accepts. Prefer a full model ID. An alias
+  gives the "models not pinned" WARN when you compare results.
 - `effort`: a value from `low` to `max`, or `session`.
 - `agentType`: a custom subagent type.
 

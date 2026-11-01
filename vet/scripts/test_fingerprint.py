@@ -59,6 +59,7 @@ class FingerprintTest(unittest.TestCase):
         write(os.path.join(self.base, "alpha", "__pycache__", "x.cpython-311.pyc"), "1")
         write(os.path.join(self.base, "alpha", ".git", "HEAD"), "ref")
         write(os.path.join(self.base, "alpha", "scripts", "m.pyc"), "2")
+        write(os.path.join(self.base, "alpha", ".vet-tmp", "n"), "n")
         self.assertEqual(before, fingerprint.fingerprint(self.skill)["skillTreeSha256"])
 
     def test_tree_hash_is_stable_and_sorted(self):

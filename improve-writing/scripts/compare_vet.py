@@ -68,6 +68,8 @@ def compare(base, cand, overall_tol=5.0, item_tol=20.0):
         if get(base, path) != get(cand, path):
             out["differences"].append("%s: baseline %r, candidate %r" % (".".join(path), get(base, path), get(cand, path)))
     out["info"] = []
+    if not models_pinned(base) or not models_pinned(cand):
+        out["warnings"].append("models not pinned; scores may not be comparable")
     for path in SAME_IF_PRESENT:
         b, c = get(base, path), get(cand, path)
         if b is not None and c is not None and b != c:
@@ -79,8 +81,6 @@ def compare(base, cand, overall_tol=5.0, item_tol=20.0):
         for who, result in (("baseline", base), ("candidate", cand)):
             if not result.get(key):
                 out["warnings"].append("%s is missing in the %s result (old result), so it was not compared" % (key, who))
-    if not models_pinned(base) or not models_pinned(cand):
-        out["warnings"].append("models not pinned; scores may not be comparable")
     state = {}
     for key in ("skillSha256", "skillTreeSha256"):
         b, c = base.get(key), cand.get(key)

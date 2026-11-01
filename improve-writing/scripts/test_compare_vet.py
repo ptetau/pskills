@@ -141,6 +141,11 @@ class CompareTest(unittest.TestCase):
             out = compare_vet.compare(base, cand)
             self.assertTrue(any("models not pinned" in w for w in out["warnings"]), where)
 
+    def test_candidate_only_alias_warns(self):
+        cand = result()
+        cand["config"]["agents"] = {"preset": "lean", "run": {"model": "opus"}}
+        self.assertEqual(len(self.pinned_warns(cand)), 1)
+
     def test_old_settings_still_checked(self):
         cand = result()
         cand["config"]["runs"] = 5
