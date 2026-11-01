@@ -50,10 +50,10 @@ its right spec, as `proposed`. Intake does not write code.
   not give has the mark `(assumed)`.
 - Each entry gives each error of the lines that use it, one error on each line. An error
   line has the code, the exact message, and the result. A command error also gives `stderr`
-  or `stdout`, the stream that gets the message ("Interfaces" in `pdlc/README.md`). Each
-  failure acceptance line gives the exact message and exit code from the words of the user,
-  not "the error".
+  or `stdout`, the stream that gets the message ("Interfaces" in `pdlc/README.md`).
   Test seams go under "Test seams".
+- Each failure acceptance line gives the exact message and the result (exit code or status)
+  from the words of the user, not "the error".
 - An error that the app gives today, with no code in `DES-errors`, gets `no code` and its
   exact message and result. If no line of this intent uses that error, intake makes no code
   for it.
@@ -97,9 +97,9 @@ its right spec, as `proposed`. Intake does not write code.
   the two intents fit? With `defaults`, this intent wins where they differ, and its changes
   come after the changes of the other intent.
 - An intent with two possible meanings is a question before intake goes on. With
-  `defaults`, intake takes the more likely meaning, marks the detail `(assumed)` in the spec, and
-  writes the Note `<ID>: <question> → <answer> (assumed)`. Only two possible meanings make a
-  point a question for ready.
+  `defaults`, intake takes the more likely meaning, marks the detail `(assumed)` in the
+  spec, and writes the Note `<ID>: <question> → <answer> (assumed)`. Only two possible
+  meanings make a point a question for ready.
 
 ## Inputs
 
@@ -114,7 +114,9 @@ its right spec, as `proposed`. Intake does not write code.
 - In the intent:
   - `Status: specifying`.
   - "Requirements": each requirement whose text intake touched, with one word for each:
-    added, changed, or retiring. A `built` requirement from recon is not listed.
+    added, changed, or retiring. A `built` requirement from recon is not listed,
+    unless intake changed its text (for example with an `(assumed)` detail). Then it is
+    listed as changed.
   - The "Notes" lines of "Spec patches".
   - The handoff `intake → ready`: what intake wrote, what it assumed, and what looks
     unclear.

@@ -80,8 +80,8 @@ change spec is sufficient for the test writer and the builder.
     of equal items. The change spec copies each error line word for word. The merge check
     compares the code, the message, the result, and the stream of each error. An error with
     no code in `DES-errors` has `no code` in place of the code. If the spec entry has a
-    command error with no stream, the change adds the stream to that entry first, and copies the
-    line.
+    command error with no stream, the change adds the stream to that entry first, and copies
+    the line.
   - When the "when" of a line is a user action (a click, a command, a request), the
     Interface lists that surface. Then the checks drive it, not only a helper below it.
   - A new name follows the style of the existing code, and has the mark `(assumed)`.
