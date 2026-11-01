@@ -46,7 +46,8 @@ testable, and consistent, and is marked `ready`.
 - Each line uses concrete values ("Ana", "80", "15%", a file with `b a b`), not "a user",
   "some amount", or "any file". Its "then" gives the exact output, not "the same error".
   Ready rewrites each such line that it finds in the requirements of the intent, also a
-  line that intake wrote.
+  line that intake wrote. Each value that the intent does not give is a question, or an
+  `(assumed)` default.
 - The words of the intent bind ("Spec patches"): each example is a line, exactly.
 - Where the requirement says how something looks, a line gives the exact text and where
   the user sees it. Other lines do the same for each edge value: zero, empty, or an
@@ -103,16 +104,21 @@ testable, and consistent, and is marked `ready`.
 ### Old wording
 
 - When ready changes what a requirement does, ready searches `pdlc/specs/` and the README
-  for the old words. Ready changes each sentence, example, and summary that still shows
-  them ("No old wording" in `pdlc/README.md`).
+  for the old words. Ready changes each sentence, example, and summary in `pdlc/specs/`
+  that still shows them. For each README line that shows them, ready adds
+  `README: "<old line>" → <requirement>` to the intent "Notes" ("No old wording" in
+  `pdlc/README.md`).
 - When ready decides which of two errors comes first, the sentence of each requirement that
   gives one of the two errors names the exception.
 
 ### Before the commit
 
 - Ready runs `python3 pdlc/bin/check_handoff.py IN-xxxx --stage ready`, and fixes each
-  problem that the script names. The handoff title is `ready → change`, or `ready → user`
-  at a stop for a contradiction.
+  problem that the script names. Then ready runs the script again. If the script still
+  fails after three runs, ready puts the problems under "Open", stops with `ready → user`,
+  and commits. The handoff title is `ready → change`, or `ready → user` at a stop.
+- Each `(assumed)` mark that ready writes, or whose sentence ready changes, has its line in
+  "Decided on defaults" and in the intent "Notes".
 
 ## Inputs
 
@@ -128,7 +134,7 @@ testable, and consistent, and is marked `ready`.
 - Each clear requirement goes from `proposed` to `ready`. A `retiring` requirement stays as
   it is.
 - The intent is `ready` when each of its requirements is `ready` or `retiring`.
-- The handoff `ready → change`: the decisions, and what helps the plan. "Decided on
+- The handoff `ready → change`, or `ready → user` at a stop: the decisions, and what helps the plan. "Decided on
   defaults" holds each `(assumed)` line that ready adds or changes in the "Notes", with the
   same words, as the template says.
 - The commit "Ready IN-xxxx: <name>" with the trailer `Intent`. Ready commits also when it
@@ -141,4 +147,5 @@ testable, and consistent, and is marked `ready`.
 - Each requirement of the intent is `ready` or `retiring`, or the run stopped at a
   contradiction that the user must settle.
 - No acceptance line is vague, and no spec text shows old wording.
-- `check_handoff.py` exits 0, and the commit exists.
+- `check_handoff.py` exits 0, or the run stopped after three failed runs with the problems
+  under "Open". The commit exists.
