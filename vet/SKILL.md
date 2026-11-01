@@ -329,6 +329,9 @@ excluded run has one of these conditions:
 - The grader died, or the grader skipped the run.
 - The capture is missing, or the capture is not verbatim.
 
+A run runs one more time before the script excludes it. This applies when the agent died, the capture is
+missing or not verbatim, or the batch grader skipped the run. The field `attempts` of the run shows this.
+
 The script lists each missing similarity judgement under `lostJudges`. A judgement is
 missing when the judge died or skipped an item. The script does not count an excluded
 run or a lost judgement as a pass or as a fail.

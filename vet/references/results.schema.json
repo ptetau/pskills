@@ -381,6 +381,11 @@
               "null"
             ],
             "description": "Why the run was left out of the scores, or null."
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "How many times the run agent ran for this label: 1, or 2 after a retry of a lost capture."
           }
         }
       }
