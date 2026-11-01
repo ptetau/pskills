@@ -54,8 +54,8 @@ testable, and consistent, and is marked `ready`.
   integer.
 - A limit has lines just inside and just outside it (59:59 and 60:00 for one hour).
 - Each input that the requirement reads has lines for each bad form: missing, empty, the
-  wrong type, and too large. An input is an argument, a field, a request, or a stored file. Stored data
-  also has unreadable, and written by an older version.
+  wrong type, and too large. An input is an argument, a field, a request, or a stored
+  file. Stored data also has unreadable, and written by an older version.
 - The "then" of a bad-input line is a coded refusal, or a stated default for an older
   record. A crash, a hang, a stack trace, or a silent empty, zero, or null is wrong.
 - A capability that reads an input for every job holds those lines one time.
