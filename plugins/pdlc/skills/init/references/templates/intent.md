@@ -46,5 +46,7 @@ newest last. Write one line for each entry, in one of these forms:
 
 ## Handoff
 
-Each intent stage (intake, ready, change) writes this section for the next stage. Use the
-handoff template, with its sections as `###` headings. Replace this section each time.
+Each intent stage (intake, ready, change) writes this section for the next stage. Replace
+this section each time. The first line is `Handoff · IN-0000 · <this stage> → <next stage>`,
+and the second line is `Time: …`. Then the sections of the handoff template follow as `###`
+headings.

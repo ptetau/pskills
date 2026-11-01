@@ -59,6 +59,13 @@ its right spec, as `proposed`. Intake does not write code.
 - A spec with no "Interface" section gets one from its template, before "Requirements".
 - Each detail that the words of the intent do not give (a message, a limit, an order, a
   format) has the mark `(assumed)` where intake writes it.
+- A detail that intake adds to a `built` requirement from recon also has the mark `(assumed)`.
+- "Decided on defaults" in the handoff lists each `(assumed)` decision that intake wrote, one line
+  for each, in the form of the template. The same lines go into the intent "Notes".
+- Before the commit, intake runs `python3 pdlc/bin/check_handoff.py IN-xxxx --stage intake`,
+  and fixes each problem that the script names. Then intake runs the script again. If the
+  script still fails after three runs, intake puts the problems under "Open", stops with
+  `intake → user`, and commits.
 - An `(assumed)` detail adds to the words of the intent. It does not remove a value that
   the plain reading of those words permits. For example, "a whole number greater than
   zero" also permits `+3`, so an assumed rule such as "digits only" is not correct.
@@ -108,6 +115,7 @@ its right spec, as `proposed`. Intake does not write code.
   - The handoff `intake → ready`: what intake wrote, what it assumed, and what looks
     unclear.
 - The commit "Specify IN-xxxx: <name>" with the trailer `Intent`: the specs and the
-  intent. Intake commits also when it stops early.
+  intent. Intake commits also when it stops early. The commit comes after `check_handoff.py`
+  exits 0.
 - For the user: what intake wrote, and that `/pdlc:ready` is next.
 - Intake is done when the commit holds each requirement that the intent needs.
