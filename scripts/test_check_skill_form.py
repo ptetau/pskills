@@ -144,7 +144,49 @@ class Budget(unittest.TestCase):
         self.assertEqual(problems(GOOD, {"demo": 500}), [])
 
     def test_over(self):
-        self.assertTrue(any("budget 10" in p for p in problems(GOOD, {"demo": 10})))
+        self.assertTrue(any("budget 10 (10 + earned 0)" in p for p in problems(GOOD, {"demo": 10})))
+
+    def test_earned_raises_budget(self):
+        words = len(GOOD[len(FM):].split())
+        earned = {"demo": [{"rule": "r", "words": 30, "evidence": "run: R7"}]}
+        b = {"demo": words - 20, "earned": earned}
+        self.assertEqual(problems(GOOD, b), [])
+        b = {"demo": words - 31, "earned": earned}
+        self.assertTrue(any(f"budget {words - 1} ({words - 31} + earned 30)" in p
+                            for p in problems(GOOD, b)))
+
+    def test_earned_sums_entries(self):
+        e = [{"rule": "a", "words": 5, "evidence": "x"}, {"rule": "b", "words": 7, "evidence": "y"}]
+        self.assertEqual(csf.effective_budget({"demo": 200, "earned": {"demo": e}}, "demo"), (212, 12))
+        self.assertEqual(csf.effective_budget({"demo": 200}, "demo"), (200, 0))
+
+    def test_validate_budgets(self):
+        ok = {"demo": 200, "enforced": [], "earned": {"demo": [{"rule": "r", "words": 1, "evidence": "e"}]}}
+        self.assertEqual(csf.validate_budgets(ok), [])
+        self.assertEqual(csf.validate_budgets({"demo": 200}), [])
+        bad = [
+            {"demo": 200, "earned": []},
+            {"demo": 200, "earned": {"demo": {}}},
+            {"demo": 200, "earned": {"other": [{"rule": "r", "words": 1, "evidence": "e"}]}},
+            {"demo": 200, "earned": {"demo": ["x"]}},
+            {"demo": 200, "earned": {"demo": [{"rule": "", "words": 1, "evidence": "e"}]}},
+            {"demo": 200, "earned": {"demo": [{"words": 1, "evidence": "e"}]}},
+            {"demo": 200, "earned": {"demo": [{"rule": "r", "words": 0, "evidence": "e"}]}},
+            {"demo": 200, "earned": {"demo": [{"rule": "r", "words": "5", "evidence": "e"}]}},
+            {"demo": 200, "earned": {"demo": [{"rule": "r", "words": True, "evidence": "e"}]}},
+            {"demo": 200, "earned": {"demo": [{"rule": "r", "words": 1, "evidence": " "}]}},
+            {"demo": 200, "earned": {"demo": [{"rule": "r", "words": 1}]}},
+        ]
+        for b in bad:
+            self.assertTrue(csf.validate_budgets(b), b)
+
+    def test_every_pdlc_skill_targets_200(self):
+        with open(os.path.join(HERE, "skill_budgets.json")) as f:
+            budgets = json.load(f)
+        skills = os.path.join(HERE, "..", "plugins", "pdlc", "skills")
+        for name in os.listdir(skills):
+            self.assertEqual(budgets[name], 200, name)
+        self.assertEqual(csf.validate_budgets(budgets), [])
 
     def test_no_budget_only_form(self):
         self.assertEqual(problems(GOOD, {"other": 1}), [])
@@ -190,6 +232,15 @@ class Cli(unittest.TestCase):
         self.assertEqual(self.run_cli("/no/such/file").returncode, 2)
         self.assertEqual(self.run_cli("--budgets", "/no/such.json", "x").returncode, 2)
         self.assertEqual(self.run_cli("--budgets").returncode, 2)
+
+    def test_bad_earned_exits_2(self):
+        with tempfile.TemporaryDirectory() as d:
+            b = os.path.join(d, "b.json")
+            with open(b, "w") as f:
+                json.dump({"demo": 200, "earned": {"demo": [{"rule": "r", "words": 0, "evidence": "e"}]}}, f)
+            r = self.run_cli("--budgets", b)
+            self.assertEqual(r.returncode, 2)
+            self.assertIn("earned", r.stderr)
 
     def test_no_argument_run_uses_enforced_list(self):
         with tempfile.TemporaryDirectory() as d:

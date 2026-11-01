@@ -37,7 +37,7 @@ skill also runs `/vet` on the two versions and compares the scores.
 |---|---|---|
 | `<path>` | necessary | A file, or a skill folder. A skill folder includes `SKILL.md` and its Markdown references. |
 | `--no-eval` | off | For a skill, do not run `/vet`. The report then says that the effectiveness is not measured. |
-| `--declarative` | off | For a skill, rewrite it in the declarative form of `AGENTS.md`, inside its word budget. The section "Declarative mode" gives the changes. |
+| `--declarative` | off | For a skill, rewrite it in the declarative form of `AGENTS.md`, to 200 words, with earned exceptions. The section "Declarative mode" gives the changes. |
 | `--dictionary PATH` | `STE100_DICTIONARY` | Your copy of the ASD-STE100 standard, as a PDF or a text file. |
 
 ## What changes and what stays
@@ -230,11 +230,14 @@ length rule.
 
 - Write the skill in the form of `AGENTS.md`: Goal, Inputs, Outputs, Constraints,
   optional Stages, and Done when.
-- Take the word budget of the skill from `scripts/skill_budgets.json` in the repository.
+- Target 200 words of body. Keep only critical rules. These are the contracts that scripts and
+  other skills read, and the rules that a model gets wrong without being told.
+- Take the budget of the skill from `scripts/skill_budgets.json`: 200 plus its earned words.
 - Do not add anything that the form in `AGENTS.md` bans.
-- Stay inside the budget. If a fix needs more words, remove the same number of words
-  elsewhere.
-- Do not raise a budget. Ask the user.
+- Earn rules back through the vet. After a REGRESSION, diagnose each failed rubric item.
+  Add the shortest rule that fixes it. Record the rule, its words, and its evidence (the vet
+  run and the rubric item) under "earned" in `scripts/skill_budgets.json`. Re-vet.
+- Do not raise the 200 target. Only the user can.
 
 **Phase 3: add the form check.** Run the checker from the root of the repository:
 
@@ -251,7 +254,7 @@ user gives.
 
 **Phase 5: report.** Add these items to the table:
 
-- The body words before and after, and the budget.
+- The body words before and after, and the budget (200 + earned).
 - The inventory counts for each class and each place.
 - The result of the form check.
 
