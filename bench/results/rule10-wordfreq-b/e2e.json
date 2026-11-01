@@ -1,0 +1,560 @@
+{
+ "label": "rule10-wordfreq-b",
+ "plugin_commit": "228f5ee",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "fixture": "wordfreq",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 132,
+     "cache_write": 224030,
+     "cache_read": 3513937,
+     "output": 37926
+    },
+    "cost_usd": 1.4333,
+    "duration_s": 409.2,
+    "turns": 42,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 10,
+    "models": {
+     "claude-sonnet-5-5": 1.4333
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 21687,
+      "cache_read": 154884,
+      "output": 49
+     },
+     "cost_usd": 0.1191,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 133.7
+    },
+    "intake": {
+     "tokens": {
+      "input": 32,
+      "cache_write": 56265,
+      "cache_read": 717872,
+      "output": 278
+     },
+     "cost_usd": 0.3452,
+     "messages": 16,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 14,
+        "cache_write": 19228,
+        "cache_read": 42990,
+        "output": 131
+       },
+       "cost_usd": 0.0584,
+       "messages": 7,
+       "calls": 2,
+       "wall_s": 25.7
+      }
+     },
+     "wall_s": 79.5
+    },
+    "acceptance": {
+     "tokens": {
+      "input": 26,
+      "cache_write": 42255,
+      "cache_read": 696090,
+      "output": 155
+     },
+     "cost_usd": 0.2632,
+     "messages": 13,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 18912,
+        "cache_read": 39327,
+        "output": 46
+       },
+       "cost_usd": 0.056,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 25.0
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 13470,
+        "cache_read": 4686,
+        "output": 19
+       },
+       "cost_usd": 0.0351,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 16.1
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 13470,
+        "cache_read": 4686,
+        "output": 19
+       },
+       "cost_usd": 0.0351,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 16.1
+      }
+     },
+     "wall_s": 72.4
+    },
+    "build": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 22596,
+      "cache_read": 429703,
+      "output": 86
+     },
+     "cost_usd": 0.1572,
+     "messages": 7,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 14141,
+        "cache_read": 20628,
+        "output": 23
+       },
+       "cost_usd": 0.04,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 15.1
+      }
+     },
+     "wall_s": 28.9
+    },
+    "verify": {
+     "tokens": {
+      "input": 26,
+      "cache_write": 47431,
+      "cache_read": 389006,
+      "output": 159
+     },
+     "cost_usd": 0.2066,
+     "messages": 13,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 42748,
+        "cache_read": 61755,
+        "output": 133
+       },
+       "cost_usd": 0.1215,
+       "messages": 10,
+       "calls": 4,
+       "wall_s": 31.9
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 8840,
+        "cache_read": 7872,
+        "output": 20
+       },
+       "cost_usd": 0.0241,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 7.2
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 9195,
+        "cache_read": 19934,
+        "output": 57
+       },
+       "cost_usd": 0.0278,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 5.3
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 8828,
+        "cache_read": 7873,
+        "output": 19
+       },
+       "cost_usd": 0.024,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 5.7
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 15885,
+        "cache_read": 26076,
+        "output": 37
+       },
+       "cost_usd": 0.0456,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 13.7
+      }
+     },
+     "wall_s": 29.7
+    },
+    "show": {
+     "tokens": {
+      "input": 26,
+      "cache_write": 33796,
+      "cache_read": 1126382,
+      "output": 995
+     },
+     "cost_usd": 0.342,
+     "messages": 13,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 20654,
+        "cache_read": 41325,
+        "output": 61
+       },
+       "cost_usd": 0.061,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 16.4
+      },
+      "pdlc:reviewer/visual": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 20654,
+        "cache_read": 41325,
+        "output": 61
+       },
+       "cost_usd": 0.061,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 16.4
+      }
+     },
+     "wall_s": 62.9
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 410.2,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-top-option",
+     "pdlc/IN-0001-top-option"
+    ],
+    "changes": [
+     "CH-0001-top-option"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-top-option": [
+      "ok   CH-0001"
+     ],
+     "pdlc/IN-0001-top-option": []
+    },
+    "change_status": {
+     "CH-0001-top-option": {
+      "pdlc/CH-0001-top-option": "in review",
+      "pdlc/IN-0001-top-option": "planned"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 1,
+    "proposed": true,
+    "tip": "pdlc/CH-0001-top-option",
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-top-option/change.md",
+      "pdlc/specs/capabilities/CAP-word-counting.md",
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 8
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": [],
+     "option_after_file_failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-ahnpdbzo/app",
+   "metrics": {
+    "time": {
+     "wall_s": 407.1,
+     "api_s": 415.7,
+     "main_session": {
+      "model": 146.2,
+      "agent": 106.8,
+      "recording": 10.0,
+      "pdlc script": 6.1,
+      "other": 5.8,
+      "checks": 4.7,
+      "writing check": 4.1,
+      "git": 1.1,
+      "Read": 0.1
+     },
+     "work_by_session": {
+      "main": {
+       "checks": 4.7,
+       "recording": 10.0
+      },
+      "pdlc:builder": {
+       "checks": 0.9
+      }
+     }
+    },
+    "context": {
+     "main_turns": 36,
+     "peak": 125409,
+     "mean": 94394
+    },
+    "tokens": {
+     "input": 72,
+     "cache_write": 94877,
+     "cache_read": 3303226,
+     "output": 21693,
+     "cost_usd": 1.4333082000000004
+    },
+    "loops": {
+     "intake": {
+      "check runs": 1,
+      "check failures": 0,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "acceptance": {
+      "check runs": 3,
+      "check failures": 1,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "build": {
+      "check runs": 2,
+      "check failures": 0,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "show": {
+      "check runs": 0,
+      "check failures": 0,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 2,
+      "recording failures": 0
+     }
+    },
+    "builder_check_runs_until_green": [
+     1
+    ],
+    "agents": {
+     "acceptance/pdlc:reviewer": 1,
+     "acceptance/pdlc:test-writer": 1,
+     "build/pdlc:builder": 1,
+     "intake/pdlc:recon": 2,
+     "show/pdlc:reviewer": 1,
+     "verify/pdlc:reviewer": 4
+    },
+    "failures": {
+     "tool errors": {},
+     "hook blocks": {
+      "commits: writing": 1,
+      "commits: subject or trailers": 1
+     },
+     "hook findings": {
+      "commits: writing": 1,
+      "commits: subject or trailers": 1
+     },
+     "permission denials": 0,
+     "rate limits": 7,
+     "is_error": false
+    },
+    "git": {
+     "rounds": {
+      "acceptance locks": 1,
+      "tests locks": 0,
+      "verify rounds": 1,
+      "recordings": 1,
+      "send-backs": {},
+      "stops": 0
+     },
+     "reviews": {
+      "compliance": {
+       "results": 1,
+       "failed": 0,
+       "problems": 0
+      },
+      "privacy": {
+       "results": 1,
+       "failed": 0,
+       "problems": 0
+      },
+      "quality": {
+       "results": 1,
+       "failed": 0,
+       "problems": 0
+      },
+      "security": {
+       "results": 1,
+       "failed": 0,
+       "problems": 0
+      },
+      "specification": {
+       "results": 1,
+       "failed": 0,
+       "problems": 0
+      },
+      "tests": {
+       "results": 1,
+       "failed": 0,
+       "problems": 0
+      },
+      "visual": {
+       "results": 1,
+       "failed": 0,
+       "problems": 0
+      }
+     },
+     "work": {
+      "changes": 1,
+      "commits": 16,
+      "intents awaiting approval": 1,
+      "requirement statuses": {
+       "built": 9,
+       "verified": 1
+      },
+      "lines": {
+       "app code added": 22,
+       "app code removed": 3,
+       "checks added": 128,
+       "checks removed": 0,
+       "docs added": 14,
+       "docs removed": 0,
+       "pdlc records added": 620,
+       "pdlc records removed": 16,
+       "review packets added": 3136,
+       "review packets removed": 0
+      },
+      "requirements with checks": 1
+     }
+    },
+    "quality": {
+     "main": 0,
+     "tip": 1,
+     "new in app code": 0,
+     "new in checks": 1,
+     "new": 1,
+     "linter": "ruff"
+    },
+    "strength": {
+     "faults": 10,
+     "caught": 10,
+     "missed": 0,
+     "escapes": 0,
+     "candidates": 10,
+     "score": 1.0,
+     "details": [
+      {
+       "file": "wordfreq/cli.py",
+       "line": 2,
+       "fault": "remove the line",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "wordfreq/cli.py",
+       "line": 11,
+       "fault": "remove the line",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "wordfreq/cli.py",
+       "line": 13,
+       "fault": "remove the line",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "wordfreq/cli.py",
+       "line": 22,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "wordfreq/cli.py",
+       "line": 23,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "wordfreq/cli.py",
+       "line": 24,
+       "fault": "+ 1 to + 2",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "wordfreq/cli.py",
+       "line": 27,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "wordfreq/cli.py",
+       "line": 28,
+       "fault": "remove the line",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "wordfreq/cli.py",
+       "line": 29,
+       "fault": "remove the line",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "wordfreq/cli.py",
+       "line": 30,
+       "fault": "!= to ==",
+       "caught": true,
+       "user_sees": true
+      }
+     ]
+    }
+   }
+  }
+ ]
+}
