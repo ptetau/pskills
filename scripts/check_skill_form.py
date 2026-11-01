@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Check a SKILL.md against the declarative form and its word budget.
 
-Usage: check_skill_form.py [--budgets PATH] SKILL.md [SKILL.md ...]
+Usage: check_skill_form.py [--budgets PATH] [SKILL.md ...]
+
+With no file, the script checks plugins/pdlc/skills/<name>/SKILL.md for each name in the
+"enforced" list of the budgets file. An empty list gives exit 0.
 
 Exit 0: no problems. Exit 1: problems (one line each). Exit 2: usage error.
 The budget of a skill is the entry for the name of its folder in the budgets file
@@ -21,7 +24,9 @@ STAGE_REQUIRED = ["Goal", "Inputs", "Outputs", "Done when"]
 MAX_CONSTRAINTS = 8
 MAX_STAGE_LINES = 6
 DEFAULT_BUDGETS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "skill_budgets.json")
-USAGE = "usage: check_skill_form.py [--budgets PATH] SKILL.md [SKILL.md ...]"
+USAGE = "usage: check_skill_form.py [--budgets PATH] [SKILL.md ...]"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FENCE = re.compile(r"^\s*(```|~~~)")
 
 ITEM = re.compile(r"^(?:[-*+]|\d+[.)])\s+")
 LABEL = re.compile(r"^[-*+]\s+(Goal|Inputs|Outputs|Done when|Constraints):")
@@ -37,20 +42,34 @@ def split_front_matter(text):
     return None, text
 
 
-def headings(body):
-    """Return ([(level, title, line_index)], lines). Headings in code fences do not count."""
-    lines = body.split("\n")
-    found, fenced = [], False
+def fenced_lines(lines):
+    """Return the set of line indexes inside a code fence, with the fence lines."""
+    out, marker = set(), None
     for i, line in enumerate(lines):
-        if line.lstrip().startswith("```"):
-            fenced = not fenced
-            continue
-        if fenced:
+        m = FENCE.match(line)
+        if m:
+            out.add(i)
+            if marker is None:
+                marker = m.group(1)
+            elif m.group(1) == marker:
+                marker = None
+        elif marker is not None:
+            out.add(i)
+    return out
+
+
+def headings(body):
+    """Return ([(level, title, line_index)], lines, fenced). Fenced lines hold no heading."""
+    lines = body.split("\n")
+    fenced = fenced_lines(lines)
+    found = []
+    for i, line in enumerate(lines):
+        if i in fenced:
             continue
         m = re.match(r"^(#{1,6})\s+(.*?)\s*$", line)
         if m:
             found.append((len(m.group(1)), m.group(2), i))
-    return found, lines
+    return found, lines, fenced
 
 
 def logical_lines(block_lines):
@@ -66,7 +85,11 @@ def logical_lines(block_lines):
     return count
 
 
-def check_stage(title, blk):
+def unfenced(lines, fenced, start, end):
+    return [lines[i] for i in range(start, end) if i not in fenced]
+
+
+def check_stage(title, blk):  # blk: the lines of the stage, fenced lines removed
     labels = [m.group(1) for m in (LABEL.match(line) for line in blk) if m]
     if not labels:
         return [f'stage "{title}": no labels (use Goal, Inputs, Outputs, Done when)']
@@ -88,7 +111,7 @@ def check(path, text, budgets):
     fm, body = split_front_matter(text)
     if fm is None:
         problems.append("no front matter")
-    heads, lines = headings(body)
+    heads, lines, fenced = headings(body)
     h1 = [h for h in heads if h[0] == 1]
     if len(h1) != 1:
         problems.append(f"expected one # title, found {len(h1)}")
@@ -120,7 +143,7 @@ def check(path, text, budgets):
 
     r = section_range("Constraints")
     if r:
-        n = sum(1 for line in lines[r[0] + 1:r[1]] if ITEM.match(line))
+        n = sum(1 for line in unfenced(lines, fenced, r[0] + 1, r[1]) if ITEM.match(line))
         if n > MAX_CONSTRAINTS:
             problems.append(f"Constraints has {n} items, at most {MAX_CONSTRAINTS}")
 
@@ -131,7 +154,12 @@ def check(path, text, budgets):
             problems.append('"## Stages" has no "###" stage')
         for idx, st in enumerate(stages):
             end = stages[idx + 1][2] if idx + 1 < len(stages) else r[1]
-            problems.extend(check_stage(st[1], lines[st[2] + 1:end]))
+            problems.extend(check_stage(st[1], unfenced(lines, fenced, st[2] + 1, end)))
+
+    sr = section_range("Stages")
+    for h in heads:
+        if h[0] == 3 and not (sr and sr[0] < h[2] < sr[1]):
+            problems.append(f'"### {h[1]}" is outside "## Stages"')
 
     skill = os.path.basename(os.path.dirname(os.path.abspath(path)))
     if skill in budgets:
@@ -139,6 +167,19 @@ def check(path, text, budgets):
         if words > budgets[skill]:
             problems.append(f"body has {words} words, budget {budgets[skill]} ({skill})")
     return problems
+
+
+def run_enforced(budgets, root=ROOT):
+    """Check each enforced skill. Return 0 or 1."""
+    bad = False
+    for name in budgets.get("enforced", []):
+        path = os.path.join(root, "plugins", "pdlc", "skills", name, "SKILL.md")
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+        for p in check(path, text, budgets):
+            bad = True
+            print(f"{path}: {p}")
+    return 1 if bad else 0
 
 
 def main(argv):
@@ -156,15 +197,18 @@ def main(argv):
         else:
             files.append(argv[i])
             i += 1
-    if not files:
-        print(USAGE, file=sys.stderr)
-        return 2
     try:
         with open(budgets_path, encoding="utf-8") as f:
             budgets = json.load(f)
     except (OSError, ValueError) as e:
         print(f"cannot read budgets {budgets_path}: {e}", file=sys.stderr)
         return 2
+    if not files:
+        try:
+            return run_enforced(budgets)
+        except OSError as e:
+            print(f"cannot read an enforced skill: {e}", file=sys.stderr)
+            return 2
     bad = False
     for path in files:
         try:

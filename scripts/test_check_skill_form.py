@@ -93,8 +93,37 @@ class Form(unittest.TestCase):
         self.assertTrue(any("at most 6" in p for p in out))
 
     def test_stage_wrapped_lines_count_once(self):
-        out = problems(STAGES.replace("- Goal: write it.", "- Goal: write it\n  and more\n  and more."))
+        out = problems(STAGES.replace("- Goal: write it.\n", "- Goal: write it\n" + "  and more\n" * 5))
         self.assertEqual(out, [])
+
+    def test_repeated_section(self):
+        self.assertTrue(any("a section repeats" in p for p in problems(GOOD + "\n## Goal\n\nx\n")))
+
+    def test_section_before_title(self):
+        out = problems(GOOD.replace("# pdlc demo\n\n", "## Goal\n\nx\n\n# pdlc demo\n\n", 1))
+        self.assertTrue(any("must come first" in p for p in out))
+
+    def test_second_title(self):
+        self.assertTrue(any("found 2" in p for p in problems(GOOD + "\n# Another\n")))
+
+    def test_stage_missing_done_when(self):
+        out = problems(STAGES.replace("- Done when: the file exists.\n\n## Done when", "\n## Done when"))
+        self.assertTrue(any('missing label "Done when"' in p for p in out))
+
+    def test_stage_heading_outside_stages(self):
+        out = problems(GOOD.replace("- One rule.", "- One rule.\n\n### 1. Loose"))
+        self.assertTrue(any("outside" in p for p in out))
+
+    def test_fenced_lines_not_counted(self):
+        fence = "```\n" + "".join(f"- Rule {i}.\n" for i in range(9)) + "```\n"
+        self.assertEqual(problems(GOOD.replace("- One rule.\n", "- One rule.\n" + fence)), [])
+        tilde = fence.replace("```", "~~~")
+        self.assertEqual(problems(GOOD.replace("- One rule.\n", "- One rule.\n" + tilde)), [])
+        stage = "```\n- Goal: x\n- Goal: y\n```\n"
+        self.assertEqual(problems(STAGES.replace(STAGE_BLOCK, STAGE_BLOCK + stage)), [])
+
+    def test_tilde_fence_hides_headings(self):
+        self.assertEqual(problems(GOOD + "\n~~~\n## Notes\n~~~\n"), [])
 
     def test_no_front_matter(self):
         self.assertIn("no front matter", problems(GOOD[len(FM):]))
@@ -118,6 +147,13 @@ class Budget(unittest.TestCase):
         words = len(GOOD[len(FM):].split())
         self.assertEqual(problems(GOOD, {"demo": words}), [])
         self.assertTrue(problems(GOOD, {"demo": words - 1}))
+
+    def test_enforced_list_is_in_budgets(self):
+        with open(os.path.join(HERE, "skill_budgets.json")) as f:
+            budgets = json.load(f)
+        self.assertIsInstance(budgets["enforced"], list)
+        for name in budgets["enforced"]:
+            self.assertIn(name, budgets)
 
     def test_budget_file_covers_pdlc_skills(self):
         with open(os.path.join(HERE, "skill_budgets.json")) as f:
@@ -144,9 +180,31 @@ class Cli(unittest.TestCase):
             r = self.run_cli(path)
             self.assertEqual(r.returncode, 1)
             self.assertIn("missing section", r.stdout)
-        self.assertEqual(self.run_cli().returncode, 2)
         self.assertEqual(self.run_cli("--nope", "x").returncode, 2)
         self.assertEqual(self.run_cli("/no/such/file").returncode, 2)
+        self.assertEqual(self.run_cli("--budgets", "/no/such.json", "x").returncode, 2)
+        self.assertEqual(self.run_cli("--budgets").returncode, 2)
+
+    def test_no_argument_checks_enforced_skills(self):
+        with tempfile.TemporaryDirectory() as d:
+            skills = os.path.join(d, "plugins", "pdlc", "skills", "demo")
+            os.makedirs(skills)
+            path = os.path.join(skills, "SKILL.md")
+            budgets = os.path.join(d, "b.json")
+            with open(path, "w") as f:
+                f.write(GOOD)
+            with open(budgets, "w") as f:
+                json.dump({"demo": 500, "enforced": []}, f)
+            self.assertEqual(csf.run_enforced(json.loads(open(budgets).read()), d), 0)
+            with open(budgets, "w") as f:
+                json.dump({"demo": 500, "enforced": ["demo"]}, f)
+            self.assertEqual(csf.run_enforced(json.loads(open(budgets).read()), d), 0)
+            with open(path, "w") as f:
+                f.write(GOOD.replace("## Goal", "## Aim"))
+            self.assertEqual(csf.run_enforced(json.loads(open(budgets).read()), d), 1)
+
+    def test_no_argument_run_passes_in_repo(self):
+        self.assertEqual(self.run_cli().returncode, 0)
 
 
 if __name__ == "__main__":

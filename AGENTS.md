@@ -43,17 +43,22 @@ Do not put these in the text:
 - A step-by-step procedure.
 - A rule that a shared reference already states. Name the reference section instead.
 - An example that the reference already has.
+- A reason, unless it stops a known failure (one sentence at most).
+- A list of the cases that a rubric item tests. State the outcome in Goal or Done when.
+- The text of a prompt for an agent. The agent file owns it.
+- A rule that repeats an Outputs or Done-when item.
 
 Keep each hard contract exact. A hard contract is a file name, a commit subject, a header
 field, or a format that a script reads. Write each commit subject in double quotes.
 
 A skill with a word budget must stay inside the budget. `scripts/skill_budgets.json`
 holds each budget: 50% of the body of the skill, rounded up to 10 words, with a minimum of
-170 words. A fix must not grow the body. If a fix needs words, remove the same number of
+170 words. The budget of `ready` is 50% of its body before commit 426551f. A fix must not grow the body. If a fix needs words, remove the same number of
 words. Only the user can raise a budget.
 
-`scripts/check_skill_form.py` checks the form and the budget. It runs on each rewritten
-skill. It does not run on the other skills yet.
+`scripts/check_skill_form.py` checks the form and the budget. It checks each skill in the
+`enforced` list of `scripts/skill_budgets.json`, and the list is empty now. Each rewrite
+adds its skill to the `enforced` list. The check does not run on the other skills yet.
 
 ## Rewrite a skill
 
@@ -71,6 +76,7 @@ Run these tests before you commit:
 python3 improve-writing/scripts/test_check_writing.py
 python3 improve-writing/scripts/test_compare_vet.py
 python3 scripts/test_check_skill_form.py
+python3 scripts/check_skill_form.py
 python3 vet/scripts/test_fingerprint.py
 python3 scripts/sync_shared.py --check
 python3 quiz-visual/scripts/test_quiz_visual.py

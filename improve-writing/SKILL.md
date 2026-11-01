@@ -214,7 +214,7 @@ reason:
 | B (other behaviour) | Any other limit, default, stop, ban, or question. | keep, or move to a README section that states it. |
 | P (procedure) | An order or a method that a capable model finds alone. | drop as procedure, with a one-line reason. |
 
-A place of "move to README section X" names the section. The checker reads that section
+A place of "move to README section X" names the section. The Phase 3 inventory check reads that section
 to make sure that it states the item. Only class P can be "drop as procedure".
 
 Contracts to keep exactly:
@@ -231,8 +231,7 @@ length rule.
 - Write the skill in the form of `AGENTS.md`: Goal, Inputs, Outputs, Constraints,
   optional Stages, and Done when.
 - Take the word budget of the skill from `scripts/skill_budgets.json` in the repository.
-- Do not add a step-by-step procedure, a rule that a README states, or an example that a
-  README has.
+- Do not add anything that the form in `AGENTS.md` bans.
 - Stay inside the budget. If a fix needs more words, remove the same number of words
   elsewhere.
 - Do not raise a budget. Ask the user.
@@ -246,6 +245,9 @@ python3 scripts/check_skill_form.py <path>/SKILL.md
 Correct each problem that the checker prints. Then run the pdlc tests. Then mark each
 inventory item "kept", "moved", "dropped as procedure", "changed", or "lost". Correct each
 changed or lost item. Refuse a drop that is not class P.
+
+**Phase 4: vet settings.** In declarative mode, use the vet settings that the plan or the
+user gives.
 
 **Phase 5: report.** Add these items to the table:
 
