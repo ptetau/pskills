@@ -1,0 +1,628 @@
+{
+ "skill": "pdlc:intake",
+ "skillSha256": "ff0837d3c76f43787fb1646eb6e8f636c4df73c21c4f058a5014c3da6ba37a08",
+ "suiteSha256": "a46eb098bdf848c3f070b0d819faf6f8858af828adb4a88176a4a45bdcba0555",
+ "runId": "cand-r2-20261101T101612Z",
+ "generatedAt": "2026-11-01T10:16:12Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 78.4,
+  "stability": 60.5,
+  "overall": 68.9,
+  "grade": "D",
+  "confidence": "normal",
+  "usableRuns": 2,
+  "totalRuns": 2
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 78.4,
+   "stability": 60.5,
+   "overall": 68.9,
+   "grade": "D",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 77.3,
+  "median": 78.4,
+  "max": 79.5
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The specs hold all of the request of the user, in the exact terms of the user.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user can find each detail that the run decided alone, and can change the detail later.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "After the run, each spec tells a reader the current truth. The summaries show the new behaviour, and no text still shows a behaviour that the request replaces.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The run records its work in a `Specify` commit on main, and the commit holds only spec and intent files.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "Each requirement, spec, and error row that the run adds or changes has the pdlc form (this item covers S3 and S4).",
+   "passRate": 50,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "Each stub spec that the run changes also gets the requirements of what the code does today.",
+   "passRate": 100,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent file records the request, its requirements, its decisions, and a handoff for ready, in the form of the templates (this item covers S1 and S2).",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each part of the request is in the spec where pdlc says that the part belongs.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run asks the user only about a point with two possible meanings, in the pdlc form. With `defaults`, the run asks nothing.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R10",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply tells the user what intake did and what comes next.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 78.4,
+   "stability": 60.5
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-intake/runs/cand-r2-20261101T101612Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "No Agent tool was available, so I did the recon deep look myself instead of using the pdlc:recon agent.",
+   "quality": 77.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "when `wordfreq --top 0 FILE` runs, then it prints `error: --top needs a whole number greater than zero` to standard error and exits with code 2."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "JOB-report-word-frequencies.R5: does `2.0` count as a whole number \u2192 no, it gets the error (more likely meaning)"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "in: the path of a text file, as the one argument of `python3 -m wordfreq`"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: Top option"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "Given a file with \"the cat and the hat and the bat\", when `wordfreq FILE` runs, then it prints \"the 3\", \"and 2\", \"bat 1\", \"cat 1\", and \"hat 1\"."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "### CAP-word-counting.R3 \u00b7 Ignore case and punctuation\n\nStatus: built \u00b7 Intents: none \u00b7 Source: recon"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "- Recon: no agent was available. Intake read the code and wrote the built requirements itself."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "- `--top N` \u00b7 flag \u00b7 `wordfreq/cli.py` \u00b7 proposed"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "JOB-report-word-frequencies.R4: how many words does `--top` print when the file has fewer than N different words \u2192 all of them (assumed)"
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "IN-0001 (top option) is specified and committed on main. `/pdlc:ready` is next."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-intake/runs/cand-r2-20261101T101612Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "No recon agent tool was available, so I did the deep look of the stub job myself. The pre-existing .gitignore change from prepare was left uncommitted.",
+   "quality": 79.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "when the user runs `wordfreq --top 0 FILE`, then standard error shows the `--top` error and the exit code is 2."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "- JOB-report-word-frequencies.R4: what happens when N is larger than the word count \u2192 the command prints all words (assumed)"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "With the option `--top N`, they see only the N most common\n+words."
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "Specify IN-0001: top-option"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "Given the same file, when the user runs `wordfreq --top 3 FILE`, then the lines are `the 3`, `and 2`, and `bat 1`."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "### JOB-report-word-frequencies.R2 \u00b7 Unreadable file\n\nStatus: built \u00b7 Source: recon"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "- JOB-report-word-frequencies.R1 (print each word with its count): recon, no text change"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "- `--top N` \u00b7 flag \u00b7 `wordfreq/cli.py` \u00b7 proposed"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "JOB-report-word-frequencies.R4: where the option can stand \u2192 before or after FILE (assumed)"
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:ready` on IN-0001 (top option)."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "Both cover the same edge values, but only P01#1 puts the exact message in an acceptance line.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Exact error message in an acceptance line; error lines for 0, -1, abc, 2.5, missing value"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Exact message only in prose; acceptance lines say 'the --top error'; covers 0, -2, abc, 2.5, empty, missing"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "Same marking approach, but the set of assumed decisions differs (2.0 handling vs error order).",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Six assumed decisions listed; extra 2.0 decision in a non-standard Note form, not in handoff"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Seven assumed decisions, all in Notes and handoff in standard form, including the error-order decision"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "minor_drift",
+   "reason": "Same summary update and was/now Note; P01#1 keeps one stale phrase, P01#2 adds README Notes.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Summary updated and R3 was/now Note; Interface still says 'the one argument'; no README Notes"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Summary updated, R3 was/now Note, plus two README Notes; no stale text"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "minor_drift",
+   "reason": "One Specify commit on main in both; the subject name and body differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Subject 'Specify IN-0001: Top option' with a body and Intent trailer"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Subject uses slug 'top-option', no body, Intent trailer"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "major_drift",
+   "reason": "P01#1 splits the behaviour into two requirements; P01#2 puts it all in one long requirement.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Two new requirements R4 (show N) and R5 (refuse wrong N), changed R3, recon R1-R2 with Intents: none"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "One combined new requirement R4 with long prose and both valid and error lines, changed R3"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "P01#1 activates and maps CAP-word-counting too; P01#2 leaves it a stub.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Maps both stub specs (CAP-word-counting and the job) as built recon, both active"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Maps only the job spec; CAP-word-counting stays a stub"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "Same file and handoff structure; each has a different small fault in Requirements or Notes.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Template guidance paragraphs removed; Requirements lists R3-R5; two Notes not in template form"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Template paragraphs kept; Requirements lists recon R1-R2 as 'recon, no text change'; Notes in template form"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "Both place the option in JOB-report-word-frequencies with a DES-errors row.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Option, output and error in the job spec, error code row in DES-errors, no new spec"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "Both ask nothing and record their choices in the Notes.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "No question; choices recorded as assumed Notes"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "equivalent",
+   "reason": "Both final replies give the same kinds of content in different words.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Intent ID with description, lists described requirements and defaults, names /pdlc:ready next"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}
