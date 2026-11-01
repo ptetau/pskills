@@ -6,7 +6,8 @@ Reads the handoff of an intent ("## Handoff" in pdlc/inbox/IN-xxxx-*.md) or of a
 it before its commit. These rules hold:
 
   1. The title is "Handoff · <ID> · <stage> → <next>", and the pair is one that the handoff
-     template permits for the stage. A leading "#" is accepted.
+     template permits for the stage. A leading "#" is accepted. A short description in
+     brackets after the ID is accepted.
   2. "Time: <ISO 8601 time with offset>" is the next line.
   3. The six sections are present, in the order of the template.
   4. Each line of "Decided on defaults" is "- none" (then it is the only line), or
@@ -16,7 +17,9 @@ it before its commit. These rules hold:
      "### <ID> ·" heading above it, or the spec ID under "## Interface" and in a design spec.
      Each owner has a line. Each line is the owner of a new mark. "- none" fails when a
      mark is new.
-  6. Each line is also a line of "## Notes" in the intent (intent handoffs only).
+  6. Each line is also a line of "## Notes" in the intent (intent handoffs only). Each line of
+     "## Notes" that holds "(assumed" and is not on HEAD is also a line of "Decided on
+     defaults".
 
 Usage:
   python3 pdlc/bin/check_handoff.py IN-0001 --stage intake
@@ -45,7 +48,7 @@ NEXT = {
     "show": ["user", "build"],
 }
 TIME = re.compile(r"^Time:\s*\d{4}-\d\d-\d\d[T ]\d\d:\d\d(:\d\d(\.\d+)?)?(Z|[+-]\d\d:?\d\d)\s*$")
-TITLE = re.compile(r"^#{0,3}\s*Handoff · (\S+) · (\S+) → (\S+)\s*$")
+TITLE = re.compile(r"^#{0,3}\s*Handoff · (\S+)(?: \([^()]*\))? · (\S+) → (\S+)\s*$")
 HEADING = re.compile(r"^#{2,4}\s+(.*?)\s*$")
 LINE = re.compile(r"^- ((?:JOB|CAP|DES)-[a-z0-9-]+(?:\.R\d+)?): (.+)$")
 REQ_HEADING = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+) ·")
@@ -150,6 +153,8 @@ def check_sections(item, lines):
     heads = [(i, HEADING.match(line).group(1).replace("\u2019", "'"))
              for i, line in enumerate(lines) if HEADING.match(line)]
     names = [name for _, name in heads]
+    if not any(name in names for name in SECTIONS):
+        return ["%s: write the sections as `###` headings under `## Handoff`" % item], []
     problems = ["%s: the section \"%s\" is missing" % (item, name) for name in SECTIONS if name not in names]
     present = [name for name in names if name in SECTIONS]
     if not problems and present != SECTIONS:
@@ -164,7 +169,12 @@ def check_sections(item, lines):
     return problems, decided
 
 
-def check_decided(item, decided, owners, notes):
+def line_id(line):
+    found = LINE.match(line)
+    return found.group(1) if found else None
+
+
+def check_decided(item, decided, owners, notes, old_notes=frozenset()):
     """Rules 4 to 6."""
     problems, ids = [], []
     if decided == ["- none"]:
@@ -182,8 +192,14 @@ def check_decided(item, decided, owners, notes):
             continue
         ids.append(found.group(1))
         if notes is not None and line not in notes:
+            same = sorted(n for n in notes if line_id(n) == found.group(1))
             problems.append("%s: this line of Decided on defaults is not in the Notes of the "
-                            "intent: %s" % (item, line))
+                            "intent: %s%s" % (item, line, (" (Notes line with this ID: %s)" % same[0]) if same else ""))
+    if notes is not None:
+        for note in sorted(notes):
+            if MARK in note and note not in old_notes and note not in decided:
+                problems.append("%s: this (assumed) line of the Notes is not in Decided on "
+                                "defaults: %s" % (item, note))
     for owner in sorted(owners):
         covered = any(i == owner or (spec_of(owner) == owner and spec_of(i) == owner) for i in ids)
         if not covered:
@@ -209,10 +225,14 @@ def main(argv, root=Path(".")):
     lines = [line.rstrip() for line in body.splitlines() if line.strip()]
     problems = check_head(item, args.stage, lines)
     section_problems, decided = check_sections(item, lines)
-    notes = None
+    notes, old_notes = None, set()
     if intent is not None:
+        path = next(p for p in sorted((root / "pdlc" / "inbox").glob(item + "*.md")))
+        old_notes = {line.strip() for line in
+                     (section(head_text(root, path.relative_to(root)), "Notes") or "").splitlines()
+                     if line.strip()}
         notes = {line.strip() for line in (section(intent, "Notes") or "").splitlines() if line.strip()}
-    problems += section_problems + check_decided(item, decided, new_marks(root), notes)
+    problems += section_problems + check_decided(item, decided, new_marks(root), notes, old_notes)
     for problem in problems:
         print(problem)
     return 1 if problems else 0

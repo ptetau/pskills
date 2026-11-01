@@ -231,6 +231,68 @@ class HandoffCheck(unittest.TestCase):
         self.assertEqual((code, out), (0, ""))
         code, out = self.intake(["- none"], head="# Handoff")
         self.assertEqual((code, out), (0, ""))
+        code, out = self.intake(["- none"], title="### Handoff · IN-0001 (thing) · intake → ready")
+        self.assertEqual((code, out), (0, ""))
+
+    def test_a_time_that_is_not_a_time_fails(self):
+        self.start()
+        text = intent(["- none"]).replace("Time: " + TIME, "Time: tomorrow")
+        self.put("pdlc/inbox/IN-0001-thing.md", text)
+        code, out = self.run_check("IN-0001", "--stage", "intake")
+        self.assertEqual(code, 1)
+        self.assertIn("Time:", out)
+
+    def test_none_with_another_line_fails(self):
+        self.start()
+        self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (assumed)"))
+        code, out = self.intake(["- none", L3])
+        self.assertEqual(code, 1)
+        self.assertIn("only line", out)
+
+    def test_a_line_with_two_arrows_fails(self):
+        self.start()
+        self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (assumed)"))
+        code, out = self.intake(["- JOB-x.R3: how to sort? → by name → or date (assumed)"])
+        self.assertEqual(code, 1)
+        self.assertIn("form", out)
+
+    def test_a_changed_earlier_sentence_does_not_make_the_mark_new(self):
+        self.start(job(r3=" (assumed)").replace("Sort by name", "One. Sort by name"))
+        self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (assumed)").replace(
+            "Sort by name", "Two. Sort by name"))
+        code, out = self.intake(["- none"])
+        self.assertEqual((code, out), (0, ""))
+
+    def test_all_sections_missing_gives_one_line(self):
+        self.start()
+        text = "# IN-0001 · Thing\n\n## Notes\n\n## Handoff\n\nHandoff · IN-0001 · intake → ready\n\nTime: %s\n" % TIME
+        self.put("pdlc/inbox/IN-0001-thing.md", text)
+        code, out = self.run_check("IN-0001", "--stage", "intake")
+        self.assertEqual(code, 1)
+        self.assertEqual(len(out.strip().splitlines()), 1, out)
+        self.assertIn("`###` headings under `## Handoff`", out)
+
+    def test_a_new_assumed_line_in_the_notes_must_be_in_decided_on_defaults(self):
+        self.start()
+        self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (assumed)"))
+        extra = "- JOB-x.R4: other? → yes (assumed)"
+        code, out = self.intake([L3], notes=[L3, extra])
+        self.assertEqual(code, 1)
+        self.assertIn("this (assumed) line of the Notes is not in Decided on defaults: " + extra, out)
+        # A line that was on HEAD already is not new.
+        self.put("pdlc/inbox/IN-0001-thing.md", "# IN-0001 · Thing\n\n## Notes\n\n%s\n" % extra)
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "notes")
+        code, out = self.intake(["- none"], notes=[extra])
+        self.assertEqual((code, out), (0, ""))
+
+    def test_a_notes_line_with_the_same_id_is_named(self):
+        self.start()
+        self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (assumed)"))
+        note = "- JOB-x.R3: how to sort? → by name, then date (assumed)"
+        code, out = self.intake([L3], notes=[note])
+        self.assertEqual(code, 1)
+        self.assertIn("Notes line with this ID: " + note, out)
 
     def test_the_sections_must_be_in_the_template_order(self):
         self.start()

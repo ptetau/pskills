@@ -174,7 +174,7 @@ merge.
   `templates/handoff.md`, which replaces the old one. Git keeps the history.
 - An intent stage writes the "Handoff" of the intent, with the template sections as `###`
   headings. A change stage writes `changes/CH-xxxx-name/handoff.md`.
-- The title comes from the list in the template. Every section stays, with "none" under an
+- The title comes from the list in the template. Every section stays, with "- none" under an
   empty one. The time comes from the real clock (`date -Iseconds`).
 - A handoff says only what the files show, with real counts of the checks that ran and of
   the acceptance lines shown.
@@ -332,7 +332,7 @@ Its `Base:` names that branch, and its pull request targets that branch.
   check rejects `(limit assumed)`, `*(assumed)*`, and each mark that does not start with
   `(assumed`.
 - With `defaults`, a skill asks nothing, and takes its recommended answer. Each answer goes
-  as `<question> → <answer> (assumed)` in "Decided on defaults" in the handoff and in the
+  as `- <requirement>: <question> → <answer> (assumed)` in "Decided on defaults" in the handoff and in the
   intent "Notes", so that the user can change it.
 
 ## Spec patches
