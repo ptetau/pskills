@@ -5,6 +5,12 @@ A change may merge only when:
   - every requirement it lists is verified (and every retired one is gone from its spec);
   - each assumption marker in its change spec and requirements starts with "(assumed",
     with no emphasis around it: "(assumed)", "(assumed limit)", "(assumed: a reason)";
+  - each entry under "Interface" in its change spec, also under "Test seams", is in the
+    "Interface" of its scope spec, or of a JOB or CAP spec under "Relies on". The first
+    text in backticks names an entry. The codes on its "errors:" line match those of the
+    spec entry, and the spec entry does not end with "· proposed". A change whose scope
+    spec has no "## Interface" heading, or a change with no candidate spec that has one
+    (a spec from before this rule), skips this check;
   - its checks are locked, and no check file changed after the lock;
   - the tests review judged the checks as they are locked now: its packet carries the
     current lock;
@@ -50,6 +56,9 @@ HASH = re.compile(r"^[0-9a-f]{7,40}$")
 # A marker with emphasis (*(assumed)*), or brackets that hold the word "assumed". A marker
 # passes when it starts with "(assumed".
 MARKER = re.compile(r"[*_]+\(assumed\b[^()\n]*\)[*_]+|\([^()\n]*\bassumed\b[^()\n]*\)", re.I)
+# The first line of an Interface entry: a top-level list item with a name in backticks.
+ENTRY = re.compile(r"^- [^`\n]*`([^`\n]+)`(.*)$")
+SPEC_ID = re.compile(r"\b((?:JOB|CAP)-[a-z0-9-]+)\b")
 
 
 def section(text, title):
@@ -87,6 +96,80 @@ def marker_problems(where, text):
     return ['%s: write "%s" so it starts with "(assumed", for example "(assumed)"'
             % (where, found.group(0)) for found in MARKER.finditer(text or "")
             if not found.group(0).startswith("(assumed")]
+
+
+def interface_entries(text):
+    """The entries under '## Interface' of a spec or change spec, by name. The name is the
+    first text in backticks on a top-level list line, with each run of whitespace as one
+    space. Each value is (first line, set of error codes). The codes are the texts in
+    backticks on the entry's indented "errors:" line. "### Test seams" is inside the
+    section, so its entries count too."""
+    found, current, errors_indent = {}, None, None
+    for line in section(text or "", "Interface").splitlines():
+        match = ENTRY.match(line)
+        indent = len(line) - len(line.lstrip())
+        if match:
+            current, errors_indent = " ".join(match.group(1).split()), None
+            found[current] = [line, set()]
+        elif line.strip() and not line[0].isspace():
+            current, errors_indent = None, None  # a heading or other top-level line
+        elif current and line.strip():
+            errors = re.match(r"^\s+-\s*errors?:(.*)$", line, re.I)
+            if errors:
+                errors_indent = indent
+                found[current][1] |= set(re.findall(r"`([^`]+)`", errors.group(1)))
+            elif errors_indent is not None and indent > errors_indent:
+                found[current][1] |= set(re.findall(r"`([^`]+)`", line))  # a wrapped line
+            else:
+                errors_indent = None
+    return {key: (first, frozenset(codes)) for key, (first, codes) in found.items()}
+
+
+def spec_text(root, spec_id):
+    """The text of a spec, or None if its file is not there."""
+    path = root / "pdlc" / "specs" / KINDS[spec_id.split("-", 1)[0]] / (spec_id + ".md")
+    return path.read_text() if path.exists() else None
+
+
+def interface_problems(root, text):
+    """Problems with the Interface of a change: each entry must be in the Interface of a
+    candidate spec, with the same error codes, and not proposed there."""
+    entries = interface_entries(text)
+    if not entries:
+        return []
+    scope = field(text, "Scope") or ""
+    candidates = [scope] if SPEC_ID.fullmatch(scope) else []
+    for found in SPEC_ID.findall(section(text, "Relies on")):
+        if found not in candidates:
+            candidates.append(found)
+    heading = re.compile(r"^## Interface\s*$", re.M)
+    if candidates and candidates[0] == scope:
+        scope_text = spec_text(root, scope)
+        if scope_text is not None and not heading.search(scope_text):
+            return []  # a spec from before the Interface rule
+    if not any(heading.search(spec_text(root, c) or "") for c in candidates):
+        return []  # no candidate spec has an Interface yet, as in a change with a design scope
+    specs = {spec_id: interface_entries(spec_text(root, spec_id)) for spec_id in candidates}
+
+    def shown(codes):
+        return ", ".join(sorted(codes)) or "none"
+
+    problems = []
+    for key, (_, codes) in entries.items():
+        owner = next((spec_id for spec_id in candidates if key in specs[spec_id]), None)
+        if owner is None:
+            problems.append("Interface entry `%s` is not in the Interface of %s. Add it to the "
+                            "spec that owns it first"
+                            % (key, ", ".join(candidates) or "a job or capability spec"))
+            continue
+        first, spec_codes = specs[owner][key]
+        if codes != spec_codes:
+            problems.append("Interface entry `%s` has the errors %s, but %s has %s"
+                            % (key, shown(codes), owner, shown(spec_codes)))
+        if re.search(r"·\s*proposed\b", first):
+            problems.append("Interface entry `%s` is still proposed in %s. /pdlc:verify removes "
+                            "the mark when the change passes" % (key, owner))
+    return problems
 
 
 def remits(root):
@@ -403,6 +486,7 @@ def check_change(root, folder):
             problems.append("%s is %s, not verified" % (req_id, status))
 
     problems += marker_problems("change.md", text)
+    problems += interface_problems(root, text)
     for req_id, _ in reqs:
         problems += marker_problems(req_id, requirement_text(root, req_id))
 

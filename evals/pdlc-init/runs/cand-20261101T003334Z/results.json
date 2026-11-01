@@ -1,0 +1,1129 @@
+{
+ "skill": "pdlc:init",
+ "skillSha256": "cd622280d8c92a34f866abf99c82c45b0640e6e772e4063c4ce0b06e1649f4cf",
+ "suiteSha256": "bbf60075f8057072313a41061e9bd4f63e0b05ab5052e82b3ada02a44d72e044",
+ "runId": "cand-20261101T003334Z",
+ "generatedAt": "2026-11-01T00:33:34Z",
+ "config": {
+  "prompts": [
+   "P01",
+   "P02"
+  ],
+  "runs": 3,
+  "wave": 3,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "lean",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 11,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 96.3,
+  "stability": 77.8,
+  "overall": 86.6,
+  "grade": "B",
+  "confidence": "normal",
+  "usableRuns": 5,
+  "totalRuns": 6
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 3,
+   "usable": 5,
+   "quality": 96.3,
+   "stability": 79.2,
+   "overall": 87.3,
+   "grade": "B",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 81.6,
+  "median": 100,
+  "max": 100
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The new `pdlc/` folder holds each file that init copies from the plugin, and the default design specs.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": 60,
+   "classCross": "minor_drift"
+  },
+  {
+   "id": "R2",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "Each new job spec and capability spec is a stub in the form of its template.",
+   "passRate": 90,
+   "stabilityWithin": 42.5,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "major_drift"
+   },
+   "agreementWithin": 58.4,
+   "stabilityCross": 25,
+   "classCross": "major_drift"
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The code maps split the code of wordfreq into clear boundaries, so that each later change knows the files that it owns.",
+   "passRate": 100,
+   "stabilityWithin": 95,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "`pdlc/config.md` has a chosen value in place of each placeholder, example, and hint.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": 90,
+   "classCross": "equivalent"
+  },
+  {
+   "id": "R5",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The six check settings work for this Python `unittest` project, and the run proves that the all command skips acceptance files.",
+   "passRate": 90,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift",
+    "P02": "minor_drift"
+   },
+   "agreementWithin": 58.4,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "With `defaults`, the run asks the user nothing, and the final reply lists each decision that the run made for the user.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Without `defaults`, the run asks one question at a time, each with a recommended answer, about each decision that init leaves to the user.",
+   "passRate": 75,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "outcome",
+   "weight": 2,
+   "criterion": "Each answer of the user that differs from the proposal of the run shows in the pdlc files.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "structure",
+   "weight": 3,
+   "criterion": "One commit on `main` records the new `pdlc/` folder, and the run leaves no other change.",
+   "passRate": 100,
+   "stabilityWithin": 95,
+   "classesWithin": {
+    "P01": "identical",
+    "P02": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": 90,
+   "classCross": "equivalent"
+  },
+  {
+   "id": "R10",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The final reply tells the user how to start with pdlc.",
+   "passRate": 100,
+   "stabilityWithin": 95,
+   "classesWithin": {
+    "P01": "equivalent",
+    "P02": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": 90,
+   "classCross": "equivalent"
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 3,
+   "quality": 100,
+   "stability": 80.5
+  },
+  {
+   "id": "P02",
+   "usableRuns": 2,
+   "quality": 90.8,
+   "stability": 77.9
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-init/runs/cand-20261101T003334Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "Recon agent was not spawnable; I mapped the code myself. Capture fence is 9 backticks; some template files contain longer fences, so check those entries.",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "### proj/pdlc/specs/design/DES-writing-style.md"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "# JOB-count-words \u00b7 Count the words of a file\n\nStatus: stub"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Job `JOB-count-words` (count the words of a file) owns `wordfreq/__main__.py` and `wordfreq/cli.py`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "- visual: visual-terminal"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "The \"all\" command ran 8 tests and passed, and skipped the file. The acceptance command ran the file and failed it."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Dashboard: not installed. Run `/pdlc:dashboard` to add it."
+    },
+    {
+     "id": "R7",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "The commit \"Set up pdlc\" is on `main`. It holds the new `pdlc/` folder and no other change."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "run `/pdlc:ship <what you want>` to run all the stages. You can also run one stage at a time, from `/pdlc:intake`."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-init/runs/cand-20261101T003334Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "### pdlc/specs/design/DES-pdlc-review-checklist.md"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "# CAP-word-counts \u00b7 Count the words of a text\n\nStatus: stub"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "JOB-count-words (count the words in a text file): `wordfreq/__main__.py`, `wordfreq/cli.py`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "- tracker: none"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "The \"all\" command ran 8 tests and passed. The acceptance command failed the check."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Dashboard: not installed. Run `/pdlc:dashboard` to add it."
+    },
+    {
+     "id": "R7",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I committed it on `main` as \"Set up pdlc\". The commit holds only the new `pdlc/` folder."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "To start, run `/pdlc:ship <what you want>` to run all the stages. You can also run one stage at a time, from `/pdlc:intake`."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-init/runs/cand-20261101T003334Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "### pdlc/specs/design/DES-pdlc-check-tagging.md"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "# CAP-word-counter \u00b7 Count the words in a text\n\nStatus: stub"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Job map: JOB-count-words owns `wordfreq/cli.py` and `wordfreq/__main__.py`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "- start: none\n- url: none"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "A probe file for the made-up intent IN-9999 showed that the \"all\" command skips it and the acceptance command fails it."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Dashboard: not installed. Run `/pdlc:dashboard` to add it."
+    },
+    {
+     "id": "R7",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "I made the `pdlc/` folder and committed it on `main` as \"Set up pdlc\"."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "run `/pdlc:ship <what you want>` to run all stages. You can also run one stage at a time, starting with `/pdlc:intake <what you want>`."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#1",
+   "prompt": "P02",
+   "repeat": 1,
+   "capture": null,
+   "status": null,
+   "note": "",
+   "quality": null,
+   "verdicts": [],
+   "excluded": "run agent died"
+  },
+  {
+   "label": "P02#2",
+   "prompt": "P02",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-init/runs/cand-20261101T003334Z/outputs/P02-r02.md",
+   "status": "completed",
+   "note": "Done. Recon agent could not be spawned, so I did the thin map myself. The assistant turns and user replies in the transcript were written after the work ran, not live. 7 of 9 scripted replies were used.",
+   "quality": 81.6,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "### pdlc/specs/design/DES-pdlc-review-checklist.md"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Status: stub\n\nKeep these sections, in this order, and add no others."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "JOB-count-words (print each word of a file with its count): `wordfreq/cli.py`, `wordfreq/__main__.py`"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "- visual: visual-terminal\n- delivery: delivery-github\n- tracker: none"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "A test proved that the \"all\" command skips an acceptance file, and that the acceptance command runs it."
+    },
+    {
+     "id": "R6",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "- No (skip it, recommended)"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "The commit \"Set up pdlc\" is on `main` and holds only the new `pdlc/` folder."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "run `/pdlc:ship <what you want>` to run all the stages. You can also run one stage at a time, from `/pdlc:intake`."
+    }
+   ],
+   "excluded": null
+  },
+  {
+   "label": "P02#3",
+   "prompt": "P02",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-init/runs/cand-20261101T003334Z/outputs/P02-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "### pdlc/specs/design/DES-pdlc-review-checklist.md"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "# CAP-word-counting \u00b7 Count the words in a text\n\nStatus: stub"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Code map: `wordfreq/cli.py`, `wordfreq/__main__.py`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "- visual: visual-terminal\n- delivery: delivery-github\n- tracker: none"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I proved the skip rule with a test file for the made-up intent IN-9999. It had one check that always fails. The \"all\" command ran 8 tests and passed. The acceptance command failed the check."
+    },
+    {
+     "id": "R6",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "- No (recommended): pdlc works without it. You can run `/pdlc:dashboard` later."
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "The commit \"Set up pdlc\" is on `main`. It holds the new `pdlc/` folder and no other change."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "run `/pdlc:ship <what you want>` to run all the stages. You can also run one stage at a time, from `/pdlc:intake`."
+    }
+   ],
+   "excluded": null
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "All runs add the same file set, with an identical README and no Question section. Run 1 removes the 'Ask at init' field from the Status line of each design spec, and runs 2 and 3 keep it.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Same 49 files under pdlc/ (README, config, 7 templates, 6 ports, 8 adapters, 7 review files, 5 bin files, .gitkeeps, 7 default design specs with no Question section)"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "All runs make one job stub and one capability stub with the same sections and 'None written yet.' requirements. The capability names and descriptions differ (counting, counts, counter), and run 1 drops the Test seams subsection that runs 2 and 3 keep.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "JOB-count-words and CAP-word-counting stubs; the Interface section has no 'Test seams' subsection"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "JOB-count-words and a CAP stub (word-counts or word-counter); the Interface section keeps a 'Test seams' subsection with 'None written yet.'"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "equivalent",
+   "reason": "Each run splits the code the same way. Only the order of the listed files and the capability name differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "The job owns cli.py and __main__.py; the capability owns counter.py and __init__.py; no shared files and no README"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "equivalent",
+   "reason": "The Adapters, Visual, Reviews, Board and Tracker sections are byte-identical. Run 3 adds one explanatory note to the acceptance file line, and that line belongs to the Checks values judged in R5.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Same adapters (inbox-files, checks-command, review-agent, visual-terminal, delivery-github, tracker none), start/url none, ID form underscored, template sections unchanged"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "All runs choose the same six values and report the IN-9999 probe. Run 3 adds an underscore note to the acceptance file line in config.md.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Six check values (discover -s tests, -k {req}, tests/, tests/acceptance_{intent}.py, unittest {files}, underscored) with no extra notes; IN-9999 probe reported"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Same six values and IN-9999 probe, plus a note on the acceptance file line to write the intent ID with underscores (acceptance_IN_0012.py)"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1
+    ],
+    "agreement": 66.7,
+    "split": "2 / 1 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "equivalent",
+   "reason": "Each final reply covers the same decision topics and the dashboard note. Only the wording and grouping differ, for example run 2 adds a line on how to change a decision.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "No questions; the final reply lists the map, branches, check names, writing style, checks, adapters and .gitignore, and says /pdlc:dashboard adds the dashboard"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "identical",
+   "reason": "The git state is the same in every run: one commit with the same subject, only pdlc/ paths, main as the only branch, and no leftover file.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "One commit 'Set up pdlc' on main, 49 files all under pdlc/, no new branch, clean status, .gitignore unchanged"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "equivalent",
+   "reason": "All three replies give both ways to start and report 'Unsure items: none', in slightly different words.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Says /pdlc:ship <what you want> runs all stages, offers one stage at a time from /pdlc:intake, and reports no unsure items"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3
+    ],
+    "agreement": 100,
+    "split": "3 of 3",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "Both runs add the same file set. P02#2 strips the 'Ask at init' marker from each design spec status line, and P02#3 keeps it.",
+   "groups": [
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Full pdlc/ tree copied: README template, config, 7 templates, 6 ports, 8 adapters, 7 remit files, 5 bin files, .gitkeeps, 7 default DES specs with no ## Question section"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R2",
+   "class": "major_drift",
+   "reason": "The titles, Relies on, and code maps are the same. P02#2 leaves a template guide sentence and the Test seams subsection in both stubs. P02#3 removes both, so the stub structure differs.",
+   "groups": [
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Stubs keep the template guide line 'Keep these sections, in this order, and add no others.' and keep the Interface section with a 'Test seams' subsection, each 'None written yet.'"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Stubs drop the template guide line and the 'Test seams' subsection, and keep only Interface 'None written yet.'"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R3",
+   "class": "identical",
+   "reason": "Both runs give the same two code maps with the same files.",
+   "groups": [
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "CAP-word-counting owns counter.py and __init__.py; JOB-count-words owns cli.py and __main__.py; no README"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R4",
+   "class": "equivalent",
+   "reason": "Both runs give the same values. Only the intro text of the Checks and Visual sections differs ('Init wrote' compared with 'Init writes', plus one extra sentence in P02#3).",
+   "groups": [
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Adapters inbox-files, checks-command, review-agent, visual-terminal, delivery-github, tracker none; Visual start/url none; other sections as template"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "The six check values are identical. The runs differ in how they show the skip test: P02#3 names IN-9999 and the results, and P02#2 only says that a test proved the skip rule.",
+   "groups": [
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Same six check values; the final reply mentions an unnamed skip test that it removed afterwards, with no IN-9999 or check-count detail"
+    },
+    {
+     "runs": [
+      "P02#3"
+     ],
+     "description": "Same six check values; the confirm message reports the IN-9999 test: all ran 8 tests and passed, the acceptance command failed the check, and the file was removed"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "Both runs ask about the same topics in the same order, with the same recommended options. The differences are wording only, such as 'Question 1 of 3' numbering and extra notes in P02#3.",
+   "groups": [
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "One question per message: map as two lists, then branches, check names, writing style (each A recommended), confirm six check values, confirm adapters, dashboard (No recommended)"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "Both runs report one 'Set up pdlc' commit on main that holds only pdlc/, and an unchanged .gitignore.",
+   "groups": [
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "One 'Set up pdlc' commit on main with only pdlc/; .gitignore unchanged; test file removed"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P02",
+   "item": "R10",
+   "class": "identical",
+   "reason": "Both final replies use the same start lines, word for word.",
+   "groups": [
+    {
+     "runs": [
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Final reply: unsure none; /pdlc:ship <what you want> for all stages, or one stage at a time from /pdlc:intake"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R1",
+   "class": "minor_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#2",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Adds pdlc/ with the README template, config, 7 templates, 6 ports, 8 adapters, 7 review files, 5 bin files, .gitkeep in inbox/ and changes/, and the 7 default DES specs with no Question section."
+    },
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Same file set and the same 7 DES specs, but the capture lists every path under proj/pdlc/ rather than pdlc/."
+    }
+   ],
+   "reason": "All four runs produce the same set of copied files and default design specs, and none adds an extra spec. The only difference is that P01#1 shows the folder under a proj/ prefix, which is a file-layout detail.",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R2",
+   "class": "major_drift",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P02#3"
+     ],
+     "description": "JOB and CAP stubs with Status: stub and the template sections. Interface and Requirements both say 'None written yet.' There is no Test seams subsection."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Same stub form, but both specs keep the template's '### Test seams' subsection under Interface, set to 'None written yet.'"
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Keeps the Test seams subsection, and also leaves the template guide sentence 'Keep these sections, in this order, and add no others.' in both specs."
+    }
+   ],
+   "reason": "The heading, status line, section order and 'Relies on' contents match in every run. But half the runs keep the Test seams subsection and half drop it. P02#2 also leaves a guide sentence from the template in both specs.",
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R4",
+   "class": "equivalent",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P02#3"
+     ],
+     "description": "Same adapters (inbox-files, checks-command, review-agent, visual-terminal, delivery-github, tracker none) and the same check commands with ID form underscored. Visual gives start: none and url: none. The Reviews, Board columns and Tracker settings sections match the template."
+    },
+    {
+     "runs": [
+      "P02#2"
+     ],
+     "description": "Same values. The only change is in the intro prose of Checks and Visual, which says 'Init wrote this section' and drops the sentence about tests/."
+    }
+   ],
+   "reason": "Every run chose the same adapters and check values, and no placeholder is left in any of them. The only difference is a small change to the prose in P02#2.",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R9",
+   "class": "equivalent",
+   "groups": [
+    {
+     "runs": [
+      "P01#2",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "The reply says one 'Set up pdlc' commit on main holds only pdlc/. The test acceptance file was removed, and .gitignore was left as it was."
+    },
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Makes the same claims about the commit, but the captured files sit under proj/pdlc/."
+    }
+   ],
+   "reason": "All runs report the same single commit with the same subject and scope, remove the IN-9999 test file, and leave .gitignore as it was. The proj/ prefix in P01#1 looks like an artifact of how the capture recorded paths, so it does not change what the run did.",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "cross",
+   "item": "R10",
+   "class": "equivalent",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P02#2",
+      "P02#3"
+     ],
+     "description": "Ends with 'Unsure items: none.' and then 'How to start:', naming /pdlc:ship <what you want> and one stage at a time from /pdlc:intake."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Gives the same two ways to start, without the 'How to start:' label. It adds a sentence on how to edit config or the design specs to change a decision."
+    }
+   ],
+   "reason": "Every final reply gives both ways to start in nearly the same words and says there are no unsure items. P01#2 only adds one extra sentence.",
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [
+  {
+   "label": "P02#1",
+   "reason": "run agent died"
+  }
+ ],
+ "lostJudges": []
+}

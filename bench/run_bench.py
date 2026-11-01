@@ -4,6 +4,7 @@
 Commands:
   run_bench.py init-fixture      run /pdlc:init once and keep its pdlc/ folder in the fixture
   run_bench.py e2e --label L     run the scripted intent through /pdlc:ship, one run
+  run_bench.py rebuild SOURCE    build the app again from the specs alone, and score it
   metrics.py RUN_DIR ...          the full measures of saved runs: time, loops, failures,
                                  tokens, rounds, reviews and the work, in one table
   run_bench.py gate BASELINE CANDIDATE
@@ -15,16 +16,21 @@ A run uses `claude -p` with the plugin folder given by --plugin, in a throwaway 
 bench/fixture-app. Nothing in the copy comes back into the repository.
 """
 import argparse
+import builtins
 import json
+import keyword
 import os
 import re
+import shlex
 import shutil
+import signal
 import statistics
 import subprocess
 import sys
 import tempfile
 import threading
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -153,11 +159,14 @@ def make_project(dest, plugin, with_pdlc=True, fixture="wordfreq"):
 
 
 def claude_command(prompt, plugin, extra=(), tools=()):
-    """The command of one headless session. `tools` adds Bash commands that the fixture needs."""
+    """The command of one headless session. `tools` adds Bash commands that the fixture needs.
+
+    With `plugin` set to None, the session loads no plugin from a folder.
+    """
     return [
         "claude", "-p", prompt,
         "--model", MODEL, "--effort", EFFORT,
-        "--plugin-dir", str(plugin),
+        *(["--plugin-dir", str(plugin)] if plugin is not None else []),
         "--setting-sources", "project,local",
         "--strict-mcp-config",
         "--permission-mode", "auto",
@@ -168,14 +177,19 @@ def claude_command(prompt, plugin, extra=(), tools=()):
     ]
 
 
-def run_claude(prompt, cwd, plugin, log_path, timeout=3600, budget_usd=None, extra=(), tools=()):
+def session_env(cwd):
+    """The environment of a session that starts in `cwd`. PWD and OLDPWD name `cwd`, not the folder of the bench."""
+    return {**os.environ, "PWD": str(cwd), "OLDPWD": str(cwd)}
+
+
+def run_claude(prompt, cwd, plugin, log_path, timeout=3600, budget_usd=None, extra=(), tools=(), env=None):
     """Run one headless session. Write each event with its arrival time. Return the events."""
     command = claude_command(prompt, plugin, extra, tools)
     if budget_usd:
         command += ["--max-budget-usd", str(budget_usd)]
     started = time.time()
     proc = subprocess.Popen(command, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, text=True, bufsize=1)
+                            stderr=subprocess.PIPE, text=True, bufsize=1, env=env)
     events = []
     err = []
     drain = threading.Thread(target=lambda: err.append(proc.stderr.read()), daemon=True)
@@ -929,6 +943,588 @@ def set_tracker(project):
     git(project, "commit", "-q", "-am", "Set the tracker")
 
 
+# ---------------------------------------------------------------- rebuilding from the specs
+
+# The files of a finished project that the rebuild keeps: the specs, the config, and the
+# README that tells how to read a spec. Rule 10 says that these files are enough.
+REBUILD_KEEP = ("pdlc/specs/", "pdlc/config.md", "pdlc/README.md")
+
+
+def config_checks(text):
+    """The "Checks" section of a pdlc/config.md, as a dict.
+
+    The keys are all, acceptance, acceptance_file, check_folders (a list) and id_form. A value
+    is the text inside the first pair of backticks on its line. A missing line, or the value
+    none, gives None.
+    """
+    found = re.search(r"^## Checks[ \t]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    section = found.group(1) if found else ""
+
+    def items(key):
+        line = re.search(r"^- %s:[ \t]*(.*?)[ \t]*$" % re.escape(key), section, re.M)
+        raw = line.group(1) if line else ""
+        values = re.findall(r"`([^`]*)`", raw) or [raw]
+        values = [v for v in values if v.strip().lower() != "none"]
+        return values if raw and values else None
+
+    def first(key):
+        values = items(key)
+        return values[0] if values else None
+
+    return {"all": first("all"), "acceptance": first("acceptance"), "acceptance_file": first("acceptance file"),
+            "check_folders": items("check folders"), "id_form": first("ID form in check names")}
+
+
+def rebuild_source(source, run=1, ref=None):
+    """The project, the ref and the fixture to rebuild from.
+
+    `source` is a result folder of an e2e run, or a project folder. For a result folder, the
+    project and the tip come from run<N>.json, and the fixture from e2e.json. pdlc does not
+    merge, so the tip is the newest change branch. It raises RuntimeError when the project
+    folder is gone, because /tmp can be cleaned.
+    """
+    source = Path(source)
+    saved = source / ("run%d.json" % run)
+    fixture = "wordfreq"
+    if saved.is_file():
+        data = json.loads(saved.read_text())
+        project = Path(data["project"])
+        ref = ref or (data.get("outcome") or {}).get("tip")
+        summary = source / "e2e.json"
+        if summary.is_file():
+            fixture = json.loads(summary.read_text()).get("fixture") or fixture
+    elif (source / ".git").exists():
+        project = source
+    elif source.is_dir():
+        raise RuntimeError("no run%d.json in %s" % (run, source))
+    else:
+        raise RuntimeError("%s does not exist" % source)
+    if not project.exists():
+        raise RuntimeError("the project %s does not exist any more" % project)
+    if not (project / ".git").exists():
+        raise RuntimeError("%s is not a git repository" % project)
+    return project, ref or tip_branch(project), fixture
+
+
+def export_tree(project, ref, dest):
+    """Write the tracked files of `ref` to `dest`. No .git, and no file that git ignores."""
+    dest = Path(dest)
+    dest.mkdir(parents=True, exist_ok=True)
+    archive = subprocess.run(["git", "-C", str(project), "archive", ref], capture_output=True)
+    if archive.returncode:
+        raise RuntimeError("git archive %s failed: %s" % (ref, archive.stderr.decode()[:300]))
+    unpack = subprocess.run(["tar", "-x", "-C", str(dest)], input=archive.stdout, capture_output=True)
+    if unpack.returncode:
+        raise RuntimeError("tar failed: " + unpack.stderr.decode()[:300])
+    return dest
+
+
+def clean_copy(tree, dest, keep=()):
+    """Copy only the files of REBUILD_KEEP, and the paths in `keep`, from `tree` to `dest`.
+
+    Return the sorted relative paths. The copy gets a new git repository with one commit, so
+    that `git status` after a build shows each file that the builder wrote.
+    """
+    tree, dest = Path(tree), Path(dest)
+    keep = set(keep)
+    paths = sorted(p.relative_to(tree).as_posix() for p in tree.rglob("*")
+                   if p.is_file() and not p.is_symlink())
+    kept = [path for path in paths if path.startswith("pdlc/specs/") or path in REBUILD_KEEP or path in keep]
+    if not kept:
+        raise RuntimeError("the tree has no spec, config or README to keep")
+    for path in kept:
+        (dest / path).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(tree / path, dest / path)
+    dest.mkdir(parents=True, exist_ok=True)
+    git(dest, "init", "-q", "-b", "main")
+    git(dest, "add", "-A")
+    done = git(dest, "commit", "-q", "-m", "Specs only")
+    if done.returncode:
+        raise RuntimeError("git commit failed: " + (done.stdout + done.stderr)[:300])
+    return kept
+
+
+def acceptance_matches(tree, config):
+    """Each file in `tree` that the "acceptance file" line names, with the file of init."""
+    pattern = config.get("acceptance_file")
+    if not pattern:
+        return []
+    tree = Path(tree)
+    # "{intent}" stands for an intent ID, so the match is exact, as make_packets.py reads it.
+    exact = re.compile("^%s$" % r"IN[-_]?\d+".join(re.escape(part) for part in pattern.strip("/ ").split("{intent}")), re.I)
+    found = (p.relative_to(tree).as_posix() for p in tree.glob(pattern.replace("{intent}", "IN*")) if p.is_file())
+    return sorted(path for path in found if exact.match(path))
+
+
+def acceptance_files(tree, config):
+    """The acceptance files of the project. IN-9999 is the test file of init, so it is left out."""
+    return [path for path in acceptance_matches(tree, config) if "IN-9999" not in path]
+
+
+def check_files(tree, config):
+    """The component checks: each file in the check folders that is not an acceptance file."""
+    tree = Path(tree)
+    skip = set(acceptance_matches(tree, config))
+    found = []
+    for folder in config.get("check_folders") or []:
+        for path in (tree / folder).rglob("*"):
+            relative = path.relative_to(tree).as_posix()
+            if path.is_file() and relative not in skip and "__pycache__" not in path.parts:
+                found.append(relative)
+    return sorted(set(found))
+
+
+def check_origin(project, ref, files):
+    """Where each check file came from: pre-pdlc, changed by pdlc, or added by pdlc.
+
+    It compares `ref` with the root commit. A pre-pdlc check can fail because the fixture is
+    old, not because of a fault in the specs, so the report keeps the three groups apart.
+    """
+    root = git(project, "rev-list", "--max-parents=0", ref).stdout.split()[-1]
+    status = {}
+    for line in git(project, "diff", "--name-status", "--no-renames", root, ref).stdout.splitlines():
+        letter, _, path = line.partition("\t")
+        status[path] = letter
+    names = {"A": "added by pdlc", "M": "changed by pdlc"}
+    return {path: names.get(status.get(path), "pre-pdlc") for path in files}
+
+
+# ---------------------------------------------------------------- scoring a rebuilt project
+
+IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+# A name that every check uses and no spec has to give.
+COMMON_NAMES = set(keyword.kwlist) | set(dir(builtins)) | {"self", "cls"}
+# The kinds of file that hold no app code, when the bench reads the code of a project.
+NOT_CODE = (".md", ".lock", ".txt", ".json", ".toml")
+
+
+def parse_check_output(text):
+    """Read the output of a check runner.
+
+    It reads Python unittest, the Rust test harness (cargo test, or a rustc --test binary) and
+    clojure.test. Output of another runner gives ran 0. The result has:
+    - ran: how many checks ran.
+    - failed: the name of each failure that the output gives. Two failures with one name
+      stay two. A clojure name has the file after it.
+    - failed_count: the number of failures that the summary lines give.
+    - skipped: skipped checks and expected failures (unittest). They ran, but did not pass.
+    - passed_names: (binary, name) of each check that the runner shows as passed (Rust). The
+      binary is the path in the "Running" line, "doc" for doc tests, None before any header.
+    - named: true when the runner prints the name of each check (Rust).
+    """
+    ran = sum(int(n) for n in re.findall(r"^Ran (\d+) tests? in ", text, re.M))
+    failed = re.findall(r"^(?:FAIL|ERROR): (\S+ \(\S+\))", text, re.M)
+    count = sum(int(n) for line in re.findall(r"^FAILED \((.*)\)", text, re.M)
+                for n in re.findall(r"(?:failures|errors)=(\d+)", line))
+    skipped = sum(int(n) for line in re.findall(r"^(?:OK|FAILED) \((.*)\)", text, re.M)
+                  for n in re.findall(r"(?:skipped|expected failures)=(\d+)", line))
+    results = re.findall(r"^test result: \w+\. (\d+) passed; (\d+) failed", text, re.M)
+    ran += sum(int(passed) + int(bad) for passed, bad in results)
+    count += sum(int(bad) for _, bad in results)
+    rust = re.findall(r"^test (.+?) \.\.\. FAILED$", text, re.M)
+    failed += rust or re.findall(r"^---- (.+?) stdout ----$", text, re.M)
+    passed_names, binary = [], None
+    for line in text.splitlines():
+        header = re.match(r"\s*Running (?:unittests )?(\S+)", line)
+        if header:
+            binary = header.group(1)
+        elif re.match(r"\s*Doc-tests ", line):
+            binary = "doc"
+        done = re.match(r"test (.+?) \.\.\. ok$", line)
+        if done:
+            passed_names.append((binary, done.group(1)))
+    ran += sum(int(n) for n in re.findall(r"^Ran (\d+) tests containing", text, re.M))
+    count += sum(int(a) + int(b) for a, b in re.findall(r"^(\d+) failures, (\d+) errors", text, re.M))
+    for name, where in re.findall(r"^(?:FAIL|ERROR) in \((\S+)\)(?: \(([^:)]+))?", text, re.M):
+        failed.append(name + (" " + where if where else ""))
+    return {"ran": ran, "failed": failed, "failed_count": count, "skipped": skipped,
+            "passed_names": passed_names, "named": bool(rust or passed_names)}
+
+
+def run_checks(project, command, files=None, timeout=900):
+    """Run a check command with bash in `project`. `{files}` stands for the quoted `files`.
+
+    Returns ok (exit code 0), the fields of parse_check_output, and the last 2,000 characters
+    of the output. At the timeout it kills the whole process group and keeps the output so far.
+    """
+    if files is not None:
+        command = command.replace("{files}", " ".join(shlex.quote(f) for f in files))
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    proc = subprocess.Popen(["bash", "-c", command], cwd=project, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True, env=env, start_new_session=True)
+    try:
+        output = proc.communicate(timeout=timeout)[0]
+        ok = proc.returncode == 0
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except OSError:
+            pass
+        output = (proc.communicate()[0] or "") + "\ntimeout after %d s\n" % timeout
+        ok = False
+    return {"ok": ok, **parse_check_output(output), "output": output[-2000:]}
+
+
+def real_folder(root, relative):
+    """Make the folder `relative` under `root` a real folder. A link on the way is removed."""
+    path = Path(root)
+    for part in Path(relative).parts:
+        path = path / part
+        if path.is_symlink() or (path.exists() and not path.is_dir()):
+            path.unlink()
+        path.mkdir(exist_ok=True)
+    return path
+
+
+def install_checks(tree, rebuilt, config):
+    """Put the original checks in the rebuilt project, in place of the checks of the builder.
+
+    It removes each file in the check folders, and each acceptance file, so that a check that
+    the builder wrote cannot count. It never follows a link: a link is replaced. Then it copies
+    the original checks from `tree`.
+    """
+    tree, rebuilt = Path(tree), Path(rebuilt)
+    for folder in config.get("check_folders") or []:
+        real_folder(rebuilt, folder)
+        for here, dirs, names in os.walk(rebuilt / folder):
+            for name in names + [d for d in dirs if (Path(here) / d).is_symlink()]:
+                (Path(here) / name).unlink()
+    for relative in acceptance_matches(rebuilt, config):
+        (rebuilt / relative).unlink()
+    for relative in check_files(tree, config) + acceptance_matches(tree, config):
+        real_folder(rebuilt, Path(relative).parent)
+        if (rebuilt / relative).is_symlink():
+            (rebuilt / relative).unlink()
+        shutil.copy2(tree / relative, rebuilt / relative)
+
+
+def check_names(tree, files):
+    """The names of the checks that the files define: unittest, the Rust harness, clojure.test."""
+    names = []
+    for relative in files:
+        text = (Path(tree) / relative).read_text(errors="replace")
+        names += re.findall(r"^\s*(?:async\s+)?def\s+(test\w*)", text, re.M)
+        names += re.findall(r"#\[test\]\s*(?:#\[[^\]]*\]\s*)*(?:pub\s+)?fn\s+(\w+)", text)
+        names += re.findall(r"\(deftest\s+([^\s()]+)", text)
+    return list(dict.fromkeys(names))
+
+
+def score(ran_original, result, names=(), skipped_original=0, files=None):
+    """Score one run of the original checks against the rebuilt project.
+
+    `names` are the original checks. When the runner prints the name of each check (Rust), only
+    an original check that the output shows as passed counts: a unit test in src/, a doc test,
+    and a check that never ran (cargo stops at the first failing binary) do not. Else `total`
+    is the number of checks in the original run. A run that crashed reports fewer checks. When
+    every check that ran failed, none passed, so each name in `names` goes in `failed`. When
+    some passed, the checks that did not run count as not passed, but their names are not
+    known. A skipped check does not pass, unless the original run skipped it too. With `files`
+    (the original check files), a name counts only when its binary is one of them or unknown.
+    """
+    ran, failed = result["ran"], list(result["failed"])
+    if result.get("named") and names:
+        passed = Counter(name.split("::")[-1] for binary, name in result.get("passed_names", [])
+                         if files is None or binary is None or binary in files)
+        failed = []
+        for name in names:
+            if passed[name]:
+                passed[name] -= 1
+            else:
+                failed.append(name)
+        return {"total": len(names), "passed": len(names) - len(failed), "failed": failed}
+    total = ran_original
+    bad = max(len(failed), result.get("failed_count", 0))
+    if ran < total and ran == bad and names:
+        return {"total": total, "passed": 0, "failed": list(names)}
+    not_run = max(0, total - ran)
+    skipped = max(0, result.get("skipped", 0) - skipped_original)
+    return {"total": total, "passed": max(0, total - bad - not_run - skipped), "failed": failed}
+
+
+def missing_names(check_text, code_text, spec_text):
+    """The names that a check uses and the original code has, but no spec gives.
+
+    A spec has to give each such name in an "Interface" entry, or a builder cannot know it.
+    Keywords and built-in names do not count, and nor do names of fewer than 3 characters.
+    """
+    wanted = {n for n in IDENTIFIER.findall(check_text) if len(n) >= 3 and n not in COMMON_NAMES}
+    return sorted(wanted & set(IDENTIFIER.findall(code_text)) - set(IDENTIFIER.findall(spec_text)))
+
+
+def failing_file(name, tree, files):
+    """The check file that holds the failing check `name`, or None."""
+    tokens = set(re.findall(r"[\w-]+", name))
+    for relative in files:
+        if Path(relative).stem in tokens:
+            return relative
+    for relative in files:
+        if tokens & set(check_names(tree, [relative])):
+            return relative
+    return None
+
+
+def requirement_of(name, specs):
+    """The requirement ID in the name of a check, and the spec file that holds it.
+
+    `specs` maps a spec file to its text. The ID form (dots or underscores) does not matter.
+    """
+    flat = re.sub(r"[-.]", "_", name)
+    for relative in sorted(specs, key=lambda r: -len(Path(r).stem)):
+        stem = Path(relative).stem
+        found = re.search(re.escape(stem.replace("-", "_")) + r"_R(\d+)", flat)
+        if found:
+            return "%s.R%s" % (stem, found.group(1)), relative
+    return None, None
+
+
+def code_text_of(tree, config):
+    """The text of the app code in `tree`: no spec, no check, no build folder, no doc file."""
+    tree = Path(tree)
+    checks = set(check_files(tree, config) + acceptance_matches(tree, config))
+    skip = {"target", ".cpcache", "__pycache__", "node_modules", ".git"}
+    text = ""
+    for here, dirs, names in os.walk(tree):
+        dirs[:] = sorted(d for d in dirs if d not in skip)
+        for name in sorted(names):
+            path = Path(here) / name
+            relative = path.relative_to(tree).as_posix()
+            if (not path.is_symlink() and not relative.startswith("pdlc/") and relative not in checks
+                    and not relative.endswith(NOT_CODE)):
+                text += path.read_text(errors="replace") + "\n"
+    return text
+
+
+def spec_gaps(tree, config, failed, code_text=None):
+    """For each failing check: its requirement and spec, and the names that the specs lack.
+
+    `code_text` is the app code. Pass it from before the checks ran, so that no file that a
+    check run wrote counts as code.
+    """
+    tree = Path(tree)
+    specs = {p.relative_to(tree).as_posix(): p.read_text(errors="replace")
+             for p in sorted((tree / "pdlc" / "specs").rglob("*.md")) if p.is_file()}
+    spec_text = "\n".join(specs.values())
+    checks = check_files(tree, config) + acceptance_matches(tree, config)
+    if code_text is None:
+        code_text = code_text_of(tree, config)
+    gaps = []
+    for name in failed:
+        file = failing_file(name, tree, checks)
+        requirement, spec = requirement_of(name, specs)
+        names = missing_names((tree / file).read_text(errors="replace"), code_text, spec_text) if file else []
+        gaps.append({"check": name, "file": file, "requirement": requirement, "spec": spec, "missing_names": names})
+    return gaps
+
+
+def score_rebuild(tree, rebuilt, config, fixture, origin=None):
+    """Score the rebuilt project with the original checks and the probes of the fixture.
+
+    `tree` is the original project. It runs the checks on `tree` first, to get the totals.
+    Then it installs the original checks in `rebuilt` and runs them there. Returns acceptance,
+    component, probes, gaps, and original. `origin` (from check_origin) goes in `component`.
+    """
+    tree, rebuilt = Path(tree), Path(rebuilt)
+    acceptance = acceptance_files(tree, config) if config.get("acceptance") else []
+    sections = {"acceptance": (config.get("acceptance"), acceptance, check_names(tree, acceptance)),
+                "component": (config.get("all"), None, check_names(tree, check_files(tree, config)))}
+    code_text = code_text_of(tree, config)  # before any run: a run can write files
+    owned = {"acceptance": acceptance, "component": check_files(tree, config)}
+    original = {key: run_checks(tree, command, files) for key, (command, files, _) in sections.items()
+                if command and (files is None or files)}
+    install_checks(tree, rebuilt, config)
+    out = {"original": {key: {k: v for k, v in done.items() if k != "output"} for key, done in original.items()}}
+    gaps = []
+    for key, (command, files, names) in sections.items():
+        if key not in original:
+            out[key] = {"measured": False}
+            continue
+        if not original[key]["ok"] or not original[key]["ran"]:
+            out[key] = {"measured": False, "reason": "the original checks did not pass"}
+            continue
+        done = run_checks(rebuilt, command, files)
+        out[key] = {"measured": True, **score(original[key]["ran"], done, names, original[key]["skipped"], owned[key]),
+                    "ok": done["ok"], "output": done["output"]}
+        gaps += out[key]["failed"]
+    if out["component"].get("measured"):
+        out["component"]["origin"] = origin or {}
+        files = check_files(tree, config)
+        out["component"]["failed_files"] = {n: failing_file(n, tree, files)
+                                            for n in out["component"]["failed"]}
+    out["probes"] = fixture_probes(rebuilt, fixture)
+    out["gaps"] = spec_gaps(tree, config, gaps, code_text)
+    return out
+
+
+# ---------------------------------------------------------------- the rebuild command
+
+REBUILD_PROMPT = (
+    "Build the whole app in this folder from the specs alone. The specs are the files in "
+    "`pdlc/specs/`: jobs, capabilities, and design. `pdlc/config.md` gives the commands that build "
+    "the app and run its checks. `pdlc/README.md` tells you how to read a spec. "
+    "Build each job and each capability, also a spec with the status `stub`. Make each requirement "
+    "true. Keep each name, file, and error code of each \"Interface\" entry exactly as its spec gives "
+    "it. Make the \"all\" command of `pdlc/config.md` run with no error. Work only in this folder. "
+    "Do not read a file outside this folder. Do not look for a different copy of this app. "
+    "Do not change the files in `pdlc/`. Stop when the app is complete."
+)
+
+PATH_INPUTS = ("file_path", "path", "pattern", "command")
+
+
+def loaded_plugins(events):
+    """The plugins that the first init event of a stream lists. An empty list if there is none."""
+    for item in events:
+        event = item.get("e", item)
+        if event.get("type") == "system" and event.get("subtype") == "init":
+            return event.get("plugins") or []
+    return []
+
+
+def peeked(events, forbidden):
+    """Each tool input or tool output of the builder that names a path in `forbidden`.
+
+    The inputs are file_path, path, pattern, and command. The outputs are the text of each tool
+    result. The builder must not read the original project, so a run with an item here is not a
+    test of the specs. A relative path, a glob or a command substitution can get past this check.
+    """
+    found = []
+    for item in events:
+        event = item.get("e", item)
+        for block in (event.get("message") or {}).get("content") or []:
+            if not isinstance(block, dict):
+                continue
+            if event.get("type") == "user" and block.get("type") == "tool_result":
+                content = block.get("content")
+                parts = [content] if isinstance(content, str) else [c.get("text", "") for c in content or [] if isinstance(c, dict)]
+                found += [text for text in parts if isinstance(text, str) and any(path and path in text for path in forbidden)]
+            if event.get("type") != "assistant" or block.get("type") != "tool_use":
+                continue
+            for key in PATH_INPUTS:
+                value = (block.get("input") or {}).get(key)
+                if isinstance(value, str) and any(path and path in value for path in forbidden):
+                    found.append(value)
+    return found
+
+
+def rebuild_verdict(result):
+    """holds, invalid, or broken. The verdict does not say holds without a measure.
+
+    invalid: the builder peeked, or the original checks did not pass, so the test says nothing.
+    holds: acceptance was measured, each acceptance check and each probe passed.
+    broken: each other result.
+    """
+    acceptance, component = result.get("acceptance") or {}, result.get("component") or {}
+    if result.get("peeked") or any(part.get("reason") for part in (acceptance, component)):
+        return "invalid"
+    probes = result.get("probes") or {}
+    if (acceptance.get("measured") and acceptance.get("total") and not acceptance.get("failed")
+            and acceptance.get("passed") == acceptance["total"] and acceptance.get("ok")
+            and probes.get("total") and probes.get("passed") == probes["total"]):
+        return "holds"
+    return "broken"
+
+
+def rebuild_report(result):
+    """The result of a rebuild, as Markdown: the verdict, the scores, then each failing check."""
+    source, acceptance, component = result["source"], result["acceptance"], result["component"]
+    probes = result["probes"]
+
+    def share(part):
+        if not part.get("measured"):
+            return "not measured" + (" (%s)" % part["reason"] if part.get("reason") else "")
+        return "%d/%d" % (part["passed"], part["total"])
+
+    lines = ["# Rebuild %s: %s" % (result["label"], result["verdict"]), "",
+             "Peek check: tool inputs and outputs only. A relative path, a glob or a command substitution can get past it.",
+             "",
+             "- Source: %s at `%s` (%s)" % (source["project"], source["ref"], source["fixture"]),
+             "- Acceptance: %s" % share(acceptance),
+             "- Component: %s" % share(component),
+             "- Probes: %d/%d" % (probes["passed"], probes["total"]),
+             "- Cost: $%.2f in %ss" % (result["cost_usd"], result["wall_s"])]
+    if result.get("plugin_warning"):
+        lines.append("- Warning: " + result["plugin_warning"])
+    if result.get("kept_extra"):
+        lines.append("- Extra files kept: " + ", ".join(result["kept_extra"]))
+    if result["peeked"]:
+        lines += ["", "## The builder read the original", ""] + ["- `%s`" % value for value in result["peeked"][:20]]
+    gaps = {gap["check"]: gap for gap in result.get("gaps") or []}
+    if acceptance.get("failed"):
+        lines += ["", "## Failing acceptance checks", "", "| Check | Requirement | Spec | Missing names |", "| --- | --- | --- | --- |"]
+        for name in acceptance["failed"]:
+            gap = gaps.get(name, {})
+            lines.append("| %s | %s | %s | %s |" % (name, gap.get("requirement") or "-", gap.get("spec") or "-",
+                                                    ", ".join(gap.get("missing_names") or []) or "-"))
+    if component.get("failed"):
+        lines += ["", "## Failing component checks", ""]
+        origin = component.get("origin") or {}
+        files = component.get("failed_files") or {}
+        for name in component["failed"]:
+            file = files.get(name)
+            lines.append("- %s (%s)" % (name, origin.get(file, "origin unknown") if file else "origin unknown"))
+    return "\n".join(lines) + "\n"
+
+
+def command_rebuild(args, builder=None):
+    """Rebuild a finished project from its specs alone, and score the new app.
+
+    `builder(folder)` returns (events, wall seconds, stderr) as run_claude does. A test gives a
+    fake one. The folder of the builder has no `pdlc-bench-` name, so that its own paths do not
+    count as a peek.
+    """
+    project, ref, fixture = rebuild_source(args.source, args.run, args.ref)
+    fixture = args.fixture or fixture
+    plugin = Path(args.plugin).resolve()
+    out_dir = Path(args.out) / args.label
+    out_dir.mkdir(parents=True, exist_ok=True)
+    work = Path(tempfile.mkdtemp(prefix="pdlc-rebuild-"))
+    commit = git(project, "rev-parse", ref).stdout.strip()  # the branch can move while the builder runs
+    tree = export_tree(project, commit, work / "original")
+    config = config_checks((tree / "pdlc" / "config.md").read_text())
+    app = work / "app"
+    kept = clean_copy(tree, app, args.keep)
+    shutil.rmtree(tree)  # the builder could read it at ../original
+    source = {"project": str(project), "ref": ref, "fixture": fixture,
+              "commit": commit,
+              "plugin_commit": git(plugin, "rev-parse", "--short", "HEAD").stdout.strip(),
+              "plugin_status": git(plugin, "status", "--porcelain", ".").stdout.strip(), "plugins": None}
+    result = {"label": args.label, "source": source, "model": MODEL, "effort": EFFORT}
+    stream = Path(args.source) / ("run%d.stream.jsonl" % args.run)
+    if stream.is_file():
+        old = [json.loads(line) for line in stream.read_text().splitlines() if line.strip()]
+        source["plugins"] = loaded_plugins(old)
+        paths = [Path(p.get("path", "")).resolve() for p in source["plugins"] if p.get("name") == "pdlc"]
+        if plugin not in paths:
+            result["plugin_warning"] = ("the e2e run did not load the plugin %s. It loaded: %s"
+                                        % (plugin, ", ".join(str(p) for p in paths) or "no pdlc plugin"))
+    if builder is None:
+        def builder(folder):
+            return run_claude(REBUILD_PROMPT, folder, None, out_dir / "rebuild.stream.jsonl", timeout=args.timeout,
+                              budget_usd=args.budget, tools=FIXTURES[fixture]["tools"], env=session_env(folder))
+    events, wall, err = builder(app)
+    analysis = analyse(events)
+    forbidden = {str(project), str(project.resolve()), str(REPO), "pdlc-bench-"}
+    status = git(app, "status", "--porcelain", "-uall").stdout.splitlines()
+    result.update({
+        "cost_usd": analysis["totals"]["cost_usd"], "wall_s": wall, "stderr": err[-500:],
+        "peeked": peeked(events, forbidden), "kept": kept, "kept_extra": sorted(set(args.keep) & set(kept)),
+        "builder_files": sorted(line[3:] for line in status if "__pycache__" not in line and not line.endswith(".pyc"))})
+    try:
+        tree = export_tree(project, commit, work / "original")
+        origin = check_origin(project, commit, check_files(tree, config))
+        result.update(score_rebuild(tree, app, config, fixture, origin))
+    finally:
+        shutil.rmtree(work / "original", ignore_errors=True)  # a later builder must not find it
+    result["verdict"] = rebuild_verdict(result)
+    (out_dir / "rebuild.json").write_text(json.dumps(result, indent=1))
+    (out_dir / "rebuild.md").write_text(rebuild_report(result))
+    share = lambda part: "%d/%d" % (part["passed"], part["total"]) if part.get("measured") else "not measured"
+    print("%s: acceptance %s, component %s, probes %d/%d, $%.2f, %ss"
+          % (result["verdict"], share(result["acceptance"]), share(result["component"]),
+             result["probes"]["passed"], result["probes"]["total"], result["cost_usd"], result["wall_s"]))
+    return result
+
+
 # ---------------------------------------------------------------- the commands
 
 
@@ -1542,6 +2138,18 @@ def main(argv=None):
     st.add_argument("--out", default=str(HERE / "results"))
     st.add_argument("--timeout", type=int, default=1800)
     st.add_argument("--budget", type=float, default=6.0)
+    rb = sub.add_parser("rebuild", help="build the app again from the specs alone, and score it")
+    rb.add_argument("source", help="the result folder of an e2e run, or a project folder")
+    rb.add_argument("--run", type=int, default=1)
+    rb.add_argument("--ref", help="the branch to read (default: the tip of the e2e run)")
+    rb.add_argument("--fixture", choices=sorted(FIXTURES), help="override the fixture in e2e.json")
+    rb.add_argument("--keep", action="append", default=[], metavar="PATH",
+                    help="keep this file in the clean copy (repeatable)")
+    rb.add_argument("--label", help="default: rebuild-<label of the e2e run>")
+    rb.add_argument("--out", default=str(HERE / "results"))
+    rb.add_argument("--plugin", default=str(DEFAULT_PLUGIN), help="the plugin that the e2e run should have loaded")
+    rb.add_argument("--budget", type=float, default=5.0)
+    rb.add_argument("--timeout", type=int, default=1800)
     pr = sub.add_parser("prepare")
     pr.add_argument("--state", required=True, choices=PREPARE_STATES)
     pr.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
@@ -1549,6 +2157,14 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.command == "prepare":
         command_prepare(args)
+        return 0
+    if args.command == "rebuild":
+        args.label = args.label or "rebuild-" + Path(args.source).resolve().name
+        try:
+            command_rebuild(args)
+        except RuntimeError as error:
+            print("rebuild: %s" % error, file=sys.stderr)
+            return 1
         return 0
     if args.command == "e2e":
         command_e2e(args)

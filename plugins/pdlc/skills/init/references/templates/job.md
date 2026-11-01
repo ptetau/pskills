@@ -23,6 +23,32 @@ in `pdlc/README.md`. pdlc uses this list to set the scope of changes.
 - path/to/folder/
 - path/to/server.py: POST /reset route and handle_reset
 
+## Interface
+
+List what the user of this job touches. A check drives the job only through these
+entries, so a rebuild from the specs must keep each name. List each command and flag,
+route, form field, and page element or page text that a check reads. See "Interfaces" in
+`pdlc/README.md`.
+
+The first line of an entry gives the name in backticks, the kind, and the file. Under it,
+give what goes in, what comes out, and each error code from `DES-errors`. A new entry ends
+its first line with ` · proposed`.
+
+- `POST /reset` · route · `path/to/server.py`
+  - in: the form field `email`, an email address
+  - out: status 303 to `/reset/sent`, a page that shows "Check your email"
+  - errors: `INVALID_ADDRESS`
+
+### Test seams
+
+List each seam that a check of this job sets at the surface of the user. A seam controls
+the clock, randomness, or an outside vendor. For a command, the seam is an environment
+variable or a flag. Write "none" if no acceptance line needs a seam.
+
+- `APP_NOW` · seam: clock · `path/to/server.py`
+  - in: an ISO 8601 time that the app uses in place of the real clock
+  - errors: none
+
 ## Requirements
 
 What its user sees: the replies, output and pages of its entry points. `Source: recon`

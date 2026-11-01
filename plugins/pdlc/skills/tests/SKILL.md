@@ -38,6 +38,11 @@ of an intent, the acceptance checks are its checks.
   writes the files under "Check files". `python3 pdlc/bin/make_packets.py CH-xxxx --brief`
   makes the brief again before each call. After a failed review, the prompt also holds
   the problems as text ("Checks before code").
+- When the test writer reports a missing "Interface" item, the item goes into the
+  "Interface" of its spec first, as `proposed`. Then it goes into the change spec
+  ("Checks before code"). The commit "Tests CH-xxxx" holds both files.
+- Suppose the spec that owns the item is not the scope of this change. Then the item goes
+  into the scope spec of this change, or becomes a question for the user.
 - The test writer cannot delete files. When it reports that a check file served only a
   `(retire)` requirement, the skill removes the file with `git rm` before the lock.
 - Red runs the checks of each requirement through the checks port.

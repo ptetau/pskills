@@ -48,7 +48,7 @@ change of the intent is proposed. Ship stops only for a case that needs the user
 - Ship stops only for these cases:
   - A contradiction between requirements. Ready takes no default for a contradiction.
   - A change that needs a file outside its "Files". A missing "Interface" entry is not a
-    stop, because the tests stage adds it.
+    stop, because the tests stage adds it to its spec and to the change spec.
   - The third failure of the same stage.
   - The end: each change is proposed.
 - Each other case takes the recommended answer, recorded in the handoff and the intent

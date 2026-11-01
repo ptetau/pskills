@@ -1,0 +1,202 @@
+{
+ "label": "rule10-wordfreq",
+ "plugin_commit": "29ecb08",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "fixture": "wordfreq",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 24,
+     "cache_write": 79415,
+     "cache_read": 453547,
+     "output": 8654
+    },
+    "cost_usd": 0.4347,
+    "duration_s": 66.3,
+    "turns": 11,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 1,
+    "models": {
+     "claude-sonnet-5-5": 0.4347
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 40662,
+      "cache_read": 37406,
+      "output": 40
+     },
+     "cost_usd": 0.1859,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 8.1
+    },
+    "intake": {
+     "tokens": {
+      "input": 20,
+      "cache_write": 38753,
+      "cache_read": 416141,
+      "output": 478
+     },
+     "cost_usd": 0.2488,
+     "messages": 10,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 9919,
+        "cache_read": 17111,
+        "output": 37
+       },
+       "cost_usd": 0.0312,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 17.5
+      }
+     },
+     "wall_s": 57.6
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 67.5,
+   "outcome": {
+    "branches": [
+     "main"
+    ],
+    "changes": [],
+    "dirty": false,
+    "change_status": {},
+    "stops": [],
+    "verify_rounds": 0,
+    "proposed": false,
+    "tip": "main",
+    "writing": {
+     "count": 0,
+     "files": [
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+     ],
+     "findings": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 8
+    },
+    "probes": {
+     "passed": 1,
+     "total": 8,
+     "failed": [
+      "top 2 keeps the two most common",
+      "top 1 keeps one",
+      "top larger than the word count keeps all",
+      "top 0 is an error",
+      "top -3 is an error",
+      "top abc is an error",
+      "top 2.5 is an error"
+     ],
+     "option_after_file_failed": [
+      "top 2 keeps the two most common",
+      "top 1 keeps one",
+      "top larger than the word count keeps all",
+      "top 0 is an error",
+      "top -3 is an error",
+      "top abc is an error",
+      "top 2.5 is an error"
+     ]
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-54rpg5lr/app",
+   "metrics": {
+    "time": {
+     "wall_s": 65.7,
+     "api_s": 63.4,
+     "main_session": {
+      "model": 39.9,
+      "agent": 18.1,
+      "other": 3.9,
+      "git": 0.9,
+      "Skill": 0.0
+     },
+     "work_by_session": {}
+    },
+    "context": {
+     "main_turns": 9,
+     "peak": 69498,
+     "mean": 56217
+    },
+    "tokens": {
+     "input": 18,
+     "cache_write": 69496,
+     "cache_read": 436436,
+     "output": 6423,
+     "cost_usd": 0.4347242
+    },
+    "loops": {},
+    "builder_check_runs_until_green": [],
+    "agents": {
+     "intake/pdlc:recon": 1
+    },
+    "failures": {
+     "tool errors": {},
+     "hook blocks": {
+      "commits: writing": 1
+     },
+     "hook findings": {
+      "commits: writing": 7
+     },
+     "permission denials": 0,
+     "rate limits": 1,
+     "is_error": false
+    },
+    "git": {
+     "rounds": {
+      "acceptance locks": 0,
+      "tests locks": 0,
+      "verify rounds": 0,
+      "recordings": 0,
+      "send-backs": {},
+      "stops": 0
+     },
+     "reviews": {},
+     "work": {
+      "changes": 0,
+      "commits": 2,
+      "intents awaiting approval": 0,
+      "requirement statuses": {
+       "built": 6,
+       "proposed": 2
+      },
+      "lines": {},
+      "requirements with checks": 0
+     }
+    },
+    "quality": {
+     "main": 0,
+     "tip": 0,
+     "new in app code": 0,
+     "new in checks": 0,
+     "new": 0,
+     "linter": "ruff"
+    },
+    "strength": {
+     "faults": 0,
+     "caught": 0,
+     "missed": 0,
+     "escapes": 0,
+     "candidates": 0,
+     "score": null,
+     "details": []
+    }
+   }
+  }
+ ]
+}

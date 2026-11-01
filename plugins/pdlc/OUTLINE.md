@@ -85,6 +85,10 @@ These rules are fixed. All other items are defaults that you can change.
 9. **A Sonnet 5.5 class model or above.** pdlc runs only on a Sonnet 5.5 class model or
    above. On a lower model, for example a Haiku model, each skill and agent does no work.
    The skill or agent tells the user that pdlc needs a Sonnet 5.5 class model or above.
+10. **The specs can rebuild the project.** A new build from the specs alone passes each
+    acceptance check of the project. The specs are the job, capability, and design
+    specs, and `pdlc/config.md`. Change specs are history, not specs. Thus, each name
+    that a check calls is in the "Interface" of a job or capability spec.
 
 ---
 
@@ -194,6 +198,10 @@ prove the requirement.
   parts of a file that other specs share. Example:
   `src/server.py: POST /reset route and handle_reset`. pdlc uses the code map to set the
   scope of changes, not to trace.
+- **Interface** (jobs and capabilities only): what a check can call. A job lists what
+  its user touches: commands, flags, routes, form fields, and page text. A capability
+  lists the calls that jobs use, each with its file. Each entry names its error codes
+  from `DES-errors`. Each test seam is under "Test seams" in the spec that owns it.
 - **Requirements**. Each requirement has an ID, a status, the intents that shaped it, and
   acceptance checks. The acceptance checks are plain "given / when / then" lines.
 - Job specs also list the capabilities and design specs that they rely on.
@@ -221,8 +229,8 @@ simplified form of the `.plan.md` format that `/quiz-plan` uses.
 - **Relies on**: the IDs of the other specs that the change uses. For a job change, this
   list includes the capabilities that the job calls. The list always includes the design
   specs that apply.
-- **Interface**: the items that the checks are permitted to call. Thus, the test writer
-  does not need the code.
+- **Interface**: the items that the checks are permitted to call, copied word for word
+  from the "Interface" of the specs. Thus, the test writer does not need the code.
 - **Files**: only the app files that this change is permitted to touch. These files come
   from the code map. The list names a shared file with the parts of this spec, and only
   those parts change.
@@ -365,7 +373,7 @@ recorder also fails a step that must change the screen but does not.
 ### The gate
 
 A change can merge only when all of these conditions are true. `check_merge.py` confirms
-the first three:
+the first four:
 
 1. **Checks pass.** Each requirement in the change has at least one check tagged with its
    ID, and those checks pass. The checks are written before the change. A check is
@@ -373,13 +381,16 @@ the first three:
    (see section 14).
 2. **The acceptance checks of the intent pass.** They are locked and reviewed, and they
    passed at the last change of the intent.
-3. **Review passes.** A reviewer agent that did not write the code reads the change spec,
+3. **The interface is in the specs.** Each "Interface" entry of the change is in the
+   "Interface" of its spec, with the same error codes. No such entry is still
+   `proposed`.
+4. **Review passes.** A reviewer agent that did not write the code reads the change spec,
    the diff, and the design specs. The reviewer agent examines these items:
    - The diff stays inside the files of the change, and inside its one job or capability.
    - The change meets each acceptance check, and the checks really prove this.
    - The change follows the design specs.
    - Each commit has its trace trailers.
-4. **You approve the merge.** You use your time for judgement, not for checklists.
+5. **You approve the merge.** You use your time for judgement, not for checklists.
 
 The changes of an intent merge together, with the bottom of the stack first. A change can
 merge only when each change of its intent is ready too. Thus, main does not get half a
@@ -521,7 +532,7 @@ and read-only. Recon tries to find "just enough", and does not make a full surve
    because each change must stay inside one capability or one job.
 3. **Deep only when needed.** When an intent touches a stub spec, intake sends recon to
    that area. Recon writes the current requirements of that area, marked
-   `Source: recon`. The other areas stay thin.
+   `Source: recon`, and the "Interface" of that area. The other areas stay thin.
 
 ---
 
@@ -666,7 +677,7 @@ The same idea has a different name in each tool. This table gives the match:
 | The in-scope list of section 1 | "What and why" of the intent |
 | An invariant, with its enforcement point | A requirement of the capability that enforces the rule |
 | The error table: code, meaning, fault | The rows of `DES-errors`: code, meaning, whose fault |
-| The signature of a method | The "Interface" of a change |
+| The signature of a method | An entry in the "Interface" of a capability spec |
 | A scenario (Given, when, then) | The acceptance lines of a requirement |
 | An Engine or a ResourceAccess | A capability |
 | A method of a Manager | A job |

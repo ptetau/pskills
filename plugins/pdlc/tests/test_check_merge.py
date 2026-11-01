@@ -68,6 +68,10 @@ Status: building · Ticket: none · Branch: none · Added: 2026-10-10
 
 ALL = ["tests", "specification", "security", "quality", "compliance", "privacy"]
 
+SEND = ("- `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`\n"
+        "  - in: a template and an address\n"
+        "  - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`\n")
+
 WRONG_VERSIONS = "Wrong versions:\n- CAP-email.R2 fills values · leaves the values out · fails\n"
 
 
@@ -213,6 +217,152 @@ class MergeCheck(unittest.TestCase):
         path.write_text(path.read_text().replace("one email goes out.",
                                                  "one email goes out *(assumed)*."))
         self.assertEqual(self.run_check("CH-0001")[0], 0)
+
+    # Interface
+
+    def interface(self, change=None, spec=None, job=None, relies=""):
+        """Append an Interface section to the change spec, and to CAP-email or a job spec.
+        A value of None adds no section. An empty string adds an empty section. Call it
+        after write(). The text in `relies` goes under "Relies on" in the change spec."""
+        def add(path, body):
+            if body is not None:
+                path.write_text(path.read_text() + "\n## Interface\n\n" + body)
+
+        add(self.change / "change.md", change)
+        add(self.root / "pdlc/specs/capabilities/CAP-email.md", spec)
+        if job is not None:
+            jobs = self.root / "pdlc/specs/jobs"
+            jobs.mkdir(parents=True, exist_ok=True)
+            (jobs / "JOB-reset.md").write_text("# JOB-reset · Reset a password\n\nStatus: active\n")
+            add(jobs / "JOB-reset.md", job)
+        if relies:
+            path = self.change / "change.md"
+            path.write_text(path.read_text().replace("- DES-writing-style\n",
+                                                     "- DES-writing-style\n" + relies))
+
+    def test_passes_when_each_interface_entry_is_in_its_spec(self):
+        self.write()
+        self.interface(change=SEND, spec=SEND)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
+
+    def test_fails_when_an_interface_entry_is_not_in_its_spec(self):
+        self.write()
+        self.interface(change=SEND, spec="- none\n")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("`send(template: TemplateName, to: Email) -> SentId` is not in the "
+                      "Interface of CAP-email", out)
+
+    def test_an_entry_in_the_requirements_of_the_spec_does_not_count(self):
+        self.write()
+        path = self.root / "pdlc/specs/capabilities/CAP-email.md"
+        path.write_text(path.read_text().replace("- Given a template, when we send, then the values are filled in.",
+                                                 SEND))
+        self.interface(change=SEND, spec="")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("is not in the Interface of CAP-email", out)
+
+    def test_finds_an_entry_in_a_spec_under_relies_on(self):
+        self.write()
+        self.interface(change=SEND, spec="", job=SEND, relies="- JOB-reset (used, not changed)\n")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
+
+    def test_ignores_a_spec_that_the_change_does_not_name(self):
+        self.write()
+        self.interface(change=SEND, spec="", job=SEND)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("is not in the Interface of CAP-email", out)
+
+    def test_checks_the_entries_under_test_seams(self):
+        self.write()
+        seam = ("### Test seams\n\n"
+                "- `EMAIL_OUTBOX_DIR` · seam: outside vendor · `src/email.js`\n"
+                "  - errors: none\n")
+        self.interface(change=SEND + "\n" + seam, spec=SEND)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("EMAIL_OUTBOX_DIR", out)
+
+    def test_fails_when_the_error_codes_differ(self):
+        self.write()
+        self.interface(change=SEND.replace(", `INVALID_ADDRESS`", ""), spec=SEND)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("has the errors TEMPLATE_NOT_FOUND, but CAP-email has "
+                      "INVALID_ADDRESS, TEMPLATE_NOT_FOUND", out)
+
+    def test_fails_when_the_spec_entry_is_still_proposed(self):
+        self.write()
+        self.interface(change=SEND, spec=SEND.replace("src/email.js`", "src/email.js` · proposed", 1))
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("is still proposed in CAP-email", out)
+
+    def test_a_retiring_spec_entry_still_matches(self):
+        self.write()
+        self.interface(change=SEND, spec=SEND.replace("src/email.js`", "src/email.js` · retiring", 1))
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
+
+    def test_spaces_in_the_name_do_not_matter(self):
+        self.write()
+        self.interface(change=SEND.replace("template: Tem", "template:  Tem"), spec=SEND)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
+
+    def test_skips_the_check_when_the_scope_spec_has_no_interface_section(self):
+        self.write()
+        self.interface(change=SEND)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
+
+    def test_an_interface_of_none_needs_nothing(self):
+        self.write()
+        self.interface(change="- none\n", spec="")
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
+
+    def test_reads_entries_with_their_error_codes(self):
+        text = ("# CAP-email\n\n## Interface\n\n"
+                + SEND + "- `ping()` · function · `src/ping.js`\n  - out: nothing\n\n"
+                "### Test seams\n\n"
+                "- `EMAIL_OUTBOX_DIR` · seam: outside vendor · `src/email.js`\n"
+                "  - Errors: `OUTBOX_MISSING`\n\n## Requirements\n\n- `later()` is not an entry.\n")
+        found = check_merge.interface_entries(text)
+        self.assertEqual(list(found), ["send(template: TemplateName, to: Email) -> SentId",
+                                       "ping()", "EMAIL_OUTBOX_DIR"])
+        self.assertEqual(found["send(template: TemplateName, to: Email) -> SentId"][1],
+                         {"TEMPLATE_NOT_FOUND", "INVALID_ADDRESS"})
+        self.assertEqual(found["ping()"][1], frozenset())
+        self.assertEqual(found["EMAIL_OUTBOX_DIR"][1], {"OUTBOX_MISSING"})
+
+    def test_a_proposed_mark_before_other_text_still_counts(self):
+        self.write()
+        self.interface(change=SEND, spec=SEND.replace("src/email.js`", "src/email.js` · proposed (assumed)", 1))
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 1)
+        self.assertIn("is still proposed in CAP-email", out)
+
+    def test_error_codes_on_wrapped_lines_count(self):
+        wrapped = SEND.replace("`TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`", "`TEMPLATE_NOT_FOUND`,\n    `INVALID_ADDRESS`")
+        self.write()
+        self.interface(change=SEND, spec=wrapped)
+        self.assertEqual(self.run_check("CH-0001")[0], 0)
+        self.write()
+        self.interface(change=SEND.replace(", `INVALID_ADDRESS`", ""), spec=wrapped)
+        self.assertEqual(self.run_check("CH-0001")[0], 1)
+
+    def test_skips_the_check_when_no_candidate_spec_has_an_interface_section(self):
+        self.write()
+        path = self.change / "change.md"
+        path.write_text(path.read_text().replace("Scope: CAP-email", "Scope: DES-errors"))
+        self.interface(change=SEND)
+        code, out = self.run_check("CH-0001")
+        self.assertEqual(code, 0, out)
 
     # Finding the change
 

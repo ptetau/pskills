@@ -35,13 +35,28 @@ change spec is sufficient for the test writer and the builder.
     order, and nothing else. Each line is a word-for-word copy, also a long line. A
     `retiring` requirement has ` (retire)` after its heading.
   - Relies on: for a job change, each capability that the job uses, marked "used, not
-    changed". Always the design specs that apply, with `DES-writing-style`,
+    changed". Also each other job whose "Interface" the checks call, with the same
+    mark. Always the design specs that apply, with `DES-writing-style`,
     `DES-pdlc-check-tagging`, and `DES-errors`.
-  - Interface: what the checks are permitted to call. The test writer does not see the
-    code, so the Interface alone is sufficient to write each check. That is functions and
-    arguments, commands and flags, routes, and page elements with what they show.
-  - Each Interface entry gives its file, what goes in and out (with types where the
-    language has them), and each error by its code in `DES-errors`.
+  - Interface: a copy of each "Interface" entry that the checks call. Copy from the spec
+    of the change and from the specs under "Relies on" ("Interfaces" in
+    `pdlc/README.md`). Each line is a word-for-word copy without ` · proposed`, as for
+    the requirements.
+  - The test writer does not see the code, so the Interface alone is sufficient to write
+    each check. That is functions and arguments, commands and flags, routes, and page
+    elements with what they show.
+  - Suppose the checks need an item that no spec lists. Then change first adds the entry
+    to the "Interface" of the spec that owns it, with ` · proposed`. Then change copies it.
+    The entry belongs first to the change whose scope spec owns it.
+    A spec with no "Interface" section gets one from its template first. Suppose the spec
+    that owns the item is not the scope of a change of this intent. Then the item goes into
+    the scope spec of this change, or the item is a question for the user.
+  - Each ` · proposed` entry in the scope spec of a change goes into the Interface of
+    that change, also when a later change copies it too. Verify removes the mark only
+    there.
+  - The rules below hold for the entry in its spec. The copy keeps the same words.
+  - Each Interface entry gives its file, and what goes in and out, with types where the
+    language has them. It gives each error by its code in `DES-errors`.
   - "In" gives each form of input that an acceptance line uses, for example each place
     where an option can stand. "Out" gives the full result, with its order and the order
     of equal items. Each error gives its exact text, where the text shows, and the exit
@@ -52,11 +67,13 @@ change spec is sufficient for the test writer and the builder.
   - The Interface holds only items of this change, of earlier changes, and of existing
     code, not of a later change. The component checks call only these items. The
     acceptance checks read the Interface of every change.
-  - Test seams: how a check controls the clock (for each line that depends on the date or
+  - Test seams: a copy of the seams that the checks use, from "Test seams" of their specs.
+    A seam says how a check controls the clock (for each line that depends on the date or
     time), randomness, and outside vendors or stores. "None" only when no line needs one.
   - Each seam is at the outermost interface that the checks call, so that a check of the
     surface of the user reaches it. A seam is not only an argument deep in the code. For
-    a command, the seam is an environment variable or a flag, and the README names it.
+    a command, the seam is an environment variable or a flag. The "Interface" of its job
+    names it, and the README names it too.
   - When the check runner cannot drive the surface (a page, but no browser), the seam is a
     stand-in. The real page and its script load into a stub page with the same element IDs
     and standard properties. Only the network is a stub. The check acts as the user, and
@@ -101,10 +118,12 @@ change spec is sufficient for the test writer and the builder.
 ## Outputs
 
 - A folder and a `change.md` for each change.
+- Each spec that got a new "Interface" entry, with ` · proposed`.
 - In the intent: the changes, in order, under "Changes", and a note for each moved entry
   point.
 - The handoff `change → acceptance`: the changes, their order, and what about the
   interface helps the test writer.
-- The commit "Plan IN-xxxx: <names of changes>" with the trailer `Intent`.
+- The commit "Plan IN-xxxx: <names of changes>" with the trailer `Intent`: the change
+  specs, the intent, and each patched spec.
 - The tracker port knows each new change.
 - For the user: the changes in order, and that `/pdlc:acceptance` is next.

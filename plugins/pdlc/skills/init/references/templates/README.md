@@ -20,6 +20,8 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 7. Each review remit gets one fresh reviewer, and the reviewer sees only its packet.
 8. A change merges only when all of these are true, as `bin/check_merge.py` confirms:
    - The requirements of the change are `verified`.
+   - Each "Interface" entry of the change is in the "Interface" of its spec, with the
+     same error codes, and is not `proposed` there ("Interfaces").
    - The tests of the change did not change after the lock.
    - Each review remit passed.
    - The branch of the change merges into main without conflicts.
@@ -27,6 +29,11 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
    - The acceptance checks of the intent are locked, reviewed, and passed at its last
      change.
 9. These files are the truth. Boards and dashboards only show what these files contain.
+10. The specs are sufficient to rebuild the project. The specs are the job, capability,
+    and design specs in `specs/`, and `config.md`. A new build from the specs alone
+    passes each acceptance check of the project. Change specs are history, not specs.
+    Thus, each name that a check calls is in the "Interface" of a job or capability
+    ("Interfaces").
 
 ## Commits
 
@@ -93,6 +100,46 @@ change.
 - The README of the project is in no code map. A change changes only what the README says
   about its own spec, and how to run the app and the checks.
 
+## Interfaces
+
+The "Interface" of each job and capability lists what a check can call. The names are
+in the specs, so a rebuild from the specs keeps them, and the checks still pass.
+
+- A job lists what its user touches: commands and flags, routes, form fields, and the
+  page elements and page text that a check reads.
+- A capability lists the calls that jobs use: the public functions, each with its file.
+- Each test seam goes under "Test seams" in the "Interface" of the spec that owns it.
+  A seam controls the clock, randomness, or an outside vendor or store.
+- The first line of an entry gives the name in backticks, the kind, and the file. The
+  merge check matches entries by the first text in backticks.
+- Under the first line, "in" and "out" give what goes in and what comes out. "errors"
+  gives each error code from `DES-errors`, or "none". An error that the app gives today,
+  with no code in `DES-errors`, gives its exact message and status in place of a code.
+  When a line of an intent uses that error, the error gets a code, as each failure line
+  does.
+- A new entry ends its first line with ` · proposed`. The `verify` stage removes the
+  mark in the scope spec when the change that builds the entry passes.
+- When a requirement retires, each entry that only it used gets ` · retiring`. The
+  build stage removes that entry with its code.
+- Intake writes the entries that the acceptance lines need. Recon writes the entries of
+  existing code, with no mark.
+- A change spec copies each entry that its checks call, word for word, as it copies
+  the requirements, but without the mark. A job change that calls an entry of another
+  job lists that job under "Relies on".
+- A missing entry goes into its spec first, as `proposed`, and then into the change
+  spec. This rule holds for the change stage, and for a missing item that the test
+  writer reports.
+- Suppose the spec that owns the item is not the scope of this change (at the change
+  stage: of a change of this intent). Then the item goes into the scope spec of this
+  change, or becomes a question for the user.
+
+```
+- `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
+  - in: the name of a template, and an email address
+  - out: the ID of the sent email
+  - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`
+```
+
 ## Who does what
 
 | Who | Does | Never |
@@ -156,8 +203,11 @@ change spec.
   as failing. The error comes from the missing interface, not from a mistake in the check.
 - A run has a time limit of a few minutes. A run that does not finish has a broken check,
   not a red one. The broken check goes back to the test writer before the lock.
-- When the test writer reports a missing "Interface" item, the skill adds the item to the
-  change spec itself (it can see the code). Then the test writer runs again.
+- When the test writer reports a missing "Interface" item, the skill adds the item to its
+  spec, as `proposed` ("Interfaces"). The skill can see the code. Then the skill copies
+  the item into the change spec that builds it. Suppose the spec that owns the item is
+  not the scope of this change. Then the item goes into the scope spec of this change,
+  or becomes a question for the user. Then the test writer runs again.
 - Lock: the commit of the checks. Its hash goes on the lock line, and replaces an older
   hash.
 - After the lock, only the test writer changes the checks, and only through the skill of
@@ -252,6 +302,8 @@ Its `Base:` names that branch, and its pull request targets that branch.
   base into it first, with the trailer `Intent`.
 - In that merge, a requirement that the intent changed keeps the text and status of the
   intent. Each other requirement keeps the text and status of the base.
+- An "Interface" entry follows the same rule. If the base removed ` · proposed`, the
+  entry keeps the base's line unless this intent changed it.
 - The changes of an intent merge together, bottom first. The merge check fails each of
   them until all are `in review`.
 - The base can merge into main before `verify` proposes the change
