@@ -10,8 +10,9 @@ description: >
 
 ## Goal
 
-Ship takes the work through every pdlc stage, with the recommended answers, until each
-change of the intent is proposed. Ship stops only for a case that needs the user.
+Ship takes the work through every pdlc stage, with the recommended answers. Ship ends
+when each change of the intent is proposed. Or it ends when a stop is recorded for a
+case that needs the user.
 
 ## Constraints
 
@@ -47,12 +48,19 @@ change of the intent is proposed. Ship stops only for a case that needs the user
   wrong app.
 - A failed review is not a question for the user. Each change, and the acceptance stage
   of each intent, has two rounds ("Rounds").
-- Ship stops only for these cases:
+- Ship ends its turn in one of two states only:
+  - Each change of the intent is proposed.
+  - A stop is recorded: the reason under "Open" in the latest handoff, and the commit
+    "Stop <id>: <why>".
+- Ship records a stop only for these cases:
   - A contradiction between requirements. Ready takes no default for a contradiction.
   - A change that needs a file outside its "Files". A missing "Interface" entry is not a
     stop, because the tests stage adds it to its spec and to the change spec.
   - The third failure of the same stage.
-  - The end: each change is proposed.
+- A rate limit, a failed tool, a slow agent, or a long run is not a stop and not an end.
+  Ship waits, tries the step again from the latest handoff, and continues.
+- A hook of the pdlc plugin logs each stage, commit, agent, and tool error of the run in
+  `pdlc/.logs/`. The hook also refuses an end of the turn in any other state.
 - Each other case takes the recommended answer, recorded in the handoff and the intent
   "Notes". These cases are not stops:
   - A missing git remote. The delivery adapter says what to do.
@@ -84,5 +92,6 @@ change of the intent is proposed. Ship stops only for a case that needs the user
   - The new behaviour that waits for approval, with the intent filed for each item.
   - What waits for the user: the merge of the pull requests of each intent together, from
     the bottom of the stack, and any manual checks.
-- Ship is done at the end of the stack, or at a stop. If an outside event ends the
-  session, the next `/pdlc:ship` continues from the handoffs.
+- Ship is done when each change is proposed, or at a recorded stop. If an outside event
+  ends the session, the next `/pdlc:ship` continues from the handoffs, and the log of the
+  run shows where it ended.

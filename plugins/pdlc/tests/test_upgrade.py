@@ -335,6 +335,7 @@ class Apply(Project):
     def test_gitignore_line_is_added_on_main_only(self):
         data = self.apply()
         self.assertIn("pdlc/.tools/", (self.root / ".gitignore").read_text().splitlines())
+        self.assertIn("pdlc/.logs/", (self.root / ".gitignore").read_text().splitlines())
         self.assertEqual(self.subjects()[0], "Upgrade pdlc")
         self.assertTrue(data["gitignore"])
 
