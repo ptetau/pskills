@@ -35,7 +35,7 @@
     "skillTreeSha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$",
-      "description": "sha256 over the sorted list of (relative path, sha256 of content) of each file in the tree of the skill. Optional: old results do not have it."
+      "description": "sha256 over the sorted list of (relative path, sha256 of content) of each file in the tree of the skill. The tree leaves out __pycache__, .git, .claude, evals, .vet-tmp, .vet-capture, node_modules, *.pyc, and .DS_Store. Optional: old results do not have it."
     },
     "skillTree": {
       "type": "string",

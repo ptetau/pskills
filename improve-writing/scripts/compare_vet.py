@@ -26,6 +26,7 @@ Exit code: 0 pass, 1 fail, 2 not comparable.
 
 import argparse
 import json
+import re
 import sys
 
 SAME = [("suiteSha256",), ("config", "prompts"), ("config", "runs"), ("config", "wave"),
@@ -40,6 +41,25 @@ def get(d, path):
     for k in path:
         d = (d or {}).get(k)
     return d
+
+
+MODEL_ID = re.compile(r"claude-[a-z]+-\d")
+
+
+def models_pinned(result):
+    """True when each model is a full model ID, and `session` has a recorded meaning."""
+    cfg = result.get("config") or {}
+    session = cfg.get("sessionModel")
+    if session is not None and not MODEL_ID.match(str(session)):
+        return False
+    for role in ("run", "grade", "compare", "cross"):
+        model = ((cfg.get("agents") or {}).get(role) or {}).get("model")
+        if model == "session":
+            if not session:
+                return False
+        elif model is not None and not MODEL_ID.match(str(model)):
+            return False
+    return True
 
 
 def compare(base, cand, overall_tol=5.0, item_tol=20.0):
@@ -59,6 +79,8 @@ def compare(base, cand, overall_tol=5.0, item_tol=20.0):
         for who, result in (("baseline", base), ("candidate", cand)):
             if not result.get(key):
                 out["warnings"].append("%s is missing in the %s result (old result), so it was not compared" % (key, who))
+    if not models_pinned(base) or not models_pinned(cand):
+        out["warnings"].append("models not pinned; scores may not be comparable")
     state = {}
     for key in ("skillSha256", "skillTreeSha256"):
         b, c = base.get(key), cand.get(key)

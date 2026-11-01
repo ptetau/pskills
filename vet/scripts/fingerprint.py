@@ -13,7 +13,9 @@ Prints one JSON object:
 
 The tree is the skill folder. When the skill is in a plugin
 (<plugin>/skills/<name>/SKILL.md, and <plugin>/.claude-plugin exists), the tree is the
-whole plugin folder. The tree leaves out __pycache__, .git, and *.pyc.
+whole plugin folder. The tree leaves out these folders: __pycache__, .git, .claude, evals,
+.vet-tmp, .vet-capture, and node_modules. It also leaves out *.pyc files, .git files, and
+.DS_Store files. Thus, the output of /vet runs does not change the hash.
 """
 
 import argparse
@@ -23,7 +25,8 @@ import os
 import subprocess
 import sys
 
-SKIP_DIRS = {"__pycache__", ".git"}
+SKIP_DIRS = {"__pycache__", ".git", ".claude", "evals", ".vet-tmp", ".vet-capture", "node_modules"}
+SKIP_FILES = {".git", ".DS_Store"}
 
 
 def sha256_file(path):
@@ -51,7 +54,7 @@ def tree_entries(root):
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
         for name in filenames:
-            if name.endswith(".pyc"):
+            if name.endswith(".pyc") or name in SKIP_FILES:
                 continue
             full = os.path.join(dirpath, name)
             if not os.path.isfile(full):

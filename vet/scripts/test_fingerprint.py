@@ -85,6 +85,52 @@ class FingerprintTest(unittest.TestCase):
         write(os.path.join(plugin, "agents", "x.md"), "agent changed")
         self.assertNotEqual(before, fingerprint.fingerprint(skill)["skillTreeSha256"])
 
+    def test_order_of_writing_does_not_change_hash(self):
+        other = tempfile.TemporaryDirectory()
+        self.addCleanup(other.cleanup)
+        root2 = os.path.realpath(other.name)
+        names = ["z.md", "m.md", "a.md"]
+        skill1 = os.path.join(self.base, "ord1", "SKILL.md")
+        skill2 = os.path.join(root2, "ord2", "SKILL.md")
+        write(skill1, "s")
+        write(skill2, "s")
+        for n in names:
+            write(os.path.join(self.base, "ord1", n), n)
+        for n in reversed(names):
+            write(os.path.join(root2, "ord2", n), n)
+        e = fingerprint.tree_entries(os.path.join(self.base, "ord1"))
+        self.assertEqual([r for r, _ in e], ["SKILL.md", "a.md", "m.md", "z.md"])
+        self.assertEqual(fingerprint.fingerprint(skill1)["skillTreeSha256"],
+                         fingerprint.fingerprint(skill2)["skillTreeSha256"])
+
+    def test_nested_paths_are_sorted(self):
+        write(os.path.join(self.base, "alpha", "z", "1.md"), "1")
+        write(os.path.join(self.base, "alpha", "b", "2.md"), "2")
+        rels = [r for r, _ in fingerprint.tree_entries(os.path.join(self.base, "alpha"))]
+        self.assertEqual(rels, sorted(rels))
+        self.assertLess(rels.index("b/2.md"), rels.index("z/1.md"))
+
+    def test_skill_not_under_skills_folder_uses_skill_folder(self):
+        plug = os.path.join(self.base, "plug2")
+        write(os.path.join(plug, ".claude-plugin", "plugin.json"), "{}")
+        skill = os.path.join(plug, "other", "x", "SKILL.md")
+        write(skill, "x")
+        self.assertEqual(fingerprint.tree_root(skill), os.path.dirname(skill))
+
+    def test_repo_root_tree_ignores_run_output(self):
+        plug = os.path.join(self.base, "rootplug")
+        skill = os.path.join(plug, "skills", "one", "SKILL.md")
+        write(skill, "one")
+        write(os.path.join(plug, ".claude-plugin", "plugin.json"), "{}")
+        before = fingerprint.fingerprint(skill)["skillTreeSha256"]
+        write(os.path.join(plug, "evals", "x", "runs", "1", "results.json"), "{}")
+        write(os.path.join(plug, ".claude", "worktrees", "a", ".vet-tmp", "n"), "n")
+        write(os.path.join(plug, ".vet-capture", "c"), "c")
+        write(os.path.join(plug, "node_modules", "m", "i.js"), "m")
+        write(os.path.join(plug, ".DS_Store"), "d")
+        write(os.path.join(plug, "skills", "one", ".git"), "gitdir: x")
+        self.assertEqual(before, fingerprint.fingerprint(skill)["skillTreeSha256"])
+
     def test_skill_tree_is_relative_inside_a_repo(self):
         here = os.path.dirname(os.path.abspath(__file__))
         fp = fingerprint.fingerprint(os.path.join(here, "..", "SKILL.md"))

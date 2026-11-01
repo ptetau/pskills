@@ -103,13 +103,20 @@ stay comparable over time.
    matches, stop and ask.
 2. **Find the repo root** with `git rev-parse --show-toplevel`. The isolated worktrees
    need git. If this is not a git repo, stop and say so.
-3. **Fingerprint the skill and the workflow.** Run this command, with the paths of the
-   directory of this skill (`vet`):
-   `python3 <vet dir>/scripts/fingerprint.py <SKILL.md of the skill> --workflow <vet dir>/references/vet.workflow.js`.
-   Keep the JSON output. It has `skillSha256` (the hash of SKILL.md), `skillTreeSha256` (the
-   hash of each file in the tree of the skill), `skillTree` (the root of that tree), and
-   `workflowSha256` (the hash of the workflow script that Phase 4 runs). The tree is the
-   skill folder. For a skill in a plugin, the tree is all of the plugin folder.
+3. **Fingerprint the skill and the workflow.** `<vet dir>` is the directory of this skill.
+   Run this command:
+
+   ```
+   python3 <vet dir>/scripts/fingerprint.py <SKILL.md of the skill> --workflow <vet dir>/references/vet.workflow.js
+   ```
+
+   Keep the JSON output. The output has these fields:
+   - `skillSha256`: the hash of SKILL.md.
+   - `skillTreeSha256`: the hash of each file in the tree of the skill.
+   - `skillTree`: the root of that tree.
+   - `workflowSha256`: the hash of the workflow script that Phase 4 runs.
+
+   The tree is the skill folder. For a skill in a plugin, the tree is all of the plugin folder.
 4. **Check for a saved suite** at `evals/<skill>/suite.json`. If the suite exists and
    there is no `--regen`, load the suite. Then go directly to Phase 3b (models). If the
    `skillSha256` of the suite is different from the `skillSha256` of step 3, say so in one line.
@@ -227,9 +234,9 @@ setting comes from `evals/agents.json`, or is `session`.
   stability and makes the grade less clear.
 
 Put the answers into the agent roles for this run. Offer one time to save the answers to
-`evals/agents.json` as the default of the repo. Record the meaning of `session` in the
-results as follows. When you know the model name of the session, set
-`config.sessionModel` to that name. Scores from runs with different models are not
+`evals/agents.json` as the default of the repo. Always set `config.sessionModel` to the
+exact model ID of this session (for example `claude-opus-5-5`), not a display name. When a
+role model is an alias, write the full model ID. Scores from runs with different models are not
 comparable.
 
 ## Phase 4: Run and judge
@@ -374,8 +381,7 @@ run or a lost judgement as a pass or as a fail.
    - The path to `report.md`.
 
    If an earlier run has the same `suiteSha256`, `workflowSha256`, agent roles, and models,
-   also give the
-   change in each score since that run. Do not use a run with a different suite version
+   also give the change in each score since that run. Do not use a run with a different suite version
    as a baseline.
 
 ## Agent roles

@@ -21,7 +21,7 @@ def result(**over):
         "skillSha256": H["a"], "skillTreeSha256": H["b"], "workflowSha256": H["c"],
         "suiteSha256": H["d"],
         "config": {"prompts": ["P01"], "runs": 4, "wave": 2,
-                   "agents": {"preset": "lean"}, "sessionModel": "m"},
+                   "agents": {"preset": "lean"}, "sessionModel": "claude-opus-5-5"},
         "scores": {"quality": 80.0, "stability": 80.0, "overall": 80.0, "usableRuns": 4,
                    "confidence": "normal"},
         "items": [{"id": "R1", "weight": 3, "criterion": "c", "passRate": 90.0}],
@@ -102,6 +102,44 @@ class CompareTest(unittest.TestCase):
         out = compare_vet.compare(old, result())
         self.assertIn("skillTreeSha256 unknown", out["info"][0])
         self.assertFalse(any("same skill text" in w for w in out["warnings"]))
+
+    def pinned_warns(self, cand):
+        out = compare_vet.compare(result(), cand)
+        return [w for w in out["warnings"] if "models not pinned" in w]
+
+    def test_pinned_models_give_no_warning(self):
+        cand = result()
+        cand["config"]["sessionModel"] = "claude-opus-5-5"
+        cand["config"]["agents"] = {"preset": "lean", "run": {"model": "session"},
+                                    "grade": {"model": "claude-sonnet-5-5"}}
+        base = copy.deepcopy(cand)
+        out = compare_vet.compare(base, cand)
+        self.assertEqual([w for w in out["warnings"] if "models not pinned" in w], [])
+
+    def test_session_role_without_session_model_warns(self):
+        cand = result()
+        cand["config"]["agents"] = {"preset": "lean", "run": {"model": "session"}}
+        del cand["config"]["sessionModel"]
+        base = copy.deepcopy(cand)
+        out = compare_vet.compare(base, cand)
+        self.assertTrue(any("models not pinned; scores may not be comparable" in w
+                            for w in out["warnings"]))
+        code, text = run_cli(base, cand)
+        self.assertIn("WARN  models not pinned; scores may not be comparable", text)
+        self.assertEqual(code, 0)
+
+    def test_alias_model_warns(self):
+        for where in ("sessionModel", "role"):
+            cand = result()
+            cand["config"]["sessionModel"] = "claude-opus-5-5"
+            cand["config"]["agents"] = {"preset": "lean", "run": {"model": "session"}}
+            if where == "sessionModel":
+                cand["config"]["sessionModel"] = "Opus"
+            else:
+                cand["config"]["agents"]["grade"] = {"model": "sonnet"}
+            base = copy.deepcopy(cand)
+            out = compare_vet.compare(base, cand)
+            self.assertTrue(any("models not pinned" in w for w in out["warnings"]), where)
 
     def test_old_settings_still_checked(self):
         cand = result()
