@@ -11,29 +11,29 @@ description: >
 
 ## Goal
 
-A test writer can write each check with no guess. Each requirement is clear and `ready`. No spec shows old behaviour.
+A test writer can write each check with no guess. No spec shows old behaviour.
 
 ## Inputs
 
-- `pdlc/README.md`: "Spec patches", "Questions".
 - The intent that the user names, or the oldest `specifying` intent. The argument `defaults`.
 
 ## Outputs
 
-- Each `proposed` requirement becomes `ready`; `retiring` stays.
+- Clear `proposed` requirements become `ready`.
 - The handoff `ready → change`, or `ready → user` at a stop.
 - The commit "Ready IN-xxxx: <name>" with trailer `Intent`, also at a stop.
+- The reply: what changed, and `/pdlc:change` next.
 
 ## Constraints
 
-- Settle implied behaviour: bad input, limits. Each failure line names a code in `DES-errors`.
-- Lines give concrete values and exact output, not "any file".
+- `pdlc/README.md` binds, in particular "Bookkeeping on main", "Spec patches", and "Questions".
+- Settle implied behaviour: bad input, limits. A missing design spec goes through `pdlc:conventions`. Each failure line names a code in `DES-errors`.
+- Lines give concrete values and exact output.
 - The order of two errors comes from the intent.
-- Each `(assumed)` mark has `<requirement>: <question> → <answer> (assumed)` in "Notes" and in "Decided on defaults".
-- A contradiction stays `proposed`: ask, never select, also with `defaults`.
-- Run `python3 pdlc/bin/check_handoff.py IN-xxxx --stage ready`. After three failed runs, put the problems under "Open" and stop with `ready → user`.
+- Each `(assumed)` mark has `<requirement>: <question> → <answer> (assumed)` in "Notes" and "Decided on defaults".
+- A contradiction stays `proposed`: the user selects, also with `defaults`.
+- After three failed runs of `python3 pdlc/bin/check_handoff.py IN-xxxx --stage ready`, put the problems under "Open" and stop.
 
 ## Done when
 
-- Each requirement is `ready` or `retiring`, or a contradiction stopped ready.
-- The check exits 0, or the stop happened. The commit exists.
+- The intent is `ready`, each requirement is `ready` or `retiring`, and the check exits 0. Or ready stopped.
