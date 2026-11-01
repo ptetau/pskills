@@ -655,6 +655,20 @@ class MergeCheck(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("CH-0002 of IN-0002 is not ready (status: building)", out)
 
+    def test_a_cancelled_change_of_the_intent_does_not_have_to_be_ready(self):
+        self.stacked_repo()
+        self.write_second("cancelled", "none")
+        self.commit_all("CH-0002 cancelled")
+        code, out = self.run_check("CH-0001")
+        self.assertNotIn("CH-0002", out)
+
+    def test_a_cancelled_change_on_its_own_branch_does_not_have_to_be_ready(self):
+        self.stacked_repo()
+        self.stack_second("cancelled")
+        git(self.root, "switch", "-q", self.FIRST)
+        code, out = self.run_check("CH-0001")
+        self.assertNotIn("CH-0002", out)
+
     def test_a_header_field_is_its_value_without_a_name_in_brackets_or_backticks(self):
         header = ("Intent: IN-0001 (poll-input-errors) · Scope: CAP-http-plumbing · "
                   "Status: in review · Ticket: none · Branch: `pdlc/CH-0001-x` · Base: main")

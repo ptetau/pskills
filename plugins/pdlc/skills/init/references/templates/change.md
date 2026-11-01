@@ -33,10 +33,12 @@ Add ` (retire)` to the heading of a requirement that this change removes.
 
 Copy each entry that the checks call from the "Interface" of its spec, as you copy the
 requirements. Copy each line word for word, but not the ` · proposed` mark. An entry
-comes from the spec of this change, or from a job or capability under "Relies on". If no
-spec has the entry, add the entry to its spec first. If that spec is not the scope of this
-change, add the entry to the scope spec instead, or ask the user. `bin/check_merge.py`
-fails the change when an entry is not in its spec. See "Interfaces" in `pdlc/README.md`.
+comes from the spec of this change, or from a job or capability under "Relies on". An
+entry that a later change of the intent builds is not permitted. `bin/check_order.py`
+checks this. If no spec has the entry, add the entry to its spec first. If that spec is
+not the scope of this change, add the entry to the scope spec instead, or ask the user.
+`bin/check_merge.py` fails the change when an entry is not in its spec. See "Interfaces"
+in `pdlc/README.md`.
 
 - `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
   - in: the name of a template, and an email address

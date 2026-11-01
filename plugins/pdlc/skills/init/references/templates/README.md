@@ -134,6 +134,10 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
 - Suppose the spec that owns the item is not the scope of this change (at the change
   stage: of a change of this intent). Then the item goes into the scope spec of this
   change, or becomes a question for the user.
+- The changes of an intent go in the order of their entries. A change comes after each
+  change that builds an entry that its acceptance lines or its Interface use. It also
+  comes after the change of each spec under its "Relies on". `bin/check_order.py`
+  checks the order at the change stage.
 
 ```
 - `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
