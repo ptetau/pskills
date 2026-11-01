@@ -1,5 +1,5 @@
 {
-  "enforced": [],
+  "enforced": ["tests"],
   "acceptance": 200,
   "board": 200,
   "build": 200,
