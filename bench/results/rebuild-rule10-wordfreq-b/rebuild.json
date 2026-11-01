@@ -1,0 +1,113 @@
+{
+ "label": "rebuild-rule10-wordfreq-b",
+ "source": {
+  "project": "/tmp/pdlc-bench-ahnpdbzo/app",
+  "ref": "pdlc/CH-0001-top-option",
+  "fixture": "wordfreq",
+  "commit": "464399ae6e1b30769ed0603ea27494b74a5afda2",
+  "plugin_commit": "228f5ee",
+  "plugin_status": "",
+  "plugins": [
+   {
+    "name": "pdlc",
+    "path": "/home/user/pskills/plugins/pdlc",
+    "source": "pdlc@inline",
+    "version": "0.5.0"
+   },
+   {
+    "name": "cc-plugin-agents-md",
+    "path": "builtin",
+    "source": "cc-plugin-agents-md@builtin"
+   },
+   {
+    "name": "cc-plugin-telemetry",
+    "path": "builtin",
+    "source": "cc-plugin-telemetry@builtin"
+   },
+   {
+    "name": "cc-plugin-plugin-authoring",
+    "path": "builtin",
+    "source": "cc-plugin-plugin-authoring@builtin"
+   }
+  ]
+ },
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "cost_usd": 0.1313,
+ "wall_s": 24.3,
+ "stderr": "",
+ "peeked": [],
+ "kept": [
+  "pdlc/README.md",
+  "pdlc/config.md",
+  "pdlc/specs/capabilities/.gitkeep",
+  "pdlc/specs/capabilities/CAP-word-counting.md",
+  "pdlc/specs/design/.gitkeep",
+  "pdlc/specs/design/DES-errors.md",
+  "pdlc/specs/design/DES-pdlc-branches.md",
+  "pdlc/specs/design/DES-pdlc-check-tagging.md",
+  "pdlc/specs/design/DES-pdlc-commit-trailers.md",
+  "pdlc/specs/design/DES-pdlc-ids.md",
+  "pdlc/specs/design/DES-pdlc-review-checklist.md",
+  "pdlc/specs/design/DES-writing-style.md",
+  "pdlc/specs/jobs/.gitkeep",
+  "pdlc/specs/jobs/JOB-report-word-frequencies.md"
+ ],
+ "kept_extra": [],
+ "builder_files": [
+  "tests/test_wordfreq.py",
+  "wordfreq/__init__.py",
+  "wordfreq/__main__.py",
+  "wordfreq/cli.py",
+  "wordfreq/counter.py"
+ ],
+ "original": {
+  "acceptance": {
+   "ok": true,
+   "ran": 14,
+   "failed": [],
+   "failed_count": 0,
+   "skipped": 0,
+   "passed_names": [],
+   "named": false
+  },
+  "component": {
+   "ok": true,
+   "ran": 8,
+   "failed": [],
+   "failed_count": 0,
+   "skipped": 0,
+   "passed_names": [],
+   "named": false
+  }
+ },
+ "acceptance": {
+  "measured": true,
+  "total": 14,
+  "passed": 14,
+  "failed": [],
+  "ok": true,
+  "output": "..............\n----------------------------------------------------------------------\nRan 14 tests in 0.118s\n\nOK\n"
+ },
+ "component": {
+  "measured": true,
+  "total": 8,
+  "passed": 8,
+  "failed": [],
+  "ok": true,
+  "output": "........\n----------------------------------------------------------------------\nRan 8 tests in 0.001s\n\nOK\n",
+  "origin": {
+   "tests/test_cli.py": "pre-pdlc",
+   "tests/test_counter.py": "pre-pdlc"
+  },
+  "failed_files": {}
+ },
+ "probes": {
+  "passed": 8,
+  "total": 8,
+  "failed": [],
+  "option_after_file_failed": []
+ },
+ "gaps": [],
+ "verdict": "holds"
+}
