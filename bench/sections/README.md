@@ -7,8 +7,8 @@ A snapshot is a git bundle of the project of a finished run. Three snapshots exi
 
 | Snapshot | File | App | Run it comes from |
 |---|---|---|---|
-| `wordfreq` (the default) | `wordfreq.bundle` | `bench/fixture-app`, one change | NOT RECORDED YET: write the run name here |
-| `todo-rust` | `todo-rust.bundle` | `bench/fixtures/todo-rust`, two changes (the store capability, then the page job) | NOT RECORDED YET: write the run name here |
+| `wordfreq` (the default) | `wordfreq.bundle` | `bench/fixture-app`, one change | `r8-base-wordfreq` |
+| `todo-rust` | `todo-rust.bundle` | `bench/fixtures/todo-rust`, three changes, stacked CH-0001, CH-0003, CH-0002 | `r8-base-todo-rust-2` |
 | `r5` | `project.bundle` | `bench/fixture-app`, from an early pdlc | `r5-compliance-by-risk-3` |
 
 `python3 bench/run_bench.py stage --stage <stage> --label <label> [--snapshot <name>]` clones a
