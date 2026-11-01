@@ -197,6 +197,7 @@ class TheSnapshot(Snapshot):
         self.assertEqual(len(lines), 2, result.stdout)
         self.assertTrue(lines[0].startswith("CH-0002 comes before CH-0003"))
         self.assertEqual(lines[1], "A good order: CH-0001, CH-0003, CH-0002")
+        self.assertEqual(list((self.root / "pdlc" / "bin").glob("__pycache__")), [])
 
     def test_a_missing_check_merge_exits_with_2(self):
         result = self.as_command(with_merge=False)
@@ -335,6 +336,69 @@ class TheKinds(Base):
                     req="JOB-builder.R1")
         self.listing(4, 5)
         self.assertEqual(self.run_check()[0], 0)
+
+    def test_five_lines_of_one_requirement_give_one_problem_line(self):
+        self.build(GET_ALL)
+        spec_file(self.root, "JOB-user", [])
+        lines = ["Then `GET /?show=all` shows item %d." % n for n in range(5)]
+        change_file(self.root, 5, "JOB-user", lines, req="JOB-user.R1")
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertEqual(out.count("comes before"), 1, out)
+
+    def test_one_use_that_matches_keys_of_two_changes_gives_no_rule(self):
+        self.build("`POST /items/<id>/done` · route · `src/lib.rs` · proposed")
+        spec_file(self.root, "JOB-other", ["`POST /items/{id}/done` · route · `src/lib.rs` · proposed"])
+        change_file(self.root, 6, "JOB-other", [PLAIN_LINE], req="JOB-other.R1")
+        self.listing(5, 4, 6)
+        self.assertEqual(self.use("When a user sends `POST /items/2/done`, then done."), 0)
+
+    def test_two_changes_with_one_scope_give_no_relies_on_rule(self):
+        self.build()
+        change_file(self.root, 6, "JOB-builder", [PLAIN_LINE], req="JOB-builder.R2")
+        self.listing(5, 4, 6)
+        spec_file(self.root, "JOB-user", [])
+        change_file(self.root, 5, "JOB-user", [PLAIN_LINE], req="JOB-user.R1", relies=["JOB-builder"])
+        self.assertEqual(self.run_check()[0], 0)
+
+    def test_a_function_name_of_fewer_than_three_letters_is_not_matched(self):
+        key = "`ab(x: u8) -> u8` · function · `src/a.rs` · proposed"
+        self.assertEqual(self.uses("When ab(2) is called, then it is 2.", key), 0)
+        key = "`abc(x: u8) -> u8` · function · `src/a.rs` · proposed"
+        self.assertEqual(self.uses("When abc(2) is called, then it is 2.", key), 1)
+
+    def test_a_placeholder_does_not_match_across_a_slash(self):
+        key = "`POST /items/<id>/done` · route · `src/lib.rs` · proposed"
+        self.assertEqual(self.uses("When a user sends `POST /items/a/b/done`, then done.", key), 0)
+
+    def test_the_end_of_a_path_in_prose_loses_its_punctuation(self):
+        key = "`POST /items/<id>/done` · route · `src/lib.rs` · proposed"
+        for end in (".", ",", ";", ":"):
+            self.assertEqual(self.uses("Then the app handles POST /items/2/done%s" % end, key), 1, end)
+
+    def test_the_good_order_keeps_the_list_order(self):
+        self.build("`POST /items/<id>/done` · route · `src/lib.rs` · proposed")
+        spec_file(self.root, "JOB-user", [])
+        spec_file(self.root, "JOB-free", [])
+        change_file(self.root, 5, "JOB-user", ["When a user sends `POST /items/2/done`, then done."],
+                    req="JOB-user.R1")
+        change_file(self.root, 7, "JOB-free", [PLAIN_LINE], req="JOB-free.R1")
+        change_file(self.root, 8, "JOB-free", [PLAIN_LINE], req="JOB-free.R2")
+        self.listing(5, 7, 8, 4)
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertTrue(out.endswith("A good order: CH-0007, CH-0008, CH-0004, CH-0005\n"), out)
+
+    def test_explain_says_when_the_scope_spec_has_no_interface(self):
+        spec = self.root / "pdlc" / "specs" / "jobs" / "JOB-builder.md"
+        spec.parent.mkdir(parents=True, exist_ok=True)
+        spec.write_text("# JOB-builder · A spec\n\nStatus: active\n")
+        change_file(self.root, 4, "JOB-builder", [PLAIN_LINE], req="JOB-builder.R1")
+        spec_file(self.root, "JOB-user", [])
+        change_file(self.root, 5, "JOB-user", [PLAIN_LINE], req="JOB-user.R1")
+        code, out = self.run_check("IN-0001", "--explain")
+        self.assertEqual(code, 0)
+        self.assertIn("skip: CH-0004 has a scope spec with no Interface", out)
 
     def test_no_false_failure_when_the_scope_spec_has_no_interface(self):
         spec = self.root / "pdlc" / "specs" / "jobs" / "JOB-builder.md"

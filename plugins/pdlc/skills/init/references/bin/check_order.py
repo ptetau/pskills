@@ -49,6 +49,7 @@ def load_check_merge():
     path = Path(__file__).resolve().with_name("check_merge.py")
     if not path.exists():
         return None
+    sys.dont_write_bytecode = True  # do not leave a __pycache__ in pdlc/bin of the project
     spec = importlib.util.spec_from_file_location("pdlc_check_merge", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -144,7 +145,12 @@ class Plan:
                     self.skip("skip: %s has the scope %s, so it builds nothing" % (ch, scope))
                 continue
             self.scopes[ch] = scope
-            for key, (first, _codes) in cm.interface_entries(cm.spec_text(self.root, scope)).items():
+            text = cm.spec_text(self.root, scope)
+            if not re.search(r"^## Interface\s*$", text or "", re.M):
+                self.skip("skip: %s has a scope spec with no Interface, so it builds nothing" % ch)
+                continue
+            for key, value in cm.interface_entries(text).items():
+                first = value[0]
                 kind = (KIND.match(first) or [None, ""])[1]
                 entry = builders.setdefault(key, [kind, [], key_class(key, kind)])
                 if PROPOSED.search(first):

@@ -48,13 +48,14 @@ its right spec, as `proposed`. Intake does not write code.
   touches. A capability gets the calls that jobs use.
 - Each new entry ends its first line with ` · proposed`. Each name that the intent does
   not give has the mark `(assumed)`.
-- Each entry names each error code of the lines that use it, from `DES-errors`, and its
-  test seams go under "Test seams".
-- An error that the app gives today, with no code in `DES-errors`, keeps its exact message
-  and status in the entry. If no line of this intent uses that error, intake makes no
-  code for it.
-- A new code that intake makes has the mark `(assumed)` in its `DES-errors` row and in
-  each entry that names it.
+- Each entry gives each error of the lines that use it, one error on each line. An error
+  line has the code, the exact message, and the result ("Interfaces" in `pdlc/README.md`).
+  Test seams go under "Test seams".
+- An error that the app gives today, with no code in `DES-errors`, gets `no code` and its
+  exact message and result. If no line of this intent uses that error, intake makes no code
+  for it.
+- A new code that intake makes has the mark `(assumed)` in its `DES-errors` row and in each
+  entry that names it.
 - A spec with no "Interface" section gets one from its template, before "Requirements".
 - Each detail that the words of the intent do not give (a message, a limit, an order, a
   format) has the mark `(assumed)` where intake writes it.

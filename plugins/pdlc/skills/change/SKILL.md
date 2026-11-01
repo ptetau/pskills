@@ -35,7 +35,7 @@ change spec is sufficient for the test writer and the builder.
   proposes `GET /?show=all`. Thus, the change of `JOB-view-list` comes first.
 - Where these rules give no order, design specs come first, then capabilities, then jobs.
 - Suppose that two changes need each other. Usually, one of them uses the item of the
-  other only to prepare a "Given". That change prepares the "Given" with an item of an
+  other only to set up a "Given". That change sets up the "Given" with an item of an
   earlier change or of existing code. An example is a store function in place of a
   route. Then it removes the copied entry and the "Relies on" line that it no longer
   needs.
@@ -72,18 +72,20 @@ change spec is sufficient for the test writer and the builder.
     there.
   - The rules below hold for the entry in its spec. The copy keeps the same words.
   - Each Interface entry gives its file, and what goes in and out, with types where the
-    language has them. It gives each error by its code in `DES-errors`.
+    language has them. It gives each error on its own line: the code in `DES-errors`, the
+    exact message, and the result.
   - "In" gives each form of input that an acceptance line uses, for example each place
     where an option can stand. "Out" gives the full result, with its order and the order
-    of equal items. Each error gives its exact text, where the text shows, and the exit
-    code or status. An error with no code in `DES-errors` also gives these items.
+    of equal items. The change spec copies each error line word for word. The merge check
+    compares the code, the message, and the result of each error. An error with no code in
+    `DES-errors` has `no code` in place of the code.
   - When the "when" of a line is a user action (a click, a command, a request), the
     Interface lists that surface. Then the checks drive it, not only a helper below it.
   - A new name follows the style of the existing code, and has the mark `(assumed)`.
   - The Interface holds only items of this change, of earlier changes, and of existing
     code, not of a later change. `check_order.py` finds an entry of a later change. The
-    component checks call only these items. The
-    acceptance checks read the Interface of every change.
+    component checks call only these items. The acceptance checks read the Interface of
+    every change.
   - Test seams: a copy of the seams that the checks use, from "Test seams" of their specs.
     A seam says how a check controls the clock (for each line that depends on the date or
     time), randomness, and outside vendors or stores. "None" only when no line needs one.

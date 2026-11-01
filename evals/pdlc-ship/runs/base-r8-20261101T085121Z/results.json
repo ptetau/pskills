@@ -1,0 +1,417 @@
+{
+ "skill": "pdlc:ship",
+ "skillSha256": "1fc0e2c0205b5c9b2282178fba38a5ca64b4611fb78be6c0f83efa0600b825ab",
+ "suiteSha256": "c687c9e875e929a2bca3f5c92788a719cdbcbeba469e4d35b21065f6314449fa",
+ "runId": "base-r8-20261101T085121Z",
+ "generatedAt": "2026-11-01T08:51:21Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 88.5,
+  "stability": 83.1,
+  "overall": 85.8,
+  "grade": "B",
+  "confidence": "normal",
+  "usableRuns": 2,
+  "totalRuns": 2
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 88.5,
+   "stability": 83.1,
+   "overall": 85.8,
+   "grade": "B",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 88.5,
+  "median": 88.5,
+  "max": 88.5
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The run ends only in an end state: each change is proposed, or a commit \"Stop <id>: <why>\" records the stop. It does not end with work half done and no stop record.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A stop gives the user a clear decision. The reply and \"Open\" in the handoff give the reason in one sentence, the decision, and a recommended answer that obeys the pdlc rules.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Ship does not settle a contradiction by default. It stops and leaves the choice to the user.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Ship continues from the latest handoff and does not run a finished stage again.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stage leaves the commit subjects and trailers of its own skill, in the order of \"Stages and handoffs\".",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A case that is not a stop (no remote, a slow agent, a choice of name) does not stop the run.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "At the end, `git status --porcelain` is empty, and each commit has the trailers of \"Commits\".",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The last reply lists the changes in stack order with their proposals and GIFs. It also lists each answer taken by default, and what waits for the user.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 88.5,
+   "stability": 83.1
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/base-r8-20261101T085121Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "Ship stopped at ready for a contradiction: the example --top 20 against the limit of N 10 or less. Three commits on main in proj: Specify IN-0001, Ready IN-0001, Stop IN-0001. No code was written.",
+   "quality": 88.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "77fea25cb64e6fa0dcb54cbe7476148afc73c4cd Stop IN-0001: R4 example and R5 limit contradict"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "- Contradiction: R4 (top option) says `wordfreq --top 20 FILE` prints 20 words. R5 (top limit) says N must be 10 or less."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Both requirements stay `proposed`. Ready takes no default for a contradiction."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: Top option ... Ready IN-0001: Top option ... Stop IN-0001: R4 example and R5 limit contradict"
+    },
+    {
+     "id": "R6",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: R4 example and R5 limit contradict\nIntent: IN-0001"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/base-r8-20261101T085121Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "Ship stopped at ready for a real contradiction in the request: N must be 10 or less, but the example is --top 20. Three commits on main in proj (Specify, Ready, Stop). No change, test or build stage ran.",
+   "quality": 88.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "0f02edb701c69b057a9f0dc58e6e8d07357e7ab5 Stop IN-0001: top limit of 10 contradicts the example --top 20"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "R5 (top limit of 10) says N must be 10 or less. Both come from the words of the user, and they cannot both be true."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Both cannot be true. I did not choose for you. R3 (usage line), R4 and R5 stay `proposed`."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: top limit of 10 contradicts the example --top 20 ... Ready IN-0001: top option ... Specify IN-0001: top option"
+    },
+    {
+     "id": "R6",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: top limit of 10 contradicts the example --top 20\nIntent: IN-0001"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "Both runs end with a Stop IN-0001 commit after Specify and Ready, and the reply states the stop. Only the wording of the stop reason differs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Specify, Ready, then Stop IN-0001 for the contradiction as the newest commit; reply says it stopped at ready."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "Both recommend keeping the limit and changing the example. Run 1 names options A and B with 'a value of 10 or less', and run 2 asks 'which statement changes' and recommends exactly `--top 10`.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Open gives the clash in several sentences, the decision, and a recommendation to keep the limit of 10 and change the example."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "equivalent",
+   "reason": "Both stop at the contradiction and choose no side. Other defaults differ, such as the error codes and which requirements are marked ready, but the handling of the clash is the same.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Stops at ready, leaves R4 and R5 proposed, and makes neither side win."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "equivalent",
+   "reason": "Both runs have the same three subjects in the same order. Run 1 adds commit bodies, and run 2 does not.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Three commits in order: Specify IN-0001, Ready IN-0001, and Stop IN-0001, each with an Intent trailer."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "Both runs give every commit the Intent trailer. Run 1 also adds session co-author lines, which pdlc does not require.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Each commit has the Intent: IN-0001 trailer, the stop commit included, and the work is committed."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

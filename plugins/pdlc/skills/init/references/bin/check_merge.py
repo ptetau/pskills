@@ -7,8 +7,11 @@ A change may merge only when:
     with no emphasis around it: "(assumed)", "(assumed limit)", "(assumed: a reason)";
   - each entry under "Interface" in its change spec, also under "Test seams", is in the
     "Interface" of its scope spec, or of a JOB or CAP spec under "Relies on". The first
-    text in backticks names an entry. The codes on its "errors:" line match those of the
-    spec entry, and the spec entry does not end with "· proposed". A change whose scope
+    text in backticks names an entry. Its "errors:" line is "errors: none", or has one
+    line under it for each error: the code, the exact message, and the result, as in
+    "- `TOP_INVALID` · `error: --top needs a whole number` · exit 2". The code, message, and
+    result of each error match those of the spec entry, a code in backticks is a row of
+    DES-errors, and the spec entry does not end with "· proposed". A change whose scope
     spec has no "## Interface" heading, or a change with no candidate spec that has one
     (a spec from before this rule), skips this check;
   - its checks are locked, and no check file changed after the lock;
@@ -27,10 +30,12 @@ A change may merge only when:
   - the acceptance checks of its intent are locked ("Acceptance-Locked:" in the intent), the
     tests review judged them at that lock with "Wrong versions", and the acceptance file did
     not change after the lock;
-  - the acceptance checks passed at the top of the stack: the intent on the branch of its
-    last change says "Acceptance-Passed: <hash>", that commit comes after the lock, and only
-    pdlc/ files changed after it. A change that only retires requirements is permitted
-    to have "Acceptance-Locked: none";
+  - the acceptance checks passed at the top of the stack: the intent on the branch of the
+    top change says "Acceptance-Passed: <hash>", that commit comes after the lock, and only
+    pdlc/ files changed after it. The top change is the one that no other change of the
+    intent has as its "Base:" branch. The "Changes" list on a lower branch can be stale, so
+    the check reads the list from the top branch. A change that only retires requirements
+    is permitted to have "Acceptance-Locked: none";
   - it hasn't merged already: a merged change's branch takes no new commits.
 
 Usage:
@@ -98,31 +103,124 @@ def marker_problems(where, text):
             if not found.group(0).startswith("(assumed")]
 
 
+# An (assumed) mark can follow the code, the message, and the result. The compared triple
+# leaves the marks out.
+ASSUMED = r"(?:\s+\(assumed[^)]*\))?"
+ERROR_ITEM = re.compile(
+    r"^\s+- (?P<code>`[A-Z][A-Z0-9_]*`|no code)" + ASSUMED
+    + r" · (?P<message>``.+?``|`[^`]+`|no message)" + ASSUMED
+    + r" · (?P<result>exit \d+|status \d{3}|raises `?[A-Za-z_][\w.:]*`?)" + ASSUMED + r"\s*$")
+NEW_FORM = ("write `errors: none`, or `errors:` with one line under it for each error, "
+            "for example - `CODE` · `exact message` · exit 2 (or status <n>, or raises <Name>)")
+
+
+def error_triple(item):
+    """(code, message, result) of one error line, or None if the line is not in the form."""
+    match = ERROR_ITEM.match(" " + item)
+    if not match:
+        return None
+    code, message, result = match.group("code", "message", "result")
+    message = message if message == "no message" else message.strip("`")
+    return code.strip("`"), message, result.replace("`", "")
+
+
+class _Entry:
+    """One Interface entry while interface_entries reads it."""
+
+    def __init__(self, first):
+        self.first, self.errors, self.problems = first, set(), []
+        self.indent = None  # the indent of the open "errors:" line, None when none is open
+        self.none = self.bad = self.has_errors = False
+        self.count = 0  # the error lines under the open "errors:" line
+        self.item, self.item_indent = None, 0  # the lines of the open error item
+
+    def flush(self):
+        """Close the open error item."""
+        if self.item is not None:
+            text = " ".join(self.item)
+            triple = error_triple(text)
+            if triple:
+                self.errors.add(triple)
+            else:
+                self.problems.append("the error line `%s` is not in the form (%s)"
+                                     % (text[2:], NEW_FORM))
+            self.item = None
+
+    def close(self):
+        """Close the open "errors:" line."""
+        self.flush()
+        if self.indent is not None and not (self.none or self.bad or self.count):
+            self.problems.append("`errors:` has no error lines, so it is not in the form (%s)"
+                                 % NEW_FORM)
+        self.indent, self.none, self.bad, self.count = None, False, False, 0
+
+    def errors_line(self, line, indent):
+        """Open an "errors:" line."""
+        self.close()
+        rest = re.match(r"^\s+-\s*errors?:(.*)$", line, re.I).group(1).strip()
+        self.indent, self.none, self.has_errors = indent, rest.lower() == "none", True
+        if rest and not self.none:
+            self.bad = True
+            kind = "in the old form" if "`" in rest else "not in the form"
+            self.problems.append("the line `%s` is %s (%s)" % (line.strip()[2:], kind, NEW_FORM))
+
+    def deeper(self, line, indent):
+        """A line under the open "errors:" line."""
+        text = line.strip()
+        if self.none or self.bad:
+            if self.none and not self.bad:
+                self.bad = True
+                self.problems.append("`errors: none` has lines under it, so it is not in the "
+                                     "form (%s)" % NEW_FORM)
+        elif text.startswith("- ") and (self.item is None or indent <= self.item_indent):
+            self.flush()
+            self.item, self.item_indent = [text], indent
+            self.count += 1
+        elif self.item is not None:
+            self.item.append(text)  # a wrapped line
+        else:
+            self.count += 1
+            self.bad = True
+            self.problems.append("the line `%s` under `errors:` is not in the form (%s)"
+                                 % (text, NEW_FORM))
+
+
 def interface_entries(text):
     """The entries under '## Interface' of a spec or change spec, by name. The name is the
     first text in backticks on a top-level list line, with each run of whitespace as one
-    space. Each value is (first line, set of error codes). The codes are the texts in
-    backticks on the entry's indented "errors:" line. "### Test seams" is inside the
-    section, so its entries count too."""
-    found, current, errors_indent = {}, None, None
+    space. Each value is (first line, set of (code, message, result), form problems). The
+    errors are the list items under the entry's indented "errors:" line, one error on each
+    item, and a deeper line continues the item above it. "errors: none" gives no errors.
+    Other text (for example the old "errors: `A`, `B`") is a form problem. "### Test seams"
+    is inside the section, so its entries count too."""
+    found, current = {}, None
     for line in section(text or "", "Interface").splitlines():
         match = ENTRY.match(line)
         indent = len(line) - len(line.lstrip())
         if match:
-            current, errors_indent = " ".join(match.group(1).split()), None
-            found[current] = [line, set()]
+            if current:
+                found[current].close()
+            current = " ".join(match.group(1).split())
+            found[current] = _Entry(line)
         elif line.strip() and not line[0].isspace():
-            current, errors_indent = None, None  # a heading or other top-level line
+            if current:
+                found[current].close()
+            current = None  # a heading or other top-level line
         elif current and line.strip():
-            errors = re.match(r"^\s+-\s*errors?:(.*)$", line, re.I)
-            if errors:
-                errors_indent = indent
-                found[current][1] |= set(re.findall(r"`([^`]+)`", errors.group(1)))
-            elif errors_indent is not None and indent > errors_indent:
-                found[current][1] |= set(re.findall(r"`([^`]+)`", line))  # a wrapped line
+            entry = found[current]
+            if re.match(r"^\s+-\s*errors?:", line, re.I):
+                entry.errors_line(line, indent)
+            elif entry.indent is not None and indent > entry.indent:
+                entry.deeper(line, indent)
             else:
-                errors_indent = None
-    return {key: (first, frozenset(codes)) for key, (first, codes) in found.items()}
+                entry.close()
+    if current:
+        found[current].close()
+    for entry in found.values():
+        if not entry.has_errors:
+            entry.problems.append("the entry has no `errors:` line, so it is not in the form (%s)"
+                                  % NEW_FORM)
+    return {key: (e.first, frozenset(e.errors), e.problems) for key, e in found.items()}
 
 
 def spec_text(root, spec_id):
@@ -131,9 +229,54 @@ def spec_text(root, spec_id):
     return path.read_text() if path.exists() else None
 
 
+def error_codes(root):
+    """The codes in the table of DES-errors, or None if the project has no DES-errors."""
+    text = spec_text(root, "DES-errors")
+    if text is None:
+        return None
+    return set(re.findall(r"^\|\s*`([A-Z][A-Z0-9_]*)`", text, re.M))
+
+
+def error_differences(key, change, spec, owner):
+    """The problems that come from errors that differ between a change entry and its spec
+    entry. An error has a code (or, with no code, its message) as its name. An error with
+    the same name in both has one problem for each field that differs."""
+    def name(triple):
+        return triple[0] if triple[0] != "no code" else "no code: " + triple[1]
+
+    def show(triple):
+        code, message, result = triple
+        return " · ".join([code if code == "no code" else "`%s`" % code,
+                           message if message == "no message" else "`%s`" % message, result])
+
+    problems = []
+    mine, theirs = sorted(change - spec), sorted(spec - change)
+    for triple in list(mine):
+        other = next((t for t in theirs if name(t) == name(triple)), None)
+        if other is None:
+            continue
+        mine.remove(triple)
+        theirs.remove(other)
+        for field_name, index in (("message", 1), ("result", 2)):
+            if triple[index] != other[index]:
+                value = (lambda v: "`%s`" % v if index == 1 else v)
+                problems.append("Interface entry `%s` has the error %s with the %s %s, but %s "
+                                "has %s" % (key, triple[0] if triple[0] == "no code"
+                                            else "`%s`" % triple[0], field_name,
+                                            value(triple[index]), owner, value(other[index])))
+    for triple in mine:
+        problems.append("Interface entry `%s` has the error %s that %s does not have"
+                        % (key, show(triple), owner))
+    for triple in theirs:
+        problems.append("Interface entry `%s` lacks the error %s that %s has"
+                        % (key, show(triple), owner))
+    return problems
+
+
 def interface_problems(root, text):
     """Problems with the Interface of a change: each entry must be in the Interface of a
-    candidate spec, with the same error codes, and not proposed there."""
+    candidate spec, in the form of the errors, with the same errors, and not proposed
+    there."""
     entries = interface_entries(text)
     if not entries:
         return []
@@ -150,22 +293,26 @@ def interface_problems(root, text):
     if not any(heading.search(spec_text(root, c) or "") for c in candidates):
         return []  # no candidate spec has an Interface yet, as in a change with a design scope
     specs = {spec_id: interface_entries(spec_text(root, spec_id)) for spec_id in candidates}
-
-    def shown(codes):
-        return ", ".join(sorted(codes)) or "none"
+    known = error_codes(root)
 
     problems = []
-    for key, (_, codes) in entries.items():
+    for key, (_, triples, form) in entries.items():
+        problems += ["Interface entry `%s` in the change spec: %s" % (key, p) for p in form]
+        if known is not None:
+            problems += ["Interface entry `%s` has the error code `%s`, which is not a row of "
+                         "DES-errors. Add the row at intake or ready first" % (key, code)
+                         for code in sorted({t[0] for t in triples})
+                         if code != "no code" and code not in known]
         owner = next((spec_id for spec_id in candidates if key in specs[spec_id]), None)
         if owner is None:
             problems.append("Interface entry `%s` is not in the Interface of %s. Add it to the "
                             "spec that owns it first"
                             % (key, ", ".join(candidates) or "a job or capability spec"))
             continue
-        first, spec_codes = specs[owner][key]
-        if codes != spec_codes:
-            problems.append("Interface entry `%s` has the errors %s, but %s has %s"
-                            % (key, shown(codes), owner, shown(spec_codes)))
+        first, spec_triples, spec_form = specs[owner][key]
+        problems += ["Interface entry `%s` in %s: %s" % (key, owner, p) for p in spec_form]
+        if not form and not spec_form:
+            problems += error_differences(key, triples, spec_triples, owner)
         if re.search(r"·\s*proposed\b", first):
             problems.append("Interface entry `%s` is still proposed in %s. /pdlc:verify removes "
                             "the mark when the change passes" % (key, owner))
@@ -287,6 +434,17 @@ def status_on_own_branch(root, path, refs):
     return status if status in READY or status == "cancelled" else None
 
 
+def intent_changes(root, intent, listed):
+    """The change IDs of an intent: the listed IDs, then each other change spec whose
+    "Intent:" is this intent. A stale "Changes" list on a branch leaves out some changes."""
+    ids = list(dict.fromkeys(listed))
+    for path in sorted((root / "pdlc" / "changes").glob("CH-*/change.md")):
+        other = change_id(path.parent)
+        if other not in ids and field(path.read_text(), "Intent") == intent:
+            ids.append(other)
+    return ids
+
+
 def partners_not_ready(root, folder, text):
     """Problems with the other changes of this change's intent: each must be ready too."""
     intent = field(text, "Intent")
@@ -298,7 +456,7 @@ def partners_not_ready(root, folder, text):
                 "intent" % intent]
     listed = re.findall(r"\bCH-\d+\b", section(found[0].read_text(), "Changes"))
     problems, refs = [], branches(root)
-    for other in dict.fromkeys(listed):
+    for other in intent_changes(root, intent, listed):
         if other == change_id(folder):
             continue
         specs = sorted((root / "pdlc" / "changes").glob(other + "-*/change.md"))
@@ -332,31 +490,74 @@ def is_ancestor(root, old, new):
     return git(root, "merge-base", "--is-ancestor", old, new).returncode == 0
 
 
+def stack_top(root, listed, here, intent=None):
+    """(change ID, branch) of the top of the stack of an intent. The top is the change that
+    no other change of the intent has as its "Base:" branch. When the links do not pick one
+    change (every change has the base main, for example), the last change in the list is the
+    top. A change with a branch is preferred as the top. The changes are the listed IDs and
+    each change spec whose "Intent:" is this intent. The branch is as git knows it. In CI,
+    HEAD can be a merge of the pull request into main, so HEAD stands in only when the top
+    is this change and git knows no such branch."""
+    ids = list(listed) or [here]
+    if intent is None:
+        mine = sorted((root / "pdlc" / "changes").glob(here + "-*/change.md"))
+        intent = field(mine[0].read_text(), "Intent") if mine else None
+    if intent:
+        ids = intent_changes(root, intent, ids)
+    refs = branches(root)
+    named, bases = {}, set()
+    for change in ids:
+        specs = sorted((root / "pdlc" / "changes").glob(change + "-*/change.md"))
+        path = specs[0].relative_to(root).as_posix() if specs else None
+        ref = own_branch(root, path, refs) if path else None
+        text = show(root, ref, path) if ref else (specs[0].read_text() if specs else "")
+        branch = field(text, "Branch") or ""
+        named[change] = (ref, branch)
+        base = field(text, "Base") or ""
+        bases.add(base[len("origin/"):] if base.startswith("origin/") else base)
+    tops = [c for c in ids if not named[c][1] or named[c][1] == "none" or named[c][1] not in bases]
+    tops = [c for c in tops if named[c][0] or c == here] or tops
+    top_id = tops[-1] if tops else ids[-1]
+    top = named[top_id][0]
+    if not top and top_id == here:
+        top = "HEAD"
+    return top_id, top
+
+
 def acceptance_problems(root, folder, text, reqs):
     """Problems with the acceptance checks of this change's intent. The checks must be
     locked, reviewed at the lock, unchanged since the lock, and recorded as passing at the
-    top of the stack: the branch of the last change of the intent."""
+    top of the stack: the branch of the top change of the intent (see stack_top)."""
     intent = field(text, "Intent")
     found = sorted((root / "pdlc" / "inbox").glob("%s-*.md" % intent)) if intent else []
     if not found:
         return []  # partners_not_ready names the missing intent
-    listed = list(dict.fromkeys(re.findall(r"\bCH-\d+\b", section(found[0].read_text(), "Changes"))))
-    top_id = listed[-1] if listed else change_id(folder)
-    # The top of the stack is the branch of the last change. In CI, HEAD can be a merge of
-    # the pull request into main, so HEAD stands in only when git knows no such branch.
-    specs = sorted((root / "pdlc" / "changes").glob(top_id + "-*/change.md"))
-    top = own_branch(root, specs[0].relative_to(root).as_posix(), branches(root)) if specs else None
-    if not top and top_id == change_id(folder):
-        top = "HEAD"
+    intent_path = found[0].relative_to(root).as_posix()
+    here = change_id(folder)
 
-    def read(path):
+    def listed_in(text):
+        return list(dict.fromkeys(re.findall(r"\bCH-\d+\b", section(text, "Changes"))))
+
+    def read_at(ref, path):
         """A file at the top of the stack. This checkout stands in when the top is HEAD, or
         when the top change has no branch yet."""
-        if top and top != "HEAD":
-            return show(root, top, path)
+        if ref and ref != "HEAD":
+            return show(root, ref, path)
         return (root / path).read_text() if (root / path).exists() else None
 
-    intent_text = read(found[0].relative_to(root).as_posix()) or found[0].read_text()
+    # The top of the stack follows the "Base:" links across the branches. The "Changes" list
+    # of a lower branch can be stale (the plan can be reordered on a branch above it), so the
+    # list comes from the top branch. A second pass uses that list in case it has more changes.
+    listed = listed_in(found[0].read_text())
+    top_id, top = stack_top(root, listed, here)
+    intent_text = read_at(top, intent_path) or found[0].read_text()
+    if set(listed_in(intent_text)) - set(listed):
+        top_id, top = stack_top(root, listed_in(intent_text), here)
+        intent_text = read_at(top, intent_path) or found[0].read_text()
+
+    def read(path):
+        return read_at(top, path)
+
     checks, lock = record(intent_text, "Acceptance-File"), record(intent_text, "Acceptance-Locked")
     passed = record(intent_text, "Acceptance-Passed")
     if not lock or not HASH.match(lock):
