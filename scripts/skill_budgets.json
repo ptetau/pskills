@@ -1,0 +1,18 @@
+{
+  "enforced": [],
+  "acceptance": 330,
+  "board": 210,
+  "build": 270,
+  "change": 840,
+  "conventions": 190,
+  "dashboard": 210,
+  "init": 530,
+  "intake": 740,
+  "ready": 580,
+  "ship": 490,
+  "show": 650,
+  "tests": 350,
+  "trace": 170,
+  "upgrade": 170,
+  "verify": 450
+}
