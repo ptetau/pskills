@@ -1,0 +1,124 @@
+{
+  "skill": "pdlc:ship",
+  "skillPath": "/home/user/pskills/plugins/pdlc/skills/ship/SKILL.md",
+  "skillSha256": "1fc0e2c0205b5c9b2282178fba38a5ca64b4611fb78be6c0f83efa0600b825ab",
+  "createdAt": "2026-11-01T05:03:48Z",
+  "structure": {
+    "summary": "Multi-stage run with no questions (all stages use `defaults`). Ship runs the stages from the latest handoff until each change is proposed, or until a case that needs the user. At a stop, it commits a Stop record and gives a reason and a recommended answer. It ends with a short account.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The outputs of each stage that ran, with their own commits and trailers."
+      },
+      {
+        "id": "S2",
+        "description": "At a stop: under \"Open\" in the latest handoff, the reason in one sentence, what the user must decide, and the recommended answer. The commit `Stop CH-0001: <why>` (or `Stop IN-0001: <why>` for an intent stage) with the trailers of \"Commits\". `git status --porcelain` is empty."
+      },
+      {
+        "id": "S3",
+        "description": "At the end of the stack: each change is proposed with a pull request and a GIF."
+      },
+      {
+        "id": "S4",
+        "description": "A final account for the user. It lists the changes in stack order with their pull requests and GIFs. It also lists each answer taken by default, the new behaviour that waits for approval, and what waits for the user."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The run ends only in an end state: each change is proposed, or a commit \"Stop <id>: <why>\" records the stop. It does not end with work half done and no stop record.",
+      "pass": "At the end, either each change of the intent has the commit `Propose CH-…`, or the newest commit is `Stop IN-0001: <why>` or `Stop CH-…: <why>`. The final reply agrees with that state. A reply that says the work is finished while a stage is missing fails this item. At a stop in the intent stages, the log shows `Specify IN-0001`, then `Ready IN-0001`, then `Stop IN-0001: <why>` as the newest commit, and no `Plan` commit.",
+      "partial": "The end state is right, but the stop record has no reason, or the final reply does not say which state it is.",
+      "source": "Goal: \"until each change of the intent is proposed. Ship stops only for a case that needs the user.\"; Outputs: \"Ship is done at the end of the stack, or at a stop.\""
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "A stop gives the user a clear decision. The reply and \"Open\" in the handoff give the reason in one sentence, the decision, and a recommended answer that obeys the pdlc rules.",
+      "pass": "Under \"Open\" in the latest handoff, and in the final reply, there are three things. They are the reason in one sentence, what the user must decide, and a recommended answer. The recommended answer obeys the pdlc rules. It does not say to merge over a failed gate or to accept a failed review. The reply and the handoff agree.",
+      "partial": "The reason and the decision are clear, but the recommended answer is missing from one of the two places. Or the reason takes more than one sentence.",
+      "source": "Outputs: \"At a stop: Under \\\"Open\\\" in the latest handoff\"",
+      "appliesWhen": "The run stops."
+    },
+    {
+      "id": "R3",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Ship does not settle a contradiction by default. It stops and leaves the choice to the user.",
+      "pass": "The run stops at the clash of \"N must be 10 or less\" and the example `--top 20`. No spec or Note makes one side win, also not with an `(assumed)` mark. The run does not edit a requirement to remove the clash.",
+      "partial": "The run stops at the contradiction, but its handoff chooses a side as a fact and not as a recommendation. Or it takes one default that the rules leave to the user, with no effect on the result.",
+      "source": "Constraints: \"A contradiction between requirements. Ready takes no default for a contradiction.\" and \"\\\"Merge over a failed gate\\\" and \\\"accept a failed review\\\" are not answers.\"",
+      "appliesWhen": "The words of the user or the specs hold a contradiction."
+    },
+    {
+      "id": "R4",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Ship continues from the latest handoff and does not run a finished stage again.",
+      "pass": "The run reads the latest handoff and starts at the stage that it names. It does not run intake, ready, change, acceptance, tests, or build again when their commits exist. A run that starts at the intake stage starts there because no intent exists.",
+      "partial": "The run starts at the right stage but runs one finished stage again for a check. Or it reads the handoff only after it starts.",
+      "source": "Constraints: \"Ship reads each intent and change where it lives, and starts from the latest handoff.\"",
+      "appliesWhen": "At `start`, the project has an intent or a change with a handoff."
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "Each stage leaves the commit subjects and trailers of its own skill, in the order of \"Stages and handoffs\".",
+      "pass": "The commit subjects and trailers of each stage that ran match those of its skill, in the order of \"Stages and handoffs\". No stage is missing from the log.",
+      "partial": "The order is right, but one stage leaves fewer commits than its skill names. Or one stage leaves commit subjects that its skill does not use.",
+      "source": "Constraints: \"Each stage runs through its own skill, with `defaults`\""
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "A case that is not a stop (no remote, a slow agent, a choice of name) does not stop the run.",
+      "pass": "These cases do not stop the run. They are a missing git remote, a slow or failed agent, a choice of name, and the base of a change. Each takes the recommended answer, and the handoff and the intent Notes record it.",
+      "partial": "The run does not stop. But it does not record one default in the Notes. Or it stops for one such case and takes the default on the next run.",
+      "source": "Constraints: \"Each other case takes the recommended answer\"",
+      "appliesWhen": "A case that is not a stop occurs in the run."
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "At the end, `git status --porcelain` is empty, and each commit has the trailers of \"Commits\".",
+      "pass": "`git status --porcelain` shows nothing at the end. Each commit after `start` has the trailers that `pdlc/README.md` \"Commits\" names for its kind. The stop commit has the trailers too.",
+      "partial": "The tree is clean, but one commit lacks a trailer. Or the tree has one uncommitted file of the debug or the dashboard.",
+      "source": "Outputs: \"The commit \\\"Stop CH-xxxx: <why>\\\" … with the trailers of \\\"Commits\\\". Then `git status --porcelain` shows nothing.\"",
+      "structureRef": "S2"
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The last reply lists the changes in stack order with their proposals and GIFs. It also lists each answer taken by default, and what waits for the user.",
+      "pass": "The final reply lists each change in stack order with its pull request and its GIF. It lists each answer that ship took by default. It lists new behaviour that waits for approval, with the intent filed for each. It says what waits for the user, such as the merge from the bottom of the stack.",
+      "partial": "Three of the four lists are there. Or the changes are not in stack order.",
+      "source": "Outputs: \"At the end, a few lines for the user\"",
+      "structureRef": "S4",
+      "appliesWhen": "Each change is proposed."
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "prompt": "defaults Add a --top N option to wordfreq. With it, the command prints only the N most common words. N must be 10 or less. For example, wordfreq --top 20 FILE prints the 20 most common words.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot wordfreq --state intake --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "stop: a contradiction in the words of the user",
+      "exercises": "The run takes new words that contradict each other (N of 10 or less, and an example with 20). It must stop at the contradiction with a Stop commit, a reason, and a recommended answer, and decide nothing alone.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot wordfreq --state verify --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "resume: a built change, so ship runs verify and show",
+      "exercises": "The run continues from the latest handoff of a built change. It runs verify and show with their own skills, proposes the change, and ends with the account for the user.",
+      "replies": []
+    }
+  ]
+}

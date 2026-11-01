@@ -1,0 +1,141 @@
+{
+  "skill": "pdlc:tests",
+  "skillPath": "/home/user/pskills/plugins/pdlc/skills/tests/SKILL.md",
+  "skillSha256": "5dfeb88c8ba00dd6b462139c41c5a895a898a76a3ecb94ea0752710c7425c1a6",
+  "createdAt": "2026-11-01T05:03:48Z",
+  "structure": {
+    "summary": "Single turn with no questions. For a change with component checks, the run starts the branch and writes the checks. It shows them red, locks them, has them reviewed, and writes the handoff. For the only change of an intent, it makes two commits and writes no check.",
+    "elements": [
+      {
+        "id": "S1",
+        "description": "The check files under \"Check files\" in the change spec. They hold component checks from the spec only, and the checks call only the Interface of this change and of earlier changes."
+      },
+      {
+        "id": "S2",
+        "description": "The change spec with `Branch:`, `Base:`, and `Tests-Locked: <hash>` (or `acceptance`) right under its header, and the status `building` at the end."
+      },
+      {
+        "id": "S3",
+        "description": "The commits, each with `Intent` and `Change`: `Start CH-0001`, `Tests CH-0001` (also `Req`), `Lock tests CH-0001`, `Review tests CH-0001`, and `Tests reviewed CH-0001`. For the only change of an intent, only `Start CH-0001` and `Tests reviewed CH-0001`."
+      },
+      {
+        "id": "S4",
+        "description": "The review folder `pdlc/changes/CH-0001-…/review/tests/` with the packet and the result of a separate reviewer. The run does not make it for the only change of an intent."
+      },
+      {
+        "id": "S5",
+        "description": "The handoff `tests → build` in the template form: the checks and what each proves, the lock, and what the builder must know. For the only change of an intent, it names the acceptance file and its lock."
+      },
+      {
+        "id": "S6",
+        "description": "A final reply to the user that says that `/pdlc:build` is next."
+      }
+    ]
+  },
+  "rubric": [
+    {
+      "id": "R1",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "Each requirement of the change has component checks. They call only the Interface of this change and of earlier changes, and they expect the exact codes and messages.",
+      "pass": "Every requirement of CH-0001 (the change under test) has at least one check in a file under \"Check files\", tagged with its requirement ID. Each check calls only items that the \"Interface\" of this change or of an earlier change lists. Each check expects the exact result, code, and message that the spec names.",
+      "partial": "All requirements have a check, but one to three checks call an item that no Interface lists, or expect only part of the result. Or one requirement has no check.",
+      "source": "Outputs: \"The commits, in this order\"; Goal: \"written from the spec\"",
+      "appliesWhen": "The change lists check files (\"Check files\" is not `- none`)."
+    },
+    {
+      "id": "R2",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The builder can start at once. Each new check fails for the missing behaviour, and no check is broken.",
+      "pass": "The final reply or the handoff reports the red run. It gives how many checks failed, and says that each failure is missing behaviour (a missing function, route or status). In Rust, a compile error about the missing item counts as red. No report of a broken check (syntax error, wrong path, time-out, or a compile error about another item) remains at the lock.",
+      "partial": "The red run is reported, but one check fails for a broken reason that the run does not correct. Or the run says that the checks are red and gives no count.",
+      "source": "Constraints: \"Red runs the checks of each requirement through the checks port.\"",
+      "appliesWhen": "The change lists check files."
+    },
+    {
+      "id": "R3",
+      "kind": "outcome",
+      "weight": 3,
+      "criterion": "The lock is sound. `Tests-Locked:` is the hash of the commit of the final checks. The tests review of that lock passed with a wrong version for each check.",
+      "pass": "`Tests-Locked:` holds the hash of the newest `Tests CH-0001` commit (the commit of the checks) of CH-0001 (the change under test). The check files at the end of the run equal those in that commit. The review folder holds a `result.md` that gives a wrong version of the code for each check, and its verdict is pass. After a failed review, the run locks again, and the spec holds the newest hash.",
+      "partial": "The lock hash is right, but the review result does not give a wrong version for some checks. Or the check files changed after the lock.",
+      "source": "Outputs: \"`Tests-Locked: <hash>`\" and \"Review tests CH-xxxx\"",
+      "appliesWhen": "The change lists check files."
+    },
+    {
+      "id": "R4",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "For the only change of an intent, the run writes no check and starts no review. It records `Tests-Locked: acceptance`, and the handoff names the acceptance file and its lock.",
+      "pass": "The run makes no packet and calls no test writer or reviewer. The change spec has `Tests-Locked: acceptance` and the status `building`. The commits are only `Start CH-0001` and `Tests reviewed CH-0001`. The handoff names the acceptance file and the value of `Acceptance-Locked:`.",
+      "partial": "The spec and the commits are right, but the handoff names only one of the acceptance file and its lock. Or the run makes a packet but calls no reviewer.",
+      "source": "Constraints: \"Suppose the intent lists only this change\"; Outputs: \"For the only change of an intent\"",
+      "appliesWhen": "The intent lists only this change, and \"Check files\" is `- none`."
+    },
+    {
+      "id": "R5",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "`Branch:` and `Base:` follow \"Stacked changes\". The first change starts from the intent branch, and the base is in its history.",
+      "pass": "The change branch starts from the intent branch (for the first change) or from the branch of the previous change. `Base:` names that branch, and the commit of the base is in the history of the new branch. A change that already had a branch keeps its `Base:`.",
+      "partial": "The branch exists with the right base, but `Base:` in the spec does not name it. Or the base is a correct branch that is not the top of the stack.",
+      "source": "Constraints: \"The base and the branch obey \\\"Stacked changes\\\"\""
+    },
+    {
+      "id": "R6",
+      "kind": "behavior",
+      "weight": 2,
+      "criterion": "The run writes no app code, and only the files under \"Check files\" hold checks.",
+      "pass": "After `start`, the run adds or changes only these files. They are a check file under \"Check files\", the change spec, the scope spec for a new \"Interface\" item, a review file, or the handoff. No app file changes. No check lies in another place.",
+      "partial": "The app code stays as it was. But one check lies outside \"Check files\", or a stub for the missing item sits in an app file.",
+      "source": "Constraints: \"written from the spec only\"; the test writer obeys \"Who does what\""
+    },
+    {
+      "id": "R7",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The commits come in the order of the skill, each with `Intent` and `Change`, and `Req` only on \"Tests\".",
+      "pass": "The commit list in the capture shows `Start CH-0001`, `Tests CH-0001`, `Lock tests CH-0001`, `Review tests CH-0001`, and `Tests reviewed CH-0001` in this order. For the only change of an intent, it shows only `Start` and `Tests reviewed`. Each commit has the trailers `Intent` and `Change`. Only `Tests CH-0001` also has `Req`.",
+      "partial": "The subjects are right and in order, but one commit lacks a trailer, or `Req` sits on another commit.",
+      "source": "Outputs: \"The commits, in this order, each with the trailers `Intent` and `Change`\"",
+      "structureRef": "S3"
+    },
+    {
+      "id": "R8",
+      "kind": "structure",
+      "weight": 2,
+      "criterion": "The handoff `tests → build` is in the template form, and lists each check and what it proves.",
+      "pass": "The `handoff.md` of the change has the title `# Handoff · CH-0001 · tests → build`, a `Time:` line, and the sections of the handoff template. It lists each check file or check name with the requirement that it proves, gives the lock hash, and tells what the builder must know. Its counts agree with the files.",
+      "partial": "The title and the sections are right, but the list names the check files and not what each proves. Or one count is wrong.",
+      "source": "Outputs: \"The handoff `tests → build`\"",
+      "structureRef": "S5"
+    },
+    {
+      "id": "R9",
+      "kind": "structure",
+      "weight": 1,
+      "criterion": "The final reply says that `/pdlc:build` is next.",
+      "pass": "The final reply names `/pdlc:build` as the next step, in one sentence.",
+      "partial": "The reply names a next step, but not `/pdlc:build`. Or the reply buries it in a long text.",
+      "source": "Outputs: \"For the user: `/pdlc:build` is next\"",
+      "structureRef": "S6"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "P01",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot todo-rust --state tests --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "typical: the first change is a capability with component checks",
+      "exercises": "The run writes, locks, and reviews component checks in Rust for the first change of a two-change intent. It covers the red run, the lock, the review, and the stacked branch.",
+      "replies": []
+    },
+    {
+      "id": "P02",
+      "prompt": "CH-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --snapshot wordfreq --state tests --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files. In the capture, list each new commit with `git -C proj log --all --stat --format='%H %s%n%b' --not start`.",
+      "axis": "edge but valid: the only change of its intent",
+      "exercises": "The run uses the change that the user names. It is the only change of its intent, so the run writes no check and starts no review.",
+      "replies": []
+    }
+  ]
+}
