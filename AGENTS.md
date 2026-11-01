@@ -57,9 +57,10 @@ being told. A body above 200 words must earn each extra rule: a vet shows the fa
 and the rule fixes it. Record the rule under "earned" in `scripts/skill_budgets.json`,
 with its words and its evidence. Only the user can raise the 200 target.
 
-`scripts/check_skill_form.py` checks the form and the budget (200 plus the earned words). It checks each skill in the
-`enforced` list of `scripts/skill_budgets.json`, and the list is empty now. Each rewrite
-adds its skill to the `enforced` list. The check does not run on the other skills yet.
+`scripts/check_skill_form.py` checks the form and the budget (200 plus the earned
+words). It checks each skill in the `enforced` list of `scripts/skill_budgets.json`.
+Each rewrite adds its skill to the `enforced` list. The check does not run on the other
+skills yet.
 
 ## Rewrite a skill
 
