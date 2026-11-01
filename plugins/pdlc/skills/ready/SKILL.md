@@ -27,9 +27,9 @@ A test writer can write each check with no guess. No spec shows old behaviour.
 ## Constraints
 
 - `pdlc/README.md` binds, in particular "Bookkeeping on main", "Spec patches", and "Questions".
-- Settle implied behaviour: bad input, limits. A missing design spec goes through `pdlc:conventions`. Each failure line names a code in `DES-errors`.
-- Lines give concrete values and exact output.
-- The order of two errors comes from the intent.
+- Settle implied behaviour: missing, empty, wrong-type, and too-large input, limits, order, existing data, unsafe input, and business rules. A missing design spec goes through `pdlc:conventions`. Each failure line, also for an existing error, names a code in `DES-errors`.
+- Each line of the intent's requirements, also an existing or `ready` line, gives concrete values and exact output, not "any file" or "the same error".
+- The order of two errors comes from the plain words of the intent, not code, and each requirement sentence that gives one names the exception.
 - Each `(assumed)` mark has `<requirement>: <question> → <answer> (assumed)` in "Notes" and "Decided on defaults".
 - A contradiction stays `proposed`: the user selects, also with `defaults`.
 - After three failed runs of `python3 pdlc/bin/check_handoff.py IN-xxxx --stage ready`, put the problems under "Open" and stop.

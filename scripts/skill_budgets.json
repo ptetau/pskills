@@ -1,19 +1,39 @@
 {
-  "enforced": ["ready"],
-  "acceptance": 200,
-  "board": 200,
-  "build": 200,
-  "change": 200,
-  "conventions": 200,
-  "dashboard": 200,
-  "init": 200,
-  "intake": 200,
-  "ready": 200,
-  "ship": 200,
-  "show": 200,
-  "tests": 200,
-  "trace": 200,
-  "upgrade": 200,
-  "verify": 200,
-  "earned": {}
+ "enforced": [
+  "ready"
+ ],
+ "acceptance": 200,
+ "board": 200,
+ "build": 200,
+ "change": 200,
+ "conventions": 200,
+ "dashboard": 200,
+ "init": 200,
+ "intake": 200,
+ "ready": 200,
+ "ship": 200,
+ "show": 200,
+ "tests": 200,
+ "trace": 200,
+ "upgrade": 200,
+ "verify": 200,
+ "earned": {
+  "ready": [
+   {
+    "rule": "Each line, also an existing or `ready` line, gives concrete values and exact output; each failure line, also for an existing error, names a code",
+    "words": 30,
+    "evidence": "evals/pdlc-ready/runs/decl200-20261101T200131Z: R3 (concrete input, exact output, error code on each failure line)"
+   },
+   {
+    "rule": "The order of two errors comes from the plain words of the intent, not code, and each requirement sentence that gives one names the exception",
+    "words": 25,
+    "evidence": "evals/pdlc-ready/runs/decl200-20261101T200131Z: R2 (one result for a bad N with no FILE) and R10 (no spec text shows old behaviour)"
+   },
+   {
+    "rule": "Settle implied behaviour: missing, empty, wrong-type, and too-large input, limits, order, existing data, unsafe input, and business rules",
+    "words": 18,
+    "evidence": "evals/pdlc-ready/runs/decl200-20261101T200131Z: R9 (implied behaviour examined, including a very large N)"
+   }
+  ]
+ }
 }
