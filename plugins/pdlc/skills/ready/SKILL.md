@@ -34,12 +34,16 @@ then marks it `ready`.
   ready omits, unless the user approves the item.
 - The recommended answer is the plain reading of the words of the intent, for each value.
   It does not keep the old behaviour where the plain words change it. It does not change
-  the result of an example in the intent.
+  the result of an example in the intent. The order of two errors also comes from the
+  words of the intent, not from the order of the checks in the code.
 - A requirement is clear when all of these are true:
   - The requirement says what must be true, not how to build it.
   - Each acceptance line is "Given …, when …, then …", and a check can prove it with a
-    pass or a fail. Each line uses concrete values ("Ana", "80", "15%"), not "a user" or
-    "some amount".
+    pass or a fail.
+  - Each line uses concrete values ("Ana", "80", "15%", a file with `b a b`), not "a user",
+    "some amount", or "any file". Its "then" gives the exact output, not "the same error".
+    Ready rewrites each such line that it finds in the requirements of the intent, also a
+    line that intake wrote.
   - The words of the intent bind ("Spec patches"): each example is a line, exactly.
   - Where the requirement says how something looks, a line gives the exact text and where
     the user sees it. Other lines do the same for each edge value: zero, empty, or an
@@ -53,8 +57,11 @@ then marks it `ready`.
   - A capability that reads an input for every job holds those lines one time.
   - Each line checks one behaviour. Its "then" is what a caller sees (a reply, an output,
     a sent message), not a stored row.
-  - Each failure line names its error code, and `DES-errors` has the code. A new code goes
-    into `DES-errors` as part of this intent.
+  - Each failure line names its error code, and `DES-errors` has the code. This is also
+    true for an error that the app gives today. A new code goes into `DES-errors` as part
+    of this intent.
+  - An "Interface" entry does not make a line exact. Each line still gives its own exact
+    output and code.
   - Each rule that a sentence states has a line, also each `(assumed)` detail. A rule with
     no line has no check, so nothing enforces it.
   - Words like "fast", "easy", or "secure" have a number or a rule behind them.
@@ -77,6 +84,14 @@ then marks it `ready`.
     other side. It keeps its mark, and its line in "Notes" changes.
 - Ready shows each other contradiction, and asks the user which statement to change. Ready
   does not select for the user, also with `defaults`. Both requirements stay `proposed`.
+- When ready changes what a requirement does, ready searches `pdlc/specs/` and the README
+  for the old words, and changes each sentence, example, and summary that still shows
+  them ("No old wording" in `pdlc/README.md`).
+- When ready decides which of two errors comes first, the sentence of each requirement
+  that gives one of the two errors names the exception.
+- Ready runs `python3 pdlc/bin/check_handoff.py IN-xxxx --stage ready`, and fixes each
+  problem that the script names. The handoff title is `ready → change`, or `ready → user`
+  at a stop for a contradiction.
 
 ## Inputs
 
@@ -92,7 +107,9 @@ then marks it `ready`.
 - Each clear requirement goes from `proposed` to `ready`. A `retiring` requirement stays
   as it is.
 - The intent is `ready` when each of its requirements is `ready` or `retiring`.
-- The handoff `ready → change`: the decisions, and what helps the plan.
+- The handoff `ready → change`: the decisions, and what helps the plan. "Decided on
+  defaults" holds each `(assumed)` line that ready adds or changes in the "Notes", with
+  the same words, as the template says.
 - The commit "Ready IN-xxxx: <name>" with the trailer `Intent`. Ready commits also when it
   stops for a contradiction.
 - For the user: what changed, and that `/pdlc:change` is next. After a contradiction, the
