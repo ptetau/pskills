@@ -929,6 +929,152 @@ def set_tracker(project):
     git(project, "commit", "-q", "-am", "Set the tracker")
 
 
+# ---------------------------------------------------------------- rebuilding from the specs
+
+# The files of a finished project that the rebuild keeps: the specs, the config, and the
+# README that tells how to read a spec. Rule 10 says that these files are enough.
+REBUILD_KEEP = ("pdlc/specs/", "pdlc/config.md", "pdlc/README.md")
+
+
+def config_checks(text):
+    """The "Checks" section of a pdlc/config.md, as a dict.
+
+    The keys are all, acceptance, acceptance_file, check_folders (a list) and id_form. A value
+    is the text inside the first pair of backticks on its line. A missing line, or the value
+    none, gives None.
+    """
+    found = re.search(r"^## Checks[ \t]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    section = found.group(1) if found else ""
+
+    def items(key):
+        line = re.search(r"^- %s:[ \t]*(.*?)[ \t]*$" % re.escape(key), section, re.M)
+        raw = line.group(1) if line else ""
+        values = re.findall(r"`([^`]*)`", raw) or [raw]
+        values = [v for v in values if v.strip().lower() != "none"]
+        return values if raw and values else None
+
+    def first(key):
+        values = items(key)
+        return values[0] if values else None
+
+    return {"all": first("all"), "acceptance": first("acceptance"), "acceptance_file": first("acceptance file"),
+            "check_folders": items("check folders"), "id_form": first("ID form in check names")}
+
+
+def rebuild_source(source, run=1, ref=None):
+    """The project, the ref and the fixture to rebuild from.
+
+    `source` is a result folder of an e2e run, or a project folder. For a result folder, the
+    project and the tip come from run<N>.json, and the fixture from e2e.json. pdlc does not
+    merge, so the tip is the newest change branch. It raises RuntimeError when the project
+    folder is gone, because /tmp can be cleaned.
+    """
+    source = Path(source)
+    saved = source / ("run%d.json" % run)
+    fixture = "wordfreq"
+    if saved.is_file():
+        data = json.loads(saved.read_text())
+        project = Path(data["project"])
+        ref = ref or (data.get("outcome") or {}).get("tip")
+        summary = source / "e2e.json"
+        if summary.is_file():
+            fixture = json.loads(summary.read_text()).get("fixture") or fixture
+    elif (source / ".git").exists():
+        project = source
+    elif source.is_dir():
+        raise RuntimeError("no run%d.json in %s" % (run, source))
+    else:
+        raise RuntimeError("%s does not exist" % source)
+    if not project.exists():
+        raise RuntimeError("the project %s does not exist any more" % project)
+    if not (project / ".git").exists():
+        raise RuntimeError("%s is not a git repository" % project)
+    return project, ref or tip_branch(project), fixture
+
+
+def export_tree(project, ref, dest):
+    """Write the tracked files of `ref` to `dest`. No .git, and no file that git ignores."""
+    dest = Path(dest)
+    dest.mkdir(parents=True, exist_ok=True)
+    archive = subprocess.run(["git", "-C", str(project), "archive", ref], capture_output=True)
+    if archive.returncode:
+        raise RuntimeError("git archive %s failed: %s" % (ref, archive.stderr.decode()[:300]))
+    unpack = subprocess.run(["tar", "-x", "-C", str(dest)], input=archive.stdout, capture_output=True)
+    if unpack.returncode:
+        raise RuntimeError("tar failed: " + unpack.stderr.decode()[:300])
+    return dest
+
+
+def clean_copy(tree, dest, keep=()):
+    """Copy only the files of REBUILD_KEEP, and the paths in `keep`, from `tree` to `dest`.
+
+    Return the sorted relative paths. The copy gets a new git repository with one commit, so
+    that `git status` after a build shows each file that the builder wrote.
+    """
+    tree, dest = Path(tree), Path(dest)
+    keep = set(keep)
+    paths = sorted(p.relative_to(tree).as_posix() for p in tree.rglob("*")
+                   if p.is_file() and not p.is_symlink())
+    kept = [path for path in paths if path.startswith("pdlc/specs/") or path in REBUILD_KEEP or path in keep]
+    if not kept:
+        raise RuntimeError("the tree has no spec, config or README to keep")
+    for path in kept:
+        (dest / path).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(tree / path, dest / path)
+    dest.mkdir(parents=True, exist_ok=True)
+    git(dest, "init", "-q", "-b", "main")
+    git(dest, "add", "-A")
+    done = git(dest, "commit", "-q", "-m", "Specs only")
+    if done.returncode:
+        raise RuntimeError("git commit failed: " + (done.stdout + done.stderr)[:300])
+    return kept
+
+
+def acceptance_matches(tree, config):
+    """Each file in `tree` that the "acceptance file" line names, with the file of init."""
+    pattern = config.get("acceptance_file")
+    if not pattern:
+        return []
+    tree = Path(tree)
+    # "{intent}" stands for an intent ID, so the match is exact, as make_packets.py reads it.
+    exact = re.compile("^%s$" % r"IN[-_]?\d+".join(re.escape(part) for part in pattern.strip("/ ").split("{intent}")), re.I)
+    found = (p.relative_to(tree).as_posix() for p in tree.glob(pattern.replace("{intent}", "IN*")) if p.is_file())
+    return sorted(path for path in found if exact.match(path))
+
+
+def acceptance_files(tree, config):
+    """The acceptance files of the project. IN-9999 is the test file of init, so it is left out."""
+    return [path for path in acceptance_matches(tree, config) if "IN-9999" not in path]
+
+
+def check_files(tree, config):
+    """The component checks: each file in the check folders that is not an acceptance file."""
+    tree = Path(tree)
+    skip = set(acceptance_matches(tree, config))
+    found = []
+    for folder in config.get("check_folders") or []:
+        for path in (tree / folder).rglob("*"):
+            relative = path.relative_to(tree).as_posix()
+            if path.is_file() and relative not in skip and "__pycache__" not in path.parts:
+                found.append(relative)
+    return sorted(set(found))
+
+
+def check_origin(project, ref, files):
+    """Where each check file came from: pre-pdlc, changed by pdlc, or added by pdlc.
+
+    It compares `ref` with the root commit. A pre-pdlc check can fail because the fixture is
+    old, not because of a fault in the specs, so the report keeps the three groups apart.
+    """
+    root = git(project, "rev-list", "--max-parents=0", ref).stdout.split()[-1]
+    status = {}
+    for line in git(project, "diff", "--name-status", "--no-renames", root, ref).stdout.splitlines():
+        letter, _, path = line.partition("\t")
+        status[path] = letter
+    names = {"A": "added by pdlc", "M": "changed by pdlc"}
+    return {path: names.get(status.get(path), "pre-pdlc") for path in files}
+
+
 # ---------------------------------------------------------------- the commands
 
 

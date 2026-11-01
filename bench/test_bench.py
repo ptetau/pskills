@@ -1233,5 +1233,203 @@ class StageReplayTest(unittest.TestCase):
         self.assertEqual(saved["entry"], shown)
 
 
+def rebuild_project(test):
+    """A project that an e2e run could leave: the fixture on main, and a change branch that adds
+    a spec, a change, an acceptance file, a new check and a build file. Main stays checked out."""
+    root = Path(tempfile.mkdtemp())
+    test.addCleanup(shutil.rmtree, root, True)
+    app = root / "app"
+    shutil.copytree(run_bench.FIXTURE, app, ignore=shutil.ignore_patterns("__pycache__"))
+    run_bench.git(app, "init", "-q", "-b", "main")
+    run_bench.git(app, "add", "-A")
+    run_bench.git(app, "commit", "-q", "-m", "Set up pdlc")
+    run_bench.git(app, "checkout", "-q", "-b", "pdlc/CH-0001-x")
+    files = {
+        "pdlc/specs/jobs/JOB-branch-only.md": "# JOB-branch-only\n",
+        "pdlc/changes/CH-0001-x/change.md": "# CH-0001\n",
+        "pdlc/inbox/IN-0001-x.md": "# IN-0001\n",
+        "pdlc/acceptance/IN-0001-x/brief.md": "# Brief\n",
+        "pdlc/bin/check_merge.py": "print('ok')\n",
+        "pdlc/README.md": "How to read a spec.\n",
+        "tests/acceptance_IN-0001.py": "import unittest\n",
+        "tests/acceptance_IN-9999.py": "import unittest\n",
+        "tests/test_new.py": "import unittest\n",
+        "Cargo.toml": "[package]\n",
+    }
+    for name, text in files.items():
+        (app / name).parent.mkdir(parents=True, exist_ok=True)
+        (app / name).write_text(text)
+    (app / "wordfreq" / "cli.py").write_text(REFERENCE_CLI)
+    with open(app / "tests" / "test_cli.py", "a") as handle:
+        handle.write("\n# changed by pdlc\n")
+    config = app / "pdlc" / "config.md"
+    config.write_text(config.read_text().replace(
+        "- check folders: `tests/`\n",
+        "- check folders: `tests/`\n- acceptance file: `tests/acceptance_{intent}.py`\n"
+        "- acceptance: `python3 -m unittest {files}`\n"))
+    run_bench.git(app, "add", "-A")
+    run_bench.git(app, "commit", "-q", "-m", "Tests reviewed CH-0001")
+    run_bench.git(app, "checkout", "-q", "main")
+    return app
+
+
+class RebuildCopyTest(unittest.TestCase):
+    branch = "pdlc/CH-0001-x"
+
+    def setUp(self):
+        self.app = rebuild_project(self)
+        self.work = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.work, True)
+        self.tree = run_bench.export_tree(self.app, self.branch, self.work / "tree")
+
+    def files_of(self, folder):
+        return sorted(p.relative_to(folder).as_posix() for p in Path(folder).rglob("*")
+                      if p.is_file() and ".git" not in p.relative_to(folder).parts)
+
+    def spec_files(self):
+        return [f for f in self.files_of(self.tree) if f.startswith("pdlc/specs/")]
+
+    def test_the_clean_copy_has_the_specs_the_config_and_the_readme_only(self):
+        kept = run_bench.clean_copy(self.tree, self.work / "copy")
+        expected = sorted(self.spec_files() + ["pdlc/config.md", "pdlc/README.md"])
+        self.assertEqual(kept, expected)
+        self.assertEqual(self.files_of(self.work / "copy"), expected)
+        self.assertIn("pdlc/specs/jobs/JOB-branch-only.md", kept)
+
+    def test_the_clean_copy_has_no_code_no_checks_and_one_commit(self):
+        run_bench.clean_copy(self.tree, self.work / "copy")
+        found = self.files_of(self.work / "copy")
+        self.assertEqual([f for f in found if f.endswith(".py")], [])
+        self.assertEqual([f for f in found if f.startswith("tests/")], [])
+        copy = self.work / "copy"
+        self.assertEqual(run_bench.git(copy, "rev-list", "--count", "HEAD").stdout.strip(), "1")
+        self.assertEqual(run_bench.git(copy, "log", "-1", "--format=%s").stdout.strip(), "Specs only")
+        self.assertEqual(run_bench.git(copy, "status", "--porcelain").stdout, "")
+
+    def test_the_export_reads_the_branch_and_not_the_checked_out_main(self):
+        main = run_bench.export_tree(self.app, "main", self.work / "main")
+        self.assertFalse((main / "pdlc" / "specs" / "jobs" / "JOB-branch-only.md").exists())
+        self.assertTrue((self.tree / "pdlc" / "specs" / "jobs" / "JOB-branch-only.md").exists())
+        self.assertFalse((self.tree / ".git").exists())
+
+    def test_keep_adds_only_the_named_file(self):
+        base = run_bench.clean_copy(self.tree, self.work / "plain")
+        kept = run_bench.clean_copy(self.tree, self.work / "extra", keep=["Cargo.toml"])
+        self.assertEqual(kept, sorted(base + ["Cargo.toml"]))
+        self.assertEqual(self.files_of(self.work / "extra"), kept)
+
+    def test_config_checks_reads_the_rust_config(self):
+        text = (run_bench.HERE / "fixtures" / "todo-rust" / "pdlc" / "config.md").read_text()
+        config = run_bench.config_checks(text)
+        self.assertEqual(config["check_folders"], ["tests/", "acceptance/"])
+        self.assertEqual(config["acceptance_file"], "acceptance/{intent}.rs")
+        self.assertEqual(config["all"], "cargo test")
+        self.assertTrue(config["acceptance"].startswith("cargo build -q && for f in {files}"))
+        self.assertEqual(config["id_form"], "underscored")
+
+    def test_config_checks_gives_none_for_a_missing_line(self):
+        text = (run_bench.FIXTURE / "pdlc" / "config.md").read_text()
+        config = run_bench.config_checks(text)
+        self.assertEqual(config["all"], "python3 -m unittest discover -s tests")
+        self.assertEqual(config["check_folders"], ["tests/"])
+        self.assertIsNone(config["acceptance"])
+        self.assertIsNone(config["acceptance_file"])
+
+    def test_config_checks_gives_none_for_the_value_none(self):
+        config = run_bench.config_checks("## Checks\n\n- all: `make test`\n- acceptance: none\n"
+                                         "- check folders: none\n\n## Reviews\n\n- acceptance: `x`\n")
+        self.assertIsNone(config["acceptance"])
+        self.assertIsNone(config["check_folders"])
+        self.assertEqual(config["all"], "make test")
+
+    def config(self):
+        return run_bench.config_checks((self.tree / "pdlc" / "config.md").read_text())
+
+    def test_acceptance_files_leave_out_the_file_of_init(self):
+        self.assertEqual(run_bench.acceptance_files(self.tree, self.config()), ["tests/acceptance_IN-0001.py"])
+
+    def test_acceptance_files_are_empty_without_an_acceptance_line(self):
+        config = run_bench.config_checks("## Checks\n\n- all: `make test`\n")
+        self.assertEqual(run_bench.acceptance_files(self.tree, config), [])
+
+    def test_check_files_are_the_component_checks(self):
+        found = run_bench.check_files(self.tree, self.config())
+        self.assertEqual(found, ["tests/test_cli.py", "tests/test_counter.py", "tests/test_new.py"])
+
+    def test_check_origin_tells_where_each_check_came_from(self):
+        found = run_bench.check_files(self.tree, self.config())
+        origin = run_bench.check_origin(self.app, self.branch, found)
+        self.assertEqual(origin, {"tests/test_cli.py": "changed by pdlc",
+                                  "tests/test_counter.py": "pre-pdlc",
+                                  "tests/test_new.py": "added by pdlc"})
+
+    def test_rebuild_source_reads_a_result_folder(self):
+        folder = self.work / "results"
+        folder.mkdir()
+        (folder / "run2.json").write_text(run_bench.json.dumps(
+            {"project": str(self.app), "outcome": {"tip": "main"}}))
+        (folder / "e2e.json").write_text(run_bench.json.dumps({"fixture": "todo-rust"}))
+        self.assertEqual(run_bench.rebuild_source(folder, run=2), (self.app, "main", "todo-rust"))
+        self.assertEqual(run_bench.rebuild_source(folder, run=2, ref=self.branch)[1], self.branch)
+
+    def test_rebuild_source_gives_a_clear_error_for_each_failure(self):
+        folder = self.work / "empty"
+        folder.mkdir()
+        with self.assertRaisesRegex(RuntimeError, "no run1.json in"):
+            run_bench.rebuild_source(folder)
+        with self.assertRaisesRegex(RuntimeError, "does not exist"):
+            run_bench.rebuild_source(self.work / "nowhere")
+        (folder / "run1.json").write_text(run_bench.json.dumps({"project": str(folder), "outcome": {}}))
+        with self.assertRaisesRegex(RuntimeError, "is not a git repository"):
+            run_bench.rebuild_source(folder)
+
+    def test_a_symlink_in_the_specs_is_not_followed(self):
+        os.symlink(self.tree / "wordfreq" / "cli.py", self.tree / "pdlc" / "specs" / "link.md")
+        kept = run_bench.clean_copy(self.tree, self.work / "copy")
+        self.assertNotIn("pdlc/specs/link.md", kept)
+        self.assertFalse((self.work / "copy" / "pdlc" / "specs" / "link.md").exists())
+
+    def test_a_backup_file_next_to_the_config_is_not_kept(self):
+        for name in ("pdlc/config.md.orig", "pdlc/README.md~"):
+            (self.tree / name).write_text("old\n")
+        kept = run_bench.clean_copy(self.tree, self.work / "copy")
+        self.assertNotIn("pdlc/config.md.orig", kept)
+        self.assertNotIn("pdlc/README.md~", kept)
+
+    def test_a_file_that_only_looks_like_an_acceptance_file_does_not_match(self):
+        (self.tree / "tests" / "acceptance_notes.py").write_text("x\n")
+        self.assertEqual(run_bench.acceptance_files(self.tree, self.config()), ["tests/acceptance_IN-0001.py"])
+        config = {"acceptance_file": "tests/test_{intent}.py"}
+        self.assertEqual(run_bench.acceptance_files(self.tree, config), [])
+
+    def test_a_backticked_none_is_none(self):
+        config = run_bench.config_checks("## Checks\n\n- acceptance: `none`\n- check folders: `None`\n")
+        self.assertIsNone(config["acceptance"])
+        self.assertIsNone(config["check_folders"])
+
+    def test_a_tree_with_nothing_to_keep_is_an_error(self):
+        empty = self.work / "nothing"
+        empty.mkdir()
+        (empty / "a.py").write_text("x\n")
+        with self.assertRaises(RuntimeError):
+            run_bench.clean_copy(empty, self.work / "copy")
+
+    def test_rebuild_source_reads_a_project_folder(self):
+        run_bench.git(self.app, "checkout", "-q", self.branch)
+        run_bench.git(self.app, "commit", "-q", "--allow-empty", "-m", "Later")
+        run_bench.git(self.app, "checkout", "-q", "main")
+        project, ref, fixture = run_bench.rebuild_source(self.app)
+        self.assertEqual((project, ref, fixture), (self.app, self.branch, "wordfreq"))
+
+    def test_rebuild_source_names_a_project_that_is_gone(self):
+        folder = self.work / "results"
+        folder.mkdir()
+        (folder / "run1.json").write_text(run_bench.json.dumps(
+            {"project": str(self.work / "gone"), "outcome": {"tip": "main"}}))
+        with self.assertRaises(RuntimeError) as caught:
+            run_bench.rebuild_source(folder)
+        self.assertIn("gone", str(caught.exception))
+
+
 if __name__ == "__main__":
     unittest.main()
