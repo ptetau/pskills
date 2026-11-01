@@ -34,7 +34,8 @@ then marks it `ready`.
   ready omits, unless the user approves the item.
 - The recommended answer is the plain reading of the words of the intent, for each value.
   It does not keep the old behaviour where the plain words change it. It does not change
-  the result of an example in the intent.
+  the result of an example in the intent. The order of two errors also comes from the
+  words of the intent, not from the order of the checks in the code.
 - A requirement is clear when all of these are true:
   - The requirement says what must be true, not how to build it.
   - Each acceptance line is "Given …, when …, then …", and a check can prove it with a
@@ -54,14 +55,13 @@ then marks it `ready`.
   - A capability that reads an input for every job holds those lines one time.
   - Each line checks one behaviour. Its "then" is what a caller sees (a reply, an output,
     a sent message), not a stored row.
-  - Each failure line names its error code, and `DES-errors` has the code. A new code goes
-    into `DES-errors` as part of this intent.
-  - The "Interface" of the spec has an entry for each surface that a line names. A surface
-    is a command, a flag, a route, a field, a page text, or a call. The entry lists each
-    error code of the lines that use it. An entry does not make a line exact: each line
-    still gives its own exact output and error code.
-  - Each line that depends on the clock, randomness, or a vendor has a seam. The seam is
-    under "Test seams" in the "Interface" of the spec that owns it.
+  - Each failure line names its error code, and `DES-errors` has the code. This is also
+    true for an error that the app gives today. A new code goes into `DES-errors` as part
+    of this intent.
+  - Each "Interface" entry of the spec that a line names lists each error code of the
+    lines that use it. Ready does not add a missing entry or a missing "Interface"
+    section. The change stage adds it ("Interfaces"). An entry does not make a line exact:
+    each line still gives its own exact output and error code.
   - Each rule that a sentence states has a line, also each `(assumed)` detail. A rule with
     no line has no check, so nothing enforces it.
   - Words like "fast", "easy", or "secure" have a number or a rule behind them.
