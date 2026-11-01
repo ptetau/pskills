@@ -78,8 +78,8 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
   remote.
 - `templates/`: blank documents. A filled document has real content in place of each
   `<placeholder>` and each guide sentence.
-- `bin/`: `check_handoff.py`, `check_merge.py`, `check_writing.py`, `make_packets.py`,
-  `record_gif.mjs`, `record_merges.py`.
+- `bin/`: `check_handoff.py`, `check_merge.py`, `check_order.py`, `check_writing.py`,
+  `make_packets.py`, `record_gif.mjs`, `record_merges.py`.
 - `version.json`: the pdlc version of these files, and the hash of each file that pdlc wrote.
   Only `/pdlc:upgrade` and init write it.
 - `.tools/`: the tools of the visual review. This folder is not committed.
@@ -147,6 +147,10 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
 - Suppose the spec that owns the item is not the scope of this change (at the change
   stage: of a change of this intent). Then the item goes into the scope spec of this
   change, or becomes a question for the user.
+- The changes of an intent go in the order of their entries. A change comes after each
+  change that builds an entry that its acceptance lines or its Interface use. It also
+  comes after the change of each spec under its "Relies on". `bin/check_order.py`
+  checks the order at the change stage.
 
 ```
 - `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`

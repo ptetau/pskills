@@ -830,6 +830,20 @@ class MergeCheck(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("CH-0002 of IN-0002 is not ready (status: building)", out)
 
+    def test_a_cancelled_change_of_the_intent_does_not_have_to_be_ready(self):
+        self.stacked_repo()
+        self.write_second("cancelled", "none")
+        self.commit_all("CH-0002 cancelled")
+        code, out = self.run_check("CH-0001")
+        self.assertNotIn("CH-0002", out)
+
+    def test_a_cancelled_change_on_its_own_branch_does_not_have_to_be_ready(self):
+        self.stacked_repo()
+        self.stack_second("cancelled")
+        git(self.root, "switch", "-q", self.FIRST)
+        code, out = self.run_check("CH-0001")
+        self.assertNotIn("CH-0002", out)
+
     def test_a_change_of_the_intent_that_its_list_leaves_out_still_has_to_be_ready(self):
         self.stacked_repo()
         (self.root / "pdlc/inbox/IN-0002-password-reset.md").write_text(
@@ -838,6 +852,31 @@ class MergeCheck(unittest.TestCase):
         code, out = self.run_check("CH-0001")
         self.assertEqual(code, 1)
         self.assertIn("CH-0002 of IN-0002 is not ready (no branch)", out)
+
+    def second_status(self, status="cancelled"):
+        """CH-0002 on main at this status, with no branch of its own."""
+        self.stacked_repo()
+        git(self.root, "switch", "-q", "main")
+        self.write_second(status, "none")
+        self.commit_all("CH-0002 " + status)
+        return "pdlc/changes/CH-0002-send-reset/change.md"
+
+    def test_a_change_with_no_branch_counts_as_cancelled_from_main(self):
+        path = self.second_status("cancelled")
+        self.assertEqual(check_merge.status_on_own_branch(self.root, path, check_merge.branches(self.root)),
+                         "cancelled")
+
+    def test_a_change_with_no_branch_and_another_status_on_main_has_no_status(self):
+        path = self.second_status("building")
+        self.assertIsNone(check_merge.status_on_own_branch(self.root, path, check_merge.branches(self.root)))
+
+    def test_a_cancelled_change_in_the_working_tree_wins_over_another_status_on_its_branch(self):
+        self.stacked_repo()
+        self.stack_second("building")
+        git(self.root, "switch", "-q", self.FIRST)
+        self.write_second("cancelled", self.SECOND)
+        code, out = self.run_check("CH-0001")
+        self.assertNotIn("CH-0002", out)
 
     def test_a_header_field_is_its_value_without_a_name_in_brackets_or_backticks(self):
         header = ("Intent: IN-0001 (poll-input-errors) · Scope: CAP-http-plumbing · "

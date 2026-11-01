@@ -26,7 +26,7 @@ A change may merge only when:
   - every review remit named in pdlc/config.md passed;
   - the branch merges into main without conflicts;
   - its intent is in pdlc/inbox, and every other change of the intent is "in review" or
-    "merged" on its own branch, so the intent's changes merge together;
+    "merged" on its own branch, or is "cancelled", so the intent's changes merge together;
   - the acceptance checks of its intent are locked ("Acceptance-Locked:" in the intent), the
     tests review judged them at that lock with "Wrong versions", and the acceptance file did
     not change after the lock;
@@ -424,14 +424,14 @@ def own_branch(root, path, refs):
 
 def status_on_own_branch(root, path, refs):
     """A change's status on its own branch, the one its change spec names. A change whose
-    branch is gone counts as merged if main's copy reads "in review" or "merged". None
-    when it has no branch."""
+    branch is gone counts as merged if main's copy reads "in review" or "merged", and as
+    cancelled if it reads "cancelled". None when it has no branch."""
     ref = own_branch(root, path, refs)
     if ref:
         return field(show(root, ref, path), "Status")
     on_main = show(root, "main", path) or show(root, "origin/main", path)
     status = field(on_main, "Status") if on_main else None
-    return status if status in READY else None
+    return status if status in READY or status == "cancelled" else None
 
 
 def intent_changes(root, intent, listed):
@@ -462,6 +462,9 @@ def partners_not_ready(root, folder, text):
         specs = sorted((root / "pdlc" / "changes").glob(other + "-*/change.md"))
         path = "pdlc/changes/%s/change.md" % specs[0].parent.name if specs else None
         status = status_on_own_branch(root, path, refs) if path else None
+        local = field(specs[0].read_text(), "Status") if specs else None
+        if "cancelled" in (local, status):
+            continue  # a cancelled change never merges, so it does not block its partners
         if status is None:
             problems.append("%s of %s is not ready (no branch)" % (other, intent))
         elif status not in READY:
