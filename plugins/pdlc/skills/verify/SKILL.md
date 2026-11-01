@@ -87,9 +87,11 @@ the change.
 - After a passed round:
   - Each requirement of the change is `verified` in its spec file, and the change is
     `in review`. For the last change, the pass commit is on `Acceptance-Passed:`.
+  - Each "Interface" entry of the change loses its ` · proposed` mark in the scope spec.
+    An entry in another spec keeps its mark, because its own change removes it.
   - The handoff `verify → show`: the result of each check and each remit, the pass
     commit, and the intents filed for new behaviour.
-  - The commit "Verified CH-xxxx" (`Intent`, `Change`): the results, the statuses, and the
-    handoff.
+  - The commit "Verified CH-xxxx" (`Intent`, `Change`): the results, the statuses,
+    the marks, and the handoff.
   - For the user: `/pdlc:show` is next.
 - The skill is done when the change is `verified`, or when a failed round goes back.

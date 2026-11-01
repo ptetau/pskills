@@ -9,8 +9,8 @@ A change may merge only when:
     "Interface" of its scope spec, or of a JOB or CAP spec under "Relies on". The first
     text in backticks names an entry. The codes on its "errors:" line match those of the
     spec entry, and the spec entry does not end with "· proposed". A change whose scope
-    spec has no "## Interface" heading, or a change with no candidate spec that has one (a spec
-    from before this rule), skips this check;
+    spec has no "## Interface" heading, or a change with no candidate spec that has one
+    (a spec from before this rule), skips this check;
   - its checks are locked, and no check file changed after the lock;
   - the tests review judged the checks as they are locked now: its packet carries the
     current lock;

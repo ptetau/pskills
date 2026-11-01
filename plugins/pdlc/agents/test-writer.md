@@ -54,8 +54,8 @@ An acceptance check proves one acceptance line as a user meets the line.
 - Write checks for the acceptance lines of each requirement that the intent lists. A
   `retiring` requirement gets no check.
 - Use only what a user uses: commands, HTTP requests, pages, or the public functions of a
-  library. The "Interface" of each change of the intent gives these items. The existing
-  checks show the features that exist already.
+  library. The "Interface" of each change of the intent gives these items. The "Interface"
+  of each job and capability spec gives the features that exist already.
 - A check is permitted to use each feature of the intent, and each feature that exists
   already. For example, run `add milk`, and then read the result with `list`.
 - Do not read or write stored data directly. Do not open a saved file, and do not query a
@@ -79,8 +79,9 @@ An acceptance check proves one acceptance line as a user meets the line.
 
 A component check tests the part of one spec through the interface of its change.
 
-- Call the app only through the items that "Interface" lists. These items come from this
-  change and from earlier changes. Do not call a feature that a later change builds.
+- Call the app only through the items that "Interface" lists. These items come from the
+  specs of this change and the specs under "Relies on". Do not call a feature that a
+  later change builds.
 - A check is permitted to prepare state directly, for example with a fixture file.
 - Read a result through the interface, for example a function of the store. Read stored
   data directly only for a stored-data line ("Acceptance checks" in `pdlc/README.md`).

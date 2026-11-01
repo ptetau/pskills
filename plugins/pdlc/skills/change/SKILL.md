@@ -47,9 +47,13 @@ change spec is sufficient for the test writer and the builder.
     elements with what they show.
   - Suppose the checks need an item that no spec lists. Then change first adds the entry
     to the "Interface" of the spec that owns it, with ` · proposed`. Then change copies it.
+    The entry belongs first to the change whose scope spec owns it.
     A spec with no "Interface" section gets one from its template first. Suppose the spec
     that owns the item is not the scope of a change of this intent. Then the item goes into
     the scope spec of this change, or the item is a question for the user.
+  - Each ` · proposed` entry in the scope spec of a change goes into the Interface of
+    that change, also when a later change copies it too. Verify removes the mark only
+    there.
   - The rules below hold for the entry in its spec. The copy keeps the same words.
   - Each Interface entry gives its file, and what goes in and out, with types where the
     language has them. It gives each error by its code in `DES-errors`.

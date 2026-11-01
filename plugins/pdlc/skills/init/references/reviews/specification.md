@@ -6,6 +6,13 @@ You judge if the code does what the spec says. You do not see the checks.
 
 - The code meets the acceptance lines of each requirement. For a requirement marked
   `(retire)`, the change removes the code that served the requirement instead.
+- The code gives each entry under "Interface" in the change spec as written.
+  That means the name, the file, what goes in, what comes out, and each error code. Each
+  test seam works as its entry says.
+- Each entry under "Interface" in the change spec is also in the "Interface" of a spec in
+  the packet. The words are the same. The spec line can end with a ` · proposed` or
+  ` · retiring` mark. An entry that is missing is a problem. An entry that is different
+  in any other way is also a problem.
 - The code does nothing that the spec did not ask for.
 - Only the files in "Files" changed. In a file that "Files" lists with parts, only those
   parts changed. The change stays in its one scope. A job change must not edit the code of

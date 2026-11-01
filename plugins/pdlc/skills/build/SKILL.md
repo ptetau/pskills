@@ -56,7 +56,8 @@ does not change the checks.
 - The ticked steps of the change, and a new line in its progress log.
 - Each requirement of the change is `built` in its spec file. A `(retire)` requirement
   leaves its spec, with the code that served only that requirement. The test writer
-  removed its checks before.
+  removed its checks before. Each "Interface" entry with ` · retiring` in the scope spec
+  leaves the spec too.
 - The handoff `build → verify`: what build made, how to run it, and anything unexpected.
 - The commit "Built CH-xxxx" with the trailers `Intent` and `Change`: the specs, the
   change spec, and the handoff.

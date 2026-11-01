@@ -121,11 +121,14 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
 - Intake and ready write the entries that the acceptance lines need. Recon writes the
   entries of existing code, with no mark.
 - A change spec copies each entry that its checks call, word for word, as it copies
-  the requirements, but without the mark. A job change that calls an entry of another job lists that job
-  under "Relies on".
+  the requirements, but without the mark. A job change that calls an entry of another
+  job lists that job under "Relies on".
 - A missing entry goes into its spec first, as `proposed`, and then into the change
   spec. This rule holds for the change stage, and for a missing item that the test
   writer reports.
+- Suppose the spec that owns the item is not the scope of this change (at the change
+  stage: of a change of this intent). Then the item goes into the scope spec of this
+  change, or becomes a question for the user.
 
 ```
 - `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
@@ -199,7 +202,9 @@ change spec.
   not a red one. The broken check goes back to the test writer before the lock.
 - When the test writer reports a missing "Interface" item, the skill adds the item to its
   spec, as `proposed` ("Interfaces"). The skill can see the code. Then the skill copies
-  the item into the change spec that builds it. Then the test writer runs again.
+  the item into the change spec that builds it. Suppose the spec that owns the item is
+  not the scope of this change. Then the item goes into the scope spec of this change,
+  or becomes a question for the user. Then the test writer runs again.
 - Lock: the commit of the checks. Its hash goes on the lock line, and replaces an older
   hash.
 - After the lock, only the test writer changes the checks, and only through the skill of
@@ -294,6 +299,8 @@ Its `Base:` names that branch, and its pull request targets that branch.
   base into it first, with the trailer `Intent`.
 - In that merge, a requirement that the intent changed keeps the text and status of the
   intent. Each other requirement keeps the text and status of the base.
+- An "Interface" entry follows the same rule. If the base removed ` · proposed`, the
+  entry keeps the base's line unless this intent changed it.
 - The changes of an intent merge together, bottom first. The merge check fails each of
   them until all are `in review`.
 - The base can merge into main before `verify` proposes the change

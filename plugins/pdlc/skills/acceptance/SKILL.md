@@ -36,6 +36,12 @@ change of the intent is built ("Acceptance checks" in `pdlc/README.md`).
   writes the acceptance file. `python3 pdlc/bin/make_packets.py IN-xxxx --brief` makes the
   brief again before each call. After a failed review, the prompt also holds the
   problems as text ("Checks before code").
+- When the test writer reports a missing "Interface" item, the item goes into the
+  "Interface" of its spec first, as `proposed`. Then it goes into the change spec that
+  builds it ("Checks before code"). The commit "Acceptance IN-xxxx" holds these files.
+- Suppose the spec that owns the item is not the scope of a change of this intent that is
+  not yet verified. Then the item goes into the scope spec of a change of this intent that
+  is not yet verified, and into that change spec. Or it becomes a question for the user.
 - The test writer can remove a check from the acceptance file of an earlier intent, when
   this intent changes or retires its requirement. This intent proves the new line.
 - Red runs through **run acceptance** of the checks port. On the branch of a change, each
