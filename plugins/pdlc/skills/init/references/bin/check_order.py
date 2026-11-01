@@ -303,7 +303,7 @@ class Plan:
                     break
                 path.append(nxt)
             out.append("No order works, because these changes need each other: %s. One change "
-                       "must set up its \"Given\" with an item of an earlier change or of existing "
+                       "must prepare its \"Given\" with an item of an earlier change or of existing "
                        "code, or the user decides" % " → ".join(path))
             return self.problems + out
         if order_problems:

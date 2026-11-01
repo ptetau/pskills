@@ -38,7 +38,8 @@ entry that a later change of the intent builds is not permitted. `bin/check_orde
 checks this.
 
 If no spec has the entry, add the entry to its spec first. If that spec is not the scope
-of this change, add the entry to the scope spec, or ask the user. `bin/check_merge.py` fails the change when an entry is not in its spec. See "Interfaces"
+of this change, add the entry to the scope spec instead, or ask the user.
+`bin/check_merge.py` fails the change when an entry is not in its spec. See "Interfaces"
 in `pdlc/README.md`.
 
 - `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`

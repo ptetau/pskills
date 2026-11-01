@@ -35,7 +35,7 @@ change spec is sufficient for the test writer and the builder.
   proposes `GET /?show=all`. Thus, the change of `JOB-view-list` comes first.
 - Where these rules give no order, design specs come first, then capabilities, then jobs.
 - Suppose that two changes need each other. Usually, one of them uses the item of the
-  other only to set up a "Given". That change sets up the "Given" with an item of an
+  other only to prepare a "Given". That change prepares the "Given" with an item of an
   earlier change or of existing code. An example is a store function in place of a
   route. Then it removes the copied entry and the "Relies on" line that it no longer
   needs.
