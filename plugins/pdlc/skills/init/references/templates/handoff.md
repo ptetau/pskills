@@ -24,9 +24,9 @@ Keep each sentence at 25 words or fewer.
 List each `(assumed)` decision that this stage wrote. Write one line for each decision:
 `- <requirement>: <question> → <answer> (assumed)`. `<requirement>` is the ID of the
 requirement or spec that holds the mark. Copy the same line into the "Notes" of the intent.
+
 Each `(assumed)` line that this stage adds to the Notes is also here. A pointer such as
-"see Notes" is not a list. Write "- none" only if this stage wrote no
-`(assumed)` mark.
+"see Notes" is not a list. Write "- none" only if this stage wrote no `(assumed)` mark.
 
 - none
 

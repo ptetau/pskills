@@ -286,6 +286,12 @@ class HandoffCheck(unittest.TestCase):
         code, out = self.intake(["- none"], notes=[extra])
         self.assertEqual((code, out), (0, ""))
 
+    def test_a_changed_note_that_quotes_a_mark_does_not_count(self):
+        self.start()
+        note = '- JOB-x.R3: was "Sort by name (assumed).", now "Sort by date."'
+        code, out = self.intake(["- none"], notes=[note])
+        self.assertEqual((code, out), (0, ""))
+
     def test_a_notes_line_with_the_same_id_is_named(self):
         self.start()
         self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (assumed)"))

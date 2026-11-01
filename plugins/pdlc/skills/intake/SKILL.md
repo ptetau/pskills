@@ -114,6 +114,7 @@ its right spec, as `proposed`. Intake does not write code.
   - The handoff `intake → ready`: what intake wrote, what it assumed, and what looks
     unclear.
 - The commit "Specify IN-xxxx: <name>" with the trailer `Intent`: the specs and the
-  intent. Intake commits also when it stops early. The commit comes after `check_handoff.py` exits 0.
+  intent. Intake commits also when it stops early. The commit comes after `check_handoff.py`
+  exits 0.
 - For the user: what intake wrote, and that `/pdlc:ready` is next.
 - Intake is done when the commit holds each requirement that the intent needs.

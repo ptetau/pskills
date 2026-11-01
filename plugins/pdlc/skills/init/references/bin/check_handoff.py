@@ -112,7 +112,7 @@ def new_marks(root):
 
 
 def find_handoff(root, item):
-    """(text of the handoff, text of the intent or None, or an error message)."""
+    """(text of the handoff, path of the intent or None, or an error message)."""
     if item.startswith("CH-"):
         found = sorted((root / "pdlc" / "changes").glob(item + "-*/handoff.md"))
         if not found:
@@ -122,11 +122,10 @@ def find_handoff(root, item):
     found = [path for path in found if path.exists()]
     if not found:
         return None, None, "%s: no intent file found in pdlc/inbox/" % item
-    text = found[0].read_text()
-    body = section(text, "Handoff")
+    body = section(found[0].read_text(), "Handoff")
     if body is None:
-        return None, text, "%s: the intent has no \"## Handoff\" section" % item
-    return body, text, None
+        return None, found[0], "%s: the intent has no \"## Handoff\" section" % item
+    return body, found[0], None
 
 
 def check_head(item, stage, lines):
@@ -197,7 +196,8 @@ def check_decided(item, decided, owners, notes, old_notes=frozenset()):
                             "intent: %s%s" % (item, line, (" (Notes line with this ID: %s)" % same[0]) if same else ""))
     if notes is not None:
         for note in sorted(notes):
-            if MARK in note and note not in old_notes and note not in decided:
+            answer = note.rsplit("→", 1)[1] if "→" in note else ""
+            if MARK in answer and note not in old_notes and note not in decided:
                 problems.append("%s: this (assumed) line of the Notes is not in Decided on "
                                 "defaults: %s" % (item, note))
     for owner in sorted(owners):
@@ -218,7 +218,7 @@ def main(argv, root=Path(".")):
     parser.add_argument("--stage", required=True, choices=sorted(NEXT))
     args = parser.parse_args(argv[1:])
     item = args.item
-    body, intent, error = find_handoff(root, item)
+    body, intent_path, error = find_handoff(root, item)
     if error:
         print(error)
         return 1
@@ -226,12 +226,12 @@ def main(argv, root=Path(".")):
     problems = check_head(item, args.stage, lines)
     section_problems, decided = check_sections(item, lines)
     notes, old_notes = None, set()
-    if intent is not None:
-        path = next(p for p in sorted((root / "pdlc" / "inbox").glob(item + "*.md")))
+    if intent_path is not None:
         old_notes = {line.strip() for line in
-                     (section(head_text(root, path.relative_to(root)), "Notes") or "").splitlines()
+                     (section(head_text(root, intent_path.relative_to(root)), "Notes") or "").splitlines()
                      if line.strip()}
-        notes = {line.strip() for line in (section(intent, "Notes") or "").splitlines() if line.strip()}
+        notes = {line.strip() for line in
+                 (section(intent_path.read_text(), "Notes") or "").splitlines() if line.strip()}
     problems += section_problems + check_decided(item, decided, new_marks(root), notes, old_notes)
     for problem in problems:
         print(problem)

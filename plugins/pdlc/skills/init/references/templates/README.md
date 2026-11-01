@@ -332,8 +332,8 @@ Its `Base:` names that branch, and its pull request targets that branch.
   check rejects `(limit assumed)`, `*(assumed)*`, and each mark that does not start with
   `(assumed`.
 - With `defaults`, a skill asks nothing, and takes its recommended answer. Each answer goes
-  as `- <requirement>: <question> → <answer> (assumed)` in "Decided on defaults" in the handoff and in the
-  intent "Notes", so that the user can change it.
+  as `- <requirement>: <question> → <answer> (assumed)` in "Decided on defaults" in the
+  handoff and in the intent "Notes", so that the user can change it.
 
 ## Spec patches
 
