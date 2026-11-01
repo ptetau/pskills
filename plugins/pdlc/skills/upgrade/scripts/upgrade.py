@@ -19,6 +19,7 @@ The script needs only the standard library (Python 3.8 or newer).
 import argparse
 import datetime
 import difflib
+import functools
 import glob
 import hashlib
 import importlib.util
@@ -134,11 +135,26 @@ def decide(path, current, new, base, known, take):
     return "edited"
 
 
+@functools.lru_cache(maxsize=None)
+def _check_merge_module():
+    """The merge check of the plugin. Its parser of the errors of an Interface entry is the
+    only one, so the upgrade and the merge check agree on the form."""
+    path = os.path.join(PLUGIN, "skills", "init", "references", "bin", "check_merge.py")
+    spec = importlib.util.spec_from_file_location("pdlc_check_merge", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def format_problems(spec_text):
     """What a job or capability spec lacks to be in the newest form."""
     problems = []
     if not re.search(r"^## Interface[ \t]*$", spec_text, re.M):
         problems.append('no "Interface" section.')
+        return problems
+    for name, (_, _, form) in _check_merge_module().interface_entries(spec_text).items():
+        for problem in form:
+            problems.append("Interface entry `%s`: %s." % (name, problem))
     return problems
 
 

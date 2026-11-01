@@ -95,6 +95,18 @@ class Pure(unittest.TestCase):
         self.assertEqual(upgrade.format_problems(JOB_WITH_INTERFACE), [])
         self.assertEqual(len(upgrade.format_problems(JOB_NO_INTERFACE)), 1)
 
+    def test_format_problems_reports_an_error_entry_in_the_old_form(self):
+        old = JOB_NO_INTERFACE + ("\n## Interface\n\n- `POST /reset` · route · `server.py`\n"
+                                 "  - in: an email\n  - errors: `INVALID_ADDRESS`, `USAGE`\n")
+        problems = upgrade.format_problems(old)
+        self.assertEqual(len(problems), 1)
+        self.assertIn("`POST /reset`", problems[0])
+        self.assertIn("old form", problems[0])
+        new = JOB_NO_INTERFACE + ("\n## Interface\n\n- `POST /reset` · route · `server.py`\n"
+                                 "  - in: an email\n  - errors:\n"
+                                 "    - `INVALID_ADDRESS` · `error: bad email` · status 400\n")
+        self.assertEqual(upgrade.format_problems(new), [])
+
     def test_next_intent_id(self):
         with tempfile.TemporaryDirectory() as tmp:
             inbox = Path(tmp, "pdlc/inbox")

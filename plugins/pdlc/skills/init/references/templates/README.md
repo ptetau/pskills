@@ -114,11 +114,20 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
   A seam controls the clock, randomness, or an outside vendor or store.
 - The first line of an entry gives the name in backticks, the kind, and the file. The
   merge check matches entries by the first text in backticks.
-- Under the first line, "in" and "out" give what goes in and what comes out. "errors"
-  gives each error code from `DES-errors`, or "none". An error that the app gives today,
-  with no code in `DES-errors`, gives its exact message and status in place of a code.
-  When a line of an intent uses that error, the error gets a code, as each failure line
-  does.
+- Under the first line, "in" and "out" give what goes in and what comes out.
+- "errors" is `errors: none`, or `errors:` with one line under it for each error. Each line
+  gives the code, the exact message, and the result, with ` · ` between them:
+  `` - `TOP_INVALID` · `error: --top needs a whole number greater than zero` · exit 2 ``.
+  The result is `exit <n>` for a command, `status <n>` for a route, or `raises <Name>` for a
+  function.
+- The code comes from `DES-errors`. An error that the app gives today, with no code in
+  `DES-errors`, has `no code`. When a line of an intent uses that error, the error gets a
+  code, as each failure line does. A function error with no message has `no message`.
+- Each entry has an `errors:` line. An `(assumed)` mark goes after the code, the message,
+  or the result that is a guess: `` - `USAGE` (assumed) · `usage: …` (assumed) · exit 2 ``.
+  The merge check leaves the marks out when it compares.
+- `errors: none` has nothing after it. The merge check compares the code, the message, and
+  the result of each error, and refuses any other form.
 - A new entry ends its first line with ` · proposed`. The `verify` stage removes the
   mark in the scope spec when the change that builds the entry passes.
 - When a requirement retires, each entry that only it used gets ` · retiring`. The
@@ -139,8 +148,12 @@ in the specs, so a rebuild from the specs keeps them, and the checks still pass.
 - `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
   - in: the name of a template, and an email address
   - out: the ID of the sent email
-  - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`
+  - errors:
+    - `TEMPLATE_NOT_FOUND` · `no template named <name>` · raises `TemplateNotFound`
+    - `INVALID_ADDRESS` · `not a valid email address: <address>` · raises `InvalidAddress`
 ```
+
+A `<placeholder>` in a message is permitted only in a template. A spec gives the real message.
 
 ## Who does what
 

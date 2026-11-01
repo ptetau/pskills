@@ -28,7 +28,8 @@ component checks of a change. For the acceptance checks of an intent, the sectio
 - A correct app passes each check. A fake that stands in for something real must use the
   names and the behaviour of the real thing. Then the check does not prove only the fake.
 - No check can hang. Anything that waits for the app has a time limit.
-- Each error code that the Interface lists has a check that expects that exact code.
+- Each error that the Interface lists has a check that expects its exact message and
+  result, and its code where the caller can see it.
 - The checks control time, randomness, and vendors only through the "Test seams" of the
   Interface.
 - The checks are sufficiently clear that a failure tells you what broke.

@@ -31,13 +31,15 @@ route, form field, and page element or page text that a check reads. See "Interf
 `pdlc/README.md`.
 
 The first line of an entry gives the name in backticks, the kind, and the file. Under it,
-give what goes in, what comes out, and each error code from `DES-errors`. A new entry ends
-its first line with ` · proposed`.
+give what goes in, what comes out, and each error on its own line. An error line has the
+code from `DES-errors`, the exact message, and `exit <n>` or `status <n>`. See "Interfaces"
+in `pdlc/README.md`. A new entry ends its first line with ` · proposed`.
 
 - `POST /reset` · route · `path/to/server.py`
   - in: the form field `email`, an email address
   - out: status 303 to `/reset/sent`, a page that shows "Check your email"
-  - errors: `INVALID_ADDRESS`
+  - errors:
+    - `INVALID_ADDRESS` · `error: the email address is not valid` · status 400
 
 ### Test seams
 
