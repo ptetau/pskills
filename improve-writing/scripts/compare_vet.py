@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """Compare two /vet results: the original skill (baseline) and the rewritten skill (candidate).
 
-The two results must come from the same suite (suiteSha256), the same prompts, runs, wave
-size, agent roles, and models. If they do not, the script says so and stops: scores from
-different settings are not comparable.
+The two results must come from the same suite (suiteSha256), the same workflow script
+(workflowSha256), the same prompts, runs, wave size, agent roles, and models. If they do not,
+the script says so and stops: scores from different settings are not comparable. An old result
+can lack workflowSha256. In that case the script prints a WARN line and does not stop.
+
+The script also prints one INFO line. The line says whether skillSha256 and skillTreeSha256
+differ. They are expected to differ for a candidate. If both are the same, the script prints a
+WARN line, because the two results measure the same skill text.
 
 The candidate fails if one of these conditions is true:
   - The overall score is more than --overall points lower (default 5).
@@ -25,6 +30,10 @@ import sys
 
 SAME = [("suiteSha256",), ("config", "prompts"), ("config", "runs"), ("config", "wave"),
         ("config", "agents"), ("config", "sessionModel")]
+# Fields that old results can lack. They must match when both results have them.
+SAME_IF_PRESENT = [("workflowSha256",)]
+# Fingerprint fields that /vet records. A result without one gets a WARN line.
+FINGERPRINTS = ["skillSha256", "skillTreeSha256", "workflowSha256"]
 
 
 def get(d, path):
@@ -38,9 +47,26 @@ def compare(base, cand, overall_tol=5.0, item_tol=20.0):
     for path in SAME:
         if get(base, path) != get(cand, path):
             out["differences"].append("%s: baseline %r, candidate %r" % (".".join(path), get(base, path), get(cand, path)))
+    out["info"] = []
+    for path in SAME_IF_PRESENT:
+        b, c = get(base, path), get(cand, path)
+        if b is not None and c is not None and b != c:
+            out["differences"].append("%s: baseline %r, candidate %r" % (".".join(path), b, c))
     if out["differences"]:
         out["comparable"] = False
         return out
+    for key in FINGERPRINTS:
+        for who, result in (("baseline", base), ("candidate", cand)):
+            if not result.get(key):
+                out["warnings"].append("%s is missing in the %s result (old result), so it was not compared" % (key, who))
+    state = {}
+    for key in ("skillSha256", "skillTreeSha256"):
+        b, c = base.get(key), cand.get(key)
+        state[key] = "unknown" if not b or not c else "same" if b == c else "differs"
+    out["info"].append("skillSha256 %s, skillTreeSha256 %s (they are expected to differ for a candidate)"
+                       % (state["skillSha256"], state["skillTreeSha256"]))
+    if state["skillSha256"] == "same" and state["skillTreeSha256"] == "same":
+        out["warnings"].append("skillSha256 and skillTreeSha256 are the same: the two results measure the same skill text")
     bs, cs = base["scores"], cand["scores"]
     for key in ("quality", "stability", "overall"):
         out["rows"].append({"measure": key, "baseline": bs[key], "candidate": cs[key], "change": round(cs[key] - bs[key], 1)})
@@ -91,6 +117,8 @@ def main(argv=None):
         print("%-62s %9s %9s %7s" % ("Measure", "Baseline", "Candidate", "Change"))
         for r in out["rows"]:
             print("%-62s %9.1f %9.1f %+7.1f" % (r["measure"][:62], r["baseline"], r["candidate"], r["change"]))
+        for i in out["info"]:
+            print("INFO  " + i)
         for w in out["warnings"]:
             print("WARN  " + w)
         for f in out["failures"]:

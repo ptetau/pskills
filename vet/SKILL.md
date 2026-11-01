@@ -103,10 +103,16 @@ stay comparable over time.
    matches, stop and ask.
 2. **Find the repo root** with `git rev-parse --show-toplevel`. The isolated worktrees
    need git. If this is not a git repo, stop and say so.
-3. **Fingerprint the skill:** get the `sha256sum` of the SKILL.md of the skill.
+3. **Fingerprint the skill and the workflow.** Run this command, with the paths of the
+   directory of this skill (`vet`):
+   `python3 <vet dir>/scripts/fingerprint.py <SKILL.md of the skill> --workflow <vet dir>/references/vet.workflow.js`.
+   Keep the JSON output. It has `skillSha256` (the hash of SKILL.md), `skillTreeSha256` (the
+   hash of each file in the tree of the skill), `skillTree` (the root of that tree), and
+   `workflowSha256` (the hash of the workflow script that Phase 4 runs). The tree is the
+   skill folder. For a skill in a plugin, the tree is all of the plugin folder.
 4. **Check for a saved suite** at `evals/<skill>/suite.json`. If the suite exists and
    there is no `--regen`, load the suite. Then go directly to Phase 3b (models). If the
-   `skillSha256` of the suite is different from the hash of step 3, say so in one line.
+   `skillSha256` of the suite is different from the `skillSha256` of step 3, say so in one line.
    Then continue. The suite still works, and the same suite keeps the scores comparable.
    `--regen` builds the suite again, but it also starts a new baseline.
 
@@ -344,7 +350,10 @@ run or a lost judgement as a pass or as a fail.
    the path in `runs[].capture`. Copy each capture to `outputs/<P01-r03>.md` with a
    shell loop. Do not read the captures into your context. Then point `runs[].capture`
    at the copy.
-3. Write `results.json` as `{ skill, skillSha256, suiteSha256, runId, generatedAt, ...workflowResult }`.
+3. Write `results.json` as `{ skill, skillSha256, skillTreeSha256, skillTree, workflowSha256, suiteSha256, runId, generatedAt, ...workflowResult }`.
+   Take `skillSha256`, `skillTreeSha256`, `skillTree`, and `workflowSha256` from the
+   output of `fingerprint.py` in Phase 0. Hash the same workflow script file that you gave
+   to the Workflow tool in Phase 4.
    Do not change the return value of the workflow, except the capture paths. Add
    `config.sessionModel` from Phase 3b. If a validator is available (for example, the
    `jsonschema` package of Python), check `results.json` against
@@ -364,7 +373,8 @@ run or a lost judgement as a pass or as a fail.
    - The weakest item and the least stable item, in plain words.
    - The path to `report.md`.
 
-   If an earlier run has the same `suiteSha256`, agent roles, and models, also give the
+   If an earlier run has the same `suiteSha256`, `workflowSha256`, agent roles, and models,
+   also give the
    change in each score since that run. Do not use a run with a different suite version
    as a baseline.
 
@@ -466,6 +476,7 @@ cross-prompt check.
 Scores are comparable only between runs with these same items:
 
 - The same `suiteSha256`.
+- The same `workflowSha256`. The workflow script builds the prompts that the agents get.
 - The same agent roles and models (`config.agents` and `config.sessionModel` in
   results.json).
 - The same wave size.
