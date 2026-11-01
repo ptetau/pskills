@@ -132,14 +132,14 @@
   "prompts": [
     {
       "id": "P01",
-      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state change --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state change --snapshot r5 --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "axis": "typical",
       "exercises": "The typical path with `defaults`: one job change, the full change spec, the intent records, one Plan commit, and no question.",
       "replies": []
     },
     {
       "id": "P02",
-      "prompt": "IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state change --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state change --snapshot r5 --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "axis": "named intent, interactive",
       "exercises": "A named intent with no `defaults`: the run plans IN-0001 (the --top option), and asks each question one at a time with a recommended answer.",
       "replies": [
@@ -148,14 +148,14 @@
     },
     {
       "id": "P03",
-      "prompt": "defaults IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot r5 --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "axis": "edge-but-valid: the intent is not ready",
       "exercises": "The readiness gate: IN-0001 (the --top option) has the status `specifying`, thus the run must say that `/pdlc:ready` comes first and stop, also with `defaults`.",
       "replies": []
     },
     {
       "id": "P04",
-      "prompt": "plan the work for the --top option\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state change --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "plan the work for the --top option\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state change --snapshot r5 --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "axis": "ambiguous: plain words, no intent ID",
       "exercises": "A request in plain words with no intent ID and no `defaults`: the run finds the oldest ready intent, IN-0001 (the --top option), and plans that intent.",
       "replies": [

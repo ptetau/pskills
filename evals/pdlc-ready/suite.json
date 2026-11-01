@@ -132,14 +132,14 @@
     {
       "id": "P01",
       "axis": "typical: defaults, no intent named",
-      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot r5 --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "The defaults path: the run takes the oldest `specifying` intent and settles the implied cases. Then the run checks each line, settles the conflict of the usage line and the --top error, marks `ready`, and commits.",
       "replies": []
     },
     {
       "id": "P02",
       "axis": "interactive: intent named by ID, no defaults",
-      "prompt": "IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "IN-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot r5 --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "Questions one at a time, each with two or three answers and a recommended answer. Also the same checks, markers and commit as P01 (the defaults path).",
       "replies": [
         "Take the answer that you recommend.",
@@ -152,7 +152,7 @@
     {
       "id": "P03",
       "axis": "ambiguous: a yes-or-no question that names the intent by its subject",
-      "prompt": "Is the wordfreq --top option ready to build?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "Is the wordfreq --top option ready to build?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot r5 --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "The run finds the intent from its subject, takes the reply `skip` from \"Asking questions\", and starts the final reply with the answer to the question.",
       "replies": [
         "skip",
@@ -165,7 +165,7 @@
     {
       "id": "P04",
       "axis": "edge-but-valid: the user changes an assumed answer",
-      "prompt": "IN-0001 defaults. I read the handoff of intake, and I want to change one assumed answer: --top must come before FILE, so `wordfreq FILE --top 2` gives the usage line.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "IN-0001 defaults. I read the handoff of intake, and I want to change one assumed answer: --top must come before FILE, so `wordfreq FILE --top 2` gives the usage line.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state ready --snapshot r5 --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "A guessed detail gives way to the words of the user. No old wording stays in R7 (top N words) or in \"Notes\", and `defaults` settles the other items.",
       "replies": []
     }
