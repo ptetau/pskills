@@ -41,7 +41,9 @@ fails the change when an entry is not in its spec. See "Interfaces" in `pdlc/REA
 - `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
   - in: the name of a template, and an email address
   - out: the ID of the sent email
-  - errors: `TEMPLATE_NOT_FOUND`, `INVALID_ADDRESS`
+  - errors:
+    - `TEMPLATE_NOT_FOUND` · `no template named <name>` · raises `TemplateNotFound`
+    - `INVALID_ADDRESS` · `not a valid email address: <address>` · raises `InvalidAddress`
 
 ### Test seams
 
