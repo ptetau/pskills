@@ -95,3 +95,5 @@ case that needs the user.
 - Ship is done when each change is proposed, or at a recorded stop. If an outside event
   ends the session, the next `/pdlc:ship` continues from the handoffs, and the log of the
   run shows where it ended.
+- After an interruption or an API error, the user types `/pdlc:ship` to continue. A normal
+  prompt ends the run.

@@ -1668,6 +1668,15 @@ class ShipLogCopyTest(unittest.TestCase):
         self.assertEqual(json.loads(copied.read_text().splitlines()[0])["event"], "run_start")
         self.assertIn("the log ends with no turn_end", summary)
 
+    def test_the_newest_log_by_modified_time_is_copied(self):
+        old, new = (self.project / ("pdlc/.logs/ship-%s.jsonl" % n) for n in ("20310101T000009Z", "20300101T000001Z"))
+        old.write_text(json.dumps({**self.ENTRY, "run": "old"}) + "\n")
+        new.write_text(json.dumps({**self.ENTRY, "run": "new"}) + "\n")
+        os.utime(old, (1000, 1000))
+        os.utime(new, (2000, 2000))
+        run_bench.collect_shiplog(self.project, self.out, 1, run_bench.HERE.parent / "plugins/pdlc")
+        self.assertIn('"new"', (self.out / "run1.shiplog.jsonl").read_text())
+
     def test_no_log_gives_none(self):
         self.assertIsNone(run_bench.collect_shiplog(self.project, self.out, 1, run_bench.HERE.parent / "plugins/pdlc"))
         self.assertFalse((self.out / "run1.shiplog.jsonl").exists())

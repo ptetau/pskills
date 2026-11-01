@@ -1690,7 +1690,7 @@ def command_rebuild(args, builder=None):
 def collect_shiplog(project, out_dir, number, plugin):
     """Copy the ship log of a run to <out_dir>/run<N>.shiplog.jsonl, and return the output of
     `shiplog.py summary`. Returns None when the project has no ship log."""
-    logs = sorted(Path(project, "pdlc", ".logs").glob("ship-*.jsonl"))
+    logs = sorted(Path(project, "pdlc", ".logs").glob("ship-*.jsonl"), key=lambda p: p.stat().st_mtime)
     if not logs:
         return None
     target = Path(out_dir) / ("run%d.shiplog.jsonl" % number)

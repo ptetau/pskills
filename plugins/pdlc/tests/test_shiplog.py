@@ -407,10 +407,15 @@ class ShipLog(unittest.TestCase):
         self.blocked(self.stop())
 
     def test_tips_hold_only_branches_and_head(self):
-        git(self.root, "update-ref", "refs/tags/t1", "HEAD")
-        git(self.root, "update-ref", "refs/remotes/origin/main", "HEAD")
+        self.commit("Specify IN-0001: x")
+        tagged = git(self.root, "rev-parse", "HEAD")
+        git(self.root, "update-ref", "refs/tags/t1", tagged)
+        git(self.root, "update-ref", "refs/remotes/origin/x", tagged)
+        git(self.root, "reset", "-q", "--hard", "HEAD~1")
         self.start()
-        self.assertEqual(len(self.events("run_start")[0]["tips"]), 1)
+        tips = self.events("run_start")[0]["tips"]
+        self.assertEqual(len(tips), 1)
+        self.assertNotIn(tagged, tips)
 
     def test_stop_and_stop_failure_have_a_timeout(self):
         hooks = json.loads(HOOKS_JSON.read_text())["hooks"]
