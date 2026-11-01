@@ -78,7 +78,8 @@ the change.
 
 - In every round, the commit "Verify CH-xxxx: round <n>" (`Intent`, `Change`): each
   packet, each result, and each new intent. The findings of a failed round stay in git.
-  The progress log names each new intent. Keep the trailers of each commit in one block, as README "Commits" says.
+  The progress log names each new intent. Keep the trailers of each commit in one block, as
+  README "Commits" says.
 - After a failed round:
   - The `handoff.md` gives each problem to its stage. Its title is `verify → tests`,
     `verify → build`, or `verify → acceptance`. The progress log has a new line.

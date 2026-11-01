@@ -129,13 +129,24 @@ class CommitHook(unittest.TestCase):
                     "Co-Authored-By: Someone <s@example.com>")
         code, err = self.hook()
         self.assertEqual(code, 2)
-        self.assertIn("the pdlc trailers are not in the last trailer block", err)
+        self.assertIn("the pdlc trailers are not in the last paragraph", err)
 
     def test_a_blank_line_before_co_authored_by_is_named(self):
         self.commit("Start CH-0001", "Intent: IN-0001\nChange: CH-0001\n\nCo-Authored-By: Someone <s@example.com>")
         code, err = self.hook()
         self.assertEqual(code, 2)
-        self.assertIn("the pdlc trailers are not in the last trailer block", err)
+        self.assertIn("the pdlc trailers are not in the last paragraph", err)
+
+    def test_a_pdlc_trailer_above_a_blank_line_is_named(self):
+        self.commit("Start CH-0001", "Change: CH-0001\n\nIntent: IN-0001\nCo-Authored-By: S <s@e.com>")
+        code, err = self.hook()
+        self.assertEqual(code, 2)
+        self.assertIn("not in the last paragraph", err)
+
+    def test_prose_that_looks_like_a_trailer_does_not_block_correct_trailers(self):
+        self.commit("Start CH-0001", "Ticket: none yet, see below.\n\nIntent: IN-0001\nChange: CH-0001\n"
+                    "Co-Authored-By: S <s@e.com>")
+        self.assertEqual(self.hook(), (0, ""))
 
     def test_other_trailers_directly_under_the_pdlc_trailers_pass(self):
         self.commit("Start CH-0001", "Intent: IN-0001\nChange: CH-0001\nCo-Authored-By: Someone <s@example.com>\n"
@@ -148,7 +159,7 @@ class CommitHook(unittest.TestCase):
                     path="pdlc/inbox/IN-0001-reset.md")
         code, err = self.hook()
         self.assertEqual(code, 2)
-        self.assertIn("the pdlc trailers are not in the last trailer block", err)
+        self.assertIn("the pdlc trailers are not in the last paragraph", err)
 
     def test_a_pdlc_subject_on_main_with_one_block_passes(self):
         git(self.root, "switch", "-q", "main")

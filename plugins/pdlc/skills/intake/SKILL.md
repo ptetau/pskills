@@ -65,9 +65,10 @@ its right spec, as `proposed`. Intake does not write code.
   case, for example N larger than the number of items. The mark goes where intake writes it, also in
   a "Given ..., then ..." line.
 - Before `check_handoff.py`, read each new Given line again. If the words of the intent do
-  not give its result, end the line with `(assumed)`. Common examples are N larger than the
-  count, a sign such as `+3`, and a missing value. Others are the option with no FILE, empty
-  standard output on an error, and which of two errors shows. A result that the words of the
+  not give its result, end the line with `(assumed)`. Common cases are a value past a limit, a
+  value in an odd form (a sign, a leading zero, a decimal), and a missing value. Others are
+  a missing necessary argument, the output of each stream on an error, and which of two
+  errors shows first. A result that the words of the
   intent decide has no mark.
 - A detail that intake adds to a `built` requirement from recon also has the mark `(assumed)`.
 - "Decided on defaults" in the handoff lists each `(assumed)` decision that intake wrote, one line

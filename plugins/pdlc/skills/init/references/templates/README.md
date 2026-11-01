@@ -45,8 +45,9 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 - The pdlc trailers are the last paragraph of the message. Any other trailer, such as
   `Co-Authored-By`, goes directly under them, with no blank line between them.
 - A hook examines each new commit. On a pdlc branch, it examines the subject and the
-  trailers. On every branch, it examines the writing in the specs, the intents, and the
-  change folders. The skill fixes all the problems that the hook names in one edit, and
+  trailers. On every branch, it examines the trailers of a commit with a pdlc subject.
+  Also on every branch, it examines the writing in the specs, the intents, and the change
+  folders. The skill fixes all the problems that the hook names in one edit, and
   amends the commit one time.
 
 ## Writing

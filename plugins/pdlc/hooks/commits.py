@@ -2,15 +2,17 @@
 """pdlc commit check. Claude Code runs this after every Bash call.
 
 A pdlc branch is one that a change spec or an intent names as its Branch. When the call
-made a commit on a pdlc branch, this checks the commit against the project's
-DES-pdlc-commit-trailers (commit subjects and trailers):
-  - its subject is one of the shapes under "Subjects", and a change it names is this
-    branch's change;
-  - it carries Intent; on a change's branch, Change with that change; and Req exactly
-    when it changes files outside pdlc/.
+made a commit, this checks the commit against the project's DES-pdlc-commit-trailers
+(commit subjects and trailers):
+  - on a pdlc branch, its subject is one of the shapes under "Subjects", and a change it
+    names is this branch's change;
+  - on a pdlc branch, it carries Intent; on a change's branch, Change with that change; and
+    Req exactly when it changes files outside pdlc/;
+  - on any branch, a commit with a pdlc subject (for example intake on main) has its pdlc
+    trailers in the last paragraph of the message. Only that paragraph is read as trailers.
 It runs while the commit is still the newest, so `git commit --amend` fixes the commit at
-once. It leaves merge commits, other branches and projects without pdlc alone. Exit 2
-shows the problems to Claude.
+once. It leaves merge commits, other subjects off a pdlc branch, and projects without pdlc
+alone. Exit 2 shows the problems to Claude.
 
 On any branch, it also runs the writing check of the project (pdlc/bin/check_writing.py) on
 the lines that the commit wrote in the specs, the intents, and the change folders. It skips
@@ -156,15 +158,24 @@ def problems(root):
 
 
 def block_problems(root):
-    """The problem when a pdlc trailer of the commit is not in the last trailer
-    block, which is the only block that `git interpret-trailers` reads. Another problem
-    already names a trailer that is missing from the whole message."""
+    """The problem when a pdlc trailer of the commit is not in the last trailer block, which
+    is the only block that `git interpret-trailers` reads. A trailer line counts only by its
+    last occurrence in the message, so prose earlier in the message does not matter. A Ticket
+    line with more than one word is prose. Another
+    problem already names a trailer that is missing from the whole message."""
     body = git(root, "log", "-1", "--format=%b") or ""
-    anywhere = set(re.findall(r"^(Intent|Change|Req|Ticket):[ \t]*\S", body, re.M))
-    last = git(root, "log", "-1", "--format=%(trailers:only,unfold)") or ""
-    block = set(re.findall(r"^([A-Za-z][\w-]*):", last, re.M))
-    if anywhere - block:
-        return ["the pdlc trailers are not in the last trailer block"]
+    last = {}
+    for line in body.splitlines():
+        found = re.match(r"^(Intent|Change|Req|Ticket):[ \t]*(\S.*?)\s*$", line)
+        if found and (found.group(1) != "Ticket" or len(found.group(2).split()) == 1):
+            last[found.group(1)] = line.strip()
+    block = {line.strip() for line in
+             (git(root, "log", "-1", "--format=%(trailers:only,unfold)") or "").splitlines()}
+    if any(line not in block for line in last.values()):
+        return ["the pdlc trailers are not in the last paragraph, so git does not read them as "
+                "trailers. Put Intent, Change and Req in the last paragraph. Put Co-Authored-By "
+                "and any other trailer directly under them, with no blank line and no other "
+                "text in that paragraph"]
     return []
 
 
