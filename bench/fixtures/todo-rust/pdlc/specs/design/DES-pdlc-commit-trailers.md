@@ -1,6 +1,6 @@
 # DES-pdlc-commit-trailers · What every pdlc commit carries
 
-Status: agreed · Default: yes
+Status: agreed · Default: yes · Ask at init: no
 
 ## Rule
 
@@ -24,8 +24,8 @@ Ticket: PROJ-88
   checks, the README). A commit that changes only files in `pdlc/` has no `Req`.
   Examples are a commit that starts a branch, logs progress, or sets statuses.
 
-Keep all trailers in one block at the end of the message. Use this order:
-`Intent`, `Change`, `Req`, `Ticket`, and `Review` (the GIF of the visual review). Then put
+Keep all trailers in one block at the end of the message. Put the trailers in this order:
+`Intent`, `Change`, `Req`, `Ticket`, `Review` (the GIF of the visual review), and then
 any other trailers (for example `Co-Authored-By`). Then git shows them all as trailers.
 For the trace, the important point is that the lines are in the message.
 

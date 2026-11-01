@@ -19,6 +19,8 @@ A spec is a JSON file:
                      for example "verify". The default baseline is then bench/sections/<stage>.json
   seeds              true to also run the planted-defect check (use it when reviewers can change)
   target             an agent for the gate's agent mode, or null for whole-run cost
+  snapshot           with "stage": the snapshot to replay from (default wordfreq). The run stops when the
+                     baseline comes from a different snapshot. A baseline with no name comes from r5
   baseline           the result file to compare with (default bench/baseline.json)
   gate               optional: min_gain, alpha, min_runs, speed_limit
   budget_usd_per_run stop a run at this many dollars (default 8)
@@ -78,8 +80,11 @@ def load_spec(path):
     spec.setdefault("seeds", False)
     spec.setdefault("target", None)
     spec.setdefault("stage", None)
-    if spec["stage"] is not None and spec["stage"] not in run_bench.STAGE_REPLAY:
-        problems.append('"stage" must be one of ' + ", ".join(sorted(run_bench.STAGE_REPLAY)))
+    if spec["stage"] is not None and spec["stage"] not in run_bench.REPLAY_STAGES:
+        problems.append('"stage" must be one of ' + ", ".join(sorted(run_bench.REPLAY_STAGES)))
+    spec.setdefault("snapshot", run_bench.DEFAULT_SNAPSHOT)
+    if spec["snapshot"] not in run_bench.SNAPSHOTS:
+        problems.append('"snapshot" must be one of ' + ", ".join(sorted(run_bench.SNAPSHOTS)))
     spec.setdefault("baseline", "bench/sections/%s.json" % spec["stage"] if spec["stage"] else "bench/baseline.json")
     spec.setdefault("gate", {})
     spec.setdefault("budget_usd_per_run", 8)
@@ -88,6 +93,18 @@ def load_spec(path):
     if problems:
         raise SpecError("; ".join(problems))
     return spec
+
+
+def snapshot_mismatch(spec, baseline):
+    """A message when a stage replay and its baseline start from different snapshots, else None.
+    A baseline with no "snapshot" comes from "r5"."""
+    if not spec["stage"]:
+        return None
+    theirs = baseline.get("snapshot", "r5")
+    if theirs == spec["snapshot"]:
+        return None
+    return ("The replay starts from the snapshot %s, but the baseline %s comes from %s. "
+            "Make a baseline from the same snapshot." % (spec["snapshot"], spec["baseline"], theirs))
 
 
 def apply_edits(spec, plugin=PLUGIN):
@@ -184,6 +201,11 @@ def command_run(args):
         (folder / "DONE").write_text("CHECK FAILED\n" + report)
         write_status(folder, state="done", verdict="CHECK FAILED")
         return 1
+    mismatch = snapshot_mismatch(spec, json.loads((REPO / spec["baseline"]).read_text()))
+    if mismatch:
+        (folder / "DONE").write_text("SNAPSHOT MISMATCH\n" + mismatch + "\n")
+        write_status(folder, state="done", verdict="SNAPSHOT MISMATCH")
+        return 1
     labels = ["%s-%d" % (spec["id"], n) for n in range(1, spec["runs"] + 1)]
     write_status(folder, state="running", runs=labels)
 
@@ -196,7 +218,8 @@ def command_run(args):
 
     def replay():
         ns = Namespace(stage=spec["stage"], label=spec["id"] + "-stage", runs=spec["runs"], plugin=str(scratch),
-                       out=str(RESULTS), timeout=1800, budget=spec["budget_usd_per_run"])
+                       out=str(RESULTS), timeout=1800, budget=spec["budget_usd_per_run"],
+                       snapshot=spec["snapshot"])
         run_bench.command_stage(ns)
 
     with ThreadPoolExecutor(max_workers=len(labels) + 1) as pool:

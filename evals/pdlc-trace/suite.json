@@ -139,28 +139,28 @@
     {
       "id": "P01",
       "axis": "typical",
-      "prompt": "Why does line 26 of wordfreq/cli.py exist?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "Why does line 26 of wordfreq/cli.py exist?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "From code with a line: `git blame` of one line, the trailers, and three requirements with titles and statuses. Also the intent, no ticket, the change folder, and the statuses on the change branch.",
       "replies": []
     },
     {
       "id": "P02",
       "axis": "reverse direction (from an intent to code), with defaults",
-      "prompt": "defaults. What did IN-0001 (the --top option) change?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults. What did IN-0001 (the --top option) change?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "From an intent: the requirements and the change with statuses, the commits of CH-0001 (top option), the checks of each requirement, and the change folder.",
       "replies": []
     },
     {
       "id": "P03",
       "axis": "terse: one requirement ID",
-      "prompt": "What proves JOB-report-word-frequencies.R8 (one --top option only)?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "What proves JOB-report-word-frequencies.R8 (one --top option only)?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "From a requirement: the status and the intent, and the find operation of the checks port in the underscored ID form. Also the commits whose `Req` trailer names the requirement, and the files of those commits.",
       "replies": []
     },
     {
       "id": "P04",
       "axis": "edge-but-valid: code with no trace trailers",
-      "prompt": "Why does wordfreq/counter.py exist? Which requirement asked for it?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "Why does wordfreq/counter.py exist? Which requirement asked for it?\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state done --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "exercises": "From a full file with `git log --follow`: the seed commit has no trailers. Thus, the reply must name the missing links, and must not invent an intent.",
       "replies": []
     }

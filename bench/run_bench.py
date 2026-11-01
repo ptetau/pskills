@@ -17,6 +17,7 @@ bench/fixture-app. Nothing in the copy comes back into the repository.
 """
 import argparse
 import builtins
+import importlib.util
 import json
 import keyword
 import os
@@ -31,6 +32,7 @@ import tempfile
 import threading
 import time
 from collections import Counter
+from argparse import Namespace
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -60,10 +62,29 @@ TODO_INTENT = (
     "404 with `error: no item <id>`."
 )
 SECTIONS = HERE / "sections"
-SNAPSHOT = SECTIONS / "project.bundle"
 CHANGE_BRANCH = "pdlc/CH-0001-top-option"
-# stage: (subject that starts the entry commit, branch to work on, prompt, subject that proves the stage finished)
-STAGE_REPLAY = {
+# The snapshots of a finished run. "r5" is the first one, from an early pdlc with no acceptance
+# stage. The two others come from runs with the pdlc of round 8 (see sections/README.md).
+SNAPSHOTS = {
+    "wordfreq": {"bundle": SECTIONS / "wordfreq.bundle", "fixture": "wordfreq", "intent": INTENT},
+    "todo-rust": {"bundle": SECTIONS / "todo-rust.bundle", "fixture": "todo-rust", "intent": TODO_INTENT},
+    "r5": {"bundle": SECTIONS / "project.bundle", "fixture": "wordfreq", "intent": INTENT, "legacy": True},
+}
+DEFAULT_SNAPSHOT = "wordfreq"
+# stage: (subject of the entry commit, prompt, subject that proves the stage finished).
+# The prompt of intake holds {intent}.
+REPLAY_STAGES = {
+    "intake": ("Set up pdlc", "/pdlc:intake defaults {intent}", "Specify IN-"),
+    "ready": ("Specify IN-0001", "/pdlc:ready defaults", "Ready IN-"),
+    "change": ("Ready IN-0001", "/pdlc:change defaults", "Plan IN-"),
+    "acceptance": ("Plan IN-0001", "/pdlc:acceptance defaults", "Acceptance reviewed IN-"),
+    "tests": ("Acceptance reviewed IN-0001", "/pdlc:tests defaults", "Tests reviewed CH-"),
+    "build": ("Tests reviewed CH-0001", "/pdlc:build defaults", "Built CH-"),
+    "verify": ("Built CH-0001", "/pdlc:verify defaults", "Verified CH-"),
+    "show": ("Verified CH-0001", "/pdlc:show defaults", "Propose CH-"),
+}
+# The table of the snapshot "r5", as it was: (entry subject, branch, prompt, end subject).
+LEGACY_STAGES = {
     "intake": ("Set up pdlc", "main", "/pdlc:intake defaults " + INTENT, "Specify IN-"),
     "ready": ("Specify IN-0001", "main", "/pdlc:ready defaults", "Ready IN-"),
     "change": ("Ready IN-0001", "main", "/pdlc:change defaults", "Plan IN-"),
@@ -74,6 +95,28 @@ STAGE_REPLAY = {
     # So a replay of verify or show needs a new snapshot.
     "show": ("Verified CH-0001", CHANGE_BRANCH, "/pdlc:show defaults", "Visual review CH-"),
 }
+
+
+def stage_table(snapshot):
+    """{stage: (entry subject, prompt, end subject)} of a snapshot."""
+    if snapshot not in SNAPSHOTS:
+        raise SystemExit("unknown snapshot %r (one of %s)" % (snapshot, ", ".join(sorted(SNAPSHOTS))))
+    if SNAPSHOTS[snapshot].get("legacy"):
+        return {stage: (row[0], row[2], row[3]) for stage, row in LEGACY_STAGES.items()}
+    intent = SNAPSHOTS[snapshot]["intent"]
+    return {stage: (row[0], row[1].replace("{intent}", intent), row[2]) for stage, row in REPLAY_STAGES.items()}
+
+
+def snapshot_bundle(snapshot):
+    """The bundle file of a snapshot. It stops with a message when the file is not there."""
+    stage_table(snapshot)  # checks the name
+    bundle = SNAPSHOTS[snapshot]["bundle"]
+    if not Path(bundle).exists():
+        raise SystemExit("The snapshot %s is not recorded: %s is missing. "
+                         "See bench/sections/README.md." % (snapshot, bundle))
+    return bundle
+
+
 ALLOWED_TOOLS = (
     "Read Write Edit Glob Grep Agent Skill "
     + " ".join(
@@ -84,16 +127,6 @@ ALLOWED_TOOLS = (
         ).split()
     )
 )
-
-# Files that init copies as they are. A run refreshes them from the plugin under test.
-VERBATIM = [
-    ("templates/README.md", "README.md"),
-    ("templates", "templates"),
-    ("ports", "ports"),
-    ("adapters", "adapters"),
-    ("bin", "bin"),
-    ("reviews", "reviews"),
-]
 
 # Relative prices, in input-token equivalents, used only to share a model's cost between
 # its messages. The total always comes from the cost that the CLI reports.
@@ -111,23 +144,37 @@ def git(cwd, *args):
     )
 
 
-def sync_verbatim(project, plugin):
-    """Copy the files that init copies as they are, from the plugin under test."""
-    refs = Path(plugin) / "skills" / "init" / "references"
-    for source, target in VERBATIM:
-        src, dst = refs / source, Path(project) / "pdlc" / target
-        if source == "templates/README.md":
-            shutil.copyfile(src, dst)
-            continue
-        if source == "templates":
-            for path in src.iterdir():
-                if path.name not in ("README.md", "config.md"):
-                    (dst).mkdir(parents=True, exist_ok=True)
-                    shutil.copyfile(path, dst / path.name)
-            continue
-        if dst.exists():
-            shutil.rmtree(dst)
-        shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__"))
+def load_upgrade(plugin):
+    """The upgrade script of the plugin under test, as a module."""
+    path = Path(plugin) / "skills" / "upgrade" / "scripts" / "upgrade.py"
+    spec = importlib.util.spec_from_file_location("pdlc_upgrade_" + str(abs(hash(str(path)))), path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def upgrade_project(project, plugin):
+    """Bring the pdlc files of a project up to the plugin under test, and write no commit.
+
+    Nobody edits the files of a bench project. So a file that is not a spec, and that the
+    upgrade would call edited, is taken from the plugin. A spec stays as it is.
+    """
+    module = load_upgrade(plugin)
+    root, plugin = str(project), str(Path(plugin))
+    plan = module.build_plan(root, plugin, set())
+    takes = [e["path"] for e in plan["entries"] if e["status"] == "edited" and not e["path"].startswith("specs/")]
+    args = Namespace(take=takes, no_intent=True, no_commit=True)
+    here = git(root, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    try:
+        module.cmd_apply(root, plugin, args)
+    except module.Stop as stop:
+        raise RuntimeError("upgrade failed (%d): %s" % (stop.code, stop.message))
+    # The script works on the newest unmerged pdlc branch. A branch at the commit of main counts
+    # as merged, so the script may have moved to main. The bench stays where the stage starts.
+    if git(root, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip() != here:
+        moved = git(root, "switch", "-q", here)
+        if moved.returncode != 0:
+            raise RuntimeError("upgrade left branch %s: %s" % (here, moved.stderr.strip()))
 
 
 def ensure_tools():
@@ -142,16 +189,22 @@ def ensure_tools():
 
 
 def make_project(dest, plugin, with_pdlc=True, fixture="wordfreq"):
-    """A fresh git repository from the fixture. With pdlc, the pdlc folder is in place."""
+    """A fresh git repository from the fixture. With pdlc, the pdlc folder is in place.
+
+    The fixture keeps only the specs, the config and the marker. The upgrade script of the
+    plugin under test adds the other pdlc files, so that init is not needed.
+    """
     dest = Path(dest)
     shutil.copytree(FIXTURES[fixture]["app"], dest,
                     ignore=shutil.ignore_patterns("__pycache__", "target", "pdlc" if not with_pdlc else ""))
-    if with_pdlc:
-        sync_verbatim(dest, plugin)
-        os.symlink(ensure_tools(), dest / "pdlc" / ".tools")
     git(dest, "init", "-q", "-b", "main")
     git(dest, "add", "-A")
     git(dest, "commit", "-q", "-m", "Set up pdlc" if with_pdlc else "Seed")
+    if with_pdlc:
+        upgrade_project(dest, plugin)
+        os.symlink(ensure_tools(), dest / "pdlc" / ".tools")
+        git(dest, "add", "-A")
+        git(dest, "commit", "-q", "--amend", "--no-edit")
     return dest
 
 
@@ -772,34 +825,120 @@ def tip_branch(project):
     return next((name for name in names if name != "main"), "main")
 
 
-def make_stage_project(dest, stage, plugin):
+def clone_snapshot(dest, snapshot):
+    """Clone the bundle with no local branch, so that a branch from the end of the run cannot
+    leak into an earlier state. The caller makes the branches that its state needs."""
+    subprocess.run(["git", "clone", "-q", str(snapshot_bundle(snapshot)), str(dest)], check=True)
+    git(dest, "checkout", "-q", "--detach")
+    for name in git(dest, "for-each-ref", "--format=%(refname:short)", "refs/heads").stdout.split():
+        git(dest, "branch", "-q", "-D", name)
+
+
+def main_commit(project, commit, ref="origin/main"):
+    """The last commit on the first-parent line of `ref` that is `commit` or older."""
+    for line in git(project, "rev-list", "--first-parent", ref).stdout.split():
+        if git(project, "merge-base", "--is-ancestor", line, commit).returncode == 0:
+            return line
+    return commit
+
+
+def change_base(project, commit, branch):
+    """`Base:` of the change spec whose `Branch:` is `branch`, read at `commit`. Main if none."""
+    for name in git(project, "ls-tree", "-r", "--name-only", commit, "--", "pdlc/changes").stdout.splitlines():
+        if name.endswith("/change.md"):
+            text = git(project, "show", "%s:%s" % (commit, name)).stdout
+            found = re.search(r"\bBranch:[ \t]*(\S+)", text)
+            if found and found.group(1) == branch:
+                base = re.search(r"\bBase:[ \t]*(\S+)", text)
+                return base.group(1) if base else "main"
+    return "main"
+
+
+def make_base_branch(project, commit, branch):
+    """For a stacked change, make its base branch at the last commit of origin/<base> before `commit`."""
+    base = change_base(project, commit, branch)
+    if base in ("main", "none", "-") or base == branch:
+        return
+    ref = "origin/" + base
+    if git(project, "rev-parse", "--verify", "-q", ref).returncode == 0:
+        git(project, "branch", "-q", "-f", base, main_commit(project, commit, ref))
+
+
+def newest_pdlc_branch(project):
+    """The remote pdlc branch at the top of the stack: the newest one that is not under another."""
+    refs = git(project, "for-each-ref", "--sort=-committerdate", "--format=%(refname:short)",
+               "refs/remotes/origin/pdlc/").stdout.split()
+    for ref in refs:
+        if not any(other != ref and git(project, "merge-base", "--is-ancestor", ref, other).returncode == 0
+                   for other in refs):
+            return ref
+    return None
+
+
+def work_branch(project, stage, entry):
+    """The branch where a stage works, read from the spec in the entry commit.
+
+    Intake works on main. A stage of a change reads `Branch:` of the change spec. The other
+    stages read `Branch:` of the intent. The value none gives main.
+    """
+    if stage == "intake":
+        return "main"
+    names = git(project, "ls-tree", "-r", "--name-only", entry, "--", "pdlc").stdout.splitlines()
+    pattern = (r"pdlc/changes/CH-0001-[^/]*/change\.md$" if stage in ("build", "verify", "show")
+               else r"pdlc/inbox/IN-0001-[^/]*\.md$")
+    for name in names:
+        if re.match(pattern, name):
+            found = re.search(r"\bBranch:[ \t]*(\S+)", git(project, "show", "%s:%s" % (entry, name)).stdout)
+            if found and found.group(1) not in ("none", "main", "-"):
+                return found.group(1)
+    return "main"
+
+
+def make_stage_project(dest, stage, plugin, snapshot=DEFAULT_SNAPSHOT):
     """Clone the snapshot to dest, with the project at the commit where the stage starts."""
-    subprocess.run(["git", "clone", "-q", str(SNAPSHOT), str(dest)], check=True)
-    subject, branch, _, _ = STAGE_REPLAY[stage]
-    # The change branch is only a remote-tracking ref until it is checked out, so find the
-    # commits before the remote goes.
-    entry = entry_commit(dest, subject)
-    if branch == "main":
-        git(dest, "checkout", "-q", "-B", "main", entry)
+    table = stage_table(snapshot)
+    if stage not in table:
+        raise SystemExit("The snapshot %s has no stage %s." % (snapshot, stage))
+    clone_snapshot(dest, snapshot)
+    # A branch is only a remote-tracking ref until it is checked out, so find the commits
+    # before the remote goes.
+    entry = entry_commit(dest, table[stage][0])
+    if SNAPSHOTS[snapshot].get("legacy"):
+        branch = LEGACY_STAGES[stage][1]
+        base = entry if branch == "main" else entry_commit(dest, "Plan IN-0001")
     else:
-        plan = entry_commit(dest, "Plan IN-0001")
-        git(dest, "checkout", "-q", "-B", "main", plan)
+        branch = work_branch(dest, stage, entry)
+        base = entry if branch == "main" else main_commit(dest, entry)
+    git(dest, "checkout", "-q", "-B", "main", base)
+    if branch != "main":
         git(dest, "checkout", "-q", "-B", branch, entry)
+        make_base_branch(dest, entry, branch)
     return finish_snapshot_project(dest, plugin), entry
 
 
-def make_done_project(dest, plugin):
-    """Clone the snapshot to dest, with the change branch at its last commit, the proposal."""
-    subprocess.run(["git", "clone", "-q", str(SNAPSHOT), str(dest)], check=True)
-    git(dest, "checkout", "-q", "-B", "main", entry_commit(dest, "Plan IN-0001"))
-    git(dest, "checkout", "-q", "-B", CHANGE_BRANCH, "origin/" + CHANGE_BRANCH)
+def make_done_project(dest, plugin, snapshot=DEFAULT_SNAPSHOT):
+    """Clone the snapshot to dest, with the newest pdlc branch at its last commit, the proposal."""
+    clone_snapshot(dest, snapshot)
+    if SNAPSHOTS[snapshot].get("legacy"):
+        branch, tip = CHANGE_BRANCH, "origin/" + CHANGE_BRANCH
+        base = entry_commit(dest, "Plan IN-0001")
+    else:
+        tip = newest_pdlc_branch(dest)
+        if not tip:
+            raise SystemExit("The snapshot %s has no pdlc branch." % snapshot)
+        branch = tip[len("origin/"):]
+        base = main_commit(dest, git(dest, "rev-parse", tip).stdout.strip())
+    git(dest, "checkout", "-q", "-B", "main", base)
+    git(dest, "checkout", "-q", "-B", branch, tip)
+    if not SNAPSHOTS[snapshot].get("legacy"):
+        make_base_branch(dest, tip, branch)
     return finish_snapshot_project(dest, plugin)
 
 
 def finish_snapshot_project(dest, plugin):
-    """Remove the remote, and bring the files that init copies up to the plugin under test."""
+    """Remove the remote, and bring the pdlc files up to the plugin under test."""
     git(dest, "remote", "remove", "origin")
-    sync_verbatim(dest, plugin)
+    upgrade_project(dest, plugin)
     tools = Path(dest) / "pdlc" / ".tools"
     if tools.is_symlink() and not tools.exists():  # the snapshot's link points to a missing folder
         tools.unlink()
@@ -811,26 +950,33 @@ def finish_snapshot_project(dest, plugin):
     return Path(dest)
 
 
-def check_stage(project, stage, entry):
+def check_stage(project, stage, entry, snapshot=DEFAULT_SNAPSHOT):
     """Judge what a stage left in the project, from the commits after its entry commit."""
     project = Path(project)
     subjects = [s for s in git(project, "log", "--all", "--format=%s", "--not", entry).stdout.splitlines()
                 if s != "Upgrade pdlc"]
-    done = STAGE_REPLAY[stage][3]
+    done = stage_table(snapshot)[stage][2]
+    fixture = SNAPSHOTS[snapshot]["fixture"]
     finished = any(s.startswith(done) for s in subjects)
     stopped = any(s.startswith("Stop ") for s in subjects)
     extra = {}
     git(project, "checkout", "-q", tip_branch(project))
     extra["writing"] = writing_findings(project, entry)
     changes = project / "pdlc" / "changes"
-    if stage == "tests":
+    if stage == "acceptance":
+        extra["locked"] = any(re.match(r"Acceptance-Locked:[ \t]*(?!none\b)\S", line)
+                              for path in (project / "pdlc" / "inbox").glob("IN-*.md")
+                              for line in path.read_text().splitlines())
+    elif stage == "tests":
         extra["locked"] = any(line.startswith("Tests-Locked:")
                               for path in changes.glob("CH-*/change.md")
                               for line in path.read_text().splitlines())
-        extra["checks_fail_first"] = not run_unit_checks(project)["ok"]
+        extra["checks_fail_first"] = not unit_checks(project, fixture)["ok"]
     elif stage == "build":
-        extra["unit"] = run_unit_checks(project)
-        extra["probes"] = run_probes(project)
+        extra["unit"] = unit_checks(project, fixture)
+        # The probes of the to-do apps need a build and a server, so a replay does not run them.
+        extra["probes"] = (run_probes(project) if fixture == "wordfreq" else
+                           {"passed": 0, "total": 0, "failed": [], "not_run": True})
     elif stage == "show":
         extra["gif"] = any(changes.glob("CH-*/review.gif"))
         extra["frames"] = len(list(changes.glob("CH-*/frames/*.png")))
@@ -842,6 +988,8 @@ def check_stage(project, stage, entry):
     git(project, "checkout", "-q", "main")
     if stage in ("intake", "ready", "change"):
         passed = True
+    elif stage == "acceptance":
+        passed = extra["locked"]
     elif stage == "tests":
         passed = extra["locked"] and extra["checks_fail_first"]
     elif stage == "build":
@@ -872,16 +1020,18 @@ def command_stage(args):
     plugin = Path(args.plugin).resolve()
     out_dir = Path(args.out) / args.label
     out_dir.mkdir(parents=True, exist_ok=True)
-    prompt = STAGE_REPLAY[args.stage][2]
+    snapshot = getattr(args, "snapshot", DEFAULT_SNAPSHOT)
+    prompt = stage_table(snapshot)[args.stage][1]
 
     def one(number):
         try:
             work = Path(tempfile.mkdtemp(prefix="pdlc-stage-"))
-            project, entry = make_stage_project(work / "app", args.stage, plugin)
+            project, entry = make_stage_project(work / "app", args.stage, plugin, snapshot)
             events, wall, err = run_claude(prompt, project, plugin, out_dir / ("run%d.stream.jsonl" % number),
-                                           timeout=args.timeout, budget_usd=args.budget)
+                                           timeout=args.timeout, budget_usd=args.budget,
+                                           tools=FIXTURES[SNAPSHOTS[snapshot]["fixture"]]["tools"])
             analysis = analyse(events)
-            check = check_stage(project, args.stage, entry)
+            check = check_stage(project, args.stage, entry, snapshot)
             analysis["outcome"] = stage_outcome(args.stage, check, entry)
             analysis.update({"wall_s": wall, "project": str(project), "stderr": err[-500:]})
             (out_dir / ("run%d.json" % number)).write_text(json.dumps(analysis, indent=1))
@@ -894,6 +1044,7 @@ def command_stage(args):
         results = list(pool.map(one, range(1, args.runs + 1)))
     runs = [run for run in results if run is not None]
     summary = {"label": args.label, "stage": args.stage,
+               "snapshot": snapshot,
                "plugin_commit": git(plugin, "rev-parse", "--short", "HEAD").stdout.strip(),
                "model": MODEL, "effort": EFFORT, "runs": runs}
     (out_dir / "e2e.json").write_text(json.dumps(summary, indent=1))
@@ -903,23 +1054,31 @@ def command_stage(args):
                                               run["outcome"]["check"]["ok"]))
 
 
-PREPARE_STATES = ["init", *STAGE_REPLAY, "done", "board"]
+PREPARE_STATES = ["init", *REPLAY_STAGES, "done", "board"]
+
+
+def prepare_states(snapshot):
+    """The states that `prepare` can make from a snapshot."""
+    return ["init", *stage_table(snapshot), "done", "board"]
 
 
 def command_prepare(args):
     """Make a project at one state, for a run that a different tool drives, for example /vet.
 
     The states are: before init, the start of each replay stage, after the proposal ("done"),
-    and "done" with a board tracker set. The tag `start` marks the commit where the run starts.
+    and "done" with a board tracker set. `--snapshot` names the finished run to start from. The tag `start` marks the commit where the run starts.
     """
     plugin = Path(args.plugin).resolve()
     dest = Path(args.dest)
+    snapshot = getattr(args, "snapshot", DEFAULT_SNAPSHOT)
+    if args.state not in prepare_states(snapshot):
+        raise SystemExit("The snapshot %s has no state %s." % (snapshot, args.state))
     if args.state == "init":
-        make_project(dest, plugin, with_pdlc=False)
-    elif args.state in STAGE_REPLAY:
-        make_stage_project(dest, args.state, plugin)
+        make_project(dest, plugin, with_pdlc=False, fixture=SNAPSHOTS[snapshot]["fixture"])
+    elif args.state in stage_table(snapshot):
+        make_stage_project(dest, args.state, plugin, snapshot)
     else:
-        make_done_project(dest, plugin)
+        make_done_project(dest, plugin, snapshot)
     if args.state == "board":
         # pdlc reads the config on main before any work, so main and the branch both get the tracker.
         branch = git(dest, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
@@ -1538,7 +1697,7 @@ def command_e2e(args):
         fixture = FIXTURES[args.fixture]
         project = make_project(work / "app", plugin, fixture=args.fixture)
         log = out_dir / ("run%d.stream.jsonl" % number)
-        events, wall, err = run_claude("/pdlc:ship defaults " + fixture["intent"], project, plugin, log,
+        events, wall, err = run_claude("/pdlc:ship defaults " + (getattr(args, "intent", None) or fixture["intent"]), project, plugin, log,
                                        timeout=args.timeout, budget_usd=args.budget,
                                        extra=("--forward-subagent-text",) if args.forward else (),
                                        tools=fixture["tools"])
@@ -1861,14 +2020,15 @@ def command_recheck(args):
     folder = Path(args.folder)
     summary = json.loads((folder / "e2e.json").read_text())
     stage = summary.get("stage")
+    snapshot = summary.get("snapshot", "r5")  # a result from before the snapshots has no name
     for number, run in enumerate(summary["runs"], 1):
         project = Path(run["project"])
         if not project.exists():
             print("run %d: the project folder is gone, so the outcome stays as it was" % number)
             continue
         if stage:
-            entry = run["outcome"].get("entry") or entry_commit(project, STAGE_REPLAY[stage][0])
-            run["outcome"] = stage_outcome(stage, check_stage(project, stage, entry), entry)
+            entry = run["outcome"].get("entry") or entry_commit(project, stage_table(snapshot)[stage][0])
+            run["outcome"] = stage_outcome(stage, check_stage(project, stage, entry, snapshot), entry)
         else:
             run["outcome"] = inspect_project(project)
         (folder / ("run%d.json" % number)).write_text(json.dumps(run, indent=1))
@@ -2074,13 +2234,18 @@ def command_report(args):
 def command_freeze(args):
     """Merge the runs of several e2e result files into one baseline file."""
     runs, commits, fixtures = [], set(), set()
+    snapshots = set()
     for path in args.results:
         data = json.loads(Path(path).read_text())
         runs += data["runs"]
+        if data.get("snapshot"):
+            snapshots.add(data["snapshot"])
         commits.add(data["plugin_commit"])
         fixtures.add(data.get("fixture", "wordfreq"))
     baseline = {"label": args.label, "plugin_commit": ",".join(sorted(commits)), "model": MODEL, "effort": EFFORT,
                 "fixture": ",".join(sorted(fixtures)), "runs": runs}
+    if snapshots:
+        baseline["snapshot"] = ",".join(sorted(snapshots))
     if args.seeds:
         seeds = json.loads(Path(args.seeds).read_text())
         baseline["seeds"] = {key: seeds[key] for key in ("reviewer_model", "caught", "missed", "false_fails", "cost_usd")}
@@ -2088,7 +2253,7 @@ def command_freeze(args):
     print("wrote %s with %d runs" % (args.out, len(runs)))
 
 
-def main(argv=None):
+def build_parser():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("e2e", "init-fixture"):
@@ -2101,6 +2266,7 @@ def main(argv=None):
         if name == "e2e":
             p.add_argument("--label", required=True)
             p.add_argument("--runs", type=int, default=1)
+            p.add_argument("--intent", help="the intent to ship, in place of the intent of the fixture")
             p.add_argument("--out", default=str(HERE / "results"))
             p.add_argument("--forward", action="store_true",
                            help="stream the text of agents and the messages of nested agents. The split of the "
@@ -2131,7 +2297,9 @@ def main(argv=None):
     g.add_argument("--min-runs", type=int, default=5, help="runs needed on each side to keep an edit by whole-run cost")
     g.add_argument("--target", help="an agent that the edit aims at, for example pdlc:reviewer; or waiting; or writing (the writing findings that a run leaves)")
     st = sub.add_parser("stage")
-    st.add_argument("--stage", required=True, choices=sorted(STAGE_REPLAY))
+    st.add_argument("--stage", required=True, choices=sorted(REPLAY_STAGES))
+    st.add_argument("--snapshot", default=DEFAULT_SNAPSHOT, choices=sorted(SNAPSHOTS),
+                    help="the finished run to start from (default: %(default)s)")
     st.add_argument("--label", required=True)
     st.add_argument("--runs", type=int, default=6)
     st.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
@@ -2152,9 +2320,15 @@ def main(argv=None):
     rb.add_argument("--timeout", type=int, default=1800)
     pr = sub.add_parser("prepare")
     pr.add_argument("--state", required=True, choices=PREPARE_STATES)
+    pr.add_argument("--snapshot", default=DEFAULT_SNAPSHOT, choices=sorted(SNAPSHOTS),
+                    help="the finished run to start from (default: %(default)s)")
     pr.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
     pr.add_argument("--dest", required=True)
-    args = parser.parse_args(argv)
+    return parser
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
     if args.command == "prepare":
         command_prepare(args)
         return 0

@@ -131,28 +131,28 @@
   "prompts": [
     {
       "id": "P01",
-      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "axis": "typical",
       "exercises": "The run picks the change itself. Then the run makes the full visual review: a script for 22 acceptance lines, the recording, the frame check, the handoff, and the commit.",
       "replies": []
     },
     {
       "id": "P02",
-      "prompt": "CH-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "CH-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "axis": "change named by its ID, without defaults",
       "exercises": "The run uses the change that the user names, without defaults. The outputs are the same as for P01 (typical run), so a question that the skill asks shows as drift.",
       "replies": []
     },
     {
       "id": "P03",
-      "prompt": "the top option change\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "the top option change\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "axis": "ambiguous: the change is named in plain words",
       "exercises": "The run finds CH-0001 (top option) from a name in plain words, and then makes the full visual review.",
       "replies": []
     },
     {
       "id": "P04",
-      "prompt": "defaults. R5 (usage line) and R8 (one --top option) look the same on screen as before, so a short GIF is fine.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults. R5 (usage line) and R8 (one --top option) look the same on screen as before, so a short GIF is fine.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
       "axis": "edge but valid: a push to skip the lines with nothing new on screen",
       "exercises": "The run must keep a step for each acceptance line, also for the old behaviour. This prompt tests the rules \"Every change gets its show\" and \"Each line gets a step\".",
       "replies": []

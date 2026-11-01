@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from argparse import Namespace
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -893,6 +894,18 @@ class ExperimentSpecTest(unittest.TestCase):
         path.write_text(run_bench.json.dumps(spec))
         return path
 
+
+    def test_a_stage_spec_names_its_snapshot_and_a_baseline_of_another_snapshot_is_refused(self):
+        spec = run_experiment.load_spec(self.write(stage="verify"))
+        self.assertEqual(spec["snapshot"], run_bench.DEFAULT_SNAPSHOT)
+        self.assertIsNone(run_experiment.snapshot_mismatch(spec, {"snapshot": "wordfreq"}))
+        self.assertIn("r5", run_experiment.snapshot_mismatch(spec, {"label": "old"}))
+        spec = run_experiment.load_spec(self.write(stage="verify", snapshot="r5"))
+        self.assertIsNone(run_experiment.snapshot_mismatch(spec, {"label": "old"}))
+        self.assertIsNone(run_experiment.snapshot_mismatch(run_experiment.load_spec(self.write()), {"label": "old"}))
+        with self.assertRaises(run_experiment.SpecError):
+            run_experiment.load_spec(self.write(snapshot="nope"))
+
     def test_a_good_spec_gets_its_defaults(self):
         spec = run_experiment.load_spec(self.write())
         self.assertEqual((spec["runs"], spec["seeds"], spec["target"]), (6, False, None))
@@ -1113,13 +1126,13 @@ class StageReplayTest(unittest.TestCase):
     def stage_project(self, stage, plugin=None):
         folder = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, folder, True)
-        return run_bench.make_stage_project(folder / "app", stage, plugin or run_bench.DEFAULT_PLUGIN)
+        return run_bench.make_stage_project(folder / "app", stage, plugin or run_bench.DEFAULT_PLUGIN, "r5")
 
     def subject(self, project, rev="HEAD"):
         return run_bench.git(project, "log", "-1", "--format=%s", rev).stdout.strip()
 
     def test_each_stage_starts_at_its_entry_commit(self):
-        for stage, (entry_subject, branch, _, _) in run_bench.STAGE_REPLAY.items():
+        for stage, (entry_subject, branch, _, _) in run_bench.LEGACY_STAGES.items():
             with self.subTest(stage=stage):
                 project, _ = self.stage_project(stage)
                 head = "HEAD~1" if self.subject(project) == "Upgrade pdlc" else "HEAD"
@@ -1136,16 +1149,16 @@ class StageReplayTest(unittest.TestCase):
 
     def test_a_stage_with_no_work_is_not_finished(self):
         project, entry = self.stage_project("show")
-        result = run_bench.check_stage(project, "show", entry)
+        result = run_bench.check_stage(project, "show", entry, "r5")
         self.assertFalse(result["finished"])
         self.assertFalse(result["ok"])
 
     def test_the_snapshot_passes_the_checks_of_earlier_stages(self):
         project, _ = self.stage_project("show")
-        self.assertTrue(run_bench.check_stage(project, "show", run_bench.entry_commit(project, "Built CH-0001"))["ok"])
-        self.assertTrue(run_bench.check_stage(project, "build", run_bench.entry_commit(project, "Tests reviewed CH-0001"))["ok"])
+        self.assertTrue(run_bench.check_stage(project, "show", run_bench.entry_commit(project, "Built CH-0001"), "r5")["ok"])
+        self.assertTrue(run_bench.check_stage(project, "build", run_bench.entry_commit(project, "Tests reviewed CH-0001"), "r5")["ok"])
         project, _ = self.stage_project("build")
-        result = run_bench.check_stage(project, "tests", run_bench.entry_commit(project, "Plan IN-0001"))
+        result = run_bench.check_stage(project, "tests", run_bench.entry_commit(project, "Plan IN-0001"), "r5")
         self.assertTrue(result["ok"])
 
     def test_a_changed_plugin_file_gets_an_upgrade_commit(self):
@@ -1163,11 +1176,11 @@ class StageReplayTest(unittest.TestCase):
         folder = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, folder, True)
         with contextlib.redirect_stdout(io.StringIO()):
-            run_bench.main(["prepare", "--state", state, "--dest", str(folder / "app")])
+            run_bench.main(["prepare", "--state", state, "--snapshot", "r5", "--dest", str(folder / "app")])
         return folder / "app"
 
     def test_prepare_tags_the_start_of_each_state(self):
-        for state in run_bench.PREPARE_STATES:
+        for state in run_bench.prepare_states("r5"):
             with self.subTest(state=state):
                 project = self.prepare(state)
                 self.assertEqual(run_bench.git(project, "rev-parse", "start").stdout,
@@ -1196,15 +1209,20 @@ class StageReplayTest(unittest.TestCase):
     def test_check_stage_counts_the_writing_findings_of_the_stage(self):
         project, _ = self.stage_project("verify")
         entry = run_bench.entry_commit(project, "Tests reviewed CH-0001")
-        writing = run_bench.check_stage(project, "build", entry)["extra"]["writing"]
+        writing = run_bench.check_stage(project, "build", entry, "r5")["extra"]["writing"]
         self.assertEqual(writing["count"], 0)
+        # The upgrade commit refreshes the four default specs that the early snapshot lacks.
         self.assertEqual(writing["files"], ["README.md", "pdlc/changes/CH-0001-top-option/change.md",
+                                            "pdlc/specs/design/DES-pdlc-check-tagging.md",
+                                            "pdlc/specs/design/DES-pdlc-commit-trailers.md",
+                                            "pdlc/specs/design/DES-pdlc-review-checklist.md",
+                                            "pdlc/specs/design/DES-writing-style.md",
                                             "pdlc/specs/jobs/JOB-report-word-frequencies.md"])
 
     def test_a_stage_outcome_carries_the_writing_count_and_the_entry(self):
         project, _ = self.stage_project("verify")
         entry = run_bench.entry_commit(project, "Tests reviewed CH-0001")
-        check = run_bench.check_stage(project, "build", entry)
+        check = run_bench.check_stage(project, "build", entry, "r5")
         outcome = run_bench.stage_outcome("build", check, entry)
         self.assertEqual(outcome["writing"], check["extra"]["writing"])
         self.assertEqual(outcome["entry"], entry)
@@ -1273,6 +1291,363 @@ def rebuild_project(test):
     run_bench.git(app, "commit", "-q", "-m", "Tests reviewed CH-0001")
     run_bench.git(app, "checkout", "-q", "main")
     return app
+
+
+class FixtureUpgradeTest(unittest.TestCase):
+    """The fixtures and the plugin under test meet at the upgrade script."""
+
+    def upgrade_module(self):
+        return run_bench.load_upgrade(run_bench.DEFAULT_PLUGIN)
+
+    def test_a_new_project_has_no_file_that_the_upgrade_would_change(self):
+        for fixture in ("wordfreq", "todo-rust", "todo-clojure"):
+            with self.subTest(fixture=fixture):
+                folder = Path(tempfile.mkdtemp())
+                self.addCleanup(shutil.rmtree, folder, True)
+                project = run_bench.make_project(folder / "app", run_bench.DEFAULT_PLUGIN, fixture=fixture)
+                module = self.upgrade_module()
+                plan = module.build_plan(str(project), str(run_bench.DEFAULT_PLUGIN), set())
+                self.assertEqual(plan["files"], [])
+                self.assertEqual(run_bench.git(project, "log", "--format=%s").stdout.split("\n")[:-1],
+                                 ["Set up pdlc"])
+
+    def test_each_fixture_lists_the_acceptance_lock_in_its_trailer_spec(self):
+        for path in (run_bench.FIXTURE, run_bench.HERE / "fixtures" / "todo-rust", run_bench.HERE / "fixtures" / "todo-clojure"):
+            with self.subTest(fixture=path.name):
+                text = (path / "pdlc" / "specs" / "design" / "DES-pdlc-commit-trailers.md").read_text()
+                self.assertIn("Lock acceptance", text)
+
+    def test_each_fixture_has_a_marker_of_the_current_plugin(self):
+        version = json.loads((run_bench.DEFAULT_PLUGIN / ".claude-plugin" / "plugin.json").read_text())["version"]
+        for path in (run_bench.FIXTURE, run_bench.HERE / "fixtures" / "todo-rust", run_bench.HERE / "fixtures" / "todo-clojure"):
+            with self.subTest(fixture=path.name):
+                marker = json.loads((path / "pdlc" / "version.json").read_text())
+                self.assertEqual(marker["pdlc"], version)
+                self.assertIn("specs/design/DES-errors.md", marker["files"])
+
+    def test_a_changed_plugin_file_reaches_a_new_project(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        plugin = folder / "pdlc"
+        shutil.copytree(run_bench.DEFAULT_PLUGIN, plugin, ignore=shutil.ignore_patterns("__pycache__"))
+        port = plugin / "skills" / "init" / "references" / "ports" / "checks.md"
+        port.write_text(port.read_text() + "\nA line that the test adds.\n")
+        project = run_bench.make_project(folder / "app", plugin)
+        self.assertIn("A line that the test adds.", (project / "pdlc" / "ports" / "checks.md").read_text())
+
+
+def synthetic_snapshot(test):
+    """A bundle with the commits of a finished run in the form of the new snapshots.
+
+    main:               Set up pdlc, Specify IN-0001
+    pdlc/IN-0001-x:     Ready, Plan, Acceptance reviewed
+    pdlc/CH-0001-x:     Tests reviewed, Built, Verified, Visual review, Propose
+    """
+    folder = Path(tempfile.mkdtemp())
+    test.addCleanup(shutil.rmtree, folder, True)
+    repo = run_bench.make_project(folder / "src", run_bench.DEFAULT_PLUGIN)
+    tools = repo / "pdlc" / ".tools"
+    if tools.is_symlink():
+        tools.unlink()
+        run_bench.git(repo, "rm", "-q", "--cached", "pdlc/.tools")
+
+    def commit(subject, files=None):
+        for name, text in (files or {}).items():
+            (repo / name).parent.mkdir(parents=True, exist_ok=True)
+            (repo / name).write_text(text)
+        run_bench.git(repo, "add", "-A")
+        run_bench.git(repo, "commit", "-q", "--allow-empty", "-m", subject)
+
+    commit("Specify IN-0001", {"pdlc/inbox/IN-0001-x.md": "# IN-0001 · x\n\nStatus: ready · Branch: pdlc/IN-0001-x\n"})
+    run_bench.git(repo, "checkout", "-q", "-b", "pdlc/IN-0001-x")
+    commit("Ready IN-0001")
+    commit("Plan IN-0001", {"pdlc/changes/CH-0001-x/change.md":
+                            "# CH-0001 · x\n\nIntent: IN-0001 · Status: planned · Branch: pdlc/CH-0001-x\n"})
+    commit("Acceptance reviewed IN-0001", {"pdlc/inbox/IN-0001-x.md":
+                                           "# IN-0001 · x\n\nStatus: ready · Branch: pdlc/IN-0001-x\n\nAcceptance-Locked: abc123\n"})
+    run_bench.git(repo, "checkout", "-q", "-b", "pdlc/CH-0001-x")
+    for subject in ("Tests reviewed CH-0001", "Built CH-0001", "Verified CH-0001", "Visual review CH-0001", "Propose CH-0001"):
+        commit(subject)
+    run_bench.git(repo, "checkout", "-q", "main")
+    bundle = folder / "synthetic.bundle"
+    run_bench.git(repo, "bundle", "create", str(bundle), "--all")
+    return bundle
+
+
+def realistic_snapshot(test):
+    """A bundle laid out as a finished run: intake, ready and plan on main with Branch none,
+    the acceptance stage starts the intent branch, a stacked second change, HEAD on the last branch."""
+    folder = Path(tempfile.mkdtemp())
+    test.addCleanup(shutil.rmtree, folder, True)
+    repo = run_bench.make_project(folder / "src", run_bench.DEFAULT_PLUGIN)
+    tools = repo / "pdlc" / ".tools"
+    tools.unlink()
+    run_bench.git(repo, "rm", "-q", "--cached", "pdlc/.tools")
+
+    def commit(subject, files=None):
+        for name, text in (files or {}).items():
+            (repo / name).parent.mkdir(parents=True, exist_ok=True)
+            (repo / name).write_text(text)
+        run_bench.git(repo, "add", "-A")
+        run_bench.git(repo, "commit", "-q", "--allow-empty", "-m", subject)
+
+    def change(number, scope, status, branch, base):
+        return {"pdlc/changes/CH-000%d-x/change.md" % number:
+                "# CH-000%d · x\n\nIntent: IN-0001 · Scope: %s · Status: %s · Ticket: none · Branch: %s · Base: %s\n"
+                % (number, scope, status, branch, base)}
+
+    intent = "pdlc/inbox/IN-0001-x.md"
+    head = "# IN-0001 · x\n\nStatus: %s · Ticket: none · Branch: %s · Added: 2026\n"
+    commit("Specify IN-0001: x", {intent: head % ("proposed", "none")})
+    commit("Ready IN-0001: x")
+    commit("Plan IN-0001: a, b", {**change(1, "CAP-a", "planned", "none", "main"),
+                                  **change(2, "JOB-b", "planned", "none", "main")})
+    run_bench.git(repo, "checkout", "-q", "-b", "pdlc/IN-0001-x")
+    commit("Acceptance IN-0001", {intent: head % ("building", "pdlc/IN-0001-x")})
+    commit("Lock acceptance IN-0001")
+    commit("Acceptance reviewed IN-0001")
+    run_bench.git(repo, "checkout", "-q", "-b", "pdlc/CH-0001-x")
+    commit("Start CH-0001", change(1, "CAP-a", "building", "pdlc/CH-0001-x", "main"))
+    for subject in ("Tests reviewed CH-0001", "Built CH-0001", "Verified CH-0001", "Visual review CH-0001",
+                    "Propose CH-0001"):
+        commit(subject)
+    run_bench.git(repo, "checkout", "-q", "-b", "pdlc/CH-0002-x")
+    commit("Start CH-0002", change(2, "JOB-b", "building", "pdlc/CH-0002-x", "pdlc/CH-0001-x"))
+    for subject in ("Tests reviewed CH-0002", "Built CH-0002", "Verified CH-0002", "Propose CH-0002"):
+        commit(subject)
+    bundle = folder / "real.bundle"
+    run_bench.git(repo, "bundle", "create", str(bundle), "--all")
+    return bundle
+
+
+class SnapshotTest(unittest.TestCase):
+    def synthetic(self):
+        bundle = synthetic_snapshot(self)
+        patcher = mock.patch.dict(run_bench.SNAPSHOTS, {"wordfreq": {**run_bench.SNAPSHOTS["wordfreq"], "bundle": bundle}})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def prepare(self, state, snapshot):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        with contextlib.redirect_stdout(io.StringIO()):
+            run_bench.main(["prepare", "--state", state, "--snapshot", snapshot, "--dest", str(folder / "app")])
+        return folder / "app"
+
+    def real(self, name):
+        if not run_bench.SNAPSHOTS[name]["bundle"].exists():
+            self.skipTest("the snapshot %s is not recorded yet" % name)
+
+    def subject(self, project, rev="HEAD"):
+        return run_bench.git(project, "log", "-1", "--format=%s", rev).stdout.strip()
+
+    def branch(self, project):
+        return run_bench.git(project, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+
+    def test_the_default_snapshot_is_wordfreq_and_r5_is_the_old_one(self):
+        self.assertEqual(run_bench.DEFAULT_SNAPSHOT, "wordfreq")
+        self.assertEqual(sorted(run_bench.SNAPSHOTS), ["r5", "todo-rust", "wordfreq"])
+        self.assertEqual(run_bench.SNAPSHOTS["r5"]["bundle"], run_bench.SECTIONS / "project.bundle")
+        self.assertEqual(run_bench.SNAPSHOTS["todo-rust"]["fixture"], "todo-rust")
+
+    def test_the_new_stages_add_acceptance_and_end_the_run_with_the_proposal(self):
+        self.assertEqual(list(run_bench.REPLAY_STAGES),
+                         ["intake", "ready", "change", "acceptance", "tests", "build", "verify", "show"])
+        self.assertEqual(run_bench.REPLAY_STAGES["acceptance"][0], "Plan IN-0001")
+        self.assertEqual(run_bench.REPLAY_STAGES["tests"][0], "Acceptance reviewed IN-0001")
+        self.assertEqual(run_bench.REPLAY_STAGES["show"][2], "Propose CH-")
+        self.assertNotIn("acceptance", run_bench.LEGACY_STAGES)
+
+    def test_the_legacy_table_is_unchanged(self):
+        self.assertEqual(run_bench.LEGACY_STAGES["show"][3], "Visual review CH-")
+        self.assertEqual(run_bench.LEGACY_STAGES["tests"][0], "Plan IN-0001")
+
+    def test_prepare_states_follow_the_snapshot(self):
+        self.assertIn("acceptance", run_bench.prepare_states("wordfreq"))
+        self.assertNotIn("acceptance", run_bench.prepare_states("r5"))
+        self.assertEqual(run_bench.prepare_states("r5")[0], "init")
+        self.assertEqual(run_bench.prepare_states("r5")[-2:], ["done", "board"])
+
+    def test_prepare_refuses_a_state_that_the_snapshot_lacks(self):
+        with self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.prepare("acceptance", "r5")
+
+    def test_prepare_says_so_when_the_bundle_is_missing(self):
+        with mock.patch.dict(run_bench.SNAPSHOTS, {"wordfreq": {**run_bench.SNAPSHOTS["wordfreq"],
+                                                                "bundle": Path("/nonexistent/x.bundle")}}):
+            with self.assertRaises(SystemExit) as caught:
+                self.prepare("ready", "wordfreq")
+        self.assertIn("x.bundle", str(caught.exception))
+
+    def test_prepare_r5_ready_keeps_the_bundle_and_adds_only_the_upgrade(self):
+        project = self.prepare("ready", "r5")
+        head = "HEAD~1" if self.subject(project) == "Upgrade pdlc" else "HEAD"
+        self.assertTrue(self.subject(project, head).startswith("Specify IN-0001"))
+        self.assertEqual(self.branch(project), "main")
+        bundle = run_bench.SNAPSHOTS["r5"]["bundle"]
+        clone = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, clone, True)
+        subprocess.run(["git", "clone", "-q", str(bundle), str(clone / "x")], check=True)
+        entry = run_bench.entry_commit(clone / "x", "Specify IN-0001")
+        self.assertEqual(run_bench.git(project, "rev-parse", head + "^{tree}").stdout,
+                         run_bench.git(clone / "x", "rev-parse", entry + "^{tree}").stdout)
+        # What differs from the bundle is the upgrade, and only inside pdlc/.
+        changed = run_bench.git(project, "diff", "--name-only", entry, "HEAD").stdout.split()
+        self.assertTrue(changed and all(name.startswith("pdlc/") for name in changed), changed)
+        self.assertIn("pdlc/version.json", changed)
+        for name in ("check-tagging", "commit-trailers", "review-checklist"):
+            self.assertIn("pdlc/specs/design/DES-pdlc-%s.md" % name, changed)
+        self.assertEqual(run_bench.git(project, "branch", "--format=%(refname:short)").stdout.split(), ["main"])
+
+    def test_each_state_of_a_new_snapshot_starts_on_the_right_branch(self):
+        self.synthetic()
+        expected = {
+            "intake": ("Set up pdlc", "main"),
+            "ready": ("Specify IN-0001", "pdlc/IN-0001-x"),
+            "change": ("Ready IN-0001", "pdlc/IN-0001-x"),
+            "acceptance": ("Plan IN-0001", "pdlc/IN-0001-x"),
+            "tests": ("Acceptance reviewed IN-0001", "pdlc/IN-0001-x"),
+            "build": ("Tests reviewed CH-0001", "pdlc/CH-0001-x"),
+            "verify": ("Built CH-0001", "pdlc/CH-0001-x"),
+            "show": ("Verified CH-0001", "pdlc/CH-0001-x"),
+            "done": ("Propose CH-0001", "pdlc/CH-0001-x"),
+        }
+        for state, (subject, branch) in expected.items():
+            with self.subTest(state=state):
+                project = self.prepare(state, "wordfreq")
+                head = "HEAD~1" if self.subject(project) == "Upgrade pdlc" else "HEAD"
+                self.assertTrue(self.subject(project, head).startswith(subject), self.subject(project, head))
+                self.assertEqual(self.branch(project), branch)
+                self.assertEqual(run_bench.git(project, "rev-parse", "start").stdout,
+                                 run_bench.git(project, "rev-parse", "HEAD").stdout)
+                self.assertEqual(run_bench.git(project, "remote").stdout.strip(), "")
+
+    def test_main_is_the_last_commit_of_main_before_the_entry_commit(self):
+        self.synthetic()
+        project = self.prepare("verify", "wordfreq")
+        self.assertEqual(self.subject(project, "main"), "Specify IN-0001")
+        project = self.prepare("intake", "wordfreq")
+        self.assertEqual(self.subject(project, "main"), "Set up pdlc")
+
+    def test_the_acceptance_stage_is_finished_when_the_intent_is_locked(self):
+        self.synthetic()
+        project, entry = run_bench.make_stage_project(Path(tempfile.mkdtemp()) / "app", "acceptance",
+                                                      run_bench.DEFAULT_PLUGIN, "wordfreq")
+        self.addCleanup(shutil.rmtree, project.parent, True)
+        result = run_bench.check_stage(project, "acceptance", entry, "wordfreq")
+        self.assertFalse(result["finished"])
+        self.assertFalse(result["ok"])
+        # the commit after the entry commit, here made by hand
+        run_bench.git(project, "checkout", "-q", "pdlc/IN-0001-x")
+        intent = next((project / "pdlc" / "inbox").glob("IN-0001-*.md"))
+        intent.write_text(intent.read_text() + "\nAcceptance-Locked: abc123\n")
+        run_bench.git(project, "add", "-A")
+        run_bench.git(project, "commit", "-q", "-m", "Acceptance reviewed IN-0001")
+        run_bench.git(project, "checkout", "-q", "main")
+        result = run_bench.check_stage(project, "acceptance", entry, "wordfreq")
+        self.assertTrue(result["finished"])
+        self.assertTrue(result["extra"]["locked"])
+        self.assertTrue(result["ok"])
+
+    def test_the_recorded_snapshots_start_each_state(self):
+        for name in ("wordfreq", "todo-rust"):
+            for state in run_bench.prepare_states(name):
+                if state in ("init", "board"):
+                    continue
+                with self.subTest(snapshot=name, state=state):
+                    self.real(name)
+                    project = self.prepare(state, name)
+                    head = "HEAD~1" if self.subject(project) == "Upgrade pdlc" else "HEAD"
+                    if state == "done":
+                        self.assertTrue(self.subject(project, head).startswith("Propose CH-"))
+                    else:
+                        self.assertTrue(self.subject(project, head).startswith(run_bench.REPLAY_STAGES[state][0]))
+                    self.assertEqual(run_bench.git(project, "rev-parse", "start").stdout,
+                                     run_bench.git(project, "rev-parse", "HEAD").stdout)
+
+
+    def heads(self, project):
+        return sorted(run_bench.git(project, "for-each-ref", "--format=%(refname:short)", "refs/heads").stdout.split())
+
+    def test_a_realistic_layout_gives_the_right_branches_and_no_leaked_branch(self):
+        bundle = realistic_snapshot(self)
+        IN, C1, C2 = "pdlc/IN-0001-x", "pdlc/CH-0001-x", "pdlc/CH-0002-x"
+        expected = {
+            "intake": ("Set up pdlc", "main", ["main"]),
+            "ready": ("Specify IN-0001", "main", ["main"]),
+            "change": ("Ready IN-0001", "main", ["main"]),
+            "acceptance": ("Plan IN-0001", "main", ["main"]),
+            "tests": ("Acceptance reviewed IN-0001", IN, sorted(["main", IN])),
+            "build": ("Tests reviewed CH-0001", C1, sorted(["main", C1])),
+            "verify": ("Built CH-0001", C1, sorted(["main", C1])),
+            "show": ("Verified CH-0001", C1, sorted(["main", C1])),
+            "done": ("Propose CH-0002", C2, sorted(["main", C1, C2])),
+        }
+        with mock.patch.dict(run_bench.SNAPSHOTS, {"wordfreq": {**run_bench.SNAPSHOTS["wordfreq"], "bundle": bundle}}):
+            for state, (subject, branch, heads) in expected.items():
+                with self.subTest(state=state):
+                    project = self.prepare(state, "wordfreq")
+                    head = "HEAD~1" if self.subject(project) == "Upgrade pdlc" else "HEAD"
+                    self.assertTrue(self.subject(project, head).startswith(subject), self.subject(project, head))
+                    self.assertEqual(self.branch(project), branch)
+                    self.assertEqual(self.heads(project), heads)
+
+    def test_the_done_state_puts_the_base_branch_at_its_last_commit_before_the_tip(self):
+        bundle = realistic_snapshot(self)
+        with mock.patch.dict(run_bench.SNAPSHOTS, {"wordfreq": {**run_bench.SNAPSHOTS["wordfreq"], "bundle": bundle}}):
+            project = self.prepare("done", "wordfreq")
+        self.assertTrue(self.subject(project, "pdlc/CH-0001-x").startswith("Propose CH-0001"))
+        self.assertTrue(self.subject(project, "main").startswith("Plan IN-0001"))
+
+    def test_a_replay_on_todo_rust_checks_with_its_own_unit_checks_and_no_wordfreq_probes(self):
+        self.synthetic()
+        with mock.patch.dict(run_bench.SNAPSHOTS, {"wordfreq": {**run_bench.SNAPSHOTS["wordfreq"], "fixture": "todo-rust"}}):
+            project, entry = run_bench.make_stage_project(Path(tempfile.mkdtemp()) / "app", "build",
+                                                          run_bench.DEFAULT_PLUGIN, "wordfreq")
+            self.addCleanup(shutil.rmtree, project.parent, True)
+            with mock.patch.object(run_bench, "unit_checks", return_value={"ok": True, "ran": 3}) as unit, \
+                    mock.patch.object(run_bench, "run_probes") as probes:
+                result = run_bench.check_stage(project, "build", entry, "wordfreq")
+            probes.assert_not_called()
+            unit.assert_called_with(mock.ANY, "todo-rust")
+            self.assertTrue(result["extra"]["probes"]["not_run"])
+            outcome = run_bench.stage_outcome("build", result, entry)
+            self.assertEqual(outcome["probes"]["failed"], [])
+
+    def test_a_replay_gives_the_agent_the_tools_of_the_fixture(self):
+        self.synthetic()
+        calls = []
+
+        def fake(prompt, cwd, plugin, log, **kw):
+            calls.append(kw)
+            return [], 0.0, ""
+
+        out = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, out, True)
+        args = Namespace(plugin=str(run_bench.DEFAULT_PLUGIN), out=str(out), label="x", stage="intake", runs=1,
+                         timeout=10, budget=1.0, snapshot="wordfreq")
+        with mock.patch.dict(run_bench.SNAPSHOTS, {"wordfreq": {**run_bench.SNAPSHOTS["wordfreq"], "fixture": "todo-rust"}}), \
+                mock.patch.object(run_bench, "run_claude", side_effect=fake), \
+                mock.patch.object(run_bench, "analyse", return_value={"totals": {"cost_usd": 0.0}}):
+            run_bench.command_stage(args)
+        self.assertEqual(calls[0]["tools"], run_bench.FIXTURES["todo-rust"]["tools"])
+        self.assertTrue(calls[0]["tools"])
+
+    def test_the_freeze_of_a_stage_result_keeps_the_snapshot_name(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        (folder / "e2e.json").write_text(json.dumps({"plugin_commit": "abc", "snapshot": "wordfreq", "runs": []}))
+        with contextlib.redirect_stdout(io.StringIO()):
+            run_bench.command_freeze(Namespace(results=[str(folder / "e2e.json")], out=str(folder / "b.json"),
+                                               seeds=None, label="x"))
+        self.assertEqual(json.loads((folder / "b.json").read_text())["snapshot"], "wordfreq")
+
+    def test_e2e_takes_an_intent_that_replaces_the_one_of_the_fixture(self):
+        args = run_bench.build_parser().parse_args(["e2e", "--label", "x", "--intent", "Do a thing."])
+        self.assertEqual(args.intent, "Do a thing.")
+        args = run_bench.build_parser().parse_args(["e2e", "--label", "x"])
+        self.assertIsNone(args.intent)
 
 
 class RebuildCopyTest(unittest.TestCase):
