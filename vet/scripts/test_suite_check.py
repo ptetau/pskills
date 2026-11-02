@@ -65,6 +65,21 @@ class WorkflowTest(unittest.TestCase):
         self.assertIn("{run}", self.js)
         self.assertIn("{bench}", self.js)
 
+    def test_grade_rules_copy_the_verdict_of_a_check_including_n_a(self):
+        self.assertIn('Copy that verdict exactly, including "n/a"', self.js)
+        self.assertIn('"met" | "partial" | "missed" | "n/a"', self.js)
+        self.assertNotIn("give n/a and do not run the command", self.js)
+
+    def test_runner_plugin_calls_vetrun_with_the_plugin_and_replies(self):
+        for text in ("args.runner", "args.pluginDir", "run_bench.py vetrun", "--reply", "--plugin", "--capture",
+                     "RUNNER === 'plugin' ? pluginRunPrompt"):
+            self.assertIn(text, self.js)
+
+    def test_runner_is_documented_in_the_skill(self):
+        skill = read(os.path.join(ROOT, "vet", "SKILL.md"))
+        self.assertIn('"runner"', skill)
+        self.assertIn('"pluginDir"', skill)
+
     def test_bench_directory_comes_from_args_or_vet_scripts(self):
         self.assertIn("args.benchDir", self.js)
 

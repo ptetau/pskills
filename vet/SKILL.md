@@ -272,10 +272,16 @@ comparable.
      "wave": 2,
      "settle": { "delta": 2, "patience": 2, "stop": false },
      "maxTurns": 12,
+     "runner": "agent",
+     "pluginDir": "<abs plugin dir, only for runner plugin>",
      "crossPerPrompt": 2,
      "agents": { "preset": "lean", "grade": { "model": "<model>" } }
    }
    ```
+
+   `runner` is `"agent"` (default: the run agent follows the skill) or `"plugin"`. With
+   `"plugin"`, the run agent starts `bench/run_bench.py vetrun` with `pluginDir`, so the
+   plugin's hooks run as they run for a user.
 
    Each run's capture ends with the output of `scripts/snapshot.py`, which lists the
    commits and the git status and leaves out the harness's own files.

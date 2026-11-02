@@ -20,6 +20,9 @@ export const meta = {
 //   wave:           repeats per prompt per wave (default 2); the script updates the grade after each wave
 //   settle:         { delta, patience, stop }       see "Settling" below
 //   benchDir:       absolute path of the folder of the scripted checks (default: bench, next to vet)
+//   runner:         "agent" (default: the run agent follows the skill itself) or "plugin" (the run agent
+//                   calls `run_bench.py vetrun`, so the plugin's hooks run as they run for a user)
+//   pluginDir:      absolute path of the plugin under test (required with runner "plugin")
 //   maxTurns:       assistant turns per run before stopping (default 12)
 //   crossPerPrompt: runs per prompt shown to cross-prompt judges (default 2)
 //   agents:         { preset, run, grade, compare, cross }, see "Agent roles" below
@@ -40,6 +43,10 @@ const VET_SCRIPTS = args && args.vetScripts
 if (!VET_SCRIPTS) throw new Error('vet: args.vetScripts is required (the absolute path of vet/scripts)')
 // The folder of the scripted checks (a rubric item's `check`). The default is the bench folder next to vet.
 const BENCH_DIR = args.benchDir || `${VET_SCRIPTS}/../../bench`
+const RUNNER = args.runner || 'agent'
+if (RUNNER !== 'agent' && RUNNER !== 'plugin') throw new Error('vet: args.runner must be "agent" or "plugin"')
+const PLUGIN_DIR = args.pluginDir
+if (RUNNER === 'plugin' && !PLUGIN_DIR) throw new Error('vet: args.pluginDir is required with runner "plugin" (the absolute path of the plugin)')
 const MAX_TURNS = args.maxTurns || 12
 const CROSS_PER_PROMPT = args.crossPerPrompt || 2
 
@@ -304,6 +311,36 @@ After you write the transcript and Files, run \`python3 ${VET_SCRIPTS}/snapshot.
 
 Then return the structured result, with capture set to the capture file's absolute path.`
 
+const shq = (x) => `'${String(x).split("'").join(`'\\''`)}'`
+
+// With runner "plugin", the run agent only prepares the project and starts the bench script. The script
+// runs `claude -p` with the plugin, so its hooks run, and it writes the transcript part of the capture.
+const pluginRunPrompt = (p, r) => `You are running a Claude Code plugin skill for a user, inside a scratch git worktree (your working directory).
+
+${CONTEXT}
+
+Skill: ${SKILL.name}
+Do not follow the skill yourself. A script runs it in a real session with the plugin and its hooks. Do not read anything under an evals/ directory.
+
+Other runs work at the same time. Keep each file that you make for yourself in .vet-tmp/ at the root of your working directory. Do not use a shared scratchpad directory or /tmp for it.
+
+The user's message is:
+${invocation(p)}
+
+The user is not live. Their replies are scripted, in order:
+${repliesText(p)}
+
+Steps:
+1. Prepare the project that the prompt needs, inside your working directory, as the prompt describes. Do not push, open pull requests, post comments, send messages, or change anything outside it.
+2. Run this command from your working directory, and wait for it to end:
+python3 ${BENCH_DIR}/run_bench.py vetrun --project <the absolute path of your working directory> --prompt ${shq(invocation(p))}${(p.replies || []).map((x) => ` --reply ${shq(x)}`).join('')} --plugin ${shq(PLUGIN_DIR)} --capture <the absolute path of your working directory>/${captureName(p, r)}
+   The script writes the capture file, with the transcript, the hook events, and the "## Repos" section. Do not edit the capture, and do not write the "## Repos" section yourself.
+3. If the command fails, report status "blocked" with its error in note. If you could not run it, report "not_run" with the reason.
+
+Your messages must not mention testing, grading or this setup.
+
+Then return the structured result, with capture set to the capture file's absolute path.`
+
 const gradeContext = (p) => `The run was given:
 ${invocation(p)}
 Scripted user replies, in order: ${JSON.stringify(p.replies || [])}
@@ -319,7 +356,7 @@ const GRADE_RULES = `Give every rubric item one verdict, in rubric order:
 - partial: the partial description holds, or the item is only partly satisfied.
 - missed: absent or wrong.
 - n/a: only when the item's "applies when" condition is false for this run.
-An item with a "scripted check" gets its verdict from a script, not from your judgment. In the command, replace {run} with the absolute path of the run's working directory. That is the folder that holds .vet-capture/ in the capture path. Run the command with Bash and read the JSON that it prints: {"verdict": "met" | "partial" | "missed", "evidence": "..."}. Copy that verdict and use its evidence. Do not change the verdict. If the item's "applies when" condition is false for this run, give n/a and do not run the command. If the command fails or prints no valid verdict, give "missed" and put the error in the evidence.
+An item with a "scripted check" gets its verdict from a script, not from your judgment. In the command, replace {run} with the absolute path of the run's working directory. That is the folder that holds .vet-capture/ in the capture path. Run the command with Bash and read the JSON that it prints: {"verdict": "met" | "partial" | "missed" | "n/a", "evidence": "..."}. Copy that verdict exactly, including "n/a", and use its evidence. The script decides when the item applies. Do not change the verdict. If the command fails or prints no valid verdict, give "missed" and put the error in the evidence.
 Evidence is the shortest verbatim quote from the capture that proves the verdict, or "absent".
 When torn between two verdicts, choose the lower one.
 Facts about commits and the tree (what was committed, the commit messages, what is changed or untracked) come only from the "## Repos" section of the capture. Paths under .vet-capture/ or .vet-tmp/ are the harness's own files. They never count against the run.
@@ -534,7 +571,7 @@ async function runOne(p, r, attempt = 1) {
     return runOne(p, r, attempt + 1)
   }
   const run = await agent(
-    runPrompt(p, r),
+    RUNNER === 'plugin' ? pluginRunPrompt(p, r) : runPrompt(p, r),
     optsFor('run', { label: `run:${base.label}`, phase: 'Run', isolation: 'worktree', schema: RUN_SCHEMA }),
   ).catch(() => null)
   if (!run) return base.attempts <= CAPTURE_RETRIES ? again('run agent died') : exclude(base, 'run agent died')
