@@ -119,6 +119,13 @@
         "evidence": "evals/pdlc-build/runs/plugin-N vs plugin-M: R6 (steps ticked, progress log line, each requirement built) fell from 100 to 12.5; change.md stayed unchanged"
       }
     ],
+    "verify": [
+      {
+        "rule": "Each round ends with `pdlc.py commit verify`; the stage then ends with `pdlc.py commit verified` or `send-back`; the newest commit is \"Verified CH-xxxx\" or \"Send back CH-xxxx: <stage>\"",
+        "words": 9,
+        "evidence": "evals/pdlc-verify/runs plugin-N: R7 (Verify CH-0001: round 1, then Verified CH-0001 or Send back CH-0001: <stage>) fell from 100 to 25; runs made only the round commit and stopped"
+      }
+    ],
     "show": [],
     "ship": [
       {

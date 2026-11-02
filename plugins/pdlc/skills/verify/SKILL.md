@@ -21,7 +21,8 @@ The named change, else the first `building` one with all requirements `built`.
 
 ## Outputs
 
-Use `python3 pdlc/bin/pdlc.py commit verify`, `send-back`, or `verified`;
+Each round ends with `python3 pdlc/bin/pdlc.py commit verify` (the round). The stage then
+ends with `pdlc.py commit verified` (passed) or `pdlc.py commit send-back` (failed);
 `pdlc.py set CH-xxxx --reqs verified --status "in review" --unpropose`;
 `pdlc.py intent new --awaits`.
 
@@ -43,4 +44,5 @@ Use `python3 pdlc/bin/pdlc.py commit verify`, `send-back`, or `verified`;
 
 ## Done when
 
-The requirements are `verified`, or the change is sent back.
+The requirements are `verified`, or the change is sent back. The newest commit is
+"Verified CH-xxxx" or "Send back CH-xxxx: <stage>".
