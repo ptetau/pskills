@@ -32,7 +32,7 @@ Make the locked checks of one change pass with app code.
 - Follow `pdlc/README.md`: "Bookkeeping on main", "Who does what", "Where pdlc commits",
   "Acceptance checks", "Interfaces", "Rounds", "Commits".
 - `Tests-Locked:` with no hash and no `acceptance`: stop. `/pdlc:tests` comes first.
-- New base commits: merge the base first.
+- New base commits: merge the base with `git merge --no-ff -F` and `pdlc.py message merge --base`.
 - The builder changes only app files under "Files". Ask the user about another file.
 - A check called incorrect stays. Send the reason to `/pdlc:tests`, or `/pdlc:acceptance`.
 

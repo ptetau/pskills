@@ -398,6 +398,33 @@ class Commit(Project):
                          ["Tests CH-0001", "", "Intent: IN-0001", "Change: CH-0001", *HARNESS])
         self.assertEqual(self.log(), "Set up pdlc")
 
+    def test_the_merge_message_names_the_base_and_has_intent_and_change(self):
+        done = self.pdlc("message", "merge", "CH-0001", "--base", "main", *harness_args())
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(done.stdout.splitlines(),
+                         ["Merge main into CH-0001", "", "Intent: IN-0001", "Change: CH-0001", *HARNESS])
+
+    def test_the_merge_message_works_for_git_merge(self):
+        git(self.root, "switch", "-q", "main")
+        self.write("base.txt", "base\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "Base")
+        git(self.root, "switch", "-q", self.branch)
+        self.write("mine.txt", "mine\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "Mine")
+        message = self.pdlc("message", "merge", "CH-0001", "--base", "main").stdout
+        (Path(self.tmp.name) / "msg.txt").write_text(message)
+        git(self.root, "merge", "--no-ff", "-q", "-F", str(Path(self.tmp.name) / "msg.txt"), "main")
+        self.assertEqual(self.log("%s"), "Merge main into CH-0001")
+        self.assertIn("Change: CH-0001", self.log("%B"))
+
+    def test_merge_needs_a_base(self):
+        self.assertEqual(self.pdlc("message", "merge", "CH-0001").returncode, 1)
+
+    def test_base_is_only_for_merge(self):
+        self.assertEqual(self.pdlc("message", "tests", "CH-0001", "--base", "main").returncode, 2)
+
     def test_the_subject_must_be_in_the_project_list(self):
         text = self.read("pdlc/specs/design/DES-pdlc-commit-trailers.md").replace("- `Tests <change>`", "- `Checks <change>`")
         self.write("pdlc/specs/design/DES-pdlc-commit-trailers.md", text)

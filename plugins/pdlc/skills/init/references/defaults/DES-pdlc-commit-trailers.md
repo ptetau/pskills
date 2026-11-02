@@ -34,7 +34,7 @@ For the trace, the important point is that the lines are in the message.
 The first line of each commit must be one of the subjects below, exactly. In a subject,
 `<change>` is the ID of the change (`CH-0031`), `<intent>` is the ID of the intent
 (`IN-0012`), and `<n>` is a number. Any other `<...>` is a few words. A merge keeps the
-subject that git gives. On a pdlc branch, a hook in the pdlc plugin checks each new commit
+subject that git gives, unless it is the merge of a base into a change (below). On a pdlc branch, a hook in the pdlc plugin checks each new commit
 against this list and the trailers above.
 
 On any branch, the hook also checks each commit with one of these subjects. Its pdlc
@@ -56,6 +56,7 @@ with `git commit --amend`.
 - `Tests reviewed <change>` (tests: status and handoff)
 - `Build <change>: <what changed>` (build: the app files)
 - `Built <change>` (build: steps, statuses and handoff)
+- `Merge <base> into <change>` (build: the merge of a new base; `pdlc.py message merge`)
 - `Visual review <change>` (show)
 - `Verify <change>: round <n>` (verify: packets, results, new intents)
 - `Send back <change>: <stage>` (verify or show: the handoff after a failed round)
