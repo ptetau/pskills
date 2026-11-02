@@ -16,7 +16,7 @@
       },
       {
         "id": "S3",
-        "description": "`pdlc/changes/CH-0001-top-option/handoff.md`, replaced, from the handoff template. The title is `# Handoff · CH-0001 · show → user`, and a `Time:` line follows. Then six sections follow in this order: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. `Done` tells where the recording is, how many key frames it has, and how many acceptance lines it shows, out of how many. `Done` also tells how many acceptance lines the GIF shows, out of how many."
+        "description": "`pdlc/changes/CH-0001-top-option/handoff.md`, replaced, from the handoff template. The title is `# Handoff · CH-0001 · show → user`, and a `Time:` line follows. Then six sections follow in this order: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. `Done` tells where the recording is, how many key frames it has, and how many acceptance lines it shows, out of how many."
       },
       {
         "id": "S4",
@@ -92,7 +92,7 @@
       "structureRef": "S3",
       "weight": 2,
       "criterion": "The handoff to the user obeys the template. The handoff gives the link of the recording, the number of key frames, and the count of acceptance lines shown.",
-      "pass": "`pdlc/changes/CH-0001-top-option/handoff.md` replaces the build handoff, with the title `# Handoff · CH-0001 · show → verify` (or `show → user` after a stop with no GIF). The `Time:` line holds a `date -Iseconds` value from this run. The six sections follow in the order of the template: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. Each empty section says \"none\". `Done` gives the link of the recording and the number of key frames. `Done` also gives the count of acceptance lines shown, out of the count in the change spec, for example \"22 of 22\".",
+      "pass": "`pdlc/changes/CH-0001-top-option/handoff.md` replaces the build handoff, with the title `# Handoff · CH-0001 · show → user` (or `show → build` after a send-back). The `Time:` line holds a `date -Iseconds` value from this run. The six sections follow in the order of the template: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. Each empty section says \"none\". `Done` gives the link of the recording and the number of key frames. `Done` also gives the count of acceptance lines shown, out of the count in the change spec, for example \"22 of 22\".",
       "partial": "The handoff has the right title, but one section is missing or out of order. Or the time is a placeholder or a typed value. Or `Done` gives no link, no frame count, or no count of the lines shown.",
       "source": "5. Finish, item 1, and `templates/handoff.md`"
     },

@@ -35,7 +35,7 @@ proposal shows the GIF. Do not merge.
 - Follow `pdlc/README.md`: "Bookkeeping on main" first, "Commits", "Who does what", "Rounds".
 - Unverified: run `/pdlc:verify`.
 - A capability uses `"kind": "terminal"`. A `setup:` caption marks a preparing step.
-- Write only in the change folder. Fix scripts, not the app.
+- Write only in the change folder and the intent Status. Fix scripts, not the app.
 - Missing browser: `npx --prefix pdlc/.tools playwright install chromium`.
 
 ## Done when

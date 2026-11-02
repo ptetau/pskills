@@ -44,8 +44,8 @@ RATE_LIMIT = re.compile(r"rate.?limit|429|529|overloaded", re.I)
 MAX_BLOCKS = 2
 TEXT_LIMIT = 500
 REASON = ('The ship run is not at an end state. Continue from the latest handoff. If the run '
-          'cannot continue, write the reason under "Open" in the handoff, and commit '
-          '"Stop <id>: <why>".')
+          'cannot continue, run `python3 pdlc/bin/pdlc.py stop <ID> --stage <stage> --json -`, '
+          'with `open` {reason, decide, recommend}.')
 NO_END = ("the log ends with no turn_end: the session ended outside the model, for example an "
           "API error or a rate limit")
 

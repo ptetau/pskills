@@ -190,7 +190,7 @@ class ShipLog(unittest.TestCase):
         self.after_bash()
         reason = self.blocked(self.stop())
         self.assertIn("not at an end state", reason)
-        self.assertIn("Stop <id>: <why>", reason)
+        self.assertIn("pdlc.py stop <ID> --stage <stage> --json -", reason)
         entry = self.events("stop_blocked")[0]
         self.assertEqual(entry["last_subject"], "Specify IN-0001: x")
         self.assertEqual(entry["block"], 1)

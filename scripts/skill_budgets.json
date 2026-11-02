@@ -102,7 +102,7 @@
       {
         "rule": "open triple on a handoff to the user",
         "words": 6,
-        "evidence": "pipeline audit M11 (open problems to the user)"
+        "evidence": "pipeline audit M11 (open problems to the user) [audit evidence, not confirmed by a vet: not measured]"
       }
     ],
     "change": [
@@ -126,7 +126,7 @@
       {
         "rule": "a wrong check goes back by handoff and update commit",
         "words": 13,
-        "evidence": "pipeline audit M2 (no build send-back)"
+        "evidence": "pipeline audit M2 (no build send-back) [audit evidence, not confirmed by a vet: not measured]"
       }
     ],
     "verify": [
@@ -138,14 +138,14 @@
       {
         "rule": "Acceptance-Passed is set on the intent",
         "words": 3,
-        "evidence": "pipeline audit M12 (Acceptance-Passed target)"
+        "evidence": "pipeline audit M12 (Acceptance-Passed target) [audit evidence, not confirmed by a vet: not measured]"
       }
     ],
     "show": [
       {
         "rule": "handoff keys, and the intent goes in review before Propose",
-        "words": 20,
-        "evidence": "pipeline audit M8 (show handoff keys) and M1 (intent never in review)"
+        "words": 24,
+        "evidence": "pipeline audit M8 (show handoff keys) and M1 (intent never in review) [audit evidence, not confirmed by a vet: not measured]"
       }
     ],
     "ship": [
@@ -164,14 +164,14 @@
       {
         "rule": "the grep for a requirement ends at a comma or line end",
         "words": 1,
-        "evidence": "pipeline audit M17 (trace grep for a requirement)"
+        "evidence": "pipeline audit M17 (trace grep for a requirement) [audit evidence, not confirmed by a vet: not measured]"
       }
     ],
     "board": [
       {
         "rule": "Ticket is set where the item lives",
         "words": 10,
-        "evidence": "pipeline audit M6 (board writes on main)"
+        "evidence": "pipeline audit M6 (board writes on main) [audit evidence, not confirmed by a vet: not measured]"
       }
     ]
   },

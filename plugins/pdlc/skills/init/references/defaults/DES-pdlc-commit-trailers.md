@@ -66,7 +66,7 @@ with `git commit --amend`.
 - `Update <change>: <what>` or `Update <intent>: <what>` (any other record: a base, a
   "Files" entry, a fix that the merge check requests)
 - `Stop <change>: <why>` or `Stop <intent>: <why>` (ship, when it stops)
-- `Set up pdlc`, `Upgrade pdlc`, `Record merges`, `Board: record card keys` (on main)
+- `Set up pdlc`, `Upgrade pdlc`, `Record merges`, `Board: record card keys` (on main, or on the branch of an unmerged item)
 
 ## Why
 
