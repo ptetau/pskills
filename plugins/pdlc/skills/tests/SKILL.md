@@ -29,7 +29,7 @@ The change that the user names, else the first `planned` one. Its `handoff.md`.
 ## Constraints
 
 - `pdlc/README.md` binds, in particular "Bookkeeping on main", "Checks before code",
-  and "Stacked changes".
+  "Stacked changes", and "Who does what" (foreground agents).
 - The first change needs the handoff `acceptance → tests`, else run `/pdlc:acceptance`.
 - Short path: the intent lists only this change, "Check files" is `- none`, and the
   intent has `Acceptance-Locked`. Then no writer, reviewer, or packet. Only "Start

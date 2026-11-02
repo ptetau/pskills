@@ -18,7 +18,7 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 
 - `pdlc/README.md` binds: "Core rules", "Bookkeeping on main", "Where pdlc commits",
   "Spec patches", "Questions", "Interfaces", "Commits", "Stages and handoffs",
-  "New behaviour needs approval".
+  "New behaviour needs approval", "Who does what".
 - Source, first match: new words of the user, a named intent or `.blueprint.md`, the
   oldest `new` intent with no `Awaits approval:`. Argument `defaults`.
 

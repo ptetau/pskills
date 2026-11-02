@@ -19,7 +19,7 @@ change starts.
 - The user's intent, else the oldest `ready` intent that lists changes and has
   `Acceptance-Locked: none`. After a send-back, the `handoff.md` of that change.
 - `pdlc/README.md`: "Acceptance checks", "Bookkeeping on main", "Where pdlc commits",
-  "Commits".
+  "Commits", "Who does what" (foreground agents).
 
 ## Outputs
 

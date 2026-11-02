@@ -33,6 +33,7 @@ The project has `pdlc/` with stub specs, conventions, working checks, and adapte
 ## Constraints
 
 - Stop if not a repository, or `pdlc/` exists.
+- Start each `pdlc:recon` with `run_in_background: false` and wait for its result.
 - Offer the dashboard (`pdlc:dashboard`). With `defaults`, ask nothing, keep the map, take
   the more common pattern, name `/pdlc:dashboard`.
 - No code: recommend `/decompose`, `/blueprint`, `/pdlc:intake <name>.blueprint.md`.

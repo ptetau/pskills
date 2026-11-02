@@ -70,7 +70,7 @@
       {
         "rule": "A missing \"Interface\" item goes into its spec and change spec as `proposed`. Only the third failed review stops the stage.",
         "words": 21,
-        "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R9 (the final reply names /pdlc:tests); also R6 (handoff acceptance → tests) in run decl200-a #2"
+        "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R9 (the final reply names /pdlc:tests); also R6 (handoff acceptance \u2192 tests) in run decl200-a #2"
       },
       {
         "rule": "The final reply names `/pdlc:tests` as next, or `/pdlc:build` after a send-back.",
@@ -103,6 +103,11 @@
         "rule": "open triple on a handoff to the user",
         "words": 6,
         "evidence": "pipeline audit M11 (open problems to the user) [audit evidence, not confirmed by a vet: not measured]"
+      },
+      {
+        "rule": "Binds README \"Who does what\", which starts agents in the foreground",
+        "words": 4,
+        "evidence": "e2e bench run2 of /pdlc:ship defaults on todo-rust: the Agent tool ran two pdlc:recon agents in the background, the turn ended with 'I will wait', and ship ended after intake (1 of 8 probes)"
       }
     ],
     "change": [
@@ -172,6 +177,13 @@
         "rule": "Ticket is set where the item lives",
         "words": 10,
         "evidence": "pipeline audit M6 (board writes on main) [audit evidence, not confirmed by a vet: not measured]"
+      }
+    ],
+    "init": [
+      {
+        "rule": "Start each pdlc:recon with run_in_background: false and wait for its result",
+        "words": 16,
+        "evidence": "e2e bench run2 of /pdlc:ship defaults on todo-rust: the Agent tool ran two pdlc:recon agents in the background, the turn ended with 'I will wait', and ship ended after intake (1 of 8 probes)"
       }
     ]
   },
