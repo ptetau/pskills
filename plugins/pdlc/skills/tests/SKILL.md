@@ -21,10 +21,9 @@ The change that the user names, else the first `planned` one. Its `handoff.md`.
 
 - Fields `Branch:`, `Base:`, `Tests-Locked: <hash>`. The change is `testing`, then
   `building`. The intent is `building`.
-- Commits, each with `Intent` and `Change`. Order: "Start CH-xxxx", "Tests CH-xxxx"
-  (also `Req`), "Lock tests CH-xxxx", "Review tests CH-xxxx" (packet from
-  `python3 pdlc/bin/make_packets.py CH-xxxx tests`), "Tests reviewed CH-xxxx".
-- Handoff `tests → build` names each check, the requirement it proves, and the lock hash. Next: `/pdlc:build`.
+- Commits, in order: `pdlc.py commit` kinds `start`, `tests`, `lock-tests`, `review-tests`
+  (packet from `python3 pdlc/bin/make_packets.py CH-xxxx tests`), `tests-reviewed`.
+  Fields: `pdlc.py set`. Handoff: `pdlc.py handoff CH-xxxx tests build`. Next: `/pdlc:build`.
 
 ## Constraints
 
@@ -37,7 +36,6 @@ The change that the user names, else the first `planned` one. Its `handoff.md`.
 - `pdlc:test-writer` gets only the absolute path of the brief from
   `python3 pdlc/bin/make_packets.py CH-xxxx --brief`, and writes only "Check files".
   `git rm` a file that served only a `(retire)` requirement.
-- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 
