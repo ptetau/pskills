@@ -41,6 +41,7 @@ The intent that the user names, else the oldest `ready` one.
   missing tool is not a stop.
 - Steps: one for each requirement, in number order, and each "Check" name holds the requirement ID. The README step's "Done when" also names each seam a user can set, and how to run the app and the checks.
 - A job change lists README in "Files". Its step is last, "Check" `none`.
+- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 

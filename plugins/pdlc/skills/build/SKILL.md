@@ -36,6 +36,7 @@ Make the locked checks of one change pass with app code.
 - New base commits: merge the base first, with `Intent` and `Change`.
 - The builder changes only app files under "Files". Ask the user about another file.
 - A check called incorrect stays. Send the reason to `/pdlc:tests`, or `/pdlc:acceptance`.
+- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 

@@ -46,6 +46,21 @@
         "rule": "Settle implied behaviour: missing, empty, wrong-type, and too-large input, limits, order, existing data, unsafe input, and business rules",
         "words": 18,
         "evidence": "evals/pdlc-ready/runs/decl200-20261101T200131Z: R9 (implied behaviour examined, including a very large N)"
+      },
+      {
+        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
+        "words": 10,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
+      },
+      {
+        "rule": "An `(assumed)` detail that takes one side of a contradiction gives way. Both sides stay as the words give them.",
+        "words": 20,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R3 (no default for a contradiction)"
+      },
+      {
+        "rule": "\"Decided on defaults\" keeps each `(assumed)` line of the earlier handoff, then adds ready's own.",
+        "words": 15,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R6 (non-stop cases do not stop, and each default is recorded in the handoff and the Notes)"
       }
     ],
     "tests": [
@@ -53,6 +68,11 @@
         "rule": "Handoff `tests → build` names each check, the requirement it proves, and the lock hash.",
         "words": 11,
         "evidence": "evals/pdlc-tests/runs/decl200-20261101T200346Z: the handoff `tests → build` lists each check, what it proves, and the lock"
+      },
+      {
+        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
+        "words": 10,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
       }
     ],
     "acceptance": [
@@ -70,6 +90,11 @@
         "rule": "Handoff `acceptance → tests`, with the number of failing checks, the lock, and what each change must give the checks.",
         "words": 16,
         "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R6 (the handoff states what each change must give the checks) and R2 (the red run is reported with a count)"
+      },
+      {
+        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
+        "words": 10,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
       }
     ],
     "intake": [
@@ -97,6 +122,16 @@
         "rule": "`Intent: IN-xxxx` in the last paragraph, with each other trailer.",
         "words": 8,
         "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R4 (Specify commit and Intent trailer)"
+      },
+      {
+        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
+        "words": 11,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
+      },
+      {
+        "rule": "An `(assumed)` detail does not remove a value that the words permit, and does not pick a side of a clash in them.",
+        "words": 23,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R3 (no default for a contradiction)"
       }
     ],
     "change": [
@@ -119,6 +154,32 @@
         "rule": "`Tests-Locked: none` in the header.",
         "words": 2,
         "evidence": "evals/pdlc-change/runs/decl200-a-20261102T035148Z and /home/user/pskills/evals/pdlc-change/runs/decl200-b-20261102T035133Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R1 (the header and the sections of the template)"
+      },
+      {
+        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
+        "words": 10,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
+      }
+    ],
+    "build": [
+      {
+        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
+        "words": 11,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
+      }
+    ],
+    "verify": [
+      {
+        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
+        "words": 10,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
+      }
+    ],
+    "show": [
+      {
+        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
+        "words": 10,
+        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
       }
     ]
   },
