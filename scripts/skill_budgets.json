@@ -10,7 +10,8 @@
     "change",
     "conventions",
     "build",
-    "show"
+    "show",
+    "init"
   ],
   "acceptance": 200,
   "board": 200,
