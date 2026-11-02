@@ -137,8 +137,11 @@ PRICE = {"input": 1.0, "cache_write_5m": 1.25, "cache_write_1h": 2.0, "cache_rea
 
 
 def git(cwd, *args):
+    # Bench projects are scratch repositories: they are never signed, so a busy signing
+    # service cannot make a commit fail without a trace.
     return subprocess.run(
-        ["git", *args], cwd=cwd, capture_output=True, text=True,
+        ["git", "-c", "commit.gpgsign=false", "-c", "tag.gpgsign=false", *args],
+        cwd=cwd, capture_output=True, text=True,
         env={**os.environ, "GIT_AUTHOR_NAME": "bench", "GIT_AUTHOR_EMAIL": "bench@example.com",
              "GIT_COMMITTER_NAME": "bench", "GIT_COMMITTER_EMAIL": "bench@example.com"},
     )
@@ -1085,6 +1088,12 @@ def command_prepare(args):
         for name in ("main", branch):
             git(dest, "checkout", "-q", name)
             set_tracker(dest)
+    # A run in the project commits with the git of its own session. Turn signing off there
+    # too, and refuse a project whose setup left work uncommitted.
+    git(dest, "config", "commit.gpgsign", "false")
+    left = git(dest, "status", "--porcelain").stdout.strip()
+    if left:
+        raise SystemExit("The prepared project has uncommitted files:\n" + left)
     git(dest, "tag", "start")
     print(dest.resolve())
 
