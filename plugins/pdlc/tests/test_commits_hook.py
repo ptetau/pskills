@@ -66,6 +66,7 @@ class CommitHook(unittest.TestCase):
         for command in ("python3 pdlc/bin/pdlc.py commit tests CH-0001",
                         "cd /tmp && python3 pdlc/bin/pdlc.py commit tests CH-0001 --amend",
                         "python3 pdlc/bin/pdlc.py stop CH-0001 --stage build --json -",
+                        "python3 pdlc/bin/pdlc.py start CH-0001",
                         "python3 ./pdlc/bin/pdlc.py commit build CH-0001 --text x --req A.R1"):
             with self.subTest(command=command):
                 code, err = self.hook(command)

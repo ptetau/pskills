@@ -5,8 +5,8 @@ Reads the handoff of an intent ("## Handoff" in pdlc/inbox/IN-xxxx-*.md) or of a
 (pdlc/changes/CH-xxxx-*/handoff.md), and compares the working tree with HEAD. A stage runs
 it before its commit. These rules hold:
 
-  1. The title is "Handoff · <ID> · <stage> → <next>", and the pair is one that the handoff
-     template permits for the stage. A leading "#" is accepted. A short description in
+  1. The title is "Handoff · <ID> · <stage> → <next>", and the pair is one that "NEXT"
+     below permits for the stage. A leading "#" is accepted. A short description in
      brackets after the ID is accepted.
   2. "Time: <ISO 8601 time with offset>" is the next line.
   3. The six sections are present, in the order of the template.
@@ -43,14 +43,14 @@ from pdlclib import section  # noqa: E402
 
 SECTIONS = ["Done", "Decided on defaults", "Open", "Look here", "Don't redo",
             "Next: do this first"]
-# The titles that templates/handoff.md permits for each stage.
+# The titles that each stage permits. This table is the source of the permitted pairs.
 NEXT = {
     "intake": ["ready", "user"],
     "ready": ["change", "user"],
     "change": ["acceptance", "user"],
     "acceptance": ["tests", "build", "user"],
     "tests": ["build", "user"],
-    "build": ["verify", "user"],
+    "build": ["verify", "tests", "acceptance", "user"],
     "verify": ["show", "tests", "build", "acceptance", "user"],
     "show": ["user", "build"],
 }

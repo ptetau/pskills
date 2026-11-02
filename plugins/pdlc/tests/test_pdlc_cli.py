@@ -611,6 +611,12 @@ class Handoff(Project):
         self.assertIn("- Recommended answer: Yes, to 30.", text)
         self.assertEqual(self.check("CH-0001", "build"), "")
 
+    def test_a_build_can_send_a_wrong_check_back(self):
+        for target in ("tests", "acceptance"):
+            done = self.hand("CH-0001", "build", target, {"next": "A check is wrong: fix it."})
+            self.assertEqual(done.returncode, 0, target + done.stdout + done.stderr)
+            self.assertEqual(self.check("CH-0001", "build"), "")
+
     def test_a_pair_the_stage_does_not_permit_exits_1(self):
         done = self.hand("CH-0001", "build", "show", {"next": "x"})
         self.assertEqual(done.returncode, 1)
@@ -1046,6 +1052,15 @@ class SetTests(Project):
         self.set("CH-0001", "--reqs", "verified")
         self.assertEqual(self.read(path), before)
 
+    def test_reqs_skips_a_requirement_that_the_change_retires(self):
+        path = "pdlc/changes/CH-0001-email/change.md"
+        self.write(path, self.read(path).replace(
+            "## Progress log", "### CAP-email.R2 \u00b7 Other (retire)\n\n- Given nothing, then it goes.\n\n## Progress log", 1))
+        spec_path = "pdlc/specs/capabilities/CAP-email.md"
+        self.write(spec_path, self.read(spec_path).replace("### CAP-email.R2 · Other\n\nStatus: ready · Intents: IN-0001\n", ""))
+        done = self.set("CH-0001", "--reqs", "verified")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
     def test_one_requirement(self):
         self.set("CH-0001", "--req", "CAP-email.R2=verified")
         self.assertIn("Status: verified · Intents", self.read("pdlc/specs/capabilities/CAP-email.md").split("R2")[1])
@@ -1229,6 +1244,16 @@ class ChangeNew(Project):
                                  "## Check files", "## Steps", "## Manual checks", "## Progress log"])
         self.assertIn("Users get an email when they reset a password.", text)
         self.assertEqual(pdlclib_field(text, "Status"), "planned")
+
+    def test_a_retiring_requirement_gets_the_retire_mark(self):
+        spec = self.root / "pdlc/specs/capabilities/CAP-email.md"
+        spec.write_text(spec.read_text().replace("### CAP-email.R2 \u00b7 Other\n\nStatus: ready", "### CAP-email.R2 \u00b7 Other\n\nStatus: retiring"))
+        done = self.new()
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.spec()
+        self.assertIn("### CAP-email.R2 \u00b7 Other (retire)\n", text)
+        self.assertIn("### CAP-email.R1 \u00b7 Send\n", text)
+        self.assertIn("\u00b7 Other \u00b7 [ ]", text)
 
     def test_the_next_free_change_id(self):
         self.write("pdlc/changes/CH-0004-x/change.md", CHANGE.replace("CH-0001", "CH-0004"))

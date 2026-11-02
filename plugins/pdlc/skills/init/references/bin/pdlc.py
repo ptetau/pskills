@@ -828,7 +828,8 @@ def set_requirement(root, texts, req_id, status):
 
 
 def change_requirements(text):
-    return re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b", pdlclib.section(text, "Requirements"), re.M)
+    found = re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b(.*)$", pdlclib.section(text, "Requirements"), re.M)
+    return [req for req, rest in found if "(retire)" not in rest]  # the build removed a retired one
 
 
 def tick_steps(text):
@@ -1118,7 +1119,8 @@ def requirement_block(root, req_id):
         raise Problem("%s: no such requirement in %s" % (req_id, path.name))
     span = requirement_span(text, req_id)
     body = [l for l in text[span[0]:span[1]].split("\n") if not re.match(r"Status:", l)]
-    block = (heading.group(0) + "\n" + "\n".join(body)).strip("\n")
+    retiring = any(re.match(r"Status:\s*retiring\b", l) for l in text[span[0]:span[1]].split("\n"))
+    block = (heading.group(0) + (" (retire)" if retiring else "") + "\n" + "\n".join(body)).strip("\n")
     block = re.sub(r"\n{3,}", "\n\n", block)
     title = heading.group(0).split("\u00b7", 1)[-1].strip()
     return title, block

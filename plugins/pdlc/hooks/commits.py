@@ -241,8 +241,8 @@ def reported_before(root, findings):
     return False
 
 
-# A Bash call that can make a commit: git commit, or the pdlc.py subcommands commit and stop.
-COMMIT_CALL = re.compile(r"\bgit\b[^\n;|&]*\bcommit\b|\bpdlc\.py\b[^\n;|&]*\b(?:commit|stop)\b")
+# A Bash call that can make a commit: git commit, or the pdlc.py subcommands commit, stop, and start.
+COMMIT_CALL = re.compile(r"\bgit\b[^\n;|&]*\bcommit\b|\bpdlc\.py\b[^\n;|&]*\b(?:commit|stop|start)\b")
 
 
 def main():

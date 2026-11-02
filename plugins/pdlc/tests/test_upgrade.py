@@ -394,7 +394,7 @@ class Apply(Project):
         text = intents[0].read_text()
         self.assertIn("Status: new", text)
         self.assertIn("JOB-report", text)
-        self.assertIn("Awaits approval:", text)
+        self.assertIn("\nAwaits approval:", text)
         self.assertEqual(data["intent"], "IN-0001")
         found = subprocess.run([sys.executable, str(WRITING), str(intents[0])], capture_output=True, text=True)
         self.assertIn("No findings", found.stdout)
