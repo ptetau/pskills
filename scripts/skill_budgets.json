@@ -81,16 +81,6 @@
         "rule": "The final reply names `/pdlc:tests` as next, or `/pdlc:build` after a send-back.",
         "words": 12,
         "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R9 (the final reply names /pdlc:tests)"
-      },
-      {
-        "rule": "Handoff `acceptance → tests`, with the number of failing checks, the lock, and what each change must give the checks.",
-        "words": 16,
-        "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R6 (the handoff states what each change must give the checks) and R2 (the red run is reported with a count)"
-      },
-      {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 10,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
       }
     ],
     "intake": [
