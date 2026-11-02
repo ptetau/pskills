@@ -103,8 +103,8 @@
       "kind": "structure",
       "structureRef": "S4",
       "weight": 2,
-      "criterion": "The run leaves one Plan commit on main and changes nothing else.",
-      "pass": "After `start`, main has exactly one new commit, with the subject `Plan IN-0001: <names of changes>`. The message ends with the trailer `Intent: IN-0001`, and has no `Req:` trailer, because the commit changes only files in `pdlc/`. The commit holds only the new change folder and the intent file. The app code, the checks, `README.md`, the specs, and `pdlc/config.md` stay the same, and the run makes no new branch. The intent keeps `Status: ready` and `Branch: none`. The working tree is clean at the end.",
+      "criterion": "The run leaves one Plan commit on main, and no file stays outside the commits.",
+      "pass": "After `start`, main has exactly one new commit, with the subject `Plan IN-0001: <names of changes>`. The message ends with the trailer `Intent: IN-0001`, and has no `Req:` trailer, because the commit changes only files in `pdlc/`. The commit holds the new change folder, the intent file, and the spec files that gained `proposed` Interface entries or `DES-errors` rows. The app code, the checks, `README.md`, and `pdlc/config.md` stay the same, and the run makes no new branch. The intent keeps `Status: ready` and `Branch: none`. The working tree is clean at the end.",
       "partial": "The Plan commit is present, but one of these faults occurs:\n- The subject has a different form.\n- The `Intent:` trailer is not there, or a `Req:` trailer is there.\n- The intent status changes.\n- A second commit occurs, or a file stays out of the commits.",
       "appliesWhen": "IN-0001 (the --top option) has the status `ready` at the tag `start`, as with the setup state `change`.",
       "source": "4. Finish: \"Commit with the message 'Plan IN-xxxx: <names of changes>' and the trailer `Intent: IN-xxxx`.\" pdlc/README.md, \"Where pdlc commits\""
