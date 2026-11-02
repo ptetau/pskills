@@ -12,7 +12,7 @@ description: >
 
 ## Goal
 
-The board agrees with pdlc: each intent and change that is not `cancelled` has one
+The board agrees with pdlc. Each intent and change that is not `cancelled` has one
 card, in the column of its status. pdlc is the truth.
 
 ## Inputs
@@ -25,16 +25,16 @@ card, in the column of its status. pdlc is the truth.
 
 - With `dry-run`: a table of card key (or `none`), current column, correct column
   for each item. Nothing changes.
-- Else **show intent** for each intent, then **show change** for each of its changes. Each
-  new card key goes into the item's `Ticket`, with the commit "Board: record card
-  keys" on main.
+- Else **show intent** for each intent, then **show change** for each of its changes.
+  Each new card key goes into the item's `Ticket`, with the commit
+  "Board: record card keys" on main.
 - Counts of cards made, moved, unchanged.
 
 ## Constraints
 
 - The adapter `none`, a missing setting, or a missing column stops the skill.
-- With `dry-run` and no board access, skip the column check; columns show "unknown".
-- Only write to the board; delete no card.
+- With `dry-run` and no board access, skip the column check. Columns show "unknown".
+- Only write to the board. Delete no card.
 - The card of a cancelled item moves to a `cancelled` column if there is one.
 
 ## Done when
