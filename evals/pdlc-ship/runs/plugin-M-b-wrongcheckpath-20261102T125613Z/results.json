@@ -1,0 +1,642 @@
+{
+ "skill": "pdlc:ship",
+ "skillSha256": "59f9a2f45b35ce2887bd7329afebec79f6a6f72c1a6cabebe74f0928a6378240",
+ "skillTreeSha256": "8672eac1e5644981b700a4a8ec35067c7c030882bbe58b4e35abbae21ddec86d",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "5d7ed4b5d0c14befcd57964573347037e6b7f865cc2083af0d6ed85a98d92136",
+ "suiteSha256": "c687c9e875e929a2bca3f5c92788a719cdbcbeba469e4d35b21065f6314449fa",
+ "runId": "plugin-M-b-wrongcheckpath-20261102T125613Z",
+ "generatedAt": "2026-11-02T12:56:13Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 4,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "session",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "session",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 7,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 59.7,
+  "stability": 46.5,
+  "overall": 52.7,
+  "grade": "F",
+  "confidence": "normal",
+  "usableRuns": 4,
+  "totalRuns": 4
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 2
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 62.5,
+   "stability": 69.7,
+   "overall": 66,
+   "grade": "D",
+   "moved": null
+  },
+  {
+   "wave": 2,
+   "runsPerPrompt": 4,
+   "usable": 4,
+   "quality": 59.7,
+   "stability": 46.5,
+   "overall": 52.7,
+   "grade": "F",
+   "moved": -13.3
+  }
+ ],
+ "qualitySpread": {
+  "min": 52.9,
+  "median": 59.3,
+  "max": 69.2
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The run ends only in an end state: each change is proposed, or a commit \"Stop <id>: <why>\" records the stop. It does not end with work half done and no stop record.",
+   "passRate": 87.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A stop gives the user a clear decision. The reply and \"Open\" in the handoff give the reason in one sentence, the decision, and a recommended answer that obeys the pdlc rules.",
+   "passRate": 87.5,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Ship does not settle a contradiction by default. It stops and leaves the choice to the user.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Ship continues from the latest handoff and does not run a finished stage again.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stage leaves the commit subjects and trailers of its own skill, in the order of \"Stages and handoffs\".",
+   "passRate": 0,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A case that is not a stop (no remote, a slow agent, a choice of name) does not stop the run.",
+   "passRate": 50,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "At the end, `git status --porcelain` is empty, and each commit has the trailers of \"Commits\".",
+   "passRate": 0,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The last reply lists the changes in stack order with their proposals and GIFs. It also lists each answer taken by default, and what waits for the user.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 4,
+   "quality": 59.7,
+   "stability": 46.5
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-b-wrongcheckpath-20261102T125613Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 56.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: top limit of 10 contradicts the example --top 20"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Recommended answer: keep the limit of 10, and change the example to `--top 10 FILE`. The next run takes it."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "JOB-report-word-frequencies.R9: what message and result for N above 10 \u2192 `error: --top needs a whole number from 1 to 10`, exit 2, stderr (assumed)"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "DES-errors: which code names the bad `--top` value \u2192 `TOP_INVALID` (assumed)"
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-b-wrongcheckpath-20261102T125613Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 69.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: R4 and R5 contradict for N above 10"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "**Recommended answer:** keep the limit of 10, change the example to `--top 10 FILE`, and make N above 10 a coded refusal."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Ready takes no default for a contradiction, so both requirements stay `proposed`."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-b-wrongcheckpath-20261102T125613Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 52.9,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Specify IN-0001: top option ... Stop IN-0001: limit of 10 contradicts the example of 20 (no Ready IN-0001 commit in the log)"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "**Recommended answer** (the next run takes it unless you say otherwise): keep the limit of 10 and change the example to `--top 10`."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Ready does not pick a side for you, even with `defaults`. The requirement stays `proposed`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: top option"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "**Defaults taken** (marked `(assumed)`, so you can change them):"
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "No changes were built or proposed."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-b-wrongcheckpath-20261102T125613Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "",
+   "quality": 61.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Ready IN-0001: top option ... Stop IN-0001: R4 example prints 20 words but R5 limits N to 10"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "My recommendation is to keep the limit in R5 and change the example to `--top 10`."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "N above 10 gives `TOP_TOO_LARGE`, with the message `error: --top needs a number of 10 or less` and exit code 2."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: top option"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "Defaults taken (all marked `(assumed)`, so you can change them)."
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "No pull requests or GIFs exist yet."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "major_drift",
+   "reason": "P01#4 matches the Specify, Ready, Stop sequence, but P01#3 skips the Ready commit and goes straight from Specify to Stop.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#4"
+     ],
+     "description": "Specify, Ready, then Stop IN-0001 at the ready stage for the contradiction; reply says nothing built"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Specify then Stop IN-0001 for the contradiction with no Ready commit; reply says stopped at ready"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "All runs recommend keeping the limit of 10 and changing the example, but the new runs frame the decision as which statement to change and do not offer raise-limit as an explicit choice.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Open gives the contradiction, the choice keep-10 vs raise-limit, and recommends keeping 10 with example --top 10"
+    },
+    {
+     "runs": [
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Gives the contradiction, asks which statement to change, recommends keeping 10 with --top 10; no explicit raise-limit option"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     2
+    ],
+    "agreement": 50,
+    "split": "2 / 2 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "P01#4 assumes an N-above-10 error like P01#1, P01#2 takes no defaults, and P01#3 takes only defaults unrelated to the limit.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#4"
+     ],
+     "description": "Stops at the clash but records (assumed) defaults for the N-above-10 error and a usage change"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Stops at the clash with no defaults taken; both requirements stay proposed"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Stops at the clash; takes only unrelated (assumed) defaults (option position, large N prints all), no N-above-10 error default"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "equivalent",
+   "reason": "Every run starts at intake because no intent exists at start.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "No intent at start; run begins at intake"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "major_drift",
+   "reason": "P01#3 leaves out the Ready stage commit that the other runs make.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#4"
+     ],
+     "description": "Specify IN-0001, Ready IN-0001, Stop IN-0001 with Intent and session trailers"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Specify IN-0001 and Stop IN-0001 with trailers; no Ready IN-0001 commit"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "The runs take different sets of defaults: error codes and usage text in P01#1 and P01#4, none in P01#2, and option position plus large-N behaviour in P01#3.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#4"
+     ],
+     "description": "Takes name and usage defaults (TOP_INVALID, usage text) in Notes, not all in the handoff"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Takes no defaults; no non-stop case arises"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Takes option-position and large-N defaults as (assumed); no error-code names"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "Every run has a clean tree, and each commit after setup carries the Intent, Co-Authored-By and Claude-Session trailers.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Clean tree; every commit after start has Intent, Co-Authored-By and Claude-Session trailers"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

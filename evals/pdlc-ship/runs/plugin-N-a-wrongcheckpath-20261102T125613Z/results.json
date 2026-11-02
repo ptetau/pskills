@@ -1,0 +1,591 @@
+{
+ "skill": "pdlc:ship",
+ "skillSha256": "a234b6908a4cd4b0e0a7b7f8039d999a8ede4cbd354cae909d836b24d39435c9",
+ "skillTreeSha256": "e6c2dbb68534fb5e9dd9f9ebec61df3bf4204b6e4e616d27068c4008c18e8660",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "5d7ed4b5d0c14befcd57964573347037e6b7f865cc2083af0d6ed85a98d92136",
+ "suiteSha256": "c687c9e875e929a2bca3f5c92788a719cdbcbeba469e4d35b21065f6314449fa",
+ "runId": "plugin-N-a-wrongcheckpath-20261102T125613Z",
+ "generatedAt": "2026-11-02T12:56:13Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 4,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "session",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "session",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 7,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 45.7,
+  "stability": 71,
+  "overall": 57,
+  "grade": "F",
+  "confidence": "normal",
+  "usableRuns": 4,
+  "totalRuns": 4
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 2
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 50,
+   "stability": 84,
+   "overall": 64.8,
+   "grade": "D",
+   "moved": null
+  },
+  {
+   "wave": 2,
+   "runsPerPrompt": 4,
+   "usable": 4,
+   "quality": 45.7,
+   "stability": 71,
+   "overall": 57,
+   "grade": "F",
+   "moved": -7.8
+  }
+ ],
+ "qualitySpread": {
+  "min": 36.7,
+  "median": 46.5,
+  "max": 53.3
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The run ends only in an end state: each change is proposed, or a commit \"Stop <id>: <why>\" records the stop. It does not end with work half done and no stop record.",
+   "passRate": 50,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A stop gives the user a clear decision. The reply and \"Open\" in the handoff give the reason in one sentence, the decision, and a recommended answer that obeys the pdlc rules.",
+   "passRate": 37.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Ship does not settle a contradiction by default. It stops and leaves the choice to the user.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Ship continues from the latest handoff and does not run a finished stage again.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stage leaves the commit subjects and trailers of its own skill, in the order of \"Stages and handoffs\".",
+   "passRate": 0,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A case that is not a stop (no remote, a slow agent, a choice of name) does not stop the run.",
+   "passRate": 66.7,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "At the end, `git status --porcelain` is empty, and each commit has the trailers of \"Commits\".",
+   "passRate": 0,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The last reply lists the changes in stack order with their proposals and GIFs. It also lists each answer taken by default, and what waits for the user.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 4,
+   "quality": 45.7,
+   "stability": 71
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-N-a-wrongcheckpath-20261102T125613Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 53.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Stop IN-0001: The intent says N must be 10 or less, and also that wordfreq --top 20 FILE prints the 20 most common words."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "**Reason:** The request says N must be 10 or less. It also says `wordfreq --top 20 FILE` prints the 20 most common words."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "I wrote both sides into R7 (top option) as lines of the request, so neither one is dropped. R7 stays `proposed`"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "Specify IN-0001: top-option"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "I changed it to `usage: wordfreq [--top N] FILE` (assumed)."
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "No code was written, no change exists, and nothing was proposed."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-N-a-wrongcheckpath-20261102T125613Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 46.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Stop IN-0001: The intent says N must be 10 or less, and its example `wordfreq --top 20 FILE` prints 20 words."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "**Reason:** The intent says N must be 10 or less. Its own example, `wordfreq --top 20 FILE`, prints 20 words."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "I kept both in the spec and did not narrow either. R8 stays `proposed`."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "Specify IN-0001: top-n-words"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "There are no pull requests or GIFs yet, because no change has been planned."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-N-a-wrongcheckpath-20261102T125613Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 46.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Stop IN-0001: The intent says N must be 10 or less. Its example, wordfreq --top 20 FILE, prints 20 words."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "**Reason:** You wrote \"N must be 10 or less\". Your example, `wordfreq --top 20 FILE`, prints 20 words."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "R6 and R7 hold both sides of the clash, and R7 gives no error code or message yet."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-N-a-wrongcheckpath-20261102T125613Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "",
+   "quality": 36.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Stop IN-0001: The intent says N must be 10 or less, but its example runs wordfreq --top 20 FILE and prints 20 words."
+    },
+    {
+     "id": "R2",
+     "verdict": "missed",
+     "evidence": "I did not paste the stop's \"Open\" text into the intent."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "It keeps both sides of the clash, as the pdlc rules require while a clash is open."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "I also added an `Interface` entry for `--top N` with an assumed error `TOP_INVALID` (exit 2)."
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "All runs commit Specify IN-0001 then Stop IN-0001 with a reason and no Ready commit, and the reply states the stop.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Specify IN-0001 then Stop IN-0001 with a reason, no Ready commit; reply states the stop."
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "major_drift",
+   "reason": "P01#4 leaves the Open block out of the handoff and recommends editing the example rather than refusing N above 10 with an error.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Open block with a two-sentence reason, a which-side decision, and a recommendation to refuse N above 10 with exit 2."
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Reply gives a two-sentence reason, a which-side decision, and a recommendation to keep 10 and change the example to --top 10; the Open text is not written into the intent handoff."
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "equivalent",
+   "reason": "Every run stops at the clash and keeps both sides in the proposed requirement without picking one.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Stops at the clash, keeps both sides in the proposed requirement, and picks no side."
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "identical",
+   "reason": "The scripted check fails with 'no such ref: start' for every run.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "The scripted check failed with 'no such ref: start'."
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "Runs differ in which defaults they take: several assumed defaults, none, or a single assumed error code.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Takes several assumed defaults (usage line, TOP_INVALID error code, N above word count) without stopping, marked assumed."
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Takes no listed defaults; only adds the proposed requirement and an Interface entry."
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Takes one assumed default (TOP_INVALID, exit 2) in an Interface entry, without stopping."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "identical",
+   "reason": "The scripted check fails with 'no such ref: start' for every run.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "The scripted check failed with 'no such ref: start'."
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}
