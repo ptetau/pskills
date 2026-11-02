@@ -49,19 +49,9 @@
         "evidence": "evals/pdlc-ready/runs/decl200-20261101T200131Z: R9 (implied behaviour examined, including a very large N)"
       },
       {
-        "rule": "`Co-Authored-By` goes directly under `Intent`, with no blank line.",
-        "words": 9,
-        "evidence": "evals/pdlc-ship/runs/decl-final-a-20261102T054013Z + decl-final-b vs master-base-a/b: R7 (trailers and clean tree)"
-      },
-      {
         "rule": "An `(assumed)` detail that takes one side of a contradiction gives way. Both sides stay as the words give them.",
         "words": 20,
         "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R3 (no default for a contradiction)"
-      },
-      {
-        "rule": "\"Decided on defaults\" keeps each `(assumed)` line of the earlier handoff, then adds ready's own.",
-        "words": 15,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R6 (non-stop cases do not stop, and each default is recorded in the handoff and the Notes)"
       },
       {
         "rule": "Text that holds only one side of it gives way, also intake's text. This covers the Interface, error codes, `DES-errors` rows, messages, and Given lines, also an example of the intent.",
