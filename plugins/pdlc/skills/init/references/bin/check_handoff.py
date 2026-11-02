@@ -37,6 +37,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # do not leave a __pycache__ in pdlc/bin of the project
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pdlclib import section  # noqa: E402
+
 SECTIONS = ["Done", "Decided on defaults", "Open", "Look here", "Don't redo",
             "Next: do this first"]
 # The titles that templates/handoff.md permits for each stage.
@@ -58,12 +62,6 @@ REQ_HEADING = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+) ·")
 MARK = "(assumed"
 # Wrong forms of the mark: "(more likely", "*(assumed", and "assumed" inside other brackets.
 BAD_MARK = re.compile(r"\(more likely|\*\(assumed|\((?!assumed)[^()]*\bassumed\b[^()]*\)")
-
-
-def section(text, title):
-    """The text under a '## title' heading, up to the next '## ' heading."""
-    match = re.search(r"^## %s\s*$(.*?)(?=^## |\Z)" % re.escape(title), text, re.M | re.S)
-    return match.group(1) if match else None
 
 
 def spec_of(item):
@@ -139,7 +137,7 @@ def find_handoff(root, item):
     found = [path for path in found if path.exists()]
     if not found:
         return None, None, "%s: no intent file found in pdlc/inbox/" % item
-    body = section(found[0].read_text(), "Handoff")
+    body = section(found[0].read_text(), "Handoff", None)
     if body is None:
         return None, found[0], "%s: the intent has no \"## Handoff\" section" % item
     return body, found[0], None
