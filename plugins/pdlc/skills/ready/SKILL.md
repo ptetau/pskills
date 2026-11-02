@@ -31,9 +31,9 @@ A test writer can write each check with no guess. No spec shows old behaviour.
 - Each line of the intent's requirements, also an existing or `ready` line, gives concrete values and exact output, not "any file" or "the same error".
 - The order of two errors comes from the plain words of the intent, not code, and the sentences of both requirements name the exception.
 - Each `(assumed)` mark has `<requirement>: <question> → <answer> (assumed)` in "Notes" and "Decided on defaults". "Decided on defaults" keeps each `(assumed)` line of the earlier handoff, then adds ready's own.
-- A contradiction stays `proposed`: the user selects, also with `defaults`. An `(assumed)` detail that takes one side of a contradiction gives way. Both sides stay as the words give them.
+- A contradiction stays `proposed`: the user selects, also with `defaults`. An `(assumed)` detail or Interface text that takes one side of a contradiction gives way. Both sides stay as the words give them.
 - After three failed runs of `python3 pdlc/bin/check_handoff.py IN-xxxx --stage ready`, put the problems under "Open" and stop.
-- Keep the trailers in one block, as README "Commits" says.
+- `Co-Authored-By` goes directly under `Intent`, with no blank line.
 
 ## Done when
 

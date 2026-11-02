@@ -286,6 +286,16 @@ class HandoffCheck(unittest.TestCase):
         code, out = self.intake(["- none"], notes=[extra])
         self.assertEqual((code, out), (0, ""))
 
+    def test_a_line_kept_from_the_earlier_handoff_needs_no_new_mark(self):
+        self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (assumed)"))
+        self.put("pdlc/specs/design/DES-errors.md", ERRORS.format(row=""))
+        self.put("pdlc/inbox/IN-0001-thing.md", "# IN-0001 · Thing\n\n## Notes\n\n%s\n" % L3)
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "start")
+        self.put("pdlc/specs/jobs/JOB-x.md", job(r3=" (assumed)", r4=" (assumed)"))
+        code, out = self.intake([L3, L4], notes=[L3, L4])
+        self.assertEqual((code, out), (0, ""))
+
     def test_a_changed_note_that_quotes_a_mark_does_not_count(self):
         self.start()
         note = '- JOB-x.R3: was "Sort by name (assumed).", now "Sort by date."'

@@ -26,8 +26,8 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 
 - Intent: `Status: specifying`. "Requirements": each requirement whose text intake
   changed, with one word only: added, changed, or retiring. Handoff `intake → ready`.
-- Commit "Specify IN-xxxx: <name>" with `Intent: IN-xxxx` in the last paragraph, with each
-  other trailer, after `python3 pdlc/bin/check_handoff.py IN-xxxx --stage intake` exits 0. After three failed
+- Commit "Specify IN-xxxx: <name>" with `Intent: IN-xxxx` in the last paragraph, and `Co-Authored-By` directly under it with no blank line.
+  Commit after `python3 pdlc/bin/check_handoff.py IN-xxxx --stage intake` exits 0. After three failed
   runs: problems under "Open", handoff `intake → user`, commit.
 - Reply: what intake wrote. Next: `/pdlc:ready`.
 
@@ -36,7 +36,7 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 - With an unmerged pdlc branch, the intent gets its own branch (delivery port).
   Otherwise `Branch: none`.
 - Each detail not in the intent has `(assumed)`, also in a Given line, a new
-  `DES-errors` code, and an edge-case result. An `(assumed)` detail does not remove a value that the words permit, and does not pick a side of a clash in them.
+  `DES-errors` code, and an edge-case result. An `(assumed)` detail does not remove a value that the words permit, and does not pick a side of a clash in them. A value in a clash, such as a limit that an example breaks, stays out of the Interface.
 - Each `(assumed)` decision has its own line in "Decided on defaults" and in "Notes", in
   the template form.
 - The summary of each spec ("Who and why" or "What it is for") names each requirement
@@ -45,7 +45,6 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 - A `Status: stub` spec first gets `pdlc:recon` with only the project root, spec path,
   and `deep look`.
 - A new job lists its capabilities and design specs.
-- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 

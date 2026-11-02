@@ -10,7 +10,7 @@ description: >
 
 ## Goal
 
-Run each stage with `defaults`, until each change is proposed or stopped.
+Run each stage through its own skill, with `defaults`, until each change is proposed or stopped.
 
 ## Inputs
 
@@ -28,8 +28,8 @@ If `pdlc/version.json` is older, run `/pdlc:upgrade`.
 ## Outputs
 
 - Each change gets `verify` and show.
-- At a stop: the reason and the recommended answer under "Open". Commit
-  "Stop CH-xxxx: <why>" or "Stop IN-xxxx: <why>".
+- At a stop: under "Open", the reason in one sentence, what the user must decide, and the recommended answer. The reply says the same. Commit
+  "Stop CH-xxxx: <why>" or "Stop IN-xxxx: <why>", with the trailers of "Commits" in one block.
 - The reply: pull requests and GIFs in stack order.
 
 ## Constraints

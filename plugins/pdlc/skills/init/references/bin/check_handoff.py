@@ -15,8 +15,8 @@ it before its commit. These rules hold:
   5. The lines match the new "(assumed" marks in pdlc/specs/**. A mark is new when the sentence
      that holds it is not in the HEAD version of the file. The owner of a mark is the nearest
      "### <ID> ·" heading above it, or the spec ID under "## Interface" and in a design spec.
-     Each owner has a line. Each line is the owner of a new mark. "- none" fails when a
-     mark is new.
+     Each owner has a line. Each line is the owner of a new mark, unless the HEAD "## Notes" of the intent
+     hold that line: the earlier handoff decided it. "- none" fails when a mark is new.
   6. Each line is also a line of "## Notes" in the intent (intent handoffs only). Each line of
      "## Notes" that holds "(assumed" and is not on HEAD is also a line of "Decided on
      defaults".
@@ -206,7 +206,7 @@ def check_decided(item, decided, owners, notes, old_notes=frozenset()):
             problems.append("%s: Decided on defaults, wrong form (need \"- <ID>: <question> → "
                             "<answer> (assumed)\"): %s" % (item, line))
             continue
-        ids.append(found.group(1))
+        ids.append((found.group(1), line))
         if notes is not None and line not in notes:
             same = sorted(n for n in notes if line_id(n) == found.group(1))
             problems.append("%s: this line of Decided on defaults is not in the Notes of the "
@@ -218,12 +218,14 @@ def check_decided(item, decided, owners, notes, old_notes=frozenset()):
                 problems.append("%s: this (assumed) line of the Notes is not in Decided on "
                                 "defaults: %s" % (item, note))
     for owner in sorted(owners):
-        covered = any(i == owner or (spec_of(owner) == owner and spec_of(i) == owner) for i in ids)
+        covered = any(i == owner or (spec_of(owner) == owner and spec_of(i) == owner) for i, _ in ids)
         if not covered:
             what = "a new (assumed) mark" if owners[owner] == 1 else "%d new (assumed) marks" % owners[owner]
             problems.append("%s: %s has %s in the specs, and no line in Decided on defaults" % (
                 item, owner, what))
-    for i in ids:
+    for i, line in ids:
+        if line in old_notes:
+            continue  # kept from the earlier handoff of this intent
         if not any(owner == i or owner == spec_of(i) for owner in owners):
             problems.append("%s: the line for %s has no new (assumed) mark in the specs" % (item, i))
     return problems
