@@ -31,7 +31,7 @@ migration intent.
 
 ## Constraints
 
-- Ask first: subject, why now, and two or three options from the code, each with a real example. Recommend one.
+- Ask first: subject, why now, and two or three options from the code, with real examples, if any. Recommend one.
 - Change nothing before the user agrees. Start no intent.
 - A new convention that records a thing done in several ways also gets migration intents.
 
