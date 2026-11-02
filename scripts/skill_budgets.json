@@ -69,18 +69,7 @@
         "evidence": "evals/pdlc-ship/runs/decl-p2-a-20261102T080703Z + decl-p2-b vs master-base-a/b: R3 (no default for a contradiction)"
       }
     ],
-    "tests": [
-      {
-        "rule": "Handoff `tests → build` names each check, the requirement it proves, and the lock hash.",
-        "words": 11,
-        "evidence": "evals/pdlc-tests/runs/decl200-20261101T200346Z: the handoff `tests → build` lists each check, what it proves, and the lock"
-      },
-      {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 10,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
-      }
-    ],
+    "tests": [],
     "acceptance": [
       {
         "rule": "A missing \"Interface\" item goes into its spec and change spec as `proposed`. Only the third failed review stops the stage.",
