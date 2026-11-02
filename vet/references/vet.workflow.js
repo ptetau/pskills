@@ -358,7 +358,7 @@ Then return the structured result, with capture set to the capture file's absolu
 const gradeContext = (p) => `The run was given:
 ${givenText(p)}
 Scripted user replies, in order: ${JSON.stringify(p.replies || [])}
-
+${p.project ? `Project folder: ${p.project}\n` : ''}
 Expected output structure:
 ${structureText()}
 
@@ -370,7 +370,7 @@ const GRADE_RULES = `Give every rubric item one verdict, in rubric order:
 - partial: the partial description holds, or the item is only partly satisfied.
 - missed: absent or wrong.
 - n/a: only when the item's "applies when" condition is false for this run.
-An item with a "scripted check" gets its verdict from a script, not from your judgment. In the command, replace {run} with the absolute path of the run's working directory. That is the folder that holds .vet-capture/ in the capture path. Run the command with Bash and read the JSON that it prints: {"verdict": "met" | "partial" | "missed" | "n/a", "evidence": "..."}. Copy that verdict exactly, including "n/a", and use its evidence. The script decides when the item applies. Do not change the verdict. If the command fails or prints no valid verdict, give "missed" and put the error in the evidence.
+An item with a "scripted check" gets its verdict from a script, not from your judgment. In the command, replace {run} with the absolute path of the run's project. That is the folder that holds .vet-capture/ in the capture path, joined with the "Project folder" above when one is given. Run the command with Bash and read the JSON that it prints: {"verdict": "met" | "partial" | "missed" | "n/a", "evidence": "..."}. Copy that verdict exactly, including "n/a", and use its evidence. The script decides when the item applies. Do not change the verdict. If the command fails or prints no valid verdict, give "missed" and put the error in the evidence.
 Evidence is the shortest verbatim quote from the capture that proves the verdict, or "absent".
 When torn between two verdicts, choose the lower one.
 Facts about commits and the tree (what was committed, the commit messages, what is changed or untracked) come only from the "## Repos" section of the capture. Paths under .vet-capture/ or .vet-tmp/ are the harness's own files. They never count against the run.

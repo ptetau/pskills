@@ -93,7 +93,11 @@ const src = fs.readFileSync(process.argv[2], 'utf8').replace('export const meta'
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
 const args = JSON.parse(fs.readFileSync(process.argv[3], 'utf8'))
 const prompts = []
-const agent = async (text, opts) => { prompts.push(text); throw new Error('stop') }
+const agent = async (text, opts) => {
+  prompts.push(text)
+  if (process.argv[4] === 'grade' && text.startsWith('You are running')) return { status: 'ok', capture: '/w/.vet-capture/P01-r01.md' }
+  throw new Error('stop')
+}
 const f = new AsyncFunction('args', 'agent', 'log', 'phase', 'parallel', 'pool', src)
 f(args, agent, () => {}, () => {}, async (xs) => Promise.all(xs.map((x) => x())), null).then(() => console.log(JSON.stringify(prompts)), () => console.log(JSON.stringify(prompts)))
 """
@@ -109,7 +113,10 @@ SETUP = ("Setup, before you start: run `python3 /b/run_bench.py prepare --dest p
 class RunnerPromptTest(unittest.TestCase):
     """The text that the run agent gets, for each runner. The script runs under node with a stub agent."""
 
-    def run_prompts(self, runner, prompt):
+    def run_grade_prompt(self, prompt):
+        return self.run_prompts("agent", prompt, mode="grade", grade=True)
+
+    def run_prompts(self, runner, prompt, mode="run", grade=False):
         prompt = {"id": "P01", "axis": "a", "exercises": "e", "replies": ["ok"], **prompt}
         args = {"skill": {"name": "pdlc:ship", "dir": "/s", "file": "/s/SKILL.md"}, "vetScripts": "/v/vet/scripts",
                 "runs": 2, "wave": 2, "runner": runner, "pluginDir": "/plug",
@@ -123,14 +130,28 @@ class RunnerPromptTest(unittest.TestCase):
             f.write(HARNESS)
         with open(argfile, "w") as f:
             json.dump(args, f)
-        out = subprocess.run(["node", harness, WORKFLOW, argfile], capture_output=True, text=True, check=True).stdout
-        return json.loads(out)[0]
+        out = subprocess.run(["node", harness, WORKFLOW, argfile, mode], capture_output=True, text=True, check=True).stdout
+        prompts = json.loads(out)
+        if grade:
+            return next(t for t in prompts if t.startswith("You are grading"))
+        return prompts[0]
 
     def test_agent_runner_shows_prompt_then_setup_as_one_text(self):
         joined = self.run_prompts("agent", {"prompt": "defaults Add x.\n\n" + SETUP})
         split = self.run_prompts("agent", {"prompt": "defaults Add x.", "setup": SETUP, "project": "proj"})
         self.assertEqual(split, joined)
         self.assertIn("/pdlc:ship defaults Add x.\n\n" + SETUP, split)
+
+    def test_grade_prompt_names_the_project_folder_and_the_run_rule(self):
+        text = self.run_grade_prompt({"prompt": "defaults Add x.", "setup": SETUP, "project": "proj"})
+        self.assertIn("Project folder: proj", text)
+        self.assertIn("replace {run} with the absolute path of the run's project", text)
+        self.assertIn('joined with the "Project folder" above when one is given', text)
+
+    def test_grade_prompt_without_a_project_has_no_project_line(self):
+        text = self.run_grade_prompt({"prompt": "defaults Add x."})
+        self.assertNotIn("Project folder", text.split("An item with")[0])
+        self.assertIn("replace {run} with the absolute path of the run's project", text)
 
     def test_agent_runner_without_setup_is_unchanged(self):
         text = self.run_prompts("agent", {"prompt": "defaults Add x."})
