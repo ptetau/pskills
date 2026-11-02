@@ -184,8 +184,14 @@ class Budget(unittest.TestCase):
         with open(os.path.join(HERE, "skill_budgets.json")) as f:
             budgets = json.load(f)
         skills = os.path.join(HERE, "..", "plugins", "pdlc", "skills")
+        raised = budgets.get("raised", {})
         for name in os.listdir(skills):
-            self.assertEqual(budgets[name], 200, name)
+            # Only the user can raise the target; each raise names its reason.
+            if name in raised:
+                self.assertTrue(raised[name].strip(), name)
+                self.assertGreater(budgets[name], 200, name)
+            else:
+                self.assertEqual(budgets[name], 200, name)
         self.assertEqual(csf.validate_budgets(budgets), [])
 
     def test_no_budget_only_form(self):

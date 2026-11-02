@@ -118,5 +118,8 @@
         "evidence": "evals/pdlc-change/runs/decl200-a-20261102T035148Z and /home/user/pskills/evals/pdlc-change/runs/decl200-b-20261102T035133Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R1 (the header and the sections of the template)"
       }
     ]
+  },
+  "raised": {
+    "verify": "User decision 2026-11-02: its contracts (3 commit subjects, 4 handoff titles, the packet command, the send-back routes) need about 270 words."
   }
 }
