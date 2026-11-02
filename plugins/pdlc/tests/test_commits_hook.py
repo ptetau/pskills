@@ -57,6 +57,40 @@ class CommitHook(unittest.TestCase):
                              capture_output=True, text=True, timeout=30)
         return run.returncode, run.stderr
 
+    # The hook also fires on pdlc.py, the script that makes pdlc commits
+
+    def test_the_hook_fires_on_pdlc_commit(self):
+        self.commit("Lock tests CH-0001 again")
+        for command in ("python3 pdlc/bin/pdlc.py commit tests CH-0001",
+                        "cd /tmp && python3 pdlc/bin/pdlc.py commit tests CH-0001 --amend",
+                        "python3 pdlc/bin/pdlc.py stop CH-0001 --stage build --json -",
+                        "python3 ./pdlc/bin/pdlc.py commit build CH-0001 --text x --req A.R1"):
+            with self.subTest(command=command):
+                code, err = self.hook(command)
+                self.assertEqual(code, 2)
+                self.assertIn('"Lock tests CH-0001 again"', err)
+
+    def test_the_fix_message_names_pdlc_commit_amend(self):
+        self.commit("Lock tests CH-0001 again")
+        code, err = self.hook("python3 pdlc/bin/pdlc.py commit tests CH-0001")
+        self.assertIn("pdlc.py commit", err)
+        self.assertIn("--amend", err)
+
+    def test_the_hook_stays_quiet_for_the_other_pdlc_subcommands(self):
+        self.commit("Lock tests CH-0001 again")
+        for command in ("python3 pdlc/bin/pdlc.py message tests CH-0001",
+                        "python3 pdlc/bin/pdlc.py handoff CH-0001 build verify --json -",
+                        "python3 pdlc/bin/pdlc.py set CH-0001 --status building",
+                        "python3 pdlc/bin/pdlc.py intent new --name x --what y",
+                        "python3 pdlc/bin/pdlc.py change new IN-0001 --scope CAP-a --name b --json -",
+                        "python3 pdlc/bin/check_order.py IN-0001"):
+            with self.subTest(command=command):
+                self.assertEqual(self.hook(command), (0, ""))
+
+    def test_a_good_commit_from_pdlc_commit_passes(self):
+        self.commit("Lock tests CH-0001")
+        self.assertEqual(self.hook("python3 pdlc/bin/pdlc.py commit lock-tests CH-0001"), (0, ""))
+
     # Subjects
 
     def test_a_listed_subject_with_its_trailers_passes(self):

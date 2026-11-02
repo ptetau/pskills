@@ -2,8 +2,8 @@
 """pdlc commit check. Claude Code runs this after every Bash call.
 
 A pdlc branch is one that a change spec or an intent names as its Branch. When the call
-made a commit, this checks the commit against the project's DES-pdlc-commit-trailers
-(commit subjects and trailers):
+made a commit (`git commit`, `pdlc.py commit`, or `pdlc.py stop`), this checks the commit
+against the project's DES-pdlc-commit-trailers (commit subjects and trailers):
   - on a pdlc branch, its subject is one of the shapes under "Subjects", and a change it
     names is this branch's change;
   - on a pdlc branch, it carries Intent; on a change's branch, Change with that change; and
@@ -232,13 +232,17 @@ def reported_before(root, findings):
     return False
 
 
+# A Bash call that can make a commit: git commit, or the pdlc.py subcommands commit and stop.
+COMMIT_CALL = re.compile(r"\bgit\b[^\n;|&]*\bcommit\b|\bpdlc\.py\b[^\n;|&]*\b(?:commit|stop)\b")
+
+
 def main():
     try:
         call = json.load(sys.stdin)
     except ValueError:
         return 0
     command = (call.get("tool_input") or {}).get("command") or ""
-    if call.get("tool_name") != "Bash" or not re.search(r"\bgit\b[^\n;|&]*\bcommit\b", command):
+    if call.get("tool_name") != "Bash" or not COMMIT_CALL.search(command):
         return 0
     root = project_root(call.get("cwd") or os.getcwd())
     if not root:
@@ -257,8 +261,9 @@ def main():
         print("pdlc: commit %s doesn't follow DES-pdlc-commit-trailers:" % sha, file=sys.stderr)
         for line in wrong:
             print("  - %s" % line, file=sys.stderr)
-        print("Fix it now, while it is the newest commit: `git commit --amend` with the right "
-              "subject and trailers. Its files stay as they are.", file=sys.stderr)
+        print("Fix it now, while it is the newest commit. Run `python3 pdlc/bin/pdlc.py commit "
+              "<kind> <ID> --amend` with the right kind and ID, or `git commit --amend` with the "
+              "right subject and trailers. Its files stay as they are.", file=sys.stderr)
     if findings:
         print("pdlc: commit %s has %d writing finding%s in the text that it wrote (DES-writing-style):"
               % (sha, len(findings), "" if len(findings) == 1 else "s"), file=sys.stderr)
