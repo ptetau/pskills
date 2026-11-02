@@ -218,6 +218,17 @@ class CommitHook(unittest.TestCase):
                     path="pdlc/inbox/IN-0001-reset.md")
         self.assertEqual(self.hook(), (0, ""))
 
+    def test_a_subject_with_no_trailers_by_design_passes_on_a_change_branch(self):
+        for subject in ("Upgrade pdlc", "Set up pdlc", "Record merges", "Board: record card keys"):
+            with self.subTest(subject=subject):
+                self.commit(subject, None, path="pdlc/bin/pdlc.py")
+                self.assertEqual(self.hook(), (0, ""))
+
+    def test_a_subject_with_no_trailers_by_design_passes_on_main(self):
+        git(self.root, "switch", "-q", "main")
+        self.commit("Upgrade pdlc", None, path="pdlc/bin/pdlc.py")
+        self.assertEqual(self.hook(), (0, ""))
+
     def test_a_commit_on_main_with_another_subject_is_left_alone(self):
         git(self.root, "switch", "-q", "main")
         self.commit("Fix a typo", "Intent: IN-0001\n\nCo-Authored-By: Someone <s@example.com>")
