@@ -13,54 +13,34 @@ description: >
 
 ## Goal
 
-Dashboard installs the live dashboard for this user, only after a clear yes. The install
-changes files in the home folder of the user, outside the project.
-
-## Constraints
-
-- The files to install are in the `references/` folder next to this file.
-- Before the question, the user hears these facts, in a short text in the words of the
-  skill:
-  - A helper agent keeps one web page, `.dashboard/index.html`. The page shows the tasks
-    and their status, the questions with the default action, the latest deliverables,
-    and anything that is stuck. The page refreshes itself every 10 seconds, and opens with
-    a double-click.
-  - The helper can use only `.dashboard/` and its own memory, and a guard script enforces
-    this limit.
-  - The skill adds a rule to `~/.claude/CLAUDE.md`. With the rule, each session uses the
-    dashboard for work in progress, and continues with the default when it needs a
-    decision of the user.
-- The question is "Install the live dashboard?", and the default is **no**. There is no
-  install without a clear yes, also with `defaults`.
-- `~/.claude/agents/` exists, or the skill makes it. `references/dashboard-builder.md` and
-  `references/dashboard-builder-guard.py` go there.
-- A file that is there already and is different shows the difference to the user. The
-  skill replaces it only after the user agrees.
-- `~/.claude/CLAUDE.md` exists, or the skill makes it. A file with a "## Live dashboard"
-  section does not change, and the user hears that the section is there. Else
-  `references/claude-md-rule.md` goes at the end of the file, after a blank line.
-- In a git repository, `.dashboard/` is in `.git/info/exclude`, so that the dashboard
-  goes into no commit.
+The live dashboard runs for this user, only after a clear yes. The install changes
+files outside the project.
 
 ## Inputs
 
-- The yes or no of the user.
 - `references/dashboard-builder.md`, `references/dashboard-builder-guard.py`, and
   `references/claude-md-rule.md`.
-- `~/.claude/agents/`, `~/.claude/CLAUDE.md`, and the `.git` folder of the project.
 
 ## Outputs
 
-- After a yes, the two agent files in `~/.claude/agents/`, and the rule in
-  `~/.claude/CLAUDE.md`.
-- For the user:
-  - What the skill installed, and where.
-  - The rule starts to work in the next session.
-  - The first time, the helper asks for a style: dark or light, dense or airy, and one
-    accent colour.
-  - The user can remove a design skill from the `skills:` list in
-    `~/.claude/agents/dashboard-builder.md` when that skill is not on this machine.
-- To remove the dashboard, the user deletes `~/.claude/agents/dashboard-builder.md`,
-  `dashboard-builder-guard.py` in the same folder, and the "## Live dashboard" section of
-  `~/.claude/CLAUDE.md`. The agent keeps its saved style in
+- After a yes: `dashboard-builder.md` and `dashboard-builder-guard.py` in
+  `~/.claude/agents/`, the rule in `~/.claude/CLAUDE.md`, and `.dashboard/` in
+  `.git/info/exclude`.
+- A reply that says what it installed, and that the rule starts next session. It names the `skills:` list in `dashboard-builder.md`, where the user removes a design skill this machine lacks. It says how to remove it: delete both agent files and the
+  "## Live dashboard" section. The style stays in
   `~/.claude/agent-memory/dashboard-builder/`.
+
+## Constraints
+
+- The question is "Install the live dashboard?". The default is **no**, also with
+  `defaults`.
+- Before the question, tell the user three facts:
+  - One page, `.dashboard/index.html`, shows the work. It refreshes every 10 seconds.
+  - The helper uses only `.dashboard/` and its memory, by a guard script.
+  - Sessions use the default when they need a decision.
+- A different existing file: show the diff. Replace it only after the user agrees.
+- A `~/.claude/CLAUDE.md` with a "## Live dashboard" section does not change.
+
+## Done when
+
+After a no, no file changed.

@@ -12,7 +12,8 @@
     "build",
     "show",
     "verify",
-    "init"
+    "init",
+    "dashboard"
   ],
   "acceptance": 200,
   "board": 200,
