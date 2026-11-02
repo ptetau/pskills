@@ -1,4 +1,5 @@
 """Tests for pdlc's commit check hook. Run: python3 -m unittest discover plugins/pdlc/tests"""
+import importlib.util
 import json
 import re
 import shutil
@@ -12,6 +13,7 @@ PLUGIN = Path(__file__).parent.parent
 HOOK = PLUGIN / "hooks/commits.py"
 WRITING = PLUGIN / "skills/init/references/bin/check_writing.py"
 TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
+PDLC = PLUGIN / "skills/init/references/bin/pdlc.py"
 
 CHANGE = "# CH-0001 · Email templates\n\nIntent: IN-0001 · Scope: CAP-email · Status: testing · " \
          "Ticket: none · Branch: pdlc/CH-0001-email · Base: main\n"
@@ -117,16 +119,26 @@ class CommitHook(unittest.TestCase):
         self.commit("Specify IN-0001: password reset", "Intent: IN-0001", path="pdlc/inbox/IN-0001-reset.md")
         self.assertEqual(self.hook(), (0, ""))
 
-    def test_every_subject_a_skill_names_is_in_the_list(self):
+    def test_every_subject_of_pdlc_py_is_in_the_list(self):
         shapes = re.findall(r"`([^`]+)`", TRAILERS.read_text().split("## Subjects", 1)[1].split("\n## ", 1)[0])
-        named = set()
-        for skill in (PLUGIN / "skills").glob("*/SKILL.md"):
-            named.update(re.findall(r'"((?:[A-Z][a-z]+ )(?:[a-z]+ )?(?:CH|IN)-xxxx[^"]*)"', skill.read_text()))
-        self.assertGreater(len(named), 10)
-        for subject in named:
-            with self.subTest(subject=subject):
+        spec = importlib.util.spec_from_file_location("pdlc_cli", PDLC)
+        sys.path.insert(0, str(PDLC.parent))
+        try:
+            cli = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(cli)
+        finally:
+            sys.path.remove(str(PDLC.parent))
+        ids = {"IN": "IN-xxxx", "CH": "CH-xxxx", "IN|CH": "CH-xxxx", "DES": "<design spec>", None: ""}
+        self.assertGreater(len(cli.KINDS), 10)
+        for kind, (idtype, form) in cli.KINDS.items():
+            subject = re.sub(r"\{(\w+)\}", lambda m: ids[idtype] if m.group(1) == "id" else "<%s>" % m.group(1), form)
+            with self.subTest(kind=kind):
                 self.assertTrue(any(self.fits(subject, shape) for shape in shapes),
                                 "%r is in no shape of DES-pdlc-commit-trailers" % subject)
+        for skill in (PLUGIN / "skills").glob("*/SKILL.md"):
+            for kind in re.findall(r"pdlc\.py commit ([a-z-]+)", skill.read_text()):
+                with self.subTest(skill=skill.parent.name, kind=kind):
+                    self.assertIn(kind, cli.KINDS)
 
     @staticmethod
     def fits(subject, shape):

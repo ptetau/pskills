@@ -27,7 +27,7 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 - Intent: `Status: specifying`, and its "Requirements". Handoff `intake → ready`. Use
   `pdlc.py intent IN-xxxx --status specifying --req …`,
   `pdlc.py handoff IN-xxxx intake ready`, and `pdlc.py commit specify IN-xxxx`. After
-  three failed runs: problems under "Open", handoff `intake → user`, commit.
+  three `pdlc.py handoff` failures: problems under "Open", handoff `intake → user`, commit.
 - Reply: what intake wrote. Next: `/pdlc:ready`.
 
 ## Constraints
