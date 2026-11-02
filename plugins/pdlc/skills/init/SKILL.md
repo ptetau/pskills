@@ -14,18 +14,18 @@ description: >
 
 ## Goal
 
-The project has `pdlc/` with stub specs, conventions, working checks, and adapters. The README binds.
+The project has `pdlc/` with stub specs, conventions, working checks, and adapters.
 
 ## Inputs
 
-- The project, the map of `pdlc:recon`, `references/`, and the answers, or `defaults`.
+- The project, `pdlc:recon` map, `references/`, answers, or `defaults`.
 
 ## Outputs
 
-- `pdlc/`: `README.md` and `config.md` from `references/templates/`; `templates/`, `ports/`,
-  `adapters/`, `bin/`, `reviews/` from `references/`; `references/defaults/` into
-  `specs/design/` without `## Question`; empty `inbox/`, `changes/`, `specs/jobs/`,
-  `specs/capabilities/` with `.gitkeep`. Then
+- `pdlc/` gets `references/templates/README.md`, `references/templates/config.md`,
+  `templates/`, `ports/`, `adapters/`, `bin/`, `reviews/`, and `references/defaults/` in
+  `specs/design/` without `## Question`. Empty `inbox/`, `changes/`, `specs/jobs/`,
+  `specs/capabilities/` get `.gitkeep`.
   `python3 <the upgrade skill>/scripts/upgrade.py record` writes `pdlc/version.json`.
 - The commit "Set up pdlc" on `main`, no new branch.
 - Reply: each decision, "Unsure" item, `/pdlc:ship <what you want>`, `/pdlc:intake`.
@@ -33,15 +33,15 @@ The project has `pdlc/` with stub specs, conventions, working checks, and adapte
 ## Constraints
 
 - Stop if not a repository, or `pdlc/` exists.
-- `defaults`: no question; keep the map; take the more common pattern; no dashboard
-  (`/pdlc:dashboard`).
+- Offer the dashboard (`pdlc:dashboard`). With `defaults`, ask nothing, keep the map, take
+  the more common pattern, name `/pdlc:dashboard`.
 - No code: recommend `/decompose`, `/blueprint`, `/pdlc:intake <name>.blueprint.md`.
 - Each file or part is in one code map at most. A stub has `Status: stub`, "None written yet."
 - `Ask at init: yes` is a question. A changed answer sets `Default: no`.
-- Checks: user confirms six items; `{intent}`, `{files}`, `none`. Prove with a failing
-  `IN-9999` acceptance file, then delete it.
-- `visual-web` or `visual-terminal`; `.gitignore` gets `pdlc/.tools/`, `pdlc/.logs/`.
+- The user confirms six Checks items (`{intent}`, `{files}`, `none`). If checks run, prove
+  "all" skips a failing `IN-9999` acceptance file. Delete it.
+- Use `visual-web` or `visual-terminal`. `.gitignore` gets `pdlc/.tools/` and `pdlc/.logs/`.
 
 ## Done when
 
-The commit exists; the tree is clean.
+The commit exists. The tree is clean.
