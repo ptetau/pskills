@@ -7,7 +7,8 @@
     "acceptance",
     "upgrade",
     "board",
-    "change"
+    "change",
+    "conventions"
   ],
   "acceptance": 200,
   "board": 200,

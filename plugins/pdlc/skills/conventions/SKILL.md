@@ -12,42 +12,29 @@ description: >
 
 ## Goal
 
-Conventions keeps the software consistent. Each convention is a design spec that the user
-agreed, and the code that does not obey it gets a migration intent.
-
-## Constraints
-
-- The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first. Each question
-  obeys "Questions".
-- No convention changes before the user agrees.
-- The user first hears the subject of the convention, and why it is important now, in one
-  or two sentences. For example: "This is the first table in the app. How do you want
-  tables to sort and page?"
-- The two or three options come from the current method in the code. Each option has a
-  short real example from this project, when one exists. The recommended option has one
-  line on why. With `defaults`, the skill takes it and does not ask.
-- A new convention is `pdlc/specs/design/DES-<name>.md` from the design template. A
-  changed convention edits its design spec, and a default gets `Default: no`.
-- A convention that a check can examine (for example, a lint rule) gets `proposed`
-  requirements, and an intent to build the check.
-- Code that does not obey the agreed convention occurs when a convention changes. It also
-  occurs when a new convention records a thing that the code does in more than one way.
-  The skill finds each such job and capability through the code maps.
-- Each such job or capability gets an intent through the inbox port. Its name is
-  "Migrate <spec> to <convention>". Its "What and why" gives what changed, and a link to
-  the design spec.
-- The skill does not start these intents. The user selects when each one runs.
+Each convention is a design spec that the user agreed. Code that does not obey it gets a
+migration intent.
 
 ## Inputs
 
-- `pdlc/README.md`, the specs and their code maps, and the code.
-- The subject of the convention, from the user or from the skill that sent the work here.
-- The design template in `pdlc/templates/`.
+- `pdlc/README.md`: "Bookkeeping on main", "Questions", "Spec patches", "Commits", "Ports".
+- The subject, from the user or the sending skill. The argument `defaults`.
+- The specs, code maps, code, and template in `pdlc/templates/`.
 
 ## Outputs
 
-- The new or changed design spec, and each migration intent.
-- The commit "Convention DES-<name>". When a different skill sent the work here, the
-  commit has the `Intent` trailer of that skill.
-- For the user: how many migration intents the skill added.
-- When a different skill sent the work here, that skill continues.
+- A new `pdlc/specs/design/DES-<name>.md`, or the edited spec. A changed default gets `Default: no`.
+- A checkable convention: `proposed` requirements, and one intent to build the check.
+- One intent, through the inbox port, for each job or capability that disobeys it: "Migrate <spec> to <convention>". Its "What and why" links the spec.
+- The commit "Convention DES-<name>", with the `Intent` trailer of the sending skill.
+- The reply: the spec, and the migration intent count.
+
+## Constraints
+
+- Ask first: subject, why now, and two or three options from the code, with real examples, if any. Recommend one.
+- Change nothing before the user agrees. Start no intent.
+- A new convention that records a thing done in several ways also gets migration intents.
+
+## Done when
+
+Spec and intents are committed. The sending skill continues.
