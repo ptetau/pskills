@@ -8,7 +8,8 @@
     "upgrade",
     "board",
     "change",
-    "conventions"
+    "conventions",
+    "build"
   ],
   "acceptance": 200,
   "board": 200,
