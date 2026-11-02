@@ -45,6 +45,8 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
   The script puts them under the pdlc trailers, with no blank line between them.
 - `pdlc.py message <kind>` prints the message and does not commit. Use it for
   `git merge --no-ff -F`.
+- `pdlc.py stop` commits only its own handoff and Notes, and refuses with exit 1 while other
+  files have changes. Commit the stage first with `pdlc.py commit <stage> <id>`.
 - A hook examines each new commit. On a pdlc branch, it examines the subject and the
   trailers. On every branch, it examines the trailers of a commit with a pdlc subject.
   Also on every branch, it examines the writing in the specs, the intents, and the change

@@ -718,14 +718,37 @@ class Stop(Project):
         self.assertEqual(git(self.root, "status", "--porcelain"), "")
 
     def test_a_commit_problem_leaves_no_handoff(self):
-        # A file outside pdlc/ needs --req, so the commit is refused.
+        done = self.stop(extra=["--trailer", "bad trailer"])
+        self.assertEqual(done.returncode, 1)
+        self.assertFalse((self.root / "pdlc/changes/CH-0001-email/handoff.md").exists())
+        done = self.stop(extra=["--trailer", "Note: ok"])
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_a_dirty_spec_file_is_refused_and_nothing_is_committed(self):
+        self.write("pdlc/specs/capabilities/CAP-email.md", CAP_EMAIL)
+        done = self.stop()
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("commit the stage first: python3 pdlc/bin/pdlc.py commit <stage> <id>", done.stdout + done.stderr)
+        self.assertIn("pdlc/specs/capabilities/CAP-email.md", done.stdout + done.stderr)
+        self.assertEqual(self.log(), "Set up pdlc")
+        self.assertFalse((self.root / "pdlc/changes/CH-0001-email/handoff.md").exists())
+        self.assertEqual(git(self.root, "status", "--porcelain"), "?? pdlc/specs/capabilities/")
+
+    def test_a_dirty_app_file_is_refused(self):
         self.write("src/a.py", "x\n")
         done = self.stop()
         self.assertEqual(done.returncode, 1)
-        self.assertFalse((self.root / "pdlc/changes/CH-0001-email/handoff.md").exists())
-        done = self.stop(extra=["--req", "CAP-email.R1"])
+        self.assertEqual(self.log(), "Set up pdlc")
+
+    def test_a_dirty_handoff_and_intent_are_not_refused(self):
+        self.hand_first()
+        done = self.stop()
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
-        self.assertIn("Req: CAP-email.R1", git(self.root, "log", "-1", "--format=%B"))
+        self.assertEqual(self.log(), "Stop CH-0001: The limit conflicts with R2.")
+
+    def hand_first(self):
+        data = {"passed": 1, "total": 1, "next": "Go."}
+        self.pdlc("handoff", "CH-0001", "build", "verify", "--json", "-", input=json.dumps(data))
 
     def test_a_next_text_is_optional(self):
         done = self.stop(data={"open": OPEN, "next": "Answer, then run /pdlc:ship."})

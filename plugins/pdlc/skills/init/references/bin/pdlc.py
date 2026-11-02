@@ -35,7 +35,7 @@ SUBCOMMANDS = {
     "commit": "make a pdlc commit with its subject and one trailer block",
     "message": "print the message of a pdlc commit, and make no commit",
     "handoff": "write the handoff of a stage",
-    "stop": "write a stop record and commit it",
+    "stop": "write a stop record and commit it; refuses when other files have changes",
     "set": "set header fields and statuses of an intent or a change",
     "intent": "make a new intent, or change the lists of an intent",
     "change": "make the spec of a new change",
@@ -639,11 +639,35 @@ def handle_handoff(args, extra):
 STOP_NEXT = "Answer the open question, then run `/pdlc:ship` again."
 
 
+def refuse_unrelated_changes(root, id_):
+    """A stop commits only its own files. Other changes are a stage's work, and it must commit them first."""
+    own = {intent_path_for(root, id_)}
+    if id_.startswith("CH-"):
+        own.add(find_change(root, id_).parent / "handoff.md")
+    own = {p.resolve().relative_to(root.resolve()).as_posix() for p in own}
+    out = run_git(root, "status", "--porcelain", "-z", "--untracked-files=all").stdout
+    entries = out.split("\0")
+    paths, i = [], 0
+    while i < len(entries):
+        entry = entries[i]
+        i += 1
+        if not entry:
+            continue
+        paths.append(entry[3:])
+        if entry[0] in "RC":
+            i += 1  # skip the source path of a rename
+    other = [p for p in paths if p not in own]
+    if other:
+        raise Problem("stop refused: these files have changes that the stop does not write: " + ", ".join(other),
+                      "commit the stage first: python3 pdlc/bin/pdlc.py commit <stage> <id>")
+
+
 def handle_stop(args, extra):
     reject_extra(extra)
     root = project()
     os.chdir(str(root))
     data = read_json(args.json)
+    refuse_unrelated_changes(root, args.id)
     triple = open_triple(data.get("open"))
     data.setdefault("next", STOP_NEXT)
     reason = " ".join(data["open"]["reason"].split())
