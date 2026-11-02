@@ -15,7 +15,7 @@ SCRIPT = PLUGIN / "skills/init/references/bin/pdlc.py"
 TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
 SUBCOMMANDS = ["commit", "message", "handoff", "stop", "set", "intent", "change"]
 # The subcommands that still answer "not implemented".
-STUBS = ["handoff", "stop", "set", "intent", "change"]
+STUBS = ["stop", "set", "intent", "change"]
 GIT_ENV = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "commit.gpgsign",
            "GIT_CONFIG_VALUE_0": "false"}
 
@@ -133,7 +133,7 @@ class EntryPoint(unittest.TestCase):
             self.assertIn("not implemented", done.stdout + done.stderr, name)
 
     def test_extra_arguments_are_accepted_by_a_stub(self):
-        done = run("handoff", "CH-0001", "build", "verify", "--bogus", "x")
+        done = run("stop", "CH-0001", "--bogus", "x")
         self.assertEqual(done.returncode, 2)
         self.assertIn("not implemented", done.stdout + done.stderr)
 
@@ -412,10 +412,232 @@ class Commit(Project):
         self.assertEqual(done.returncode, 3)
 
 
+SPEC_MARK = """# JOB-x · Do a thing
+
+Status: active
+
+## Requirements
+
+### JOB-x.R1 · One
+
+Status: proposed · Intents: IN-0001
+
+Show at most 20 items{mark}.
+"""
+
+
+class Handoff(Project):
+    def hand(self, id_, stage, next_, data, extra=()):
+        return self.pdlc("handoff", id_, stage, next_, "--json", "-", *extra, input=json.dumps(data))
+
+    def handoff_text(self):
+        return self.read("pdlc/changes/CH-0001-email/handoff.md")
+
+    def check(self, id_, stage):
+        done = subprocess.run([sys.executable, str(SCRIPT.parent / "check_handoff.py"), id_, "--stage", stage],
+                              cwd=str(self.root), capture_output=True, text=True)
+        return done.stdout
+
+    def commit_all(self, subject="Update CH-0001: x"):
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", subject)
+
+    def test_a_change_handoff_has_the_title_time_and_six_sections(self):
+        done = self.hand("CH-0001", "build", "verify", {"passed": 4, "total": 5, "next": "Verify it.",
+                                                         "done": ["Built CAP-email.R1 (send)."]})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.handoff_text()
+        lines = text.splitlines()
+        self.assertEqual(lines[0], "# Handoff · CH-0001 · build → verify")
+        self.assertRegex(lines[1], r"^Time: \d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d\d:\d\d$")
+        heads = [l for l in lines if l.startswith("## ")]
+        self.assertEqual(heads, ["## Done", "## Decided on defaults", "## Open", "## Look here",
+                                 "## Don't redo", "## Next: do this first"])
+        self.assertIn("- 4 of 5 checks pass.", text)
+        self.assertIn("- Built CAP-email.R1 (send).", text)
+        self.assertIn("Run `/pdlc:verify`. Verify it.", text)
+        self.assertEqual(self.check("CH-0001", "build"), "")
+        self.assertIn("handoff.md", done.stdout)
+
+    def test_each_empty_list_gives_none(self):
+        self.hand("CH-0001", "build", "verify", {"passed": 1, "total": 1, "next": "Go."})
+        text = self.handoff_text()
+        self.assertIn("## Decided on defaults\n\n- none", text)
+        self.assertIn("## Open\n\n- none", text)
+        self.assertIn("## Look here\n\n- none", text)
+        self.assertIn("## Don't redo\n\n- none", text)
+
+    def test_a_missing_required_key_exits_1_and_writes_nothing(self):
+        for stage, next_, keys in [
+            ("acceptance", "tests", {"failing": 1, "total": 2, "lock": "abc"}),
+            ("tests", "build", {"lock": "abc"}),
+            ("build", "verify", {"passed": 1}),
+            ("show", "user", {"link": "x", "frames": 3, "shown": 2}),
+        ]:
+            with self.subTest(stage=stage):
+                done = self.hand("CH-0001", stage, next_, dict(keys, next="Go."))
+                self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+                self.assertFalse((self.root / "pdlc/changes/CH-0001-email/handoff.md").exists())
+
+    def test_acceptance_to_tests_writes_its_keys(self):
+        done = self.hand("IN-0001", "acceptance", "tests", {
+            "failing": 3, "total": 3, "lock": "abc1234", "next": "Write the checks.",
+            "gives": [{"change": "CH-0001", "needs": "the send function"}]})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.read("pdlc/inbox/IN-0001-reset.md")
+        self.assertIn("3 of 3 acceptance checks fail", text)
+        self.assertIn("abc1234", text)
+        self.assertIn("CH-0001", text.split("## Handoff")[1])
+        self.assertEqual(self.check("IN-0001", "acceptance"), "")
+
+    def test_tests_to_build_lists_the_checks(self):
+        done = self.hand("CH-0001", "tests", "build", {
+            "lock": "abc1234", "next": "Build.",
+            "checks": [{"check": "tests/test_send.py::test_CAP_email_R1", "req": "CAP-email.R1"}]})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.handoff_text()
+        self.assertIn("- tests/test_send.py::test_CAP_email_R1 (proves CAP-email.R1)", text)
+        self.assertIn("abc1234", text)
+
+    def test_verify_to_show_reads_the_results(self):
+        self.write("pdlc/changes/CH-0001-email/review/security/result.md", "Result: pass\n\nRemit: security\n")
+        self.write("pdlc/changes/CH-0001-email/review/quality/result.md", "Result: fail\n\nRemit: quality\n")
+        self.write("pdlc/inbox/IN-0001-reset.md",
+                   self.read("pdlc/inbox/IN-0001-reset.md").replace("Acceptance-Passed: none", "Acceptance-Passed: abc1234"))
+        done = self.hand("CH-0001", "verify", "show", {"next": "Show."})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.handoff_text()
+        self.assertIn("- security: pass", text)
+        self.assertIn("- quality: fail", text)
+        self.assertIn("abc1234", text)
+
+    def test_verify_to_show_needs_the_results(self):
+        done = self.hand("CH-0001", "verify", "show", {"next": "Show."})
+        self.assertEqual(done.returncode, 1)
+
+    def test_show_to_user(self):
+        done = self.hand("CH-0001", "show", "user", {"link": "https://x/pr/1", "frames": 6, "shown": 3,
+                                                      "total": 3, "next": "Merge it."})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("https://x/pr/1", self.handoff_text())
+
+    def test_to_user_needs_the_open_triple(self):
+        done = self.hand("CH-0001", "build", "user", {"next": "Answer.", "open": ["just a note"]})
+        self.assertEqual(done.returncode, 1)
+        done = self.hand("CH-0001", "build", "user", {"next": "Answer.", "open": {"reason": "r", "decide": "d"}})
+        self.assertEqual(done.returncode, 1)
+        done = self.hand("CH-0001", "build", "user", {"next": "Answer.", "open": {
+            "reason": "The check fails.", "decide": "Change the limit?", "recommend": "Yes, to 30."}})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.handoff_text()
+        self.assertIn("- Reason: The check fails.", text)
+        self.assertIn("- Decision: Change the limit?", text)
+        self.assertIn("- Recommended answer: Yes, to 30.", text)
+        self.assertEqual(self.check("CH-0001", "build"), "")
+
+    def test_a_pair_the_stage_does_not_permit_exits_1(self):
+        done = self.hand("CH-0001", "build", "show", {"next": "x"})
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("build", done.stdout)
+        self.assertFalse((self.root / "pdlc/changes/CH-0001-email/handoff.md").exists())
+
+    def test_an_intent_handoff_replaces_the_handoff_section_only(self):
+        before = self.read("pdlc/inbox/IN-0001-reset.md")
+        done = self.hand("IN-0001", "intake", "ready", {"next": "Check it.", "done": ["Wrote the specs."]})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.read("pdlc/inbox/IN-0001-reset.md")
+        self.assertEqual(text.split("## Handoff")[0], before.split("## Handoff")[0])
+        body = text.split("## Handoff")[1]
+        self.assertIn("Handoff · IN-0001 · intake → ready\nTime: ", body)
+        self.assertIn("### Done", body)
+        self.assertNotIn("# Handoff", body)
+        self.assertEqual(self.check("IN-0001", "intake"), "")
+
+    def test_a_decided_item_is_in_the_handoff_and_once_in_the_notes(self):
+        self.write("pdlc/specs/jobs/JOB-x.md", SPEC_MARK.format(mark=" (assumed)"))
+        data = {"next": "Check it.", "decided": [
+            {"id": "JOB-x.R1", "question": "How many items?", "answer": "At most 20"}]}
+        for _ in range(2):
+            done = self.hand("IN-0001", "intake", "ready", data)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.read("pdlc/inbox/IN-0001-reset.md")
+        line = "- JOB-x.R1: How many items? → At most 20 (assumed)"
+        self.assertEqual(text.count(line), 2)  # one in the handoff and one in the notes
+        self.assertIn(line, text.split("## Notes")[1].split("## Handoff")[0])
+        self.assertEqual(self.check("IN-0001", "intake"), "")
+
+    def test_a_new_mark_with_no_decided_item_exits_1_and_restores_the_files(self):
+        self.write("pdlc/specs/jobs/JOB-x.md", SPEC_MARK.format(mark=" (assumed)"))
+        before = self.read("pdlc/inbox/IN-0001-reset.md")
+        done = self.hand("IN-0001", "intake", "ready", {"next": "Check it."})
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("JOB-x.R1", done.stdout)
+        self.assertEqual(self.read("pdlc/inbox/IN-0001-reset.md"), before)
+
+    def test_ready_keeps_the_decided_lines_of_the_earlier_handoff(self):
+        self.write("pdlc/specs/jobs/JOB-x.md", SPEC_MARK.format(mark=" (assumed)"))
+        self.hand("IN-0001", "intake", "ready", {"next": "Check it.", "decided": [
+            {"id": "JOB-x.R1", "question": "How many items?", "answer": "At most 20"}]})
+        self.commit_all("Specify IN-0001: Password reset")
+        done = self.hand("IN-0001", "ready", "change", {"next": "Plan."})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        body = self.read("pdlc/inbox/IN-0001-reset.md").split("## Handoff")[1]
+        self.assertIn("- JOB-x.R1: How many items? → At most 20 (assumed)", body)
+        self.assertNotIn("### Decided on defaults\n\n- none", body)
+        self.assertEqual(self.check("IN-0001", "ready"), "")
+
+    def test_the_change_decided_line_goes_to_the_intent_notes(self):
+        self.write("pdlc/specs/jobs/JOB-x.md", SPEC_MARK.format(mark=" (assumed)"))
+        done = self.hand("CH-0001", "build", "verify", {"passed": 1, "total": 1, "next": "Go.", "decided": [
+            {"id": "JOB-x.R1", "question": "How many items?", "answer": "At most 20"}]})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("- JOB-x.R1: How many items? → At most 20 (assumed)",
+                      self.read("pdlc/inbox/IN-0001-reset.md").split("## Notes")[1])
+
+    def test_a_json_object_with_a_wrong_type_exits_1(self):
+        done = self.hand("CH-0001", "build", "verify", {"passed": 1, "total": 1, "next": "Go.", "done": "text"})
+        self.assertEqual(done.returncode, 1)
+
+    def test_next_is_required(self):
+        done = self.hand("CH-0001", "build", "verify", {"passed": 1, "total": 1})
+        self.assertEqual(done.returncode, 1)
+
+    def test_an_unknown_id_exits_1(self):
+        done = self.hand("CH-0009", "build", "verify", {"passed": 1, "total": 1, "next": "Go."})
+        self.assertEqual(done.returncode, 1)
+        done = self.hand("IN-0009", "intake", "ready", {"next": "Go."})
+        self.assertEqual(done.returncode, 1)
+
+    def test_json_from_a_file(self):
+        path = self.root / "h.json"
+        path.write_text(json.dumps({"passed": 1, "total": 1, "next": "Go."}))
+        done = self.pdlc("handoff", "CH-0001", "build", "verify", "--json", str(path))
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_json_from_a_terminal_exits_2_at_once(self):
+        import pty
+        master, slave = pty.openpty()
+        try:
+            done = run("handoff", "CH-0001", "build", "verify", "--json", "-", cwd=str(self.root), stdin=slave)
+        finally:
+            os.close(master)
+            os.close(slave)
+        self.assertEqual(done.returncode, 2)
+
+    def test_invalid_json_exits_2_with_its_line(self):
+        done = self.pdlc("handoff", "CH-0001", "build", "verify", "--json", "-", input='{"a": 1,\n "b": }')
+        self.assertEqual(done.returncode, 2)
+        self.assertIn("line 2", done.stderr)
+
+    def test_the_stage_must_be_known(self):
+        done = self.pdlc("handoff", "CH-0001", "nope", "verify", "--json", "-", input="{}")
+        self.assertEqual(done.returncode, 2)
+
+
 class Imports(unittest.TestCase):
     def test_no_bytecode_left_in_the_bin_folder(self):
         shutil.rmtree(SCRIPT.parent / "__pycache__", ignore_errors=True)
-        run("handoff")
+        run("stop")
         self.assertFalse((SCRIPT.parent / "__pycache__").exists())
 
 

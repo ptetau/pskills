@@ -409,6 +409,235 @@ def add_commit_options(parser):
 
 
 # ---------------------------------------------------------------------------------------
+# handoff and stop
+
+SECTIONS = ["Done", "Decided on defaults", "Open", "Look here", "Don't redo", "Next: do this first"]
+# The keys that a transition requires, besides "next".
+REQUIRED = {
+    ("acceptance", "tests"): ["failing", "total", "lock", "gives"],
+    ("tests", "build"): ["checks", "lock"],
+    ("build", "verify"): ["passed", "total"],
+    ("show", "user"): ["link", "frames", "shown", "total"],
+}
+OPEN_KEYS = [("reason", "Reason"), ("decide", "Decision"), ("recommend", "Recommended answer")]
+LIST_KEYS = ("done", "look_here", "dont_redo")
+
+
+def import_check_handoff():
+    import check_handoff
+    return check_handoff
+
+
+def text_list(data, key):
+    value = data.get(key, [])
+    if not isinstance(value, list) or not all(isinstance(v, str) and v.strip() for v in value):
+        raise Problem('"%s" must be a list of non-empty strings' % key)
+    return [v.strip() for v in value]
+
+
+def list_of_objects(data, key, fields):
+    value = data.get(key)
+    if (not isinstance(value, list) or not value
+            or not all(isinstance(v, dict) and all(isinstance(v.get(f), str) and v.get(f).strip()
+                                                   for f in fields) for v in value)):
+        raise Problem('"%s" must be a list with at least one item, each with %s'
+                      % (key, ", ".join('"%s"' % f for f in fields)))
+    return value
+
+
+def decided_lines(data):
+    lines = []
+    items = list_of_objects(data, "decided", ["id", "question", "answer"]) if data.get("decided") else []
+    for item in items:
+        answer = re.sub(r"\s*\(assumed\)\s*$", "", item["answer"].strip())
+        lines.append("- %s: %s \u2192 %s (assumed)" % (item["id"].strip(), item["question"].strip(), answer))
+    return lines
+
+
+def open_triple(value):
+    if (not isinstance(value, dict)
+            or not all(isinstance(value.get(k), str) and value.get(k).strip() for k, _ in OPEN_KEYS)):
+        raise Problem('a handoff to the user needs "open" with "reason", "decide", and "recommend", '
+                      "each one sentence")
+    return ["- %s: %s" % (label, value[key].strip()) for key, label in OPEN_KEYS]
+
+
+def review_results(root, change_dir):
+    lines = []
+    for result in sorted((change_dir / "review").glob("*/result.md")):
+        found = re.search(r"^\s*Result:\s*(\S+)", result.read_text(), re.M | re.I)
+        lines.append("- %s: %s" % (result.parent.name, found.group(1).lower() if found else "no result"))
+    if not lines:
+        raise Problem("verify \u2192 show: no review results in %s/review/*/result.md"
+                      % change_dir.relative_to(root).as_posix())
+    return lines
+
+
+def intent_path_for(root, id_):
+    return find_intent(root, id_ if id_.startswith("IN-") else intent_of(root, id_))
+
+
+def handoff_sections(root, id_, stage, next_, data, kept):
+    """The text of each section, as lists of lines, for a handoff."""
+    keys = REQUIRED.get((stage, next_), [])
+    for key in keys:
+        if key not in data or data[key] in (None, "", []):
+            raise Problem('%s \u2192 %s needs the key "%s"' % (stage, next_, key))
+    if not isinstance(data.get("next"), str) or not data["next"].strip():
+        raise Problem('"next" is required: one or two sentences for the next stage')
+    done = text_list(data, "done")
+    look, keep = text_list(data, "look_here"), text_list(data, "dont_redo")
+    open_ = None
+    if stage == "acceptance" and next_ == "tests":
+        gives = list_of_objects(data, "gives", ["change", "needs"])
+        done.append("%s of %s acceptance checks fail, as they must before the build."
+                    % (data["failing"], data["total"]))
+        done += ["%s gives: %s" % (g["change"].strip(), g["needs"].strip()) for g in gives]
+        keep.append("The acceptance checks are locked at %s." % data["lock"])
+    elif stage == "tests" and next_ == "build":
+        checks = list_of_objects(data, "checks", ["check", "req"])
+        look += ["%s (proves %s)" % (c["check"].strip(), c["req"].strip()) for c in checks]
+        keep.append("The checks are locked at %s." % data["lock"])
+    elif stage == "build" and next_ == "verify":
+        done.append("%s of %s checks pass." % (data["passed"], data["total"]))
+    elif stage == "verify" and next_ == "show":
+        done_lines = review_results(root, find_change(root, id_).parent)
+        done += [l[2:] for l in done_lines]
+        passed = pdlclib.field(intent_path_for(root, id_).read_text(), "Acceptance-Passed")
+        if passed and passed != "none":
+            done.append("The acceptance checks passed at %s." % passed)
+    elif stage == "show" and next_ == "user":
+        done.append("The recording is at %s." % data["link"])
+        done.append("%s key frames. %s of %s acceptance lines are shown."
+                    % (data["frames"], data["shown"], data["total"]))
+    if next_ == "user" and (stage, next_) not in REQUIRED:
+        open_ = open_triple(data.get("open"))
+    else:
+        items = data.get("open", [])
+        if isinstance(items, dict):
+            raise Problem('"open" is a list of sentences, except in a handoff to the user')
+        open_ = ["- " + v for v in text_list(data, "open")]
+    nxt = data["next"].strip()
+    if next_ != "user":
+        nxt = "Run `/pdlc:%s`. %s" % (next_, nxt)
+    bullets = lambda items: ["- " + i for i in items] or ["- none"]  # noqa: E731
+    return {
+        "Done": bullets(done),
+        "Decided on defaults": kept or ["- none"],
+        "Open": open_ or ["- none"],
+        "Look here": bullets(look),
+        "Don't redo": bullets(keep),
+        "Next: do this first": [nxt],
+    }
+
+
+def render_sections(parts, level):
+    out = []
+    for name in SECTIONS:
+        out += [level + " " + name, ""] + parts[name] + [""]
+    return "\n".join(out).rstrip("\n") + "\n"
+
+
+def set_section(text, title, body, create_before=None):
+    """The text with the body of '## title' replaced. The heading is added when it is not there."""
+    pattern = re.compile(r"^(## %s[ \t]*\n)(.*?)(?=^## |\Z)" % re.escape(title), re.M | re.S)
+    found = pattern.search(text)
+    block = "\n" + body.strip("\n") + "\n"
+    if found:
+        more = found.end() < len(text)
+        return text[:found.start(2)] + block + ("\n" if more else "") + text[found.end(2):]
+    heading = "## %s\n%s\n" % (title, block)
+    if create_before:
+        before = re.search(r"^## %s[ \t]*$" % re.escape(create_before), text, re.M)
+        if before:
+            return text[:before.start()] + heading + text[before.start():]
+    return text.rstrip("\n") + "\n\n" + heading
+
+
+def add_notes(text, lines):
+    """The text with each line added to the end of '## Notes', when it is not there yet."""
+    present = {l.strip() for l in pdlclib.section(text, "Notes").splitlines()}
+    new = [l for l in lines if l not in present]
+    if not new:
+        return text
+    body = pdlclib.section(text, "Notes", None)
+    current = (body or "").strip("\n")
+    return set_section(text, "Notes", (current + "\n" if current else "") + "\n".join(new), "Handoff")
+
+
+def write_handoff(root, id_, stage, next_, data):
+    """Write the handoff, check it, and return the path. Nothing stays on a problem."""
+    ch = import_check_handoff()
+    if stage not in ch.NEXT:
+        raise Usage("unknown stage %s" % stage)
+    if not re.fullmatch(r"(IN|CH)-\d+", id_):
+        raise Usage("the ID must be IN-xxxx or CH-xxxx")
+    is_intent = id_.startswith("IN-")
+    path = find_intent(root, id_) if is_intent else find_change(root, id_).parent / "handoff.md"
+    if is_intent:
+        old = pdlclib.section(path.read_text(), "Handoff", "")
+        found = re.search(r"^### Decided on defaults[ \t]*\n(.*?)(?=^### |\Z)", old, re.M | re.S)
+        kept = [l.strip() for l in (found.group(1) if found else "").splitlines()
+                if l.strip().startswith("- ") and l.strip() != "- none"]
+    else:
+        kept = []
+    new = decided_lines(data)
+    kept = list(dict.fromkeys(kept + new))
+    parts = handoff_sections(root, id_, stage, next_, data, kept)
+    time = __import__("datetime").datetime.now().astimezone().isoformat(timespec="seconds")
+    head = "Handoff \u00b7 %s \u00b7 %s \u2192 %s\nTime: %s\n\n" % (id_, stage, next_, time)
+    intent_file = intent_path_for(root, id_)
+    snapshot = {path: path.read_text() if path.exists() else None,
+                intent_file: intent_file.read_text()}
+    try:
+        if is_intent:
+            text = set_section(path.read_text(), "Handoff", head + render_sections(parts, "###"), None)
+            path.write_text(add_notes(text, kept))
+        else:
+            path.write_text("# " + head + render_sections(parts, "##"))
+            intent_file.write_text(add_notes(intent_file.read_text(), new))
+        import io
+        from contextlib import redirect_stdout
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            ch.main(["check_handoff.py", id_, "--stage", stage], root)
+        problems = [l for l in buffer.getvalue().splitlines() if l.strip()]
+    except BaseException:
+        restore(snapshot)
+        raise
+    if problems:
+        restore(snapshot)
+        raise Problem(*problems)
+    return path
+
+
+def restore(snapshot):
+    for path, text in snapshot.items():
+        if text is None:
+            path.unlink(missing_ok=True)
+        else:
+            path.write_text(text)
+
+
+def handle_handoff(args, extra):
+    reject_extra(extra)
+    root = project()
+    os.chdir(str(root))
+    data = read_json(args.json)
+    path = write_handoff(root, args.id, args.stage, args.next, data)
+    print("wrote the handoff %s \u2192 %s in %s" % (args.stage, args.next, path.relative_to(root).as_posix()))
+    return EXIT_DONE
+
+
+def options_handoff(parser):
+    parser.add_argument("id", help="IN-xxxx or CH-xxxx")
+    parser.add_argument("stage", choices=["intake", "ready", "change", "acceptance", "tests",
+                                          "build", "verify", "show"])
+    parser.add_argument("next", help="the next stage, or user")
+    parser.add_argument("--json", required=True, metavar="FILE|-", help="the content, as JSON")
+
+
+# ---------------------------------------------------------------------------------------
 # The entry point
 
 def not_implemented(name):
@@ -423,8 +652,10 @@ def not_implemented(name):
 HANDLERS = {name: not_implemented(name) for name in SUBCOMMANDS}
 HANDLERS["commit"] = handle_commit
 HANDLERS["message"] = handle_message
+HANDLERS["handoff"] = handle_handoff
 
-OPTIONS = {"commit": add_commit_options, "message": add_commit_options}
+OPTIONS = {"commit": add_commit_options, "message": add_commit_options,
+           "handoff": options_handoff}
 
 
 def build_parser():
