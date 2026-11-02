@@ -254,6 +254,22 @@ def round_number(root, change_id):
     return len(done) + 1
 
 
+def require_round(root, kind, change_id):
+    """Verified and send-back follow a "Verify <change>: round <n>" commit that is newer
+    than the newest "Built <change>" or "Send back <change>" commit."""
+    if kind not in ("verified", "send-back") or not change_id:
+        return
+    name = re.escape(change_id)
+    for subject in run_git(root, "log", "--format=%s", check=False).stdout.splitlines():
+        if re.fullmatch(r"Verify %s: round \d+" % name, subject):
+            return
+        if re.fullmatch(r"Built %s|Send back %s: .+" % (name, name), subject):
+            break
+    raise Problem("%s needs a round commit of %s after its last Built or Send back commit"
+                  % (kind, change_id),
+                  "commit the round first: python3 pdlc/bin/pdlc.py commit verify %s" % change_id)
+
+
 def check_trailer_text(lines):
     """Check each --trailer or pdlc.trailer line. Return them without empty lines."""
     out = []
@@ -368,6 +384,7 @@ def handle_commit(args, extra):
     reject_extra(extra)
     root = project()
     os.chdir(str(root))
+    require_round(root, args.kind, args.id)
     if args.amend and not args.paths:
         pass  # keep the files of the commit as they are
     else:

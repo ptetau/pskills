@@ -217,9 +217,9 @@ class Commit(Project):
             "tests-reviewed CH-0001": "Tests reviewed CH-0001",
             "built CH-0001": "Built CH-0001",
             "visual-review CH-0001": "Visual review CH-0001",
-            "verified CH-0001": "Verified CH-0001",
             "propose CH-0001": "Propose CH-0001",
             "verify CH-0001": "Verify CH-0001: round 1",
+            "verified CH-0001": "Verified CH-0001",
         }
         for command, subject in cases.items():
             with self.subTest(command=command):
@@ -229,6 +229,7 @@ class Commit(Project):
                 self.assertEqual(load_hook().problems(str(self.root)), [])
 
     def test_kinds_with_text(self):
+        self.make("verify", "CH-0001")
         for command, subject in {
             ("build", "CH-0001", "--text", "add send"): "Build CH-0001: add send",
             ("update", "CH-0001", "--text", "set the base"): "Update CH-0001: set the base",
@@ -253,6 +254,42 @@ class Commit(Project):
         self.make("verify", "CH-0001")
         self.make("verify", "CH-0001")
         self.assertEqual(self.log(), "Verify CH-0001: round 2")
+
+    def refused(self, *args):
+        before = git(self.root, "rev-parse", "HEAD")
+        done = self.make(*args, touch=None)
+        self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+        self.assertIn("commit the round first: python3 pdlc/bin/pdlc.py commit verify CH-0001",
+                      done.stdout + done.stderr)
+        self.assertEqual(git(self.root, "rev-parse", "HEAD"), before)
+        self.assertEqual(git(self.root, "diff", "--cached", "--name-only"), "")
+
+    def test_verified_and_send_back_need_a_round_after_the_last_built(self):
+        self.make("built", "CH-0001")
+        self.refused("verified", "CH-0001")
+        self.refused("send-back", "CH-0001", "--text", "build")
+        self.make("verify", "CH-0001")
+        self.assertEqual(self.make("verified", "CH-0001").returncode, 0)
+
+    def test_a_refusal_stages_nothing(self):
+        self.make("built", "CH-0001")
+        self.write("pdlc/changes/CH-0001-email/log.md", "unstaged\n")
+        done = self.pdlc("commit", "verified", "CH-0001", *harness_args())
+        self.assertEqual(done.returncode, 1)
+        self.assertEqual(git(self.root, "diff", "--cached", "--name-only"), "")
+
+    def test_a_round_before_a_new_built_does_not_count(self):
+        self.make("verify", "CH-0001")
+        self.make("built", "CH-0001")
+        self.refused("verified", "CH-0001")
+        self.make("verify", "CH-0001")
+        self.assertEqual(self.log(), "Verify CH-0001: round 2")
+        self.assertEqual(self.make("send-back", "CH-0001", "--text", "build").returncode, 0)
+
+    def test_a_send_back_ends_its_round(self):
+        self.make("verify", "CH-0001")
+        self.make("send-back", "CH-0001", "--text", "build")
+        self.refused("verified", "CH-0001")
 
     def test_visual_review_adds_the_review_trailer(self):
         self.make("visual-review", "CH-0001")
