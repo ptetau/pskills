@@ -22,7 +22,7 @@ The intent that the user names, else the oldest `ready` one.
 ## Outputs
 
 - `pdlc/changes/CH-xxxx-<short-name>/change.md` from `pdlc/templates/change.md`:
-  `Status: planned`, `Branch: none`, `Base: main`. "Requirements" are word for word.
+  `Status: planned`, `Branch: none`, `Base: main`, `Tests-Locked: none`. "Requirements" holds only the headings and acceptance lines, word for word.
   "Relies on" has `used, not changed`, `DES-writing-style`, `DES-pdlc-check-tagging`,
   `DES-errors`.
 - New "Interface" entries in their specs, with ` · proposed`.
@@ -33,12 +33,13 @@ The intent that the user names, else the oldest `ready` one.
 
 ## Constraints
 
-- `pdlc/README.md` binds, in particular "Bookkeeping on main" and "Interfaces".
+- `pdlc/README.md` binds "Bookkeeping on main" and "Interfaces".
 - Not `ready` (`/pdlc:ready` first), or a need-cycle that no change breaks: stop with `change → user`.
 - "Interface" lets the checks drive the user surface. A command error gets `stderr` or
-  `stdout`. A new name has `(assumed)`.
+  `stdout`. A new name has `(assumed)`. "Out" gives the full result, with its order and the order of equal items.
 - A seam sits at the outermost interface, or, with no runner, is a `stand-in`. A
   missing tool is not a stop.
+- Steps: one for each requirement, in number order, and each "Check" name holds the requirement ID. The README step's "Done when" also names each seam a user can set, and how to run the app and the checks.
 - A job change lists README in "Files". Its step is last, "Check" `none`.
 
 ## Done when
