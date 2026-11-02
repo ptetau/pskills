@@ -16,7 +16,7 @@ Make the locked checks of one change pass with app code.
 ## Inputs
 
 - The change that the user names, else the first `building` one.
-- The acceptance files to pass: each other intent whose `Acceptance-Passed:` holds a
+- Acceptance files: each other intent whose `Acceptance-Passed:` holds a
   hash, and, for the last change under "Changes", this intent. Give `pdlc:builder` the paths.
 
 ## Outputs
@@ -30,10 +30,11 @@ Make the locked checks of one change pass with app code.
 
 ## Constraints
 
-- Follow `pdlc/README.md`: "Bookkeeping on main", "Who does what", "Rounds", "Commits".
-- `Tests-Locked:` with no hash and no `acceptance`: stop; `/pdlc:tests` comes first.
+- Follow `pdlc/README.md`: "Bookkeeping on main", "Who does what", "Where pdlc commits",
+  "Acceptance checks", "Interfaces", "Rounds", "Commits".
+- `Tests-Locked:` with no hash and no `acceptance`: stop. `/pdlc:tests` comes first.
 - New base commits: merge the base first, with `Intent` and `Change`.
-- The builder changes only app files under "Files". Another file is a question for the user.
+- The builder changes only app files under "Files". Ask the user about another file.
 - A check called incorrect stays. Send the reason to `/pdlc:tests`, or `/pdlc:acceptance`.
 
 ## Done when
