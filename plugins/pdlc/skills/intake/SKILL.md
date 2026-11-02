@@ -36,7 +36,7 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 - With an unmerged pdlc branch, the intent gets its own branch (delivery port).
   Otherwise `Branch: none`.
 - Each detail not in the intent has `(assumed)`, also in a Given line, a new
-  `DES-errors` code, and an edge-case result.
+  `DES-errors` code, and an edge-case result. An `(assumed)` detail does not remove a value that the words permit, and does not pick a side of a clash in them.
 - Each `(assumed)` decision has its own line in "Decided on defaults" and in "Notes", in
   the template form.
 - The summary of each spec ("Who and why" or "What it is for") names each requirement
@@ -45,6 +45,7 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 - A `Status: stub` spec first gets `pdlc:recon` with only the project root, spec path,
   and `deep look`.
 - A new job lists its capabilities and design specs.
+- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 

@@ -36,6 +36,7 @@ proposal shows the GIF. Do not merge.
 - A capability uses `"kind": "terminal"`. A `setup:` caption marks a preparing step.
 - Write only in the change folder. Fix scripts, not the app.
 - Missing browser: `npx --prefix pdlc/.tools playwright install chromium`.
+- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 

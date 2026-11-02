@@ -37,6 +37,7 @@ change starts.
 - Add a missing "acceptance file" or "acceptance" line of `pdlc/config.md` in the first commit.
 - A missing "Interface" item goes into its spec and change spec as `proposed`. Only the third failed review stops the stage.
 - The final reply names `/pdlc:tests` as next, or `/pdlc:build` after a send-back.
+- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 

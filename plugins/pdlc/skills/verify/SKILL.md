@@ -42,6 +42,7 @@ Trailers: `Intent`, `Change`.
 - Send a failed or wrong check to tests.
 - Send a failed acceptance check, a remit rule, a design spec, or unsafe code to build.
 - Send a wrong acceptance check to acceptance.
+- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 

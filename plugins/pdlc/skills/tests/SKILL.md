@@ -37,6 +37,7 @@ The change that the user names, else the first `planned` one. Its `handoff.md`.
 - `pdlc:test-writer` gets only the absolute path of the brief from
   `python3 pdlc/bin/make_packets.py CH-xxxx --brief`, and writes only "Check files".
   `git rm` a file that served only a `(retire)` requirement.
+- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 
