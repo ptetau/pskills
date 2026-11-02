@@ -26,8 +26,8 @@ card, in the column of its status. pdlc is the truth.
 - With `dry-run`: a table of card key (or `none`), current column, correct column
   for each item. Nothing changes.
 - Else **show intent** for each intent, then **show change** for each of its changes.
-  Each new card key goes into the item's `Ticket`, with the commit
-  "Board: record card keys" on main.
+  Each new card key goes into the item's `Ticket`: `pdlc.py set <ID> --ticket <key>`,
+  then `pdlc.py commit board`.
 - Counts of cards made, moved, unchanged.
 
 ## Constraints
