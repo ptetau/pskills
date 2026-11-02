@@ -15,7 +15,7 @@ SCRIPT = PLUGIN / "skills/init/references/bin/pdlc.py"
 TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
 SUBCOMMANDS = ["commit", "message", "handoff", "stop", "set", "intent", "change"]
 # The subcommands that still answer "not implemented".
-STUBS = ["stop", "set", "intent", "change"]
+STUBS = ["set", "intent", "change"]
 GIT_ENV = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "commit.gpgsign",
            "GIT_CONFIG_VALUE_0": "false"}
 
@@ -133,7 +133,7 @@ class EntryPoint(unittest.TestCase):
             self.assertIn("not implemented", done.stdout + done.stderr, name)
 
     def test_extra_arguments_are_accepted_by_a_stub(self):
-        done = run("stop", "CH-0001", "--bogus", "x")
+        done = run("set", "CH-0001", "--bogus", "x")
         self.assertEqual(done.returncode, 2)
         self.assertIn("not implemented", done.stdout + done.stderr)
 
@@ -634,10 +634,71 @@ class Handoff(Project):
         self.assertEqual(done.returncode, 2)
 
 
+OPEN = {"reason": "The limit conflicts with R2.", "decide": "Which limit holds?",
+        "recommend": "Use 20, as R2 says."}
+
+
+class Stop(Project):
+    def stop(self, id_="CH-0001", stage="build", data=None, extra=()):
+        data = {"open": OPEN} if data is None else data
+        return self.pdlc("stop", id_, "--stage", stage, "--json", "-", *extra, *harness_args(),
+                         input=json.dumps(data))
+
+    def test_it_writes_the_handoff_and_the_stop_commit(self):
+        done = self.stop()
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual(self.log(), "Stop CH-0001: The limit conflicts with R2.")
+        self.assertTrue(self.log().startswith("Stop "))
+        text = git(self.root, "show", "HEAD:pdlc/changes/CH-0001-email/handoff.md")
+        self.assertIn("# Handoff · CH-0001 · build → user", text)
+        self.assertIn("- Reason: The limit conflicts with R2.", text)
+        self.assertIn("- Decision: Which limit holds?", text)
+        self.assertIn("- Recommended answer: Use 20, as R2 says.", text)
+        self.assertEqual(git(self.root, "log", "-1", "--format=%(trailers:only,unfold)").splitlines(),
+                         ["Intent: IN-0001", "Change: CH-0001", *HARNESS])
+        self.assertEqual(load_hook().problems(str(self.root)), [])
+        self.assertEqual(git(self.root, "status", "--porcelain"), "")
+
+    def test_it_prints_the_open_text_for_the_reply(self):
+        done = self.stop()
+        self.assertIn("- Reason: The limit conflicts with R2.", done.stdout)
+        self.assertIn("- Recommended answer: Use 20, as R2 says.", done.stdout)
+
+    def test_an_intent_stop(self):
+        git(self.root, "switch", "-q", "main")
+        done = self.stop("IN-0001", "ready")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual(self.log(), "Stop IN-0001: The limit conflicts with R2.")
+        self.assertIn("ready → user", git(self.root, "show", "HEAD:pdlc/inbox/IN-0001-reset.md"))
+
+    def test_the_open_triple_is_required_and_nothing_is_written(self):
+        done = self.stop(data={"open": {"reason": "r"}})
+        self.assertEqual(done.returncode, 1)
+        done = self.stop(data={})
+        self.assertEqual(done.returncode, 1)
+        self.assertEqual(self.log(), "Set up pdlc")
+        self.assertEqual(git(self.root, "status", "--porcelain"), "")
+
+    def test_a_commit_problem_leaves_no_handoff(self):
+        # A file outside pdlc/ needs --req, so the commit is refused.
+        self.write("src/a.py", "x\n")
+        done = self.stop()
+        self.assertEqual(done.returncode, 1)
+        self.assertFalse((self.root / "pdlc/changes/CH-0001-email/handoff.md").exists())
+        done = self.stop(extra=["--req", "CAP-email.R1"])
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("Req: CAP-email.R1", git(self.root, "log", "-1", "--format=%B"))
+
+    def test_a_next_text_is_optional(self):
+        done = self.stop(data={"open": OPEN, "next": "Answer, then run /pdlc:ship."})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("Answer, then run /pdlc:ship.", git(self.root, "show", "HEAD:pdlc/changes/CH-0001-email/handoff.md"))
+
+
 class Imports(unittest.TestCase):
     def test_no_bytecode_left_in_the_bin_folder(self):
         shutil.rmtree(SCRIPT.parent / "__pycache__", ignore_errors=True)
-        run("stop")
+        run("set")
         self.assertFalse((SCRIPT.parent / "__pycache__").exists())
 
 

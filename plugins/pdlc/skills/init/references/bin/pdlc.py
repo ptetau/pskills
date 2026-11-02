@@ -608,7 +608,7 @@ def write_handoff(root, id_, stage, next_, data):
     if problems:
         restore(snapshot)
         raise Problem(*problems)
-    return path
+    return path, snapshot
 
 
 def restore(snapshot):
@@ -624,9 +624,44 @@ def handle_handoff(args, extra):
     root = project()
     os.chdir(str(root))
     data = read_json(args.json)
-    path = write_handoff(root, args.id, args.stage, args.next, data)
+    path, _ = write_handoff(root, args.id, args.stage, args.next, data)
     print("wrote the handoff %s \u2192 %s in %s" % (args.stage, args.next, path.relative_to(root).as_posix()))
     return EXIT_DONE
+
+
+STOP_NEXT = "Answer the open question, then run `/pdlc:ship` again."
+
+
+def handle_stop(args, extra):
+    reject_extra(extra)
+    root = project()
+    os.chdir(str(root))
+    data = read_json(args.json)
+    triple = open_triple(data.get("open"))
+    data.setdefault("next", STOP_NEXT)
+    reason = " ".join(data["open"]["reason"].split())
+    path, snapshot = write_handoff(root, args.id, args.stage, "user", data)
+    commit = argparse.Namespace(kind="stop", id=args.id, text=reason, req=args.req, ticket=args.ticket,
+                                trailer=args.trailer, intent=args.intent, amend=False, paths=args.paths)
+    try:
+        handle_commit(commit, [])
+    except BaseException:
+        restore(snapshot)
+        raise
+    print("\n".join(triple))
+    return EXIT_DONE
+
+
+def options_stop(parser):
+    parser.add_argument("id", help="IN-xxxx or CH-xxxx")
+    parser.add_argument("--stage", required=True, choices=["intake", "ready", "change", "acceptance",
+                                                           "tests", "build", "verify", "show"])
+    parser.add_argument("--json", required=True, metavar="FILE|-", help="the open triple, as JSON")
+    parser.add_argument("--req", nargs="+", action="extend", help="requirement IDs for Req")
+    parser.add_argument("--ticket", help="the ticket key for Ticket")
+    parser.add_argument("--trailer", action="append", help='another trailer, "Key: value"')
+    parser.add_argument("--intent", help="the intent ID for Intent")
+    parser.add_argument("--paths", nargs="+", help="stage only these paths")
 
 
 def options_handoff(parser):
@@ -653,9 +688,10 @@ HANDLERS = {name: not_implemented(name) for name in SUBCOMMANDS}
 HANDLERS["commit"] = handle_commit
 HANDLERS["message"] = handle_message
 HANDLERS["handoff"] = handle_handoff
+HANDLERS["stop"] = handle_stop
 
 OPTIONS = {"commit": add_commit_options, "message": add_commit_options,
-           "handoff": options_handoff}
+           "handoff": options_handoff, "stop": options_stop}
 
 
 def build_parser():
