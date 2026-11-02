@@ -1,5 +1,6 @@
 {
   "enforced": [
+    "intake",
     "ready",
     "tests",
     "trace",
@@ -62,6 +63,33 @@
         "rule": "Handoff `acceptance \u2192 tests`, with the number of failing checks, the lock, and what each change must give the checks.",
         "words": 16,
         "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R6 (the handoff states what each change must give the checks) and R2 (the red run is reported with a count)"
+      }
+    ],
+    "intake": [
+      {
+        "rule": "The summary of each spec (\"Who and why\" or \"What it is for\") names each requirement that intake adds.",
+        "words": 19,
+        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R3 (summaries show the new behaviour)"
+      },
+      {
+        "rule": "also in a Given line, a new `DES-errors` code, and an edge-case result",
+        "words": 9,
+        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R2 (assumed marks) and R7 (Notes form)"
+      },
+      {
+        "rule": "Each `(assumed)` decision has its own line in \"Decided on defaults\" and in \"Notes\", in the template form.",
+        "words": 18,
+        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R7 (intent Notes) and R2 (Decided on defaults list)"
+      },
+      {
+        "rule": "\"Requirements\": each requirement whose text intake changed, with one word only: added, changed, or retiring.",
+        "words": 10,
+        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R7 (Requirements list)"
+      },
+      {
+        "rule": "`Intent: IN-xxxx` in the last paragraph, with each other trailer.",
+        "words": 8,
+        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R4 (Specify commit and Intent trailer)"
       }
     ]
   }
