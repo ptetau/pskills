@@ -37,18 +37,20 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 
 ## Commits
 
-- The subject comes from "Subjects" in `specs/design/DES-pdlc-commit-trailers.md`. Each
-  skill gives its subjects.
-- The trailers follow a blank line, one on each line: `Intent: IN-xxxx` first, then
-  `Change: CH-xxxx` on the branch of a change. A commit that changes code, checks, or the
-  README also has `Req: <IDs>`.
-- The pdlc trailers are the last paragraph of the message. Any other trailer, such as
-  `Co-Authored-By`, goes directly under them, with no blank line between them.
+- Each pdlc commit comes from `python3 pdlc/bin/pdlc.py commit <kind>`. The script writes
+  the subject, the trailers, and one trailer block. Run `pdlc.py --help` for the kinds.
+- The subject comes from "Subjects" in `specs/design/DES-pdlc-commit-trailers.md`.
+- The harness can ask for more trailers, such as `Co-Authored-By`. Pass each one with
+  `--trailer "Key: value"`. The script also reads each `git config pdlc.trailer` value.
+  The script puts them under the pdlc trailers, with no blank line between them.
+- `pdlc.py message <kind>` prints the message and does not commit. Use it for
+  `git merge --no-ff -F`.
 - A hook examines each new commit. On a pdlc branch, it examines the subject and the
   trailers. On every branch, it examines the trailers of a commit with a pdlc subject.
   Also on every branch, it examines the writing in the specs, the intents, and the change
-  folders. The skill fixes all the problems that the hook names in one edit, and
-  amends the commit one time.
+  folders. The hook checks the form only, and does not refuse a plain `git commit`. The
+  skill fixes all the problems that the hook names in one edit, and runs
+  `pdlc.py commit --amend` one time.
 
 ## Writing
 
@@ -81,8 +83,8 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
   remote.
 - `templates/`: blank documents. A filled document has real content in place of each
   `<placeholder>` and each guide sentence.
-- `bin/`: `check_handoff.py`, `check_merge.py`, `check_order.py`, `check_writing.py`,
-  `make_packets.py`, `record_gif.mjs`, `record_merges.py`.
+- `bin/`: `pdlc.py`, `pdlclib.py`, `check_handoff.py`, `check_merge.py`, `check_order.py`,
+  `check_writing.py`, `make_packets.py`, `record_gif.mjs`, `record_merges.py`.
 - `version.json`: the pdlc version of these files, and the hash of each file that pdlc wrote.
   Only `/pdlc:upgrade` and init write it.
 - `.tools/`: the tools of the visual review. This folder is not committed.
@@ -199,18 +201,21 @@ passed `verify`. An independent reviewer judges the recording, and then show pro
 merge.
 
 - Each stage starts from the latest handoff, and ends with a new one from
-  `templates/handoff.md`, which replaces the old one. Git keeps the history.
-- An intent stage writes the "Handoff" of the intent, with the template sections as `###`
-  headings. A change stage writes `changes/CH-xxxx-name/handoff.md`.
-- The title comes from the list in the template. Every section stays, with "- none" under an
-  empty one. The time comes from the real clock (`date -Iseconds`).
+  `pdlc.py handoff <ID> <stage> <next> --json FILE|-`, which replaces the old one. Git
+  keeps the history. The sections are in `templates/handoff.md`.
+- The script writes the title, the time, and the section layout. The model gives only the
+  content, as JSON. An intent stage gets the "Handoff" of the intent, with the sections as
+  `###` headings. A change stage gets `changes/CH-xxxx-name/handoff.md`.
+- The script runs the `bin/check_handoff.py` rules for every stage. On a problem, it writes
+  nothing and exits 1.
 - A handoff says only what the files show, with real counts of the checks that ran and of
   the acceptance lines shown.
 
 At the end of each stage, and at each stop:
 
-- The statuses that the stage owns are set. The tests stage sets `testing`, then
-  `building`. The `verify` stage sets `in review` when everything passed.
+- The statuses that the stage owns are set, with `pdlc.py set`. The script checks each
+  status against "Statuses", and turns each revision into a full hash. The tests stage sets
+  `testing`, then `building`. The `verify` stage sets `in review` when everything passed.
   `bin/record_merges.py` sets `merged` and `done`.
 - Everything that the stage wrote is committed: specs, the intent, the change folder,
   packets, and results. `git status --porcelain` shows nothing.
@@ -353,15 +358,16 @@ Its `Base:` names that branch, and its pull request targets that branch.
   answer has a mark and one line on why. The reply `skip` takes it.
 - A decision that a skill makes without an instruction (a name, a limit, a message, an
   order, a default answer) has the mark `(assumed)` where the spec or change spec states
-  it. The handoff lists it too. `bin/check_handoff.py` makes sure that the list names each
-  new mark. Thus, no guess stays hidden.
+  it. The handoff lists it too, as a `decided` item of `pdlc.py handoff`. The script
+  makes sure that the list names each new mark. Thus, no guess stays hidden.
 - The mark is plain, right after the words that it marks, with any reason outside the
   brackets: "at most 20 items (assumed), to keep the list short". In a change, the merge
   check rejects `(limit assumed)`, `*(assumed)*`, and each mark that does not start with
   `(assumed`.
 - With `defaults`, a skill asks nothing, and takes its recommended answer. Each answer goes
   as `- <requirement>: <question> → <answer> (assumed)` in "Decided on defaults" in the
-  handoff and in the intent "Notes", so that the user can change it.
+  handoff and in the intent "Notes", so that the user can change it. `pdlc.py handoff`
+  writes both lines.
 
 ## Spec patches
 
