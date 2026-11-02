@@ -115,21 +115,6 @@
         "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R2 (assumed marks) and R7 (Notes form)"
       },
       {
-        "rule": "Each `(assumed)` decision has its own line in \"Decided on defaults\" and in \"Notes\", in the template form.",
-        "words": 18,
-        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R7 (intent Notes) and R2 (Decided on defaults list)"
-      },
-      {
-        "rule": "\"Requirements\": each requirement whose text intake changed, with one word only: added, changed, or retiring.",
-        "words": 10,
-        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R7 (Requirements list)"
-      },
-      {
-        "rule": "`Intent: IN-xxxx` in the last paragraph, and `Co-Authored-By` directly under it with no blank line.",
-        "words": 15,
-        "evidence": "evals/pdlc-ship/runs/decl-final-a-20261102T054013Z + decl-final-b vs master-base-a/b: R7 (trailers and clean tree)"
-      },
-      {
         "rule": "An `(assumed)` detail does not remove a value that the words permit.",
         "words": 12,
         "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R3 (no default for a contradiction)"
