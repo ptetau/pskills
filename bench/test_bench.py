@@ -2660,6 +2660,15 @@ class TrailerCheckTest(unittest.TestCase):
         result = self.verdict()
         self.assertEqual((result["verdict"], result["commits"]), ("n/a", []))
 
+    def test_n_a_is_a_verdict_to_copy_when_nothing_applies(self):
+        """The script decides when R7 applies. A grader copies "n/a" as it copies "met"."""
+        self.commit("Fix the typo", ["README.md"])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = check_trailers.main([str(self.dir), "--since", "start"])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out.getvalue())["verdict"], "n/a")
+
     def test_a_stray_file_makes_the_verdict_partial(self):
         self.commit("Specify IN-0001: poll\n\nIntent: IN-0001", ["pdlc/inbox/IN-0001.md"])
         (self.dir / "stray.txt").write_text("x")
