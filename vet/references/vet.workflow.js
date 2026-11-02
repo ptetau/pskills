@@ -35,6 +35,8 @@ const PROMPTS = SUITE.prompts
 const R = Math.max(2, args.runs || 10)
 const W = Math.max(1, Math.min(R, args.wave || 2))
 const WAVES = Math.ceil(R / W)
+const VET_SCRIPTS = args && args.vetScripts
+if (!VET_SCRIPTS) throw new Error('vet: args.vetScripts is required (the absolute path of vet/scripts)')
 const MAX_TURNS = args.maxTurns || 12
 const CROSS_PER_PROMPT = args.crossPerPrompt || 2
 
@@ -294,6 +296,8 @@ When the run is over, write the capture file ${captureName(p, r)} inside your wo
 ## Files
 For every file the run created or changed in your worktree (check git status, including untracked files, but leave out .vet-capture/, .vet-tmp/ and your own scratch files): a "### <path>" heading, then the full content of a new file or the git diff of a changed one, inside a fence longer than any fence it contains. Write "None." if there were none.
 
+After you write the transcript and Files, run \`python3 ${VET_SCRIPTS}/snapshot.py <the absolute path of your working directory>\` and append its output to the capture file, verbatim and unedited. Its "## Repos" section holds the commits and the git status. Do not write that section yourself.
+
 Then return the structured result, with capture set to the capture file's absolute path.`
 
 const gradeContext = (p) => `The run was given:
@@ -313,7 +317,8 @@ const GRADE_RULES = `Give every rubric item one verdict, in rubric order:
 - n/a: only when the item's "applies when" condition is false for this run.
 Evidence is the shortest verbatim quote from the capture that proves the verdict, or "absent".
 When torn between two verdicts, choose the lower one.
-Set captureOk to false if the capture is missing, empty, or a summary rather than the verbatim messages.`
+Facts about commits and the tree (what was committed, the commit messages, what is changed or untracked) come only from the "## Repos" section of the capture. Paths under .vet-capture/ or .vet-tmp/ are the harness's own files. They never count against the run.
+Set captureOk to false if the capture is missing, empty, or a summary rather than the verbatim messages, or if it has no "## Repos" section.`
 
 const GRADE_EACH = `Grade each run on its own, as if it were the only one. Don't compare runs while grading, and don't let one run's verdicts pull another's. Return one entry per run, using its label.`
 
