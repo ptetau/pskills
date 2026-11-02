@@ -145,7 +145,8 @@ def current_branch(root):
 # commit and message
 
 # kind -> (what the ID is, subject format). {id} is the ID, {text} is --text, {name} is the
-# intent name, {names} the change names of the intent, and {n} the number of the round.
+# intent name, {names} the change names of the intent, {n} the number of the round, and
+# {base} is --base, the branch that a merge brings in.
 KINDS = {
     "specify": ("IN", "Specify {id}: {name}"),
     "ready": ("IN", "Ready {id}: {name}"),
@@ -162,6 +163,7 @@ KINDS = {
     "tests-reviewed": ("CH", "Tests reviewed {id}"),
     "build": ("CH", "Build {id}: {text}"),
     "built": ("CH", "Built {id}"),
+    "merge": ("CH", "Merge {base} into {id}"),
     "visual-review": ("CH", "Visual review {id}"),
     "verify": ("CH", "Verify {id}: round {n}"),
     "send-back": ("CH", "Send back {id}: {text}"),
@@ -290,7 +292,12 @@ def build_message(root, args, files=None):
             raise Usage("%s needs an ID like %s, not %s" % (args.kind, idtype.replace("|", " or "), id_))
     if args.kind in NEEDS_TEXT and not args.text:
         raise Problem("%s needs --text, the words after the colon of the subject" % args.kind)
-    values = {"id": id_, "text": args.text}
+    base = getattr(args, "base", None)
+    if args.kind == "merge" and not base:
+        raise Problem("merge needs --base, the branch that the merge brings in")
+    if base and args.kind != "merge":
+        raise Usage("--base is only for the merge kind")
+    values = {"id": id_, "text": args.text, "base": base}
     if args.kind in ("specify", "ready"):
         values["name"] = title_name(find_intent(root, id_).read_text())
     if args.kind == "plan":
@@ -403,6 +410,7 @@ def add_commit_options(parser):
     parser.add_argument("--ticket", help="the ticket key for Ticket")
     parser.add_argument("--trailer", action="append", help='another trailer, "Key: value"')
     parser.add_argument("--intent", help="the intent ID, when the ID is not an IN or CH ID")
+    parser.add_argument("--base", help="the branch that a merge brings in (merge only)")
     parser.add_argument("--amend", action="store_true", help="amend the newest commit")
     parser.add_argument("--paths", nargs="+", help="stage only these paths")
 
