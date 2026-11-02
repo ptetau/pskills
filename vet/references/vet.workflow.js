@@ -19,6 +19,7 @@ export const meta = {
 //   runs:           repeats per prompt (default 10, minimum 2)
 //   wave:           repeats per prompt per wave (default 2); the script updates the grade after each wave
 //   settle:         { delta, patience, stop }       see "Settling" below
+//   benchDir:       absolute path of the folder of the scripted checks (default: bench, next to vet)
 //   maxTurns:       assistant turns per run before stopping (default 12)
 //   crossPerPrompt: runs per prompt shown to cross-prompt judges (default 2)
 //   agents:         { preset, run, grade, compare, cross }, see "Agent roles" below
@@ -37,6 +38,8 @@ const W = Math.max(1, Math.min(R, args.wave || 2))
 const WAVES = Math.ceil(R / W)
 const VET_SCRIPTS = args && args.vetScripts
 if (!VET_SCRIPTS) throw new Error('vet: args.vetScripts is required (the absolute path of vet/scripts)')
+// The folder of the scripted checks (a rubric item's `check`). The default is the bench folder next to vet.
+const BENCH_DIR = args.benchDir || `${VET_SCRIPTS}/../../bench`
 const MAX_TURNS = args.maxTurns || 12
 const CROSS_PER_PROMPT = args.crossPerPrompt || 2
 
@@ -255,6 +258,7 @@ const itemText = (i) =>
     `   pass: ${i.pass}`,
     `   partial: ${i.partial || 'partly satisfies the pass description'}`,
     `   applies when: ${i.appliesWhen || 'always'}`,
+    ...(i.check ? [`   scripted check: ${i.check.split('{bench}').join(BENCH_DIR)}`] : []),
   ].join('\n')
 
 // The part of this prompt that shapes the skill's behaviour is identical for
@@ -315,6 +319,7 @@ const GRADE_RULES = `Give every rubric item one verdict, in rubric order:
 - partial: the partial description holds, or the item is only partly satisfied.
 - missed: absent or wrong.
 - n/a: only when the item's "applies when" condition is false for this run.
+An item with a "scripted check" gets its verdict from a script, not from your judgment. In the command, replace {run} with the absolute path of the run's working directory. That is the folder that holds .vet-capture/ in the capture path. Run the command with Bash and read the JSON that it prints: {"verdict": "met" | "partial" | "missed", "evidence": "..."}. Copy that verdict and use its evidence. Do not change the verdict. If the item's "applies when" condition is false for this run, give n/a and do not run the command. If the command fails or prints no valid verdict, give "missed" and put the error in the evidence.
 Evidence is the shortest verbatim quote from the capture that proves the verdict, or "absent".
 When torn between two verdicts, choose the lower one.
 Facts about commits and the tree (what was committed, the commit messages, what is changed or untracked) come only from the "## Repos" section of the capture. Paths under .vet-capture/ or .vet-tmp/ are the harness's own files. They never count against the run.

@@ -170,6 +170,10 @@ Rules for the rubric:
 - Prevent circularity. A rubric that only restates the claims of the skill passes
   the skill by construction. The outcome items are the counterweight: the outcome items
   ask if the user got what the user needed.
+- Give an item a `check` when a script can decide it, for example a trailer or a clean
+  tree. The `check` is a command that prints a JSON verdict (`met`, `partial`, or
+  `missed`, with evidence). Use `{run}` for the working directory of the run and `{bench}`
+  for the folder of the checks. The grader copies the verdict and does not judge the item.
 
 ## Phase 2: Test prompts (new suite only)
 

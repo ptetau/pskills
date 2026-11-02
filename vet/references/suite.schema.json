@@ -103,6 +103,10 @@
           "type": "string",
           "description": "Where in SKILL.md this comes from: a heading, rule number, or short quote."
         },
+        "check": {
+          "type": "string",
+          "description": "Optional. A command that grades this item by script. It prints a JSON verdict {\"verdict\": \"met|partial|missed\", \"evidence\": \"...\"}. {run} is the absolute path of the run's working directory. {bench} is the folder of the scripted checks. The grader runs the command and copies the verdict; it does not judge the item."
+        },
         "structureRef": {
           "type": "string",
           "pattern": "^S[0-9]+$",
