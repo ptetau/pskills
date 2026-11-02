@@ -247,7 +247,18 @@ const labelOf = (p, r) => `${p.id}#${r}`
 const captureName = (p, r) => `.vet-capture/${p.id}-r${pad2(r)}.md`
 const CAPTURES = {}
 const captureOfLabel = (label) => CAPTURES[label] || '(capture path not reported)'
+// The user's words. A prompt may also have `setup` (text for the run agent) and `project` (the project
+// folder, relative to the worktree). The agent runner shows the prompt, then the setup, as one text. The
+// plugin runner passes only the user's words to the real session.
 const invocation = (p) => `/${SKILL.name} ${p.prompt}`.trim()
+const agentText = (p) => (p.setup ? `${invocation(p)}\n\n${p.setup}` : invocation(p))
+const givenText = (p) => (RUNNER === 'plugin' ? invocation(p) : agentText(p))
+// A real session can start agents, and the script writes the capture. So the plugin runner drops the
+// sentences that tell the run agent to do the agents' work itself and to list the commits.
+const pluginSetup = (p) =>
+  (p.setup || '')
+    .replace(/ ?This session cannot start agents\.[\s\S]*?reads only its packet\./, '')
+    .replace(/ ?In the capture, list each new commit with `[^`]*`\./, '')
 const captureList = (labels) => labels.map((l) => `- ${l}: ${captureOfLabel(l)}`).join('\n')
 const uniq = (xs) => xs.filter((x, i) => xs.indexOf(x) === i)
 
@@ -281,7 +292,7 @@ Read that file first, then any files it points to (resolve relative paths agains
 Other runs work at the same time. Keep each file that you make for yourself (a script, a note, a temporary output) in .vet-tmp/ at the root of your working directory. Never put it inside a project that the skill works on, and do not use a shared scratchpad directory or /tmp for it.
 
 The user's message is:
-${invocation(p)}
+${agentText(p)}
 
 The user is not live. Their replies are scripted, in order:
 ${repliesText(p)}
@@ -331,10 +342,13 @@ The user is not live. Their replies are scripted, in order:
 ${repliesText(p)}
 
 Steps:
-1. Prepare the project that the prompt needs, inside your working directory, as the prompt describes. Do not push, open pull requests, post comments, send messages, or change anything outside it.
+1. ${p.setup
+  ? `Do this setup, once, in your working directory. For it, PLUGIN is ${PLUGIN_DIR}. Do only the setup: do not do the work of the user's message yourself.
+${pluginSetup(p)}`
+  : 'Prepare the project that the prompt needs, inside your working directory, as the prompt describes.'} Do not push, open pull requests, post comments, send messages, or change anything outside your working directory.
 2. Run this command from your working directory, and wait for it to end:
-python3 ${BENCH_DIR}/run_bench.py vetrun --project <the absolute path of your working directory> --prompt ${shq(invocation(p))}${(p.replies || []).map((x) => ` --reply ${shq(x)}`).join('')} --plugin ${shq(PLUGIN_DIR)} --capture <the absolute path of your working directory>/${captureName(p, r)}
-   The script writes the capture file, with the transcript, the hook events, and the "## Repos" section. Do not edit the capture, and do not write the "## Repos" section yourself.
+python3 ${BENCH_DIR}/run_bench.py vetrun --project <the absolute path of your working directory>${p.project ? '/' + p.project : ''} --root <the absolute path of your working directory> --prompt ${shq(invocation(p))}${(p.replies || []).map((x) => ` --reply ${shq(x)}`).join('')} --plugin ${shq(PLUGIN_DIR)} --capture <the absolute path of your working directory>/${captureName(p, r)}
+   The script writes the capture file, with the transcript, the hook events, and the "## Repos" section for the whole working directory. Do not edit the capture, and do not write the "## Repos" section yourself.
 3. If the command fails, report status "blocked" with its error in note. If you could not run it, report "not_run" with the reason.
 
 Your messages must not mention testing, grading or this setup.
@@ -342,7 +356,7 @@ Your messages must not mention testing, grading or this setup.
 Then return the structured result, with capture set to the capture file's absolute path.`
 
 const gradeContext = (p) => `The run was given:
-${invocation(p)}
+${givenText(p)}
 Scripted user replies, in order: ${JSON.stringify(p.replies || [])}
 
 Expected output structure:
@@ -408,7 +422,7 @@ ${CLASSES}
 Judge each item on its own; don't let one item's class pull another's. Answer every listed item.`
 
 const SAME_INPUT = (p) =>
-  `Every run below got the same input, ${JSON.stringify(invocation(p))}, with the same scripted replies. Any difference between them comes from the skill.`
+  `Every run below got the same input, ${JSON.stringify(givenText(p))}, with the same scripted replies. Any difference between them comes from the skill.`
 const CROSS_INPUT =
   'The runs below got DIFFERENT inputs, so their content will differ. Ignore content. Compare only the shape each item describes: sections, their order, formats, turn pattern, file layout.'
 

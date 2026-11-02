@@ -5,7 +5,7 @@ Commands:
   run_bench.py init-fixture      run /pdlc:init once and keep its pdlc/ folder in the fixture
   run_bench.py e2e --label L     run the scripted intent through /pdlc:ship, one run
   run_bench.py rebuild SOURCE    build the app again from the specs alone, and score it
-  run_bench.py vetrun --project P --prompt T [--reply R ...]
+  run_bench.py vetrun --project P [--root W] --prompt T [--reply R ...]
                                  run one /vet prompt in a prepared project with the plugin and its
                                  hooks, and write a capture that no model writes
   metrics.py RUN_DIR ...          the full measures of saved runs: time, loops, failures,
@@ -1190,9 +1190,11 @@ def command_vetrun(args):
 
     The session is `claude -p` with the plugin under test, so its hooks run as they run for a user.
     Each --reply continues the same session, as the scripted replies of the prompt. The capture
-    ends with the git facts of snapshot.py. No model writes them.
+    ends with the git facts of snapshot.py. No model writes them. The session runs in the project.
+    The git facts cover `--root`, the worktree that holds the project (default: the project).
     """
     project = Path(args.project).resolve()
+    root = Path(getattr(args, "root", None) or project).resolve()
     plugin = Path(args.plugin).resolve()
     capture = Path(args.capture) if args.capture else project / ".vet-capture" / "vetrun.md"
     capture.parent.mkdir(parents=True, exist_ok=True)
@@ -1208,7 +1210,7 @@ def command_vetrun(args):
         if failed or (not session and number <= len(args.reply)):
             print("vetrun: stopped after turn %d. %s" % (number, err.strip()[:300]), file=sys.stderr)
             break
-    capture.write_text(render_capture(turns, vet_snapshot().render(project)))
+    capture.write_text(render_capture(turns, vet_snapshot().render(root)))
     print(capture.resolve())
 
 
@@ -2456,6 +2458,7 @@ def build_parser():
     pr.add_argument("--dest", required=True)
     vr = sub.add_parser("vetrun", help="run one /vet prompt with the plugin and its hooks, and write a capture")
     vr.add_argument("--project", required=True, help="a project that `prepare` made")
+    vr.add_argument("--root", help="the worktree whose commits and status the capture lists (default: the project)")
     vr.add_argument("--prompt", required=True)
     vr.add_argument("--reply", action="append", default=[], help="a scripted reply, in order (repeatable)")
     vr.add_argument("--plugin", default=str(DEFAULT_PLUGIN))

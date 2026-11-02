@@ -1193,6 +1193,24 @@ class StageReplayTest(unittest.TestCase):
                 project = self.prepare(state)
                 self.assertEqual(run_bench.git(project, "status", "--porcelain").stdout.strip(), "")
 
+    def test_prepare_writes_the_version_of_the_plugin_under_test(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        plugin = folder / "pdlc"
+        shutil.copytree(run_bench.DEFAULT_PLUGIN, plugin, ignore=shutil.ignore_patterns("__pycache__"))
+        manifest = plugin / ".claude-plugin" / "plugin.json"
+        data = json.loads(manifest.read_text())
+        data["version"] = "0.0.9"
+        manifest.write_text(json.dumps(data))
+        for state in ("intake", "ready", "done"):
+            with self.subTest(state=state):
+                dest = folder / ("app-" + state)
+                with contextlib.redirect_stdout(io.StringIO()):
+                    run_bench.main(["prepare", "--state", state, "--snapshot", "r5", "--dest", str(dest),
+                                    "--plugin", str(plugin)])
+                self.assertEqual(json.loads((dest / "pdlc" / "version.json").read_text())["pdlc"], "0.0.9")
+                self.assertEqual(run_bench.git(dest, "status", "--porcelain").stdout.strip(), "")
+
     def test_prepare_init_has_no_pdlc_folder(self):
         self.assertFalse((self.prepare("init") / "pdlc").exists())
 
@@ -2776,8 +2794,8 @@ class VetRunTest(unittest.TestCase):
         return run
 
     def args(self, **kwargs):
-        base = dict(project=str(self.project), prompt="start it", reply=[], plugin=str(run_bench.DEFAULT_PLUGIN),
-                    capture=None, timeout=60, budget=1.0)
+        base = dict(project=str(self.project), root=None, prompt="start it", reply=[],
+                    plugin=str(run_bench.DEFAULT_PLUGIN), capture=None, timeout=60, budget=1.0)
         base.update(kwargs)
         return Namespace(**base)
 
@@ -2810,6 +2828,27 @@ class VetRunTest(unittest.TestCase):
             run_bench.command_vetrun(self.args())
         repos = run_bench.vet_snapshot().render(self.project)
         self.assertTrue((self.project / ".vet-capture" / "vetrun.md").read_text().endswith(repos + "\n"))
+
+    def test_the_snapshot_covers_the_root_when_the_project_is_a_folder_inside_it(self):
+        root = self.dir / "worktree"
+        root.mkdir()
+        run_bench.git(root, "init", "-q", "-b", "main")
+        (root / "r.txt").write_text("r")
+        run_bench.git(root, "add", "-A")
+        run_bench.git(root, "commit", "-q", "-m", "Root seed")
+        project = root / "proj"
+        shutil.move(str(self.project), str(project))
+        calls = []
+        with mock.patch.object(run_bench, "run_claude", self.fake_session(calls)), \
+                contextlib.redirect_stdout(io.StringIO()):
+            run_bench.command_vetrun(self.args(project=str(project), root=str(root),
+                                               capture=str(root / ".vet-capture" / "p.md")))
+        self.assertEqual(calls[0][1:][0].get("env", {}).get("PWD"), str(project))
+        text = (root / ".vet-capture" / "p.md").read_text()
+        self.assertIn("### .\n", text)
+        self.assertIn("### proj\n", text)
+        self.assertIn("Specify IN-0001: x", text)
+        self.assertTrue(text.endswith(run_bench.vet_snapshot().render(root) + "\n"))
 
     def test_the_hook_section_says_none_when_no_hook_spoke(self):
         text = run_bench.render_capture([("hi", [{"t": 0, "e": {"type": "result", "result": "ok"}}])], "## Repos\n")

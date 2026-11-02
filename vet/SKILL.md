@@ -281,7 +281,10 @@ comparable.
 
    `runner` is `"agent"` (default: the run agent follows the skill) or `"plugin"`. With
    `"plugin"`, the run agent starts `bench/run_bench.py vetrun` with `pluginDir`, so the
-   plugin's hooks run as they run for a user.
+   plugin's hooks run as they run for a user. A prompt may have `setup` (text for the run
+   agent) and `project` (the project folder, relative to the worktree). With `"agent"`, the
+   run prompt shows the prompt, then the setup. With `"plugin"`, the run agent follows the
+   setup once, and the real session gets only the prompt, inside `project`.
 
    Each run's capture ends with the output of `scripts/snapshot.py`, which lists the
    commits and the git status and leaves out the harness's own files.

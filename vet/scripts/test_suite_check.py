@@ -5,6 +5,9 @@ import glob
 import json
 import os
 import re
+import shutil
+import subprocess
+import tempfile
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -82,6 +85,114 @@ class WorkflowTest(unittest.TestCase):
 
     def test_bench_directory_comes_from_args_or_vet_scripts(self):
         self.assertIn("args.benchDir", self.js)
+
+
+HARNESS = """
+const fs = require('fs')
+const src = fs.readFileSync(process.argv[2], 'utf8').replace('export const meta', 'const meta')
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
+const args = JSON.parse(fs.readFileSync(process.argv[3], 'utf8'))
+const prompts = []
+const agent = async (text, opts) => { prompts.push(text); throw new Error('stop') }
+const f = new AsyncFunction('args', 'agent', 'log', 'phase', 'parallel', 'pool', src)
+f(args, agent, () => {}, () => {}, async (xs) => Promise.all(xs.map((x) => x())), null).then(() => console.log(JSON.stringify(prompts)), () => console.log(JSON.stringify(prompts)))
+"""
+
+SETUP = ("Setup, before you start: run `python3 /b/run_bench.py prepare --dest proj --plugin PLUGIN`. "
+         "PLUGIN is the folder two levels above the skill file. Then treat `proj` as the project root. "
+         "This session cannot start agents. Where the skill starts a pdlc agent, do that agent's work yourself. "
+         "Follow its file, and keep to its limits: a reviewer reads only its packet. "
+         "In the capture, list each new commit with `git -C proj log --all --not start`.")
+
+
+@unittest.skipUnless(shutil.which("node"), "node is not installed")
+class RunnerPromptTest(unittest.TestCase):
+    """The text that the run agent gets, for each runner. The script runs under node with a stub agent."""
+
+    def run_prompts(self, runner, prompt):
+        prompt = {"id": "P01", "axis": "a", "exercises": "e", "replies": ["ok"], **prompt}
+        args = {"skill": {"name": "pdlc:ship", "dir": "/s", "file": "/s/SKILL.md"}, "vetScripts": "/v/vet/scripts",
+                "runs": 2, "wave": 2, "runner": runner, "pluginDir": "/plug",
+                "suite": {"rubric": [{"id": "R1", "kind": "outcome", "criterion": "c", "pass": "p", "partial": "q",
+                                      "weight": 1, "source": "s"}],
+                          "structure": {"summary": "s", "elements": []}, "prompts": [prompt]}}
+        folder = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, folder, True)
+        harness, argfile = os.path.join(folder, "h.js"), os.path.join(folder, "args.json")
+        with open(harness, "w") as f:
+            f.write(HARNESS)
+        with open(argfile, "w") as f:
+            json.dump(args, f)
+        out = subprocess.run(["node", harness, WORKFLOW, argfile], capture_output=True, text=True, check=True).stdout
+        return json.loads(out)[0]
+
+    def test_agent_runner_shows_prompt_then_setup_as_one_text(self):
+        joined = self.run_prompts("agent", {"prompt": "defaults Add x.\n\n" + SETUP})
+        split = self.run_prompts("agent", {"prompt": "defaults Add x.", "setup": SETUP, "project": "proj"})
+        self.assertEqual(split, joined)
+        self.assertIn("/pdlc:ship defaults Add x.\n\n" + SETUP, split)
+
+    def test_agent_runner_without_setup_is_unchanged(self):
+        text = self.run_prompts("agent", {"prompt": "defaults Add x."})
+        self.assertIn("The user's message is:\n/pdlc:ship defaults Add x.\n\nThe user is not live.", text)
+
+    def test_plugin_runner_follows_the_setup_with_the_plugin_dir(self):
+        text = self.run_prompts("plugin", {"prompt": "defaults Add x.", "setup": SETUP, "project": "proj"})
+        self.assertIn("run_bench.py prepare --dest proj --plugin PLUGIN", text)
+        self.assertIn("PLUGIN is /plug", text)
+
+    def test_plugin_runner_drops_the_agent_only_sentences(self):
+        text = self.run_prompts("plugin", {"prompt": "defaults Add x.", "setup": SETUP, "project": "proj"})
+        for gone in ("cannot start agents", "reads only its packet", "do that agent's work yourself",
+                     "In the capture, list each new commit"):
+            self.assertNotIn(gone, text)
+
+    def test_plugin_runner_gives_vetrun_the_project_and_only_the_users_words(self):
+        text = self.run_prompts("plugin", {"prompt": "defaults Add x.", "setup": SETUP, "project": "proj"})
+        command = [l for l in text.splitlines() if "run_bench.py vetrun" in l][0]
+        self.assertIn("--project <the absolute path of your working directory>/proj ", command)
+        self.assertIn("--prompt '/pdlc:ship defaults Add x.'", command)
+        self.assertIn("--root <the absolute path of your working directory> ", command)
+        self.assertNotIn("Setup", command)
+        self.assertIn("The user's message is:\n/pdlc:ship defaults Add x.\n\nThe user is not live.", text)
+
+    def test_plugin_runner_without_project_runs_in_the_worktree(self):
+        text = self.run_prompts("plugin", {"prompt": "defaults Add x."})
+        command = [l for l in text.splitlines() if "run_bench.py vetrun" in l][0]
+        self.assertIn("--project <the absolute path of your working directory> --root", command)
+
+
+class SetupFieldTest(unittest.TestCase):
+    def test_schema_has_optional_string_setup_and_project(self):
+        prompt = load(SCHEMA)["$defs"]["prompt"]
+        for name in ("setup", "project"):
+            self.assertEqual(prompt["properties"][name]["type"], "string")
+            self.assertNotIn(name, prompt["required"])
+
+    def test_every_project_is_a_relative_folder_inside_the_worktree(self):
+        for path in glob.glob(os.path.join(ROOT, "evals", "*", "suite.json")):
+            for p in load(path)["prompts"]:
+                for name in ("setup", "project"):
+                    self.assertIsInstance(p.get(name, ""), str, f"{path} {p['id']}")
+                project = p.get("project")
+                if project is not None:
+                    self.assertTrue(project and not project.startswith("/") and ".." not in project.split("/"),
+                                    f"{path} {p['id']}")
+                    self.assertIn("setup", p, f"{path} {p['id']}: project needs a setup")
+
+    def test_pdlc_prompts_keep_the_setup_out_of_the_user_words(self):
+        for path in glob.glob(os.path.join(ROOT, "evals", "pdlc-*", "suite.json")):
+            for p in load(path)["prompts"]:
+                self.assertNotIn("Setup, before you start", p["prompt"], f"{path} {p['id']}")
+                self.assertTrue(p["setup"].startswith("Setup, before you start: run `python3 "), f"{path} {p['id']}")
+                self.assertEqual(p["project"], "proj", f"{path} {p['id']}")
+                self.assertIn("--dest proj", p["setup"], f"{path} {p['id']}")
+
+    def test_workflow_reads_both_fields(self):
+        js = read(WORKFLOW)
+        self.assertIn("p.setup", js)
+        self.assertIn("p.project", js)
+
 
 
 if __name__ == "__main__":
