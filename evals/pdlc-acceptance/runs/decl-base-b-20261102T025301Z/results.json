@@ -1,0 +1,554 @@
+{
+ "skill": "pdlc:acceptance",
+ "skillSha256": "efa834e56f4cdcbe386e66c9963720f463cc3970df5a28109bdd4fb3061ab9ed",
+ "skillTreeSha256": "cf984fa8b3bf8cde9f9705283e365cf3a0a0138d2ba8149f0e9baa347f24c1d0",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "0b5d73d16f541df2dcc810be5c4e9852042cc137f7c92e1db107089e530af4be",
+ "suiteSha256": "a8fd75b654d3fc1fde4ca035b1b00881752425b69603b0003320e999ae159199",
+ "runId": "decl-base-b-20261102T025301Z",
+ "generatedAt": "2026-11-02T02:53:01Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 77.5,
+  "stability": 84.5,
+  "overall": 80.9,
+  "grade": "B",
+  "confidence": "normal",
+  "usableRuns": 2,
+  "totalRuns": 2
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 77.5,
+   "stability": 84.5,
+   "overall": 80.9,
+   "grade": "B",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 75,
+  "median": 77.5,
+  "max": 80
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Each acceptance line of IN-0001 (the intent in the request) that is not a stored-data line has a check. The check drives the app as a user does (the command, or HTTP) and expects the exact output, message, and code of the line.",
+   "passRate": 0,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Before the lock, each check of new behaviour fails because the behaviour is missing, and no check fails because it is broken. The run reports the red run.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "`Acceptance-Locked` names the commit that holds the final acceptance file, and the file does not change after that commit.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A separate reviewer judges the checks from the packet that `make_packets.py` makes for IN-0001 (the intent in the request). The result names a wrong version for each check. A failed review goes back to the test writer, and the run locks again.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The four commits come in order on the intent branch, each with its trailers.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent has `Status: building`, `Branch:`, `Acceptance-File:`, and `Acceptance-Locked:`, and a handoff `acceptance \u2192 tests` in the template form.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stored-data line sits in a comment at the top of the acceptance file, with its requirement ID and change. It has no acceptance check.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run writes no app code and changes no requirement text.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply says that `/pdlc:tests` is next.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 77.5,
+   "stability": 84.5
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-acceptance/runs/decl-base-b-20261102T025301Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "Test-writer and reviewer work done in-session. First review failed (1 problem), second passed. The run made 7 commits on pdlc/IN-0001-mark-done, and the intent is now building.",
+   "quality": 80,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "missed",
+     "evidence": "handle(store, &Request::new(\"POST\", target, body))"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "wrote 27 acceptance checks in `acceptance/IN-0001.rs`. All fail to compile, because `Item.done` and `Store::mark_done` do not exist yet."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Acceptance-Locked: 39e046eebb9933831dd29a432e19226d62ca73bb"
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "Result: pass ... Wrong versions:\n- none"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "39e046eebb99... Acceptance IN-0001 / 7d987023... Lock acceptance IN-0001 / 7ca8b3c3... Review acceptance IN-0001 / d7d65915... Acceptance reviewed IN-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "CH-0001 gives the checks `Item.done` and `Store::mark_done`. CH-0002 gives the route, and CH-0003 gives the page."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "// Stored-data lines (proved by the component checks of the change, not here):"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "pdlc/changes/CH-0003-view-open-items/change.md |   4 +"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:tests` for CH-0001 (store keeps the done state)."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-acceptance/runs/decl-base-b-20261102T025301Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "Capture bug: the summary message the capture records as assistant 1 gives the final lock hash but its numbered file list is fine. The work ran as one continuous turn, so the transcript has a single assistant message. The first tests review failed with one problem (\"one\" matches inside \"done\"), and the second passed.",
+   "quality": 75,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "missed",
+     "evidence": "handle(store, &Request::new(\"GET\", target, \"\"))"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "The file has 26 checks ... All of them fail now, because `Store::mark_done` and `Item.done` do not exist yet."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Acceptance-Locked: 583034fb6e24fc3fb59101f009f080262a5ea87b"
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "The diff only renames item texts. The other checks did not change."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "583034fb... Acceptance IN-0001 / 56fceacf... Lock acceptance IN-0001 / 814ab263... Review acceptance IN-0001 / e87ed991... Acceptance reviewed IN-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "CH-0001 must give `Store::mark_done` and `Item.done` ... CH-0003 must give `Request::new` and `Response`"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "// Stored-data lines. These lines get a component check of their change, and no check here:"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "pdlc/specs/jobs/JOB-view-list.md               |   8 +"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next: run `/pdlc:tests` for CH-0001 (store keeps the done state)."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "Both runs write the same kind of in-process Rust checks with exact statuses and bodies; only the item names and check count differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Checks call the in-process `handle` function and Store methods, never start the real app over HTTP; stored-data lines left out"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "equivalent",
+   "reason": "Both report a full compile-failure red run with a count (27 vs 26) and the same missing-API cause.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Reports all checks red (count given) because Item.done and Store::mark_done do not exist yet"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "equivalent",
+   "reason": "Both relock after a failed review and name the newest acceptance commit.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Lock names the second Acceptance commit, the newest change to the acceptance file"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "minor_drift",
+   "reason": "Same fail-then-re-review flow, but the failure reason and the wrong-versions content of the final result differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "First review fails on a missing stored-data comment entry; re-review passes with Wrong versions: none"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "First review fails on a weak substring match; re-review passes with wrong versions listed for the 12 changed checks"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "equivalent",
+   "reason": "Both make the same seven-commit sequence with the same trailers.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Seven commits: two rounds of Acceptance/Lock/Review, then Acceptance reviewed, correct trailers"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "Same header and handoff form; one run omits the route change from the per-change list.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Full header and handoff; Next names what CH-0001, CH-0002 and CH-0003 each give the checks"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Full header and handoff; Next names what CH-0001 and CH-0003 give, omits CH-0002"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "Both list the same three stored-data requirements with the same changes, in different wording.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Top comment lists CAP-store.R10, JOB-mark-done.R1 old file, JOB-view-list.R2 malformed lines, each with its change"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "Both edit the same files; run 2 adds Request::new besides Response.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Touches only acceptance file, brief, review files, intent, and adds proposed Interface items to JOB-view-list and CH-0003"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "identical",
+   "reason": "Both final replies end with the same next-step sentence word for word.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Ends with 'Next: run /pdlc:tests for CH-0001 (store keeps the done state).'"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}
