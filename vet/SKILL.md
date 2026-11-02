@@ -262,6 +262,7 @@ comparable.
    ```json
    {
      "skill": { "name": "<skill>", "dir": "<abs skill dir>", "file": "<abs SKILL.md>" },
+     "vetScripts": "<abs vet dir>/scripts",
      "suite": { "structure": {…}, "rubric": [ … ], "prompts": [ <selected prompts only> ] },
      "runs": 10,
      "wave": 2,
@@ -271,6 +272,9 @@ comparable.
      "agents": { "preset": "lean", "grade": { "model": "<model>" } }
    }
    ```
+
+   Each run's capture ends with the output of `scripts/snapshot.py`, which lists the
+   commits and the git status and leaves out the harness's own files.
 
    All paths must be absolute, because the run agents work in their own worktrees. The
    Workflow tool accepts only a `scriptPath` in the working directory. Thus, the tool
