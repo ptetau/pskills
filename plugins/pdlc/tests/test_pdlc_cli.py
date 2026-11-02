@@ -15,7 +15,7 @@ SCRIPT = PLUGIN / "skills/init/references/bin/pdlc.py"
 TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
 SUBCOMMANDS = ["commit", "message", "handoff", "stop", "set", "intent", "change"]
 # The subcommands that still answer "not implemented".
-STUBS = ["set", "intent", "change"]
+STUBS = ["change"]
 GIT_ENV = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "commit.gpgsign",
            "GIT_CONFIG_VALUE_0": "false"}
 
@@ -133,7 +133,7 @@ class EntryPoint(unittest.TestCase):
             self.assertIn("not implemented", done.stdout + done.stderr, name)
 
     def test_extra_arguments_are_accepted_by_a_stub(self):
-        done = run("set", "CH-0001", "--bogus", "x")
+        done = run("change", "new", "--bogus", "x")
         self.assertEqual(done.returncode, 2)
         self.assertIn("not implemented", done.stdout + done.stderr)
 
@@ -695,10 +695,261 @@ class Stop(Project):
         self.assertIn("Answer, then run /pdlc:ship.", git(self.root, "show", "HEAD:pdlc/changes/CH-0001-email/handoff.md"))
 
 
+CAP_EMAIL = """# CAP-email · Send email
+
+Status: active
+
+## Interface
+
+- `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js` · proposed
+  - in: the name of a template, and an email address
+  - out: the ID of the sent email
+  - errors: none
+- `other()` · function · `src/other.js` · proposed
+  - in: nothing
+  - errors: none
+
+### Test seams
+
+- `EMAIL_OUTBOX_DIR` · seam: outside vendor · `src/email.js` · proposed
+  - in: a folder
+  - errors: none
+
+## Requirements
+
+### CAP-email.R1 · Send
+
+Status: ready · Intents: IN-0001
+
+- Given a name, when sent, then it is sent.
+
+### CAP-email.R2 · Other
+
+Status: ready · Intents: IN-0001
+
+- Given nothing, when called, then it returns.
+"""
+CHANGE_WITH_INTERFACE = CHANGE.replace("## Progress log", """## Interface
+
+- `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`
+  - in: the name of a template, and an email address
+  - out: the ID of the sent email
+  - errors: none
+
+### Test seams
+
+- `EMAIL_OUTBOX_DIR` · seam: outside vendor · `src/email.js`
+  - in: a folder
+  - errors: none
+
+## Progress log""")
+
+
+class SetTests(Project):
+    def setUp(self):
+        super().setUp()
+        self.write("pdlc/specs/capabilities/CAP-email.md", CAP_EMAIL)
+        self.write("pdlc/changes/CH-0001-email/change.md", CHANGE_WITH_INTERFACE)
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "Update CH-0001: fixtures")
+
+    def set(self, *args):
+        return self.pdlc("set", *args)
+
+    def head(self):
+        return git(self.root, "rev-parse", "HEAD")
+
+    def test_it_sets_the_status_and_leaves_the_rest(self):
+        before = self.read("pdlc/changes/CH-0001-email/change.md")
+        done = self.set("CH-0001", "--status", "building")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        after = self.read("pdlc/changes/CH-0001-email/change.md")
+        self.assertEqual(after, before.replace("Status: testing", "Status: building"))
+        self.assertIn("Status", done.stdout)
+
+    def test_a_wrong_status_exits_1_and_nothing_is_written(self):
+        before = self.read("pdlc/changes/CH-0001-email/change.md")
+        done = self.set("CH-0001", "--status", "merged-ish", "--branch", "pdlc/CH-0001-other")
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("planned", done.stdout)
+        self.assertEqual(self.read("pdlc/changes/CH-0001-email/change.md"), before)
+
+    def test_an_intent_status_is_not_a_change_status(self):
+        self.assertEqual(self.set("CH-0001", "--status", "ready").returncode, 1)
+        self.assertEqual(self.set("IN-0001", "--status", "planned").returncode, 1)
+        self.assertEqual(self.set("IN-0001", "--status", "ready").returncode, 0)
+        self.assertIn("Status: ready ·", self.read("pdlc/inbox/IN-0001-reset.md"))
+
+    def test_the_readme_statuses_govern(self):
+        self.write("pdlc/README.md", "# pdlc\n\n## Statuses\n\n- Intent: new → hatching → done. Also paused.\n"
+                   "- Change: planned → testing. Also cancelled.\n- Requirement: proposed → ready.\n")
+        self.assertEqual(self.set("IN-0001", "--status", "hatching").returncode, 0)
+        self.assertEqual(self.set("IN-0001", "--status", "specifying").returncode, 1)
+
+    def test_branch_base_and_ticket(self):
+        done = self.set("CH-0001", "--branch", "pdlc/CH-0001-x", "--base", "pdlc/IN-0001-reset", "--ticket", "PROJ-9")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.read("pdlc/changes/CH-0001-email/change.md")
+        self.assertIn("Ticket: PROJ-9 · Branch: pdlc/CH-0001-x · Base: pdlc/IN-0001-reset", text)
+
+    def test_a_revision_becomes_a_full_hash(self):
+        self.assertEqual(self.set("CH-0001", "--tests-locked", "HEAD").returncode, 0)
+        self.assertIn("Tests-Locked: %s\n" % self.head(), self.read("pdlc/changes/CH-0001-email/change.md"))
+
+    def test_the_word_acceptance_stays_a_word(self):
+        self.assertEqual(self.set("CH-0001", "--tests-locked", "acceptance").returncode, 0)
+        self.assertIn("Tests-Locked: acceptance\n", self.read("pdlc/changes/CH-0001-email/change.md"))
+
+    def test_an_unknown_revision_exits_3(self):
+        self.assertEqual(self.set("CH-0001", "--tests-locked", "nonesuch123").returncode, 3)
+
+    def test_acceptance_fields_of_an_intent(self):
+        done = self.set("IN-0001", "--acceptance-locked", "HEAD", "--acceptance-passed", "HEAD",
+                        "--acceptance-file", "auto")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.read("pdlc/inbox/IN-0001-reset.md")
+        self.assertIn("Acceptance-File: tests/acceptance/IN-0001.py\n", text)
+        self.assertIn("Acceptance-Locked: %s\n" % self.head(), text)
+        self.assertIn("Acceptance-Passed: %s\n" % self.head(), text)
+
+    def test_the_auto_file_uses_the_id_form_of_the_project(self):
+        self.write("pdlc/config.md", CONFIG.replace("`dotted`", "`underscored`"))
+        self.set("IN-0001", "--acceptance-file", "auto")
+        self.assertIn("Acceptance-File: tests/acceptance/IN_0001.py\n", self.read("pdlc/inbox/IN-0001-reset.md"))
+
+    def test_a_path_is_written_as_it_is(self):
+        self.set("IN-0001", "--acceptance-file", "tests/a.py")
+        self.assertIn("Acceptance-File: tests/a.py\n", self.read("pdlc/inbox/IN-0001-reset.md"))
+
+    def test_a_field_the_file_does_not_have_exits_1(self):
+        self.assertEqual(self.set("IN-0001", "--tests-locked", "HEAD").returncode, 1)
+        self.assertEqual(self.set("CH-0001", "--acceptance-locked", "HEAD").returncode, 1)
+
+    def test_reqs_sets_each_requirement_of_the_change_only(self):
+        done = self.set("CH-0001", "--reqs", "built")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        spec = self.read("pdlc/specs/capabilities/CAP-email.md")
+        self.assertIn("### CAP-email.R1 · Send\n\nStatus: built · Intents: IN-0001", spec)
+        self.assertIn("### CAP-email.R2 · Other\n\nStatus: ready · Intents: IN-0001", spec)
+
+    def test_one_requirement(self):
+        self.set("CH-0001", "--req", "CAP-email.R2=verified")
+        self.assertIn("Status: verified · Intents", self.read("pdlc/specs/capabilities/CAP-email.md").split("R2")[1])
+
+    def test_a_wrong_requirement_status_exits_1(self):
+        self.assertEqual(self.set("CH-0001", "--reqs", "finished").returncode, 1)
+        self.assertEqual(self.set("CH-0001", "--req", "CAP-email.R9=built").returncode, 1)
+
+    def test_unpropose_removes_only_the_marks_of_this_change(self):
+        done = self.set("CH-0001", "--unpropose")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        spec = self.read("pdlc/specs/capabilities/CAP-email.md")
+        self.assertIn("`send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`\n", spec)
+        self.assertIn("`EMAIL_OUTBOX_DIR` · seam: outside vendor · `src/email.js`\n", spec)
+        self.assertIn("`other()` · function · `src/other.js` · proposed", spec)
+        self.assertEqual(spec.count("proposed"), 1)  # only the mark of other() stays
+        self.assertNotIn("send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js` · proposed", spec)
+
+    def test_several_options_in_one_call(self):
+        done = self.set("CH-0001", "--status", "in review", "--reqs", "verified", "--unpropose")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("Status: in review ·", self.read("pdlc/changes/CH-0001-email/change.md"))
+
+    def test_it_makes_no_commit(self):
+        self.set("CH-0001", "--status", "building")
+        self.assertEqual(self.log(), "Update CH-0001: fixtures")
+
+    def test_an_unknown_id_exits_1(self):
+        self.assertEqual(self.set("CH-0009", "--status", "building").returncode, 1)
+
+    def test_an_id_with_no_option_is_a_usage_error(self):
+        self.assertEqual(self.set("CH-0001").returncode, 2)
+
+
+class IntentTests(Project):
+    def intent(self, *args):
+        return self.pdlc("intent", *args)
+
+    def test_new_takes_the_next_free_id_and_writes_the_file(self):
+        done = self.intent("new", "--name", "Export to CSV", "--what", "Users export the list.")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("IN-0002", done.stdout)
+        path = self.root / "pdlc/inbox/IN-0002-export-to-csv.md"
+        text = path.read_text()
+        self.assertTrue(text.startswith("# IN-0002 · Export to CSV\n"))
+        self.assertRegex(text, r"Status: new · Ticket: none · Branch: none · Added: \d{4}-\d\d-\d\d")
+        self.assertIn("## What and why\n\nUsers export the list.", text)
+        for title in ("Requirements", "Changes", "Acceptance checks", "Notes"):
+            self.assertIn("## %s\n" % title, text)
+        self.assertIn("Acceptance-File: none", text)
+        self.assertNotIn("Awaits approval", text)
+
+    def test_the_next_id_counts_changes_and_branches_too(self):
+        self.write("pdlc/changes/CH-0004-x/change.md", CHANGE.replace("IN-0001", "IN-0007").replace("CH-0001", "CH-0004"))
+        done = self.intent("new", "--name", "Next", "--what", "x")
+        self.assertIn("IN-0008", done.stdout)
+
+    def test_awaits_goes_first_in_the_notes(self):
+        done = self.intent("new", "--name", "Dark mode", "--what", "A dark theme.", "--awaits", "The user says yes.")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = (self.root / "pdlc/inbox/IN-0002-dark-mode.md").read_text()
+        self.assertTrue(text.split("## Notes")[1].strip().startswith("Awaits approval: The user says yes."))
+
+    def test_migrate(self):
+        done = self.intent("new", "--migrate", "JOB-list", "DES-errors")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = (self.root / "pdlc/inbox/IN-0002-migrate-job-list-to-des-errors.md").read_text()
+        self.assertIn("# IN-0002 · Migrate JOB-list to DES-errors", text)
+        self.assertIn("JOB-list", text.split("## What and why")[1])
+
+    def test_new_needs_a_name_and_text(self):
+        self.assertEqual(self.intent("new", "--name", "x").returncode, 2)
+        self.assertEqual(self.intent("new", "--what", "x").returncode, 2)
+
+    def test_new_needs_the_inbox_files_adapter(self):
+        self.write("pdlc/config.md", CONFIG.replace("inbox-files", "inbox-github"))
+        done = self.intent("new", "--name", "x", "--what", "y")
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("inbox-files", done.stdout)
+        self.assertFalse(list((self.root / "pdlc/inbox").glob("IN-0002*")))
+
+    def test_status(self):
+        self.assertEqual(self.intent("IN-0001", "--status", "ready").returncode, 0)
+        self.assertEqual(self.intent("IN-0001", "--status", "planned").returncode, 1)
+        self.assertIn("Status: ready ·", self.read("pdlc/inbox/IN-0001-reset.md"))
+
+    def test_requirements_replace_the_placeholder_and_change_in_place(self):
+        done = self.intent("IN-0001", "--req", "CAP-email.R1=added", "--req", "JOB-x.R2=changed")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.read("pdlc/inbox/IN-0001-reset.md")
+        part = text.split("## Requirements")[1].split("## Changes")[0]
+        self.assertEqual([l for l in part.splitlines() if l.strip()], ["- CAP-email.R1: added", "- JOB-x.R2: changed"])
+        self.intent("IN-0001", "--req", "CAP-email.R1=retiring")
+        part = self.read("pdlc/inbox/IN-0001-reset.md").split("## Requirements")[1].split("## Changes")[0]
+        self.assertEqual([l for l in part.splitlines() if l.strip()], ["- CAP-email.R1: retiring", "- JOB-x.R2: changed"])
+
+    def test_a_wrong_requirement_word_exits_1(self):
+        self.assertEqual(self.intent("IN-0001", "--req", "CAP-email.R1=new").returncode, 1)
+        self.assertEqual(self.intent("IN-0001", "--req", "CAP-email.R1").returncode, 1)
+
+    def test_was_and_readme_go_to_the_notes_once(self):
+        for _ in range(2):
+            done = self.intent("IN-0001", "--was", "CAP-email.R1", "old words", "new words",
+                               "--readme", "Run it", "CAP-email.R1")
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        notes = self.read("pdlc/inbox/IN-0001-reset.md").split("## Notes")[1].split("## Handoff")[0]
+        self.assertEqual(notes.count('- CAP-email.R1: was "old words", now "new words"'), 1)
+        self.assertEqual(notes.count('- README: "Run it" → CAP-email.R1'), 1)
+        self.assertIn("how many tries", notes)
+
+    def test_an_unknown_intent_exits_1(self):
+        self.assertEqual(self.intent("IN-0009", "--status", "ready").returncode, 1)
+
+
 class Imports(unittest.TestCase):
     def test_no_bytecode_left_in_the_bin_folder(self):
         shutil.rmtree(SCRIPT.parent / "__pycache__", ignore_errors=True)
-        run("set")
+        run("change")
         self.assertFalse((SCRIPT.parent / "__pycache__").exists())
 
 

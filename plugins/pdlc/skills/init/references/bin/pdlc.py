@@ -673,6 +673,335 @@ def options_handoff(parser):
 
 
 # ---------------------------------------------------------------------------------------
+# set
+
+DEFAULT_STATUSES = {
+    "Intent": ["new", "specifying", "ready", "building", "in review", "done", "paused", "cancelled"],
+    "Change": ["planned", "testing", "building", "in review", "merged", "cancelled"],
+    "Requirement": ["proposed", "ready", "built", "verified", "retiring"],
+}
+ENTRY = re.compile(r"^- [^`\n]*`([^`\n]+)`(.*)$")
+
+
+def statuses(root):
+    """The statuses of each kind, from "Statuses" in the README of the project. A kind that
+    the README does not give has the default list."""
+    found = {kind: list(values) for kind, values in DEFAULT_STATUSES.items()}
+    try:
+        text = pdlclib.section((root / "pdlc" / "README.md").read_text(), "Statuses")
+    except OSError:
+        return found
+    for kind in found:
+        line = re.search(r"^- %s:\s*(.+)$" % kind, text, re.M)
+        if not line:
+            continue
+        main, _, also = line.group(1).partition("Also")
+        words = [w.strip(" .") for w in main.split("\u2192")]
+        words += [w.strip(" .") for w in also.split(",")]
+        words = [w for w in words if w]
+        if words:
+            found[kind] = words
+    return found
+
+
+class Texts:
+    """The files that a command changes, held in memory until it writes them all."""
+
+    def __init__(self):
+        self.new = {}
+
+    def get(self, path):
+        return self.new[path] if path in self.new else path.read_text()
+
+    def put(self, path, text):
+        self.new[path] = text
+
+    def write(self):
+        for path, text in self.new.items():
+            path.write_text(text)
+
+
+def set_field(text, name, value, header_only=False):
+    """The text with the first field `name` set to the value, or None when it is not there."""
+    cut = text.find("\n## ") if header_only else -1
+    head, tail = (text[:cut], text[cut:]) if cut >= 0 else (text, "")
+    found = re.search(r"(\b%s:[ \t]*)([^\u00b7\n]*?)([ \t]*(?:\u00b7|$))" % re.escape(name), head, re.M)
+    if not found:
+        return None
+    return head[:found.start(2)] + value + head[found.end(2):] + tail
+
+
+def must_set(texts, path, name, value, header_only=False):
+    new = set_field(texts.get(path), name, value, header_only)
+    if new is None:
+        raise Problem("%s has no \"%s:\" field" % (path.name if path.name != "change.md" else path.parent.name, name))
+    texts.put(path, new)
+
+
+def full_hash(root, rev):
+    done = run_git(root, "rev-parse", "--verify", "-q", rev + "^{commit}", check=False)
+    if done.returncode != 0:
+        raise GitError("git cannot find the revision %s" % rev)
+    return done.stdout.strip()
+
+
+def acceptance_path(root, intent_id):
+    try:
+        config = (root / "pdlc" / "config.md").read_text()
+    except OSError:
+        config = ""
+    found = re.search(r"^- acceptance file:\s*`([^`]+)`", config, re.M | re.I)
+    if not found or "..." in found.group(1) or "{intent}" not in found.group(1):
+        raise Problem('pdlc/config.md has no usable "acceptance file" line (a path with {intent})')
+    form = re.search(r"^- ID form in check names:\s*`(\w+)`", config, re.M | re.I)
+    name = intent_id.replace("-", "_") if form and form.group(1) == "underscored" else intent_id
+    return found.group(1).replace("{intent}", name)
+
+
+def requirement_span(text, req_id):
+    heading = re.search(r"^### %s\b.*$" % re.escape(req_id), text, re.M)
+    if not heading:
+        return None
+    end = re.search(r"^##", text[heading.end():], re.M)
+    return heading.end(), heading.end() + (end.start() if end else len(text) - heading.end())
+
+
+def set_requirement(root, texts, req_id, status):
+    path = spec_file(root, req_id.rsplit(".", 1)[0])
+    text = texts.get(path)
+    span = requirement_span(text, req_id)
+    if not span:
+        raise Problem("%s: no such requirement in %s" % (req_id, path.name))
+    body = set_field(text[span[0]:span[1]], "Status", status)
+    if body is None:
+        raise Problem("%s has no Status line" % req_id)
+    texts.put(path, text[:span[0]] + body + text[span[1]:])
+
+
+def change_requirements(text):
+    return re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b", pdlclib.section(text, "Requirements"), re.M)
+
+
+def unpropose(root, texts, change_text):
+    scope = pdlclib.field(change_text, "Scope")
+    if not scope:
+        raise Problem("the change has no Scope field")
+    path = spec_file(root, scope)
+    keys = {m.group(1) for m in (ENTRY.match(l) for l in pdlclib.section(change_text, "Interface").splitlines()) if m}
+    out, in_interface = [], False
+    for line in texts.get(path).split("\n"):
+        if line.startswith("## "):
+            in_interface = line.strip() == "## Interface"
+        found = ENTRY.match(line) if in_interface else None
+        if found and found.group(1) in keys:
+            line = re.sub(r"\s*\u00b7\s*proposed\b", "", line)
+        out.append(line)
+    texts.put(path, "\n".join(out))
+
+
+def handle_set(args, extra):
+    reject_extra(extra)
+    root = project()
+    os.chdir(str(root))
+    id_ = args.id
+    if not re.fullmatch(r"(IN|CH)-\d+", id_):
+        raise Usage("the ID must be IN-xxxx or CH-xxxx")
+    wanted = [args.status, args.branch, args.base, args.tests_locked, args.acceptance_file,
+              args.acceptance_locked, args.acceptance_passed, args.ticket, args.reqs, args.req,
+              args.unpropose or None]
+    if not any(wanted):
+        raise Usage("give at least one option to set")
+    path = find_intent(root, id_) if id_.startswith("IN-") else find_change(root, id_)
+    kind = "Intent" if id_.startswith("IN-") else "Change"
+    allowed = statuses(root)
+    texts, report = Texts(), []
+
+    def put(name, value, header_only=False):
+        must_set(texts, path, name, value, header_only)
+        report.append("%s: %s \u2192 %s" % (id_, name, value))
+
+    if args.status:
+        if args.status not in allowed[kind]:
+            raise Problem("%s: status \"%s\" is not one of: %s" % (id_, args.status, ", ".join(allowed[kind])))
+        put("Status", args.status, True)
+    if args.branch:
+        put("Branch", args.branch, True)
+    if args.base:
+        put("Base", args.base, True)
+    if args.ticket:
+        put("Ticket", args.ticket, True)
+    if args.tests_locked:
+        value = args.tests_locked if args.tests_locked == "acceptance" else full_hash(root, args.tests_locked)
+        put("Tests-Locked", value, True)
+    if args.acceptance_file:
+        value = acceptance_path(root, id_) if args.acceptance_file == "auto" else args.acceptance_file
+        put("Acceptance-File", value)
+    if args.acceptance_locked:
+        put("Acceptance-Locked", full_hash(root, args.acceptance_locked))
+    if args.acceptance_passed:
+        put("Acceptance-Passed", full_hash(root, args.acceptance_passed))
+    pairs = []
+    if args.reqs:
+        if kind != "Change":
+            raise Problem("--reqs works on a change; use --req ID=STATUS for an intent")
+        pairs += [(r, args.reqs) for r in change_requirements(path.read_text())]
+    for item in args.req or []:
+        req_id, _, status = item.partition("=")
+        if not status:
+            raise Problem('--req needs the form ID=STATUS, not "%s"' % item)
+        pairs.append((req_id, status))
+    for req_id, status in pairs:
+        if status not in allowed["Requirement"]:
+            raise Problem("%s: status \"%s\" is not one of: %s" % (req_id, status, ", ".join(allowed["Requirement"])))
+        set_requirement(root, texts, req_id, status)
+        report.append("%s: Status \u2192 %s" % (req_id, status))
+    if args.unpropose:
+        if kind != "Change":
+            raise Problem("--unpropose works on a change")
+        unpropose(root, texts, path.read_text())
+        report.append("%s: removed \u00b7 proposed from the entries of its Interface" % id_)
+    texts.write()
+    print("\n".join(report))
+    return EXIT_DONE
+
+
+def options_set(parser):
+    parser.add_argument("id", help="IN-xxxx or CH-xxxx")
+    parser.add_argument("--status")
+    parser.add_argument("--branch")
+    parser.add_argument("--base")
+    parser.add_argument("--ticket")
+    parser.add_argument("--tests-locked", metavar="REV|acceptance")
+    parser.add_argument("--acceptance-file", metavar="auto|PATH")
+    parser.add_argument("--acceptance-locked", metavar="REV")
+    parser.add_argument("--acceptance-passed", metavar="REV")
+    parser.add_argument("--reqs", metavar="STATUS", help="set each requirement that the change lists")
+    parser.add_argument("--req", action="append", metavar="ID=STATUS")
+    parser.add_argument("--unpropose", action="store_true", help="remove the proposed mark of its entries")
+
+
+# ---------------------------------------------------------------------------------------
+# intent
+
+def next_id(root, prefix):
+    numbers = []
+    patterns = {"IN": ["pdlc/inbox/**/IN-*", "pdlc/changes/*/change.md"],
+                "CH": ["pdlc/changes/CH-*"]}[prefix]
+    names = []
+    for pattern in patterns:
+        names += [p.as_posix() for p in root.glob(pattern)]
+    for name in names:
+        numbers += [int(n) for n in re.findall(r"\b%s-(\d+)" % prefix, Path(name).name)]
+        if name.endswith("change.md") and prefix == "IN":
+            numbers += [int(n) for n in re.findall(r"\bIN-(\d+)", Path(name).read_text().split("\n## ")[0])]
+    refs = run_git(root, "for-each-ref", "--format=%(refname:short)", "refs/heads/pdlc/", check=False).stdout
+    numbers += [int(n) for n in re.findall(r"pdlc/%s-(\d+)" % prefix, refs)]
+    return "%s-%04d" % (prefix, max(numbers or [0]) + 1)
+
+
+def slug(text, limit=40):
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:limit].strip("-") or "intent"
+
+
+def inbox_adapter(root):
+    try:
+        found = re.search(r"^- inbox:\s*(\S+)", (root / "pdlc" / "config.md").read_text(), re.M)
+    except OSError:
+        found = None
+    return found.group(1) if found else None
+
+
+def list_edit(text, title, lines):
+    """The text with each line added to the list under '## title'. A line with the same
+    "- ID:" start replaces the old line. The placeholder "- none yet" goes."""
+    current = [l for l in pdlclib.section(text, title).splitlines() if l.strip() and l.strip() != "- none yet"]
+    for line in lines:
+        key = line.split(":", 1)[0] + ":"
+        for n, old in enumerate(current):
+            if old.startswith(key):
+                current[n] = line
+                break
+        else:
+            current.append(line)
+    return set_section(text, title, "\n".join(current))
+
+
+def new_intent(root, args):
+    if inbox_adapter(root) != "inbox-files":
+        raise Problem("intent new works only with the inbox-files adapter (pdlc/config.md); "
+                      "use the inbox port of the adapter in place of it")
+    if args.migrate:
+        spec, convention = args.migrate
+        name = "Migrate %s to %s" % (spec, convention)
+        what = args.what or "Change the spec %s to follow the convention %s." % (spec, convention)
+    else:
+        if not args.name or not args.what:
+            raise Usage("intent new needs --name and --what (or --migrate SPEC DES)")
+        name, what = args.name.strip(), args.what.strip()
+    id_ = next_id(root, "IN")
+    notes = "Awaits approval: %s" % args.awaits.strip() if args.awaits else ""
+    text = (
+        "# %s \u00b7 %s\n\nStatus: new \u00b7 Ticket: none \u00b7 Branch: none \u00b7 Added: %s\n\n"
+        "## What and why\n\n%s\n\n## Requirements\n\n- none yet\n\n## Changes\n\n- none yet\n\n"
+        "## Acceptance checks\n\nAcceptance-File: none\nAcceptance-Locked: none\nAcceptance-Passed: none\n\n"
+        "## Notes\n\n%s" % (id_, name, __import__("datetime").date.today().isoformat(), what,
+                            notes + "\n" if notes else ""))
+    path = root / "pdlc" / "inbox" / ("%s-%s.md" % (id_, slug(name)))
+    path.write_text(text)
+    print("%s %s" % (id_, path.relative_to(root).as_posix()))
+
+
+def handle_intent(args, extra):
+    reject_extra(extra)
+    root = project()
+    os.chdir(str(root))
+    if args.target == "new":
+        new_intent(root, args)
+        return EXIT_DONE
+    if not re.fullmatch(r"IN-\d+", args.target):
+        raise Usage('the first argument is "new" or an intent ID (IN-xxxx)')
+    path = find_intent(root, args.target)
+    text, report = path.read_text(), []
+    if args.status:
+        allowed = statuses(root)["Intent"]
+        if args.status not in allowed:
+            raise Problem("%s: status \"%s\" is not one of: %s" % (args.target, args.status, ", ".join(allowed)))
+        text = set_field(text, "Status", args.status, True)
+        report.append("Status \u2192 %s" % args.status)
+    if args.req:
+        lines = []
+        for item in args.req:
+            req_id, _, word = item.partition("=")
+            if not re.fullmatch(r"(?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+", req_id) or word not in ("added", "changed", "retiring"):
+                raise Problem('--req needs the form ID=added, ID=changed, or ID=retiring, not "%s"' % item)
+            lines.append("- %s: %s" % (req_id, word))
+        text = list_edit(text, "Requirements", lines)
+        report += ["Requirements: " + l[2:] for l in lines]
+    notes = ['- %s: was "%s", now "%s"' % tuple(w) for w in (args.was or [])]
+    notes += ['- README: "%s" \u2192 %s' % tuple(r) for r in (args.readme or [])]
+    if notes:
+        text = add_notes(text, notes)
+        report += ["Notes: " + n[2:] for n in notes]
+    if not report:
+        raise Usage("give at least one option to change")
+    path.write_text(text)
+    print("\n".join("%s: %s" % (args.target, r) for r in report))
+    return EXIT_DONE
+
+
+def options_intent(parser):
+    parser.add_argument("target", help='"new", or the intent ID (IN-xxxx)')
+    parser.add_argument("--name")
+    parser.add_argument("--what")
+    parser.add_argument("--awaits")
+    parser.add_argument("--migrate", nargs=2, metavar=("SPEC", "DES"))
+    parser.add_argument("--status")
+    parser.add_argument("--req", action="append", metavar="ID=added|changed|retiring")
+    parser.add_argument("--was", nargs=3, action="append", metavar=("ID", "OLD", "NEW"))
+    parser.add_argument("--readme", nargs=2, action="append", metavar=("OLD", "REQ"))
+
+
+# ---------------------------------------------------------------------------------------
 # The entry point
 
 def not_implemented(name):
@@ -689,9 +1018,12 @@ HANDLERS["commit"] = handle_commit
 HANDLERS["message"] = handle_message
 HANDLERS["handoff"] = handle_handoff
 HANDLERS["stop"] = handle_stop
+HANDLERS["set"] = handle_set
+HANDLERS["intent"] = handle_intent
 
 OPTIONS = {"commit": add_commit_options, "message": add_commit_options,
-           "handoff": options_handoff, "stop": options_stop}
+           "handoff": options_handoff, "stop": options_stop,
+           "set": options_set, "intent": options_intent}
 
 
 def build_parser():
