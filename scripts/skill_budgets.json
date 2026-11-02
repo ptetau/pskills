@@ -26,7 +26,7 @@
   "tests": 200,
   "trace": 200,
   "upgrade": 200,
-  "verify": 200,
+  "verify": 270,
   "earned": {
     "ready": [
       {
