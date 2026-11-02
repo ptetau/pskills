@@ -27,7 +27,7 @@ change starts.
 - Commits in order: "Acceptance IN-xxxx" (`Intent`, `Req`), "Lock acceptance IN-xxxx",
   "Review acceptance IN-xxxx" (packet from `python3 pdlc/bin/make_packets.py IN-xxxx`),
   "Acceptance reviewed IN-xxxx". The last three have `Intent`. On the branch of a change, each has `Change`.
-- Handoff `acceptance → tests`, or `acceptance → build` after a send-back.
+- Handoff `acceptance → tests`, with the number of failing checks, the lock, and what each change must give the checks.
 
 ## Constraints
 
@@ -35,6 +35,8 @@ change starts.
   `python3 pdlc/bin/make_packets.py IN-xxxx --brief`.
 - `Acceptance-File:` is the "acceptance file" path of `pdlc/config.md`, with the intent ID for `{intent}`, in the ID form of the project.
 - Add a missing "acceptance file" or "acceptance" line of `pdlc/config.md` in the first commit.
+- A missing "Interface" item goes into its spec and change spec as `proposed`. Only the third failed review stops the stage.
+- The final reply names `/pdlc:tests` as next, or `/pdlc:build` after a send-back.
 
 ## Done when
 
