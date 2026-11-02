@@ -1,0 +1,743 @@
+{
+ "skill": "pdlc:tests",
+ "skillSha256": "5e7eea8919176d9e36bfdc3a287180baed328cda8f98804c9170beab3c39ec24",
+ "skillTreeSha256": "0c453833240139b7a56e67d6e96c3622065b74b7d5762704cbcc42b18651dfa1",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "67a92beb077c55551fe8d42401323458ff03dc895c0ade650717f55412ae6f59",
+ "suiteSha256": "1699da63f48fb640a4ff7af270d5662da6366cc6c635906ff0241d83ba4cb4a9",
+ "runId": "plugin-N2-20261102T135622Z",
+ "generatedAt": "2026-11-02T13:56:22Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 4,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "session",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "session",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 7,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 47.9,
+  "stability": 25,
+  "overall": 34.6,
+  "grade": "F",
+  "confidence": "normal",
+  "usableRuns": 4,
+  "totalRuns": 4
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 2
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 36.1,
+   "stability": 25,
+   "overall": 30,
+   "grade": "F",
+   "moved": null
+  },
+  {
+   "wave": 2,
+   "runsPerPrompt": 4,
+   "usable": 4,
+   "quality": 47.9,
+   "stability": 25,
+   "overall": 34.6,
+   "grade": "F",
+   "moved": 4.6
+  }
+ ],
+ "qualitySpread": {
+  "min": 0,
+  "median": 57,
+  "max": 77.8
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Each requirement of the change has component checks. They call only the Interface of this change and of earlier changes, and they expect the exact codes and messages.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 25,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The builder can start at once. Each new check fails for the missing behaviour, and no check is broken.",
+   "passRate": 37.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The lock is sound. `Tests-Locked:` is the hash of the commit of the final checks. The tests review of that lock passed with a wrong version for each check.",
+   "passRate": 25,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "For the only change of an intent, the run writes no check and starts no review. It records `Tests-Locked: acceptance`, and the handoff names the acceptance file and its lock.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "`Branch:` and `Base:` follow \"Stacked changes\". The first change starts from the intent branch, and the base is in its history.",
+   "passRate": 37.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run writes no app code, and only the files under \"Check files\" hold checks.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The commits come in the order of the skill, each with `Intent` and `Change`, and `Req` only on \"Tests\".",
+   "passRate": 37.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 25,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The handoff `tests \u2192 build` is in the template form, and lists each check and what it proves.",
+   "passRate": 50,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply says that `/pdlc:build` is next.",
+   "passRate": 50,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 4,
+   "quality": 47.9,
+   "stability": 25
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-tests/runs/plugin-N2-20261102T135622Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 0,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "missed",
+     "evidence": "I've stopped before writing any tests for CH-0001"
+    },
+    {
+     "id": "R2",
+     "verdict": "missed",
+     "evidence": "I've stopped before writing any tests for CH-0001"
+    },
+    {
+     "id": "R3",
+     "verdict": "missed",
+     "evidence": "absent"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "Plan IN-0001: store-done, mark-done, view-open-items"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "none of the three changes has a branch yet"
+    },
+    {
+     "id": "R6",
+     "verdict": "missed",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "eb85a3cf8bc2 Upgrade pdlc (no Start CH-0001 commit)"
+    },
+    {
+     "id": "R8",
+     "verdict": "missed",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "missed",
+     "evidence": "How do you want to go on?"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-tests/runs/plugin-N2-20261102T135622Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 72.2,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Req: CAP-store.R1, CAP-store.R3, CAP-store.R7, CAP-store.R8, CAP-store.R9, CAP-store.R10"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "The new checks failed to compile for the right reasons. `Item.done` and `Store::mark_done` don't exist yet."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "The tests review passed on round 3, against the lock at `1a3fcee`."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "Plan IN-0001: store-done, mark-done, view-open-items"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "The branch is `pdlc/CH-0001-store-done` and `Base:` is `main`."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "The only change to `tests/page.rs` is adding `done: false` to the `Item` literals."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "There are two `Tests reviewed CH-0001` commits."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "The `tests \u2192 build` handoff is committed."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next is `/pdlc:build`."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-tests/runs/plugin-N2-20261102T135622Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 77.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "The test writer wrote 20 component checks in `tests/store.rs`"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "They failed first, because `Item.done` and `Store::mark_done` don't exist yet."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "`Tests-Locked:` is `d71f166402b5614ea9ce0855ee2eb3bd39836be0`."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "`Base:` is `main`."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Status (`git status --porcelain -uall`):\n\n```\n```"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Tests reviewed CH-0001\n\nIntent: IN-0001\nChange: CH-0001"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "`handoff.md` for `tests \u2192 build` is committed"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "The next step is `/pdlc:build`."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-tests/runs/plugin-N2-20261102T135622Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "",
+   "quality": 41.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "the checks in `tests/store.rs` and `tests/page.rs` fail for the right reason"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "They don't compile yet because `mark_done` and `Item.done` don't exist."
+    },
+    {
+     "id": "R3",
+     "verdict": "missed",
+     "evidence": "The tests review failed a third time"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "absent"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "All the commits so far are in git, and the working tree is clean."
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "The tests aren't locked and reviewed"
+    },
+    {
+     "id": "R8",
+     "verdict": "missed",
+     "evidence": "no handoff has been written"
+    },
+    {
+     "id": "R9",
+     "verdict": "missed",
+     "evidence": "I recommend option 1."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "major_drift",
+   "reason": "One run writes no checks; the others write tagged checks but differ in which error checks they add and how they tag them.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Stops before writing any checks, asks the user about a blocked amend"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Writes tagged checks for R1, R8, R9, R10 in tests/store.rs, plus extra R3/R7 checks"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Writes 20 tagged checks for R1, R8, R9, R10, with all io error checks tagged R9, including a ulimit write-failure check"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Writes tagged checks for R1, R8, R9, R10 with io error checks spread over R1/R8/R9, but no mark_done write-failure check"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "major_drift",
+   "reason": "Three runs report compile-error red for the missing items without a count; one run has no red run.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "No red run, stage halted"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Reports compile-error red for missing Item.done and mark_done, without a count"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "Outcomes range from no lock, to a passed review with a partial wrong-version list, to a failed review and stop.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "No lock or review"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Locks at newest Tests commit after three review rounds; result gives a wrong version for only one check"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Locks at newest Tests commit but the third review fails and the stage stops unreviewed"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "major_drift",
+   "reason": "Three runs branch from the intent branch tip and record Base: main; one run makes no branch.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Makes no change branch"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Branches from the intent branch tip but records Base: main"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "Three runs change only check files and pdlc change files; one run changes nothing.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Changes no files at all"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Changes only check files, change spec, review files, brief and handoff"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "major_drift",
+   "reason": "Commit sequences range from none, to complete with or without a duplicate final commit, to incomplete.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "No change commits"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Full commit sequence with three review rounds and a duplicate Tests reviewed commit"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Full sequence with three review rounds and a single Tests reviewed commit"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Start then repeated Tests/Lock/Review rounds, stops with no Tests reviewed commit"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "major_drift",
+   "reason": "Two runs write a template handoff with each check group and the lock; two runs write no handoff.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#4"
+     ],
+     "description": "No handoff"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Template handoff listing each check group with its requirement and the lock hash"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     2
+    ],
+    "agreement": 50,
+    "split": "2 / 2 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "major_drift",
+   "reason": "Two runs name /pdlc:build; two runs end with a question to the user, on different topics.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Ends with a question to the user about the amend, no next step"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "States that /pdlc:build is next in the opening lines"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Ends with options for the user after a failed review, no next step named"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

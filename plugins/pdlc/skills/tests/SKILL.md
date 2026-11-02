@@ -11,69 +11,33 @@ description: >
 
 ## Goal
 
-The component checks of one change are written from the spec, by a test writer that does
-not see the code, before any app code. The checks are red, locked, and reviewed. The
-acceptance checks of the intent come earlier, from `/pdlc:acceptance`. For the only change
-of an intent, the acceptance checks are its checks.
-
-## Constraints
-
-- The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first. Red, lock, and
-  review obey "Checks before code". The base and the branch obey "Stacked changes".
-- The change is the one that the user names, or else the first `planned` change in the
-  order of the intent.
-- The first change of an intent needs the acceptance stage complete: the intent handoff
-  has the title `acceptance → tests`. If not, `/pdlc:acceptance` runs first.
-- Suppose the intent lists only this change, "Check files" is `- none`, and the intent has
-  an `Acceptance-Locked` hash. Then the skill starts the branch as usual, and sets
-  `Tests-Locked: acceptance` and the status `building`. No test writer and no reviewer
-  run, and the skill makes no packet.
-- A change that has a branch already came back from `/pdlc:build` or `/pdlc:verify`. The
-  skill works on that branch, keeps its `Base:`, starts from the reason of the send-back,
-  and keeps the status until the finish.
-- A merge of the previous change first is not necessary, but that change is `in review`
-  or `merged`. If not, its `verify` and show stages finish first.
-- The delivery port starts the branch of the change ("Stacked changes").
-- The `pdlc:test-writer` agent gets the absolute path of its brief and nothing else, and
-  writes the files under "Check files". `python3 pdlc/bin/make_packets.py CH-xxxx --brief`
-  makes the brief again before each call. After a failed review, the prompt also holds
-  the problems as text ("Checks before code").
-- When the test writer reports a missing "Interface" item, the item goes into the
-  "Interface" of its spec first, as `proposed`. Then it goes into the change spec
-  ("Checks before code"). The commit "Tests CH-xxxx" holds both files.
-- Suppose the spec that owns the item is not the scope of this change. Then the item goes
-  into the scope spec of this change, or becomes a question for the user.
-- The test writer cannot delete files. When it reports that a check file served only a
-  `(retire)` requirement, the skill removes the file with `git rm` before the lock.
-- Red runs the checks of each requirement through the checks port.
+The checks of one change exist before any app code: red, locked, and reviewed.
 
 ## Inputs
 
-- `pdlc/README.md`, the shared rules.
-- The change spec, and its `handoff.md`, or else the "Handoff" of the intent.
-- The intent, its "Changes", and the branches of the earlier changes.
+The change that the user names, else the first `planned` one. Its `handoff.md`.
 
 ## Outputs
 
-- The change spec has `Branch:`, `Base:`, and `Tests-Locked: <hash>` (or `acceptance`)
-  right under its header. The change is `testing` while the checks are written, then
+- Fields `Branch:`, `Base:`, `Tests-Locked: <hash>`. The change is `testing`, then
   `building`. The intent is `building`.
-- The commits, in this order, each with the trailers `Intent` and `Change` in one block, as
-  README "Commits" says:
-  - "Start CH-xxxx": the branch, the base, and the statuses. A send-back has no new start.
-  - "Tests CH-xxxx", also with `Req`: the check files.
-  - "Lock tests CH-xxxx": the lock line.
-  - "Review tests CH-xxxx": the packet from `python3 pdlc/bin/make_packets.py CH-xxxx tests`
-    and the result, in `pdlc/changes/CH-xxxx-…/review/tests/`.
-  - "Tests reviewed CH-xxxx": the status and the handoff.
-- The handoff `tests → build`: the checks and what each one proves, the lock, and what
-  the builder must know.
-- For the only change of an intent, the commits are only these two, each with the trailers
-  `Intent` and `Change`:
-  - "Start CH-xxxx": the branch, the base, and the status `testing`.
-  - "Tests reviewed CH-xxxx": `Tests-Locked: acceptance`, the status `building`, and the
-    handoff. The handoff names the acceptance file and its lock.
-- For the user: `/pdlc:build` is next.
-- The stage is done when the tests review of the newest lock passes. The third failed
-  review stops the stage ("Rounds"). For the only change of an intent, the stage is done
-  when the handoff is committed.
+- Commits, in order: `pdlc.py start CH-xxxx` (it sets `Branch:`, `Base:`, and the status,
+  makes the branch, and commits "Start CH-xxxx"; never pick the base), then `pdlc.py commit`
+  kinds `tests`, `lock-tests`, `review-tests` (packet from `python3 pdlc/bin/make_packets.py CH-xxxx tests`), `tests-reviewed`.
+  Fields: `pdlc.py set`. Handoff: `pdlc.py handoff CH-xxxx tests build`. Next: `/pdlc:build`.
+
+## Constraints
+
+- `pdlc/README.md` binds, in particular "Bookkeeping on main", "Checks before code",
+  "Stacked changes", and "Who does what" (foreground agents).
+- The first change needs the handoff `acceptance → tests`, else run `/pdlc:acceptance`.
+- Short path: the intent lists only this change, "Check files" is `- none`, and the
+  intent has `Acceptance-Locked`. Then no writer, reviewer, or packet. Only "Start
+  CH-xxxx" and "Tests reviewed CH-xxxx", with `Tests-Locked: acceptance`.
+- `pdlc:test-writer` gets only the absolute path of the brief from
+  `python3 pdlc/bin/make_packets.py CH-xxxx --brief`, and writes only "Check files".
+  `git rm` a file that served only a `(retire)` requirement.
+
+## Done when
+
+The tests review of the newest lock passes. Short path: the handoff is committed.

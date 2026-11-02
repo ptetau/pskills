@@ -1,0 +1,621 @@
+{
+ "skill": "pdlc:ship",
+ "skillSha256": "a234b6908a4cd4b0e0a7b7f8039d999a8ede4cbd354cae909d836b24d39435c9",
+ "skillTreeSha256": "e6c2dbb68534fb5e9dd9f9ebec61df3bf4204b6e4e616d27068c4008c18e8660",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "5d7ed4b5d0c14befcd57964573347037e6b7f865cc2083af0d6ed85a98d92136",
+ "suiteSha256": "c687c9e875e929a2bca3f5c92788a719cdbcbeba469e4d35b21065f6314449fa",
+ "runId": "plugin-N-b-wrongcheckpath-20261102T125613Z",
+ "generatedAt": "2026-11-02T12:56:13Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 4,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "session",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "session",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 7,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 48.3,
+  "stability": 44.7,
+  "overall": 46.5,
+  "grade": "F",
+  "confidence": "normal",
+  "usableRuns": 4,
+  "totalRuns": 4
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 2
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 50,
+   "stability": 69.7,
+   "overall": 59,
+   "grade": "F",
+   "moved": null
+  },
+  {
+   "wave": 2,
+   "runsPerPrompt": 4,
+   "usable": 4,
+   "quality": 48.3,
+   "stability": 44.7,
+   "overall": 46.5,
+   "grade": "F",
+   "moved": -12.5
+  }
+ ],
+ "qualitySpread": {
+  "min": 36.7,
+  "median": 46.7,
+  "max": 63.3
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The run ends only in an end state: each change is proposed, or a commit \"Stop <id>: <why>\" records the stop. It does not end with work half done and no stop record.",
+   "passRate": 62.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A stop gives the user a clear decision. The reply and \"Open\" in the handoff give the reason in one sentence, the decision, and a recommended answer that obeys the pdlc rules.",
+   "passRate": 75,
+   "stabilityWithin": 0,
+   "classesWithin": {
+    "P01": "contradictory"
+   },
+   "agreementWithin": 25,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Ship does not settle a contradiction by default. It stops and leaves the choice to the user.",
+   "passRate": 62.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Ship continues from the latest handoff and does not run a finished stage again.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stage leaves the commit subjects and trailers of its own skill, in the order of \"Stages and handoffs\".",
+   "passRate": 0,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A case that is not a stop (no remote, a slow agent, a choice of name) does not stop the run.",
+   "passRate": 62.5,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "At the end, `git status --porcelain` is empty, and each commit has the trailers of \"Commits\".",
+   "passRate": 0,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The last reply lists the changes in stack order with their proposals and GIFs. It also lists each answer taken by default, and what waits for the user.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 4,
+   "quality": 48.3,
+   "stability": 44.7
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-N-b-wrongcheckpath-20261102T125613Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 36.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Stop IN-0001: The intent says N must be 10 or less, and its example is wordfreq --top 20 FILE with 20 words printed. (no Ready IN-0001 commit between Specify and Stop)"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "**Your decision:** which one wins? - **Limit of 10 (recommended):** `--top 20` is rejected (reason given over three bullets, not one sentence)"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "I took out the text that held only the limit side (the `TOP_TOO_LARGE` code, its error row and its message)."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "I chose this myself, and it is marked `(assumed)` in the spec so you can change it."
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "Nothing is built, so there are no pull requests or GIFs."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-N-b-wrongcheckpath-20261102T125613Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 63.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Stop IN-0001: R8 (top option) has a clash: N must be 10 or less, yet the example prints the 20 most common words for --top 20. (no Ready IN-0001 commit)"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "**Reason:** R8 (top option) says \"N must be 10 or less\", but the example `wordfreq --top 20 FILE` prints the 20 most common words. **Decision:** ... **Recommended answer:** Keep the limit of 10"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "R8 (top option) is added to the job spec and stays `proposed` while the clash is open."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Every detail the request left out is marked `(assumed)` and listed in the handoff."
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "No pull request or GIF exists yet."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-N-b-wrongcheckpath-20261102T125613Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 46.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: R5 (top option) and R6 (top limit) clash, because the example --top 20 prints 20 words but N must be 10 or less."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "you wrote \"N must be 10 or less\", but your example `wordfreq --top 20 FILE` prints 20 words. A limit of 10 means that example can't work as written."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "**Limit error removed:** I took out the \"too large\" error and its message, because they only held one side of the clash."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "**Assumed:** `--top 0` prints nothing and exits 0. The error messages for a bad `--top` value are my own wording, marked as assumed."
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-N-b-wrongcheckpath-20261102T125613Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "",
+   "quality": 46.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Specify IN-0001: top-words ... Stop IN-0001: The intent says N must be 10 or less"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "**Reason:** The request says N must be 10 or less, but its example `wordfreq --top 20 FILE` prints 20 words. **Decide:** Which one wins? ... **Recommended:** Raise the limit to 20."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "I removed the text that held only the \"10 or less\" side: the `TOP_TOO_LARGE` error, its message and its error-code row."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "Two choices I made without being told, marked `(assumed)`"
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "check_trailers: no such ref: start"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "major_drift",
+   "reason": "P01#3 commits a Ready IN-0001 before the stop, while the other runs go from Specify straight to Stop.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#4"
+     ],
+     "description": "Stops in intent stages with Specify then Stop IN-0001 commits, no Ready commit; reply says it stopped at ready"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Stops with Specify, Ready, then Stop IN-0001 commits; reply says it stopped before code"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "contradictory",
+   "reason": "Three runs recommend keeping the limit of 10, but P01#4 recommends raising the limit to 20, which is the opposite choice.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Reply explains the clash in bullets, asks which wins, offers two options with limit of 10 recommended"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Reply has an explicit Open block with one-sentence reason, decision, and recommended answer (keep limit 10, change example)"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Reply explains the clash in two sentences, offers three options (a/b/c), recommends keeping the limit of 10"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Explicit Open block with one-sentence reason, decision, and recommended answer to raise the limit to 20"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "Some runs remove the limit-side error text and others keep it. The runs also differ on one requirement versus two.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3"
+     ],
+     "description": "Stops at the clash, keeps both rules proposed as R6 and R7, but removes the limit-side error code text from the spec"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Stops at the clash, keeps one R8 requirement proposed with both sides intact, no side removed"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Stops at the clash, keeps one R7 requirement with both sides, but removes the TOP_TOO_LARGE error text"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "identical",
+   "reason": "The scripted check fails the same way in every run: no such ref start.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Scripted check fails: no such ref start"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "Every run takes the defaults and marks them (assumed). The runs differ in where they list them: in the spec only, in the handoff, or in the reply.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Takes the error-message default without stopping, marks it (assumed) in the spec only"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Takes defaults without stopping, marks each (assumed) and lists them in the handoff"
+    },
+    {
+     "runs": [
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Takes the defaults without stopping, marks them (assumed) in the spec, and lists them in the final reply"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "identical",
+   "reason": "The scripted check fails the same way in every run: no such ref start.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Scripted check fails: no such ref start"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

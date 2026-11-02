@@ -10,7 +10,7 @@ The delivery-github adapter fills the delivery port with git and GitHub pull req
   - For an intent, the start is the newest unmerged branch.
 
   If the start is main and there is a remote, pull main before you create the branch.
-- **commit**: run `git commit`. Put the trailers at the end of the message, after a blank
+- **commit**: run `python3 pdlc/bin/pdlc.py commit <kind>`. Put the trailers at the end of the message, after a blank
   line, with one trailer on each line. Put other trailers in the same block, with no
   blank line between them. Make sure that pdlc's trailers show in the output of
   `git log -1 --format=%(trailers)`.

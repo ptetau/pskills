@@ -131,14 +131,16 @@
   "prompts": [
     {
       "id": "P01",
-      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults",
       "axis": "typical: `defaults`, no questions",
       "exercises": "The full path with `defaults`: the scaffold, the code map, the config for a Python CLI, the acceptance test, the commit, and the decision list.",
-      "replies": []
+      "replies": [],
+      "setup": "Setup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "project": "proj"
     },
     {
       "id": "P02",
-      "prompt": "set up pdlc for this project\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "set up pdlc for this project",
       "axis": "interactive: no `defaults`, the user takes each recommended answer",
       "exercises": "One question at a time, each with a recommended answer: the map, three init questions, the checks, the adapters, and the dashboard (the user says no).",
       "replies": [
@@ -151,11 +153,13 @@
         "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
         "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard.",
         "Yes. Keep what you propose, and take your recommended answer (skip). If this question is about the live dashboard, my answer is no: do not install the dashboard."
-      ]
+      ],
+      "setup": "Setup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "project": "proj"
     },
     {
       "id": "P03",
-      "prompt": "set up pdlc in this repo. Our team has its own rule for branch names.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "set up pdlc in this repo. Our team has its own rule for branch names.",
       "axis": "edge-but-valid: the user picks a non-recommended option",
       "exercises": "A default that the user changes: the run writes DES-pdlc-branches (the branch-name rule) again with the pattern of the user, and sets `Default: no`.",
       "replies": [
@@ -168,11 +172,13 @@
         "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
         "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no.",
         "For the branch names, I pick B (our own pattern). Name change branches `feature/<change ID>-<short name>`, and name intent branches `feature/<intent ID>-<short name>`. For each other question, keep what you propose and take your recommended answer. If you ask about the live dashboard, my answer is no."
-      ]
+      ],
+      "setup": "Setup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "project": "proj"
     },
     {
       "id": "P04",
-      "prompt": "pdlc, please\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "pdlc, please",
       "axis": "terse: the user renames an item of the map",
       "exercises": "A map edit from the user: the job spec of the command gets the new name (JOB-word-report). The code maps keep their boundaries.",
       "replies": [
@@ -185,7 +191,9 @@
         "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
         "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no.",
         "Rename the job that owns the `wordfreq FILE` command to `word-report`, so that its spec is JOB-word-report. Keep each other item of the map as you propose. For each other question, take your recommended answer. If you ask about the live dashboard, my answer is no."
-      ]
+      ],
+      "setup": "Setup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state init --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "project": "proj"
     }
   ]
 }

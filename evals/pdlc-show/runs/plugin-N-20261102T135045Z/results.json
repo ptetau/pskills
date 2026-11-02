@@ -1,0 +1,823 @@
+{
+ "skill": "pdlc:show",
+ "skillSha256": "34887d2b536c70a0e847e3c841c2d5fd99099ea3d879e2cf9064795653ae8d54",
+ "skillTreeSha256": "f81c133250cb22dcac4af0d1d4adf01d92dfb1f070e10af7535c32cd577e8ecf",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "67a92beb077c55551fe8d42401323458ff03dc895c0ade650717f55412ae6f59",
+ "suiteSha256": "7a1becbd726d3e00b883b643ce652cce44bf3731bbacf7ce1d3a1f42975e6bb3",
+ "runId": "plugin-N-20261102T135045Z",
+ "generatedAt": "2026-11-02T13:50:45Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 4,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "session",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "session",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 7,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 75,
+  "stability": 67.3,
+  "overall": 71,
+  "grade": "C",
+  "confidence": "normal",
+  "usableRuns": 4,
+  "totalRuns": 4
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 2
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 78.4,
+   "stability": 66.6,
+   "overall": 72.3,
+   "grade": "C",
+   "moved": null
+  },
+  {
+   "wave": 2,
+   "runsPerPrompt": 4,
+   "usable": 4,
+   "quality": 75,
+   "stability": 67.3,
+   "overall": 71,
+   "grade": "C",
+   "moved": -1.3
+  }
+ ],
+ "qualitySpread": {
+  "min": 65.9,
+  "median": 76.2,
+  "max": 81.8
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A reviewer can find each acceptance line of CH-0001 (top option) in the recording, because each line has its own captioned step.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Each step proves its acceptance line as a user meets the command. Thus, a reviewer can confirm the line from the frame alone.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 25,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "`visual.json` is a terminal script that anyone can record again from the project root, and the script ends with a step that runs all checks.",
+   "passRate": 50,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The change folder holds `review.gif` and its frames from a successful recording of the final `visual.json`.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run looks at the recorded frames itself before the commit, and the run records again when a frame is wrong.",
+   "passRate": 62.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 25,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run changes only the records of the visual review. The app, the checks, the specs, and the statuses stay as they were.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The handoff to `/pdlc:verify` obeys the template. The handoff tells what the GIF shows, frame by frame, and gives the count of acceptance lines shown.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 25,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "One commit, `Visual review CH-0001`, holds all the files of the visual review, with the trailers `Intent`, `Change`, and `Review`.",
+   "passRate": 50,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply tells the user that `/pdlc:verify` is next.",
+   "passRate": 0,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R10",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The user and the `verify` stage get a true account of the recording. Each claim in the final reply and in the handoff agrees with the files.",
+   "passRate": 75,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 4,
+   "quality": 75,
+   "stability": 67.3
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-show/runs/plugin-N-20261102T135045Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 75,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "shows all 14 acceptance lines of R7 (top option) and R8 (top value check)"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "python3 -m wordfreq --top 0 pdlc/changes/CH-0001-top-option/sample.txt; echo \"exit=$?\" (visual.json on branch)"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "the recording uses a small `sample.txt` that I added in the change folder"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`review.gif` has 18 frames in a terminal"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "I read frames 17 and 18 directly. The reviewer read all 18."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Status (`git status --porcelain -uall`): (empty); all run files under pdlc/changes/CH-0001-top-option/"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "18 key frames. 14 of 14 acceptance lines are shown. (no frame-by-frame account; title is show \u2192 user)"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "Visual review CH-0001 ... Review: pdlc/changes/CH-0001-top-option/review.gif; handoff.md is in the later \"Propose CH-0001\" commit"
+    },
+    {
+     "id": "R9",
+     "verdict": "missed",
+     "evidence": "**Next:** merge `pdlc/CH-0001-top-option` into main locally."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "handoff.md: \"The recording is at pdlc/changes/CH-0001-top-option/proposal.md.\""
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-show/runs/plugin-N-20261102T135045Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 81.8,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "shows all 14 acceptance lines: 4 for R7 (top limit) and 10 for R8 (top value check)"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "python3 -m wordfreq --top 0 pdlc/changes/CH-0001-top-option/sample.txt 2>&1 >/dev/null; echo \"exit code: $?\" (visual.json on branch)"
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "python3 -m wordfreq --top abc /nonexistent/file.txt (absolute path in visual.json)"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`review.gif` has 18 frames"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I read the last frame of each line, and each shows its caption."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Status (`git status --porcelain -uall`): (empty); all run files under pdlc/changes/CH-0001-top-option/"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "18 key frames. 14 of 14 acceptance lines are shown. (no frame-by-frame account; title is show \u2192 user)"
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "committed with the handoff as \"Propose CH-0001\""
+    },
+    {
+     "id": "R9",
+     "verdict": "missed",
+     "evidence": "**Merge:** merge branch `pdlc/CH-0001-top-option` into main locally."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "`review.gif` has 18 frames and shows all 14 acceptance lines: 4 for R7 (top limit) and 10 for R8 (top value check)"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-show/runs/plugin-N-20261102T135045Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 77.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "shows all 14 acceptance lines of R7 (top option) and R8 (top value check)"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "python3 -m wordfreq --top 2 pdlc/changes/CH-0001-top-option/words.txt; echo \"exit $?\""
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "python3 -m wordfreq --top abc /no/such/file.txt; echo \"exit $?\""
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "`review.gif` has 18 frames"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "I read frames 3 and 17, and the last frame (18) of each run."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Status (`git status --porcelain -uall`): (empty)"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "# Handoff \u00b7 CH-0001 \u00b7 show \u2192 user ... 18 key frames. 14 of 14 acceptance lines are shown."
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "Propose CH-0001 commit holds handoff.md, frames and review.gif, separate from Visual review CH-0001"
+    },
+    {
+     "id": "R9",
+     "verdict": "missed",
+     "evidence": "**Next:** read the proposal and merge `pdlc/CH-0001-top-option` into main yourself."
+    },
+    {
+     "id": "R10",
+     "verdict": "met",
+     "evidence": "`review.gif` has 18 frames and shows all 14 acceptance lines ... Frame 18 shows 8 other checks and 21 acceptance checks passing."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-show/runs/plugin-N-20261102T135045Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "",
+   "quality": 65.9,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "It shows all 14 acceptance lines of R7 (top option) and R8 (top value check) in a terminal"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "with exit codes printed"
+    },
+    {
+     "id": "R3",
+     "verdict": "missed",
+     "evidence": "python3 -m wordfreq --top 2 /tmp/claude-0/.../scratchpad/words.txt; echo \"exit=$?\""
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "I removed those words and re-recorded."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "I read the last frame."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Status (`git status --porcelain -uall`): (empty)"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "The handoff `show \u2192 user` has a wrong line under \"Open\"."
+    },
+    {
+     "id": "R8",
+     "verdict": "partial",
+     "evidence": "Visual review CH-0001 ... Review: pdlc/changes/CH-0001-top-option/review.gif; handoff committed in Propose CH-0001"
+    },
+    {
+     "id": "R9",
+     "verdict": "missed",
+     "evidence": "**Not merged:** Merge `pdlc/CH-0001-top-option` into main locally."
+    },
+    {
+     "id": "R10",
+     "verdict": "partial",
+     "evidence": "It says the frame 06 fix is still open, but the fix is done."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "All runs have 18 steps: setup, 4 R7 lines, 10 R8 lines with the -3/abc/2.5 line split, then all checks, with full requirement IDs in captions.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "18 steps: setup, 4 R7 lines, 10 R8 lines (the -3/abc/2.5 line split into 3 steps), then all checks; captions start with the full requirement ID"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "All runs run the real command with the spec inputs and show exit codes, but the input location, missing-file path and stream handling differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Real command on the committed sample.txt, streams not redirected, exit shown with echo exit=$?, missing file is relative no_such_file.txt"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Real command; error steps show only stderr (2>&1 >/dev/null), exit shown as \"exit code: $?\", missing file is /nonexistent/file.txt"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Real command on words.txt made in the change folder, exit shown with echo \"exit $?\", missing file is /no/such/file.txt"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Real command on words.txt in a /tmp scratchpad, exit shown with echo exit=$?, missing file is words.txt.missing in /tmp"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "Three runs keep inputs in the project, but P01#4 puts all inputs in an absolute /tmp path that is not committed.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "All paths relative; sample.txt is committed and only read by the setup step; last step runs the all command plus the acceptance file"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Setup step writes sample.txt in the change folder; one absolute path /nonexistent/file.txt; same last step"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Every step reads an input file in an absolute /tmp scratchpad path that the commit does not hold; same last step"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "equivalent",
+   "reason": "All runs commit review.gif plus 18 frames for an 18-step visual.json.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "review.gif plus 18 frames, one per step of an 18-step visual.json, committed together"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "major_drift",
+   "reason": "One run reads the last frame of each acceptance line, while others sample one to three frames.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Run reads only frames 17 and 18 and relies on the reviewer for the rest"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Run reads the last frame of each acceptance line"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Run reads frames 3, 17 and 18 and relies on the reviewer for the rest"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Run reads only the last frame and relies on the reviewer"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "equivalent",
+   "reason": "All runs keep new files in the change folder, leave status and main unchanged, and end with a clean tree.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "All new files stay in the change folder; status and main unchanged; clean tree"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "All runs write a show \u2192 user handoff with 14 of 14 and no frame-by-frame account; Done and Open content differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "show \u2192 user handoff with \"14 of 14\" and no frame-by-frame account; Done has extra bullets, one with a wrong recording path"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "show \u2192 user handoff with \"14 of 14\" and no frame-by-frame account; short Done"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "show \u2192 user handoff with \"14 of 14\", no frame-by-frame account; Done adds review-round history bullets with a correct path"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "show \u2192 user handoff with \"14 of 14\", short Done, and a stale item under Open about a fixed frame 06 caption"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "All runs make a Visual review CH-0001 commit with correct trailers and put the handoff in a separate Propose CH-0001 commit.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Visual review CH-0001 commit with script, sample, GIF and frames and correct trailers; handoff goes in a separate Propose CH-0001 commit"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "equivalent",
+   "reason": "All runs name a local merge into main as the next step, not /pdlc:verify.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Final reply names a local merge into main as next, not /pdlc:verify"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R10",
+   "class": "minor_drift",
+   "reason": "Counts agree in all runs; two runs each have one wrong handoff claim (a path or an Open item).",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Counts are correct, but the handoff says that the recording is at proposal.md"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "All counts and claims agree with the files"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Counts are correct, but the handoff lists a fixed frame 06 caption as still open; the reply admits the error"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}
