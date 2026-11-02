@@ -12,8 +12,8 @@ description: >
 
 ## Goal
 
-Record each acceptance line of a verified change as `review.gif`, have a fresh reviewer
-judge the frames, and propose the merge with the GIF. Never merge.
+Record each acceptance line as `review.gif`. A fresh reviewer judges the frames. The
+proposal shows the GIF. Do not merge.
 
 ## Inputs
 
@@ -24,17 +24,17 @@ judge the frames, and propose the merge with the GIF. Never merge.
 
 - `visual.json`, `review.gif`, `frames/`: commit "Visual review CH-xxxx" (`Intent`, `Change`, `Review: pdlc/changes/CH-xxxx-…/review.gif`).
 - Record with `node pdlc/bin/record_gif.mjs pdlc/changes/CH-xxxx-…/visual.json pdlc/changes/CH-xxxx-…`.
-  Review: `python3 pdlc/bin/make_packets.py CH-xxxx visual` for one `pdlc:reviewer`.
+  Review: `python3 pdlc/bin/make_packets.py CH-xxxx visual` for one `pdlc:reviewer`, when "Reviews" lists `visual`.
 - Gate fixes: "Update CH-xxxx: <what>".
 - Handoff `show → user` (link, frames, lines shown of total) in "Propose CH-xxxx" (`Intent`, `Change`).
-- An `app` problem: `building`, requirements `built`, handoff `show → build`, "Send back CH-xxxx: <stage>" (build); stop.
+- An `app` problem: `building`, requirements `built`, handoff `show → build`, "Send back CH-xxxx: <stage>" (build). Stop.
 
 ## Constraints
 
 - Follow `pdlc/README.md`: "Bookkeeping on main" first, "Commits", "Who does what", "Rounds".
 - Unverified: `/pdlc:verify` first.
 - A capability uses `"kind": "terminal"`. A `setup:` caption marks a preparing step.
-- Write only in the change folder. Fix scripts, never the app.
+- Write only in the change folder. Fix scripts, not the app.
 - Missing browser: `npx --prefix pdlc/.tools playwright install chromium`.
 
 ## Done when
