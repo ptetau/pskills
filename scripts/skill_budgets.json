@@ -3,7 +3,8 @@
     "ready",
     "tests",
     "trace",
-    "acceptance"
+    "acceptance",
+    "upgrade"
   ],
   "acceptance": 200,
   "board": 200,
