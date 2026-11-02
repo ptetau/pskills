@@ -59,7 +59,13 @@
         "evidence": "evals/pdlc-ship/runs/decl-p2-a-20261102T080703Z + decl-p2-b vs master-base-a/b: R3 (no default for a contradiction)"
       }
     ],
-    "tests": [],
+    "tests": [
+      {
+        "rule": "`pdlc.py start CH-xxxx` sets `Branch:`, `Base:`, and the status, makes the branch, and commits \"Start CH-xxxx\"; never pick the base.",
+        "words": 22,
+        "evidence": "evals/pdlc-tests/runs/plugin-N* vs plugin-M* (pooled, in /home/user/pskills): R5 (`Branch:` and `Base:` follow \"Stacked changes\"; the first change starts from the intent branch) fell from 93.8 to 68.8; new runs wrote `Base: main` for CH-0001 while the intent had `Branch: pdlc/IN-0001-mark-done`"
+      }
+    ],
     "acceptance": [
       {
         "rule": "A missing \"Interface\" item goes into its spec and change spec as `proposed`. Only the third failed review stops the stage.",

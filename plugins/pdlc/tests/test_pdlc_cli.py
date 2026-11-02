@@ -13,7 +13,7 @@ from pathlib import Path
 PLUGIN = Path(__file__).parent.parent
 SCRIPT = PLUGIN / "skills/init/references/bin/pdlc.py"
 TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
-SUBCOMMANDS = ["commit", "message", "handoff", "stop", "set", "intent", "change"]
+SUBCOMMANDS = ["commit", "message", "handoff", "stop", "set", "intent", "change", "start"]
 # The subcommands that still answer "not implemented".
 STUBS = []
 GIT_ENV = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "commit.gpgsign",
@@ -245,6 +245,7 @@ class Commit(Project):
                 self.assertEqual(self.log(), subject)
 
     def test_text_is_required_for_a_kind_that_needs_it(self):
+        self.make("verify", "CH-0001")
         for kind in ("build", "update", "send-back", "stop"):
             done = self.make(kind, "CH-0001")
             self.assertEqual(done.returncode, 1, kind)
@@ -841,6 +842,82 @@ CHANGE_WITH_INTERFACE = CHANGE.replace("## Progress log", """## Interface
   - errors: none
 
 ## Progress log""")
+
+
+class StartTests(Project):
+    """`pdlc.py start` works out Branch and Base from "Stacked changes", and makes the branch."""
+    branch = "pdlc/IN-0001-reset"
+
+    def setUp(self):
+        super().setUp()
+        planned = CHANGE.replace("Status: testing", "Status: planned").replace(
+            "Branch: pdlc/CH-0001-email · Base: main", "Branch: none · Base: main")
+        self.write("pdlc/changes/CH-0001-email/change.md", planned)
+        self.write("pdlc/changes/CH-0002-sms/change.md",
+                   planned.replace("CH-0001", "CH-0002").replace("Email templates", "Sms"))
+        self.write("pdlc/inbox/IN-0001-reset.md", INTENT.replace(
+            "- CH-0001 \u00b7 email templates", "- CH-0001 \u00b7 email templates\n- CH-0002 \u00b7 sms"))
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "Plan IN-0001: email templates, sms")
+
+    def fields(self, folder):
+        return self.read("pdlc/changes/%s/change.md" % folder)
+
+    def test_the_first_change_starts_from_the_intent_branch(self):
+        intent_tip = git(self.root, "rev-parse", "HEAD")
+        done = self.pdlc("start", "CH-0001")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual(git(self.root, "branch", "--show-current"), "pdlc/CH-0001-email")
+        text = self.fields("CH-0001-email")
+        self.assertIn("Status: testing", text)
+        self.assertIn("Branch: pdlc/CH-0001-email \u00b7 Base: pdlc/IN-0001-reset", text)
+        self.assertEqual(self.log(), "Start CH-0001")
+        self.assertEqual(git(self.root, "rev-parse", "HEAD~1"), intent_tip)
+
+    def test_the_second_change_starts_from_the_first_change_branch(self):
+        self.assertEqual(self.pdlc("start", "CH-0001").returncode, 0)
+        git(self.root, "switch", "-q", "pdlc/IN-0001-reset")
+        first_tip = git(self.root, "rev-parse", "pdlc/CH-0001-email")
+        done = self.pdlc("start", "CH-0002")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual(git(self.root, "branch", "--show-current"), "pdlc/CH-0002-sms")
+        self.assertIn("Branch: pdlc/CH-0002-sms \u00b7 Base: pdlc/CH-0001-email", self.fields("CH-0002-sms"))
+        self.assertEqual(git(self.root, "rev-parse", "HEAD~1"), first_tip)
+
+    def test_a_second_change_after_a_merged_first_starts_from_main(self):
+        self.assertEqual(self.pdlc("start", "CH-0001").returncode, 0)
+        git(self.root, "switch", "-q", "main")
+        git(self.root, "merge", "-q", "--no-edit", "pdlc/CH-0001-email")
+        git(self.root, "switch", "-q", "pdlc/IN-0001-reset")
+        done = self.pdlc("start", "CH-0002")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("Base: main", self.fields("CH-0002-sms"))
+
+    def test_the_first_change_with_no_intent_branch_starts_from_main(self):
+        git(self.root, "switch", "-q", "main")
+        git(self.root, "merge", "-q", "--ff-only", "pdlc/IN-0001-reset")
+        text = self.read("pdlc/inbox/IN-0001-reset.md").replace("Branch: pdlc/IN-0001-reset", "Branch: none")
+        self.write("pdlc/inbox/IN-0001-reset.md", text)
+        git(self.root, "commit", "-qam", "Update IN-0001: no branch")
+        done = self.pdlc("start", "CH-0001")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("Base: main", self.fields("CH-0001-email"))
+
+    def test_an_existing_branch_keeps_its_base_and_makes_no_commit(self):
+        self.assertEqual(self.pdlc("start", "CH-0001").returncode, 0)
+        git(self.root, "switch", "-q", "main")
+        before = git(self.root, "rev-parse", "pdlc/CH-0001-email")
+        done = self.pdlc("start", "CH-0001")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual(git(self.root, "branch", "--show-current"), "pdlc/CH-0001-email")
+        self.assertEqual(git(self.root, "rev-parse", "HEAD"), before)
+        self.assertIn("Base: pdlc/IN-0001-reset", self.fields("CH-0001-email"))
+
+    def test_a_change_before_its_predecessor_has_started_is_refused(self):
+        done = self.pdlc("start", "CH-0002")
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("CH-0001", done.stdout)
+        self.assertEqual(git(self.root, "branch", "--show-current"), "pdlc/IN-0001-reset")
 
 
 class SetTests(Project):

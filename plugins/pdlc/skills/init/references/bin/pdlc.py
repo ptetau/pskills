@@ -3,7 +3,7 @@
 
 Usage: python3 pdlc/bin/pdlc.py <subcommand> [options]
 
-Subcommands: commit, message, handoff, stop, set, intent, change.
+Subcommands: commit, message, handoff, stop, set, intent, change, start.
 
 Exit codes, for every subcommand:
   0  done
@@ -39,6 +39,7 @@ SUBCOMMANDS = {
     "set": "set header fields and statuses of an intent or a change",
     "intent": "make a new intent, or change the lists of an intent",
     "change": "make the spec of a new change",
+    "start": "start a change: work out its Branch and Base, make the branch, commit the start",
 }
 
 
@@ -1250,6 +1251,78 @@ def options_change(parser):
 
 
 # ---------------------------------------------------------------------------------------
+# start
+
+def branch_exists(root, name):
+    return run_git(root, "show-ref", "--verify", "--quiet", "refs/heads/" + name, check=False).returncode == 0
+
+
+def merged_into_main(root, branch):
+    return run_git(root, "merge-base", "--is-ancestor", branch, "main", check=False).returncode == 0
+
+
+def listed_changes(root, intent_id):
+    text = pdlclib.section(find_intent(root, intent_id).read_text(), "Changes")
+    return [m.group(1) for m in (re.search(r"\b(CH-\d+)\b", l) for l in text.splitlines()) if m]
+
+
+def stacked_base(root, change_id):
+    """The base of a change, by "Stacked changes" in the README."""
+    intent_id = intent_of(root, change_id)
+    changes = listed_changes(root, intent_id)
+    if change_id not in changes:
+        raise Problem("%s is not in the Changes list of %s" % (change_id, intent_id))
+    position = changes.index(change_id)
+    if position:
+        before = changes[position - 1]
+        found = run_git(root, "for-each-ref", "--format=%(refname:short)",
+                        "refs/heads/pdlc/%s-*" % before, check=False).stdout.split()
+        branch = found[0] if found else None
+        if not branch:
+            raise Problem("%s comes before %s and has no branch: start %s first" % (before, change_id, before))
+        return "main" if merged_into_main(root, branch) else branch
+    branch = pdlclib.field(find_intent(root, intent_id).read_text(), "Branch")
+    if branch and branch != "none" and branch_exists(root, branch):
+        return branch
+    own = {pdlclib.field(find_change(root, c).read_text(), "Branch") for c in changes}
+    listing = run_git(root, "branch", "--no-merged", "main", "--list", "pdlc/CH-*",
+                      "--sort=-committerdate", "--format=%(refname:short)", check=False).stdout.split()
+    return next((b for b in listing if b not in own), "main")
+
+
+def handle_start(args, extra):
+    reject_extra(extra)
+    root = project()
+    os.chdir(str(root))
+    id_ = args.id
+    if not re.fullmatch(r"CH-\d+", id_):
+        raise Usage("the ID must be CH-xxxx")
+    path = find_change(root, id_)
+    branch = pdlclib.field(path.read_text(), "Branch")
+    if not branch or branch == "none":
+        branch = "pdlc/" + path.parent.name
+    if branch_exists(root, branch):
+        run_git(root, "switch", "-q", branch)
+        print("%s: the branch %s exists; its Base stays" % (id_, branch))
+        return EXIT_DONE
+    base = stacked_base(root, id_)
+    texts = Texts()
+    must_set(texts, path, "Branch", branch, True)
+    must_set(texts, path, "Base", base, True)
+    must_set(texts, path, "Status", "testing", True)
+    run_git(root, "switch", "-q", "-c", branch, base)
+    texts.write()
+    print("%s: Branch \u2192 %s, Base \u2192 %s, Status \u2192 testing" % (id_, branch, base))
+    return handle_commit(argparse.Namespace(kind="start", id=id_, text=None, req=None, ticket=None,
+                                            trailer=None, intent=None, base=None, amend=False,
+                                            paths=None), [])
+
+
+def options_start(parser):
+    parser.add_argument("id", help="CH-xxxx")
+
+
+# ---------------------------------------------------------------------------------------
 # The entry point
 
 def not_implemented(name):
@@ -1269,11 +1342,12 @@ HANDLERS["stop"] = handle_stop
 HANDLERS["set"] = handle_set
 HANDLERS["intent"] = handle_intent
 HANDLERS["change"] = handle_change
+HANDLERS["start"] = handle_start
 
 OPTIONS = {"commit": add_commit_options, "message": add_commit_options,
            "handoff": options_handoff, "stop": options_stop,
            "set": options_set, "intent": options_intent,
-           "change": options_change}
+           "change": options_change, "start": options_start}
 
 
 def build_parser():
