@@ -30,8 +30,8 @@ each edited file, and the user sees its diff. `pdlc/version.json` records the ve
 
 - `pdlc/README.md` binds, in particular "Core rules", "pdlc's own files", and "New behaviour
   needs approval".
-- The script does the work: `python3 <this skill>/scripts/upgrade.py apply`. The skill never
-  copies, edits, or merges a pdlc file, and never re-judges which files are edited.
+- The script does the work: `python3 <this skill>/scripts/upgrade.py apply`. The skill does not
+  copy, edit, or merge a pdlc file, or re-judge which files are edited.
 - An edited file goes to the plugin version only when the user names it, with `--take <path>`.
 - On a non-zero exit, the skill gives the message of the script to the user and stops.
 - The upgrade runs no other stage.
