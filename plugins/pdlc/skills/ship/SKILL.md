@@ -28,8 +28,7 @@ If `pdlc/version.json` is older, run `/pdlc:upgrade`.
 ## Outputs
 
 - Each change gets `verify` and show.
-- At a stop: under "Open", the reason in one sentence, what the user must decide, and the recommended answer. The reply says the same. Commit
-  "Stop CH-xxxx: <why>" or "Stop IN-xxxx: <why>", with the trailers of "Commits" in one block.
+- At a stop: `python3 pdlc/bin/pdlc.py stop`. The reply repeats its "Open".
 - The reply: pull requests and GIFs in stack order.
 
 ## Constraints

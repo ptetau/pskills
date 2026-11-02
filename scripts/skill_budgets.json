@@ -195,16 +195,6 @@
         "evidence": "evals/pdlc-ship/runs/decl-final-a-20261102T054013Z + decl-final-b vs master-base-a/b: R5 (stage subjects and trailers), supports R7"
       },
       {
-        "rule": "Under \"Open\", the reason in one sentence, what the user must decide, and the recommended answer. The reply says the same.",
-        "words": 21,
-        "evidence": "evals/pdlc-ship/runs/decl-final-a-20261102T054013Z + decl-final-b vs master-base-a/b: R2 (a stop gives a clear decision)"
-      },
-      {
-        "rule": "Commit with the trailers of \"Commits\" in one block.",
-        "words": 9,
-        "evidence": "evals/pdlc-ship/runs/decl-final-a-20261102T054013Z + decl-final-b vs master-base-a/b: R7 (trailers and clean tree)"
-      },
-      {
         "rule": "Stop only for a contradiction that ready finds",
         "words": 3,
         "evidence": "evals/pdlc-ship/runs/decl-p3-b-* run 1 vs master-base-a/b: R5 and R1 (ship stopped after intake and skipped ready; master: 'Ready takes no default for a contradiction')"
