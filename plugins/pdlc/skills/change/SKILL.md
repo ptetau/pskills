@@ -21,14 +21,10 @@ The intent that the user names, else the oldest `ready` one.
 
 ## Outputs
 
-- `pdlc/changes/CH-xxxx-<short-name>/change.md` from `pdlc/templates/change.md`:
-  `Status: planned`, `Branch: none`, `Base: main`, `Tests-Locked: none`. "Requirements" holds only the headings and acceptance lines, word for word.
-  "Relies on" has `used, not changed`, `DES-writing-style`, `DES-pdlc-check-tagging`,
-  `DES-errors`.
+- `pdlc/changes/CH-xxxx-<short-name>/change.md`, from `python3 pdlc/bin/pdlc.py change new IN-xxxx --scope SPEC --name SHORT --json -`.
 - New "Interface" entries in their specs, with ` · proposed`.
-- Handoff `change → acceptance`.
-- The commit "Plan IN-xxxx: <names of changes>", trailer `Intent`, after
-  `python3 pdlc/bin/check_order.py IN-xxxx` exits 0.
+- Handoff `change → acceptance`, from `python3 pdlc/bin/pdlc.py handoff IN-xxxx change acceptance`.
+- The commit, from `python3 pdlc/bin/pdlc.py commit plan IN-xxxx`, which runs `check_order.py`.
 - The reply: `/pdlc:acceptance` next.
 
 ## Constraints
@@ -39,9 +35,8 @@ The intent that the user names, else the oldest `ready` one.
   `stdout`. A new name has `(assumed)`. "Out" gives the full result, with its order and the order of equal items.
 - A seam sits at the outermost interface, or, with no runner, is a `stand-in`. A
   missing tool is not a stop.
-- Steps: one for each requirement, in number order, and each "Check" name holds the requirement ID. The README step's "Done when" also names each seam a user can set, and how to run the app and the checks.
-- A job change lists README in "Files". Its step is last, "Check" `none`.
-- Keep the trailers in one block, as README "Commits" says.
+- The README step's "Done when" (`readme_done`) also names each seam a user can set, and how to run the app and the checks.
+- A job change lists README in "Files".
 
 ## Done when
 
