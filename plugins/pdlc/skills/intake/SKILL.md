@@ -17,26 +17,27 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 ## Inputs
 
 - `pdlc/README.md` binds: "Core rules", "Bookkeeping on main", "Where pdlc commits",
-  "Spec patches", "Questions", "Interfaces", "Commits", "Stages and handoffs".
-- Source, first match: new words of the user, a named intent, a named
-  `.blueprint.md`, the oldest `new` intent with no `Awaits approval:`.
+  "Spec patches", "Questions", "Interfaces", "Commits", "Stages and handoffs",
+  "New behaviour needs approval".
+- Source, first match: new words of the user, a named intent or `.blueprint.md`, the
+  oldest `new` intent with no `Awaits approval:`. Argument `defaults`.
 
 ## Outputs
 
-- Intent: `Status: specifying`; "Requirements" with added, changed, or retiring; handoff
+- Intent: `Status: specifying`. "Requirements" with added, changed, or retiring. Handoff
   `intake → ready`.
 - Commit "Specify IN-xxxx: <name>" with `Intent: IN-xxxx`, after
   `python3 pdlc/bin/check_handoff.py IN-xxxx --stage intake` exits 0. After three failed
   runs: problems under "Open", handoff `intake → user`, commit.
-- Reply: what intake wrote; next `/pdlc:ready`.
+- Reply: what intake wrote. Next: `/pdlc:ready`.
 
 ## Constraints
 
 - With an unmerged pdlc branch, the intent gets its own branch (delivery port).
   Otherwise `Branch: none`.
-- Each detail the intent does not give has `(assumed)`, also in a Given line.
+- Each detail not in the intent has `(assumed)`, also in a Given line.
 - A failure line gives the exact message and result.
-- A `Status: stub` spec first gets `pdlc:recon` with only the project root, the spec path,
+- A `Status: stub` spec first gets `pdlc:recon` with only the project root, spec path,
   and `deep look`.
 - A new job lists its capabilities and design specs.
 
