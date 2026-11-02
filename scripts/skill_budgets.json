@@ -4,7 +4,8 @@
     "tests",
     "trace",
     "acceptance",
-    "upgrade"
+    "upgrade",
+    "change"
   ],
   "acceptance": 200,
   "board": 200,
