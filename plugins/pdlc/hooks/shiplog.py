@@ -6,7 +6,7 @@ Two jobs, both only while a ship run is current:
 1. A debug log. Each ship run writes one file, pdlc/.logs/ship-<UTC start>.jsonl, with one
    JSON object on each line. The model writes no entry. Each entry comes from an event
    that this hook sees: run_start, stage_start, commit, agent_start, agent_end,
-   agent_stop, tool_error, stop_blocked, turn_end, and hook_error. The keys of every
+   agent_stop, tool_error, stop_blocked, turn_wait, turn_end, and hook_error. The keys of every
    entry: t (ISO time with offset), run, session, event. pdlc/.logs/current holds the name
    of the current log. The project's .gitignore lists pdlc/.logs/, so the log costs no
    commit and survives a branch switch.
@@ -19,6 +19,9 @@ Two jobs, both only while a ship run is current:
      - no commit was made since run_start (end state "no work").
    Else the hook blocks the end of the turn, at most 2 times in one run. After that it lets
    the turn end, with end state "unrecorded". When the turn ends, the run is over.
+   Exception: when an agent that the run started in the background has not stopped yet, the
+   turn ends with a "turn_wait" entry, no block, and the run stays current. The notification
+   turn of the agent is still in the run.
 
 A session that is not a ship run is never blocked and never logged: no current run for the
 session, no project (a folder that holds pdlc/config.md), a broken input, or any error
@@ -40,6 +43,9 @@ CURRENT = "current"
 START = re.compile(r"\s*/pdlc:ship\b")
 STAGE_END = re.compile(r"^(Specify|Ready|Plan|Acceptance reviewed|Tests reviewed|Built|Verified|"
                        r"Send back|Propose|Stop)\b")
+BACKGROUND = re.compile(r"async[_ ]agent[_ ]launched|async_launched|working in the background|"
+                        r"running in the background", re.I)
+AGENT_ID = re.compile(r"agent_?id\W{1,4}([A-Za-z0-9_-]+)", re.I)
 RATE_LIMIT = re.compile(r"rate.?limit|429|529|overloaded", re.I)
 MAX_BLOCKS = 2
 TEXT_LIMIT = 500
@@ -348,7 +354,14 @@ def on_agent_end(data, root, session):
                        if e.get("agent") == fields["agent"] and e.get("tool_use_id") not in done]
         started = open_starts[-1] if open_starts else None
     seconds = seconds_between(started["t"], now()) if started else None
-    run.add("agent_end", session, seconds=seconds, attempt=started.get("attempt") if started else None, **fields)
+    extra = {}
+    response = data.get("tool_response")
+    text = response if isinstance(response, str) else json.dumps(response)
+    if BACKGROUND.search(text or ""):
+        found = AGENT_ID.search(text)
+        extra = {"background": True, "agent_id": found.group(1) if found else None}
+    run.add("agent_end", session, seconds=seconds, attempt=started.get("attempt") if started else None,
+            **fields, **extra)
 
 
 def on_failure(data, root, session):
@@ -382,6 +395,23 @@ def on_stop_failure(data, root, session):
     return None
 
 
+def pending_agents(run):
+    """The agent_end entries of background launches whose agent has not stopped yet."""
+    stops = run.of("agent_stop")
+    pending = []
+    for index, entry in enumerate(run.entries):
+        if entry.get("event") != "agent_end" or not entry.get("background"):
+            continue
+        later = [e for e in run.entries[index + 1:] if e.get("event") == "agent_stop"]
+        if entry.get("agent_id"):
+            done = any(e.get("agent_id") == entry["agent_id"] for e in stops)
+        else:
+            done = any(e.get("agent") == entry.get("agent") for e in later)
+        if not done:
+            pending.append(entry)
+    return pending
+
+
 def on_stop(data, root, session):
     """Returns the JSON to print, or None."""
     run = Run.current(root, session)
@@ -394,6 +424,11 @@ def on_stop(data, root, session):
     dirty = len((git(root, "status", "--porcelain") or "").splitlines())
     common = dict(last_subject=last, commits=len(pairs), dirty_files=dirty,
                   stop_hook_active=data.get("stop_hook_active"), **where(root))
+    waiting = pending_agents(run)
+    if waiting and state not in ("stopped", "proposed"):
+        run.add("turn_wait", session, pending=len(waiting), agents=[e.get("agent") for e in waiting],
+                **common)
+        return None
     if not allowed and blocks < MAX_BLOCKS:
         run.add("stop_blocked", session, block=blocks + 1, reason=REASON, **common)
         return {"decision": "block", "reason": REASON}
@@ -466,7 +501,7 @@ def stage_rows(entries):
         if entry.get("event") == "stage_start":
             current = {"stage": entry.get("stage"), "entries": []}
             stages.append(current)
-        elif entry.get("event") in ("turn_end", "stop_blocked"):
+        elif entry.get("event") in ("turn_end", "stop_blocked", "turn_wait"):
             continue
         if current is None and entry.get("event") not in ("run_start",):
             current = {"stage": "(before the first stage)", "entries": []}

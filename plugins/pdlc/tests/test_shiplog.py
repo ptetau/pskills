@@ -244,6 +244,60 @@ class ShipLog(unittest.TestCase):
         self.assertEqual(self.last_turn_end()["end_state"], "unrecorded")
         self.assertEqual(len(self.events("stop_blocked")), 2)
 
+    # background agents
+    LAUNCH = ("Async agent launched successfully.\nagentId: %s (internal ID)\n"
+              "The agent is working in the background. You will be notified automatically "
+              "when it completes.")
+
+    def launch_background(self, *ids):
+        for n in ids:
+            tool = {"subagent_type": "pdlc:recon", "description": "recon " + n}
+            self.hook("PreToolUse", tool_name="Agent", tool_input=tool, tool_use_id="tu" + n)
+            self.hook("PostToolUse", tool_name="Agent", tool_input=tool, tool_use_id="tu" + n,
+                      tool_response=[{"type": "text", "text": self.LAUNCH % n}])
+
+    def test_pending_background_agent_keeps_the_run_current(self):
+        self.start()
+        self.launch_background("a1", "a2")
+        self.assertEqual(self.stop().stdout, "")
+        self.assertEqual(len(self.events("turn_wait")), 1)
+        self.assertEqual(self.events("turn_end"), [])
+        self.assertEqual(self.events("stop_blocked"), [])
+        self.assertTrue((self.root / "pdlc/.logs/current").exists())
+        # the notification turn: the agents are done, the intent is specified, no end state
+        self.hook("SubagentStop", agent_type="pdlc:recon", agent_id="a1")
+        self.hook("SubagentStop", agent_type="pdlc:recon", agent_id="a2")
+        self.commit("Specify IN-0001: x")
+        self.blocked(self.stop())
+        self.assertEqual(len(self.events("stop_blocked")), 1)
+
+    def test_turn_waits_while_one_background_agent_is_pending(self):
+        self.start()
+        self.launch_background("a1", "a2")
+        self.hook("SubagentStop", agent_type="pdlc:recon", agent_id="a1")
+        self.commit("Specify IN-0001: x")
+        self.assertEqual(self.stop().stdout, "")
+        self.assertEqual(len(self.events("turn_wait")), 1)
+        self.assertEqual(self.events("stop_blocked"), [])
+
+    def test_foreground_agent_does_not_hold_the_run(self):
+        self.start()
+        tool = {"subagent_type": "pdlc:recon", "description": "d"}
+        self.hook("PreToolUse", tool_name="Agent", tool_input=tool, tool_use_id="f1")
+        self.hook("PostToolUse", tool_name="Agent", tool_input=tool, tool_use_id="f1",
+                  tool_response=[{"type": "text", "text": "Mapped 3 requirements."}])
+        self.stop()
+        self.assertEqual(self.events("turn_wait"), [])
+        self.assertEqual(self.last_turn_end()["end_state"], "no work")
+
+    def test_new_prompt_ends_a_run_that_waits(self):
+        self.start()
+        self.launch_background("a1")
+        self.stop()
+        self.hook("UserPromptSubmit", prompt="never mind")
+        self.assertEqual(self.last_turn_end()["end_state"], "left by user")
+        self.assertFalse((self.root / "pdlc/.logs/current").exists())
+
     def test_turn_end_ends_the_run(self):
         self.start()
         self.stop()
