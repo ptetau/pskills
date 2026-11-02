@@ -786,6 +786,19 @@ def writing_findings(project, since):
     return {"count": len(findings), "files": files, "findings": findings}
 
 
+def stack_tip(project, branches):
+    """The branch to probe: the top of the stack. A branch that holds another one wins over it,
+    because two tips can share one commit second. Among the rest, the newest commit wins."""
+    others = [b for b in branches if b != "main"]
+    if not others:
+        return "main"
+
+    def holds(top, low):
+        return top != low and git(project, "merge-base", "--is-ancestor", low, top).returncode == 0
+    tops = [b for b in others if not any(holds(o, b) for o in others)]
+    return max(tops, key=lambda b: git(project, "log", "-1", "--format=%ct", b).stdout.strip() or "0")
+
+
 def inspect_project(project, fixture="wordfreq"):
     """Read what a ship run left in the project. Check each change branch as the merge would."""
     project = Path(project)
@@ -808,7 +821,7 @@ def inspect_project(project, fixture="wordfreq"):
     out["stops"] = [x for x in subjects if x.startswith("Stop ")]
     out["verify_rounds"] = len([x for x in subjects if x.startswith("Verify CH-")])
     out["proposed"] = any(x.startswith("Propose CH-") for x in subjects)
-    tip = max((b for b in branches if b != "main"), key=lambda b: git(project, "log", "-1", "--format=%ct", b).stdout.strip() or "0", default="main")
+    tip = stack_tip(project, branches)
     git(project, "checkout", "-q", tip)
     out["tip"] = tip
     root = git(project, "rev-list", "--max-parents=0", "HEAD").stdout.split()[0]

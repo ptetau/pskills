@@ -2885,5 +2885,34 @@ class VetRunTest(unittest.TestCase):
         self.assertEqual(run_bench.git(app, "status", "--porcelain", "-uall").stdout.strip(), "")
 
 
+
+
+class StackTipTest(unittest.TestCase):
+    """The bench probes the top of the stack, even when two tips share a commit second."""
+
+    def test_the_branch_that_holds_the_others_wins_a_tie(self):
+        import subprocess, tempfile
+        work = tempfile.mkdtemp()
+        env = dict(os.environ, GIT_AUTHOR_DATE="2026-01-01T00:00:00", GIT_COMMITTER_DATE="2026-01-01T00:00:00")
+
+        def run(*args):
+            subprocess.run(["git", "-c", "commit.gpgsign=false", *args], cwd=work, env=env, check=True,
+                           capture_output=True)
+        run("init", "-q", "-b", "main")
+        run("commit", "-q", "--allow-empty", "-m", "root")
+        run("checkout", "-q", "-b", "pdlc/CH-0001-a")
+        run("commit", "-q", "--allow-empty", "-m", "a")
+        run("checkout", "-q", "-b", "pdlc/CH-0002-b")
+        run("commit", "-q", "--allow-empty", "-m", "b")
+        run("checkout", "-q", "-b", "pdlc/CH-0003-c")
+        run("commit", "-q", "--allow-empty", "-m", "c")
+        branches = ["main", "pdlc/CH-0001-a", "pdlc/CH-0002-b", "pdlc/CH-0003-c"]
+        self.assertEqual(run_bench.stack_tip(Path(work), branches), "pdlc/CH-0003-c")
+
+    def test_no_pdlc_branch_gives_main(self):
+        import tempfile
+        self.assertEqual(run_bench.stack_tip(Path(tempfile.mkdtemp()), ["main"]), "main")
+
+
 if __name__ == "__main__":
     unittest.main()
