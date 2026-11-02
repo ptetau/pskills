@@ -12,47 +12,32 @@ description: >
 
 ## Goal
 
-Board makes all of the board agree with pdlc in one pass. The other skills tell the
-tracker port about each new status while they work. Board is for a board that no longer
-agrees with pdlc, or for a new tracker.
-
-## Constraints
-
-- The rules of `pdlc/README.md` hold, and "Bookkeeping on main" runs first.
-- A tracker adapter `none` in `pdlc/config.md` stops the skill, and the user hears that
-  there is no tracker.
-- A missing setting of the adapter under "Tracker settings" stops the skill, and the user
-  hears which setting is missing.
-- Each column in "Board columns" is on the board. Else the skill stops, and lists each
-  missing column.
-- With `dry-run` and no access to the board yet, the skill does no column check, and the
-  current column of each card is "unknown".
-- Each intent and each change that is not `cancelled` gets a card with these items:
-  - The ID, the name, the status, and the column of that status.
-  - The `Ticket` (the card key), or `none`.
-  - The links: the intent file, and the pull request of a change that has one.
-- With `dry-run`, the skill changes no board and no file.
-- Without `dry-run`, **show intent** of the tracker port runs for each intent, then
-  **show change** for each change of that intent.
-- The skill only writes to the board. It does not act on moves that persons make on the
-  board, because that function comes later.
-- The skill does not delete a card.
-- The card of a cancelled intent moves to a `cancelled` column if there is one. Else the
-  card does not move.
+The board agrees with pdlc: each intent and change that is not `cancelled` has one
+card, in the column of its status. pdlc is the truth.
 
 ## Inputs
 
-- `pdlc/README.md`, the tracker adapter, "Tracker settings", and "Board columns" in
-  `pdlc/config.md`.
-- Each intent and each change, with its status, `Ticket`, and links.
-- The argument `dry-run`, if the user gives it.
+- `pdlc/README.md`: "Bookkeeping on main", "Where pdlc commits".
+- `pdlc/config.md`: the tracker adapter, "Tracker settings", "Board columns".
+- The argument `dry-run`, or a request only to look.
 
 ## Outputs
 
-- With `dry-run`: a table, with one row for each item, of the card key, the current
-  column, and the correct column. The skill then stops.
-- Without `dry-run`: the board agrees with pdlc, and each new card key is in the `Ticket`
-  of its intent or change.
-- If the skill wrote a `Ticket`, the commit "Board: record card keys" on main.
-- For the user: how many cards the skill made, how many it moved, and how many needed no
-  change.
+- With `dry-run`: a table of card key (or `none`), current column, correct column
+  for each item. Nothing changes.
+- Else **show intent** for each intent, then **show change** for each of its changes. Each
+  new card key goes into the item's `Ticket`, with the commit "Board: record card
+  keys" on main.
+- Counts of cards made, moved, unchanged.
+
+## Constraints
+
+- The adapter `none`, a missing setting, or a missing column stops the skill.
+- With `dry-run` and no board access, skip the column check; columns show "unknown".
+- Only write to the board; delete no card.
+- The card of a cancelled item moves to a `cancelled` column if there is one.
+
+## Done when
+
+The board agrees, or the table is shown. Each stop names its gap. The reply states only
+what the run saw.
