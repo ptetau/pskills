@@ -34,7 +34,7 @@ If `pdlc/version.json` is older, run `/pdlc:upgrade`.
 
 ## Constraints
 
-- Stop only for a contradiction, a file outside "Files", or a third failure of a stage.
+- Stop only for a contradiction that ready finds, a file outside "Files", or a third failure of a stage.
   A missing "Interface" entry, a rate limit, a missing remote, and a long run are not stops.
 - "Merge over a failed gate" and "accept a failed review" are no answers.
 
