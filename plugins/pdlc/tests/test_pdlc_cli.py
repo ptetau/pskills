@@ -15,7 +15,7 @@ SCRIPT = PLUGIN / "skills/init/references/bin/pdlc.py"
 TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
 SUBCOMMANDS = ["commit", "message", "handoff", "stop", "set", "intent", "change"]
 # The subcommands that still answer "not implemented".
-STUBS = ["change"]
+STUBS = []
 GIT_ENV = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "commit.gpgsign",
            "GIT_CONFIG_VALUE_0": "false"}
 
@@ -126,16 +126,11 @@ class Project(unittest.TestCase):
 
 
 class EntryPoint(unittest.TestCase):
-    def test_each_subcommand_is_registered_and_not_implemented(self):
+    def test_a_stub_answers_not_implemented(self):
         for name in STUBS:
             done = run(name)
             self.assertEqual(done.returncode, 2, name)
             self.assertIn("not implemented", done.stdout + done.stderr, name)
-
-    def test_extra_arguments_are_accepted_by_a_stub(self):
-        done = run("change", "new", "--bogus", "x")
-        self.assertEqual(done.returncode, 2)
-        self.assertIn("not implemented", done.stdout + done.stderr)
 
     def test_no_subcommand_is_a_usage_error(self):
         self.assertEqual(run().returncode, 2)
@@ -148,6 +143,22 @@ class EntryPoint(unittest.TestCase):
         self.assertEqual(done.returncode, 0)
         for name in SUBCOMMANDS:
             self.assertIn(name, done.stdout)
+
+
+def _pdlclib():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pdlclib_for_cli", SCRIPT.parent / "pdlclib.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def pdlclib_field(text, name):
+    return _pdlclib().field(text, name)
+
+
+def pdlclib_section(text, title):
+    return _pdlclib().section(text, title)
 
 
 def load_hook():
@@ -946,10 +957,203 @@ class IntentTests(Project):
         self.assertEqual(self.intent("IN-0009", "--status", "ready").returncode, 1)
 
 
+JOB_LIST = """# JOB-list · List things
+
+Status: active
+
+## Interface
+
+- `list [--top N]` · command · `src/cli.py` · proposed
+  - in: an optional number N
+  - out: on standard output, one line for each item. The exit code is 0.
+  - errors: none
+
+## Requirements
+
+### JOB-list.R1 · Top
+
+Status: proposed · Intents: IN-0001
+
+- Given --top 2, when run, then two lines show.
+"""
+NEW_CHANGE = {
+    "delivers": "Users get an email when they reset a password.",
+    "reqs": ["CAP-email.R2", "CAP-email.R1"],
+    "interface": ["send(template: TemplateName, to: Email) -> SentId", "EMAIL_OUTBOX_DIR"],
+    "relies": ["CAP-store (used, not changed)"],
+    "files": ["src/email.js"],
+    "check_files": ["tests/test_email.py"],
+    "checks": {"CAP-email.R1": "test_CAP_email_R1_send", "CAP-email.R2": "manual check"},
+    "manual": ["CAP-email.R2 · Given nothing, when called, then it returns. · Open the page."],
+}
+
+
+class ChangeNew(Project):
+    branch = "main"
+
+    def setUp(self):
+        super().setUp()
+        shutil.rmtree(self.root / "pdlc/changes/CH-0001-email")
+        self.write("pdlc/inbox/IN-0001-reset.md",
+                   self.read("pdlc/inbox/IN-0001-reset.md").replace("- CH-0001 · email templates", "- none yet"))
+        self.write("pdlc/specs/capabilities/CAP-email.md", CAP_EMAIL)
+        self.write("pdlc/specs/jobs/JOB-list.md", JOB_LIST)
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "Update IN-0001: fixtures")
+
+    def new(self, data=None, scope="CAP-email", name="Email templates", **change):
+        body = dict(NEW_CHANGE if data is None else data, **change)
+        for key in [k for k, v in body.items() if v is None]:
+            del body[key]
+        return self.pdlc("change", "new", "IN-0001", "--scope", scope, "--name", name, "--json", "-",
+                         input=json.dumps(body))
+
+    def spec(self):
+        return self.read("pdlc/changes/CH-0001-email-templates/change.md")
+
+    def test_it_writes_the_header_and_the_sections_in_order(self):
+        done = self.new()
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("CH-0001", done.stdout)
+        text = self.spec()
+        lines = text.splitlines()
+        self.assertEqual(lines[0], "# CH-0001 · Email templates")
+        self.assertEqual(lines[2], "Intent: IN-0001 · Scope: CAP-email · Status: planned · Ticket: none · "
+                                   "Branch: none · Base: main")
+        self.assertEqual(lines[3], "Tests-Locked: none")
+        heads = [l for l in lines if l.startswith("## ")]
+        self.assertEqual(heads, ["## Delivers", "## Requirements", "## Relies on", "## Interface", "## Files",
+                                 "## Check files", "## Steps", "## Manual checks", "## Progress log"])
+        self.assertIn("Users get an email when they reset a password.", text)
+        self.assertEqual(pdlclib_field(text, "Status"), "planned")
+
+    def test_the_next_free_change_id(self):
+        self.write("pdlc/changes/CH-0004-x/change.md", CHANGE.replace("CH-0001", "CH-0004"))
+        done = self.new()
+        self.assertIn("CH-0005", done.stdout)
+        self.assertTrue((self.root / "pdlc/changes/CH-0005-email-templates/change.md").exists())
+
+    def test_requirements_are_copied_word_for_word_in_number_order(self):
+        self.new()
+        part = pdlclib_section(self.spec(), "Requirements")
+        self.assertEqual(part.strip(), "### CAP-email.R1 · Send\n\n- Given a name, when sent, then it is sent.\n\n"
+                                       "### CAP-email.R2 · Other\n\n- Given nothing, when called, then it returns.")
+        self.assertNotIn("Intents:", self.spec())
+
+    def test_relies_on_has_the_fixed_entries_and_the_extra_ones(self):
+        self.new()
+        part = pdlclib_section(self.spec(), "Relies on")
+        self.assertEqual([l for l in part.splitlines() if l.strip()], [
+            "- DES-writing-style (conventions to follow)", "- DES-pdlc-check-tagging (conventions to follow)",
+            "- DES-errors (conventions to follow)", "- CAP-store (used, not changed)"])
+
+    def test_interface_entries_are_copied_without_the_proposed_mark(self):
+        self.new()
+        part = pdlclib_section(self.spec(), "Interface")
+        self.assertIn("- `send(template: TemplateName, to: Email) -> SentId` · function · `src/email.js`\n"
+                      "  - in: the name of a template, and an email address\n"
+                      "  - out: the ID of the sent email\n  - errors: none", part)
+        self.assertNotIn("proposed", self.spec())
+        self.assertNotIn("other()", part)
+        seams = part.split("### Test seams")[1]
+        self.assertIn("- `EMAIL_OUTBOX_DIR` · seam: outside vendor · `src/email.js`\n  - in: a folder", seams)
+        self.assertNotIn("send(", seams)
+
+    def test_steps_have_one_for_each_requirement(self):
+        self.new()
+        part = pdlclib_section(self.spec(), "Steps")
+        self.assertIn("### Step 1 · Send · [ ]\n\n- Requirement: CAP-email.R1\n- Check: test_CAP_email_R1_send\n"
+                      "- Done when: the check passes", part)
+        self.assertIn("### Step 2 · Other · [ ]\n\n- Requirement: CAP-email.R2\n- Check: manual check", part)
+
+    def test_files_check_files_and_manual_checks(self):
+        self.new()
+        self.assertIn("- src/email.js", pdlclib_section(self.spec(), "Files"))
+        self.assertIn("- tests/test_email.py", pdlclib_section(self.spec(), "Check files"))
+        self.assertIn("CAP-email.R2 · Given nothing", pdlclib_section(self.spec(), "Manual checks"))
+        done = self.new(manual=[], check_files=[], name="Other name")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.read("pdlc/changes/CH-0002-other-name/change.md")
+        self.assertEqual(pdlclib_section(text, "Manual checks").strip(), "none")
+        self.assertEqual(pdlclib_section(text, "Check files").strip(), "- none")
+
+    def test_a_job_change_gets_the_readme_step_last(self):
+        data = dict(NEW_CHANGE, reqs=["JOB-list.R1"], interface=["list [--top N]"], relies=[],
+                    checks={"JOB-list.R1": "test_JOB_list_R1"}, files=["src/cli.py"],
+                    readme_done="The README names the --top flag and how to run the checks.")
+        done = self.new(data, scope="JOB-list", name="List things")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.read("pdlc/changes/CH-0001-list-things/change.md")
+        steps = pdlclib_section(text, "Steps")
+        self.assertTrue(steps.strip().endswith("- Done when: The README names the --top flag and how to run the checks."))
+        self.assertIn("### Step 2 · README · [ ]", steps)
+        self.assertIn("- README.md", pdlclib_section(text, "Files"))
+
+    def test_a_job_change_needs_readme_done(self):
+        data = dict(NEW_CHANGE, reqs=["JOB-list.R1"], interface=["list [--top N]"], relies=[],
+                    checks={"JOB-list.R1": "test_JOB_list_R1"})
+        self.assertEqual(self.new(data, scope="JOB-list").returncode, 1)
+
+    def test_the_change_is_added_to_the_intent_changes(self):
+        self.new()
+        part = pdlclib_section(self.read("pdlc/inbox/IN-0001-reset.md"), "Changes")
+        self.assertEqual([l for l in part.splitlines() if l.strip()], ["- CH-0001 · Email templates"])
+        self.new(name="Second")
+        part = pdlclib_section(self.read("pdlc/inbox/IN-0001-reset.md"), "Changes")
+        self.assertEqual([l for l in part.splitlines() if l.strip()],
+                         ["- CH-0001 · Email templates", "- CH-0002 · Second"])
+
+    def test_the_file_passes_the_order_check(self):
+        self.new()
+        done = subprocess.run([sys.executable, str(SCRIPT.parent / "check_order.py"), "IN-0001"],
+                              cwd=str(self.root), capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_a_check_name_without_its_requirement_id_exits_1_and_writes_nothing(self):
+        before = self.read("pdlc/inbox/IN-0001-reset.md")
+        done = self.new(checks={"CAP-email.R1": "test_send", "CAP-email.R2": "manual check"})
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("CAP-email.R1", done.stdout)
+        self.assertEqual(list((self.root / "pdlc/changes").iterdir()), [])
+        self.assertEqual(self.read("pdlc/inbox/IN-0001-reset.md"), before)
+
+    def test_the_underscored_form_of_the_id_is_accepted(self):
+        done = self.new(checks={"CAP-email.R1": "test_CAP_email_R1", "CAP-email.R2": "CAP-email.R2 works"})
+        self.assertEqual(done.returncode, 0, done.stdout)
+
+    def test_each_requirement_needs_a_check(self):
+        self.assertEqual(self.new(checks={"CAP-email.R1": "test_CAP_email_R1"}).returncode, 1)
+
+    def test_a_missing_key_exits_1(self):
+        for key in ("delivers", "reqs", "checks", "files", "check_files", "interface", "relies", "manual"):
+            with self.subTest(key=key):
+                done = self.new(**{key: None})
+                self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+
+    def test_an_entry_that_no_spec_has_exits_1(self):
+        done = self.new(interface=["nothing()"])
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("nothing()", done.stdout)
+
+    def test_a_requirement_that_no_spec_has_exits_1(self):
+        done = self.new(reqs=["CAP-email.R9"], checks={"CAP-email.R9": "CAP_email_R9"})
+        self.assertEqual(done.returncode, 1)
+
+    def test_an_unknown_scope_or_intent_exits_1(self):
+        self.assertEqual(self.new(scope="CAP-nothing").returncode, 1)
+        done = self.pdlc("change", "new", "IN-0009", "--scope", "CAP-email", "--name", "x", "--json", "-",
+                         input=json.dumps(NEW_CHANGE))
+        self.assertEqual(done.returncode, 1)
+
+    def test_it_makes_no_commit(self):
+        self.new()
+        self.assertEqual(self.log(), "Update IN-0001: fixtures")
+
+
 class Imports(unittest.TestCase):
     def test_no_bytecode_left_in_the_bin_folder(self):
         shutil.rmtree(SCRIPT.parent / "__pycache__", ignore_errors=True)
-        run("change")
+        run("commit")
         self.assertFalse((SCRIPT.parent / "__pycache__").exists())
 
 

@@ -1002,6 +1002,175 @@ def options_intent(parser):
 
 
 # ---------------------------------------------------------------------------------------
+# change new
+
+FIXED_RELIES = ["DES-writing-style", "DES-pdlc-check-tagging", "DES-errors"]
+CHANGE_LISTS = ("reqs", "files", "check_files", "interface", "relies", "manual")
+
+
+def interface_entries(spec_text):
+    """{key: (is_seam, lines)} for each entry of "Interface" in a spec. The lines have no
+    ' \u00b7 proposed' mark."""
+    out, seam, current = {}, False, None
+    for line in pdlclib.section(spec_text, "Interface").split("\n"):
+        if line.startswith("### "):
+            seam, current = line.strip().lower() == "### test seams", None
+            continue
+        found = ENTRY.match(line)
+        if found:
+            current = [re.sub(r"\s*\u00b7\s*proposed\b", "", line.rstrip())]
+            out.setdefault(found.group(1), (seam, current))
+        elif current is not None and line[:1] in (" ", "\t"):
+            current.append(line.rstrip())
+        elif line.strip() == "":
+            continue
+        else:
+            current = None
+    return {key: (seam, [l for l in lines]) for key, (seam, lines) in out.items()}
+
+
+def requirement_block(root, req_id):
+    """(title, text) of a requirement: the heading and its lines, without the Status line."""
+    path = spec_file(root, req_id.rsplit(".", 1)[0])
+    text = path.read_text()
+    heading = re.search(r"^### %s\b.*$" % re.escape(req_id), text, re.M)
+    if not heading:
+        raise Problem("%s: no such requirement in %s" % (req_id, path.name))
+    span = requirement_span(text, req_id)
+    body = [l for l in text[span[0]:span[1]].split("\n") if not re.match(r"Status:", l)]
+    block = (heading.group(0) + "\n" + "\n".join(body)).strip("\n")
+    block = re.sub(r"\n{3,}", "\n\n", block)
+    title = heading.group(0).split("\u00b7", 1)[-1].strip()
+    return title, block
+
+
+def req_sort_key(req_id):
+    spec, _, number = req_id.rpartition(".R")
+    return spec, int(number or 0)
+
+
+def check_names(reqs, checks):
+    norm = lambda text: re.sub(r"[-.]", "_", text)  # noqa: E731
+    problems = []
+    for req in reqs:
+        name = checks.get(req)
+        if not isinstance(name, str) or not name.strip():
+            problems.append('"checks" has no check for %s' % req)
+        elif name.strip() != "manual check" and norm(req) not in norm(name):
+            problems.append('the check "%s" does not hold the requirement ID %s' % (name, req))
+    problems += ['"checks" names %s, which is not in "reqs"' % r for r in checks if r not in reqs]
+    return problems
+
+
+def bullets(items, empty="- none"):
+    return "\n".join("- " + i for i in items) if items else empty
+
+
+def handle_change(args, extra):
+    reject_extra(extra)
+    root = project()
+    os.chdir(str(root))
+    data = read_json(args.json)
+    if not re.fullmatch(r"IN-\d+", args.intent):
+        raise Usage("the intent must be IN-xxxx")
+    intent_file = find_intent(root, args.intent)
+    scope_path = spec_file(root, args.scope)
+    problems = []
+    if not isinstance(data.get("delivers"), str) or not data["delivers"].strip():
+        problems.append('"delivers" is required: one or two sentences')
+    for key in CHANGE_LISTS:
+        value = data.get(key)
+        if not isinstance(value, list) or not all(isinstance(v, str) and v.strip() for v in value):
+            problems.append('"%s" is required: a list of strings (it can be empty, except "reqs")' % key)
+    if not isinstance(data.get("checks"), dict):
+        problems.append('"checks" is required: {"<requirement ID>": "<check name>"}')
+    if not problems and not data["reqs"]:
+        problems.append('"reqs" needs at least one requirement ID')
+    if not problems and args.scope.startswith("JOB-") and not str(data.get("readme_done") or "").strip():
+        problems.append('"readme_done" is required for a job change: what the README step finishes')
+    if problems:
+        raise Problem(*problems)
+    reqs = sorted(dict.fromkeys(data["reqs"]), key=req_sort_key)
+    problems = check_names(reqs, data["checks"])
+    if problems:
+        raise Problem(*problems)
+    blocks = [requirement_block(root, r) for r in reqs]
+
+    specs = [args.scope] + [s for s in dict.fromkeys(
+        m for r in data["relies"] for m in re.findall(r"\b(?:JOB|CAP)-[a-z0-9-]+\b", r)) if s != args.scope]
+    found = {}
+    for spec_id in specs:
+        try:
+            spec_text = spec_file(root, spec_id).read_text()
+        except Problem:
+            if spec_id == args.scope:
+                raise
+            continue  # a spec under "relies" that has no file has no entries to copy
+        for key, value in interface_entries(spec_text).items():
+            found.setdefault(key, value)
+    entries, seams, missing = [], [], []
+    for key in data["interface"]:
+        if key not in found:
+            missing.append('the Interface entry "%s" is in none of the specs %s: add it to its spec first'
+                           % (key, ", ".join(specs)))
+        else:
+            (seams if found[key][0] else entries).append("\n".join(found[key][1]).rstrip())
+    if missing:
+        raise Problem(*missing)
+
+    relies = ["%s (conventions to follow)" % d for d in FIXED_RELIES]
+    for item in data["relies"]:
+        relies.append(item if "(" in item else item + " (used, not changed)")
+    steps = []
+    for n, (req, (title, _)) in enumerate(zip(reqs, blocks), 1):
+        check = data["checks"][req].strip()
+        done_when = "the check passes" if check != "manual check" else "the user confirms the manual check"
+        steps.append("### Step %d \u00b7 %s \u00b7 [ ]\n\n- Requirement: %s\n- Check: %s\n- Done when: %s"
+                     % (n, title, req, check, done_when))
+    files = list(data["files"])
+    if data.get("readme_done"):
+        steps.append("### Step %d \u00b7 README \u00b7 [ ]\n\n- Requirement: none\n- Check: none\n- Done when: %s"
+                     % (len(steps) + 1, data["readme_done"].strip()))
+        if "README.md" not in files:
+            files.append("README.md")
+
+    change_id = next_id(root, "CH")
+    name = args.name.strip()
+    text = "\n\n".join([
+        "# %s \u00b7 %s" % (change_id, name),
+        "Intent: %s \u00b7 Scope: %s \u00b7 Status: planned \u00b7 Ticket: none \u00b7 Branch: none \u00b7 Base: main\n"
+        "Tests-Locked: none" % (args.intent, args.scope),
+        "## Delivers\n\n" + data["delivers"].strip(),
+        "## Requirements\n\n" + "\n\n".join(block for _, block in blocks),
+        "## Relies on\n\n" + bullets(relies),
+        "## Interface\n\n" + ("\n\n".join(entries) if entries else "- none")
+        + "\n\n### Test seams\n\n" + ("\n\n".join(seams) if seams else "none"),
+        "## Files\n\n" + bullets(files),
+        "## Check files\n\n" + bullets(data["check_files"]),
+        "## Steps\n\n" + "\n\n".join(steps),
+        "## Manual checks\n\n" + ("\n".join(data["manual"]) if data["manual"] else "none"),
+        "## Progress log",
+    ]) + "\n"
+    folder = root / "pdlc" / "changes" / ("%s-%s" % (change_id, slug(name)))
+    line = "- %s \u00b7 %s" % (change_id, name)
+    current = [l for l in pdlclib.section(intent_file.read_text(), "Changes").splitlines()
+               if l.strip() and l.strip() != "- none yet"]
+    folder.mkdir(parents=True)
+    (folder / "change.md").write_text(text)
+    intent_file.write_text(set_section(intent_file.read_text(), "Changes", "\n".join(current + [line])))
+    print("%s %s" % (change_id, (folder / "change.md").relative_to(root).as_posix()))
+    return EXIT_DONE
+
+
+def options_change(parser):
+    parser.add_argument("action", choices=["new"])
+    parser.add_argument("intent", help="IN-xxxx")
+    parser.add_argument("--scope", required=True, metavar="SPEC", help="the JOB, CAP, or DES spec of the change")
+    parser.add_argument("--name", required=True, metavar="SHORT")
+    parser.add_argument("--json", required=True, metavar="FILE|-", help="the content, as JSON")
+
+
+# ---------------------------------------------------------------------------------------
 # The entry point
 
 def not_implemented(name):
@@ -1020,10 +1189,12 @@ HANDLERS["handoff"] = handle_handoff
 HANDLERS["stop"] = handle_stop
 HANDLERS["set"] = handle_set
 HANDLERS["intent"] = handle_intent
+HANDLERS["change"] = handle_change
 
 OPTIONS = {"commit": add_commit_options, "message": add_commit_options,
            "handoff": options_handoff, "stop": options_stop,
-           "set": options_set, "intent": options_intent}
+           "set": options_set, "intent": options_intent,
+           "change": options_change}
 
 
 def build_parser():
