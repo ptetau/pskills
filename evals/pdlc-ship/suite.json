@@ -71,7 +71,8 @@
       "criterion": "Each stage leaves the commit subjects and trailers of its own skill, in the order of \"Stages and handoffs\".",
       "pass": "The commit subjects and trailers of each stage that ran match those of its skill, in the order of \"Stages and handoffs\". No stage is missing from the log.",
       "partial": "The order is right, but one stage leaves fewer commits than its skill names. Or one stage leaves commit subjects that its skill does not use.",
-      "source": "Constraints: \"Each stage runs through its own skill, with `defaults`\""
+      "source": "Constraints: \"Each stage runs through its own skill, with `defaults`\"",
+      "check": "python3 {bench}/check_trailers.py {run} --since start --stages"
     },
     {
       "id": "R6",
@@ -91,7 +92,8 @@
       "pass": "`git status --porcelain` shows nothing at the end. Each commit after `start` has the trailers that `pdlc/README.md` \"Commits\" names for its kind. The stop commit has the trailers too.",
       "partial": "The tree is clean, but one commit lacks a trailer. Or the tree has one uncommitted file of the debug or the dashboard.",
       "source": "Outputs: \"The commit \\\"Stop CH-xxxx: <why>\\\" … with the trailers of \\\"Commits\\\". Then `git status --porcelain` shows nothing.\"",
-      "structureRef": "S2"
+      "structureRef": "S2",
+      "check": "python3 {bench}/check_trailers.py {run} --since start"
     },
     {
       "id": "R8",
