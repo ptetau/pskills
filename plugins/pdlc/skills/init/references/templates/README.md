@@ -38,7 +38,7 @@ rules that all pdlc skills share. Each skill reads this file first, and names it
 ## Commits
 
 - Each pdlc commit comes from `python3 pdlc/bin/pdlc.py commit <kind>`. The script writes
-  the subject, the trailers, and one trailer block. Run `pdlc.py --help` for the kinds.
+  the subject, the trailers, and one trailer block. Run `pdlc.py commit --help` for the kinds.
 - The subject comes from "Subjects" in `specs/design/DES-pdlc-commit-trailers.md`.
 - The harness can ask for more trailers, such as `Co-Authored-By`. Pass each one with
   `--trailer "Key: value"`. The script also reads each `git config pdlc.trailer` value.
@@ -204,7 +204,8 @@ merge.
 
 - Each stage starts from the latest handoff, and ends with a new one from
   `pdlc.py handoff <ID> <stage> <next> --json FILE|-`, which replaces the old one. Git
-  keeps the history. The sections are in `templates/handoff.md`.
+  keeps the history. The sections are in `templates/handoff.md`. The permitted pairs are
+  `NEXT` in `bin/check_handoff.py`.
 - The script writes the title, the time, and the section layout. The model gives only the
   content, as JSON. An intent stage gets the "Handoff" of the intent, with the sections as
   `###` headings. A change stage gets `changes/CH-xxxx-name/handoff.md`.
@@ -352,7 +353,7 @@ Its `Base:` names that branch, and its pull request targets that branch.
 - Intent: new → specifying → ready → building → in review → done. Also paused, cancelled.
 - Requirement: proposed → ready → built → verified. Also retiring.
 - Change: planned → testing → building → in review → merged. Also cancelled.
-- Spec file: stub (no requirements written yet) or active.
+- Spec file: stub (no requirements written yet) or active. A design spec: agreed.
 
 ## Questions
 
