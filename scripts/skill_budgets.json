@@ -6,7 +6,8 @@
     "trace",
     "acceptance",
     "upgrade",
-    "board"
+    "board",
+    "conventions"
   ],
   "acceptance": 200,
   "board": 200,
