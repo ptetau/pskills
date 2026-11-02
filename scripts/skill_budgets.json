@@ -1,7 +1,8 @@
 {
   "enforced": [
     "ready",
-    "tests"
+    "tests",
+    "trace"
   ],
   "acceptance": 200,
   "board": 200,
