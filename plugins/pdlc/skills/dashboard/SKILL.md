@@ -18,7 +18,6 @@ files outside the project.
 
 ## Inputs
 
-- The user's yes or no.
 - `references/dashboard-builder.md`, `references/dashboard-builder-guard.py`, and
   `references/claude-md-rule.md`.
 
@@ -27,7 +26,7 @@ files outside the project.
 - After a yes: `dashboard-builder.md` and `dashboard-builder-guard.py` in
   `~/.claude/agents/`, the rule in `~/.claude/CLAUDE.md`, and `.dashboard/` in
   `.git/info/exclude`.
-- A reply that says what the skill installed, and that the rule starts next session. It also says how to remove it: delete the two agent files and the
+- A reply that says what it installed, and that the rule starts next session. It names the `skills:` list in `dashboard-builder.md`, where the user removes a design skill this machine lacks. It says how to remove it: delete both agent files and the
   "## Live dashboard" section. The style stays in
   `~/.claude/agent-memory/dashboard-builder/`.
 
@@ -44,4 +43,4 @@ files outside the project.
 
 ## Done when
 
-After a yes, the files are in place. After a no, no file changed.
+After a no, no file changed.
