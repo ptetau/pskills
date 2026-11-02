@@ -25,8 +25,8 @@ migration intent.
 
 - A new `pdlc/specs/design/DES-<name>.md`, or the edited spec. A changed default gets `Default: no`.
 - A checkable convention: `proposed` requirements, and one intent to build the check.
-- One intent, through the inbox port, for each job or capability that disobeys it: "Migrate <spec> to <convention>". Its "What and why" links the spec.
-- The commit "Convention DES-<name>", with the `Intent` trailer of the sending skill.
+- One migration intent for each job or capability that disobeys it: `pdlc.py intent new --migrate`.
+- The commit: `pdlc.py commit convention DES-<name> --intent <sender>`.
 - The reply: the spec, and the migration intent count.
 
 ## Constraints

@@ -170,6 +170,10 @@ Rules for the rubric:
 - Prevent circularity. A rubric that only restates the claims of the skill passes
   the skill by construction. The outcome items are the counterweight: the outcome items
   ask if the user got what the user needed.
+- Give an item a `check` when a script can decide it, for example a trailer or a clean
+  tree. The `check` is a command that prints a JSON verdict (`met`, `partial`, or
+  `missed`, with evidence). Use `{run}` for the working directory of the run and `{bench}`
+  for the folder of the checks. The grader copies the verdict and does not judge the item.
 
 ## Phase 2: Test prompts (new suite only)
 
@@ -268,10 +272,19 @@ comparable.
      "wave": 2,
      "settle": { "delta": 2, "patience": 2, "stop": false },
      "maxTurns": 12,
+     "runner": "agent",
+     "pluginDir": "<abs plugin dir, only for runner plugin>",
      "crossPerPrompt": 2,
      "agents": { "preset": "lean", "grade": { "model": "<model>" } }
    }
    ```
+
+   `runner` is `"agent"` (default: the run agent follows the skill) or `"plugin"`. With
+   `"plugin"`, the run agent starts `bench/run_bench.py vetrun` with `pluginDir`, so the
+   plugin's hooks run as they run for a user. A prompt may have `setup` (text for the run
+   agent) and `project` (the project folder, relative to the worktree). With `"agent"`, the
+   run prompt shows the prompt, then the setup. With `"plugin"`, the run agent follows the
+   setup once, and the real session gets only the prompt, inside `project`.
 
    Each run's capture ends with the output of `scripts/snapshot.py`, which lists the
    commits and the git status and leaves out the harness's own files.

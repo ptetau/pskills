@@ -24,11 +24,10 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 
 ## Outputs
 
-- Intent: `Status: specifying`. "Requirements": each requirement whose text intake
-  changed, with one word only: added, changed, or retiring. Handoff `intake → ready`.
-- Commit "Specify IN-xxxx: <name>" with `Intent: IN-xxxx` in the last paragraph, with each
-  other trailer, after `python3 pdlc/bin/check_handoff.py IN-xxxx --stage intake` exits 0. After three failed
-  runs: problems under "Open", handoff `intake → user`, commit.
+- Intent: `Status: specifying`, and its "Requirements". Handoff `intake → ready`. Use
+  `pdlc.py intent IN-xxxx --status specifying --req …`,
+  `pdlc.py handoff IN-xxxx intake ready`, and `pdlc.py commit specify IN-xxxx`. After
+  three `pdlc.py handoff` failures: problems under "Open", handoff `intake → user`, commit.
 - Reply: what intake wrote. Next: `/pdlc:ready`.
 
 ## Constraints
@@ -36,16 +35,13 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 - With an unmerged pdlc branch, the intent gets its own branch (delivery port).
   Otherwise `Branch: none`.
 - Each detail not in the intent has `(assumed)`, also in a Given line, a new
-  `DES-errors` code, and an edge-case result. An `(assumed)` detail does not remove a value that the words permit, and does not pick a side of a clash in them.
-- Each `(assumed)` decision has its own line in "Decided on defaults" and in "Notes", in
-  the template form.
+  `DES-errors` code, and an edge-case result. An `(assumed)` detail does not remove a value that the words permit. While a clash is open, no text holds only one side of it. This covers the Interface, error codes, `DES-errors` rows, messages, and Given lines, also an example of the intent.
 - The summary of each spec ("Who and why" or "What it is for") names each requirement
   that intake adds.
 - A failure line gives the exact message and result.
 - A `Status: stub` spec first gets `pdlc:recon` with only the project root, spec path,
   and `deep look`.
 - A new job lists its capabilities and design specs.
-- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 

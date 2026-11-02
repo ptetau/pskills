@@ -2,8 +2,8 @@
 """pdlc commit check. Claude Code runs this after every Bash call.
 
 A pdlc branch is one that a change spec or an intent names as its Branch. When the call
-made a commit, this checks the commit against the project's DES-pdlc-commit-trailers
-(commit subjects and trailers):
+made a commit (`git commit`, `pdlc.py commit`, or `pdlc.py stop`), this checks the commit
+against the project's DES-pdlc-commit-trailers (commit subjects and trailers):
   - on a pdlc branch, its subject is one of the shapes under "Subjects", and a change it
     names is this branch's change;
   - on a pdlc branch, it carries Intent; on a change's branch, Change with that change; and
@@ -11,7 +11,8 @@ made a commit, this checks the commit against the project's DES-pdlc-commit-trai
   - on any branch, a commit with a pdlc subject (for example intake on main) has its pdlc
     trailers in the last paragraph of the message. Only that paragraph is read as trailers.
 It runs while the commit is still the newest, so `git commit --amend` fixes the commit at
-once. It leaves merge commits, other subjects off a pdlc branch, and projects without pdlc
+once. It leaves the subjects that name no intent or change (for example "Upgrade pdlc"), merge
+commits, other subjects off a pdlc branch, and projects without pdlc
 alone. Exit 2 shows the problems to Claude.
 
 On any branch, it also runs the writing check of the project (pdlc/bin/check_writing.py) on
@@ -98,6 +99,12 @@ def shapes(text):
     return out
 
 
+def no_trailer_subjects(text):
+    """The subjects of the list with no placeholder, for example "Upgrade pdlc". They name
+    no intent and no change, so they carry no trailers by design."""
+    return {shape for shape, _ in shapes(text) if "<" not in shape}
+
+
 def owner(root, branch):
     """("change", "CH-0031") or ("intent", "IN-0012") for the spec whose Branch is this one."""
     places = [("change", os.path.join(root, "pdlc", "changes", "CH-*", "change.md")),
@@ -127,6 +134,8 @@ def problems(root):
     if not newest.startswith("commit") or len(parents) > 2:
         return []
     subject = git(root, "log", "-1", "--format=%s") or ""
+    if subject in no_trailer_subjects(text):
+        return []  # for example "Upgrade pdlc": it names no intent or change, on any branch
     if not found:
         # Off a pdlc branch (for example intake on main), only a pdlc subject makes it pdlc's.
         if any(regex.match(subject) for _, regex in shapes(text)):
@@ -232,13 +241,17 @@ def reported_before(root, findings):
     return False
 
 
+# A Bash call that can make a commit: git commit, or the pdlc.py subcommands commit and stop.
+COMMIT_CALL = re.compile(r"\bgit\b[^\n;|&]*\bcommit\b|\bpdlc\.py\b[^\n;|&]*\b(?:commit|stop)\b")
+
+
 def main():
     try:
         call = json.load(sys.stdin)
     except ValueError:
         return 0
     command = (call.get("tool_input") or {}).get("command") or ""
-    if call.get("tool_name") != "Bash" or not re.search(r"\bgit\b[^\n;|&]*\bcommit\b", command):
+    if call.get("tool_name") != "Bash" or not COMMIT_CALL.search(command):
         return 0
     root = project_root(call.get("cwd") or os.getcwd())
     if not root:
@@ -257,8 +270,9 @@ def main():
         print("pdlc: commit %s doesn't follow DES-pdlc-commit-trailers:" % sha, file=sys.stderr)
         for line in wrong:
             print("  - %s" % line, file=sys.stderr)
-        print("Fix it now, while it is the newest commit: `git commit --amend` with the right "
-              "subject and trailers. Its files stay as they are.", file=sys.stderr)
+        print("Fix it now, while it is the newest commit. Run `python3 pdlc/bin/pdlc.py commit "
+              "<kind> <ID> --amend` with the right kind and ID, or `git commit --amend` with the "
+              "right subject and trailers. Its files stay as they are.", file=sys.stderr)
     if findings:
         print("pdlc: commit %s has %d writing finding%s in the text that it wrote (DES-writing-style):"
               % (sha, len(findings), "" if len(findings) == 1 else "s"), file=sys.stderr)

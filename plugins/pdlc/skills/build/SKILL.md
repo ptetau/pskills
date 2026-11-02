@@ -21,11 +21,10 @@ Make the locked checks of one change pass with app code.
 
 ## Outputs
 
-- "Build CH-xxxx: <what changed>": the app files. Trailers: `Intent`, `Change`, `Req`,
-  `Ticket`.
-- Each requirement `built`. A `(retire)` requirement leaves its spec.
+- Commits: `pdlc.py commit build` (the app files), then `pdlc.py commit built` (specs,
+  change spec, handoff).
+- `pdlc.py set CH-xxxx --reqs built` (also ticks the steps, logs the build). A `(retire)` requirement leaves its spec.
 - The handoff `build → verify`.
-- "Built CH-xxxx", with `Intent` and `Change`: specs, change spec, handoff.
 - The reply names `/pdlc:verify`.
 
 ## Constraints
@@ -33,10 +32,9 @@ Make the locked checks of one change pass with app code.
 - Follow `pdlc/README.md`: "Bookkeeping on main", "Who does what", "Where pdlc commits",
   "Acceptance checks", "Interfaces", "Rounds", "Commits".
 - `Tests-Locked:` with no hash and no `acceptance`: stop. `/pdlc:tests` comes first.
-- New base commits: merge the base first, with `Intent` and `Change`.
+- New base commits: merge the base with `git merge --no-ff -F` and `pdlc.py message merge --base`.
 - The builder changes only app files under "Files". Ask the user about another file.
 - A check called incorrect stays. Send the reason to `/pdlc:tests`, or `/pdlc:acceptance`.
-- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 

@@ -21,16 +21,15 @@ The named change, else the first `building` one with all requirements `built`.
 
 ## Outputs
 
-Trailers: `Intent`, `Change`.
+Each round ends with `python3 pdlc/bin/pdlc.py commit verify` (the round). The stage then
+ends with `pdlc.py commit verified` (passed) or `pdlc.py commit send-back` (failed);
+`pdlc.py set CH-xxxx --reqs verified --status "in review" --unpropose`;
+`pdlc.py intent new --awaits`.
 
-- Each round: "Verify CH-xxxx: round <n>": packets
-  (`python3 pdlc/bin/make_packets.py CH-xxxx --verify`), results, new intents.
+- Each round: packets (`python3 pdlc/bin/make_packets.py CH-xxxx --verify`), results, new intents.
 - Failed: handoff `verify → tests`, `verify → build`, or `verify → acceptance`.
-  "Send back CH-xxxx: <stage>".
-- Passed: handoff `verify → show`. "Verified CH-xxxx".
-- Passed: each requirement `verified` in its spec file, the change `in review`.
+- Passed: handoff `verify → show`.
 - Passed, last change: `git rev-parse HEAD` of **run acceptance** on `Acceptance-Passed:`.
-- Passed: no ` · proposed` on its "Interface" entries.
 
 ## Constraints
 
@@ -38,12 +37,12 @@ Trailers: `Intent`, `Change`.
 - Each requirement needs a check ("No checks found" fails, except `(retire)`). Run all
   checks and **run earlier acceptance**. For the last change, **run acceptance**.
 - No check file changed since `Tests-Locked` (with `Tests-Locked: acceptance`, no acceptance-file change since `Acceptance-Locked`).
-- Each "Follow-ups" point, and each problem that only new behaviour can fix, becomes a `new` intent through the inbox port, also with `defaults`. Its "Notes" start `Awaits approval: found reviewing CH-xxxx (<remit>)`. Such a problem sends nothing to build.
+- Each "Follow-ups" point, and each problem that only new behaviour can fix, becomes a `new` intent through the inbox port, also with `defaults`, made with `--awaits` (found reviewing CH-xxxx, <remit>). Such a problem sends nothing to build.
 - Send a failed or wrong check to tests.
 - Send a failed acceptance check, a remit rule, a design spec, or unsafe code to build.
 - Send a wrong acceptance check to acceptance.
-- Keep the trailers in one block, as README "Commits" says.
 
 ## Done when
 
-The requirements are `verified`, or the change is sent back.
+The requirements are `verified`, or the change is sent back. The newest commit is
+"Verified CH-xxxx" or "Send back CH-xxxx: <stage>".

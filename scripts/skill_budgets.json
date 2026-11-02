@@ -13,7 +13,8 @@
     "show",
     "verify",
     "init",
-    "dashboard"
+    "dashboard",
+    "ship"
   ],
   "acceptance": 200,
   "board": 200,
@@ -48,31 +49,21 @@
         "evidence": "evals/pdlc-ready/runs/decl200-20261101T200131Z: R9 (implied behaviour examined, including a very large N)"
       },
       {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 10,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
-      },
-      {
         "rule": "An `(assumed)` detail that takes one side of a contradiction gives way. Both sides stay as the words give them.",
         "words": 20,
         "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R3 (no default for a contradiction)"
       },
       {
-        "rule": "\"Decided on defaults\" keeps each `(assumed)` line of the earlier handoff, then adds ready's own.",
-        "words": 15,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R6 (non-stop cases do not stop, and each default is recorded in the handoff and the Notes)"
+        "rule": "Text that holds only one side of it gives way, also intake's text. This covers the Interface, error codes, `DES-errors` rows, messages, and Given lines, also an example of the intent.",
+        "words": 31,
+        "evidence": "evals/pdlc-ship/runs/decl-p2-a-20261102T080703Z + decl-p2-b vs master-base-a/b: R3 (no default for a contradiction)"
       }
     ],
     "tests": [
       {
-        "rule": "Handoff `tests → build` names each check, the requirement it proves, and the lock hash.",
-        "words": 11,
-        "evidence": "evals/pdlc-tests/runs/decl200-20261101T200346Z: the handoff `tests → build` lists each check, what it proves, and the lock"
-      },
-      {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 10,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
+        "rule": "`pdlc.py start CH-xxxx` sets `Branch:`, `Base:`, and the status, makes the branch, and commits \"Start CH-xxxx\"; never pick the base.",
+        "words": 22,
+        "evidence": "evals/pdlc-tests/runs/plugin-N* vs plugin-M* (pooled, in /home/user/pskills): R5 (`Branch:` and `Base:` follow \"Stacked changes\"; the first change starts from the intent branch) fell from 93.8 to 68.8; new runs wrote `Base: main` for CH-0001 while the intent had `Branch: pdlc/IN-0001-mark-done`"
       }
     ],
     "acceptance": [
@@ -85,16 +76,6 @@
         "rule": "The final reply names `/pdlc:tests` as next, or `/pdlc:build` after a send-back.",
         "words": 12,
         "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R9 (the final reply names /pdlc:tests)"
-      },
-      {
-        "rule": "Handoff `acceptance → tests`, with the number of failing checks, the lock, and what each change must give the checks.",
-        "words": 16,
-        "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R6 (the handoff states what each change must give the checks) and R2 (the red run is reported with a count)"
-      },
-      {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 10,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
       }
     ],
     "intake": [
@@ -109,77 +90,53 @@
         "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R2 (assumed marks) and R7 (Notes form)"
       },
       {
-        "rule": "Each `(assumed)` decision has its own line in \"Decided on defaults\" and in \"Notes\", in the template form.",
-        "words": 18,
-        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R7 (intent Notes) and R2 (Decided on defaults list)"
-      },
-      {
-        "rule": "\"Requirements\": each requirement whose text intake changed, with one word only: added, changed, or retiring.",
-        "words": 10,
-        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R7 (Requirements list)"
-      },
-      {
-        "rule": "`Intent: IN-xxxx` in the last paragraph, with each other trailer.",
-        "words": 8,
-        "evidence": "evals/pdlc-intake/runs/decl200-a-20261102T032810Z and /home/user/pskills/evals/pdlc-intake/runs/decl200-b-20261102T032832Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R4 (Specify commit and Intent trailer)"
-      },
-      {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 11,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
-      },
-      {
-        "rule": "An `(assumed)` detail does not remove a value that the words permit, and does not pick a side of a clash in them.",
-        "words": 23,
+        "rule": "An `(assumed)` detail does not remove a value that the words permit.",
+        "words": 12,
         "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R3 (no default for a contradiction)"
+      },
+      {
+        "rule": "While a clash is open, no text holds only one side of it. This covers the Interface, error codes, `DES-errors` rows, messages, and Given lines, also an example of the intent.",
+        "words": 31,
+        "evidence": "evals/pdlc-ship/runs/decl-p2-a-20261102T080703Z + decl-p2-b vs master-base-a/b: R3 (no default for a contradiction)"
       }
     ],
     "change": [
       {
-        "rule": "Steps: one for each requirement, in number order, and each \"Check\" name holds the requirement ID. The README step's \"Done when\" also names each seam a user can set, and how to run the app and the checks.",
-        "words": 38,
+        "rule": "The README step's \"Done when\" also names each seam a user can set, and how to run the app and the checks.",
+        "words": 22,
         "evidence": "evals/pdlc-change/runs/decl200-a-20261102T035148Z and /home/user/pskills/evals/pdlc-change/runs/decl200-b-20261102T035133Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R6 (one step per requirement with the ID in the Check, and a README step with the four Done-when conditions)"
-      },
-      {
-        "rule": "\"Requirements\" holds only the headings and acceptance lines, word for word.",
-        "words": 6,
-        "evidence": "evals/pdlc-change/runs/decl200-a-20261102T035148Z and /home/user/pskills/evals/pdlc-change/runs/decl200-b-20261102T035133Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R3 (the Requirements section copies only the headings and the acceptance lines)"
       },
       {
         "rule": "\"Out\" gives the full result, with its order and the order of equal items.",
         "words": 14,
         "evidence": "evals/pdlc-change/runs/decl200-a-20261102T035148Z and /home/user/pskills/evals/pdlc-change/runs/decl200-b-20261102T035133Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R4 (the Interface lets a test writer write each check through the command)"
-      },
-      {
-        "rule": "`Tests-Locked: none` in the header.",
-        "words": 2,
-        "evidence": "evals/pdlc-change/runs/decl200-a-20261102T035148Z and /home/user/pskills/evals/pdlc-change/runs/decl200-b-20261102T035133Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R1 (the header and the sections of the template)"
-      },
-      {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 10,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
       }
     ],
     "build": [
       {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 11,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
+        "rule": "`--reqs built` also ticks the steps and logs the build",
+        "words": 6,
+        "evidence": "evals/pdlc-build/runs/plugin-N vs plugin-M: R6 (steps ticked, progress log line, each requirement built) fell from 100 to 12.5; change.md stayed unchanged"
       }
     ],
     "verify": [
       {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 10,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
+        "rule": "Each round ends with `pdlc.py commit verify`; the stage then ends with `pdlc.py commit verified` or `send-back`; the newest commit is \"Verified CH-xxxx\" or \"Send back CH-xxxx: <stage>\"",
+        "words": 9,
+        "evidence": "evals/pdlc-verify/runs plugin-N: R7 (Verify CH-0001: round 1, then Verified CH-0001 or Send back CH-0001: <stage>) fell from 100 to 25; runs made only the round commit and stopped"
       }
     ],
-    "show": [
+    "show": [],
+    "ship": [
       {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 10,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
+        "rule": "Run each stage through its own skill, with `defaults`.",
+        "words": 9,
+        "evidence": "evals/pdlc-ship/runs/decl-final-a-20261102T054013Z + decl-final-b vs master-base-a/b: R5 (stage subjects and trailers), supports R7"
+      },
+      {
+        "rule": "Stop only for a contradiction that ready finds",
+        "words": 3,
+        "evidence": "evals/pdlc-ship/runs/decl-p3-b-* run 1 vs master-base-a/b: R5 and R1 (ship stopped after intake and skipped ready; master: 'Ready takes no default for a contradiction')"
       }
     ]
   },

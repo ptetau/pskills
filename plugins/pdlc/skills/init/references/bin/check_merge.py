@@ -55,6 +55,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # do not leave a __pycache__ in pdlc/bin of the project
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pdlclib import field, section  # noqa: E402
+
 REQ = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b(.*)$", re.M)
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy", "visual"]
@@ -66,12 +70,6 @@ MARKER = re.compile(r"[*_]+\(assumed\b[^()\n]*\)[*_]+|\([^()\n]*\bassumed\b[^()\
 # The first line of an Interface entry: a top-level list item with a name in backticks.
 ENTRY = re.compile(r"^- [^`\n]*`([^`\n]+)`(.*)$")
 SPEC_ID = re.compile(r"\b((?:JOB|CAP)-[a-z0-9-]+)\b")
-
-
-def section(text, title):
-    """The text under a '## title' heading, up to the next '## ' heading."""
-    match = re.search(r"^## %s\s*$(.*?)(?=^## |\Z)" % re.escape(title), text, re.M | re.S)
-    return match.group(1) if match else ""
 
 
 def requirement_text(root, req_id):
@@ -396,17 +394,6 @@ def unchanged_since_earlier_review(root, text, lock, checks):
         return False
     diff = git(root, "diff", "--name-only", earlier.group(1), lock, "--", *checks)
     return diff.returncode == 0 and not diff.stdout.strip()
-
-
-def field(text, name):
-    """A header field of a change spec or intent, such as Status or Branch. The value is
-    bare: "IN-0001 (poll-input-errors)" gives "IN-0001", and "`pdlc/CH-0001-x`" gives
-    "pdlc/CH-0001-x"."""
-    match = re.search(r"\b%s:[ \t]*([^·\n]*?)[ \t]*(?:·|$)" % name, text, re.M)
-    if not match:
-        return None
-    value = match.group(1).replace("`", "")
-    return re.sub(r"\s+\(.*\)$", "", value).strip()
 
 
 def show(root, ref, path):

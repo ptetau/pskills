@@ -27,7 +27,7 @@ The project has `pdlc/` with stub specs, conventions, working checks, and adapte
   `specs/design/` without `## Question`. Empty `inbox/`, `changes/`, `specs/jobs/`,
   `specs/capabilities/` get `.gitkeep`.
   `python3 <the upgrade skill>/scripts/upgrade.py record` writes `pdlc/version.json`.
-- The commit "Set up pdlc" on `main`, no new branch.
+- The commit `pdlc.py commit setup` on `main`, no new branch.
 - Reply: each decision, "Unsure" item, `/pdlc:ship <what you want>`, `/pdlc:intake`.
 
 ## Constraints

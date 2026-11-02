@@ -18,26 +18,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # do not leave a __pycache__ in pdlc/bin of the project
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pdlclib import field, section  # noqa: E402
+
 
 def git(root, *args):
     return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True)
-
-
-def section(text, title):
-    """The text under a '## title' heading, up to the next '## ' heading."""
-    match = re.search(r"^## %s\s*$(.*?)(?=^## |\Z)" % re.escape(title), text, re.M | re.S)
-    return match.group(1) if match else ""
-
-
-def field(text, name):
-    """A header field of a change spec or intent, such as Status or Branch. The value is
-    bare: "IN-0001 (poll-input-errors)" gives "IN-0001", and "`pdlc/CH-0001-x`" gives
-    "pdlc/CH-0001-x"."""
-    match = re.search(r"\b%s:[ \t]*([^·\n]*?)[ \t]*(?:·|$)" % name, text, re.M)
-    if not match:
-        return None
-    value = match.group(1).replace("`", "")
-    return re.sub(r"\s+\(.*\)$", "", value).strip()
 
 
 def with_status(text, status):

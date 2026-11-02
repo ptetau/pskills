@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import metrics  # noqa: E402
 import run_bench  # noqa: E402
 import run_experiment  # noqa: E402
+import check_trailers  # noqa: E402
 
 REFERENCE_CLI = '''
 import sys
@@ -1191,6 +1192,24 @@ class StageReplayTest(unittest.TestCase):
             with self.subTest(state=state):
                 project = self.prepare(state)
                 self.assertEqual(run_bench.git(project, "status", "--porcelain").stdout.strip(), "")
+
+    def test_prepare_writes_the_version_of_the_plugin_under_test(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        plugin = folder / "pdlc"
+        shutil.copytree(run_bench.DEFAULT_PLUGIN, plugin, ignore=shutil.ignore_patterns("__pycache__"))
+        manifest = plugin / ".claude-plugin" / "plugin.json"
+        data = json.loads(manifest.read_text())
+        data["version"] = "0.0.9"
+        manifest.write_text(json.dumps(data))
+        for state in ("intake", "ready", "done"):
+            with self.subTest(state=state):
+                dest = folder / ("app-" + state)
+                with contextlib.redirect_stdout(io.StringIO()):
+                    run_bench.main(["prepare", "--state", state, "--snapshot", "r5", "--dest", str(dest),
+                                    "--plugin", str(plugin)])
+                self.assertEqual(json.loads((dest / "pdlc" / "version.json").read_text())["pdlc"], "0.0.9")
+                self.assertEqual(run_bench.git(dest, "status", "--porcelain").stdout.strip(), "")
 
     def test_prepare_init_has_no_pdlc_folder(self):
         self.assertFalse((self.prepare("init") / "pdlc").exists())
@@ -2585,6 +2604,285 @@ class RebuildCommandTest(unittest.TestCase):
             run_bench.main(["rebuild", "--help"])
         for option in ("--run", "--ref", "--fixture", "--keep", "--label", "--out", "--budget", "--timeout", "--plugin"):
             self.assertIn(option, printed.getvalue())
+
+
+class TrailerCheckTest(unittest.TestCase):
+    """bench/check_trailers.py: the scripted verdict of R7 (trailers and a clean tree)."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir, True)
+        self.git("init", "-q", "-b", "main")
+        (self.dir / "README.md").write_text("app\n")
+        self.commit("Seed", ["README.md"])
+        self.git("tag", "start")
+        design = self.dir / "pdlc" / "specs" / "design"
+        design.mkdir(parents=True)
+        shutil.copy(run_bench.DEFAULT_PLUGIN / "skills" / "init" / "references" / "defaults"
+                    / "DES-pdlc-commit-trailers.md", design)
+
+    def git(self, *args):
+        return run_bench.git(self.dir, *args).stdout
+
+    def commit(self, message, paths):
+        for path in paths:
+            target = self.dir / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(target.read_text() + "x\n" if target.exists() else "x\n")
+        self.git("add", "-A")
+        result = run_bench.git(self.dir, "commit", "-q", "-m", message)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def verdict(self, **kwargs):
+        return check_trailers.check(self.dir, "start", **kwargs)
+
+    def test_a_commit_with_one_trailer_block_is_met(self):
+        self.commit("Specify IN-0001: poll\n\nIntent: IN-0001\nCo-Authored-By: A <a@b>\nClaude-Session: s",
+                    ["pdlc/inbox/IN-0001.md"])
+        self.assertEqual(self.verdict()["verdict"], "met")
+
+    def test_a_blank_line_that_splits_the_block_is_missed(self):
+        self.commit("Specify IN-0001: poll\n\nIntent: IN-0001\n\nCo-Authored-By: A <a@b>",
+                    ["pdlc/inbox/IN-0001.md"])
+        result = self.verdict()
+        self.assertEqual(result["verdict"], "missed")
+        self.assertIn("last paragraph", " ".join(result["commits"][0]["problems"]))
+
+    def test_one_good_and_one_bad_commit_is_partial(self):
+        self.commit("Specify IN-0001: poll\n\nIntent: IN-0001", ["pdlc/inbox/IN-0001.md"])
+        self.commit("Ready IN-0001: poll", ["pdlc/inbox/IN-0001.md"])
+        self.assertEqual(self.verdict()["verdict"], "partial")
+
+    def test_a_file_outside_pdlc_needs_req(self):
+        self.commit("Build CH-0001: add it\n\nIntent: IN-0001\nChange: CH-0001", ["app/main.py"])
+        problems = self.verdict()["commits"][0]["problems"]
+        self.assertTrue(any("Req" in p for p in problems), problems)
+
+    def test_req_with_only_pdlc_files_is_a_problem(self):
+        self.commit("Start CH-0001\n\nIntent: IN-0001\nChange: CH-0001\nReq: CAP-x.R1",
+                    ["pdlc/changes/CH-0001/change.md"])
+        problems = self.verdict()["commits"][0]["problems"]
+        self.assertTrue(any("Req" in p for p in problems), problems)
+
+    def test_a_subject_with_a_change_needs_the_change_trailer(self):
+        self.commit("Tests CH-0001\n\nIntent: IN-0001", ["pdlc/changes/CH-0001/change.md"])
+        problems = self.verdict()["commits"][0]["problems"]
+        self.assertTrue(any("Change" in p for p in problems), problems)
+
+    def test_the_change_trailer_must_name_the_change_of_the_subject(self):
+        self.commit("Tests CH-0001\n\nIntent: IN-0001\nChange: CH-0002", ["pdlc/changes/CH-0001/change.md"])
+        self.assertEqual(self.verdict()["verdict"], "missed")
+
+    def test_a_commit_with_no_pdlc_subject_is_left_out(self):
+        self.commit("Fix the typo", ["README.md"])
+        result = self.verdict()
+        self.assertEqual((result["verdict"], result["commits"]), ("n/a", []))
+
+    def test_n_a_is_a_verdict_to_copy_when_nothing_applies(self):
+        """The script decides when R7 applies. A grader copies "n/a" as it copies "met"."""
+        self.commit("Fix the typo", ["README.md"])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = check_trailers.main([str(self.dir), "--since", "start"])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out.getvalue())["verdict"], "n/a")
+
+    def test_a_stray_file_makes_the_verdict_partial(self):
+        self.commit("Specify IN-0001: poll\n\nIntent: IN-0001", ["pdlc/inbox/IN-0001.md"])
+        (self.dir / "stray.txt").write_text("x")
+        result = self.verdict()
+        self.assertEqual(result["verdict"], "partial")
+        self.assertEqual(result["status"], ["?? stray.txt"])
+
+    def test_the_files_of_a_vet_run_are_not_stray_files(self):
+        self.commit("Specify IN-0001: poll\n\nIntent: IN-0001", ["pdlc/inbox/IN-0001.md"])
+        for folder in (".vet-capture", ".vet-tmp"):
+            (self.dir / folder).mkdir()
+            (self.dir / folder / "a.md").write_text("x")
+        self.assertEqual(self.verdict()["verdict"], "met")
+
+    def test_no_commit_and_a_stray_file_is_missed(self):
+        (self.dir / "stray.txt").write_text("x")
+        self.assertEqual(self.verdict()["verdict"], "missed")
+
+    def test_a_commit_on_another_branch_counts(self):
+        self.git("checkout", "-q", "-b", "pdlc/CH-0001-x")
+        self.commit("Start CH-0001\n\nIntent: IN-0001\nChange: CH-0001", ["pdlc/changes/CH-0001/change.md"])
+        self.git("checkout", "-q", "main")
+        self.assertEqual(self.verdict()["verdict"], "met")
+
+    def test_main_prints_the_verdict_as_json(self):
+        self.commit("Specify IN-0001: poll\n\nIntent: IN-0001", ["pdlc/inbox/IN-0001.md"])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = check_trailers.main([str(self.dir), "--since", "start"])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out.getvalue())["verdict"], "met")
+
+    def test_main_exits_2_for_an_unknown_ref(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(check_trailers.main([str(self.dir), "--since", "nope"]), 2)
+
+    def stages(self):
+        return check_trailers.check_stages(self.dir, "start")
+
+    def subjects(self, *subjects):
+        for subject in subjects:
+            self.commit(subject, ["pdlc/inbox/IN-0001.md"])
+
+    def test_stages_in_order_are_met(self):
+        self.subjects("Specify IN-0001: poll", "Ready IN-0001: poll", "Plan IN-0001: one")
+        self.assertEqual(self.stages()["verdict"], "met")
+
+    def test_a_stage_before_an_earlier_stage_is_missed(self):
+        self.subjects("Ready IN-0001: poll", "Specify IN-0001: poll")
+        result = self.stages()
+        self.assertEqual(result["verdict"], "missed")
+        self.assertIn("Specify", " ".join(result["evidence"]))
+
+    def test_a_missing_stage_between_two_stages_is_partial(self):
+        self.subjects("Start CH-0001", "Tests CH-0001", "Build CH-0001: add it", "Built CH-0001")
+        result = self.stages()
+        self.assertEqual(result["verdict"], "partial")
+        self.assertIn("Lock tests", " ".join(result["evidence"]))
+
+    def test_a_send_back_lets_the_stages_run_again(self):
+        self.subjects("Build CH-0001: add it", "Built CH-0001", "Verify CH-0001: round 1",
+                      "Send back CH-0001: build", "Build CH-0001: fix it", "Built CH-0001",
+                      "Verify CH-0001: round 2", "Verified CH-0001")
+        self.assertEqual(self.stages()["verdict"], "met")
+
+    def test_each_change_has_its_own_order(self):
+        self.subjects("Start CH-0001", "Tests CH-0001", "Start CH-0002", "Tests CH-0002")
+        self.assertEqual(self.stages()["verdict"], "met")
+
+    def test_main_with_stages_prints_the_stage_verdict(self):
+        self.subjects("Ready IN-0001: poll", "Specify IN-0001: poll")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = check_trailers.main([str(self.dir), "--since", "start", "--stages"])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out.getvalue())["verdict"], "missed")
+
+
+class VetRunTest(unittest.TestCase):
+    """run_bench.py vetrun and the exclude lines of prepare."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir, True)
+        self.project = self.dir / "app"
+        self.project.mkdir()
+        run_bench.git(self.project, "init", "-q", "-b", "main")
+        (self.project / "a.txt").write_text("a")
+        run_bench.git(self.project, "add", "-A")
+        run_bench.git(self.project, "commit", "-q", "-m", "Seed")
+
+    def fake_session(self, calls):
+        def run(prompt, cwd, plugin, log_path, **kwargs):
+            calls.append((prompt, kwargs))
+            number = len(calls)
+            if number == 1:
+                (Path(cwd) / "b.txt").write_text("b")
+                run_bench.git(cwd, "add", "-A")
+                run_bench.git(cwd, "commit", "-q", "-m", "Specify IN-0001: x\n\nIntent: IN-0001")
+            events = [{"t": 0, "e": {"type": "system", "subtype": "init", "session_id": "sid-1"}},
+                      {"t": 1, "e": {"type": "system", "subtype": "hook_response", "hook_name": "PostToolUse:Bash",
+                                     "exit_code": "2", "stderr": "pdlc: commit abc does not follow it"}},
+                      {"t": 2, "e": {"type": "result", "result": "reply %d" % number, "session_id": "sid-1"}}]
+            return events, 1.0, ""
+        return run
+
+    def args(self, **kwargs):
+        base = dict(project=str(self.project), root=None, prompt="start it", reply=[],
+                    plugin=str(run_bench.DEFAULT_PLUGIN), capture=None, timeout=60, budget=1.0)
+        base.update(kwargs)
+        return Namespace(**base)
+
+    def test_vetrun_runs_each_reply_in_the_same_session(self):
+        calls = []
+        with mock.patch.object(run_bench, "run_claude", self.fake_session(calls)), \
+                contextlib.redirect_stdout(io.StringIO()):
+            run_bench.command_vetrun(self.args(reply=["yes", "no"]))
+        self.assertEqual([c[0] for c in calls], ["start it", "yes", "no"])
+        self.assertNotIn("--resume", calls[0][1]["extra"])
+        for _, kwargs in calls[1:]:
+            self.assertEqual(kwargs["extra"][-2:], ["--resume", "sid-1"])
+        self.assertTrue(all(kwargs["persist"] for _, kwargs in calls))
+
+    def test_the_capture_holds_the_replies_the_hook_messages_and_the_git_facts(self):
+        calls = []
+        with mock.patch.object(run_bench, "run_claude", self.fake_session(calls)), \
+                contextlib.redirect_stdout(io.StringIO()):
+            run_bench.command_vetrun(self.args(reply=["yes"]))
+        text = (self.project / ".vet-capture" / "vetrun.md").read_text()
+        for part in ("### user 1", "start it", "### assistant 2", "reply 2", "## Hooks",
+                     "PostToolUse:Bash (exit 2)", "pdlc: commit abc does not follow it",
+                     "## Repos", "Specify IN-0001: x", "Intent: IN-0001"):
+            self.assertIn(part, text)
+
+    def test_the_git_facts_come_from_snapshot_py(self):
+        calls = []
+        with mock.patch.object(run_bench, "run_claude", self.fake_session(calls)), \
+                contextlib.redirect_stdout(io.StringIO()):
+            run_bench.command_vetrun(self.args())
+        repos = run_bench.vet_snapshot().render(self.project)
+        self.assertTrue((self.project / ".vet-capture" / "vetrun.md").read_text().endswith(repos + "\n"))
+
+    def test_the_snapshot_covers_the_root_when_the_project_is_a_folder_inside_it(self):
+        root = self.dir / "worktree"
+        root.mkdir()
+        run_bench.git(root, "init", "-q", "-b", "main")
+        (root / "r.txt").write_text("r")
+        run_bench.git(root, "add", "-A")
+        run_bench.git(root, "commit", "-q", "-m", "Root seed")
+        project = root / "proj"
+        shutil.move(str(self.project), str(project))
+        calls = []
+        with mock.patch.object(run_bench, "run_claude", self.fake_session(calls)), \
+                contextlib.redirect_stdout(io.StringIO()):
+            run_bench.command_vetrun(self.args(project=str(project), root=str(root),
+                                               capture=str(root / ".vet-capture" / "p.md")))
+        self.assertEqual(calls[0][1:][0].get("env", {}).get("PWD"), str(project))
+        text = (root / ".vet-capture" / "p.md").read_text()
+        self.assertIn("### .\n", text)
+        self.assertIn("### proj\n", text)
+        self.assertIn("Specify IN-0001: x", text)
+        self.assertTrue(text.endswith(run_bench.vet_snapshot().render(root) + "\n"))
+
+    def test_the_hook_section_says_none_when_no_hook_spoke(self):
+        text = run_bench.render_capture([("hi", [{"t": 0, "e": {"type": "result", "result": "ok"}}])], "## Repos\n")
+        self.assertIn("## Hooks\n\nNone.", text)
+
+    def test_the_nested_command_keeps_the_session_and_loads_the_plugin(self):
+        command = run_bench.claude_command("p", run_bench.DEFAULT_PLUGIN)
+        self.assertIn("--plugin-dir", command)
+        launched = []
+
+        class Boom(Exception):
+            pass
+
+        def popen(cmd, **kwargs):
+            launched.append(cmd)
+            raise Boom
+
+        with mock.patch.object(run_bench.subprocess, "Popen", popen):
+            with self.assertRaises(Boom):
+                run_bench.run_claude("p", self.dir, run_bench.DEFAULT_PLUGIN, self.dir / "log", persist=True)
+        self.assertNotIn("--no-session-persistence", launched[0])
+
+    def test_prepare_excludes_the_files_of_a_vet_run(self):
+        folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, folder, True)
+        with contextlib.redirect_stdout(io.StringIO()):
+            run_bench.main(["prepare", "--state", "init", "--snapshot", "r5", "--dest", str(folder / "app")])
+        app = folder / "app"
+        lines = (app / ".git" / "info" / "exclude").read_text().splitlines()
+        self.assertIn(".vet-capture/", lines)
+        self.assertIn(".vet-tmp/", lines)
+        (app / ".vet-capture").mkdir()
+        (app / ".vet-capture" / "x.md").write_text("x")
+        self.assertEqual(run_bench.git(app, "status", "--porcelain", "-uall").stdout.strip(), "")
 
 
 if __name__ == "__main__":
