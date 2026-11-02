@@ -36,7 +36,7 @@ One intent's requirements are in their right specs, as `proposed`. No code.
 - With an unmerged pdlc branch, the intent gets its own branch (delivery port).
   Otherwise `Branch: none`.
 - Each detail not in the intent has `(assumed)`, also in a Given line, a new
-  `DES-errors` code, and an edge-case result. An `(assumed)` detail does not remove a value that the words permit, and does not pick a side of a clash in them. A value in a clash, such as a limit that an example breaks, stays out of the Interface.
+  `DES-errors` code, and an edge-case result. An `(assumed)` detail does not remove a value that the words permit. While a clash is open, no text holds only one side of it. This covers the Interface, error codes, `DES-errors` rows, messages, and Given lines, also an example of the intent.
 - Each `(assumed)` decision has its own line in "Decided on defaults" and in "Notes", in
   the template form.
 - The summary of each spec ("Who and why" or "What it is for") names each requirement

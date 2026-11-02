@@ -64,9 +64,9 @@
         "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R6 (non-stop cases do not stop, and each default is recorded in the handoff and the Notes)"
       },
       {
-        "rule": "An `(assumed)` detail or Interface text that takes one side of a contradiction gives way.",
-        "words": 15,
-        "evidence": "evals/pdlc-ship/runs/decl-final-a-20261102T054013Z + decl-final-b vs master-base-a/b: R3 (no default for a contradiction)"
+        "rule": "Text that holds only one side of it gives way, also intake's text. This covers the Interface, error codes, `DES-errors` rows, messages, and Given lines, also an example of the intent.",
+        "words": 31,
+        "evidence": "evals/pdlc-ship/runs/decl-p2-a-20261102T080703Z + decl-p2-b vs master-base-a/b: R3 (no default for a contradiction)"
       }
     ],
     "tests": [
@@ -130,14 +130,14 @@
         "evidence": "evals/pdlc-ship/runs/decl-final-a-20261102T054013Z + decl-final-b vs master-base-a/b: R7 (trailers and clean tree)"
       },
       {
-        "rule": "An `(assumed)` detail does not remove a value that the words permit, and does not pick a side of a clash in them.",
-        "words": 23,
+        "rule": "An `(assumed)` detail does not remove a value that the words permit.",
+        "words": 12,
         "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R3 (no default for a contradiction)"
       },
       {
-        "rule": "A value in a clash, such as a limit that an example breaks, stays out of the Interface.",
-        "words": 18,
-        "evidence": "evals/pdlc-ship/runs/decl-final-a-20261102T054013Z + decl-final-b vs master-base-a/b: R3 (no default for a contradiction)"
+        "rule": "While a clash is open, no text holds only one side of it. This covers the Interface, error codes, `DES-errors` rows, messages, and Given lines, also an example of the intent.",
+        "words": 31,
+        "evidence": "evals/pdlc-ship/runs/decl-p2-a-20261102T080703Z + decl-p2-b vs master-base-a/b: R3 (no default for a contradiction)"
       }
     ],
     "change": [
