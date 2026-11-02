@@ -2,7 +2,8 @@
   "enforced": [
     "ready",
     "tests",
-    "trace"
+    "trace",
+    "upgrade"
   ],
   "acceptance": 200,
   "board": 200,
