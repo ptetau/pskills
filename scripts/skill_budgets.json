@@ -167,13 +167,7 @@
         "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
       }
     ],
-    "build": [
-      {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 11,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
-      }
-    ],
+    "build": [],
     "verify": [
       {
         "rule": "Keep the trailers in one block, as README \"Commits\" says.",
@@ -181,13 +175,7 @@
         "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
       }
     ],
-    "show": [
-      {
-        "rule": "Keep the trailers in one block, as README \"Commits\" says.",
-        "words": 10,
-        "evidence": "evals/pdlc-ship/runs/decl-base-a-20261102T052014Z + decl-base-b vs master-base-a/b: R7 and R5 (trailers of each stage's commits, in one block)"
-      }
-    ],
+    "show": [],
     "ship": [
       {
         "rule": "Run each stage through its own skill, with `defaults`.",
