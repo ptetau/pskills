@@ -34,11 +34,11 @@ The intent that the user names, else the oldest `ready` one.
 ## Constraints
 
 - `pdlc/README.md` binds, in particular "Bookkeeping on main" and "Interfaces".
-- Not `ready`, or a need-cycle that no change breaks: stop with `change → user`.
+- Not `ready` (`/pdlc:ready` first), or a need-cycle that no change breaks: stop with `change → user`.
 - "Interface" lets the checks drive the user surface. A command error gets `stderr` or
   `stdout`. A new name has `(assumed)`.
-- A seam sits at the outermost interface, or is a `stand-in`. A missing tool is never a
-  stop.
+- A seam sits at the outermost interface, or, with no runner, is a `stand-in`. A
+  missing tool is not a stop.
 - A job change lists README in "Files". Its step is last, "Check" `none`.
 
 ## Done when
