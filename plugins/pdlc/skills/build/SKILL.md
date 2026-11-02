@@ -23,7 +23,7 @@ Make the locked checks of one change pass with app code.
 
 - Commits: `pdlc.py commit build` (the app files), then `pdlc.py commit built` (specs,
   change spec, handoff).
-- `pdlc.py set CH-xxxx --reqs built`. A `(retire)` requirement leaves its spec.
+- `pdlc.py set CH-xxxx --reqs built` (also ticks the steps, logs the build). A `(retire)` requirement leaves its spec.
 - The handoff `build → verify`.
 - The reply names `/pdlc:verify`.
 

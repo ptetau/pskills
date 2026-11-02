@@ -893,6 +893,45 @@ class SetTests(Project):
         self.assertIn("### CAP-email.R1 · Send\n\nStatus: built · Intents: IN-0001", spec)
         self.assertIn("### CAP-email.R2 · Other\n\nStatus: ready · Intents: IN-0001", spec)
 
+    def with_steps(self):
+        text = self.read("pdlc/changes/CH-0001-email/change.md")
+        steps = ("## Steps\n\n### Step 1 \u00b7 Send \u00b7 [ ]\n\n- Requirement: CAP-email.R1\n"
+                 "- Done when: the check passes\n\n### Step 2 \u00b7 README \u00b7 [ ]\n\n"
+                 "- Requirement: none\n\n## Progress log\n\n- 2026-01-01 \u00b7 planned\n")
+        self.write("pdlc/changes/CH-0001-email/change.md", text.replace("## Progress log\n", steps))
+        return "pdlc/changes/CH-0001-email/change.md"
+
+    def test_reqs_built_ticks_the_steps_and_logs_progress(self):
+        path = self.with_steps()
+        done = self.set("CH-0001", "--reqs", "built")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        text = self.read(path)
+        self.assertNotIn("[ ]", text)
+        self.assertEqual(text.count("\u00b7 [x]"), 2)
+        log = text.split("## Progress log")[1].strip().splitlines()
+        self.assertEqual(log[0], "- 2026-01-01 \u00b7 planned")
+        self.assertEqual(len(log), 2)
+        self.assertRegex(log[1], r"^- \d{4}-\d{2}-\d{2} \u00b7 built: all checks pass$")
+
+    def test_reqs_built_twice_changes_nothing_more(self):
+        path = self.with_steps()
+        self.set("CH-0001", "--reqs", "built")
+        once = self.read(path)
+        self.assertEqual(self.set("CH-0001", "--reqs", "built").returncode, 0)
+        self.assertEqual(self.read(path), once)
+
+    def test_reqs_built_ticks_bullet_steps_too(self):
+        path = self.with_steps()
+        self.write(path, self.read(path).replace("- Requirement: none\n", "- Requirement: none\n- [ ] extra\n"))
+        self.set("CH-0001", "--reqs", "built")
+        self.assertNotIn("[ ]", self.read(path))
+
+    def test_other_statuses_leave_steps_and_log_alone(self):
+        path = self.with_steps()
+        before = self.read(path)
+        self.set("CH-0001", "--reqs", "verified")
+        self.assertEqual(self.read(path), before)
+
     def test_one_requirement(self):
         self.set("CH-0001", "--req", "CAP-email.R2=verified")
         self.assertIn("Status: verified · Intents", self.read("pdlc/specs/capabilities/CAP-email.md").split("R2")[1])

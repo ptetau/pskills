@@ -106,7 +106,13 @@
         "evidence": "evals/pdlc-change/runs/decl200-a-20261102T035148Z and /home/user/pskills/evals/pdlc-change/runs/decl200-b-20261102T035133Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R4 (the Interface lets a test writer write each check through the command)"
       }
     ],
-    "build": [],
+    "build": [
+      {
+        "rule": "`--reqs built` also ticks the steps and logs the build",
+        "words": 6,
+        "evidence": "evals/pdlc-build/runs/plugin-N vs plugin-M: R6 (steps ticked, progress log line, each requirement built) fell from 100 to 12.5; change.md stayed unchanged"
+      }
+    ],
     "show": [],
     "ship": [
       {

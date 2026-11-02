@@ -813,6 +813,33 @@ def change_requirements(text):
     return re.findall(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+)\b", pdlclib.section(text, "Requirements"), re.M)
 
 
+def tick_steps(text):
+    """The change spec with each open step under "## Steps" ticked."""
+    span = re.search(r"^## Steps\s*$.*?(?=^## |\Z)", text, re.M | re.S)
+    if not span:
+        return text
+    body = re.sub(r"^(### .*\u00b7 )\[ \]([ \t]*)$", r"\1[x]\2", span.group(0), flags=re.M)
+    body = re.sub(r"^(\s*- )\[ \]", r"\1[x]", body, flags=re.M)
+    return text[:span.start()] + body + text[span.end():]
+
+
+BUILT_LOG = "built: all checks pass"
+
+
+def log_built(text):
+    """The change spec with one new last line in its progress log, unless it has that line."""
+    if not re.search(r"^## Progress log\s*$", text, re.M):
+        raise Problem("the change has no Progress log section")
+    if any(BUILT_LOG in l for l in pdlclib.section(text, "Progress log").splitlines()):
+        return text
+    line = "- %s \u00b7 %s" % (__import__("datetime").date.today().isoformat(), BUILT_LOG)
+    span = re.search(r"^## Progress log[ \t]*$\n?(.*?)(?=^## |\Z)", text, re.M | re.S)
+    old = span.group(1).strip("\n")
+    body = "\n" + (old + "\n" if old else "") + line + "\n"
+    rest = text[span.end():]
+    return text[:span.start(1)] + body + ("\n" + rest if rest else "")
+
+
 def unpropose(root, texts, change_text):
     scope = pdlclib.field(change_text, "Scope")
     if not scope:
@@ -891,6 +918,10 @@ def handle_set(args, extra):
             raise Problem("--unpropose works on a change")
         unpropose(root, texts, path.read_text())
         report.append("%s: removed \u00b7 proposed from the entries of its Interface" % id_)
+    if args.reqs == "built":
+        text = texts.get(path)
+        texts.put(path, log_built(tick_steps(text)))
+        report.append("%s: steps ticked, progress log updated" % id_)
     texts.write()
     print("\n".join(report))
     return EXIT_DONE
@@ -906,7 +937,7 @@ def options_set(parser):
     parser.add_argument("--acceptance-file", metavar="auto|PATH")
     parser.add_argument("--acceptance-locked", metavar="REV")
     parser.add_argument("--acceptance-passed", metavar="REV")
-    parser.add_argument("--reqs", metavar="STATUS", help="set each requirement that the change lists")
+    parser.add_argument("--reqs", metavar="STATUS", help="set each requirement that the change lists; \"built\" also ticks the steps and logs progress")
     parser.add_argument("--req", action="append", metavar="ID=STATUS")
     parser.add_argument("--unpropose", action="store_true", help="remove the proposed mark of its entries")
 
