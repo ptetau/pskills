@@ -26,7 +26,8 @@ proposal shows the GIF. Do not merge.
 - Record: `node pdlc/bin/record_gif.mjs pdlc/changes/CH-xxxx-…/visual.json pdlc/changes/CH-xxxx-…`.
   Review: `python3 pdlc/bin/make_packets.py CH-xxxx visual` (one `pdlc:reviewer`), when "Reviews" lists `visual`.
 - Gate fixes: `pdlc.py commit update CH-xxxx`.
-- Handoff (link, frames, lines shown): `pdlc.py handoff CH-xxxx show user`, then `pdlc.py commit propose CH-xxxx`.
+- Handoff (`link`, `frames`, `shown`, `total`): `pdlc.py handoff CH-xxxx show user`, then `pdlc.py commit propose CH-xxxx`.
+- Before `commit propose`, when each change of the intent is `in review` or `merged`: `pdlc.py set IN-xxxx --status "in review"`.
 - An `app` problem: `pdlc.py set CH-xxxx --status building --reqs built`, `pdlc.py handoff CH-xxxx show build`, then `pdlc.py commit send-back CH-xxxx --text build`. Stop.
 
 ## Constraints

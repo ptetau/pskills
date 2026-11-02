@@ -29,7 +29,7 @@ ends with `pdlc.py commit verified` (passed) or `pdlc.py commit send-back` (fail
 - Each round: packets (`python3 pdlc/bin/make_packets.py CH-xxxx --verify`), results, new intents.
 - Failed: handoff `verify → tests`, `verify → build`, or `verify → acceptance`.
 - Passed: handoff `verify → show`.
-- Passed, last change: `git rev-parse HEAD` of **run acceptance** on `Acceptance-Passed:`.
+- Passed, last change: `git rev-parse HEAD` of **run acceptance** into `pdlc.py set IN-xxxx --acceptance-passed`.
 
 ## Constraints
 

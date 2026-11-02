@@ -34,7 +34,7 @@ Make the locked checks of one change pass with app code.
 - `Tests-Locked:` with no hash and no `acceptance`: stop. `/pdlc:tests` comes first.
 - New base commits: merge the base with `git merge --no-ff -F` and `pdlc.py message merge --base`.
 - The builder changes only app files under "Files". Ask the user about another file.
-- A check called incorrect stays. Send the reason to `/pdlc:tests`, or `/pdlc:acceptance`.
+- A check called incorrect stays. Send the reason: `pdlc.py handoff CH-xxxx build tests` (or `build acceptance`), then `pdlc.py commit update CH-xxxx --text "<check> sent back"`.
 
 ## Done when
 

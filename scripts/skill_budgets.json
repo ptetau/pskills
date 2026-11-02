@@ -98,6 +98,11 @@
         "rule": "While a clash is open, no text holds only one side of it. This covers the Interface, error codes, `DES-errors` rows, messages, and Given lines, also an example of the intent.",
         "words": 31,
         "evidence": "evals/pdlc-ship/runs/decl-p2-a-20261102T080703Z + decl-p2-b vs master-base-a/b: R3 (no default for a contradiction)"
+      },
+      {
+        "rule": "open triple on a handoff to the user",
+        "words": 6,
+        "evidence": "pipeline audit M11 (open problems to the user)"
       }
     ],
     "change": [
@@ -117,6 +122,11 @@
         "rule": "`--reqs built` also ticks the steps and logs the build",
         "words": 6,
         "evidence": "evals/pdlc-build/runs/plugin-N vs plugin-M: R6 (steps ticked, progress log line, each requirement built) fell from 100 to 12.5; change.md stayed unchanged"
+      },
+      {
+        "rule": "a wrong check goes back by handoff and update commit",
+        "words": 13,
+        "evidence": "pipeline audit M2 (no build send-back)"
       }
     ],
     "verify": [
@@ -124,9 +134,20 @@
         "rule": "Each round ends with `pdlc.py commit verify`; the stage then ends with `pdlc.py commit verified` or `send-back`; the newest commit is \"Verified CH-xxxx\" or \"Send back CH-xxxx: <stage>\"",
         "words": 9,
         "evidence": "evals/pdlc-verify/runs plugin-N: R7 (Verify CH-0001: round 1, then Verified CH-0001 or Send back CH-0001: <stage>) fell from 100 to 25; runs made only the round commit and stopped"
+      },
+      {
+        "rule": "Acceptance-Passed is set on the intent",
+        "words": 3,
+        "evidence": "pipeline audit M12 (Acceptance-Passed target)"
       }
     ],
-    "show": [],
+    "show": [
+      {
+        "rule": "handoff keys, and the intent goes in review before Propose",
+        "words": 20,
+        "evidence": "pipeline audit M8 (show handoff keys) and M1 (intent never in review)"
+      }
+    ],
     "ship": [
       {
         "rule": "Run each stage through its own skill, with `defaults`.",
@@ -137,6 +158,20 @@
         "rule": "Stop only for a contradiction that ready finds",
         "words": 3,
         "evidence": "evals/pdlc-ship/runs/decl-p3-b-* run 1 vs master-base-a/b: R5 and R1 (ship stopped after intake and skipped ready; master: 'Ready takes no default for a contradiction')"
+      }
+    ],
+    "trace": [
+      {
+        "rule": "the grep for a requirement ends at a comma or line end",
+        "words": 1,
+        "evidence": "pipeline audit M17 (trace grep for a requirement)"
+      }
+    ],
+    "board": [
+      {
+        "rule": "Ticket is set where the item lives",
+        "words": 10,
+        "evidence": "pipeline audit M6 (board writes on main)"
       }
     ]
   },

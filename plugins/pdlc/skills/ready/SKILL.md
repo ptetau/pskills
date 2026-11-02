@@ -20,7 +20,7 @@ A test writer can write each check with no guess. No spec shows old behaviour.
 ## Outputs
 
 - Clear `proposed` requirements become `ready`.
-- The handoff and the commit, also at a stop: `pdlc.py handoff IN-xxxx ready change` (or `ready user`), then `pdlc.py commit ready IN-xxxx`.
+- The handoff and the commit, also at a stop: `pdlc.py handoff IN-xxxx ready change` (or `ready user`, with `open` {reason, decide, recommend}, the problems in `reason`), then `pdlc.py commit ready IN-xxxx`.
 - The reply: what changed, and `/pdlc:change` next.
 
 ## Constraints

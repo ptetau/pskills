@@ -25,7 +25,7 @@ change starts.
 
 - The intent is `building`, with `Branch:`, `Acceptance-File:`, and `Acceptance-Locked:`.
 - Four commits and a handoff. The packet of the review comes from `python3 pdlc/bin/make_packets.py IN-xxxx`.
-- `pdlc.py set`. `pdlc.py commit` kinds in order: acceptance, lock-acceptance, review-acceptance, acceptance-reviewed. `pdlc.py handoff IN-xxxx acceptance tests`.
+- `pdlc.py set`. `pdlc.py commit` kinds in order: acceptance, lock-acceptance, review-acceptance, acceptance-reviewed. `pdlc.py handoff IN-xxxx acceptance tests`, or `acceptance build` after a send-back.
 
 ## Constraints
 

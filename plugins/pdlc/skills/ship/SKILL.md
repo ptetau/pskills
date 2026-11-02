@@ -16,7 +16,7 @@ Run each stage through its own skill, with `defaults`, until each change is prop
 
 `pdlc/README.md` ("Core rules", "Bookkeeping on main", "Stages and handoffs", "Stacked changes", "Where pdlc commits", "Rounds", "Questions", "Who does what", "New behaviour needs approval", "Commits", "Layout"). Take:
 
-1. An unmerged stopped change: take its recommended answer, and give two
+1. An unmerged stopped intent or change: take its recommended answer, and give two
    new rounds. A contradiction still waits for the user.
 2. New user words: `pdlc:intake`.
 3. A named intent or change.
@@ -28,7 +28,7 @@ If `pdlc/version.json` is older, run `/pdlc:upgrade`.
 ## Outputs
 
 - Each change gets `verify` and show.
-- At a stop: `python3 pdlc/bin/pdlc.py stop`. The reply repeats its "Open".
+- At a stop: `python3 pdlc/bin/pdlc.py stop <ID> --stage <stage> --json -`, with `open` {reason, decide, recommend}. The reply repeats its "Open".
 - The reply: pull requests and GIFs in stack order.
 
 ## Constraints

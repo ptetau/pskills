@@ -32,7 +32,7 @@ code to its reason, or from an intent or a requirement to what it touched.
 
 - `pdlc/README.md` binds, in particular "Writing", "Where pdlc commits", and "Ports".
 - Trace changes no file and makes no commit, and invents no link.
-- `git log --all --grep "Change: CH-xxxx"` and `git log --all --grep "Req:.*<ID>"` find
+- `git log --all --grep "Change: CH-xxxx"` and `git log --all -E --grep "Req:.*<ID>(,|$)"` find
   the commits. A requirement shows the files that those commits changed.
 
 ## Done when
