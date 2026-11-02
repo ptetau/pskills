@@ -5,6 +5,9 @@ Commands:
   run_bench.py init-fixture      run /pdlc:init once and keep its pdlc/ folder in the fixture
   run_bench.py e2e --label L     run the scripted intent through /pdlc:ship, one run
   run_bench.py rebuild SOURCE    build the app again from the specs alone, and score it
+  run_bench.py vetrun --project P --prompt T [--reply R ...]
+                                 run one /vet prompt in a prepared project with the plugin and its
+                                 hooks, and write a capture that no model writes
   metrics.py RUN_DIR ...          the full measures of saved runs: time, loops, failures,
                                  tokens, rounds, reviews and the work, in one table
   run_bench.py gate BASELINE CANDIDATE
@@ -238,9 +241,15 @@ def session_env(cwd):
     return {**os.environ, "PWD": str(cwd), "OLDPWD": str(cwd)}
 
 
-def run_claude(prompt, cwd, plugin, log_path, timeout=3600, budget_usd=None, extra=(), tools=(), env=None):
-    """Run one headless session. Write each event with its arrival time. Return the events."""
+def run_claude(prompt, cwd, plugin, log_path, timeout=3600, budget_usd=None, extra=(), tools=(), env=None,
+               persist=False):
+    """Run one headless session. Write each event with its arrival time. Return the events.
+
+    With `persist`, the session is saved, so that a later call can continue it with `--resume`.
+    """
     command = claude_command(prompt, plugin, extra, tools)
+    if persist:
+        command.remove("--no-session-persistence")
     if budget_usd:
         command += ["--max-budget-usd", str(budget_usd)]
     started = time.time()
@@ -1057,6 +1066,7 @@ def command_stage(args):
                                               run["outcome"]["check"]["ok"]))
 
 
+VET_EXCLUDES = (".vet-capture/", ".vet-tmp/")
 PREPARE_STATES = ["init", *REPLAY_STAGES, "done", "board"]
 
 
@@ -1088,6 +1098,11 @@ def command_prepare(args):
         for name in ("main", branch):
             git(dest, "checkout", "-q", name)
             set_tracker(dest)
+    # The files of a vet run are not part of the project. Exclude them, so that no tool lists them as stray files.
+    exclude = dest / ".git" / "info" / "exclude"
+    exclude.parent.mkdir(parents=True, exist_ok=True)
+    old = exclude.read_text() if exclude.exists() else ""
+    exclude.write_text(old + "".join(line + "\n" for line in VET_EXCLUDES if line not in old.splitlines()))
     # A run in the project commits with the git of its own session. Turn signing off there
     # too, and refuse a project whose setup left work uncommitted.
     git(dest, "config", "commit.gpgsign", "false")
@@ -1109,6 +1124,92 @@ def set_tracker(project):
                         "- status field: Status")
     config.write_text(text)
     git(project, "commit", "-q", "-am", "Set the tracker")
+
+
+# ---------------------------------------------------------------- running a vet prompt
+
+
+def vet_snapshot():
+    """The module vet/scripts/snapshot.py, which lists the commits and the git status of a worktree."""
+    spec = importlib.util.spec_from_file_location("vet_snapshot", REPO / "vet" / "scripts" / "snapshot.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def session_id_of(events):
+    for item in events:
+        found = item["e"].get("session_id")
+        if found:
+            return found
+    return None
+
+
+def hook_reports(events):
+    """[(hook name, exit code, text)] for each hook that ended with an exit code other than 0."""
+    out = []
+    for item in events:
+        event = item["e"]
+        if event.get("type") == "system" and event.get("subtype") == "hook_response":
+            code = str(event.get("exit_code"))
+            if code not in ("0", "None"):
+                out.append((event.get("hook_name") or "?", code,
+                            (event.get("stderr") or event.get("output") or "").strip()))
+    return out
+
+
+def final_reply(events):
+    """The last reply of a session: the text of its result event."""
+    for item in reversed(events):
+        if item["e"].get("type") == "result":
+            return str(item["e"].get("result") or "")
+    return ""
+
+
+def render_capture(turns, repos):
+    """The capture of a vet run as Markdown. `turns` is a list of (user text, events).
+
+    The transcript holds the final reply of each turn. The hook section lists each hook message
+    that reached the session. `repos` is the "## Repos" section that snapshot.py wrote.
+    """
+    out = ["## Transcript", ""]
+    hooks = []
+    for number, (said, events) in enumerate(turns, 1):
+        out += ["### user %d" % number, "", said, "", "### assistant %d" % number, "", final_reply(events), ""]
+        hooks += hook_reports(events)
+    out += ["## Hooks", ""]
+    if not hooks:
+        out += ["None.", ""]
+    for name, code, text in hooks:
+        out += ["### %s (exit %s)" % (name, code), "", "```", text, "```", ""]
+    return "\n".join(out) + "\n" + repos + "\n"
+
+
+def command_vetrun(args):
+    """Run one prompt of a /vet suite in a prepared project, and write the capture.
+
+    The session is `claude -p` with the plugin under test, so its hooks run as they run for a user.
+    Each --reply continues the same session, as the scripted replies of the prompt. The capture
+    ends with the git facts of snapshot.py. No model writes them.
+    """
+    project = Path(args.project).resolve()
+    plugin = Path(args.plugin).resolve()
+    capture = Path(args.capture) if args.capture else project / ".vet-capture" / "vetrun.md"
+    capture.parent.mkdir(parents=True, exist_ok=True)
+    turns, session = [], None
+    for number, text in enumerate([args.prompt, *args.reply], 1):
+        extra = ["--include-hook-events"] + (["--resume", session] if session else [])
+        log = capture.with_name("%s.turn%d.jsonl" % (capture.stem, number))
+        events, _, err = run_claude(text, project, plugin, log, timeout=args.timeout, budget_usd=args.budget,
+                                    extra=extra, env=session_env(project), persist=True)
+        turns.append((text, events))
+        session = session or session_id_of(events)
+        failed = any(i["e"].get("type") == "result" and i["e"].get("is_error") for i in events)
+        if failed or (not session and number <= len(args.reply)):
+            print("vetrun: stopped after turn %d. %s" % (number, err.strip()[:300]), file=sys.stderr)
+            break
+    capture.write_text(render_capture(turns, vet_snapshot().render(project)))
+    print(capture.resolve())
 
 
 # ---------------------------------------------------------------- rebuilding from the specs
@@ -2353,6 +2454,14 @@ def build_parser():
                     help="the finished run to start from (default: %(default)s)")
     pr.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
     pr.add_argument("--dest", required=True)
+    vr = sub.add_parser("vetrun", help="run one /vet prompt with the plugin and its hooks, and write a capture")
+    vr.add_argument("--project", required=True, help="a project that `prepare` made")
+    vr.add_argument("--prompt", required=True)
+    vr.add_argument("--reply", action="append", default=[], help="a scripted reply, in order (repeatable)")
+    vr.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
+    vr.add_argument("--capture", help="the capture file (default: PROJECT/.vet-capture/vetrun.md)")
+    vr.add_argument("--timeout", type=int, default=1800, help="seconds for each turn")
+    vr.add_argument("--budget", type=float, default=6.0, help="dollars for each turn")
     return parser
 
 
@@ -2360,6 +2469,9 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
     if args.command == "prepare":
         command_prepare(args)
+        return 0
+    if args.command == "vetrun":
+        command_vetrun(args)
         return 0
     if args.command == "rebuild":
         args.label = args.label or "rebuild-" + Path(args.source).resolve().name
