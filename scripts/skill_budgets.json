@@ -1,7 +1,8 @@
 {
   "enforced": [
     "ready",
-    "tests"
+    "tests",
+    "acceptance"
   ],
   "acceptance": 200,
   "board": 200,
@@ -38,9 +39,9 @@
     ],
     "tests": [
       {
-        "rule": "Handoff `tests → build` names each check, the requirement it proves, and the lock hash.",
+        "rule": "Handoff `tests \u2192 build` names each check, the requirement it proves, and the lock hash.",
         "words": 11,
-        "evidence": "evals/pdlc-tests/runs/decl200-20261101T200346Z: the handoff `tests → build` lists each check, what it proves, and the lock"
+        "evidence": "evals/pdlc-tests/runs/decl200-20261101T200346Z: the handoff `tests \u2192 build` lists each check, what it proves, and the lock"
       }
     ]
   }
