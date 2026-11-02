@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The scripted verdict of rubric item R7 of a pdlc vet: trailers in one block, and a clean tree.
 
-Usage: check_trailers.py PROJECT [--since REF]
+Usage: check_trailers.py PROJECT [--since REF] [--stages]
 
 Reads each commit since REF (default: start), on every branch, except merge commits. A commit
 counts when its subject is one of the shapes under "Subjects" in the project's
@@ -17,6 +17,12 @@ lists these).
 It prints a JSON verdict: "met" (no problem), "missed" (each pdlc commit has a problem, or there
 is no pdlc commit and the tree is not clean), "partial" (any other problem), or "n/a" (no pdlc
 commit and a clean tree). Exit 0 with a verdict, 2 for a usage error.
+
+With --stages, it gives the verdict of rubric item R5 instead: the stage subjects in order. The
+intent and each change have their own order (README "Stages and handoffs"). A subject before a
+stage that came earlier is "missed". A stage that is skipped between two stages that ran is
+"partial". "Send back" lets the stages of its change run again. Update, Stop, Convention, and
+the subjects on main have no place in the order.
 """
 import argparse
 import importlib.util
@@ -120,16 +126,74 @@ def check(project, since="start"):
     return {"verdict": verdict, "commits": commits, "status": status, "evidence": evidence}
 
 
+# The stage subjects in their order. Each entry is (name, subject prefix).
+INTENT_STAGES = [("Specify", "Specify IN-"), ("Ready", "Ready IN-"), ("Plan", "Plan IN-"),
+                 ("Acceptance", "Acceptance IN-"), ("Lock acceptance", "Lock acceptance IN-"),
+                 ("Review acceptance", "Review acceptance IN-"), ("Acceptance reviewed", "Acceptance reviewed IN-")]
+CHANGE_STAGES = [("Start", "Start CH-"), ("Tests", "Tests CH-"), ("Lock tests", "Lock tests CH-"),
+                 ("Review tests", "Review tests CH-"), ("Tests reviewed", "Tests reviewed CH-"),
+                 ("Build", "Build CH-"), ("Built", "Built CH-"), ("Verify", "Verify CH-"),
+                 ("Verified", "Verified CH-"), ("Visual review", "Visual review CH-"), ("Propose", "Propose CH-")]
+
+
+def stage_of(subject):
+    """(sequence key, stage index, stage list) of a stage subject, ("send back", key) or None."""
+    found = re.search(r"\b(IN|CH)-\d+\b", subject)
+    if not found:
+        return None
+    if subject.startswith("Send back CH-"):
+        return ("send back", found.group(0))
+    for stages in (INTENT_STAGES, CHANGE_STAGES):
+        for index, (_, prefix) in enumerate(stages):
+            if subject.startswith(prefix):
+                return (found.group(0), index, stages)
+    return None
+
+
+def check_stages(project, since="start"):
+    """The verdict of the stage order, as a dict with "verdict", "commits" and "evidence"."""
+    project = Path(project)
+    listed = git(project, "rev-list", "--reverse", "--topo-order", "--no-merges", "--all", "--not", since)
+    if listed is None:
+        raise ValueError("no such ref: %s" % since)
+    seen, top, commits, order, gaps = {}, {}, [], [], []
+    for sha in listed.split():
+        subject = (git(project, "log", "-1", "--format=%s", sha) or "").strip()
+        stage = stage_of(subject)
+        if not stage:
+            continue
+        commits.append({"sha": sha[:12], "subject": subject})
+        if stage[0] == "send back":
+            top[stage[1]] = -1
+            continue
+        key, index, stages = stage
+        seen.setdefault(key, (set(), stages))[0].add(index)
+        if index < top.get(key, -1):
+            order.append("%s: \"%s\" comes after \"%s\"" % (sha[:12], subject, stages[top[key]][0]))
+        top[key] = max(top.get(key, -1), index)
+    for key, (indexes, stages) in sorted(seen.items()):
+        missing = [stages[i][0] for i in range(min(indexes), max(indexes)) if i not in indexes]
+        if missing:
+            gaps.append("%s: no %s commit" % (key, ", ".join("\"%s\"" % m for m in missing)))
+    if not commits:
+        verdict = "n/a"
+    else:
+        verdict = "missed" if order else "partial" if gaps else "met"
+    evidence = order + gaps or ["%d stage commits in order" % len(commits)]
+    return {"verdict": verdict, "commits": commits, "evidence": evidence}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("project")
     parser.add_argument("--since", default="start")
+    parser.add_argument("--stages", action="store_true", help="check the order of the stage subjects (R5)")
     args = parser.parse_args(argv)
     if not Path(args.project).is_dir():
         print("check_trailers: %s is not a folder" % args.project, file=sys.stderr)
         return 2
     try:
-        result = check(args.project, args.since)
+        result = (check_stages if args.stages else check)(args.project, args.since)
     except ValueError as error:
         print("check_trailers: %s" % error, file=sys.stderr)
         return 2

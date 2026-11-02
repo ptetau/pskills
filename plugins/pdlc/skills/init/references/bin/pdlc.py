@@ -12,8 +12,7 @@ Exit codes, for every subcommand:
   3  a git error
   4  not a pdlc project
 
-Each subcommand is registered here and answers "not implemented" until its code is added
-to HANDLERS.
+Run it from anywhere under the project root.
 """
 import argparse
 import glob

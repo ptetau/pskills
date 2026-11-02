@@ -2696,6 +2696,47 @@ class TrailerCheckTest(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(check_trailers.main([str(self.dir), "--since", "nope"]), 2)
 
+    def stages(self):
+        return check_trailers.check_stages(self.dir, "start")
+
+    def subjects(self, *subjects):
+        for subject in subjects:
+            self.commit(subject, ["pdlc/inbox/IN-0001.md"])
+
+    def test_stages_in_order_are_met(self):
+        self.subjects("Specify IN-0001: poll", "Ready IN-0001: poll", "Plan IN-0001: one")
+        self.assertEqual(self.stages()["verdict"], "met")
+
+    def test_a_stage_before_an_earlier_stage_is_missed(self):
+        self.subjects("Ready IN-0001: poll", "Specify IN-0001: poll")
+        result = self.stages()
+        self.assertEqual(result["verdict"], "missed")
+        self.assertIn("Specify", " ".join(result["evidence"]))
+
+    def test_a_missing_stage_between_two_stages_is_partial(self):
+        self.subjects("Start CH-0001", "Tests CH-0001", "Build CH-0001: add it", "Built CH-0001")
+        result = self.stages()
+        self.assertEqual(result["verdict"], "partial")
+        self.assertIn("Lock tests", " ".join(result["evidence"]))
+
+    def test_a_send_back_lets_the_stages_run_again(self):
+        self.subjects("Build CH-0001: add it", "Built CH-0001", "Verify CH-0001: round 1",
+                      "Send back CH-0001: build", "Build CH-0001: fix it", "Built CH-0001",
+                      "Verify CH-0001: round 2", "Verified CH-0001")
+        self.assertEqual(self.stages()["verdict"], "met")
+
+    def test_each_change_has_its_own_order(self):
+        self.subjects("Start CH-0001", "Tests CH-0001", "Start CH-0002", "Tests CH-0002")
+        self.assertEqual(self.stages()["verdict"], "met")
+
+    def test_main_with_stages_prints_the_stage_verdict(self):
+        self.subjects("Ready IN-0001: poll", "Specify IN-0001: poll")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = check_trailers.main([str(self.dir), "--since", "start", "--stages"])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out.getvalue())["verdict"], "missed")
+
 
 class VetRunTest(unittest.TestCase):
     """run_bench.py vetrun and the exclude lines of prepare."""
