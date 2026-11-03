@@ -1362,8 +1362,8 @@ def handle_red(args, extra):
     if not command:
         raise Problem('pdlc/config.md has no usable "all:" command under "Checks"')
     try:
-        done = subprocess.run(command, shell=True, cwd=str(root), capture_output=True, text=True,
-                              errors="replace", stdin=subprocess.DEVNULL, timeout=RED_TIME_LIMIT)
+        done = subprocess.run(pdlclib.red_run_command(command), shell=True, cwd=str(root), capture_output=True,
+                              text=True, errors="replace", stdin=subprocess.DEVNULL, timeout=RED_TIME_LIMIT)
         output, code = done.stdout + "\n" + done.stderr, done.returncode
     except subprocess.TimeoutExpired as error:
         output, code = "", None

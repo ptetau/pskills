@@ -2843,6 +2843,20 @@ class RedCheckTest(unittest.TestCase):
         return (self.git("status", "--porcelain", "-uall"), self.git("worktree", "list"),
                 self.git("for-each-ref"), self.git("stash", "list"))
 
+    def test_cargo_test_runs_with_no_fail_fast(self):
+        bin_dir = self.dir.parent / (self.dir.name + "-bin")
+        bin_dir.mkdir()
+        self.addCleanup(shutil.rmtree, bin_dir, True)
+        args = bin_dir / "args.txt"
+        (bin_dir / "cargo").write_text('#!/bin/sh\necho "$@" > "%s"\ncat out.txt\nexit 101\n' % args)
+        (bin_dir / "cargo").chmod(0o755)
+        self.project(RED_COMPILE, config="cargo test")
+        old = os.environ["PATH"]
+        os.environ["PATH"] = str(bin_dir) + os.pathsep + old
+        self.addCleanup(os.environ.__setitem__, "PATH", old)
+        self.assertEqual(check_red.check(self.dir)["verdict"], "met")
+        self.assertEqual(args.read_text().split(), ["test", "--no-fail-fast"])
+
     def test_checks_that_do_not_compile_for_a_proposed_name_are_met(self):
         self.project(RED_COMPILE)
         got = check_red.check(self.dir)

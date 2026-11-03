@@ -243,7 +243,8 @@ change spec.
   `Tests-Locked:` in the change spec, and the "Lock tests" commit carries it. The verdict
   is `red` (each new check fails, each other check passes), `red-compile` (the checks do
   not compile, and each error names a `proposed` "Interface" entry), `broken`, or
-  `unknown`. A `broken` verdict goes back to the test writer.
+  `unknown`. A `broken` verdict goes back to the test writer. Name each requirement of
+  existing behaviour with `--allow-pass REQ`, so that its passing check is not `broken`.
 - A run has a time limit of a few minutes. A run that does not finish has a broken check,
   not a red one. The broken check goes back to the test writer before the lock.
 - When the test writer reports a missing "Interface" item, the skill adds the item to its

@@ -332,6 +332,26 @@ class Inputs(unittest.TestCase):
         self.assertIsNone(lib.checks_command("nothing"))
 
 
+class RunCommand(unittest.TestCase):
+    def test_cargo_test_gets_no_fail_fast(self):
+        self.assertEqual(lib.red_run_command("cargo test"), "cargo test --no-fail-fast")
+        self.assertEqual(lib.red_run_command("cargo test --quiet -- --nocapture"),
+                         "cargo test --no-fail-fast --quiet -- --nocapture")
+
+    def test_other_commands_stay(self):
+        for command in ("cargo test --no-fail-fast", "pytest -q", "cargo build", "lein test"):
+            self.assertEqual(lib.red_run_command(command), command)
+
+    def test_a_compound_command_is_left_alone_unless_it_starts_with_cargo_test(self):
+        self.assertEqual(lib.red_run_command("make && cargo test"), "make && cargo test")
+
+
+class Allowed(unittest.TestCase):
+    def test_only_the_id_token_of_each_item_counts(self):
+        text = "Red: red; 2 fail; may pass: CAP-store.R1 (load order), CAP-store.R2\n"
+        self.assertEqual(lib.red_allowed(text), ["CAP-store.R1", "CAP-store.R2"])
+
+
 def git(root, *args):
     env = dict(os.environ, **GIT_ENV)
     return subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args], cwd=str(root),
@@ -368,6 +388,21 @@ class Command(unittest.TestCase):
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         self.assertIn("red-compile", done.stdout)
         self.assertIn("mark_done", done.stdout)
+
+    def test_cargo_test_runs_with_no_fail_fast(self):
+        root = self.project("x\n")
+        bin_dir = root / "fakebin"
+        bin_dir.mkdir()
+        (bin_dir / "cargo").write_text('#!/bin/sh\necho "$@" > "$ARGS_FILE"\ncat out.txt\nexit 101\n')
+        (bin_dir / "cargo").chmod(0o755)
+        (root / "pdlc/config.md").write_text("## Checks\n\n- all: `cargo test`\n")
+        args = root.parent / (root.name + "-args.txt")
+        self.addCleanup(lambda: args.exists() and args.unlink())
+        (root / "out.txt").write_text(RUST_METHOD)
+        env = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ["PATH"], ARGS_FILE=str(args))
+        subprocess.run([sys.executable, str(BIN / "pdlc.py"), "red", "CH-0001"], cwd=str(root),
+                       capture_output=True, text=True, env=env)
+        self.assertEqual(args.read_text().split(), ["test", "--no-fail-fast"])
 
     def test_broken_exits_1(self):
         done = self.red(self.project(RUST_IMPORT))

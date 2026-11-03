@@ -171,6 +171,14 @@ def checks_command(config_text):
     return command if command and command != "..." else None
 
 
+def red_run_command(command):
+    """The checks command as `red` runs it. A plain `cargo test` stops compiling the other
+    targets after the first target fails, so the classifier would see some errors only."""
+    if re.match(r"cargo test(\s|$)", command) and "--no-fail-fast" not in command:
+        return re.sub(r"^cargo test", "cargo test --no-fail-fast", command, count=1)
+    return command
+
+
 def _tail(name):
     """The last segment of a path-like name: "a::b::C" gives "C"."""
     parts = [p for p in re.split(r"::|/|\.", name.strip().strip("`'\"()")) if p]
@@ -355,4 +363,4 @@ def red_line(result, allow_pass=()):
 def red_allowed(change_text):
     """The requirements that the "Red:" line of a change spec lets pass."""
     found = re.search(r"^Red:.*?may pass: ([^;\n]+)", change_text, re.M)
-    return [r.strip() for r in found.group(1).split(",")] if found else []
+    return re.findall(r"[A-Z][A-Za-z]*-[\w-]*\.R\d+", found.group(1)) if found else []

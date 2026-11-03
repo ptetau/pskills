@@ -83,7 +83,7 @@ def run_checks(project, commit, command):
         with tarfile.open(fileobj=io.BytesIO(data)) as tar:
             tar.extractall(tmp, members=[m for m in tar if not m.issym() and not m.islnk()], filter="data")
         try:
-            done = subprocess.run(command, shell=True, cwd=tmp, capture_output=True, text=True,
+            done = subprocess.run(pdlclib.red_run_command(command), shell=True, cwd=tmp, capture_output=True, text=True,
                                   errors="replace", stdin=subprocess.DEVNULL, timeout=TIME_LIMIT)
         except subprocess.TimeoutExpired:
             return "", None

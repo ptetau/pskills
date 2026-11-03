@@ -188,6 +188,9 @@ class WritingCheck(unittest.TestCase):
     def test_a_table_row_may_hold_an_id_alone(self):
         self.assertNothingFound("| Requirement | Result |\n|---|---|\n| CAP-email.R3 | pass |\n")
 
+    def test_a_red_line_may_hold_an_id_alone(self):
+        self.assertNothingFound("Red: red; 2 new checks fail; may pass: CAP-store.R1\n")
+
     def test_a_trailer_line_may_hold_an_id_alone(self):
         self.assertNothingFound("Intent: IN-0012\nChange: CH-0031\nReq: CAP-email.R3, CAP-email.R4\n\n"
                                 "Status: proposed · Intents: IN-0012\n")
