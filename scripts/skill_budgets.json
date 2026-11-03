@@ -64,6 +64,11 @@
         "rule": "`pdlc.py start CH-xxxx` sets `Branch:`, `Base:`, and the status, makes the branch, and commits \"Start CH-xxxx\"; never pick the base.",
         "words": 22,
         "evidence": "evals/pdlc-tests/runs/plugin-N* vs plugin-M* (pooled, in /home/user/pskills): R5 (`Branch:` and `Base:` follow \"Stacked changes\"; the first change starts from the intent branch) fell from 93.8 to 68.8; new runs wrote `Base: main` for CH-0001 while the intent had `Branch: pdlc/IN-0001-mark-done`"
+      },
+      {
+        "rule": "Before `lock-tests`, run `pdlc.py red CH-xxxx --record`. A `broken` verdict goes back to the test writer.",
+        "words": 12,
+        "evidence": "evals/pdlc-tests/runs/plugin-* (in /home/user/pskills), todo-rust fixture: every run's checks failed to compile because `Store::mark_done` and `Item.done` did not exist yet; the judge graded R2 partial on all 8 new-skill runs and met on some master runs with the same red, so R2 measured the judge. The script now proves red and records it."
       }
     ],
     "acceptance": [

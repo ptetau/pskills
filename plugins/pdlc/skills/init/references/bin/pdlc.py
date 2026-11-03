@@ -3,7 +3,7 @@
 
 Usage: python3 pdlc/bin/pdlc.py <subcommand> [options]
 
-Subcommands: commit, message, handoff, stop, set, intent, change, start.
+Subcommands: commit, message, handoff, stop, set, intent, change, start, red.
 
 Exit codes, for every subcommand:
   0  done
@@ -11,6 +11,7 @@ Exit codes, for every subcommand:
   2  a usage error
   3  a git error
   4  not a pdlc project
+(`red` uses 0 for red or red-compile, 1 for broken, and 3 for unknown.)
 
 Run it from anywhere under the project root.
 """
@@ -40,6 +41,7 @@ SUBCOMMANDS = {
     "intent": "make a new intent, or change the lists of an intent",
     "change": "make the spec of a new change",
     "start": "start a change: work out its Branch and Base, make the branch, commit the start",
+    "red": "run the checks of a change and prove that they are red; --record writes the Red: line",
 }
 
 
@@ -1325,6 +1327,69 @@ def options_start(parser):
 
 
 # ---------------------------------------------------------------------------------------
+# red
+
+EXIT_UNKNOWN = 3
+RED_TIME_LIMIT = 300  # seconds; README "Checks before code": a run that does not finish is broken
+
+
+def record_red(path, line):
+    """Write the Red: line under the Tests-Locked: line of the change spec, or replace it."""
+    text = path.read_text()
+    head, sep, tail = text.partition("\n## ")
+    if re.search(r"^Red:.*$", head, re.M):
+        head = re.sub(r"^Red:.*$", lambda _: line, head, count=1, flags=re.M)
+    elif re.search(r"^Tests-Locked:.*$", head, re.M):
+        head = re.sub(r"^(Tests-Locked:.*)$", lambda m: m.group(1) + "\n" + line, head, count=1, flags=re.M)
+    else:
+        raise Problem("%s has no \"Tests-Locked:\" line to put the Red: line under" % path.parent.name)
+    path.write_text(head + sep + tail)
+
+
+def handle_red(args, extra):
+    reject_extra(extra)
+    root = project()
+    os.chdir(str(root))
+    if not re.fullmatch(r"CH-\d+", args.id):
+        raise Usage("the ID must be CH-xxxx")
+    path = find_change(root, args.id)
+    text = path.read_text()
+    try:
+        scope_text = spec_file(root, pdlclib.field(text, "Scope") or "").read_text()
+    except Problem:
+        scope_text = ""
+    command = pdlclib.checks_command((root / "pdlc" / "config.md").read_text())
+    if not command:
+        raise Problem('pdlc/config.md has no usable "all:" command under "Checks"')
+    try:
+        done = subprocess.run(command, shell=True, cwd=str(root), capture_output=True, text=True,
+                              errors="replace", stdin=subprocess.DEVNULL, timeout=RED_TIME_LIMIT)
+        output, code = done.stdout + "\n" + done.stderr, done.returncode
+    except subprocess.TimeoutExpired as error:
+        output, code = "", None
+        for part in (error.stdout, error.stderr):
+            output += part.decode(errors="replace") if isinstance(part, bytes) else (part or "")
+    allow = list(args.allow_pass or [])
+    got = pdlclib.classify_red(allow_pass=allow, output=output, exit_code=code, **pdlclib.red_inputs(text, scope_text))
+    print("%s: %s" % (args.id, got["verdict"]))
+    for line in got["evidence"]:
+        print("- " + line)
+    if got["verdict"] in ("red", "red-compile"):
+        if args.record:
+            record_red(path, pdlclib.red_line(got, allow))
+            print("%s: Red line written; the \"Lock tests\" commit carries it" % args.id)
+        return EXIT_DONE
+    return EXIT_CONTRACT if got["verdict"] == "broken" else EXIT_UNKNOWN
+
+
+def options_red(parser):
+    parser.add_argument("id", help="CH-xxxx")
+    parser.add_argument("--record", action="store_true", help="write the Red: line into the change spec")
+    parser.add_argument("--allow-pass", action="append", metavar="REQ",
+                        help="a requirement of existing behaviour, whose check may pass")
+
+
+# ---------------------------------------------------------------------------------------
 # The entry point
 
 def not_implemented(name):
@@ -1345,11 +1410,12 @@ HANDLERS["set"] = handle_set
 HANDLERS["intent"] = handle_intent
 HANDLERS["change"] = handle_change
 HANDLERS["start"] = handle_start
+HANDLERS["red"] = handle_red
 
 OPTIONS = {"commit": add_commit_options, "message": add_commit_options,
            "handoff": options_handoff, "stop": options_stop,
            "set": options_set, "intent": options_intent,
-           "change": options_change, "start": options_start}
+           "change": options_change, "start": options_start, "red": options_red}
 
 
 def build_parser():

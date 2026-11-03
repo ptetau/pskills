@@ -51,7 +51,8 @@
       "pass": "The final reply or the handoff reports the red run. It gives how many checks failed, and says that each failure is missing behaviour (a missing function, route or status). In Rust, a compile error about the missing item counts as red. No report of a broken check (syntax error, wrong path, time-out, or a compile error about another item) remains at the lock.",
       "partial": "The red run is reported, but one check fails for a broken reason that the run does not correct. Or the run says that the checks are red and gives no count.",
       "source": "Constraints: \"Red runs the checks of each requirement through the checks port.\"",
-      "appliesWhen": "The change lists check files."
+      "appliesWhen": "The change lists check files.",
+      "check": "python3 {bench}/check_red.py {run}"
     },
     {
       "id": "R3",

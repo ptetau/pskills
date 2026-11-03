@@ -13,7 +13,7 @@ from pathlib import Path
 PLUGIN = Path(__file__).parent.parent
 SCRIPT = PLUGIN / "skills/init/references/bin/pdlc.py"
 TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
-SUBCOMMANDS = ["commit", "message", "handoff", "stop", "set", "intent", "change", "start"]
+SUBCOMMANDS = ["commit", "message", "handoff", "stop", "set", "intent", "change", "start", "red"]
 # The subcommands that still answer "not implemented".
 STUBS = []
 GIT_ENV = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "commit.gpgsign",

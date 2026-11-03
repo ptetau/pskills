@@ -24,6 +24,7 @@ The change that the user names, else the first `planned` one. Its `handoff.md`.
 - Commits, in order: `pdlc.py start CH-xxxx` (it sets `Branch:`, `Base:`, and the status,
   makes the branch, and commits "Start CH-xxxx"; never pick the base), then `pdlc.py commit`
   kinds `tests`, `lock-tests`, `review-tests` (packet from `python3 pdlc/bin/make_packets.py CH-xxxx tests`), `tests-reviewed`.
+  Before `lock-tests`, run `pdlc.py red CH-xxxx --record`. A `broken` verdict goes back to the test writer.
   Fields: `pdlc.py set`. Handoff: `pdlc.py handoff CH-xxxx tests build`. Next: `/pdlc:build`.
 
 ## Constraints

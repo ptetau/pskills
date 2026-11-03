@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -17,6 +18,7 @@ import metrics  # noqa: E402
 import run_bench  # noqa: E402
 import run_experiment  # noqa: E402
 import check_trailers  # noqa: E402
+import check_red  # noqa: E402
 
 REFERENCE_CLI = '''
 import sys
@@ -2763,6 +2765,174 @@ class TrailerCheckTest(unittest.TestCase):
             code = check_trailers.main([str(self.dir), "--since", "start", "--stages"])
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out.getvalue())["verdict"], "missed")
+
+
+RED_CHANGE = """# CH-0001 · Done
+
+Intent: IN-0001 · Scope: CAP-store · Status: testing · Ticket: none · Branch: pdlc/CH-0001-x · Base: main
+Tests-Locked: %s
+
+## Requirements
+
+### CAP-store.R9 · Mark done
+
+- Given x, then y.
+
+## Interface
+
+- `Store::mark_done(&self, id: u64) -> io::Result<bool>` · call · `src/store.rs`
+
+## Check files
+
+- tests/store.rs
+
+## Steps
+"""
+RED_SCOPE = """# CAP-store
+
+## Interface
+
+- `Store::mark_done(&self, id: u64) -> io::Result<bool>` · call · `src/store.rs` · proposed
+"""
+RED_COMPILE = "error[E0599]: no method named `mark_done` found for struct `Store` in the current scope\n"
+RED_RUN = ("     Running tests/store.rs (target/debug/deps/store-1)\nrunning 1 test\n"
+           "test cap_store_r9_mark_done ... FAILED\n\ntest result: FAILED.\n")
+RED_BROKEN = "error[E0432]: unresolved import `todo::archive::Archive`\n"
+
+
+class RedCheckTest(unittest.TestCase):
+    """bench/check_red.py: the scripted verdict of R2 of pdlc:tests (is the lock red?)."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir, True)
+
+    def git(self, *args):
+        result = run_bench.git(self.dir, *args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout.strip()
+
+    def write(self, path, text):
+        target = self.dir / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text)
+
+    def project(self, output, lock="hash", config="cat out.txt; exit 1", extra=""):
+        """A project like a tests run leaves it: the checks commit, then the lock commit."""
+        self.git("init", "-q", "-b", "main")
+        self.write("README.md", "app\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Seed")
+        self.git("tag", "start")
+        self.git("switch", "-q", "-c", "pdlc/CH-0001-x")
+        self.write("pdlc/config.md", "## Checks\n\n- all: `%s`\n" % config)
+        self.write("pdlc/specs/capabilities/CAP-store.md", RED_SCOPE)
+        self.write("pdlc/changes/CH-0001-x/change.md", RED_CHANGE % "none")
+        self.write("out.txt", output)
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Tests CH-0001")
+        checks = self.git("rev-parse", "HEAD")
+        value = {"hash": checks, "acceptance": "acceptance", "none": "none"}[lock]
+        self.write("pdlc/changes/CH-0001-x/change.md", (RED_CHANGE % value).replace(
+            "Tests-Locked: %s\n" % value, "Tests-Locked: %s\n%s" % (value, extra)))
+        self.write("out.txt", "changed after the lock\n")  # the lock commit must be the one that runs
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Lock tests CH-0001")
+
+    def state(self):
+        return (self.git("status", "--porcelain", "-uall"), self.git("worktree", "list"),
+                self.git("for-each-ref"), self.git("stash", "list"))
+
+    def test_checks_that_do_not_compile_for_a_proposed_name_are_met(self):
+        self.project(RED_COMPILE)
+        got = check_red.check(self.dir)
+        self.assertEqual(got["verdict"], "met", got)
+        self.assertIn("mark_done", got["evidence"])
+
+    def test_checks_that_fail_for_the_missing_behaviour_are_met(self):
+        self.project(RED_RUN)
+        self.assertEqual(check_red.check(self.dir)["verdict"], "met")
+
+    def test_a_compile_error_about_another_item_is_missed(self):
+        self.project(RED_BROKEN)
+        got = check_red.check(self.dir)
+        self.assertEqual(got["verdict"], "missed")
+        self.assertIn("Archive", got["evidence"])
+
+    def test_an_output_in_no_known_format_is_partial(self):
+        self.project("hello\n")
+        self.assertEqual(check_red.check(self.dir)["verdict"], "partial")
+
+    def test_no_checks_command_is_partial(self):
+        self.project(RED_COMPILE, config="...")
+        self.assertEqual(check_red.check(self.dir)["verdict"], "partial")
+
+    def test_a_change_with_no_lock_is_n_a(self):
+        self.project(RED_COMPILE, lock="none")
+        self.assertEqual(check_red.check(self.dir)["verdict"], "n/a")
+
+    def test_the_acceptance_lock_is_n_a(self):
+        self.project(RED_COMPILE, lock="acceptance")
+        self.assertEqual(check_red.check(self.dir)["verdict"], "n/a")
+
+    def test_a_lock_before_start_is_n_a(self):
+        self.project(RED_COMPILE)
+        self.git("tag", "-f", "start", "pdlc/CH-0001-x")
+        self.assertEqual(check_red.check(self.dir)["verdict"], "n/a")
+
+    def test_the_recorded_allow_pass_line_is_used(self):
+        out = RED_RUN.replace("FAILED", "ok", 1)
+        self.project(out)
+        self.assertEqual(check_red.check(self.dir)["verdict"], "missed")
+        shutil.rmtree(self.dir)
+        self.dir.mkdir()
+        self.project(out, extra="Red: red; 1 new check fails; may pass: CAP-store.R9\n")
+        self.assertEqual(check_red.check(self.dir)["verdict"], "met")
+
+    def test_the_project_does_not_change(self):
+        self.project(RED_COMPILE)
+        before = self.state()
+        check_red.check(self.dir)
+        self.assertEqual(self.state(), before)
+
+    def test_it_runs_the_checks_at_the_lock_not_at_the_tip(self):
+        self.project(RED_COMPILE)
+        self.assertEqual((self.dir / "out.txt").read_text(), "changed after the lock\n")
+        self.assertEqual(check_red.check(self.dir)["verdict"], "met")
+
+    def test_a_tracked_link_to_an_absolute_path_does_not_stop_it(self):
+        self.project(RED_COMPILE)
+        (self.dir / "pdlc").mkdir(exist_ok=True)
+        (self.dir / "pdlc" / ".tools").symlink_to("/usr")
+        self.write("out.txt", RED_COMPILE)
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Tests CH-0001 again")
+        text = (self.dir / "pdlc/changes/CH-0001-x/change.md").read_text()
+        text = re.sub(r"Tests-Locked: \w+", "Tests-Locked: " + self.git("rev-parse", "HEAD"), text)
+        self.write("pdlc/changes/CH-0001-x/change.md", text)
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "Lock tests CH-0001")
+        self.assertEqual(check_red.check(self.dir)["verdict"], "met")
+
+    def test_a_project_with_no_pdlc_bin_works(self):
+        self.project(RED_COMPILE)
+        self.assertFalse((self.dir / "pdlc" / "bin").exists())
+        self.assertEqual(check_red.check(self.dir)["verdict"], "met")
+
+    def test_main_prints_json_and_finds_proj_in_a_run_folder(self):
+        run = self.dir
+        self.dir = run / "proj"
+        self.dir.mkdir()
+        self.project(RED_COMPILE)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = check_red.main([str(run)])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out.getvalue())["verdict"], "met")
+
+    def test_main_rejects_a_missing_folder(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(check_red.main([str(self.dir / "nope")]), 2)
 
 
 class VetRunTest(unittest.TestCase):
