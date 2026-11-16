@@ -1267,7 +1267,11 @@ def merged_into_main(root, branch):
 
 
 def listed_changes(root, intent_id):
-    text = pdlclib.section(find_intent(root, intent_id).read_text(), "Changes")
+    return changes_in(find_intent(root, intent_id).read_text())
+
+
+def changes_in(intent_text):
+    text = pdlclib.section(intent_text, "Changes")
     return [m.group(1) for m in (re.search(r"\b(CH-\d+)\b", l) for l in text.splitlines()) if m]
 
 
@@ -1398,31 +1402,95 @@ SKIPPED_INTENT = ("done", "paused", "cancelled", "in review")
 
 
 def last_handoff(text):
-    """(stage, next, reason) of the last handoff title in the text, or None. The reason is the
-    "Reason:" line of its Open section."""
+    """(stage, next, reason, time) of the last handoff title in the text, or None. The reason is
+    the "Reason:" line of its Open section, or None when the handoff has none (a stop has one).
+    The time is its "Time:" line, or None."""
     found = list(HANDOFF_TITLE.finditer(text))
     if not found:
         return None
     tail = text[found[-1].start():]
     why = re.search(r"^[ \t]*- Reason:[ \t]*(.+?)\s*$", tail, re.M)
-    return found[-1].group(2), found[-1].group(3), why.group(1) if why else "no reason recorded"
+    when = re.search(r"^Time:[ \t]*(\S+)", tail, re.M)
+    return found[-1].group(2), found[-1].group(3), why.group(1) if why else None, when.group(1) if when else None
+
+
+def reason_of(last):
+    return last[2] or "no reason recorded"
+
+
+def handoff_newer(new, old):
+    """True when the time of the handoff `new` is later than the time of `old`."""
+    import datetime
+    try:
+        times = [datetime.datetime.fromisoformat(h[3].replace("Z", "+00:00")) for h in (new, old)]
+        times = [t if t.tzinfo else t.replace(tzinfo=datetime.timezone.utc) for t in times]
+    except (TypeError, ValueError):
+        return False
+    return times[0] > times[1]
 
 
 def awaits_approval(text):
     return re.search(r"^[ \t]*(?:- )?Awaits approval:", pdlclib.section(text, "Notes"), re.M) is not None
 
 
-def change_step(root, change_id, intent_id, resume):
-    """The next step for one change: (stage, ID), ("stopped", reason), or None when it is proposed."""
+def pdlc_branches(root):
+    """The unmerged pdlc branches, newest first ("Where pdlc commits")."""
+    out = run_git(root, "branch", "--no-merged", "main", "--list", "pdlc/*", "--sort=-committerdate",
+                  "--format=%(refname:short)", check=False).stdout.split()
+    return out
+
+
+def read_at(root, branch, path):
+    """The text of the file `path` on the branch, or None when the branch has no such file."""
+    done = run_git(root, "show", "%s:./%s" % (branch, path.relative_to(root).as_posix()), check=False)
+    return done.stdout if done.returncode == 0 else None
+
+
+def read_on(root, branch, path):
+    """The file from the working tree when the branch is checked out, else from the branch."""
+    if branch == current_branch(root):
+        return path.read_text() if path.exists() else None
+    return read_at(root, branch, path)
+
+
+def newest_intent_text(root, intent_id):
+    """The intent from the newest unmerged pdlc branch that has it, else from the working tree."""
+    path = find_intent(root, intent_id)
+    for branch in pdlc_branches(root):
+        text = read_on(root, branch, path)
+        if text is not None:
+            return text
+    return path.read_text()
+
+
+def change_record(root, change_id):
+    """(status, change.md text, handoff.md text or None) of a change. They come from the branch of
+    the change. A change with no branch is planned."""
     path = find_change(root, change_id)
     text = path.read_text()
-    status = pdlclib.field(text, "Status") or "planned"
+    if (pdlclib.field(text, "Status") or "planned") in ("merged", "cancelled"):
+        handoff = path.parent / "handoff.md"
+        return pdlclib.field(text, "Status"), text, handoff.read_text() if handoff.exists() else None
+    folder = path.parent.name
+    branches = pdlc_branches(root)
+    named = pdlclib.field(text, "Branch")
+    branch = named if named in branches else next(
+        (b for b in branches if b == "pdlc/" + folder or b.startswith("pdlc/%s-" % change_id)), None)
+    if not branch:
+        return "planned", text, None
+    text = read_on(root, branch, path) or text
+    return pdlclib.field(text, "Status") or "planned", text, read_on(root, branch, path.parent / "handoff.md")
+
+
+def change_step(root, change_id, intent_id, resume, intent_text):
+    """The next step for one change: (stage, ID), ("stopped", reason), or None when it is proposed."""
+    status, text, handoff = change_record(root, change_id)
     if status in ("merged", "cancelled"):
         return None
-    handoff_path = path.parent / "handoff.md"
-    last = last_handoff(handoff_path.read_text()) if handoff_path.exists() else None
-    if last and last[1] == "user" and last[0] != "show":
-        return (last[0], change_id) if resume else ("stopped", "%s: %s" % (change_id, last[2]))
+    last = last_handoff(handoff) if handoff else None
+    stopped = last and last[1] == "user" and (last[0] != "show" or last[2] is not None)
+    if stopped:
+        return (last[0], change_id) if resume else ("stopped", "%s: %s" % (change_id, reason_of(last)))
     if last and last[0] == "show" and last[1] == "user":
         return None
     if last and last[0] == "verify" and last[1] == "show":
@@ -1433,31 +1501,34 @@ def change_step(root, change_id, intent_id, resume):
         return ("tests", change_id)
     if last and last[1] != "user":
         if last[1] == "acceptance":
+            sent = last_handoff(pdlclib.section(intent_text, "Handoff"))
+            if sent and sent[0] == "acceptance" and sent[1] not in ("user", "acceptance") \
+                    and handoff_newer(sent, last):
+                return (sent[1], change_id)
             return ("acceptance", intent_id)
         return (last[1], change_id)
     return ("tests" if status == "testing" else "build", change_id)
 
 
 def intent_step(root, intent_id, resume):
-    path = find_intent(root, intent_id)
-    text = path.read_text()
+    text = newest_intent_text(root, intent_id)
     status = pdlclib.field(text, "Status") or "new"
     if status in SKIPPED_INTENT or awaits_approval(text):
         return None
     last = last_handoff(pdlclib.section(text, "Handoff"))
     if last and last[1] == "user":
-        return (last[0], intent_id) if resume else ("stopped", "%s: %s" % (intent_id, last[2]))
+        return (last[0], intent_id) if resume else ("stopped", "%s: %s" % (intent_id, reason_of(last)))
     if status == "new":
         return ("intake", intent_id)
     if status == "specifying":
         return ("ready", intent_id)
-    changes = listed_changes(root, intent_id)
+    changes = changes_in(text)
     if not changes:
         return ("change", intent_id)
     if (pdlclib.field(text, "Acceptance-Locked") or "none") == "none":
         return ("acceptance", intent_id)
     for change_id in changes:
-        step = change_step(root, change_id, intent_id, resume)
+        step = change_step(root, change_id, intent_id, resume, text)
         if step:
             return step
     return None

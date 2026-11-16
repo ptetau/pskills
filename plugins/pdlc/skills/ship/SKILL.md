@@ -10,7 +10,7 @@ description: >
 
 ## Goal
 
-Loop: run `python3 pdlc/bin/pdlc.py next`, then run that stage through its own skill, with `defaults`, until it prints `done` or `stopped`. Never choose the order.
+Run `python3 pdlc/bin/pdlc.py next`, run that stage through its own skill with `defaults`, and repeat. Never choose the order.
 
 ## Inputs
 
@@ -25,14 +25,14 @@ If `pdlc/version.json` is older, run `/pdlc:upgrade`.
 ## Outputs
 
 - At a stop: `python3 pdlc/bin/pdlc.py stop <ID> --stage <stage> --json -`, with `open` {reason, decide, recommend}. The reply repeats its "Open".
-- One line before each stage. The reply: a short recap, then pull requests and GIFs in stack order.
+- One line per stage. The reply: a short recap, then pull requests and GIFs in stack order.
 
 ## Constraints
 
-- Stop only for a contradiction that ready finds, a file outside "Files", or a third failure of a stage.
-  A missing "Interface" entry, a rate limit, a missing remote, and a long run are no stops.
+- Stop only for a contradiction from ready, a file outside "Files", or a third failure of a stage.
+  A missing "Interface" entry, a rate limit, a missing remote, or a long run is no stop.
 - "Merge over a failed gate" and "accept a failed review" are no answers.
 
 ## Done when
 
-`git status --porcelain` is empty.
+`pdlc.py next` prints `done` or `stopped <ID>: <reason>`, and `git status --porcelain` is empty.
