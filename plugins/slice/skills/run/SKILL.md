@@ -24,9 +24,9 @@ A specification becomes committed slices, with the fewest stops. It stops only f
 
 ## Constraints
 
-- Loop on `slice.py next`. Run what it prints, then run it again. Never choose or reorder the stages yourself.
-- The user ratifies the spec and approves the interface. Do not skip these two stops.
-- `stop <Sn>: <reason>` ends the run. Show what fails, and ask.
+- Loop on `slice.py next`. Run what it prints, then run it again. Never choose or reorder the stages.
+- The user ratifies the spec and approves the interface. Never skip these two stops.
+- `stop <Sn>: <reason>` ends the run: show what fails, ask, then run `slice.py resume <Sn>`.
 - Start no stage twice for the same state.
 - Outputs give each reader exactly what it reads: see `contracts.json`.
 

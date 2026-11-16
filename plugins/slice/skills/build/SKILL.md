@@ -18,7 +18,7 @@ One slice passes its tests, has no open major finding, and is one commit.
 
 ## Outputs
 
-- Code from `slice:implementer`, then `slice.py commit <Sn>`: the subject "Slice Sn: <title>" and the trailer `Slice: Sn`. The slice is `done`.
+- Code from `slice:implementer`, then `slice.py commit <Sn>`: the subject "Slice Sn: <title>" and the trailer `Slice: Sn`.
 - A line that says what starts, and a recap.
 
 ## Constraints
@@ -26,7 +26,7 @@ One slice passes its tests, has no open major finding, and is one commit.
 - `slice.py` is `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py`. Give the implementer results only.
 - Test loop: `slice.py set <Sn> building`, then `slice.py test <Sn>`. If the tests already pass, go to review. Else, before each implementer run (at most 5), `slice.py round <Sn> test`; after it, `slice.py test <Sn>`.
 - Review loop: `slice.py set <Sn> review`. Before each `slice:reviewer` run (at most 3), `slice.py round <Sn> review`. Give `review/<Sn>.md` to the implementer, then test. A test that fails after a review fix uses a test round.
-- A refused round stops the slice. Ask the user.
+- A refused round stops the slice: ask the user, then `slice.py resume <Sn>`.
 - Run agents in the foreground.
 - Outputs give each reader exactly what it reads: see `contracts.json`.
 

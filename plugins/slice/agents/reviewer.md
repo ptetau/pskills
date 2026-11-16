@@ -14,7 +14,7 @@ Judge the code of one slice in three parts. (1) Each numbered requirement of the
 ## Inputs
 
 - The slice ID. Read `slice/NNN-<name>/spec.md`, `slice/NNN-<name>/slices.md` (that slice), `slice/NNN-<name>/domain.md`, `slice/NNN-<name>/interface.md`, and `slice/config.md`.
-- The diff of the slice, limited to the source folders: `git diff -- <source folders>`, and the new files there. Read the code around it to learn the architecture.
+- The diff of the slice, limited to the source folders and the `source files`: `git diff -- <paths>`, and the new files there. Read the code around it to learn the architecture.
 - On a later round, the earlier `slice/NNN-<name>/review/<Sn>.md`.
 
 ## Outputs
