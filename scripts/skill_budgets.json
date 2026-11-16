@@ -14,7 +14,13 @@
     "verify",
     "init",
     "dashboard",
-    "ship"
+    "ship",
+    "slice:spec",
+    "slice:plan",
+    "slice:domain",
+    "slice:interface",
+    "slice:build",
+    "slice:run"
   ],
   "acceptance": 200,
   "board": 200,
@@ -31,6 +37,12 @@
   "trace": 200,
   "upgrade": 200,
   "verify": 270,
+  "slice:spec": 200,
+  "slice:plan": 200,
+  "slice:domain": 200,
+  "slice:interface": 200,
+  "slice:build": 200,
+  "slice:run": 200,
   "earned": {
     "ready": [
       {

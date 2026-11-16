@@ -1,0 +1,8 @@
+{
+  "name": "slice",
+  "version": "0.1.0",
+  "description": "A light development harness: a specification becomes vertical slices, each slice gets red acceptance tests against an agreed interface, and an implementer who never sees the tests builds it.",
+  "author": {
+    "name": "Patrick Te Tau"
+  }
+}
