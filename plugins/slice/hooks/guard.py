@@ -12,9 +12,13 @@ implementer, this guard blocks:
     match it or list it, a recursive search from the project root, a git command that shows
     file content with no path limit, the configured test runner and every known runner
     (python, python3, and python3.X count the same), and any `slice.py` subcommand but `test`.
-  - Write, Edit, MultiEdit, and NotebookEdit outside the source folders.
+  - Write, Edit, MultiEdit, and NotebookEdit outside the source folders and the source files.
+The source files are the "source files:" line of the config: single paths and globs, relative
+to the project root (`package.json, migrations/**`; `*` stays in one folder, `**` crosses
+folders). A path in the tests folder or in slice/ is never one of them.
 For the test writer, the same rules hide the source folders ("source folders:" line of the
-config; default: src, lib, app), including the stubs. The runner is not blocked for it.
+config; default: src, lib, app) and the source files, including the stubs. The runner is not
+blocked for it.
 Every other agent, and the main session, is left alone. The check is by name and by
 resolved path, so a command that builds the folder name at run time gets through. That is a
 known limit.
@@ -96,6 +100,52 @@ def source_folders(root):
     return found or DEFAULT_SOURCES
 
 
+def source_files(root):
+    value = config_value(root, "source files")
+    found = [f.strip(" `/") for f in (value or "").split(",") if f.strip(" `/")]
+    return [f for f in found if f != "none" and not f.startswith("<")]
+
+
+def glob_regex(pattern):
+    out, i = "", 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out, i = out + "(?:.*/)?", i + 3
+        elif pattern.startswith("**", i):
+            out, i = out + ".*", i + 2
+        elif pattern[i] == "*":
+            out, i = out + "[^/]*", i + 1
+        elif pattern[i] == "?":
+            out, i = out + "[^/]", i + 1
+        else:
+            out, i = out + re.escape(pattern[i]), i + 1
+    return re.compile(out + r"\Z")
+
+
+def barred(rel, root):
+    """True for a path inside slice/ or a tests folder: no source-files pattern opens it."""
+    return any(rel == b or rel.startswith(b + "/") for b in ["slice"] + test_folders(root))
+
+
+def source_file_match(path, root):
+    """True when the resolved path is one of the `source files:` of the config."""
+    rel = os.path.relpath(path, root).replace(os.sep, "/")
+    if rel == "." or rel.startswith("..") or barred(rel, root):
+        return False
+    return any(glob_regex(p).match(rel) for p in source_files(root))
+
+
+def source_file_folders(root):
+    """The folders (or single paths) that the source files name before any wildcard."""
+    out = []
+    for p in source_files(root):
+        literal = re.split(r"[*?\[]", p, maxsplit=1)[0]
+        entry = p if literal == p else literal.rsplit("/", 1)[0] if "/" in literal else ""
+        if entry and not barred(entry, root):
+            out.append(entry)
+    return out
+
+
 def test_command(root):
     return config_value(root, "test command") or ""
 
@@ -138,7 +188,7 @@ def glob_folders(base, pattern):
 
 
 def hidden_folders(agent, root):
-    return test_folders(root) if agent == IMPLEMENTER else source_folders(root)
+    return test_folders(root) if agent == IMPLEMENTER else source_folders(root) + source_file_folders(root)
 
 
 def label(agent):
@@ -165,12 +215,12 @@ def file_decision(call, cwd, root, folders, agent=IMPLEMENTER):
     for path in paths:
         root_of = project_root(path) or root
         hidden = hidden_folders(agent, root_of)
-        if hits(path, root_of, hidden):
+        if hits(path, root_of, hidden) or (agent == TEST_WRITER and source_file_match(path, root_of)):
             return False, "the %s may not use the %s (%s): %s" % (
                 label(agent), what(agent), os.path.relpath(path, root_of), HINTS[agent])
     if tool in WRITES:
         allowed = test_folders(root) if agent == TEST_WRITER else source_folders(root)
-        if not inside(base, root, allowed):
+        if not inside(base, root, allowed) and not (agent == IMPLEMENTER and source_file_match(base, root)):
             return False, "the %s writes only in the %s folders (%s): %s" % (
                 label(agent), "tests" if agent == TEST_WRITER else "source", os.path.relpath(base, root),
                 HINTS[agent])
@@ -245,7 +295,7 @@ def names_folder(text, folders):
     return None
 
 
-def wildcard_hit(token, here, root, folders):
+def wildcard_hit(token, here, root, folders, files=False):
     """True when a shell wildcard in a word can match, or list, a hidden folder."""
     for alt in expand_braces(token.replace("\\", "/") if "/" in token else token):
         parts = alt.split("/")
@@ -263,7 +313,8 @@ def wildcard_hit(token, here, root, folders):
                if os.path.dirname(os.path.join(root, f)) == folder or "/" not in f):
             return True
         for found in glob.glob(os.path.join(here, os.path.expanduser(alt)))[:500]:
-            if inside(os.path.realpath(found), root, folders):
+            if inside(os.path.realpath(found), root, folders) or (
+                    files and source_file_match(os.path.realpath(found), root)):
                 return True
     return False
 
@@ -295,7 +346,7 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
         return False, "the command names the %s folder (%s): %s" % (noun, found, hint)
     # A shell wildcard that can match or list a hidden folder, in a path word.
     for token in tokens:
-        if re.search(r"[*?\[]", token) and wildcard_hit(token, cwd, root, folders):
+        if re.search(r"[*?\[]", token) and wildcard_hit(token, cwd, root, folders, agent == TEST_WRITER):
             return False, "a wildcard in the command can match or list the %s folder: %s" % (noun, hint)
     if agent == IMPLEMENTER:
         sig = runner_signature(test_command(root))
@@ -339,7 +390,8 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
                 return False, "the implementer runs only `slice.py test`: %s" % hint
         if not any(os.path.basename(t) == "slice.py" for t in toks):
             for a in path_args(toks if "/" in toks[0] else toks[1:], here):
-                if inside(os.path.realpath(os.path.join(here, os.path.expanduser(a))), root, folders):
+                target = os.path.realpath(os.path.join(here, os.path.expanduser(a)))
+                if inside(target, root, folders) or (agent == TEST_WRITER and source_file_match(target, root)):
                     return False, "a path in the command leads into the %s folder (%s): %s" % (noun, a, hint)
         args = [t for t in toks[1:] if not t.startswith("-")]
         paths = [os.path.realpath(os.path.join(here, os.path.expanduser(a))) for a in args
