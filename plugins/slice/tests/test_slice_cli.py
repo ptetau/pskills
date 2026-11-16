@@ -278,7 +278,7 @@ class TestCommand(Base):
         cfg = fixture.CONFIG.replace("PYTHONPATH=src python3 -m unittest discover -s tests -v",
                                      "python3 fake.py {junit}").replace("unittest\n- tests", "junit\n- tests")
         self.p.write("slice/config.md", cfg)
-        r = self.p.slice("test", "S1")
+        r = self.p.slice("test", "S1", "--full")
         self.assertEqual(r.returncode, 1)
         self.assertIn("PASS t::test_S1_a", r.stdout)
         self.assertIn("FAIL t::test_S1_b", r.stdout)
@@ -375,7 +375,7 @@ class Docstrings(Base):
     def test_a_failure_block_with_a_docstring_gives_its_message(self):
         self.p.write("tests/test_wordfreq.py", DOC_TESTS)
         self.p.write("src/wordfreq.py", "def count(text):\n    return {'a': 1}\n\n\ndef top(text, n):\n    return []\n")
-        r = self.p.slice("test", "S1")
+        r = self.p.slice("test", "S1", "--full")
         self.assertEqual(r.returncode, 1)
         self.assertIn("FAIL test_S1_counts_words", r.stdout)
         self.assertIn("AssertionError", r.stdout)
@@ -824,6 +824,104 @@ class SourceFiles(Base):
         self.p.slice("set", "S1", "review")
         self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
         self.assertNotIn("package.json", git(self.p.root, "show", "--name-only", "--format=").split())
+
+SLICES_CITED = fixture.SLICES.replace(
+    '  - Given "a b a", the count of "a" is 2.\n',
+    '  - Given "a b a", the count of "a" is 2. (R1)\n  - Given "", the count is empty. (R1)\n').replace(
+    '  - Given "a b a", the top word is "a".\n', '  - Given "a b a", the top word is "a". (R2)\n')
+WRONG = ("def count(text):\n    if text == 'boom':\n        raise ValueError('bad input')\n    return {}\n\n\n"
+         "def top(text, n):\n    return []\n")
+TESTS_CITED = (
+    "import unittest\n\nimport wordfreq\n\n\nclass W(unittest.TestCase):\n"
+    "    def test_001_S1_R1_counts_words(self):\n"
+    "        self.assertEqual(wordfreq.count('a b a'), {'a': 2, 'b': 1})\n\n"
+    "    def test_001_S1_R1_boom(self):\n        wordfreq.count('boom')\n\n"
+    "    def test_001_S1_plain(self):\n        self.assertEqual(wordfreq.count('x'), {'x': 1})\n\n"
+    "    def test_001_S2_R2_top_word(self):\n        self.assertEqual(wordfreq.top('a b a', 1), ['a'])\n")
+
+
+class Withheld(Base):
+    """The implementer sees the acceptance line, not the assertion: B."""
+
+    def setUp(self):
+        self.p = fixture.Project(slices=SLICES_CITED, tests=TESTS_CITED, stub=WRONG)
+        self.addCleanup(self.p.close)
+
+    def rounds(self, n):
+        for _ in range(n):
+            self.p.slice("round", "S1", "test")
+
+    def test_a_failed_assertion_prints_the_acceptance_lines_and_no_message(self):
+        out = self.p.slice("test", "S1").stdout
+        self.assertIn("FAIL test_001_S1_R1_counts_words", out)
+        self.assertIn('Given "a b a", the count of "a" is 2. (R1)', out)
+        self.assertIn('Given "", the count is empty. (R1)', out)
+        self.assertNotIn("AssertionError", out)
+        self.assertNotIn("'b': 1", out)
+        self.assertIn("message withheld", out)
+
+    def test_an_error_prints_its_type_and_message_at_once(self):
+        out = self.p.slice("test", "S1").stdout
+        self.assertIn("ERROR test_001_S1_R1_boom", out)
+        self.assertIn("ValueError: bad input", out)
+
+    def test_the_message_stays_withheld_for_two_rounds(self):
+        self.rounds(1)
+        self.assertNotIn("'b': 1", self.p.slice("test", "S1").stdout)
+
+    def test_the_message_shows_from_the_third_round(self):
+        self.rounds(2)
+        out = self.p.slice("test", "S1").stdout
+        self.assertIn("'b': 1", out)
+        self.assertNotIn("message withheld", out)
+
+    def test_full_prints_the_message_at_once(self):
+        r = self.p.slice("test", "S1", "--full")
+        self.assertIn("'b': 1", r.stdout)
+        self.assertEqual(r.returncode, 1)
+
+    def test_a_test_that_cites_no_requirement_prints_all_the_acceptance_lines_of_the_slice(self):
+        out = self.p.slice("test", "S1").stdout
+        plain = out[out.index("test_001_S1_plain"):]
+        self.assertIn('Given "", the count is empty. (R1)', plain)
+
+    def test_a_pass_prints_no_acceptance_line(self):
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        out = self.p.slice("test", "S1").stdout
+        self.assertNotIn("Given", out)
+
+    def test_the_regression_lines_keep_their_messages(self):
+        self.p.slice("set", "S2", "done")
+        out = self.p.slice("test", "S1").stdout
+        reg = out[out.index("regressions"):]
+        self.assertIn("FAIL test_001_S2_R2_top_word", reg)
+        self.assertIn("[] != ['a']", reg)
+
+    def test_a_junit_failure_is_withheld_and_a_junit_error_is_not(self):
+        runner = (
+            "import sys\n"
+            "open(sys.argv[1], 'w').write(\'\'\'<testsuites><testsuite>"
+            "<testcase classname=\"t\" name=\"test_001_S1_R1_b\"><failure message=\"expected 2, got 0\">"
+            "assert f(x) == 2</failure></testcase>"
+            "<testcase classname=\"t\" name=\"test_001_S1_R1_c\"><error message=\"boom\" type=\"RuntimeError\"/>"
+            "</testcase></testsuite></testsuites>\'\'\')\n")
+        self.p.write("fake.py", runner)
+        cfg = fixture.CONFIG.replace("PYTHONPATH=src python3 -m unittest discover -s tests -v",
+                                     "python3 fake.py {junit}").replace("unittest\n- tests", "junit\n- tests")
+        self.p.write("slice/config.md", cfg)
+        out = self.p.slice("test", "S1").stdout
+        self.assertIn("FAIL t::test_001_S1_R1_b", out)
+        self.assertNotIn("expected 2, got 0", out)
+        self.assertIn("RuntimeError", out)
+        self.assertIn("expected 2, got 0", self.p.slice("test", "S1", "--full").stdout)
+
+    def test_red_output_is_unchanged(self):
+        r = self.p.slice("test", "S1", "--red")
+        self.assertIn("does not reach the surface", r.stdout)
+        self.assertIn("{} != ", r.stdout)
+
+    def test_bad_arguments_are_a_usage_error(self):
+        self.assertEqual(self.p.slice("test", "S1", "--nope").returncode, 2)
 
 
 if __name__ == "__main__":

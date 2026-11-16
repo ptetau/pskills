@@ -160,7 +160,7 @@
     },
     "slice.py test": {
       "producer": "slice.py",
-      "form": "a header `Sn: N tests, P passed, F not passed`, then one `PASS|FAIL|ERROR|SKIP <name>` line for each test of the slice with its failure message indented below; then, when a test outside the slice fails (a done slice, or no slice owns it), `regressions: N tests ...` and the same lines for them; `no tests found for Sn` when no test name holds the spec number and the ID; with --red, `broken:` lines for tests that fail to load, and a plain FAIL is red for a test that cites a requirement of the `- Changed:` line of its slice",
+      "form": "a header `Sn: N tests, P passed, F not passed`, then one `PASS|FAIL|ERROR|SKIP <name>` line for each test of the slice; a FAIL or ERROR line is followed by the `acceptance:` lines of slices.md that cite its requirement (all lines when the name cites none); an ERROR (unittest ERROR, junit error) shows its message indented at once; a FAIL (unittest FAIL, junit failure) shows `message withheld` until the slice has used 2 test rounds, then its message, or at once with `--full` (the guard blocks `--full` and `--red` for the implementer); then, when a test outside the slice fails (a done slice, or no slice owns it), `regressions: N tests ...` and the same lines for them; `no tests found for Sn` when no test name holds the spec number and the ID; with --red, `broken:` lines for tests that fail to load, and a plain FAIL is red for a test that cites a requirement of the `- Changed:` line of its slice",
       "consumers": [
         "implementer",
         "build"

@@ -158,6 +158,14 @@ class Guard(Base):
         self.assertTrue(self.bash("%s --spec 001 test S1" % slice_py))
         self.assertTrue(self.bash("%s commit S1" % slice_py, agent="slice:test-writer"))
 
+    def test_the_implementer_may_not_print_the_withheld_messages(self):
+        slice_py = "python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py"
+        for flags in ("S1 --full", "--full S1", "S1 --red", "--spec 001 test S1 --full"):
+            self.assertFalse(self.bash("%s test %s" % (slice_py, flags)) if not flags.startswith("--spec")
+                             else self.bash("%s %s" % (slice_py, flags)), flags)
+        self.assertTrue(self.bash("%s test S1 --full" % slice_py, agent="slice:test-writer"))
+        self.assertTrue(self.bash("%s test S1 --full" % slice_py, agent="slice:reviewer"))
+
     def test_bash_runs_from_a_subfolder_resolve_against_the_cwd(self):
         self.assertFalse(self.ok(IMPL, "Bash", cwd=self.root / "src", command="cat ../tests/a.py"))
         self.assertTrue(self.ok(IMPL, "Bash", cwd=self.root / "src", command="cat a.py"))

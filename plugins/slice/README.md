@@ -46,7 +46,11 @@ use the highest number, or the folder that `--spec` names. The templates are in
   `Slice: Sn`. It holds the records, the source folders, and the source files, not the tests.
   `commit interface` holds the tests and the stubs of all slices, so a slice commit stays
   small. `commit Sn` refuses when a done slice's test, or a test that no slice owns, fails.
-  `test Sn` lists these regressions.
+  `test Sn` lists these regressions. For each failing test it prints the acceptance lines of the
+  requirement that the test name cites. An assertion failure keeps its message back until the slice
+  has used 2 test rounds, so the implementer works from the spec and not from the expected
+  value; an error (an exception, an import error) prints at once. `test Sn --full` prints every message
+  (the guard blocks it, and `--red`, for the implementer).
 - `hooks/guard.py`: blocks the implementer from every read, search, edit, and command that
   reaches the tests folder, also through quotes, wildcards, and symlinks, from every test
   runner, and from `slice.py` except `test`. It limits its writes to the source folders and

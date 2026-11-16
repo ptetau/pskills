@@ -6,7 +6,7 @@ Usage: slice.py [--root DIR] [--spec NNN|NAME] status
        slice.py [--root DIR] [--spec NNN|NAME] set Sn STATUS [--reason TEXT]
        slice.py [--root DIR] [--spec NNN|NAME] round Sn test|review
        slice.py [--root DIR] [--spec NNN|NAME] resume Sn
-       slice.py [--root DIR] [--spec NNN|NAME] test Sn [--red]
+       slice.py [--root DIR] [--spec NNN|NAME] test Sn [--red|--full]
        slice.py [--root DIR] [--spec NNN|NAME] commit Sn|interface
 
 slice/config.md is at the top of slice/. Each spec has its own folder, slice/NNN-<name>/
@@ -20,6 +20,11 @@ its requirements on a `- Requirements:` line, and domain.md maps each requiremen
 "stop Sn: <reason>" (a stopped slice: ask the user), or "done". "status" ends with "next: <that line>".
 "resume" puts a stopped slice back to building, with no reason and no rounds used.
 "test" prints test names, pass or fail, and failure messages. It never prints test source.
+For each failing test of the slice it also prints the acceptance lines of slices.md that cite the
+requirement of the test name (all lines when the name cites none). An assertion failure (unittest
+FAIL, junit failure) keeps its message back until the slice has used 2 test rounds; an error
+(unittest ERROR, junit error: an import error, or an exception in the code) prints its message
+at once. --full prints every message at once.
 After the results of the slice, it lists the regressions: tests that fail and that no unfinished
 slice owns (the tests of a done slice, and tests that no slice owns).
 A test belongs to a slice when its name holds the spec number and the slice, `test_NNN_Sn_Rn_<what>`
@@ -569,9 +574,44 @@ def show(r):
         print("  " + line)
 
 
-def cmd_test(root, sid, red):
+REQ_WORD = r"(?<![0-9A-Za-z])R\d+(?![0-9])"
+WITHHOLD_ROUNDS = 2  # an assertion message shows once the slice has used this many test rounds
+
+
+def acceptance_lines(block):
+    """The acceptance lines of one slice: the indented items under its `- Acceptance:` line."""
+    out, inside = [], False
+    for line in block.splitlines():
+        if re.match(r"^- Acceptance:", line):
+            inside = True
+        elif inside and re.match(r"^\s+[-*]\s+\S", line):
+            out.append(re.sub(r"^\s+[-*]\s+", "", line).strip())
+        elif inside and re.match(r"^\S", line):
+            inside = False
+    return out
+
+
+def show_own(r, lines, withhold):
+    """One result of the slice. A failing test shows its acceptance lines. An assertion
+    failure shows its message only when withhold is False."""
+    word = {"pass": "PASS", "fail": "FAIL", "error": "ERROR", "skip": "SKIP"}[r["status"]]
+    print("%s %s" % (word, r["name"]))
+    if r["status"] in ("fail", "error"):
+        cited = set(re.findall(REQ_WORD, r["name"]))
+        pick = [l for l in lines if cited & set(re.findall(REQ_WORD, l))] or lines
+        for l in pick:
+            print("  acceptance: " + l)
+    if r["status"] == "fail" and withhold:
+        print("  message withheld: it shows from test round %d, or with --full" % (WITHHOLD_ROUNDS + 1))
+        return
+    for line in r["message"].splitlines():
+        print("  " + line)
+
+
+def cmd_test(root, sid, red, full=False):
     text, _ = load_slices(root)
-    find(text, sid)
+    sec = find(text, sid)
+    block = text[sec[2]:sec[3]]
     results, code, errors = run_tests(root)
     mine = mine_of(root, results, sid)
     if not mine:
@@ -587,8 +627,10 @@ def cmd_test(root, sid, red):
     if not red:
         passed = sum(1 for r in mine if r["status"] == "pass")
         print("%s: %d tests, %d passed, %d not passed" % (sid, len(mine), passed, len(mine) - passed))
+        withhold = not full and int(get_field(block, "Test rounds") or 0) < WITHHOLD_ROUNDS
+        lines = acceptance_lines(block)
         for r in mine:
-            show(r)
+            show_own(r, lines, withhold)
         broken = regressions(root, results)
         if broken:
             print("regressions: %d tests outside %s fail (tests of a done slice, or of no slice)" % (
@@ -739,8 +781,9 @@ def main(argv):
             return cmd_resume(root, args[0])
         if cmd == "round" and len(args) == 2:
             return cmd_round(root, args[0], args[1])
-        if cmd == "test" and len(args) in (1, 2) and (len(args) == 1 or args[1] == "--red"):
-            return cmd_test(root, args[0], len(args) == 2)
+        if cmd == "test" and len(args) in (1, 2) and (len(args) == 1 or args[1] in ("--red", "--full")):
+            return cmd_test(root, args[0], len(args) == 2 and args[1] == "--red",
+                            len(args) == 2 and args[1] == "--full")
         if cmd == "commit" and len(args) == 1:
             return cmd_commit(root, args[0])
     except Fail as e:

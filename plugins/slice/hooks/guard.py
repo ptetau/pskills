@@ -12,6 +12,7 @@ implementer, this guard blocks:
     match it or list it, a recursive search from the project root, a git command that shows
     file content with no path limit, the configured test runner and every known runner
     (python, python3, and python3.X count the same), and any `slice.py` subcommand but `test`.
+  - `slice.py test` with --full or --red (they print the failure messages that the script withholds).
   - Write, Edit, MultiEdit, and NotebookEdit outside the source folders and the source files.
 The source files are the "source files:" line of the config: single paths and globs, relative
 to the project root (`package.json, migrations/**`; `*` stays in one folder, `**` crosses
@@ -388,6 +389,8 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
                     break
             if sub != ["test"]:
                 return False, "the implementer runs only `slice.py test`: %s" % hint
+            if any(t in ("--full", "--red") for t in after):
+                return False, "the implementer may not use --full or --red: they print the withheld messages: %s" % hint
         if not any(os.path.basename(t) == "slice.py" for t in toks):
             for a in path_args(toks if "/" in toks[0] else toks[1:], here):
                 target = os.path.realpath(os.path.join(here, os.path.expanduser(a)))
