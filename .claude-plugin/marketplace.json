@@ -9,6 +9,11 @@
       "name": "pdlc",
       "source": "./plugins/pdlc",
       "description": "A development lifecycle harness: intents become specs, specs become small changes, changes become verified, traceable code."
+    },
+    {
+      "name": "slice",
+      "source": "./plugins/slice",
+      "description": "A light harness: a specification becomes vertical slices, each with red acceptance tests against an agreed interface, built by an implementer who never sees the tests."
     }
   ]
 }

@@ -273,6 +273,31 @@ class Cli(unittest.TestCase):
                 f.write(GOOD.replace("## Goal", "## Aim"))
             self.assertEqual(csf.run_enforced(json.loads(open(budgets).read()), d), 1)
 
+    def test_enforced_name_with_a_plugin_prefix_checks_that_plugin(self):
+        with tempfile.TemporaryDirectory() as d:
+            folder = os.path.join(d, "plugins", "slice", "skills", "demo")
+            os.makedirs(folder)
+            path = os.path.join(folder, "SKILL.md")
+            with open(path, "w") as f:
+                f.write(GOOD)
+            budgets = {"slice:demo": 500, "demo": 1, "enforced": ["slice:demo"]}
+            self.assertEqual(csf.run_enforced(budgets, d), 0)
+            # The budget of "slice:demo" applies, not the one of "demo".
+            budgets["slice:demo"] = 1
+            self.assertEqual(csf.run_enforced(budgets, d), 1)
+            with open(path, "w") as f:
+                f.write(GOOD.replace("## Goal", "## Aim"))
+            budgets["slice:demo"] = 500
+            self.assertEqual(csf.run_enforced(budgets, d), 1)
+
+    def test_every_slice_skill_is_enforced_with_a_budget_of_200(self):
+        with open(os.path.join(HERE, "skill_budgets.json")) as f:
+            budgets = json.load(f)
+        skills = os.path.join(HERE, "..", "plugins", "slice", "skills")
+        for name in os.listdir(skills):
+            self.assertIn("slice:" + name, budgets["enforced"])
+            self.assertEqual(budgets["slice:" + name], 200)
+
     def test_no_argument_run_passes_in_repo(self):
         self.assertEqual(self.run_cli().returncode, 0)
 

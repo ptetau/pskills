@@ -4,7 +4,8 @@
 Usage: check_skill_form.py [--budgets PATH] [SKILL.md ...]
 
 With no file, the script checks plugins/pdlc/skills/<name>/SKILL.md for each name in the
-"enforced" list of the budgets file. An empty list gives exit 0.
+"enforced" list of the budgets file. A name like "slice:spec" stands for
+plugins/slice/skills/spec/SKILL.md, and its budget key is the same name. An empty list gives exit 0.
 
 Exit 0: no problems. Exit 1: problems (one line each). Exit 2: usage error.
 The budget of a skill is the entry for the name of its folder in the budgets file
@@ -140,6 +141,16 @@ def validate_budgets(budgets):
     return problems
 
 
+def skill_key(path):
+    """The budget key of a skill: its folder name, or "<plugin>:<name>" for a plugin other
+    than pdlc (plugins/<plugin>/skills/<name>/SKILL.md)."""
+    folder = os.path.dirname(os.path.abspath(path))
+    parts = folder.split(os.sep)
+    if len(parts) >= 4 and parts[-2] == "skills" and parts[-4] == "plugins" and parts[-3] != "pdlc":
+        return "%s:%s" % (parts[-3], parts[-1])
+    return parts[-1]
+
+
 def check(path, text, budgets):
     problems = []
     fm, body = split_front_matter(text)
@@ -195,7 +206,7 @@ def check(path, text, budgets):
         if h[0] == 3 and not (sr and sr[0] < h[2] < sr[1]):
             problems.append(f'"### {h[1]}" is outside "## Stages"')
 
-    skill = os.path.basename(os.path.dirname(os.path.abspath(path)))
+    skill = skill_key(path)
     if skill in budgets:
         words = len(body.split())
         total, earned = effective_budget(budgets, skill)
@@ -208,7 +219,8 @@ def run_enforced(budgets, root=ROOT):
     """Check each enforced skill. Return 0 or 1."""
     bad = False
     for name in budgets.get("enforced", []):
-        path = os.path.join(root, "plugins", "pdlc", "skills", name, "SKILL.md")
+        plugin, _, skill = name.rpartition(":")
+        path = os.path.join(root, "plugins", plugin or "pdlc", "skills", skill, "SKILL.md")
         with open(path, encoding="utf-8") as f:
             text = f.read()
         for p in check(path, text, budgets):
