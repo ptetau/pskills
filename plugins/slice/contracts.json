@@ -130,9 +130,19 @@
     },
     "slice/NNN-<name>/review/Sn.md": {
       "producer": "reviewer",
-      "form": "one `- major: [part] file:line text` or `- minor: [part] file:line text` line for each open finding, or `none`; part is requirement, architecture, or security",
+      "form": "one `- major: [part] file:line text` or `- minor: [part] file:line text` line for each open code finding, or `none`; part is requirement, architecture, or security. The guard hides it from the test writer",
       "consumers": [
         "implementer",
+        "build",
+        "slice.py",
+        "reviewer"
+      ]
+    },
+    "slice/NNN-<name>/review/Sn.tests.md": {
+      "producer": "reviewer",
+      "form": "one `- major: [tests] <test name> <what a wrong version would pass, and the fix>` or `- minor: [tests] <test name> <...>` line for each open test finding, or `none`; the wrong version is named as a behaviour, with no test code, no app code, and no file:line. The guard hides it from the implementer. `slice.py commit Sn` refuses on a major line; `slice.py commit tests Sn` needs a line",
+      "consumers": [
+        "test-writer",
         "build",
         "slice.py",
         "reviewer"
@@ -163,6 +173,13 @@
       "name form": "test_NNN_Sn_Rn_<what>",
       "consumers": [
         "slice.py"
+      ]
+    },
+    "slice.py commit tests": {
+      "producer": "slice.py",
+      "form": "`commit tests Sn` makes one commit of the tests folder and the records, with the subject `Tests Sn: <title>` and the trailer `Slice: Sn`. It refuses unless Sn is in review, review/Sn.tests.md holds a finding, and the tests folder changed; and it refuses a test that does not load, another error than the not-implemented error, and a skip. A failing assertion or a pass is accepted, and a failing test sets the slice to building. `commit Sn` still refuses a tests folder that no commit holds",
+      "consumers": [
+        "build"
       ]
     },
     "slice.py scan": {

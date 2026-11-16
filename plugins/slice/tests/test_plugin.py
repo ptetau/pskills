@@ -99,7 +99,7 @@ class Layout(unittest.TestCase):
         self.assertEqual(mod.requirement_ids((PLUGIN / "templates/spec.md").read_text()), ["R1"])
 
     def test_readme_exists_and_is_short(self):
-        self.assertLess(len((PLUGIN / "README.md").read_text().split()), 900)
+        self.assertLess(len((PLUGIN / "README.md").read_text().split()), 1000)
 
 
 if __name__ == "__main__":

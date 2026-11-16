@@ -211,6 +211,18 @@
         "words": 12,
         "evidence": "slice improvement C (security scan), no vet run yet"
       }
+    ],
+    "slice:build": [
+      {
+        "rule": "Test fix: tests from `slice:test-writer`, then `slice.py commit tests <Sn>`: the subject \"Tests Sn: <title>\" and the trailer `Slice: Sn`.",
+        "words": 21,
+        "evidence": "slice improvement A (reviewer judges the tests): `slice.py commit tests` subject and trailer are a contract; no vet run yet"
+      },
+      {
+        "rule": "A line in `review/<Sn>.tests.md` goes to `slice:test-writer` and not to the implementer. Then run `slice.py commit tests <Sn>`. Failing tests make the slice `building`: run the test loop. A test fix uses no round of its own.",
+        "words": 38,
+        "evidence": "slice improvement A (reviewer judges the tests): the build skill is the only router of the test findings; no vet run yet"
+      }
     ]
   },
   "raised": {

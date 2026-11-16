@@ -166,6 +166,52 @@ class Guard(Base):
         self.assertTrue(self.bash("%s test S1 --full" % slice_py, agent="slice:test-writer"))
         self.assertTrue(self.bash("%s test S1 --full" % slice_py, agent="slice:reviewer"))
 
+    # the review files: code findings for the implementer, test findings for the test writer
+
+    def review_files(self):
+        review = self.root / "slice/001-x/review"
+        review.mkdir(parents=True)
+        (review / "S1.md").write_text("- major: [security] a.py:1 x\n")
+        (review / "S1.tests.md").write_text("- major: [tests] test_S1_a a wrong version passes\n")
+
+    def test_the_implementer_does_not_read_the_test_findings(self):
+        self.review_files()
+        TW = "slice:test-writer"
+        self.assertFalse(self.ok(IMPL, "Read", file_path="slice/001-x/review/S1.tests.md"))
+        self.assertFalse(self.ok(IMPL, "Grep", pattern="x", path="slice/001-x/review"))
+        self.assertFalse(self.ok(IMPL, "Grep", pattern="x", path="slice"))
+        self.assertFalse(self.bash("cat slice/001-x/review/S1.tests.md"))
+        self.assertFalse(self.bash("cat slice/001-x/review/*"))
+        self.assertFalse(self.bash("cd slice/001-x/review && cat S1.tests.md"))
+        self.assertFalse(self.bash("grep -r x slice"))
+        self.assertFalse(self.bash("cat S1.tests.md"))
+        self.assertTrue(self.ok(IMPL, "Read", file_path="slice/001-x/review/S1.md"))
+        self.assertTrue(self.bash("cat slice/001-x/review/S1.md"))
+        self.assertTrue(self.ok(IMPL, "Read", file_path="slice/001-x/spec.md"))
+        self.assertTrue(self.ok(TW, "Read", file_path="slice/001-x/review/S1.tests.md"))
+        self.assertTrue(self.bash("cat slice/001-x/review/S1.tests.md", agent=TW))
+
+    def test_the_test_writer_does_not_read_the_code_findings(self):
+        self.review_files()
+        TW = "slice:test-writer"
+        self.assertFalse(self.ok(TW, "Read", file_path="slice/001-x/review/S1.md"))
+        self.assertFalse(self.ok(TW, "Grep", pattern="x", path="slice/001-x/review"))
+        self.assertFalse(self.bash("cat slice/001-x/review/S1.md", agent=TW))
+        self.assertFalse(self.bash("cat slice/001-x/review/*", agent=TW))
+        self.assertTrue(self.ok(TW, "Read", file_path="slice/001-x/review/S1.tests.md"))
+        self.assertTrue(self.ok(TW, "Read", file_path="slice/001-x/spec.md"))
+        self.assertTrue(self.ok(TW, "Read", file_path="slice/001-x/interface.md"))
+
+    def test_the_reviewer_and_the_main_session_read_both(self):
+        self.review_files()
+        for agent in ("slice:reviewer", "", None):
+            self.assertTrue(self.ok(agent, "Read", file_path="slice/001-x/review/S1.tests.md"), agent)
+            self.assertTrue(self.ok(agent, "Read", file_path="slice/001-x/review/S1.md"), agent)
+
+    def test_without_review_files_nothing_new_is_hidden(self):
+        self.assertTrue(self.ok("slice:test-writer", "Read", file_path="slice/001-x/spec.md"))
+        self.assertTrue(self.ok(IMPL, "Read", file_path="slice/001-x/review/S1.md"))
+
     def test_bash_runs_from_a_subfolder_resolve_against_the_cwd(self):
         self.assertFalse(self.ok(IMPL, "Bash", cwd=self.root / "src", command="cat ../tests/a.py"))
         self.assertTrue(self.ok(IMPL, "Bash", cwd=self.root / "src", command="cat a.py"))

@@ -1091,6 +1091,138 @@ class Scan(Base):
     def test_the_scan_is_one_of_the_subcommands_in_the_usage(self):
         self.assertEqual(self.p.slice("scan", "extra").returncode, 2)
 
+TESTS_FINDING = "# Review S1 (tests)\n\n- major: [tests] test_S1_counts_words passes a version that counts only the first word. Assert two words.\n"
+TESTS_STRONGER = fixture.TESTS.replace('self.assertEqual(wordfreq.count("a b a"), {"a": 2, "b": 1})',
+                                       'self.assertEqual(wordfreq.count("a b a c"), {"a": 2, "b": 1, "c": 1})')
+
+
+class TestFindings(Base):
+    """A: the reviewer also judges the tests. Test findings are in review/Sn.tests.md and go to the test writer."""
+    FILE = "slice/001-wordfreq/review/S1.tests.md"
+
+    def ready(self, finding=TESTS_FINDING):
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.p.slice("set", "S1", "review")
+        if finding is not None:
+            self.p.write(self.FILE, finding)
+
+    def fixed(self, tests=TESTS_STRONGER):
+        self.p.write("tests/test_wordfreq.py", tests)
+
+    def test_commit_refuses_an_open_major_tests_finding(self):
+        self.ready()
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("S1.tests.md", r.stderr)
+        self.assertIn("major", r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "base")
+
+    def test_a_minor_tests_finding_and_none_do_not_block(self):
+        self.ready("# Review S1 (tests)\n\n- minor: [tests] test_S1_empty_text name is vague.\n")
+        self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
+        self.p.write(self.FILE, "# Review S1 (tests)\n\nnone\n")
+        self.assertEqual(self.p.slice("test", "S1").returncode, 0)
+
+    def test_the_code_findings_file_is_still_counted_on_its_own(self):
+        self.ready("# Review S1 (tests)\n\nnone\n")
+        self.p.write("slice/001-wordfreq/review/S1.md", "# Review S1\n\n- major: [security] x.py:1 bad\n")
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("review/S1.md", r.stderr)
+
+    def test_commit_tests_commits_the_fixed_tests_and_keeps_the_slice_in_review(self):
+        self.ready()
+        self.fixed()
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "Tests S1: Count words")
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%b").strip().splitlines()[-1], "Slice: S1")
+        files = git(self.p.root, "show", "--name-only", "--format=").split()
+        self.assertIn("tests/test_wordfreq.py", files)
+        self.assertIn(self.FILE, files)
+        self.assertIn("- Status: review\n", self.p.read("slice/001-wordfreq/slices.md").split("## S2")[0])
+        status = git(self.p.root, "status", "--porcelain")
+        self.assertNotIn("tests/", status)
+        self.assertNotIn("slice/", status)
+
+    def test_commit_tests_holds_no_app_code(self):
+        self.ready()
+        self.fixed()
+        self.p.slice("commit", "tests", "S1")
+        self.assertNotIn("src/wordfreq.py", git(self.p.root, "show", "--name-only", "--format=").split())
+
+    def test_a_fixed_test_that_fails_by_assertion_sends_the_slice_back_to_building(self):
+        self.ready()
+        self.p.write("src/wordfreq.py", fixture.GOOD.replace("dict(Counter(text.split()))", "{'a': 2, 'b': 1}"))
+        self.fixed()
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("building", r.stdout)
+        self.assertIn("- Status: building\n", self.p.read("slice/001-wordfreq/slices.md").split("## S2")[0])
+
+    def test_a_fixed_test_of_a_behaviour_that_is_not_built_fails_with_the_stub_error_and_is_accepted(self):
+        self.ready()
+        self.p.write("src/wordfreq.py", fixture.STUB)
+        self.fixed()
+        self.assertEqual(self.p.slice("commit", "tests", "S1").returncode, 0)
+
+    def test_a_fixed_test_that_does_not_load_is_refused(self):
+        self.ready()
+        self.fixed("import unittest\nimport nothing_here\n\n\nclass Words(unittest.TestCase):\n"
+                   "    def test_S1_counts_words(self):\n        pass\n")
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("broken", r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "base")
+
+    def test_a_skipped_test_is_refused(self):
+        self.ready()
+        self.fixed(TESTS_STRONGER.replace("    def test_S1_counts_words", "    @unittest.skip('later')\n    def test_S1_counts_words"))
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("skipped", r.stderr)
+
+    def test_commit_tests_refuses_when_no_tests_finding_is_open(self):
+        self.ready(None)
+        self.fixed()
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("no tests finding", r.stderr)
+        self.p.write(self.FILE, "# Review S1 (tests)\n\nnone\n")
+        self.assertEqual(self.p.slice("commit", "tests", "S1").returncode, 1)
+
+    def test_commit_tests_refuses_when_the_tests_did_not_change(self):
+        self.ready()
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("no change", r.stderr)
+
+    def test_commit_tests_works_only_on_a_slice_in_review(self):
+        self.ready()
+        self.fixed()
+        self.p.slice("set", "S1", "building")
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("review", r.stderr)
+
+    def test_commit_tests_needs_a_slice(self):
+        self.assertEqual(self.p.slice("commit", "tests").returncode, 2)
+        self.assertEqual(self.p.slice("commit", "tests", "S9").returncode, 2)
+
+    def test_commit_of_the_slice_still_refuses_uncommitted_tests_and_names_the_way(self):
+        self.ready("# Review S1 (tests)\n\nnone\n")
+        self.fixed()
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("commit interface", r.stderr)
+
+    def test_next_keeps_the_build_while_a_tests_finding_is_open(self):
+        self.ready()
+        self.fixed()
+        self.assertEqual(self.p.slice("next").stdout.strip(), "build S1")
+        self.p.write(self.FILE, "# Review S1 (tests)\n\nnone\n")
+        self.assertEqual(self.p.slice("next").stdout.strip(), "interface")
+
 
 if __name__ == "__main__":
     unittest.main()

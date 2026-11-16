@@ -24,7 +24,7 @@ effort: medium
 ## Constraints
 
 - Write no code. This is a design document.
-- Give each object with a lifecycle a state machine, as a `### Machine:` section in the form of the template: States, Start, End, `Tn` transitions (trigger, guard, effect), and `Xn` refused transitions with their error. With no such object, write `- Machines: none`. A requirement that changes state cites its transitions (`Order.T2`), and each transition is cited.
+- Give each object with a lifecycle a state machine, as a `### Machine:` section in the form of the template. It holds States, Start, End, `Tn` transitions (trigger, guard, effect), and `Xn` refused transitions with their error. With no such object, write `- Machines: none`. A requirement that changes state cites its transitions (`Order.T2`), and each transition is cited.
 - Name the boundary: what is inside, what is outside, and each external actor.
 - On a gap, ask the user with `AskUserQuestion`, or fix the spec with the user.
 - Outputs give each reader exactly what it reads: see `contracts.json`.

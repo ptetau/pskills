@@ -9,10 +9,12 @@ Usage: slice.py [--root DIR] [--spec NNN|NAME] status
        slice.py [--root DIR] [--spec NNN|NAME] test Sn [--red|--full]
        slice.py [--root DIR] [--spec NNN|NAME] scan
        slice.py [--root DIR] [--spec NNN|NAME] commit Sn|interface
+       slice.py [--root DIR] [--spec NNN|NAME] commit tests Sn
 
 slice/config.md is at the top of slice/. Each spec has its own folder, slice/NNN-<name>/
 (for example slice/001-wordfreq/), with spec.md, domain.md, slices.md, interface.md, and
-review/Sn.md (the findings of the reviewer). The current spec is the folder with the highest
+review/Sn.md (the code findings of the reviewer, for the implementer) and review/Sn.tests.md
+(the test findings, for the test writer; the guard hides each file from the other agent). The current spec is the folder with the highest
 number, or the one that --spec names. The script keeps the round counts in slices.md.
 Requirements (R1, R2, ...) and decisions (D1, D2, ...) are numbered in spec.md. A slice names
 its requirements on a `- Requirements:` line, and domain.md maps each requirement.
@@ -42,6 +44,13 @@ longer than 300 seconds. The command is the one line of the config: no part of a
 the records, the source folders, and the source files of one slice, and refuses when a
 regression fails. The config line `source files:` lists single paths and globs (`package.json,
 migrations/**`) that lie outside the source folders.
+"commit tests Sn" commits a test fix: the tests folder and the records, as one "Tests Sn: <title>"
+commit with the trailer `Slice: Sn`. It needs the slice in `review`, an open finding (a `- major:` or
+`- minor:` line) in review/Sn.tests.md, and a change in the tests folder. Each test of the slice must
+run: it passes, or it fails by assertion, or it fails with the not-implemented error. A test that
+does not load, another error, or a skip refuses the commit. When a test of the slice still fails, the
+slice goes back to `building`. "commit Sn" refuses an open major line in review/Sn.md and in
+review/Sn.tests.md.
 Exit 0: ok. Exit 1: a refusal or a failing check. Exit 2: usage or record error.
 """
 import glob
@@ -378,7 +387,9 @@ def next_step(root):
     if any(r[1] == "planned" for r in rows) or interface_status(root) != "approved":
         return "interface"
     open_ = [r for r in rows if r[1] != "done"]
-    if open_ and tests_dirty(root):
+    fixing = [r for r in open_ if r[1] in ("building", "review")
+              and open_findings(read(root, "review/%s.tests.md" % r[0]))]
+    if open_ and tests_dirty(root) and not fixing:
         return "interface"
     return "build %s" % open_[0][0] if open_ else "done"
 
@@ -808,6 +819,14 @@ def dirty(root, paths):
     return [l for l in out.splitlines() if l.strip()]
 
 
+FINDING = re.compile(r"^\s*[-*]\s+\W*(major|minor)\W*[:\-]", re.M | re.I)
+
+
+def open_findings(text, kind=None):
+    """The finding lines of a review file, as their kinds (major or minor). `none` holds no line."""
+    return [k.lower() for k in FINDING.findall(text or "") if kind is None or k.lower() == kind]
+
+
 def cmd_commit(root, sid):
     if sid == "interface":
         return commit_interface(root)
@@ -826,10 +845,10 @@ def cmd_commit(root, sid):
     if broken:
         raise Fail("%s: %d tests outside the slice fail (tests of a done slice, or of no slice): %s" % (
             sid, len(broken), ", ".join(r["name"] for r in broken)))
-    review = read(root, "review/%s.md" % sid) or ""
-    major = re.findall(r"^\s*[-*]\s+\W*major\W*[:\-]", review, re.M | re.I)
-    if major:
-        raise Fail("%s: %d open major finding(s) in %s" % (sid, len(major), shown(root, "review/%s.md" % sid)))
+    for name in ("review/%s.md" % sid, "review/%s.tests.md" % sid):
+        major = open_findings(read(root, name), "major")
+        if major:
+            raise Fail("%s: %d open major finding(s) in %s" % (sid, len(major), shown(root, name)))
     ok, code, scan_text = run_scan(root)
     if not ok:
         raise Fail("%s: the security scan fails%s: %s. Run: slice.py scan" % (
@@ -837,7 +856,8 @@ def cmd_commit(root, sid):
     cfg = config(root)
     tests = folders(cfg.get("tests folder"))
     if tests and dirty(root, tests):
-        raise Fail("the tests folder has changes that no commit holds: run slice.py commit interface first")
+        raise Fail("the tests folder has changes that no commit holds: run slice.py commit interface first "
+                   "(for the fix of a tests finding: slice.py commit tests %s)" % sid)
     old = text
     write_status(root, sid, "done")
     try:
@@ -847,6 +867,51 @@ def cmd_commit(root, sid):
         write(root, "slices.md", old)
         raise
     print("%s committed: Slice %s: %s" % (sid, sid, title))
+    return 0
+
+
+def commit_tests(root, sid):
+    """One commit for a test fix that a tests finding asked for. The rules are in the module docstring."""
+    text, _ = load_slices(root)
+    sec = find(text, sid)
+    status, _ = status_of(text[sec[2]:sec[3]])
+    if status != "review":
+        raise Fail("%s is %s: tests change only while the slice is in review" % (sid, status))
+    if not open_findings(read(root, "review/%s.tests.md" % sid)):
+        raise Fail("%s: no tests finding is open in %s: a test changes only for a finding" % (
+            sid, shown(root, "review/%s.tests.md" % sid)))
+    cfg = config(root)
+    tests = folders(cfg.get("tests folder"))
+    if not tests or not dirty(root, tests):
+        raise Fail("%s: the tests folder has no change to commit" % sid)
+    results, _, _ = run_tests(root)
+    mine = mine_of(root, results, sid)
+    bad = []
+    if not mine:
+        bad.append("no tests found for %s" % sid)
+    for r in mine:
+        if r["status"] == "skip":
+            bad.append("skipped: %s" % r["name"])
+        elif r["status"] == "error" and not UNIMPLEMENTED.search(r["message"]):
+            bad.append("broken: %s" % r["name"])
+    for r in results:
+        if r["status"] == "error" and not owner(r["name"]) and not UNIMPLEMENTED.search(r["message"]):
+            bad.append("broken: %s" % r["name"])
+    if bad:
+        raise Fail("%s: the tests do not run as a fix needs: %s" % (sid, "; ".join(bad)))
+    failing = [r for r in mine if r["status"] != "pass"]
+    old = text
+    if failing:
+        write_status(root, sid, "building")
+    try:
+        stage(root, ["slice"] + tests)
+        git(root, "commit", "-m", "Tests %s: %s" % (sid, sec[1]), "-m", "Slice: %s" % sid)
+    except Fail:
+        write(root, "slices.md", old)
+        raise
+    print("%s tests committed: Tests %s: %s" % (sid, sid, sec[1]))
+    if failing:
+        print("%s building: %d tests of the slice fail, the implementer continues" % (sid, len(failing)))
     return 0
 
 
@@ -911,6 +976,8 @@ def main(argv):
                             len(args) == 2 and args[1] == "--full")
         if cmd == "scan" and not args:
             return cmd_scan(root)
+        if cmd == "commit" and len(args) == 2 and args[0] == "tests":
+            return commit_tests(root, args[1])
         if cmd == "commit" and len(args) == 1:
             return cmd_commit(root, args[0])
     except Fail as e:
