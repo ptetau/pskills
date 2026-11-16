@@ -5,6 +5,7 @@ description: >
   checks or pdlc files. The pdlc build skill uses this agent.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: inherit
+effort: medium
 ---
 
 pdlc needs a Sonnet 5.5 class model or above. If you run on a lower model, for example a
