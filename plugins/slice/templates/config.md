@@ -1,6 +1,6 @@
 # slice config
 
-- stack: <language, framework, and test library>
+- stack: <language, framework, and test library, as ratified in the spec interview>
 - test command: `<one command that runs all tests and prints one result for each test>`
 - result format: <unittest | junit>
 - tests folder: `tests`

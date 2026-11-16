@@ -4,7 +4,15 @@ Stack: <language and style of the surface, for example HTTP JSON API, or a Pytho
 
 ## Surface
 
-<each endpoint, function, or type, with its request and response shapes or its signature>
+The test writer sees only this file, not the code. Give it all that it must know to call the surface.
+
+- `<import line, or METHOD /path>`: `<signature, or the request and response shapes>`. Types: <types>. Errors: <error form>. Exposes: <domain concepts from domain.md>.
+
+The stubs raise the not-implemented error of the stack, for example `raise NotImplementedError("not implemented")`.
+
+## Security
+
+<the OWASP Top 10 protection that this surface needs, in the idiom of the stack: for example input validation, access control, no secret in output, safe queries>
 
 ## S1
 

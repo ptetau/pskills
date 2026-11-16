@@ -1,17 +1,14 @@
 ---
 name: run
 description: >
-  Runs the slice stages in order, from the state in slice/: spec, plan, interface, build.
-  Continues where it stopped. Use when the user says "/slice:run", or wants a
-  specification built all the way.
+  Runs the slice stages in order, from the state in slice/: spec, plan, domain, interface, build. Continues where it stopped. Use when the user says "/slice:run", or wants a specification built all the way.
 ---
 
 # slice run
 
 ## Goal
 
-A specification becomes committed slices, with the fewest stops. It stops only for a
-question to the user or a limit.
+A specification becomes committed slices, with the fewest stops. It stops only for a question to the user or a limit.
 
 ## Inputs
 
@@ -20,7 +17,7 @@ question to the user or a limit.
 
 ## Outputs
 
-- Each stage runs through its own skill: `/slice:spec`, `/slice:plan`, `/slice:interface`, `/slice:build`.
+- Each stage runs through its own skill: `/slice:spec`, `/slice:plan`, `/slice:domain`, `/slice:interface`, `/slice:build`.
 - The reply: the slices done, and the slice or question that stopped the run.
 
 ## Constraints
@@ -29,6 +26,7 @@ question to the user or a limit.
 - The user ratifies the spec and approves the interface. Do not skip these two stops.
 - `next: ask the user about <Sn>` ends the run. Show what fails, and ask.
 - Start no stage twice for the same state.
+- Outputs give each reader exactly what it reads: see `contracts.json`.
 
 ## Done when
 

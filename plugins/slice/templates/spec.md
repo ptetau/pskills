@@ -10,9 +10,9 @@ Status: draft
 
 - D1 (<topic>): <the decision, in the words of the user>
 
-## Behaviour
+## Requirements
 
-- <what the software does, as short statements>
+- R1 (<topic>): <one thing the software does, as a statement that a test can check>
 
 ## Out of scope
 

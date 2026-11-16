@@ -17,6 +17,7 @@
     "ship",
     "slice:spec",
     "slice:plan",
+    "slice:domain",
     "slice:interface",
     "slice:build",
     "slice:run"
@@ -38,6 +39,7 @@
   "verify": 270,
   "slice:spec": 200,
   "slice:plan": 200,
+  "slice:domain": 200,
   "slice:interface": 200,
   "slice:build": 200,
   "slice:run": 200,

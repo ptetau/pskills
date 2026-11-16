@@ -1,0 +1,129 @@
+{
+  "note": "Each hand-off between a prompt and a script. tests/test_contracts.py fails when a prompt or script names a file, status, or subcommand that this table does not define, or reads a file that no producer makes.",
+  "subcommands": [
+    "status",
+    "set",
+    "round",
+    "test",
+    "commit"
+  ],
+  "statuses": [
+    "planned",
+    "red",
+    "building",
+    "review",
+    "done",
+    "stopped"
+  ],
+  "stages": [
+    "spec",
+    "plan",
+    "domain",
+    "interface",
+    "build"
+  ],
+  "files": {
+    "slice/config.md": {
+      "producer": "spec",
+      "template": "config.md",
+      "form": "`- key: value` lines: stack, test command, result format, tests folder, source folders",
+      "fields": [
+        "stack",
+        "test command",
+        "result format",
+        "tests folder",
+        "source folders"
+      ],
+      "consumers": [
+        "interface",
+        "test-writer",
+        "implementer",
+        "slice.py",
+        "guard",
+        "reviewer"
+      ]
+    },
+    "slice/NNN-<name>/spec.md": {
+      "producer": "spec",
+      "template": "spec.md",
+      "form": "`Status: draft|ratified` line; requirements as `- Rn (topic): ...`; decisions as `- Dn (topic): ...`",
+      "fields": [
+        "Status:",
+        "- R1 ",
+        "- D1 "
+      ],
+      "consumers": [
+        "plan",
+        "domain",
+        "interface",
+        "test-writer",
+        "implementer",
+        "reviewer",
+        "slice.py"
+      ]
+    },
+    "slice/NNN-<name>/slices.md": {
+      "producer": "plan",
+      "template": "slices.md",
+      "form": "one `## Sn: title` section per slice, with `- Story:`, `- Requirements: R1, R2`, `- Acceptance:`, `- Layers:`, `- Status:`, `- Test rounds:`, `- Review rounds:`",
+      "fields": [
+        "## S1:",
+        "- Requirements:",
+        "- Status:",
+        "- Test rounds:",
+        "- Review rounds:"
+      ],
+      "consumers": [
+        "domain",
+        "interface",
+        "build",
+        "test-writer",
+        "implementer",
+        "reviewer",
+        "slice.py"
+      ]
+    },
+    "slice/NNN-<name>/domain.md": {
+      "producer": "domain",
+      "template": "domain.md",
+      "form": "entities, value objects, relationships, invariants, a state machine for each object with a lifecycle, the bounded contexts and the boundary, and a `## Requirement map` with one `- Rn: parts` line for each requirement (`GAP` when none)",
+      "fields": [
+        "## Requirement map",
+        "## State machines",
+        "## Bounded contexts and boundary"
+      ],
+      "consumers": [
+        "interface",
+        "test-writer",
+        "implementer",
+        "reviewer",
+        "slice.py"
+      ]
+    },
+    "slice/NNN-<name>/interface.md": {
+      "producer": "interface",
+      "template": "interface.md",
+      "form": "for each part of the surface: import line or endpoint, signature or shapes, types, error forms, and the domain concepts it exposes; a security section; one `## Sn` section for each slice",
+      "fields": [
+        "## Surface",
+        "## Security",
+        "## S1"
+      ],
+      "consumers": [
+        "test-writer",
+        "implementer",
+        "reviewer"
+      ]
+    },
+    "slice/NNN-<name>/review/Sn.md": {
+      "producer": "reviewer",
+      "form": "one `- major: [part] file:line text` or `- minor: [part] file:line text` line for each open finding, or `none`; part is requirement, architecture, or security",
+      "consumers": [
+        "implementer",
+        "build",
+        "slice.py",
+        "reviewer"
+      ]
+    }
+  }
+}

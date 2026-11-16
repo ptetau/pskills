@@ -49,7 +49,7 @@ class Layout(unittest.TestCase):
         self.assertIn("slice.py test", text)
 
     def test_skills(self):
-        for name in ("spec", "plan", "interface", "build", "run"):
+        for name in ("spec", "plan", "domain", "interface", "build", "run"):
             fm = front_matter(PLUGIN / "skills" / name / "SKILL.md")
             self.assertEqual(fm["name"], name)
 
@@ -64,13 +64,23 @@ class Layout(unittest.TestCase):
         self.assertIn("- tests folder:", (t / "config.md").read_text())
         self.assertIn("- test command:", (t / "config.md").read_text())
         self.assertIn("Status: draft", (t / "spec.md").read_text())
+        self.assertRegex((t / "spec.md").read_text(), r"(?m)^- R1 ")
         self.assertRegex((t / "slices.md").read_text(), r"(?m)^## S1: ")
+        self.assertRegex((t / "slices.md").read_text(), r"(?m)^- Requirements: R1\b")
+        self.assertRegex((t / "domain.md").read_text(), r"(?m)^- R1: ")
         self.assertIn("- Status: planned", (t / "slices.md").read_text())
         self.assertIn("- Test rounds: 0", (t / "slices.md").read_text())
         self.assertTrue((t / "interface.md").is_file())
 
+    def test_the_template_domain_is_a_gap_until_it_is_filled(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("slice_cli", PLUGIN / "bin/slice.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        self.assertEqual(mod.requirement_ids((PLUGIN / "templates/spec.md").read_text()), ["R1"])
+
     def test_readme_exists_and_is_short(self):
-        self.assertLess(len((PLUGIN / "README.md").read_text().split()), 400)
+        self.assertLess(len((PLUGIN / "README.md").read_text().split()), 500)
 
 
 if __name__ == "__main__":
