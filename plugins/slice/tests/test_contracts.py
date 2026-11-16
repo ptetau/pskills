@@ -322,6 +322,18 @@ class Rules(unittest.TestCase):
             self.assertIn("Changed:", self.read(rel), rel)
         self.assertIn("- Changed:", TABLE["files"]["slice/NNN-<name>/interface.md"]["fields"])
 
+    def test_the_security_scan_line_is_in_the_config_the_table_and_the_prompts(self):
+        self.assertIn("scan", TABLE["subcommands"])
+        self.assertIn("security scan", TABLE["files"]["slice/config.md"]["fields"])
+        self.assertIn("- security scan: none", self.read("templates/config.md"))
+        self.assertIn("slice.py scan", self.read("agents/reviewer.md"))
+        self.assertRegex(self.read("agents/reviewer.md"), r"(?i)security.{0,40}major|major.{0,60}security")
+        self.assertIn("security scan", self.read("skills/spec/SKILL.md"))
+        self.assertIn("slice.py scan", self.read("README.md"))
+        entry = TABLE["outputs"]["slice.py scan"]
+        self.assertEqual(entry["producer"], "slice.py")
+        self.assertIn("reviewer", entry["consumers"])
+
     def test_the_source_files_line_is_in_the_config_the_table_and_the_prompts(self):
         self.assertIn("source files", TABLE["files"]["slice/config.md"]["fields"])
         self.assertIn("- source files:", self.read("templates/config.md"))

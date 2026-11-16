@@ -7,6 +7,7 @@ Usage: slice.py [--root DIR] [--spec NNN|NAME] status
        slice.py [--root DIR] [--spec NNN|NAME] round Sn test|review
        slice.py [--root DIR] [--spec NNN|NAME] resume Sn
        slice.py [--root DIR] [--spec NNN|NAME] test Sn [--red|--full]
+       slice.py [--root DIR] [--spec NNN|NAME] scan
        slice.py [--root DIR] [--spec NNN|NAME] commit Sn|interface
 
 slice/config.md is at the top of slice/. Each spec has its own folder, slice/NNN-<name>/
@@ -33,6 +34,9 @@ only spec, and to no slice when there are two specs or more.
 With --red, a test is red only when it fails with the not-implemented error of the stub, or
 (a plain failure) when it cites a requirement that the `- Changed:` line of its slice in
 interface.md lists.
+"scan" runs the command of the config line `- security scan: <command>` (default none) in the
+project folder, prints one short result, and exits 1 when the command exits non-zero or runs
+longer than 300 seconds. The command is the one line of the config: no part of a record is added to it.
 "commit interface" commits the records, the tests, the stubs, and the source files: one
 "Interface: NNN-name" commit. It needs `Status: approved` in interface.md. "commit Sn" commits
 the records, the source folders, and the source files of one slice, and refuses when a
@@ -53,6 +57,7 @@ LIMITS = {"test": 5, "review": 3}
 FIELDS = {"test": "Test rounds", "review": "Review rounds"}
 USAGE = __doc__.split("\n\n")[0]
 TIMEOUT = 600
+SCAN_TIMEOUT = 300
 UNIMPLEMENTED = re.compile(r"not\s*(yet\s*)?implemented|unimplemented|NotImplemented", re.I)
 
 
@@ -759,6 +764,32 @@ def cmd_test(root, sid, red, full=False):
     return 0
 
 
+def run_scan(root):
+    """Run the security scan of the config. Return (ok, exit code or None, text). With no scanner,
+    ok is True and the text is "none". The command comes from the config line only."""
+    command = config(root).get("security scan", "none").strip()
+    if not command or command.lower() == "none" or command.startswith("<"):
+        return True, None, "none"
+    try:
+        proc = subprocess.run(command, shell=True, cwd=root, capture_output=True, text=True,
+                              timeout=SCAN_TIMEOUT, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    except subprocess.TimeoutExpired:
+        return False, None, "the scan ran longer than %d seconds" % SCAN_TIMEOUT
+    lines = (proc.stdout + "\n" + proc.stderr).splitlines()
+    return proc.returncode == 0, proc.returncode, short([l for l in lines if l.strip()][-6:], 6)
+
+
+def cmd_scan(root):
+    ok, code, text = run_scan(root)
+    if text == "none" and code is None and ok:
+        print("scan: none configured")
+        return 0
+    print("scan: %s" % ("ok" if ok else "failed (exit %s)" % code if code is not None else "failed"))
+    if text:
+        print("  " + text.replace("\n", "\n  "))
+    return 0 if ok else 1
+
+
 PYCACHE = [":(exclude,glob)**/__pycache__/**", ":(exclude,glob)**/*.pyc"]
 
 
@@ -799,6 +830,10 @@ def cmd_commit(root, sid):
     major = re.findall(r"^\s*[-*]\s+\W*major\W*[:\-]", review, re.M | re.I)
     if major:
         raise Fail("%s: %d open major finding(s) in %s" % (sid, len(major), shown(root, "review/%s.md" % sid)))
+    ok, code, scan_text = run_scan(root)
+    if not ok:
+        raise Fail("%s: the security scan fails%s: %s. Run: slice.py scan" % (
+            sid, " (exit %s)" % code if code is not None else "", scan_text.replace("\n", " | ")))
     cfg = config(root)
     tests = folders(cfg.get("tests folder"))
     if tests and dirty(root, tests):
@@ -874,6 +909,8 @@ def main(argv):
         if cmd == "test" and len(args) in (1, 2) and (len(args) == 1 or args[1] in ("--red", "--full")):
             return cmd_test(root, args[0], len(args) == 2 and args[1] == "--red",
                             len(args) == 2 and args[1] == "--full")
+        if cmd == "scan" and not args:
+            return cmd_scan(root)
         if cmd == "commit" and len(args) == 1:
             return cmd_commit(root, args[0])
     except Fail as e:

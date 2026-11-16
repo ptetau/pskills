@@ -7,6 +7,7 @@
     "round",
     "resume",
     "test",
+    "scan",
     "commit"
   ],
   "statuses": [
@@ -28,14 +29,15 @@
     "slice/config.md": {
       "producer": "spec",
       "template": "config.md",
-      "form": "`- key: value` lines: stack, test command, result format, tests folder, source folders, and the optional `source files` (single paths and globs outside the source folders, for example `package.json, migrations/**`)",
+      "form": "`- key: value` lines: stack, test command, result format, tests folder, source folders, and the optional `source files` (single paths and globs outside the source folders, for example `package.json, migrations/**`) and `security scan` (one command that exits non-zero on a finding, for example `bandit -q -r src`; `none` by default)",
       "fields": [
         "stack",
         "test command",
         "result format",
         "tests folder",
         "source folders",
-        "source files"
+        "source files",
+        "security scan"
       ],
       "consumers": [
         "interface",
@@ -161,6 +163,14 @@
       "name form": "test_NNN_Sn_Rn_<what>",
       "consumers": [
         "slice.py"
+      ]
+    },
+    "slice.py scan": {
+      "producer": "slice.py",
+      "form": "`scan: none configured`, or `scan: ok`, or `scan: failed (exit N)` (also `scan: failed` for a timeout) followed by at most 6 indented lines of the output of the configured `security scan` command; exit 1 on a failure. `commit Sn` refuses when the scan fails",
+      "consumers": [
+        "reviewer",
+        "build"
       ]
     },
     "slice.py test": {

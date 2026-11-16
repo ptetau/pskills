@@ -1019,6 +1019,78 @@ class Machines(Base):
         out = self.domain(MACHINE_DOMAIN.replace("- R2: Order.X1", "- R2: GAP"))
         self.assertIn("domain: gaps R2", out)
 
+class Scan(Base):
+    """C: an optional security scanner that the config names."""
+
+    def config(self, line):
+        self.p.write("slice/config.md", fixture.CONFIG + line)
+
+    def test_no_line_means_none(self):
+        r = self.p.slice("scan")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("scan: none", r.stdout)
+
+    def test_none_is_none(self):
+        self.config("- security scan: none\n")
+        self.assertIn("scan: none", self.p.slice("scan").stdout)
+
+    def test_a_command_that_exits_0_is_ok(self):
+        self.config("- security scan: `python3 -c \"print('clean')\"`\n")
+        r = self.p.slice("scan")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("scan: ok", r.stdout)
+
+    def test_a_command_that_exits_non_zero_fails_with_a_short_result(self):
+        self.config("- security scan: `python3 -c \"import sys; print('B101 issue in x.py'); sys.exit(3)\"`\n")
+        r = self.p.slice("scan")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("scan: failed (exit 3)", r.stdout)
+        self.assertIn("B101 issue in x.py", r.stdout)
+
+    def test_the_result_is_short(self):
+        self.config("- security scan: `python3 -c \"print('x' * 5000); import sys; sys.exit(1)\"`\n")
+        self.assertLess(len(self.p.slice("scan").stdout), 1500)
+
+    def test_the_command_runs_in_the_project_folder_and_gets_no_argument_from_the_records(self):
+        self.config("- security scan: `python3 -c \"import os, sys; sys.exit(0 if os.path.isdir('slice') and len(sys.argv) == 1 else 1)\"`\n")
+        self.assertEqual(self.p.slice("scan").returncode, 0)
+
+    def test_a_missing_scanner_is_a_failure(self):
+        self.config("- security scan: `no-such-scanner-xyz src`\n")
+        r = self.p.slice("scan")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("scan: failed", r.stdout)
+
+    def test_a_scan_that_runs_too_long_fails(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("slice_cli_scan", fixture.SLICE)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        self.config("- security scan: `python3 -c \"import time; time.sleep(5)\"`\n")
+        mod.SCAN_TIMEOUT = 1
+        result = mod.run_scan(self.p.root)
+        self.assertFalse(result[0])
+        self.assertIn("longer than 1 seconds", result[2])
+
+    def test_commit_refuses_when_the_scan_fails(self):
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.config("- security scan: `python3 -c \"import sys; sys.exit(1)\"`\n")
+        self.p.slice("set", "S1", "review")
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("security scan fails", r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "base")
+        self.assertIn("- Status: review\n", self.p.read("slice/001-wordfreq/slices.md"))
+
+    def test_commit_goes_through_when_the_scan_passes_or_is_none(self):
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.config("- security scan: `python3 -c \"pass\"`\n")
+        self.p.slice("set", "S1", "review")
+        self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
+
+    def test_the_scan_is_one_of_the_subcommands_in_the_usage(self):
+        self.assertEqual(self.p.slice("scan", "extra").returncode, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -50,12 +50,13 @@ class Layout(unittest.TestCase):
         for path in paths:
             fm = front_matter(path)
             self.assertEqual(fm.get("model"), "claude-opus-5-5", path)
-            self.assertEqual(fm.get("effort"), "medium", path)
+            self.assertEqual(fm.get("effort"), "high" if path.name == "reviewer.md" else "medium", path)
 
     def test_the_readme_names_the_model_and_the_effort(self):
         text = (PLUGIN / "README.md").read_text()
         self.assertIn("claude-opus-5-5", text)
         self.assertIn("medium", text)
+        self.assertRegex(text, r"(?i)reviewer.{0,80}\bhigh\b|\bhigh\b.{0,80}reviewer")
 
     def test_the_smoke_readme_gives_the_claude_p_flags(self):
         text = (PLUGIN / "tests/smoke/README.md").read_text()
@@ -98,7 +99,7 @@ class Layout(unittest.TestCase):
         self.assertEqual(mod.requirement_ids((PLUGIN / "templates/spec.md").read_text()), ["R1"])
 
     def test_readme_exists_and_is_short(self):
-        self.assertLess(len((PLUGIN / "README.md").read_text().split()), 800)
+        self.assertLess(len((PLUGIN / "README.md").read_text().split()), 900)
 
 
 if __name__ == "__main__":

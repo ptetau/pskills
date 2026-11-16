@@ -32,7 +32,7 @@ time. A slice is a user story through every layer.
 
 ## Model
 
-Every agent and skill sets `model: claude-opus-5-5` and `effort: medium` in its frontmatter.
+Every agent and skill sets `model: claude-opus-5-5` and `effort: medium` in its frontmatter, except the reviewer, which sets `effort: high`.
 Claude Code supports both fields for agents and skills. The bindings have limits: `CLAUDE_CODE_EFFORT_LEVEL` overrides `effort`, and a skill's `model` lasts one turn and can be dropped by an `availableModels` allowlist or auto mode.
 
 ## Records
@@ -56,6 +56,10 @@ use the highest number, or the folder that `--spec` names. The templates are in
   has used 2 test rounds, so the implementer works from the spec and not from the expected
   value; an error (an exception, an import error) prints at once. `test Sn --full` prints every message
   (the guard blocks it, and `--red`, for the implementer).
+- `slice.py scan` runs the optional config line `- security scan: <command>` (for example
+  `bandit -q -r src`, `semgrep --error --config auto src`, `npm audit --audit-level=high`; default
+  `none`). It exits 1 when the command fails or runs over 300 seconds. The reviewer runs it and
+  reports a failure as a major security finding, and `commit Sn` refuses while it fails.
 - `hooks/guard.py`: blocks the implementer from every read, search, edit, and command that
   reaches the tests folder, also through quotes, wildcards, and symlinks, from every test
   runner, and from `slice.py` except `test`. It limits its writes to the source folders and

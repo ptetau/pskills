@@ -150,7 +150,7 @@ class Guard(Base):
     def test_the_implementer_runs_only_the_test_subcommand_of_slice_py(self):
         slice_py = "python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py"
         for sub in ("commit S1", "commit interface", "set S1 done", "round S1 test", "next", "status",
-                    "resume S1"):
+                    "resume S1", "scan"):
             self.assertFalse(self.bash("%s %s" % (slice_py, sub)), sub)
         self.assertFalse(self.bash("%s --root . set S1 done" % slice_py))
         self.assertFalse(self.bash("cd src && %s --spec 001 commit S1" % slice_py))
