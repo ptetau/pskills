@@ -6,6 +6,7 @@ description: >
   agent for a thin map. The pdlc intake skill uses this agent for a deep look at one area.
 tools: Read, Grep, Glob, Bash
 model: inherit
+effort: low
 ---
 
 pdlc needs a Sonnet 5.5 class model or above. If you run on a lower model, for example a

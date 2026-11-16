@@ -3,7 +3,7 @@
 
 Usage: python3 pdlc/bin/pdlc.py <subcommand> [options]
 
-Subcommands: commit, message, handoff, stop, set, intent, change, start, red.
+Subcommands: commit, message, handoff, stop, set, intent, change, start, red, next.
 
 Exit codes, for every subcommand:
   0  done
@@ -42,6 +42,7 @@ SUBCOMMANDS = {
     "change": "make the spec of a new change",
     "start": "start a change: work out its Branch and Base, make the branch, commit the start",
     "red": "run the checks of a change and prove that they are red; --record writes the Red: line",
+    "next": "print the next stage and its target, or done, or stopped <ID>: <reason>",
 }
 
 
@@ -1390,6 +1391,106 @@ def options_red(parser):
 
 
 # ---------------------------------------------------------------------------------------
+# next
+
+HANDOFF_TITLE = re.compile(r"^#{0,3}\s*Handoff \u00b7 (\S+)(?: \([^()]*\))? \u00b7 (\S+) \u2192 (\S+)\s*$", re.M)
+SKIPPED_INTENT = ("done", "paused", "cancelled", "in review")
+
+
+def last_handoff(text):
+    """(stage, next, reason) of the last handoff title in the text, or None. The reason is the
+    "Reason:" line of its Open section."""
+    found = list(HANDOFF_TITLE.finditer(text))
+    if not found:
+        return None
+    tail = text[found[-1].start():]
+    why = re.search(r"^[ \t]*- Reason:[ \t]*(.+?)\s*$", tail, re.M)
+    return found[-1].group(2), found[-1].group(3), why.group(1) if why else "no reason recorded"
+
+
+def awaits_approval(text):
+    return re.search(r"^[ \t]*(?:- )?Awaits approval:", pdlclib.section(text, "Notes"), re.M) is not None
+
+
+def change_step(root, change_id, intent_id, resume):
+    """The next step for one change: (stage, ID), ("stopped", reason), or None when it is proposed."""
+    path = find_change(root, change_id)
+    text = path.read_text()
+    status = pdlclib.field(text, "Status") or "planned"
+    if status in ("merged", "cancelled"):
+        return None
+    handoff_path = path.parent / "handoff.md"
+    last = last_handoff(handoff_path.read_text()) if handoff_path.exists() else None
+    if last and last[1] == "user" and last[0] != "show":
+        return (last[0], change_id) if resume else ("stopped", "%s: %s" % (change_id, last[2]))
+    if last and last[0] == "show" and last[1] == "user":
+        return None
+    if last and last[0] == "verify" and last[1] == "show":
+        return ("show", change_id)
+    if status == "in review":
+        return None
+    if status == "planned":
+        return ("tests", change_id)
+    if last and last[1] != "user":
+        if last[1] == "acceptance":
+            return ("acceptance", intent_id)
+        return (last[1], change_id)
+    return ("tests" if status == "testing" else "build", change_id)
+
+
+def intent_step(root, intent_id, resume):
+    path = find_intent(root, intent_id)
+    text = path.read_text()
+    status = pdlclib.field(text, "Status") or "new"
+    if status in SKIPPED_INTENT or awaits_approval(text):
+        return None
+    last = last_handoff(pdlclib.section(text, "Handoff"))
+    if last and last[1] == "user":
+        return (last[0], intent_id) if resume else ("stopped", "%s: %s" % (intent_id, last[2]))
+    if status == "new":
+        return ("intake", intent_id)
+    if status == "specifying":
+        return ("ready", intent_id)
+    changes = listed_changes(root, intent_id)
+    if not changes:
+        return ("change", intent_id)
+    if (pdlclib.field(text, "Acceptance-Locked") or "none") == "none":
+        return ("acceptance", intent_id)
+    for change_id in changes:
+        step = change_step(root, change_id, intent_id, resume)
+        if step:
+            return step
+    return None
+
+
+def handle_next(args, extra):
+    reject_extra(extra)
+    root = project()
+    os.chdir(str(root))
+    if args.id and args.id.startswith("CH-"):
+        wanted = [intent_of(root, args.id)]
+    elif args.id:
+        find_intent(root, args.id)
+        wanted = [args.id]
+    else:
+        found = {re.match(r"(IN-\d+)", p.name).group(1) for p in (root / "pdlc" / "inbox").glob("IN-*.md")}
+        wanted = sorted(found)
+    for intent_id in wanted:
+        step = intent_step(root, intent_id, args.resume)
+        if step:
+            print(" ".join(step))
+            return EXIT_DONE
+    print("done")
+    return EXIT_DONE
+
+
+def options_next(parser):
+    parser.add_argument("id", nargs="?", help="IN-xxxx or CH-xxxx: look only at this intent")
+    parser.add_argument("--resume", action="store_true",
+                        help="a stopped stage runs again, after the user answered")
+
+
+# ---------------------------------------------------------------------------------------
 # The entry point
 
 def not_implemented(name):
@@ -1411,11 +1512,13 @@ HANDLERS["intent"] = handle_intent
 HANDLERS["change"] = handle_change
 HANDLERS["start"] = handle_start
 HANDLERS["red"] = handle_red
+HANDLERS["next"] = handle_next
 
 OPTIONS = {"commit": add_commit_options, "message": add_commit_options,
            "handoff": options_handoff, "stop": options_stop,
            "set": options_set, "intent": options_intent,
-           "change": options_change, "start": options_start, "red": options_red}
+           "change": options_change, "start": options_start, "red": options_red,
+           "next": options_next}
 
 
 def build_parser():

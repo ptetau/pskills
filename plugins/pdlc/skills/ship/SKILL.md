@@ -10,31 +10,27 @@ description: >
 
 ## Goal
 
-Run each stage through its own skill, with `defaults`, until each change is proposed or stopped.
+Loop: run `python3 pdlc/bin/pdlc.py next`, then run that stage through its own skill, with `defaults`, until it prints `done` or `stopped`. Never choose the order.
 
 ## Inputs
 
 `pdlc/README.md` ("Core rules", "Bookkeeping on main", "Stages and handoffs", "Stacked changes", "Where pdlc commits", "Rounds", "Questions", "Who does what", "New behaviour needs approval", "Commits", "Layout"). Take:
 
-1. An unmerged stopped intent or change: take its recommended answer, and give two
-   new rounds. A contradiction still waits for the user.
+1. A stopped intent or change: take its recommended answer, run `pdlc.py next --resume`, and give two new rounds. A contradiction still waits for the user.
 2. New user words: `pdlc:intake`.
-3. A named intent or change.
-4. The oldest intent that is not `in review`, `done`, `paused`, or `cancelled`, and has
-   no `Awaits approval:`.
+3. A named intent or change: `pdlc.py next <ID>`.
 
 If `pdlc/version.json` is older, run `/pdlc:upgrade`.
 
 ## Outputs
 
-- Each change gets `verify` and show.
 - At a stop: `python3 pdlc/bin/pdlc.py stop <ID> --stage <stage> --json -`, with `open` {reason, decide, recommend}. The reply repeats its "Open".
-- The reply: pull requests and GIFs in stack order.
+- One line before each stage. The reply: a short recap, then pull requests and GIFs in stack order.
 
 ## Constraints
 
 - Stop only for a contradiction that ready finds, a file outside "Files", or a third failure of a stage.
-  A missing "Interface" entry, a rate limit, a missing remote, and a long run are not stops.
+  A missing "Interface" entry, a rate limit, a missing remote, and a long run are no stops.
 - "Merge over a failed gate" and "accept a failed review" are no answers.
 
 ## Done when
