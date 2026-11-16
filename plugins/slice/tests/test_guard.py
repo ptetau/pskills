@@ -17,7 +17,7 @@ spec.loader.exec_module(guard)
 IMPL = "slice:implementer"
 
 
-class Guard(unittest.TestCase):
+class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -33,6 +33,9 @@ class Guard(unittest.TestCase):
 
     def bash(self, command, agent=IMPL):
         return self.ok(agent, "Bash", command=command)
+
+
+class Guard(Base):
 
     # file tools
 
@@ -73,6 +76,9 @@ class Guard(unittest.TestCase):
             self.assertTrue(self.ok(agent, "Read", file_path="tests/test_a.py"), agent)
             self.assertTrue(self.ok(agent, "Write", file_path="tests/test_a.py"), agent)
             self.assertTrue(self.bash("cat tests/test_a.py", agent), agent)
+        for agent in ("slice:reviewer", "pdlc:builder", "", None):
+            self.assertTrue(self.ok(agent, "Read", file_path="src/a.py"), agent)
+            self.assertTrue(self.ok(agent, "Write", file_path="src/a.py"), agent)
 
     def test_config_names_the_folder(self):
         (self.root / "slice/config.md").write_text(fixture.CONFIG.replace("`tests`", "`spec/acceptance`"))
@@ -127,6 +133,118 @@ class Guard(unittest.TestCase):
         self.assertFalse(self.ok(IMPL, "Read", file_path="tests/a.py"))
         self.assertFalse(self.ok(IMPL, "Read", file_path="test/a.py"))
         self.assertTrue(self.ok(IMPL, "Read", file_path="src/a.py"))
+
+    def test_blocks_a_bare_star_that_lists_the_tests(self):
+        (self.root / "tests/test_a.py").write_text("x")
+        os.symlink(self.root / "tests", self.root / "src/tl")
+        for command in ("cat */*", "cat ./*/test_a.py", "cat src/tl/*", "cat src/tl/t*", "ls *", "cat src/*/*"):
+            self.assertFalse(self.bash(command), command)
+        self.assertTrue(self.bash("ls src/*.py"))
+        self.assertTrue(self.ok(IMPL, "Bash", cwd=self.root / "src", command="ls *.py"))
+
+    def test_a_bare_star_in_a_folder_with_no_tests_is_allowed(self):
+        (self.root / "src/pkg").mkdir()
+        for command in ("cat src/*", "cat src/pkg/*", "ls src/*/"):
+            self.assertTrue(self.bash(command), command)
+
+    def test_blocks_a_quoted_or_escaped_folder_name(self):
+        for command in ("cat 'tes''ts/test_a.py'", 'base64 tes"ts"/test_a.py', "cat te\\sts/test_a.py",
+                        'cat "tests"/test_a.py', "cat t''ests/a.py"):
+            self.assertFalse(self.bash(command), command)
+
+    def test_blocks_a_symlink_into_the_tests_from_bash(self):
+        (self.root / "tests/test_a.py").write_text("x")
+        os.symlink(self.root / "tests", self.root / "src/tl")
+        os.symlink(self.root / "tests", self.root / "lnk")
+        os.symlink(self.root / "tests/test_a.py", self.root / "flink")
+        for command in ("cat src/tl/test_a.py", "cat lnk/test_a.py", "cat flink", "head -1 ./lnk/test_a.py",
+                        "cd lnk && cat test_a.py", "cat < lnk/test_a.py", "python3 lnk/test_a.py"):
+            self.assertFalse(self.bash(command), command)
+        self.assertFalse(self.ok(IMPL, "Bash", cwd=self.root / "src", command="cat tl/test_a.py"))
+        self.assertTrue(self.bash("cat src/a.py"))
+
+    def test_tar_and_rsync_are_always_recursive(self):
+        for command in ("tar cf - . | cat", "tar -cf x.tar .", "rsync -a . /tmp/x", "zip -r x.zip ."):
+            self.assertFalse(self.bash(command), command)
+        for command in ("tar cf - src | cat", "rsync -a src/ /tmp/x", "tar tf x.tar"):
+            self.assertTrue(self.bash(command), command)
+
+    def test_blocks_the_runner_with_a_joined_flag(self):
+        for command in ("python3 -munittest discover", "PYTHONPATH=src python3 -munittest -v",
+                        "python3  -m  unittest", "python3 -m 'unittest'"):
+            self.assertFalse(self.bash(command), command)
+        self.assertTrue(self.bash("python3 -mjson.tool src/a.json"))
+
+
+class TestWriter(Base):
+    """The test writer never sees the app code: the source folders are hidden from it."""
+    AGENT = "slice:test-writer"
+
+    def setUp(self):
+        super().setUp()
+        (self.root / "slice/001-x").mkdir()
+
+    def w(self, tool, **tool_input):
+        return self.ok(self.AGENT, tool, **tool_input)
+
+    def wb(self, command, cwd=None):
+        return self.ok(self.AGENT, "Bash", cwd=cwd, command=command)
+
+    def test_blocks_every_file_tool_on_a_source_path(self):
+        for tool in ("Read", "Write", "Edit", "MultiEdit"):
+            self.assertFalse(self.w(tool, file_path="src/wordfreq.py"), tool)
+        self.assertFalse(self.w("NotebookEdit", notebook_path="src/a.ipynb"))
+        self.assertFalse(self.w("Read", file_path="tests/../src/a.py"))
+        self.assertFalse(self.w("Grep", pattern="x", path="src"))
+        self.assertFalse(self.w("Grep", pattern="x"))
+        self.assertFalse(self.w("Glob", pattern="**/*.py"))
+        self.assertFalse(self.w("Glob", pattern="src/*.py"))
+
+    def test_blocks_a_symlink_into_the_source(self):
+        os.symlink(self.root / "src", self.root / "tests/lnk")
+        self.assertFalse(self.w("Read", file_path="tests/lnk/a.py"))
+
+    def test_allows_the_spec_folder_and_the_tests(self):
+        self.assertTrue(self.w("Read", file_path="slice/001-x/interface.md"))
+        self.assertTrue(self.w("Read", file_path="slice/config.md"))
+        self.assertTrue(self.w("Read", file_path="tests/test_a.py"))
+        self.assertTrue(self.w("Write", file_path="tests/test_a.py"))
+        self.assertTrue(self.w("Grep", pattern="x", path="tests"))
+        self.assertTrue(self.w("Glob", pattern="tests/*.py"))
+
+    def test_writes_only_in_the_tests_folder(self):
+        self.assertFalse(self.w("Write", file_path="slice/001-x/interface.md"))
+        self.assertFalse(self.w("Edit", file_path="notes.md"))
+
+    def test_blocks_bash_that_names_the_source(self):
+        for command in ("cat src/wordfreq.py", "grep -rn x ./src", "cat s*/a.py", "cat 'sr''c'/a.py",
+                        "cat */a.py", "ls -R", "git diff", "cat " + str(self.root) + "/src/a.py"):
+            self.assertFalse(self.wb(command), command)
+        os.symlink(self.root / "src", self.root / "tests/lnk")
+        self.assertFalse(self.wb("cat tests/lnk/a.py"))
+
+    def test_allows_bash_in_the_spec_and_tests(self):
+        for command in ("cat slice/001-x/interface.md", "ls tests", "grep -rn x tests", "cat tests/test_a.py"):
+            self.assertTrue(self.wb(command), command)
+
+    def test_the_test_command_is_not_blocked_for_the_test_writer(self):
+        self.assertTrue(self.wb("python3 -m unittest discover -s tests"))
+
+    def test_the_source_folders_come_from_the_config(self):
+        (self.root / "slice/config.md").write_text(fixture.CONFIG.replace("`src`", "`app`, `lib`"))
+        self.assertFalse(self.w("Read", file_path="app/a.py"))
+        self.assertFalse(self.w("Read", file_path="lib/a.py"))
+        self.assertTrue(self.w("Read", file_path="src/a.py"))
+
+    def test_without_a_config_the_default_source_folders_apply(self):
+        (self.root / "slice/config.md").unlink()
+        self.assertFalse(self.w("Read", file_path="src/a.py"))
+        self.assertFalse(self.w("Read", file_path="lib/a.py"))
+        self.assertTrue(self.w("Read", file_path="tests/a.py"))
+
+    def test_the_implementer_still_reads_the_source(self):
+        self.assertTrue(self.ok(IMPL, "Read", file_path="src/a.py"))
+        self.assertTrue(self.ok(IMPL, "Write", file_path="src/a.py"))
 
 
 class Cli(unittest.TestCase):
