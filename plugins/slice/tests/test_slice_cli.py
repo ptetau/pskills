@@ -83,6 +83,12 @@ class Next(Base):
         self.p.slice("set", "S2", "planned")
         self.assertEqual(self.next(), "interface")
 
+    def test_red_slices_with_uncommitted_tests_need_the_interface_commit(self):
+        self.p.write("tests/test_more.py", "x = 1\n")
+        self.assertEqual(self.next(), "interface")
+        self.p.slice("commit", "interface")
+        self.assertEqual(self.next(), "build S1")
+
     def test_a_missing_domain_comes_first(self):
         (self.p.root / "slice/001-wordfreq/domain.md").unlink()
         self.assertEqual(self.next(), "domain")

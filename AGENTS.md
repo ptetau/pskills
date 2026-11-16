@@ -90,7 +90,6 @@ python3 bench/test_bench.py
 python3 scripts/pdlc_known_files.py --check
 (cd plugins/pdlc && python3 -m unittest discover -s tests)
 (cd plugins/slice && python3 -m unittest discover -s tests)
-(cd plugins/slice && python3 -m unittest discover -s tests)
 python3 blueprint/scripts/check_blueprint.py blueprint/references/notifications.blueprint.md \
   --design decompose/references/notifications.design.md
 ```

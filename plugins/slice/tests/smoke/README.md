@@ -9,7 +9,7 @@ The commits that the run made, oldest first:
 - "Slice S1: Count the words of a text" (trailer `Slice: S1`)
 - "Slice S2: List the most common words" (trailer `Slice: S2`)
 
-`slice.py status` ended with `next: all slices done`. S1 used 2 test rounds and 2 review
+The log is from before the next command (A10-A12) and the red-timing change; it was not re-run after them. At that time `slice.py status` ended with `next: all slices done`, which is now `next: done`. S1 used 2 test rounds and 2 review
 rounds. S2 used 1 test round and 1 review round.
 
 `guard-log.jsonl` is the log of the guard hook (`SLICE_GUARD_LOG`), with the paths

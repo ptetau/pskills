@@ -1,5 +1,6 @@
 """Tests for contracts.json: every hand-off between the prompts and the scripts is in the table,
 and each prompt follows the form (A1: Goal, Inputs, Outputs, Constraints, Done when)."""
+import importlib.util
 import json
 import re
 import unittest
@@ -152,6 +153,66 @@ class Prompts(unittest.TestCase):
     def test_the_numbered_spec_folder_is_the_only_home_of_the_spec_records(self):
         for label, _, path in prompts():
             self.assertNotRegex(path.read_text(), r"`slice/(spec|slices|interface|domain)\.md`", label)
+
+
+class Outputs(unittest.TestCase):
+    """The hand-offs that are not files: the output of `next`, the test names, and the output of `test`."""
+
+    def test_every_output_has_a_producer_a_form_and_a_consumer(self):
+        known = set(SKILLS) | set(AGENTS) | set(SCRIPTS)
+        for key, e in TABLE["outputs"].items():
+            self.assertIn(e["producer"], known, key)
+            self.assertTrue(e["form"].strip(), key)
+            self.assertTrue(e["consumers"], key)
+            for c in e["consumers"]:
+                self.assertIn(c, known, "%s: %s" % (key, c))
+
+    def test_the_forms_of_next_are_the_ones_the_script_prints(self):
+        forms = TABLE["outputs"]["slice.py next"]["forms"]
+        script = SCRIPTS["slice.py"].read_text()
+        body = script[script.index("def next_step"):script.index("def tests_dirty")]
+        for stage in TABLE["stages"][:-1]:
+            self.assertEqual(forms.count(stage), 1, stage)
+            self.assertIn('return "%s"' % stage, body)
+        self.assertIn('"build %s"', body)
+        self.assertIn('"stop %s: %s"', body)
+        self.assertIn('"done"', body)
+        self.assertEqual(len(forms), len(TABLE["stages"]) - 1 + 3)
+
+    def test_the_run_skill_names_each_form_of_next(self):
+        inputs = section((PLUGIN / "skills/run/SKILL.md").read_text(), "Inputs")
+        for form in TABLE["outputs"]["slice.py next"]["forms"]:
+            token = form.replace("Sn", "<Sn>").replace("reason", "<reason>")
+            self.assertIn("`%s`" % token, inputs, form)
+
+    def test_the_run_skill_uses_only_the_forms_of_next(self):
+        inputs = section((PLUGIN / "skills/run/SKILL.md").read_text(), "Inputs")
+        forms = TABLE["outputs"]["slice.py next"]["forms"]
+        allowed = {f.replace("Sn", "<Sn>").replace("reason", "<reason>") for f in forms}
+        line = inputs.strip().split("\n")[0]
+        for token in re.findall(r"`([^`]+)`", line.split("slice.py next`", 1)[1]):
+            self.assertIn(token, allowed)
+
+    def test_the_build_skill_takes_its_slice_from_the_build_line(self):
+        inputs = section((PLUGIN / "skills/build/SKILL.md").read_text(), "Inputs")
+        self.assertIn("`build Sn`", inputs)
+        self.assertIn("slice.py next", inputs)
+
+    def test_the_test_name_form_is_one_that_the_script_matches(self):
+        spec = importlib.util.spec_from_file_location("slice_cli", SCRIPTS["slice.py"])
+        cli = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cli)
+        name_form = TABLE["outputs"]["tests folder files"]["name form"]
+        self.assertEqual(name_form, "test_Sn_Rn_<what>")
+        self.assertTrue(cli.belongs("test_S1_R2_counts_words", "S1"))
+        self.assertFalse(cli.belongs("test_S10_R2_counts_words", "S1"))
+        self.assertIn("test_S1_R", (PLUGIN / "agents/test-writer.md").read_text())
+
+    def test_the_output_of_test_has_the_forms_the_script_prints(self):
+        script = SCRIPTS["slice.py"].read_text()
+        for text in ("%s: %d tests, %d passed, %d not passed", "no tests found for %s", "broken: %s", "PASS", "FAIL"):
+            self.assertIn(text, script)
+        self.assertIn("slice.py test", (PLUGIN / "agents/implementer.md").read_text())
 
 
 class Rules(unittest.TestCase):

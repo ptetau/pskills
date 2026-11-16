@@ -126,5 +126,40 @@
         "reviewer"
       ]
     }
+  },
+  "outputs": {
+    "slice.py next": {
+      "producer": "slice.py",
+      "form": "one line: `spec`, `plan`, `domain`, `interface`, `build Sn`, `stop Sn: reason`, or `done`",
+      "forms": [
+        "spec",
+        "plan",
+        "domain",
+        "interface",
+        "build Sn",
+        "stop Sn: reason",
+        "done"
+      ],
+      "consumers": [
+        "run",
+        "build"
+      ]
+    },
+    "tests folder files": {
+      "producer": "test-writer",
+      "form": "test files in the tests folder; each test name holds the slice ID as a whole word and the requirement, `test_Sn_Rn_<what>`, the form that `belongs()` of slice.py matches",
+      "name form": "test_Sn_Rn_<what>",
+      "consumers": [
+        "slice.py"
+      ]
+    },
+    "slice.py test": {
+      "producer": "slice.py",
+      "form": "a header `Sn: N tests, P passed, F not passed`, then one `PASS|FAIL|ERROR|SKIP <name>` line for each test of the slice with its failure message indented below; `no tests found for Sn` when no test name holds the ID; with --red, `broken:` lines for tests that fail to load",
+      "consumers": [
+        "implementer",
+        "build"
+      ]
+    }
   }
 }

@@ -233,7 +233,17 @@ def next_step(root):
     if any(r[1] == "planned" for r in rows) or read(root, "interface.md") is None:
         return "interface"
     open_ = [r for r in rows if r[1] != "done"]
+    if open_ and tests_dirty(root):
+        return "interface"
     return "build %s" % open_[0][0] if open_ else "done"
+
+
+def tests_dirty(root):
+    """True while the tests folder holds a change that no commit holds (the interface commit is due)."""
+    try:
+        return bool(dirty(root, folders(config(root).get("tests folder"))))
+    except Fail:
+        return False
 
 
 def cmd_next(root):

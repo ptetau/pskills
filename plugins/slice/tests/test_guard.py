@@ -122,6 +122,41 @@ class Guard(Base):
         self.assertFalse(self.bash("npm test"))
         self.assertTrue(self.bash("npm install"))
 
+    def test_blocks_every_known_runner_and_python_spelling(self):
+        for command in ("pytest", "pytest -q", "python3 -m pytest -q", "python -m unittest discover -v",
+                        "python3.12 -m unittest", "/usr/bin/python3 -m pytest", "python3 -m nose2",
+                        "python3 -m tox", "tox", "make test", "npm test", "npm run test", "yarn test",
+                        "pnpm test", "pnpm run test", "npx jest", "jest", "vitest run", "go test ./...",
+                        "cargo test", "cd src && pytest", "FOO=1 python3 -m pytest", "uv run pytest",
+                        "poetry run pytest", "bash -c 'pytest -q'", "py.test", "nose2"):
+            self.assertFalse(self.bash(command), command)
+
+    def test_allows_commands_that_only_look_like_runners(self):
+        for command in ("npm install", "make build", "go build ./...", "cargo build", "cat src/pytest_helpers.py",
+                        "python3 -m json.tool src/a.json", "grep pytest src/a.py", "echo test",
+                        "python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py test S1"):
+            self.assertTrue(self.bash(command), command)
+
+    def test_the_implementer_writes_only_in_the_source_folders(self):
+        for path in ("slice/001-x/slices.md", "slice/001-x/review/S1.md", "conftest.py", "slice/config.md",
+                     "setup.cfg"):
+            for tool in ("Write", "Edit", "MultiEdit"):
+                self.assertFalse(self.ok(IMPL, tool, file_path=path), "%s %s" % (tool, path))
+        self.assertTrue(self.ok(IMPL, "Edit", file_path="src/a.py"))
+        self.assertTrue(self.ok(IMPL, "Write", file_path=str(self.root / "src/sub/a.py")))
+        self.assertFalse(self.ok(IMPL, "Write", file_path="src/../conftest.py"))
+        self.assertTrue(self.ok(IMPL, "Read", file_path="slice/001-x/review/S1.md"))
+
+    def test_the_implementer_runs_only_the_test_subcommand_of_slice_py(self):
+        slice_py = "python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py"
+        for sub in ("commit S1", "commit interface", "set S1 done", "round S1 test", "next", "status"):
+            self.assertFalse(self.bash("%s %s" % (slice_py, sub)), sub)
+        self.assertFalse(self.bash("%s --root . set S1 done" % slice_py))
+        self.assertFalse(self.bash("cd src && %s --spec 001 commit S1" % slice_py))
+        self.assertTrue(self.bash("%s test S1" % slice_py))
+        self.assertTrue(self.bash("%s --spec 001 test S1" % slice_py))
+        self.assertTrue(self.bash("%s commit S1" % slice_py, agent="slice:test-writer"))
+
     def test_bash_runs_from_a_subfolder_resolve_against_the_cwd(self):
         self.assertFalse(self.ok(IMPL, "Bash", cwd=self.root / "src", command="cat ../tests/a.py"))
         self.assertTrue(self.ok(IMPL, "Bash", cwd=self.root / "src", command="cat a.py"))

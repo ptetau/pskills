@@ -19,7 +19,7 @@ Write app code that makes a slice work as the spec says. A reviewer must find it
 
 ## Outputs
 
-- Changes in the source folders only. Read by `slice.py test` and the reviewer.
+- Changes in the source folders only (a hook blocks other writes and every `slice.py` command but `test`). Read by `slice.py test` and the reviewer.
 - Reply: what changed, and what you could not fix.
 
 ## Constraints

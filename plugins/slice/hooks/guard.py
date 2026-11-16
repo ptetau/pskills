@@ -10,7 +10,9 @@ implementer, this guard blocks:
   - a Bash command that names the tests folder (in the raw text, or in a word after the
     shell removes quotes), a path that a symlink leads into it, a shell wildcard that can
     match it or list it, a recursive search from the project root, a git command that shows
-    file content with no path limit, and the project's own test runner.
+    file content with no path limit, the configured test runner and every known runner
+    (python, python3, and python3.X count the same), and any `slice.py` subcommand but `test`.
+  - Write, Edit, MultiEdit, and NotebookEdit outside the source folders.
 For the test writer, the same rules hide the source folders ("source folders:" line of the
 config; default: src, lib, app), including the stubs. The runner is not blocked for it.
 Every other agent, and the main session, is left alone. The check is by name and by
@@ -46,6 +48,13 @@ RECURSIVE = {"find", "tree", "rg", "ag", "ack", "du", "fd", "grep", "egrep", "fg
 # These recurse only with a flag. tar and rsync always recurse, and find and the rest too.
 NO_DEFAULT = ("tar", "rsync", "zip", "cp")  # with no folder word, these read nothing from here
 FLAGGED = ("grep", "egrep", "fgrep", "ls", "cp", "zip", "xargs")
+# Test runners that the implementer may not start, with or without the configured command.
+RUNNER_PROGRAMS = {"pytest", "py.test", "nose2", "nose", "tox", "jest", "vitest"}
+RUNNER_MODULES = {"pytest", "unittest", "nose2", "nose", "tox"}
+PACKAGE_MANAGERS = {"npm", "yarn", "pnpm"}
+WRAPPERS = {"npx", "uvx", "uv", "poetry", "pipenv", "pipx", "run", "exec", "env", "sudo", "time", "nice",
+            "command", "nohup", "xvfb-run"}
+SHELLS = {"sh", "bash", "zsh", "dash"}
 GIT_SHOWS = {"diff", "show", "log", "grep", "blame", "cat-file", "stash", "archive", "format-patch",
              "whatchanged", "difftool", "restore", "checkout"}
 
@@ -159,9 +168,12 @@ def file_decision(call, cwd, root, folders, agent=IMPLEMENTER):
         if hits(path, root_of, hidden):
             return False, "the %s may not use the %s (%s): %s" % (
                 label(agent), what(agent), os.path.relpath(path, root_of), HINTS[agent])
-    if agent == TEST_WRITER and tool in WRITES and not inside(base, root, test_folders(root)):
-        return False, "the test writer writes only in the tests folder (%s): %s" % (
-            os.path.relpath(base, root), HINTS[agent])
+    if tool in WRITES:
+        allowed = test_folders(root) if agent == TEST_WRITER else source_folders(root)
+        if not inside(base, root, allowed):
+            return False, "the %s writes only in the %s folders (%s): %s" % (
+                label(agent), "tests" if agent == TEST_WRITER else "source", os.path.relpath(base, root),
+                HINTS[agent])
     return True, ""
 
 
@@ -192,6 +204,37 @@ def runner_signature(command):
     elif len(tokens) > 1 and not tokens[1].startswith("-") and "/" not in tokens[1]:
         sig.append(tokens[1])
     return " ".join(sig)
+
+
+def is_python(program):
+    return re.match(r"^python[\d.]*$", os.path.basename(program)) is not None
+
+
+def starts_runner(tokens, depth=0):
+    """True when one command (a list of words) starts a known test runner."""
+    toks = [t for t in split_flags(tokens) if not re.match(r"^[A-Za-z_]\w*=", t)]
+    while toks and (os.path.basename(toks[0]) in WRAPPERS):
+        toks = toks[1:]
+    if not toks:
+        return False
+    prog = os.path.basename(toks[0])
+    rest = [t for t in toks[1:] if not t.startswith("-")]
+    if prog in RUNNER_PROGRAMS:
+        return True
+    if is_python(prog):
+        module = toks[toks.index("-m") + 1] if "-m" in toks[:-1] else ""
+        return module.split(".")[0] in RUNNER_MODULES
+    if prog == "make":
+        return bool(rest) and rest[0] in ("test", "tests", "check")
+    if prog in PACKAGE_MANAGERS:
+        return bool(rest) and (rest[0] in ("test", "t") or rest[:2] in (["run", "test"], ["run-script", "test"]))
+    if prog in ("go", "cargo"):
+        return bool(rest) and rest[0] == "test"
+    if prog in SHELLS and "-c" in toks[:-1] and depth < 3:
+        inner = toks[toks.index("-c") + 1]
+        return any(starts_runner(words(seg), depth + 1) for seg in re.split(r"\|\||&&|[|;&\n]", inner)
+                   if seg.strip())
+    return False
 
 
 def names_folder(text, folders):
@@ -257,7 +300,10 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
     if agent == IMPLEMENTER:
         sig = runner_signature(test_command(root))
         normal = " ".join(split_flags(tokens))
-        if sig and (sig in flat or sig in normal):
+        normal = re.sub(r"(?<![\w.\-])(?:[\w./-]*/)?python[\d.]*(?![\w.\-])", "python", normal)
+        flat_py = re.sub(r"(?<![\w.\-])(?:[\w./-]*/)?python[\d.]*(?![\w.\-])", "python", flat)
+        sig = re.sub(r"^(?:[\w./-]*/)?python[\d.]*", "python", sig)
+        if sig and (sig in flat_py or sig in normal):
             return False, "the implementer does not run the tests directly: %s" % hint
     # Paths, recursive search, and git content commands, judged by where they point.
     segments = [s for s in re.split(r"\|\||&&|[|;&\n]", command) if s.strip()]
@@ -275,6 +321,22 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
                 return False, "cd leads into the %s folder: %s" % (noun, hint)
             continue
         prog = os.path.basename(toks[0])
+        if agent == IMPLEMENTER and starts_runner(toks):
+            return False, "the implementer does not run the tests directly: %s" % hint
+        if agent == IMPLEMENTER and any(os.path.basename(t) == "slice.py" for t in toks):
+            after = toks[[os.path.basename(t) for t in toks].index("slice.py") + 1:]
+            sub = []
+            skip = False
+            for t in after:
+                if skip:
+                    skip = False
+                elif t in ("--root", "--spec"):
+                    skip = True
+                elif not t.startswith("-"):
+                    sub.append(t)
+                    break
+            if sub != ["test"]:
+                return False, "the implementer runs only `slice.py test`: %s" % hint
         if not any(os.path.basename(t) == "slice.py" for t in toks):
             for a in path_args(toks if "/" in toks[0] else toks[1:], here):
                 if inside(os.path.realpath(os.path.join(here, os.path.expanduser(a))), root, folders):
