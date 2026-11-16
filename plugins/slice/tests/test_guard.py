@@ -278,5 +278,34 @@ class Cli(unittest.TestCase):
             self.assertFalse(json.loads(open(log).readline())["allowed"])
 
 
+class SmokeLog(unittest.TestCase):
+    """The log of the smoke run: the implementer never read a test file, and the test writer
+    never read the app code."""
+    rows = [json.loads(l) for l in (Path(fixture.PLUGIN) / "tests/smoke/guard-log.jsonl").read_text().splitlines()]
+
+    def calls(self, agent):
+        return [r for r in self.rows if r["agent"] == agent]
+
+    def test_the_log_has_each_agent(self):
+        for agent in (IMPL, "slice:test-writer", "slice:reviewer"):
+            self.assertTrue(self.calls(agent), agent)
+
+    def test_no_implementer_call_names_the_tests(self):
+        for r in self.calls(IMPL):
+            text = " ".join(str(v) for k, v in (r["input"] or {}).items() if k in ("command", "file_path", "path"))
+            text = text.replace("slice.py test ", "slice.py RUN ")
+            self.assertNotRegex(text, r"(^|[^\w.-])tests?(/|\b)|test_\w+\.py", text[:80])
+            self.assertTrue(r["allowed"])
+
+    def test_the_test_writer_read_only_the_spec_folder_and_wrote_only_tests(self):
+        for r in self.calls("slice:test-writer"):
+            path = (r["input"] or {}).get("file_path", "")
+            if r["tool"] == "Write":
+                self.assertIn("<project>/tests/", path)
+            if r["tool"] == "Read":
+                self.assertIn("<project>/slice/", path)
+            self.assertNotIn("<project>/src", json.dumps(r["input"]))
+
+
 if __name__ == "__main__":
     unittest.main()
