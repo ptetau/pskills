@@ -2,6 +2,8 @@
 name: plan
 description: >
   Breaks a ratified spec into vertical slices: user stories that each cut through every layer of the app, in build order. Use when the user says "/slice:plan", or when the spec is ratified.
+model: claude-opus-5-5
+effort: medium
 ---
 
 # slice plan

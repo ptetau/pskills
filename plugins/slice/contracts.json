@@ -2,6 +2,7 @@
   "note": "Each hand-off between a prompt and a script. tests/test_contracts.py fails when a prompt or script names a file, status, or subcommand that this table does not define, or reads a file that no producer makes.",
   "subcommands": [
     "status",
+    "next",
     "set",
     "round",
     "test",

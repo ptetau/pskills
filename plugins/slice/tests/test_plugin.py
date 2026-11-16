@@ -44,6 +44,24 @@ class Layout(unittest.TestCase):
             fm = front_matter(PLUGIN / "agents" / (name + ".md"))
             self.assertEqual(fm["name"], name)
 
+    def test_each_agent_and_skill_is_bound_to_the_model_and_the_effort(self):
+        paths = sorted((PLUGIN / "agents").glob("*.md")) + sorted((PLUGIN / "skills").glob("*/SKILL.md"))
+        self.assertEqual(len(paths), 9)
+        for path in paths:
+            fm = front_matter(path)
+            self.assertEqual(fm.get("model"), "claude-opus-5-5", path)
+            self.assertEqual(fm.get("effort"), "medium", path)
+
+    def test_the_readme_names_the_model_and_the_effort(self):
+        text = (PLUGIN / "README.md").read_text()
+        self.assertIn("claude-opus-5-5", text)
+        self.assertIn("medium", text)
+
+    def test_the_smoke_readme_gives_the_claude_p_flags(self):
+        text = (PLUGIN / "tests/smoke/README.md").read_text()
+        self.assertIn('--permission-mode acceptEdits --allowedTools "Bash Edit Write Read Glob Grep Agent Task Skill"', text)
+        self.assertIn("--model claude-opus-5-5", text)
+
     def test_the_implementer_has_no_tests_in_its_text(self):
         text = (PLUGIN / "agents/implementer.md").read_text()
         self.assertIn("slice.py test", text)

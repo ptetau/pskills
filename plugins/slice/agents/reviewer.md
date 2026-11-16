@@ -3,7 +3,8 @@ name: reviewer
 description: >
   Reviews the code of one slice against its requirements, the architecture of the codebase, and the security guidelines. Writes findings marked major or minor. The slice build skill uses this agent.
 tools: Read, Write, Glob, Grep, Bash
-model: inherit
+model: claude-opus-5-5
+effort: medium
 ---
 
 ## Goal

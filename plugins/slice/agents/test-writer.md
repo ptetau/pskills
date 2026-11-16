@@ -3,7 +3,8 @@ name: test-writer
 description: >
   Writes the red acceptance tests of one slice, against the agreed interface only. A hook hides the app code and the stubs from it. The slice interface skill uses this agent.
 tools: Read, Write, Edit, Glob, Grep
-model: inherit
+model: claude-opus-5-5
+effort: medium
 ---
 
 ## Goal

@@ -2,6 +2,8 @@
 name: spec
 description: >
   Turns a specification, for one change or a full app, into a ratified, numbered spec folder. Finds each ambiguity that changes what gets built, and asks the user about it, one question at a time, with a recommended answer. Use when the user says "/slice:spec", or gives a specification to build.
+model: claude-opus-5-5
+effort: medium
 ---
 
 # slice spec

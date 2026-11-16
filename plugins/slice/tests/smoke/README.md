@@ -21,3 +21,15 @@ spec folder and wrote only in the tests folder.
 To repeat the run, copy `spec.md` to `slice/001-wordfreq/` in a git project that has a
 `slice/config.md`, then run `claude -p "/slice:run ..." --plugin-dir plugins/slice` with
 `SLICE_GUARD_LOG` set.
+
+## Flags for `claude -p`
+
+A smoke run has no one to answer a permission prompt. Run it with these flags:
+
+```
+claude -p "/slice:run ..." --plugin-dir plugins/slice --model claude-opus-5-5 \
+  --permission-mode acceptEdits --allowedTools "Bash Edit Write Read Glob Grep Agent Task Skill"
+```
+
+Without them, the run stops at the first edit or command. Use medium effort (the agents
+and skills set it).

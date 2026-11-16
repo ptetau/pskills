@@ -2,6 +2,8 @@
 name: domain
 description: >
   Models the domain and the boundary of the system before any interface exists, and shows that each numbered requirement is met by the model. Writes a design document only. Use when the user says "/slice:domain", or when the slices are planned.
+model: claude-opus-5-5
+effort: medium
 ---
 
 # slice domain

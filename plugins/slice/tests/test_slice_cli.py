@@ -41,12 +41,68 @@ class Status(Base):
         out = self.p.slice("status").stdout
         self.assertIn("stopped", out)
         self.assertIn("tests still fail", out)
-        self.assertIn("next: ask the user about S1", out)
+        self.assertIn("next: stop S1: tests still fail", out)
 
     def test_all_done(self):
         self.p.slice("set", "S1", "done")
         self.p.slice("set", "S2", "done")
-        self.assertIn("next: all slices done", self.p.slice("status").stdout)
+        self.assertIn("next: done", self.p.slice("status").stdout)
+
+
+class Next(Base):
+    def next(self, *args):
+        r = self.p.slice(*args, "next") if args else self.p.slice("next")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r.stdout.strip()
+
+    def test_prints_the_first_open_slice(self):
+        self.assertEqual(self.next(), "build S1")
+
+    def test_skips_a_done_slice(self):
+        self.p.slice("set", "S1", "done")
+        self.assertEqual(self.next(), "build S2")
+
+    def test_prints_done_when_all_are_done(self):
+        self.p.slice("set", "S1", "done")
+        self.p.slice("set", "S2", "done")
+        self.assertEqual(self.next(), "done")
+
+    def test_prints_the_stop_with_its_reason(self):
+        self.p.slice("set", "S2", "stopped", "--reason", "no review rounds left: 3 used")
+        self.assertEqual(self.next(), "stop S2: no review rounds left: 3 used")
+
+    def test_a_stop_comes_before_the_next_build(self):
+        self.p.slice("set", "S2", "stopped", "--reason", "x")
+        self.assertEqual(self.next(), "stop S2: x")
+
+    def test_prints_the_stage_before_the_slices(self):
+        self.p.write("slice/001-wordfreq/spec.md", "# Spec\n\nStatus: draft\n")
+        self.assertEqual(self.next(), "spec")
+
+    def test_planned_slices_need_the_interface_stage(self):
+        self.p.slice("set", "S2", "planned")
+        self.assertEqual(self.next(), "interface")
+
+    def test_a_missing_domain_comes_first(self):
+        (self.p.root / "slice/001-wordfreq/domain.md").unlink()
+        self.assertEqual(self.next(), "domain")
+
+    def test_no_slice_folder(self):
+        import tempfile, subprocess, sys
+        with tempfile.TemporaryDirectory() as d:
+            r = subprocess.run([sys.executable, str(fixture.SLICE), "next"], cwd=d, capture_output=True,
+                               text=True)
+        self.assertEqual((r.returncode, r.stdout.strip()), (0, "spec"))
+
+    def test_status_ends_with_the_same_line(self):
+        out = self.p.slice("status").stdout.strip().splitlines()[-1]
+        self.assertEqual(out, "next: " + self.next())
+
+    def test_prints_one_line_and_changes_nothing(self):
+        before = self.p.read("slice/001-wordfreq/slices.md")
+        r = self.p.slice("next")
+        self.assertEqual(len(r.stdout.strip().splitlines()), 1)
+        self.assertEqual(self.p.read("slice/001-wordfreq/slices.md"), before)
 
 
 class SpecFolders(Base):

@@ -20,7 +20,12 @@ time. A slice is a user story that cuts through every layer of the app.
 5. `/slice:build`: for each slice, `slice:implementer` writes the code. A hook keeps it out
    of the tests. A script runs the tests, `slice:reviewer` checks the requirements, the
    architecture, and the security, and a script commits the slice.
-6. `/slice:run`: run the stages in order, from the state in `slice/`.
+6. `/slice:run`: loop on `slice.py next`, which prints the next stage and slice, `done`, or the stop with its reason. Run and build say what they start and recap at the end.
+
+## Model
+
+Every agent and skill sets `model: claude-opus-5-5` and `effort: medium` in its frontmatter.
+Claude Code supports both fields for agents and skills.
 
 ## Records
 
@@ -32,7 +37,7 @@ use the folder with the highest number, or the one that `--spec` names. The temp
 
 ## Script and hook
 
-- `bin/slice.py`: `status`, `set`, `round`, `test` (with `--red`), and `commit`. Run it as
+- `bin/slice.py`: `status`, `next`, `set`, `round`, `test` (with `--red`), and `commit`. Run it as
   `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py`. It gives 5 test rounds and 3 review rounds
   for each slice. A slice commit has the subject "Slice Sn: <title>" and the trailer
   `Slice: Sn`. It holds the records and the source folders, not the tests. `commit

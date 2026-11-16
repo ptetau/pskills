@@ -2,6 +2,7 @@
 """slice: the state, test, and commit script of the slice plugin.
 
 Usage: slice.py [--root DIR] [--spec NNN|NAME] status
+       slice.py [--root DIR] [--spec NNN|NAME] next
        slice.py [--root DIR] [--spec NNN|NAME] set Sn STATUS [--reason TEXT]
        slice.py [--root DIR] [--spec NNN|NAME] round Sn test|review
        slice.py [--root DIR] [--spec NNN|NAME] test Sn [--red]
@@ -14,6 +15,8 @@ number, or the one that --spec names. The script keeps the round counts in slice
 Requirements (R1, R2, ...) and decisions (D1, D2, ...) are numbered in spec.md. A slice names
 its requirements on a `- Requirements:` line, and domain.md maps each requirement.
 
+"next" prints one line and changes nothing: the next stage (spec, plan, domain, interface), "build Sn",
+"stop Sn: <reason>" (a stopped slice: ask the user), or "done". "status" ends with "next: <that line>".
 "test" prints test names, pass or fail, and failure messages. It never prints test source.
 With --red, a test is red only when it fails with the not-implemented error of the stub.
 "commit interface" commits the records, the tests, and the stubs: one "Interface: NNN-name"
@@ -204,6 +207,40 @@ def domain_gaps(root, reqs):
     return gaps
 
 
+def next_step(root):
+    """The next stage, "build Sn", "stop Sn: reason", or "done". The one place that picks the order."""
+    if root is None or spec_name(root) is None:
+        return "spec"
+    text = read(root, "slices.md")
+    slices = sections(text) if text else []
+    reqs = requirement_ids(read(root, "spec.md"))
+    covered = set(re.findall(r"R\d+", " ".join(get_field(text[s[2]:s[3]], "Requirements") for s in slices)))
+    uncovered = [r for r in reqs if r not in covered]
+    gaps = domain_gaps(root, reqs)
+    rows = []
+    for sid, _, start, end in slices:
+        status, reason = status_of(text[start:end])
+        rows.append((sid, status, reason))
+    if spec_status(root) != "ratified":
+        return "spec"
+    if not slices or uncovered:
+        return "plan"
+    if gaps is None or gaps:
+        return "domain"
+    stopped = [r for r in rows if r[1] == "stopped"]
+    if stopped:
+        return "stop %s: %s" % (stopped[0][0], stopped[0][2] or "no reason recorded")
+    if any(r[1] == "planned" for r in rows) or read(root, "interface.md") is None:
+        return "interface"
+    open_ = [r for r in rows if r[1] != "done"]
+    return "build %s" % open_[0][0] if open_ else "done"
+
+
+def cmd_next(root):
+    print(next_step(root))
+    return 0
+
+
 def cmd_status(root):
     if root is None or spec_name(root) is None:
         print("no spec folder in slice/" if root else "no slice/ folder")
@@ -232,25 +269,7 @@ def cmd_status(root):
         print("%s %s%s  %s  [test rounds %s/%d, review rounds %s/%d]" % (
             sid, status, extra, title, get_field(block, "Test rounds") or 0, LIMITS["test"],
             get_field(block, "Review rounds") or 0, LIMITS["review"]))
-    if spec != "ratified":
-        nxt = "spec"
-    elif not slices or uncovered:
-        nxt = "plan"
-    elif gaps is None or gaps:
-        nxt = "domain"
-    else:
-        stopped = [r for r in rows if r[1] == "stopped"]
-        planned = [r for r in rows if r[1] == "planned"]
-        open_ = [r for r in rows if r[1] not in ("done", "stopped")]
-        if stopped:
-            nxt = "ask the user about %s" % stopped[0][0]
-        elif planned or not has_interface:
-            nxt = "interface"
-        elif open_:
-            nxt = "build %s" % open_[0][0]
-        else:
-            nxt = "all slices done"
-    print("next: %s" % nxt)
+    print("next: %s" % next_step(root))
     return 0
 
 
@@ -567,6 +586,8 @@ def main(argv):
     try:
         if cmd == "status" and not args:
             return cmd_status(root)
+        if cmd == "next" and not args:
+            return cmd_next(root)
         if root is None:
             raise Fail("no slice/ folder found", 2)
         if cmd == "set" and len(args) in (2, 4) and (len(args) == 2 or args[2] == "--reason"):

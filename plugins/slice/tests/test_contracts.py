@@ -158,6 +158,30 @@ class Rules(unittest.TestCase):
     def read(self, rel):
         return (PLUGIN / rel).read_text()
 
+    def test_next_is_in_the_table(self):
+        self.assertIn("next", TABLE["subcommands"])
+
+    def test_the_run_skill_loops_on_next_and_does_not_pick_the_order(self):
+        text = self.read("skills/run/SKILL.md")
+        self.assertIn("slice.py next", text)
+        self.assertNotIn("`next:` line", text)
+        self.assertRegex(text, r"(?i)does not (choose|pick)|never (choose|pick)|do not (choose|pick)")
+
+    def test_run_and_build_say_what_they_start_and_recap(self):
+        for rel in ("skills/run/SKILL.md", "skills/build/SKILL.md"):
+            text = self.read(rel)
+            self.assertRegex(text, r"(?i)says what starts|names the stage", rel)
+            self.assertRegex(text, r"(?i)recap", rel)
+
+    def test_the_interface_stage_runs_red_for_every_slice_before_any_build(self):
+        text = self.read("skills/interface/SKILL.md")
+        self.assertRegex(text, r"every slice")
+        self.assertRegex(text, r"before any build")
+
+    def test_a_slice_whose_tests_pass_at_build_time_goes_to_review(self):
+        text = self.read("skills/build/SKILL.md")
+        self.assertRegex(text, r"(?i)already pass.*review|review.*already pass")
+
     def test_the_reviewer_has_the_three_part_remit(self):
         text = self.read("agents/reviewer.md")
         for word in ("requirement", "architecture", "security", "OWASP", "Do not quote or show test code"):
