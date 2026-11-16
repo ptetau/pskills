@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 """slice: the state, test, and commit script of the slice plugin.
 
-Usage: slice.py [--root DIR] status
-       slice.py [--root DIR] set Sn STATUS [--reason TEXT]
-       slice.py [--root DIR] round Sn test|review
-       slice.py [--root DIR] test Sn [--red]
-       slice.py [--root DIR] commit Sn
+Usage: slice.py [--root DIR] [--spec NNN|NAME] status
+       slice.py [--root DIR] [--spec NNN|NAME] set Sn STATUS [--reason TEXT]
+       slice.py [--root DIR] [--spec NNN|NAME] round Sn test|review
+       slice.py [--root DIR] [--spec NNN|NAME] test Sn [--red]
+       slice.py [--root DIR] [--spec NNN|NAME] commit Sn|interface
 
-The records are in slice/ at the project root: config.md, spec.md, slices.md, interface.md,
-and review/Sn.md (the findings of the reviewer). The script keeps the round counts in
-slices.md.
+slice/config.md is at the top of slice/. Each spec has its own folder, slice/NNN-<name>/
+(for example slice/001-wordfreq/), with spec.md, domain.md, slices.md, interface.md, and
+review/Sn.md (the findings of the reviewer). The current spec is the folder with the highest
+number, or the one that --spec names. The script keeps the round counts in slices.md.
+Requirements (R1, R2, ...) and decisions (D1, D2, ...) are numbered in spec.md. A slice names
+its requirements on a `- Requirements:` line, and domain.md maps each requirement.
 
 "test" prints test names, pass or fail, and failure messages. It never prints test source.
+With --red, a test is red only when it fails with the not-implemented error of the stub.
+"commit interface" commits the records, the tests, and the stubs: one "Interface: NNN-name"
+commit. "commit Sn" commits the records and the source folders of one slice.
 Exit 0: ok. Exit 1: a refusal or a failing check. Exit 2: usage or record error.
 """
 import os
@@ -48,16 +54,54 @@ def find_root(start):
         path = parent
 
 
-def read(root, name):
+SPEC_ARG = None
+SPEC_DIR = re.compile(r"^(\d{3})-[A-Za-z0-9][\w-]*$")
+
+
+def spec_names(root):
     try:
-        with open(os.path.join(root, "slice", name), encoding="utf-8") as f:
-            return f.read()
+        names = os.listdir(os.path.join(root, "slice"))
     except OSError:
+        return []
+    return sorted(n for n in names if SPEC_DIR.match(n) and os.path.isdir(os.path.join(root, "slice", n)))
+
+
+def spec_name(root):
+    """The folder name of the current spec: the one that --spec names, else the highest number."""
+    names = spec_names(root)
+    if SPEC_ARG:
+        for n in names:
+            if n == SPEC_ARG or n.startswith(SPEC_ARG + "-"):
+                return n
+        raise Fail("no spec folder %s in slice/" % SPEC_ARG, 2)
+    return names[-1] if names else None
+
+
+def record_path(root, name):
+    if name == "config.md":
+        return os.path.join(root, "slice", name)
+    spec = spec_name(root)
+    return os.path.join(root, "slice", spec, name) if spec else None
+
+
+def shown(root, name):
+    spec = spec_name(root) or "NNN-<name>"
+    return "slice/%s" % name if name == "config.md" else "slice/%s/%s" % (spec, name)
+
+
+def read(root, name):
+    path = record_path(root, name)
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    except (OSError, TypeError):
         return None
 
 
 def write(root, name, text):
-    path = os.path.join(root, "slice", name)
+    path = record_path(root, name)
+    if path is None:
+        raise Fail("no spec folder: make slice/NNN-<name>/ first", 2)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
@@ -101,7 +145,7 @@ def sections(text):
 def load_slices(root):
     text = read(root, "slices.md")
     if text is None:
-        raise Fail("slice/slices.md is missing", 2)
+        raise Fail("%s is missing" % shown(root, "slices.md"), 2)
     return text, sections(text)
 
 
@@ -109,7 +153,7 @@ def find(text, sid):
     for s in sections(text):
         if s[0] == sid:
             return s
-    raise Fail("no slice %s in slice/slices.md" % sid, 2)
+    raise Fail("no slice %s in slices.md" % sid, 2)
 
 
 def get_field(block, name):
@@ -142,16 +186,42 @@ def write_status(root, sid, status, reason=""):
 
 # Commands
 
+def requirement_ids(text):
+    return re.findall(r"^[-*]\s+(R\d+)\b", text or "", re.M)
+
+
+def domain_gaps(root, reqs):
+    """The requirements that domain.md does not map. None when domain.md is missing."""
+    text = read(root, "domain.md")
+    if text is None:
+        return None
+    gaps = []
+    for r in reqs:
+        m = re.search(r"^[-*]\s+%s:[ \t]*(.*)$" % r, text, re.M)
+        value = m.group(1).strip() if m else ""
+        if not value or value.upper().startswith("GAP") or value.startswith("<"):
+            gaps.append(r)
+    return gaps
+
+
 def cmd_status(root):
-    if root is None:
-        print("no slice/ folder")
+    if root is None or spec_name(root) is None:
+        print("no spec folder in slice/" if root else "no slice/ folder")
         print("next: spec")
         return 0
     spec = spec_status(root)
     has_interface = read(root, "interface.md") is not None
     text = read(root, "slices.md")
     slices = sections(text) if text else []
+    reqs = requirement_ids(read(root, "spec.md"))
+    covered = set(re.findall(r"R\d+", " ".join(get_field(text[s[2]:s[3]], "Requirements") for s in slices)))
+    uncovered = [r for r in reqs if r not in covered]
+    gaps = domain_gaps(root, reqs)
+    print("spec folder: %s" % spec_name(root))
     print("spec: %s" % spec)
+    if reqs:
+        print("requirements: %d, uncovered by a slice: %s" % (len(reqs), ", ".join(uncovered) or "none"))
+    print("domain: %s" % ("missing" if gaps is None else "gaps %s" % ", ".join(gaps) if gaps else "mapped"))
     print("interface: %s" % ("present" if has_interface else "missing"))
     rows = []
     for sid, title, start, end in slices:
@@ -164,8 +234,10 @@ def cmd_status(root):
             get_field(block, "Review rounds") or 0, LIMITS["review"]))
     if spec != "ratified":
         nxt = "spec"
-    elif not slices:
+    elif not slices or uncovered:
         nxt = "plan"
+    elif gaps is None or gaps:
+        nxt = "domain"
     else:
         stopped = [r for r in rows if r[1] == "stopped"]
         planned = [r for r in rows if r[1] == "planned"]
@@ -263,27 +335,42 @@ def exception_text(block):
     return short(block[i:], 8)
 
 
+NAME_LINE = re.compile(r"^\S+ \([\w.]+\)$")
+
+
 def parse_unittest(output):
+    """Results from verbose unittest output. A test with a docstring prints its name line,
+    then `<docstring> ... status`: the name line gives the name."""
     lines = output.splitlines()
     results, pending = [], None
     for line in lines:
+        if line.startswith("="):
+            continue
+        if NAME_LINE.match(line):
+            pending = line
+            continue
         if pending is not None and unittest_status(line):
             results.append({"name": pending, "status": unittest_status(line), "message": ""})
             pending = None
             continue
         m = STATUS_LINE.match(line)
-        if m and not line.startswith("="):
-            st = unittest_status(m.group(2))
-            if st:
-                results.append({"name": m.group(1), "status": st, "message": ""})
-                pending = None
-            else:
-                pending = m.group(1)
+        if not m:
+            continue
+        st = unittest_status(m.group(2))
+        name = m.group(1) if NAME_LINE.match(m.group(1)) or pending is None else pending
+        if st:
+            results.append({"name": name, "status": st, "message": ""})
+            pending = None
+        else:
+            pending = name
     i = 0
     while i < len(lines):
         head = BLOCK_HEAD.match(lines[i])
         if head and i > 0 and lines[i - 1].startswith("=" * 10):
-            j = i + 2
+            j = i + 1
+            while j < len(lines) and not lines[j].startswith("-" * 10) and not lines[j].startswith("=" * 10):
+                j += 1  # the docstring lines, up to the separator
+            j += 1
             body = []
             while j < len(lines) and not lines[j].startswith("=" * 10) and not lines[j].startswith("-" * 10 + "-"):
                 body.append(lines[j])
@@ -319,7 +406,8 @@ def run_tests(root):
         junit = os.path.join(tmp, "results.xml")
         try:
             proc = subprocess.run(command.replace("{junit}", junit), shell=True, cwd=root,
-                                  capture_output=True, text=True, timeout=TIMEOUT)
+                                  capture_output=True, text=True, timeout=TIMEOUT,
+                                  env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
         except subprocess.TimeoutExpired:
             return [], 1, ["the test command ran longer than %d seconds" % TIMEOUT]
         output = proc.stdout + "\n" + proc.stderr
@@ -364,10 +452,12 @@ def cmd_test(root, sid, red):
             bad.append("passes already: %s" % r["name"])
         elif r["status"] == "skip":
             bad.append("skipped: %s" % r["name"])
-        elif r["status"] == "error" and not UNIMPLEMENTED.search(r["message"]):
-            bad.append("broken: %s\n  %s" % (r["name"], r["message"].replace("\n", "\n  ")))
-        else:
+        elif UNIMPLEMENTED.search(r["message"]):
             red_count += 1
+        elif r["status"] == "fail":
+            bad.append("does not reach the surface: %s\n  %s" % (r["name"], r["message"].replace("\n", "\n  ")))
+        else:
+            bad.append("broken: %s\n  %s" % (r["name"], r["message"].replace("\n", "\n  ")))
     # An error that no slice ID names, for example a test file that does not import.
     for r in results:
         if r["status"] == "error" and not re.search(r"(?<![0-9A-Za-z])[Ss]\d+(?![0-9])", r["name"]) \
@@ -384,7 +474,26 @@ def cmd_test(root, sid, red):
     return 0
 
 
+PYCACHE = [":(exclude,glob)**/__pycache__/**", ":(exclude,glob)**/*.pyc"]
+
+
+def stage(root, paths):
+    for p in paths:
+        if not os.path.exists(os.path.join(root, p)):
+            continue
+        if subprocess.run(["git", "check-ignore", "-q", "--", p], cwd=root).returncode == 0:
+            continue
+        git(root, "add", "--", p, *PYCACHE)
+
+
+def dirty(root, paths):
+    out = git(root, "status", "--porcelain", "--", *paths, *PYCACHE)
+    return [l for l in out.splitlines() if l.strip()]
+
+
 def cmd_commit(root, sid):
+    if sid == "interface":
+        return commit_interface(root)
     text, _ = load_slices(root)
     sec = find(text, sid)
     block = text[sec[2]:sec[3]]
@@ -399,22 +508,38 @@ def cmd_commit(root, sid):
     review = read(root, "review/%s.md" % sid) or ""
     major = re.findall(r"^\s*[-*]\s+\W*major\W*[:\-]", review, re.M | re.I)
     if major:
-        raise Fail("%s: %d open major finding(s) in slice/review/%s.md" % (sid, len(major), sid))
+        raise Fail("%s: %d open major finding(s) in %s" % (sid, len(major), shown(root, "review/%s.md" % sid)))
     cfg = config(root)
-    paths = ["slice"] + folders(cfg.get("tests folder")) + folders(cfg.get("source folders"))
-    paths = [p for p in paths if os.path.exists(os.path.join(root, p))]
+    tests = folders(cfg.get("tests folder"))
+    if tests and dirty(root, tests):
+        raise Fail("the tests folder has changes that no commit holds: run slice.py commit interface first")
     old = text
     write_status(root, sid, "done")
     try:
-        for p in paths:
-            ignored = subprocess.run(["git", "check-ignore", "-q", "--", p], cwd=root).returncode == 0
-            if not ignored:
-                git(root, "add", "--", p)
+        stage(root, ["slice"] + folders(cfg.get("source folders")))
         git(root, "commit", "-m", "Slice %s: %s" % (sid, title), "-m", "Slice: %s" % sid)
     except Fail:
         write(root, "slices.md", old)
         raise
     print("%s committed: Slice %s: %s" % (sid, sid, title))
+    return 0
+
+
+def commit_interface(root):
+    """One commit for the records, the tests, and the stubs of all slices, so that a slice
+    commit holds only its own code."""
+    text, secs = load_slices(root)
+    planned = [s[0] for s in secs if status_of(text[s[2]:s[3]])[0] == "planned"]
+    if planned:
+        raise Fail("the interface is not ready: %s still planned. Make each slice red first." % ", ".join(planned))
+    cfg = config(root)
+    stage(root, ["slice"] + folders(cfg.get("tests folder")) + folders(cfg.get("source folders")))
+    if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=root).returncode == 0:
+        print("interface: nothing to commit")
+        return 0
+    name = spec_name(root)
+    git(root, "commit", "-m", "Interface: %s" % name, "-m", "Slice: interface")
+    print("interface committed: Interface: %s" % name)
     return 0
 
 
@@ -426,9 +551,14 @@ def git(root, *args):
 
 
 def main(argv):
+    global SPEC_ARG
     root_arg = None
-    if argv[:1] == ["--root"] and len(argv) > 1:
-        root_arg, argv = argv[1], argv[2:]
+    while len(argv) > 1 and argv[0] in ("--root", "--spec"):
+        if argv[0] == "--root":
+            root_arg = argv[1]
+        else:
+            SPEC_ARG = argv[1]
+        argv = argv[2:]
     if not argv:
         print(USAGE, file=sys.stderr)
         return 2

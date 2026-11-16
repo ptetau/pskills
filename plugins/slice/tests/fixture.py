@@ -18,6 +18,8 @@ CONFIG = """# slice config
 - source folders: `src`
 """
 
+SPEC_DIR = "slice/001-wordfreq"
+
 SPEC = """# Spec: wordfreq
 
 Status: ratified
@@ -25,6 +27,19 @@ Status: ratified
 ## Decisions
 
 - D1 (case): words are lower case.
+
+## Requirements
+
+- R1 (count): the program counts the words of a text.
+- R2 (top): the program shows the most common words.
+"""
+
+DOMAIN = """# Domain: wordfreq
+
+## Requirement map
+
+- R1: Text, WordCount; boundary: the caller passes the text
+- R2: WordCount ranking; boundary: the caller reads the list
 """
 
 SLICES = """# Slices
@@ -34,6 +49,7 @@ SLICES = """# Slices
 - Story: As a user, I count the words of a text.
 - Acceptance:
   - Given "a b a", the count of "a" is 2.
+- Requirements: R1
 - Layers: core
 - Status: red
 - Test rounds: 0
@@ -44,6 +60,7 @@ SLICES = """# Slices
 - Story: As a user, I see the most common words.
 - Acceptance:
   - Given "a b a", the top word is "a".
+- Requirements: R2
 - Layers: core, cli
 - Status: red
 - Test rounds: 0
@@ -53,11 +70,11 @@ SLICES = """# Slices
 INTERFACE = "# Interface\n\n## S1\n\n- count(text) -> dict\n\n## S2\n\n- top(text, n) -> list\n"
 
 STUB = '''def count(text):
-    return None
+    raise NotImplementedError("not implemented")
 
 
 def top(text, n):
-    return None
+    raise NotImplementedError("not implemented")
 '''
 
 TESTS = '''import unittest
@@ -100,8 +117,9 @@ class Project:
         git(self.root, "config", "user.email", "t@example.com")
         git(self.root, "config", "user.name", "T")
         git(self.root, "config", "commit.gpgsign", "false")
-        for rel, text in {"slice/config.md": config, "slice/spec.md": SPEC, "slice/slices.md": slices,
-                          "slice/interface.md": INTERFACE, "src/wordfreq.py": stub,
+        for rel, text in {"slice/config.md": config, SPEC_DIR + "/spec.md": SPEC,
+                          SPEC_DIR + "/domain.md": DOMAIN, SPEC_DIR + "/slices.md": slices,
+                          SPEC_DIR + "/interface.md": INTERFACE, "src/wordfreq.py": stub,
                           "tests/test_wordfreq.py": tests}.items():
             self.write(rel, text)
         git(self.root, "add", "-A")
