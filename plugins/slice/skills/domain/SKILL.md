@@ -18,13 +18,13 @@ effort: medium
 
 ## Outputs
 
-- `slice/NNN-<name>/domain.md` from `${CLAUDE_PLUGIN_ROOT}/templates/domain.md`. Read by `interface`, the agents, and `slice.py status`, which reads each `- Rn:` line of the requirement map.
+- `slice/NNN-<name>/domain.md` from `${CLAUDE_PLUGIN_ROOT}/templates/domain.md`. Read by `interface`, the agents, and `slice.py status`, which reads each `- Rn:` line of the requirement map and each machine.
 - The reply names `/slice:interface`.
 
 ## Constraints
 
 - Write no code. This is a design document.
-- Give each object with a lifecycle a state machine: states, start, end, and transitions (trigger, guard, effect). Name each refused transition and its error. A requirement that changes state maps to its transitions.
+- Give each object with a lifecycle a state machine, as a `### Machine:` section in the form of the template. It holds States, Start, End, `Tn` transitions (trigger, guard, effect), and `Xn` refused transitions with their error. With no such object, write `- Machines: none`. A requirement that changes state cites its transitions (`Order.T2`), and each transition is cited.
 - Name the boundary: what is inside, what is outside, and each external actor.
 - On a gap, ask the user with `AskUserQuestion`, or fix the spec with the user.
 - Outputs give each reader exactly what it reads: see `contracts.json`.

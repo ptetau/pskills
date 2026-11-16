@@ -278,7 +278,7 @@ class TestCommand(Base):
         cfg = fixture.CONFIG.replace("PYTHONPATH=src python3 -m unittest discover -s tests -v",
                                      "python3 fake.py {junit}").replace("unittest\n- tests", "junit\n- tests")
         self.p.write("slice/config.md", cfg)
-        r = self.p.slice("test", "S1")
+        r = self.p.slice("test", "S1", "--full")
         self.assertEqual(r.returncode, 1)
         self.assertIn("PASS t::test_S1_a", r.stdout)
         self.assertIn("FAIL t::test_S1_b", r.stdout)
@@ -375,7 +375,7 @@ class Docstrings(Base):
     def test_a_failure_block_with_a_docstring_gives_its_message(self):
         self.p.write("tests/test_wordfreq.py", DOC_TESTS)
         self.p.write("src/wordfreq.py", "def count(text):\n    return {'a': 1}\n\n\ndef top(text, n):\n    return []\n")
-        r = self.p.slice("test", "S1")
+        r = self.p.slice("test", "S1", "--full")
         self.assertEqual(r.returncode, 1)
         self.assertIn("FAIL test_S1_counts_words", r.stdout)
         self.assertIn("AssertionError", r.stdout)
@@ -824,6 +824,404 @@ class SourceFiles(Base):
         self.p.slice("set", "S1", "review")
         self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
         self.assertNotIn("package.json", git(self.p.root, "show", "--name-only", "--format=").split())
+
+SLICES_CITED = fixture.SLICES.replace(
+    '  - Given "a b a", the count of "a" is 2.\n',
+    '  - Given "a b a", the count of "a" is 2. (R1)\n  - Given "", the count is empty. (R1)\n').replace(
+    '  - Given "a b a", the top word is "a".\n', '  - Given "a b a", the top word is "a". (R2)\n')
+WRONG = ("def count(text):\n    if text == 'boom':\n        raise ValueError('bad input')\n    return {}\n\n\n"
+         "def top(text, n):\n    return []\n")
+TESTS_CITED = (
+    "import unittest\n\nimport wordfreq\n\n\nclass W(unittest.TestCase):\n"
+    "    def test_001_S1_R1_counts_words(self):\n"
+    "        self.assertEqual(wordfreq.count('a b a'), {'a': 2, 'b': 1})\n\n"
+    "    def test_001_S1_R1_boom(self):\n        wordfreq.count('boom')\n\n"
+    "    def test_001_S1_plain(self):\n        self.assertEqual(wordfreq.count('x'), {'x': 1})\n\n"
+    "    def test_001_S2_R2_top_word(self):\n        self.assertEqual(wordfreq.top('a b a', 1), ['a'])\n")
+
+
+class Withheld(Base):
+    """The implementer sees the acceptance line, not the assertion: B."""
+
+    def setUp(self):
+        self.p = fixture.Project(slices=SLICES_CITED, tests=TESTS_CITED, stub=WRONG)
+        self.addCleanup(self.p.close)
+
+    def rounds(self, n):
+        for _ in range(n):
+            self.p.slice("round", "S1", "test")
+
+    def test_a_failed_assertion_prints_the_acceptance_lines_and_no_message(self):
+        out = self.p.slice("test", "S1").stdout
+        self.assertIn("FAIL test_001_S1_R1_counts_words", out)
+        self.assertIn('Given "a b a", the count of "a" is 2. (R1)', out)
+        self.assertIn('Given "", the count is empty. (R1)', out)
+        self.assertNotIn("AssertionError", out)
+        self.assertNotIn("'b': 1", out)
+        self.assertIn("message withheld", out)
+
+    def test_an_error_prints_its_type_and_message_at_once(self):
+        out = self.p.slice("test", "S1").stdout
+        self.assertIn("ERROR test_001_S1_R1_boom", out)
+        self.assertIn("ValueError: bad input", out)
+
+    def test_the_message_stays_withheld_for_two_rounds(self):
+        self.rounds(1)
+        self.assertNotIn("'b': 1", self.p.slice("test", "S1").stdout)
+
+    def test_the_message_shows_from_the_third_round(self):
+        self.rounds(2)
+        out = self.p.slice("test", "S1").stdout
+        self.assertIn("'b': 1", out)
+        self.assertNotIn("message withheld", out)
+
+    def test_full_prints_the_message_at_once(self):
+        r = self.p.slice("test", "S1", "--full")
+        self.assertIn("'b': 1", r.stdout)
+        self.assertEqual(r.returncode, 1)
+
+    def test_a_test_that_cites_no_requirement_prints_all_the_acceptance_lines_of_the_slice(self):
+        out = self.p.slice("test", "S1").stdout
+        plain = out[out.index("test_001_S1_plain"):]
+        self.assertIn('Given "", the count is empty. (R1)', plain)
+
+    def test_a_pass_prints_no_acceptance_line(self):
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        out = self.p.slice("test", "S1").stdout
+        self.assertNotIn("Given", out)
+
+    def test_the_regression_lines_keep_their_messages(self):
+        self.p.slice("set", "S2", "done")
+        out = self.p.slice("test", "S1").stdout
+        reg = out[out.index("regressions"):]
+        self.assertIn("FAIL test_001_S2_R2_top_word", reg)
+        self.assertIn("[] != ['a']", reg)
+
+    def test_a_junit_failure_is_withheld_and_a_junit_error_is_not(self):
+        runner = (
+            "import sys\n"
+            "open(sys.argv[1], 'w').write(\'\'\'<testsuites><testsuite>"
+            "<testcase classname=\"t\" name=\"test_001_S1_R1_b\"><failure message=\"expected 2, got 0\">"
+            "assert f(x) == 2</failure></testcase>"
+            "<testcase classname=\"t\" name=\"test_001_S1_R1_c\"><error message=\"boom\" type=\"RuntimeError\"/>"
+            "</testcase></testsuite></testsuites>\'\'\')\n")
+        self.p.write("fake.py", runner)
+        cfg = fixture.CONFIG.replace("PYTHONPATH=src python3 -m unittest discover -s tests -v",
+                                     "python3 fake.py {junit}").replace("unittest\n- tests", "junit\n- tests")
+        self.p.write("slice/config.md", cfg)
+        out = self.p.slice("test", "S1").stdout
+        self.assertIn("FAIL t::test_001_S1_R1_b", out)
+        self.assertNotIn("expected 2, got 0", out)
+        self.assertIn("RuntimeError", out)
+        self.assertIn("expected 2, got 0", self.p.slice("test", "S1", "--full").stdout)
+
+    def test_red_output_is_unchanged(self):
+        r = self.p.slice("test", "S1", "--red")
+        self.assertIn("does not reach the surface", r.stdout)
+        self.assertIn("{} != ", r.stdout)
+
+    def test_bad_arguments_are_a_usage_error(self):
+        self.assertEqual(self.p.slice("test", "S1", "--nope").returncode, 2)
+
+MACHINE_DOMAIN = """# Domain: shop
+
+## State machines
+
+### Machine: Order
+
+- States: Created, Paid, Shipped
+- Start: Created
+- End: Shipped
+- T1: Created -> Paid on pay [amount > 0] / mark paid
+- T2: Paid -> Shipped on ship / set the ship date
+- X1: Created on ship refused: NotPaid
+
+## Requirement map
+
+- R1: Order, Money; boundary: the caller pays. Order.T1, Order.T2
+- R2: Order.X1
+"""
+
+
+class Machines(Base):
+    """D: the state machines of domain.md have a form that the script reads."""
+
+    def domain(self, text=MACHINE_DOMAIN):
+        self.p.write("slice/001-wordfreq/domain.md", text)
+        return self.p.slice("status").stdout
+
+    def test_a_complete_machine_with_cited_transitions_is_mapped(self):
+        out = self.domain()
+        self.assertIn("domain: mapped", out)
+        self.assertIn("next: build S1", out)
+
+    def test_machines_none_passes_a_spec_with_no_lifecycle(self):
+        self.assertIn("domain: mapped", self.domain(fixture.DOMAIN))
+        self.assertIn("- Machines: none", fixture.DOMAIN)
+
+    def test_no_machine_and_no_machines_none_line_is_a_problem(self):
+        out = self.domain(fixture.DOMAIN.replace("- Machines: none\n", ""))
+        self.assertIn("domain: problems", out)
+        self.assertIn("Machines: none", out)
+        self.assertIn("next: domain", out)
+
+    def test_a_cited_transition_that_no_machine_defines_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("- R2: Order.X1", "- R2: Order.X1, Order.T9, Cart.T1"))
+        self.assertIn("R2 cites Order.T9", out)
+        self.assertIn("R2 cites Cart.T1", out)
+        self.assertIn("next: domain", out)
+
+    def test_a_transition_that_no_requirement_cites_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("Order.T1, Order.T2", "Order.T1"))
+        self.assertIn("Order.T2 is not cited", out)
+        self.assertNotIn("Order.T1 is not cited", out)
+        self.assertIn("next: domain", out)
+
+    def test_a_refused_transition_that_no_requirement_cites_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("- R2: Order.X1", "- R2: Order"))
+        self.assertIn("Order.X1 is not cited", out)
+
+    def test_a_machine_with_no_start_state_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("- Start: Created\n", ""))
+        self.assertIn("Order has no start state", out)
+        out = self.domain(MACHINE_DOMAIN.replace("- Start: Created", "- Start: Nowhere"))
+        self.assertIn("Order has no start state", out)
+
+    def test_an_unreachable_state_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("States: Created, Paid, Shipped", "States: Created, Paid, Shipped, Lost"))
+        self.assertIn("Order: state Lost is unreachable", out)
+        self.assertNotIn("state Paid is unreachable", out)
+
+    def test_a_refused_transition_does_not_make_a_state_reachable(self):
+        out = self.domain(MACHINE_DOMAIN.replace("States: Created, Paid, Shipped", "States: Created, Paid, Shipped, Lost")
+                          .replace("- X1: Created on ship refused: NotPaid", "- X1: Created on ship refused: NotPaid\n"
+                                   "- X2: Lost on ship refused: Gone"))
+        self.assertIn("Order: state Lost is unreachable", out)
+
+    def test_a_transition_that_names_an_unknown_state_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("-> Shipped on ship", "-> Sent on ship"))
+        self.assertIn("Order.T2: state Sent is not in States", out)
+
+    def test_the_machine_form_is_the_one_in_the_template(self):
+        template = (fixture.PLUGIN / "templates/domain.md").read_text()
+        self.assertIn("### Machine:", template)
+        out = self.domain(template)
+        self.assertNotIn("domain: mapped", out)
+
+    def test_two_machines_each_have_their_own_ids(self):
+        two = MACHINE_DOMAIN.replace("## Requirement map", "### Machine: Cart\n\n- States: Open, Closed\n"
+                                     "- Start: Open\n- End: Closed\n- T1: Open -> Closed on close\n\n## Requirement map"
+                                     ).replace("- R2: Order.X1", "- R2: Order.X1, Cart.T1")
+        self.assertIn("domain: mapped", self.domain(two))
+        self.assertIn("Cart.T1 is not cited", self.domain(two.replace(", Cart.T1", "")))
+
+    def test_requirement_gaps_still_come_first(self):
+        out = self.domain(MACHINE_DOMAIN.replace("- R2: Order.X1", "- R2: GAP"))
+        self.assertIn("domain: gaps R2", out)
+
+class Scan(Base):
+    """C: an optional security scanner that the config names."""
+
+    def config(self, line):
+        self.p.write("slice/config.md", fixture.CONFIG + line)
+
+    def test_no_line_means_none(self):
+        r = self.p.slice("scan")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("scan: none", r.stdout)
+
+    def test_none_is_none(self):
+        self.config("- security scan: none\n")
+        self.assertIn("scan: none", self.p.slice("scan").stdout)
+
+    def test_a_command_that_exits_0_is_ok(self):
+        self.config("- security scan: `python3 -c \"print('clean')\"`\n")
+        r = self.p.slice("scan")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("scan: ok", r.stdout)
+
+    def test_a_command_that_exits_non_zero_fails_with_a_short_result(self):
+        self.config("- security scan: `python3 -c \"import sys; print('B101 issue in x.py'); sys.exit(3)\"`\n")
+        r = self.p.slice("scan")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("scan: failed (exit 3)", r.stdout)
+        self.assertIn("B101 issue in x.py", r.stdout)
+
+    def test_the_result_is_short(self):
+        self.config("- security scan: `python3 -c \"print('x' * 5000); import sys; sys.exit(1)\"`\n")
+        self.assertLess(len(self.p.slice("scan").stdout), 1500)
+
+    def test_the_command_runs_in_the_project_folder_and_gets_no_argument_from_the_records(self):
+        self.config("- security scan: `python3 -c \"import os, sys; sys.exit(0 if os.path.isdir('slice') and len(sys.argv) == 1 else 1)\"`\n")
+        self.assertEqual(self.p.slice("scan").returncode, 0)
+
+    def test_a_missing_scanner_is_a_failure(self):
+        self.config("- security scan: `no-such-scanner-xyz src`\n")
+        r = self.p.slice("scan")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("scan: failed", r.stdout)
+
+    def test_a_scan_that_runs_too_long_fails(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("slice_cli_scan", fixture.SLICE)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        self.config("- security scan: `python3 -c \"import time; time.sleep(5)\"`\n")
+        mod.SCAN_TIMEOUT = 1
+        result = mod.run_scan(self.p.root)
+        self.assertFalse(result[0])
+        self.assertIn("longer than 1 seconds", result[2])
+
+    def test_commit_refuses_when_the_scan_fails(self):
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.config("- security scan: `python3 -c \"import sys; sys.exit(1)\"`\n")
+        self.p.slice("set", "S1", "review")
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("security scan fails", r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "base")
+        self.assertIn("- Status: review\n", self.p.read("slice/001-wordfreq/slices.md"))
+
+    def test_commit_goes_through_when_the_scan_passes_or_is_none(self):
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.config("- security scan: `python3 -c \"pass\"`\n")
+        self.p.slice("set", "S1", "review")
+        self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
+
+    def test_the_scan_is_one_of_the_subcommands_in_the_usage(self):
+        self.assertEqual(self.p.slice("scan", "extra").returncode, 2)
+
+TESTS_FINDING = "# Review S1 (tests)\n\n- major: [tests] test_S1_counts_words passes a version that counts only the first word. Assert two words.\n"
+TESTS_STRONGER = fixture.TESTS.replace('self.assertEqual(wordfreq.count("a b a"), {"a": 2, "b": 1})',
+                                       'self.assertEqual(wordfreq.count("a b a c"), {"a": 2, "b": 1, "c": 1})')
+
+
+class TestFindings(Base):
+    """A: the reviewer also judges the tests. Test findings are in review/Sn.tests.md and go to the test writer."""
+    FILE = "slice/001-wordfreq/review/S1.tests.md"
+
+    def ready(self, finding=TESTS_FINDING):
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.p.slice("set", "S1", "review")
+        if finding is not None:
+            self.p.write(self.FILE, finding)
+
+    def fixed(self, tests=TESTS_STRONGER):
+        self.p.write("tests/test_wordfreq.py", tests)
+
+    def test_commit_refuses_an_open_major_tests_finding(self):
+        self.ready()
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("S1.tests.md", r.stderr)
+        self.assertIn("major", r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "base")
+
+    def test_a_minor_tests_finding_and_none_do_not_block(self):
+        self.ready("# Review S1 (tests)\n\n- minor: [tests] test_S1_empty_text name is vague.\n")
+        self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
+        self.p.write(self.FILE, "# Review S1 (tests)\n\nnone\n")
+        self.assertEqual(self.p.slice("test", "S1").returncode, 0)
+
+    def test_the_code_findings_file_is_still_counted_on_its_own(self):
+        self.ready("# Review S1 (tests)\n\nnone\n")
+        self.p.write("slice/001-wordfreq/review/S1.md", "# Review S1\n\n- major: [security] x.py:1 bad\n")
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("review/S1.md", r.stderr)
+
+    def test_commit_tests_commits_the_fixed_tests_and_keeps_the_slice_in_review(self):
+        self.ready()
+        self.fixed()
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "Tests S1: Count words")
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%b").strip().splitlines()[-1], "Slice: S1")
+        files = git(self.p.root, "show", "--name-only", "--format=").split()
+        self.assertIn("tests/test_wordfreq.py", files)
+        self.assertIn(self.FILE, files)
+        self.assertIn("- Status: review\n", self.p.read("slice/001-wordfreq/slices.md").split("## S2")[0])
+        status = git(self.p.root, "status", "--porcelain")
+        self.assertNotIn("tests/", status)
+        self.assertNotIn("slice/", status)
+
+    def test_commit_tests_holds_no_app_code(self):
+        self.ready()
+        self.fixed()
+        self.p.slice("commit", "tests", "S1")
+        self.assertNotIn("src/wordfreq.py", git(self.p.root, "show", "--name-only", "--format=").split())
+
+    def test_a_fixed_test_that_fails_by_assertion_sends_the_slice_back_to_building(self):
+        self.ready()
+        self.p.write("src/wordfreq.py", fixture.GOOD.replace("dict(Counter(text.split()))", "{'a': 2, 'b': 1}"))
+        self.fixed()
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("building", r.stdout)
+        self.assertIn("- Status: building\n", self.p.read("slice/001-wordfreq/slices.md").split("## S2")[0])
+
+    def test_a_fixed_test_of_a_behaviour_that_is_not_built_fails_with_the_stub_error_and_is_accepted(self):
+        self.ready()
+        self.p.write("src/wordfreq.py", fixture.STUB)
+        self.fixed()
+        self.assertEqual(self.p.slice("commit", "tests", "S1").returncode, 0)
+
+    def test_a_fixed_test_that_does_not_load_is_refused(self):
+        self.ready()
+        self.fixed("import unittest\nimport nothing_here\n\n\nclass Words(unittest.TestCase):\n"
+                   "    def test_S1_counts_words(self):\n        pass\n")
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("broken", r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "base")
+
+    def test_a_skipped_test_is_refused(self):
+        self.ready()
+        self.fixed(TESTS_STRONGER.replace("    def test_S1_counts_words", "    @unittest.skip('later')\n    def test_S1_counts_words"))
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("skipped", r.stderr)
+
+    def test_commit_tests_refuses_when_no_tests_finding_is_open(self):
+        self.ready(None)
+        self.fixed()
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("no tests finding", r.stderr)
+        self.p.write(self.FILE, "# Review S1 (tests)\n\nnone\n")
+        self.assertEqual(self.p.slice("commit", "tests", "S1").returncode, 1)
+
+    def test_commit_tests_refuses_when_the_tests_did_not_change(self):
+        self.ready()
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("no change", r.stderr)
+
+    def test_commit_tests_works_only_on_a_slice_in_review(self):
+        self.ready()
+        self.fixed()
+        self.p.slice("set", "S1", "building")
+        r = self.p.slice("commit", "tests", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("review", r.stderr)
+
+    def test_commit_tests_needs_a_slice(self):
+        self.assertEqual(self.p.slice("commit", "tests").returncode, 2)
+        self.assertEqual(self.p.slice("commit", "tests", "S9").returncode, 2)
+
+    def test_commit_of_the_slice_still_refuses_uncommitted_tests_and_names_the_way(self):
+        self.ready("# Review S1 (tests)\n\nnone\n")
+        self.fixed()
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("commit interface", r.stderr)
+
+    def test_next_keeps_the_build_while_a_tests_finding_is_open(self):
+        self.ready()
+        self.fixed()
+        self.assertEqual(self.p.slice("next").stdout.strip(), "build S1")
+        self.p.write(self.FILE, "# Review S1 (tests)\n\nnone\n")
+        self.assertEqual(self.p.slice("next").stdout.strip(), "interface")
 
 
 if __name__ == "__main__":

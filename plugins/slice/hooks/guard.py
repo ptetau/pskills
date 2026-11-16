@@ -12,6 +12,7 @@ implementer, this guard blocks:
     match it or list it, a recursive search from the project root, a git command that shows
     file content with no path limit, the configured test runner and every known runner
     (python, python3, and python3.X count the same), and any `slice.py` subcommand but `test`.
+  - `slice.py test` with --full or --red (they print the failure messages that the script withholds).
   - Write, Edit, MultiEdit, and NotebookEdit outside the source folders and the source files.
 The source files are the "source files:" line of the config: single paths and globs, relative
 to the project root (`package.json, migrations/**`; `*` stays in one folder, `**` crosses
@@ -19,6 +20,9 @@ folders). A path in the tests folder or in slice/ is never one of them.
 For the test writer, the same rules hide the source folders ("source folders:" line of the
 config; default: src, lib, app) and the source files, including the stubs. The runner is not
 blocked for it.
+The review files are hidden the same way, each from the other side: the implementer does not see
+slice/NNN-<name>/review/Sn.tests.md (the test findings), and the test writer does not see
+review/Sn.md (the code findings). The reviewer writes both.
 Every other agent, and the main session, is left alone. The check is by name and by
 resolved path, so a command that builds the folder name at run time gets through. That is a
 known limit.
@@ -187,8 +191,21 @@ def glob_folders(base, pattern):
     return out
 
 
+def review_files(agent, root):
+    """The review files that this agent may not see, as paths relative to the project: the test
+    findings (review/Sn.tests.md) for the implementer, the code findings (review/Sn.md) for the
+    test writer. Only the files that exist now: the reviewer writes them before another agent reads."""
+    out = []
+    for path in sorted(glob.glob(os.path.join(root, "slice", "*", "review", "*.md"))):
+        tests_file = path.endswith(".tests.md")
+        if tests_file == (agent == IMPLEMENTER):
+            out.append(os.path.relpath(path, root).replace(os.sep, "/"))
+    return out
+
+
 def hidden_folders(agent, root):
-    return test_folders(root) if agent == IMPLEMENTER else source_folders(root) + source_file_folders(root)
+    base = test_folders(root) if agent == IMPLEMENTER else source_folders(root) + source_file_folders(root)
+    return base + review_files(agent, root)
 
 
 def label(agent):
@@ -196,7 +213,7 @@ def label(agent):
 
 
 def what(agent):
-    return "tests" if agent == IMPLEMENTER else "app code"
+    return "tests" if agent == IMPLEMENTER else "app code"  # the review files of each side count too
 
 
 def file_decision(call, cwd, root, folders, agent=IMPLEMENTER):
@@ -337,6 +354,8 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
     command = (call.get("tool_input") or {}).get("command") or ""
     flat = " ".join(command.split())
     hint, noun = HINTS[agent], what(agent)
+    if agent == IMPLEMENTER and ".tests.md" in command:
+        return False, "the implementer does not read the test findings: %s" % hint
     tops = [os.path.realpath(os.path.join(root, f)) for f in folders]
     tokens = words(command)
     # The folder name, in the raw text and in each word after the shell removes quotes.
@@ -388,6 +407,8 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
                     break
             if sub != ["test"]:
                 return False, "the implementer runs only `slice.py test`: %s" % hint
+            if any(t in ("--full", "--red") for t in after):
+                return False, "the implementer may not use --full or --red: they print the withheld messages: %s" % hint
         if not any(os.path.basename(t) == "slice.py" for t in toks):
             for a in path_args(toks if "/" in toks[0] else toks[1:], here):
                 target = os.path.realpath(os.path.join(here, os.path.expanduser(a)))

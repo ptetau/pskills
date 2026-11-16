@@ -6,13 +6,18 @@ time. A slice is a user story through every layer.
 ## Flow
 
 1. `/slice:spec`: find the ambiguities in the specification and ask the user about each,
-   one question at a time. The interview recommends a stack if none is fixed. The user
-   ratifies the result in `slice/NNN-<name>/spec.md`, with numbered requirements (R1) and
-   decisions (D1).
+   one question at a time. The interview recommends a stack and a security scanner if none
+   is fixed. The user ratifies the result in `slice/NNN-<name>/spec.md`, with numbered
+   requirements (R1) and decisions (D1).
 2. `/slice:plan`: break the spec into vertical slices in `slices.md`. Each slice names its
    requirements.
 3. `/slice:domain`: model the entities, the state machines, and the boundary in
-   `domain.md`. Each requirement must map to the model. It holds no code.
+   `domain.md`. Each requirement must map to the model. It holds no code. A state machine is a
+   `### Machine: <Object>` section with `- T1: <from> -> <to> on <trigger> [<guard>] / <effect>`
+   and `- X1: <from> on <trigger> refused: <error>` lines, or the line `- Machines: none`. A
+   requirement cites transitions as `Order.T1`. `status` reports an undefined citation, an uncited
+   transition, a machine with no start state, and an unreachable state; `next` prints `domain` until
+   none is left.
 4. `/slice:interface`: design one test surface for all the slices. The user approves it
    (`Status: approved`). Create it as stubs that fail with the not-implemented error of the
    stack. A `- Changed:` line per slice lists the requirements of existing entries that
@@ -21,37 +26,58 @@ time. A slice is a user story through every layer.
    stubs go in one "Interface: NNN-name" commit.
 5. `/slice:build`: for the slice that `next` names, `slice:implementer` writes the code. A hook keeps it out
    of the tests. A script runs the tests, `slice:reviewer` checks the requirements, the
-   architecture, and the security, and a script commits the slice.
+   architecture, the security, and the tests, and a script commits the slice. The reviewer
+   writes code findings to `review/Sn.md` (for the implementer) and test findings to
+   `review/Sn.tests.md` (for `slice:test-writer`): each acceptance line needs a test that fails
+   on a plausible wrong version, and no test may assert what the spec does not say. A test fix
+   is one "Tests Sn: <title>" commit (`slice.py commit tests Sn`).
 6. `/slice:run`: loop on `slice.py next` (a stage, `build Sn`, `stop Sn: reason`, or `done`). Run and build recap.
    After the user answers a stop, `slice.py resume Sn` restarts the slice.
 
 ## Model
 
-Every agent and skill sets `model: claude-opus-5-5` and `effort: medium` in its frontmatter.
-Claude Code supports both fields for agents and skills. The bindings have limits: `CLAUDE_CODE_EFFORT_LEVEL` overrides `effort`, and a skill's `model` lasts one turn and can be dropped by an `availableModels` allowlist or auto mode.
+Every agent and skill sets `model: claude-opus-5-5` and `effort: medium` in its frontmatter,
+except the reviewer, which sets `effort: high`. Claude Code supports both fields. The bindings have limits:
+`CLAUDE_CODE_EFFORT_LEVEL` overrides `effort`, and a skill's `model` lasts one turn and can be
+dropped by an `availableModels` allowlist or auto mode.
 
 ## Records
 
 `slice/config.md` (stack, test command, tests folder, source folders, optional `source files`
-such as `package.json, migrations/**`) is at the top of `slice/`. Each spec has a folder, `slice/NNN-<name>/`,
-with `spec.md`, `slices.md`, `domain.md`, `interface.md`, and `review/Sn.md`. The scripts
-use the highest number, or the folder that `--spec` names. The templates are in
-`templates/`. `contracts.json` lists each hand-off between the prompts and the scripts.
+such as `package.json, migrations/**`, and optional `security scan`) is at the top of `slice/`.
+Each spec has a folder, `slice/NNN-<name>/`, with `spec.md`, `slices.md`, `domain.md`,
+`interface.md`, `review/Sn.md`, and `review/Sn.tests.md`. The scripts use the highest number, or
+the folder that `--spec` names. The templates are in `templates/`. `contracts.json` lists each
+hand-off between the prompts and the scripts.
 
 ## Script and hook
 
-- `bin/slice.py`: `status`, `next`, `set`, `round`, `resume`, `test` (with `--red`), and `commit`. Run it with
+- `bin/slice.py`: `status`, `next`, `set`, `round`, `resume`, `test`, `scan`, and `commit`. Run it with
   `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py`. It gives 5 test rounds and 3 review rounds
   for each slice. A slice commit has the subject "Slice Sn: <title>" and the trailer
   `Slice: Sn`. It holds the records, the source folders, and the source files, not the tests.
   `commit interface` holds the tests and the stubs of all slices, so a slice commit stays
-  small. `commit Sn` refuses when a done slice's test, or a test that no slice owns, fails.
-  `test Sn` lists these regressions.
+  small. `commit Sn` refuses when a done slice's test, or a test that no slice owns, fails, when
+  the security scan fails, and on an open `major` line in `review/Sn.md` or `review/Sn.tests.md`.
+  `test Sn` lists the regressions.
+- `test Sn` prints, for each failing test, the acceptance lines of the requirement that its name
+  cites. An assertion failure keeps its message back until the slice has used 2 test rounds, so the
+  implementer works from the spec and not from the expected value. An error (an exception, an
+  import error) prints at once. `test Sn --full` prints every message.
+- `commit tests Sn` commits a test fix (the tests folder and the records). It needs the slice in
+  `review`, an open tests finding, and a change in the tests folder. Each test of the slice must
+  run: a pass, a failing assertion, or the not-implemented error. A failing test sends the slice
+  back to `building`. A test fix is part of the review round that found it.
+- `slice.py scan` runs the optional config line `- security scan: <command>` (for example
+  `bandit -q -r src`, `semgrep --error --config auto src`, `npm audit --audit-level=high`; default
+  `none`). It exits 1 when the command fails or runs over 300 seconds. The reviewer runs it and
+  reports a failure as a major security finding.
 - `hooks/guard.py`: blocks the implementer from every read, search, edit, and command that
   reaches the tests folder, also through quotes, wildcards, and symlinks, from every test
-  runner, and from `slice.py` except `test`. It limits its writes to the source folders and
-  source files. It blocks the test writer from both, and limits its writes to the tests folder. The
-  check is by name and by path, so it is a guard, not a sandbox.
+  runner, from `test --full` and `test --red`, and from `slice.py` except `test`. It limits its writes
+  to the source folders and source files, and hides `review/Sn.tests.md` from it. It blocks the
+  test writer from the source folders, the source files, and `review/Sn.md`, and limits its writes
+  to the tests folder. The check is by name and by path, so it is a guard, not a sandbox.
 
 ## Test names
 

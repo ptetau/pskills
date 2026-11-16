@@ -29,17 +29,20 @@ def section(text, name):
 def md_names(text):
     """The markdown file names that a prompt uses as records or templates."""
     text = re.sub(r"\$\{CLAUDE_PLUGIN_ROOT\}/templates/\w+\.md", "", text)
-    return set(re.findall(r"(?<![\w/.-])((?:slice/)?(?:NNN-<name>/)?(?:review/)?[\w<>-]+\.md)\b", text)) - {"SKILL.md"}
+    return set(re.findall(r"(?<![\w/.-])((?:slice/)?(?:NNN-<name>/)?(?:review/)?[\w<>-]+(?:\.tests)?\.md)\b", text)) - {"SKILL.md"}
 
 
 def key_of(name):
     """The table key of a file name as a prompt writes it."""
     base = name.split("/")[-1]
+    if base.endswith(".tests.md"):
+        return "review/Sn.tests.md"
     return "review/Sn.md" if base in ("Sn.md", "<Sn>.md") or "review/" in name else base
 
 
 def files_by_base():
-    return {"review/Sn.md" if "/review/" in k else k.split("/")[-1]: k for k in TABLE["files"]}
+    return {("review/Sn.tests.md" if k.endswith(".tests.md") else "review/Sn.md") if "/review/" in k
+            else k.split("/")[-1]: k for k in TABLE["files"]}
 
 
 class Table(unittest.TestCase):
@@ -125,9 +128,10 @@ class Prompts(unittest.TestCase):
         texts = {name: path.read_text() for _, name, path in prompts()}
         for key, e in TABLE["files"].items():
             base = key.split("/")[-1].replace(".md", "")
+            pattern = r"review/\S*\.tests\.md" if base == "Sn.tests" else r"review/" if base == "Sn" else r"\b%s\b" % re.escape(base)
             for who in [e["producer"]] + e["consumers"]:
                 if who in texts:
-                    self.assertRegex(texts[who], r"\b%s\b" % re.escape(base) if base != "Sn" else r"review/", "%s: %s" % (key, who))
+                    self.assertRegex(texts[who], pattern, "%s: %s" % (key, who))
 
     def test_the_script_calls_use_known_subcommands_and_statuses(self):
         for label, _, path in prompts():
@@ -246,10 +250,27 @@ class Rules(unittest.TestCase):
         text = self.read("skills/build/SKILL.md")
         self.assertRegex(text, r"(?i)already pass.*review|review.*already pass")
 
-    def test_the_reviewer_has_the_three_part_remit(self):
+    def test_the_reviewer_has_the_four_part_remit(self):
         text = self.read("agents/reviewer.md")
-        for word in ("requirement", "architecture", "security", "OWASP", "Do not quote or show test code"):
+        for word in ("requirement", "architecture", "security", "OWASP", "Do not quote or show test code",
+                     "four parts", "wrong version", "[tests]", "review/<Sn>.tests.md", "more than the spec says"):
             self.assertIn(word, text)
+
+    def test_the_test_findings_have_their_own_file_and_route(self):
+        entry = TABLE["files"]["slice/NNN-<name>/review/Sn.tests.md"]
+        self.assertEqual(entry["producer"], "reviewer")
+        self.assertIn("test-writer", entry["consumers"])
+        self.assertNotIn("implementer", entry["consumers"])
+        self.assertIn("- major: [tests]", entry["form"])
+        self.assertIn("commit tests Sn", TABLE["outputs"]["slice.py commit tests"]["form"])
+        build = self.read("skills/build/SKILL.md")
+        self.assertIn("and not to the implementer", build)
+        self.assertIn("commit tests <Sn>", build)
+        self.assertIn('"Tests Sn: <title>"', build)
+        self.assertIn("review/<Sn>.tests.md", self.read("agents/test-writer.md"))
+        self.assertNotIn("tests.md", self.read("agents/implementer.md"))
+        for rel in ("README.md", "bin/slice.py", "hooks/guard.py"):
+            self.assertIn("Sn.tests.md", self.read(rel), rel)
 
     def test_the_security_floor_is_in_the_three_prompts(self):
         for rel in ("skills/interface/SKILL.md", "agents/implementer.md", "agents/reviewer.md"):
@@ -284,8 +305,14 @@ class Rules(unittest.TestCase):
         for word in ("domain.md", "boundary", "gap", "state machine", "no code"):
             self.assertIn(word, text.lower() if word != "domain.md" else text)
         template = self.read("templates/domain.md")
-        for word in ("## Requirement map", "## State machines", "## Bounded contexts", "Not allowed"):
+        for word in ("## Requirement map", "## State machines", "## Bounded contexts", "### Machine:",
+                     "- Machines: none", "- Start:", "- T1:", "- X1:", "refused:"):
             self.assertIn(word, template)
+        fields = TABLE["files"]["slice/NNN-<name>/domain.md"]["fields"]
+        for word in ("### Machine:", "- Machines: none", "- Start:", "- T1:", "- X1:"):
+            self.assertIn(word, fields)
+        for rel in ("skills/domain/SKILL.md", "agents/test-writer.md"):
+            self.assertIn("### Machine:", self.read(rel), rel)
         self.assertIn("domain", self.read("skills/interface/SKILL.md"))
 
     def test_numbered_requirements_in_the_templates(self):
@@ -315,6 +342,18 @@ class Rules(unittest.TestCase):
         for rel in ("skills/interface/SKILL.md", "agents/test-writer.md"):
             self.assertIn("Changed:", self.read(rel), rel)
         self.assertIn("- Changed:", TABLE["files"]["slice/NNN-<name>/interface.md"]["fields"])
+
+    def test_the_security_scan_line_is_in_the_config_the_table_and_the_prompts(self):
+        self.assertIn("scan", TABLE["subcommands"])
+        self.assertIn("security scan", TABLE["files"]["slice/config.md"]["fields"])
+        self.assertIn("- security scan: none", self.read("templates/config.md"))
+        self.assertIn("slice.py scan", self.read("agents/reviewer.md"))
+        self.assertRegex(self.read("agents/reviewer.md"), r"(?i)security.{0,40}major|major.{0,60}security")
+        self.assertIn("security scan", self.read("skills/spec/SKILL.md"))
+        self.assertIn("slice.py scan", self.read("README.md"))
+        entry = TABLE["outputs"]["slice.py scan"]
+        self.assertEqual(entry["producer"], "slice.py")
+        self.assertIn("reviewer", entry["consumers"])
 
     def test_the_source_files_line_is_in_the_config_the_table_and_the_prompts(self):
         self.assertIn("source files", TABLE["files"]["slice/config.md"]["fields"])

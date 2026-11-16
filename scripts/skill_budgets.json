@@ -87,7 +87,7 @@
       {
         "rule": "A missing \"Interface\" item goes into its spec and change spec as `proposed`. Only the third failed review stops the stage.",
         "words": 21,
-        "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R9 (the final reply names /pdlc:tests); also R6 (handoff acceptance \u2192 tests) in run decl200-a #2"
+        "evidence": "evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z and /home/user/pskills/evals/pdlc-acceptance/runs/decl200-b-20261102T031021Z (two candidate vets; pool them, and earn back only items that are lower in the pooled candidate than in the pooled baseline): R9 (the final reply names /pdlc:tests); also R6 (handoff acceptance → tests) in run decl200-a #2"
       },
       {
         "rule": "The final reply names `/pdlc:tests` as next, or `/pdlc:build` after a send-back.",
@@ -203,6 +203,25 @@
         "rule": "After the user approves the surface, set `Status: approved`, before the test writer runs.",
         "words": 15,
         "evidence": "slice plugin review, finding 4 (interface approval): `slice.py next` and `commit interface` read the `Status:` line, so the skill must say when to set it; no vet run yet"
+      }
+    ],
+    "slice:spec": [
+      {
+        "rule": "Write a `security scan` command that fits the ratified stack in config.md (`none` if none fits).",
+        "words": 12,
+        "evidence": "slice improvement C (security scan), no vet run yet"
+      }
+    ],
+    "slice:build": [
+      {
+        "rule": "Test fix: tests from `slice:test-writer`, then `slice.py commit tests <Sn>`: the subject \"Tests Sn: <title>\" and the trailer `Slice: Sn`.",
+        "words": 21,
+        "evidence": "slice improvement A (reviewer judges the tests): `slice.py commit tests` subject and trailer are a contract; no vet run yet"
+      },
+      {
+        "rule": "A line in `review/<Sn>.tests.md` goes to `slice:test-writer` and not to the implementer. Then run `slice.py commit tests <Sn>`. Failing tests make the slice `building`: run the test loop. A test fix uses no round of its own.",
+        "words": 38,
+        "evidence": "slice improvement A (reviewer judges the tests): the build skill is the only router of the test findings; no vet run yet"
       }
     ]
   },

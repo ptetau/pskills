@@ -18,7 +18,7 @@ effort: medium
 
 ## Outputs
 
-- `slice/config.md` from `${CLAUDE_PLUGIN_ROOT}/templates/config.md`, with the ratified stack. Read by `slice.py` and the guard.
+- `slice/config.md` from `${CLAUDE_PLUGIN_ROOT}/templates/config.md`, with the ratified stack and a `security scan` command that fits it (`none` if none fits). Read by `slice.py` and the guard.
 - `slice/NNN-<name>/spec.md` from the spec template, with the next NNN. Read by `plan`, `domain`, and agents. `Status: draft`, then `ratified`.
 - The reply names `/slice:plan`.
 

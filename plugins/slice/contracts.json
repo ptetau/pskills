@@ -7,6 +7,7 @@
     "round",
     "resume",
     "test",
+    "scan",
     "commit"
   ],
   "statuses": [
@@ -28,14 +29,15 @@
     "slice/config.md": {
       "producer": "spec",
       "template": "config.md",
-      "form": "`- key: value` lines: stack, test command, result format, tests folder, source folders, and the optional `source files` (single paths and globs outside the source folders, for example `package.json, migrations/**`)",
+      "form": "`- key: value` lines: stack, test command, result format, tests folder, source folders, and the optional `source files` (single paths and globs outside the source folders, for example `package.json, migrations/**`) and `security scan` (one command that exits non-zero on a finding, for example `bandit -q -r src`; `none` by default)",
       "fields": [
         "stack",
         "test command",
         "result format",
         "tests folder",
         "source folders",
-        "source files"
+        "source files",
+        "security scan"
       ],
       "consumers": [
         "interface",
@@ -89,10 +91,15 @@
     "slice/NNN-<name>/domain.md": {
       "producer": "domain",
       "template": "domain.md",
-      "form": "entities, value objects, relationships, invariants, a state machine for each object with a lifecycle, the bounded contexts and the boundary, and a `## Requirement map` with one `- Rn: parts` line for each requirement (`GAP` when none)",
+      "form": "entities, value objects, relationships, invariants, a `### Machine: <Object>` section for each object with a lifecycle (`- States:`, `- Start:`, `- End:`, transitions `- T1: <from> -> <to> on <trigger> [<guard>] / <effect>`, refused lines `- X1: <from> on <trigger> refused: <error>`; the line `- Machines: none` when no object has a lifecycle), the bounded contexts and the boundary, and a `## Requirement map` with one `- Rn: parts` line for each requirement (`GAP` when none; a requirement cites transitions as `Object.T1` or `Object.X1`). `slice.py status` reports a cited transition that no machine defines, a transition that no requirement cites, a machine with no start state, an unreachable state, and a state that States does not list",
       "fields": [
         "## Requirement map",
         "## State machines",
+        "### Machine:",
+        "- Machines: none",
+        "- Start:",
+        "- T1:",
+        "- X1:",
         "## Bounded contexts and boundary"
       ],
       "consumers": [
@@ -123,9 +130,19 @@
     },
     "slice/NNN-<name>/review/Sn.md": {
       "producer": "reviewer",
-      "form": "one `- major: [part] file:line text` or `- minor: [part] file:line text` line for each open finding, or `none`; part is requirement, architecture, or security",
+      "form": "one `- major: [part] file:line text` or `- minor: [part] file:line text` line for each open code finding, or `none`; part is requirement, architecture, or security. The guard hides it from the test writer",
       "consumers": [
         "implementer",
+        "build",
+        "slice.py",
+        "reviewer"
+      ]
+    },
+    "slice/NNN-<name>/review/Sn.tests.md": {
+      "producer": "reviewer",
+      "form": "one `- major: [tests] <test name> <what a wrong version would pass, and the fix>` or `- minor: [tests] <test name> <...>` line for each open test finding, or `none`; the wrong version is named as a behaviour, with no test code, no app code, and no file:line. The guard hides it from the implementer. `slice.py commit Sn` refuses on a major line; `slice.py commit tests Sn` needs a line",
+      "consumers": [
+        "test-writer",
         "build",
         "slice.py",
         "reviewer"
@@ -158,9 +175,24 @@
         "slice.py"
       ]
     },
+    "slice.py commit tests": {
+      "producer": "slice.py",
+      "form": "`commit tests Sn` makes one commit of the tests folder and the records, with the subject `Tests Sn: <title>` and the trailer `Slice: Sn`. It refuses unless Sn is in review, review/Sn.tests.md holds a finding, and the tests folder changed; and it refuses a test that does not load, another error than the not-implemented error, and a skip. A failing assertion or a pass is accepted, and a failing test sets the slice to building. `commit Sn` still refuses a tests folder that no commit holds",
+      "consumers": [
+        "build"
+      ]
+    },
+    "slice.py scan": {
+      "producer": "slice.py",
+      "form": "`scan: none configured`, or `scan: ok`, or `scan: failed (exit N)` (also `scan: failed` for a timeout) followed by at most 6 indented lines of the output of the configured `security scan` command; exit 1 on a failure. `commit Sn` refuses when the scan fails",
+      "consumers": [
+        "reviewer",
+        "build"
+      ]
+    },
     "slice.py test": {
       "producer": "slice.py",
-      "form": "a header `Sn: N tests, P passed, F not passed`, then one `PASS|FAIL|ERROR|SKIP <name>` line for each test of the slice with its failure message indented below; then, when a test outside the slice fails (a done slice, or no slice owns it), `regressions: N tests ...` and the same lines for them; `no tests found for Sn` when no test name holds the spec number and the ID; with --red, `broken:` lines for tests that fail to load, and a plain FAIL is red for a test that cites a requirement of the `- Changed:` line of its slice",
+      "form": "a header `Sn: N tests, P passed, F not passed`, then one `PASS|FAIL|ERROR|SKIP <name>` line for each test of the slice; a FAIL or ERROR line is followed by the `acceptance:` lines of slices.md that cite its requirement (all lines when the name cites none); an ERROR (unittest ERROR, junit error) shows its message indented at once; a FAIL (unittest FAIL, junit failure) shows `message withheld` until the slice has used 2 test rounds, then its message, or at once with `--full` (the guard blocks `--full` and `--red` for the implementer); then, when a test outside the slice fails (a done slice, or no slice owns it), `regressions: N tests ...` and the same lines for them; `no tests found for Sn` when no test name holds the spec number and the ID; with --red, `broken:` lines for tests that fail to load, and a plain FAIL is red for a test that cites a requirement of the `- Changed:` line of its slice",
       "consumers": [
         "implementer",
         "build"

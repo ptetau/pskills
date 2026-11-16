@@ -14,7 +14,7 @@ Write app code that makes a slice work as the spec says. A reviewer must find it
 ## Inputs
 
 - The slice ID. Read `slice/NNN-<name>/spec.md`, `slice/NNN-<name>/slices.md` (that slice), `slice/NNN-<name>/domain.md`, `slice/NNN-<name>/interface.md`, `slice/config.md`, and the app code.
-- The results of `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py test <Sn>`: test names, pass or fail, and failure messages, then the regressions (tests outside the slice that fail).
+- The results of `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py test <Sn>`: test names, pass or fail, the acceptance lines of each failing test, and the messages of errors (an exception in the code, or an import error). The message of an assertion failure shows from test round 3 on. Then the regressions (tests outside the slice that fail, with their messages).
 - Review findings in `slice/NNN-<name>/review/<Sn>.md`.
 
 ## Outputs
