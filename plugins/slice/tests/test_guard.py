@@ -149,7 +149,8 @@ class Guard(Base):
 
     def test_the_implementer_runs_only_the_test_subcommand_of_slice_py(self):
         slice_py = "python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py"
-        for sub in ("commit S1", "commit interface", "set S1 done", "round S1 test", "next", "status"):
+        for sub in ("commit S1", "commit interface", "set S1 done", "round S1 test", "next", "status",
+                    "resume S1"):
             self.assertFalse(self.bash("%s %s" % (slice_py, sub)), sub)
         self.assertFalse(self.bash("%s --root . set S1 done" % slice_py))
         self.assertFalse(self.bash("cd src && %s --spec 001 commit S1" % slice_py))
@@ -340,6 +341,66 @@ class SmokeLog(unittest.TestCase):
             if r["tool"] == "Read":
                 self.assertIn("<project>/slice/", path)
             self.assertNotIn("<project>/src", json.dumps(r["input"]))
+
+
+class SourceFiles(Base):
+    """The `source files:` config line: paths outside the source folders that the implementer may write."""
+
+    TEST_WRITER = "slice:test-writer"
+
+    def config(self, line):
+        (self.root / "slice/config.md").write_text(fixture.CONFIG + "- source files: %s\n" % line)
+
+    def test_the_implementer_writes_the_listed_files_and_globs(self):
+        self.config("`package.json`, `migrations/**`, `*.toml`")
+        for path in ("package.json", "migrations/001_init.sql", "migrations/sub/002.sql", "pyproject.toml"):
+            self.assertTrue(self.ok(IMPL, "Write", file_path=path), path)
+            self.assertTrue(self.ok(IMPL, "Edit", file_path=str(self.root / path)), path)
+
+    def test_the_implementer_still_may_not_write_other_files(self):
+        self.config("`package.json`, `migrations/**`")
+        for path in ("setup.cfg", "migrations_old/a.sql", "sub/package.json", "package.json.bak", "conftest.py"):
+            self.assertFalse(self.ok(IMPL, "Write", file_path=path), path)
+
+    def test_none_means_no_source_files(self):
+        self.config("none")
+        self.assertFalse(self.ok(IMPL, "Write", file_path="none"))
+        self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="none"))
+
+    def test_without_the_line_only_the_source_folders_are_writable(self):
+        self.assertFalse(self.ok(IMPL, "Write", file_path="package.json"))
+
+    def test_a_pattern_never_opens_the_tests_folder_or_slice(self):
+        self.config("`**/*.json`, `**`")
+        self.assertTrue(self.ok(IMPL, "Write", file_path="package.json"))
+        for path in ("tests/a.json", "tests/sub/a.json", "slice/001-x/a.json", "slice/config.md", "slice/x"):
+            self.assertFalse(self.ok(IMPL, "Write", file_path=path), path)
+
+    def test_a_symlink_does_not_lead_a_write_into_the_tests(self):
+        self.config("`links/**`")
+        (self.root / "links").mkdir()
+        os.symlink(self.root / "tests", self.root / "links/t")
+        self.assertFalse(self.ok(IMPL, "Write", file_path="links/t/a.py"))
+
+    def test_the_test_writer_does_not_see_the_source_files(self):
+        self.config("`package.json`, `migrations/**`, `*.toml`")
+        for path in ("package.json", "migrations/001_init.sql", "migrations/sub/a.sql", "pyproject.toml"):
+            self.assertFalse(self.ok(self.TEST_WRITER, "Read", file_path=path), path)
+        for command in ("cat package.json", "cat migrations/001_init.sql", "cat pyproject.toml", "ls migrations"):
+            self.assertFalse(self.bash(command, agent=self.TEST_WRITER), command)
+
+    def test_the_test_writer_still_reads_the_records_and_writes_the_tests(self):
+        self.config("`**/*.json`, `package.json`")
+        self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="slice/001-x/interface.md"))
+        self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="slice/001-x/data.json"))
+        self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="tests/data.json"))
+        self.assertTrue(self.ok(self.TEST_WRITER, "Write", file_path="tests/test_a.py"))
+        self.assertFalse(self.ok(self.TEST_WRITER, "Write", file_path="package.json"))
+
+    def test_the_implementer_still_reads_the_source_files(self):
+        self.config("`package.json`")
+        self.assertTrue(self.ok(IMPL, "Read", file_path="package.json"))
+        self.assertTrue(self.bash("cat package.json"))
 
 
 if __name__ == "__main__":

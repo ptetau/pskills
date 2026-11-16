@@ -5,6 +5,7 @@
     "next",
     "set",
     "round",
+    "resume",
     "test",
     "commit"
   ],
@@ -27,13 +28,14 @@
     "slice/config.md": {
       "producer": "spec",
       "template": "config.md",
-      "form": "`- key: value` lines: stack, test command, result format, tests folder, source folders",
+      "form": "`- key: value` lines: stack, test command, result format, tests folder, source folders, and the optional `source files` (single paths and globs outside the source folders, for example `package.json, migrations/**`)",
       "fields": [
         "stack",
         "test command",
         "result format",
         "tests folder",
-        "source folders"
+        "source folders",
+        "source files"
       ],
       "consumers": [
         "interface",
@@ -104,16 +106,19 @@
     "slice/NNN-<name>/interface.md": {
       "producer": "interface",
       "template": "interface.md",
-      "form": "for each part of the surface: import line or endpoint, signature or shapes, types, error forms, and the domain concepts it exposes; a security section; one `## Sn` section for each slice",
+      "form": "a `Status: draft|approved` line (`approved` only after the user approves the surface, before the test writer runs); for each part of the surface: import line or endpoint, signature or shapes, types, error forms, and the domain concepts it exposes; a security section; one `## Sn` section for each slice, with `- Uses:`, `- Stubs:`, and `- Changed: Rn, Rm` (the requirements whose entries already exist and change, so that their tests may fail by assertion; `none` otherwise)",
       "fields": [
+        "Status:",
         "## Surface",
         "## Security",
-        "## S1"
+        "## S1",
+        "- Changed:"
       ],
       "consumers": [
         "test-writer",
         "implementer",
-        "reviewer"
+        "reviewer",
+        "slice.py"
       ]
     },
     "slice/NNN-<name>/review/Sn.md": {
@@ -130,7 +135,7 @@
   "outputs": {
     "slice.py next": {
       "producer": "slice.py",
-      "form": "one line: `spec`, `plan`, `domain`, `interface`, `build Sn`, `stop Sn: reason`, or `done`",
+      "form": "one line: `spec`, `plan`, `domain`, `interface` (also while interface.md is missing or not approved), `build Sn`, `stop Sn: reason`, or `done`",
       "forms": [
         "spec",
         "plan",
@@ -147,15 +152,15 @@
     },
     "tests folder files": {
       "producer": "test-writer",
-      "form": "test files in the tests folder; each test name holds the slice ID as a whole word and the requirement, `test_Sn_Rn_<what>`, the form that `belongs()` of slice.py matches",
-      "name form": "test_Sn_Rn_<what>",
+      "form": "test files in the tests folder; each test name holds the spec number, the slice ID, and the requirement, `test_NNN_Sn_Rn_<what>` (for example `test_002_S1_R2_counts_words`), the form that `belongs()` of slice.py matches. A name with no number belongs to the slice of the only spec of the project, and to no slice when the project has two specs or more",
+      "name form": "test_NNN_Sn_Rn_<what>",
       "consumers": [
         "slice.py"
       ]
     },
     "slice.py test": {
       "producer": "slice.py",
-      "form": "a header `Sn: N tests, P passed, F not passed`, then one `PASS|FAIL|ERROR|SKIP <name>` line for each test of the slice with its failure message indented below; `no tests found for Sn` when no test name holds the ID; with --red, `broken:` lines for tests that fail to load",
+      "form": "a header `Sn: N tests, P passed, F not passed`, then one `PASS|FAIL|ERROR|SKIP <name>` line for each test of the slice with its failure message indented below; then, when a test outside the slice fails (a done slice, or no slice owns it), `regressions: N tests ...` and the same lines for them; `no tests found for Sn` when no test name holds the spec number and the ID; with --red, `broken:` lines for tests that fail to load, and a plain FAIL is red for a test that cites a requirement of the `- Changed:` line of its slice",
       "consumers": [
         "implementer",
         "build"

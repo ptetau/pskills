@@ -5,7 +5,9 @@
 - result format: <unittest | junit>
 - tests folder: `tests`
 - source folders: `src`
+- source files: none
 
 A `junit` command writes its report to `{junit}`, for example `pytest --junitxml={junit}`.
 A `unittest` command prints verbose lines, for example `python3 -m unittest discover -s tests -v`.
-Each test name holds the ID of its slice, for example `test_S1_counts_words`.
+Each test name holds the spec number, the ID of its slice, and the requirement: `test_NNN_Sn_Rn_<what>`, for example `test_002_S1_R2_counts_words`.
+`source files` is optional: single paths and globs outside the source folders that a slice can write, for example `package.json`, `migrations/**`. A source file path is relative to the project root. `*` stays in one folder and `**` crosses folders. A path in the tests folder or in `slice/` is not a source file.

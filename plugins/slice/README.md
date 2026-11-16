@@ -13,14 +13,17 @@ time. A slice is a user story through every layer.
    requirements.
 3. `/slice:domain`: model the entities, the state machines, and the boundary in
    `domain.md`. Each requirement must map to the model. It holds no code.
-4. `/slice:interface`: design one test surface for all the slices. Create it as stubs that
-   raise the not-implemented error. Then `slice:test-writer` writes red acceptance tests
+4. `/slice:interface`: design one test surface for all the slices. The user approves it
+   (`Status: approved`). Create it as stubs that fail with the not-implemented error of the
+   stack. A `- Changed:` line per slice lists the requirements of existing entries that
+   change: their tests can fail by assertion. Then `slice:test-writer` writes red acceptance tests
    from `interface.md` alone. A script checks that each test is red. The tests and
    stubs go in one "Interface: NNN-name" commit.
 5. `/slice:build`: for the slice that `next` names, `slice:implementer` writes the code. A hook keeps it out
    of the tests. A script runs the tests, `slice:reviewer` checks the requirements, the
    architecture, and the security, and a script commits the slice.
 6. `/slice:run`: loop on `slice.py next` (a stage, `build Sn`, `stop Sn: reason`, or `done`). Run and build recap.
+   After the user answers a stop, `slice.py resume Sn` restarts the slice.
 
 ## Model
 
@@ -29,29 +32,32 @@ Claude Code supports both fields for agents and skills. The bindings have limits
 
 ## Records
 
-`slice/config.md` (stack, test command, tests folder, source folders) is at the top of
-`slice/`. Each spec has a folder, `slice/NNN-<name>/`,
+`slice/config.md` (stack, test command, tests folder, source folders, optional `source files`
+such as `package.json, migrations/**`) is at the top of `slice/`. Each spec has a folder, `slice/NNN-<name>/`,
 with `spec.md`, `slices.md`, `domain.md`, `interface.md`, and `review/Sn.md`. The scripts
 use the highest number, or the folder that `--spec` names. The templates are in
 `templates/`. `contracts.json` lists each hand-off between the prompts and the scripts.
 
 ## Script and hook
 
-- `bin/slice.py`: `status`, `next`, `set`, `round`, `test` (with `--red`), and `commit`. Run it with
+- `bin/slice.py`: `status`, `next`, `set`, `round`, `resume`, `test` (with `--red`), and `commit`. Run it with
   `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py`. It gives 5 test rounds and 3 review rounds
   for each slice. A slice commit has the subject "Slice Sn: <title>" and the trailer
-  `Slice: Sn`. It holds the records and the source folders, not the tests. `commit
-  interface` holds the tests and the stubs of all slices, so a slice commit stays small.
+  `Slice: Sn`. It holds the records, the source folders, and the source files, not the tests.
+  `commit interface` holds the tests and the stubs of all slices, so a slice commit stays
+  small. `commit Sn` refuses when a done slice's test, or a test that no slice owns, fails.
+  `test Sn` lists these regressions.
 - `hooks/guard.py`: blocks the implementer from every read, search, edit, and command that
   reaches the tests folder, also through quotes, wildcards, and symlinks, from every test
-  runner, and from `slice.py` except `test`. It limits its writes to the source folders. It blocks the
-  test writer from the source folders, and limits its writes to the tests folder. The
+  runner, and from `slice.py` except `test`. It limits its writes to the source folders and
+  source files. It blocks the test writer from both, and limits its writes to the tests folder. The
   check is by name and by path, so it is a guard, not a sandbox.
 
 ## Test names
 
-Each test name holds the ID of its slice and of its requirement, for example
-`test_S1_R1_counts_words`.
+Each test name holds its spec number, slice ID, and requirement ID: `test_NNN_Sn_Rn_<what>`,
+for example `test_002_S1_R2_counts_words`. A name with no number belongs to the only spec of
+a project. It belongs to no slice when there are two specs.
 
 ## Tests
 

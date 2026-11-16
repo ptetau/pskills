@@ -203,10 +203,13 @@ class Outputs(unittest.TestCase):
         cli = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cli)
         name_form = TABLE["outputs"]["tests folder files"]["name form"]
-        self.assertEqual(name_form, "test_Sn_Rn_<what>")
-        self.assertTrue(cli.belongs("test_S1_R2_counts_words", "S1"))
-        self.assertFalse(cli.belongs("test_S10_R2_counts_words", "S1"))
-        self.assertIn("test_S1_R", (PLUGIN / "agents/test-writer.md").read_text())
+        self.assertEqual(name_form, "test_NNN_Sn_Rn_<what>")
+        self.assertTrue(cli.belongs("test_002_S1_R2_counts_words", "S1", "002"))
+        self.assertFalse(cli.belongs("test_001_S1_R2_counts_words", "S1", "002"))
+        self.assertFalse(cli.belongs("test_002_S10_R2_counts_words", "S1", "002"))
+        for rel in ("agents/test-writer.md", "templates/config.md", "skills/interface/SKILL.md"):
+            self.assertIn("test_NNN_Sn_Rn_<what>", (PLUGIN / rel).read_text(), rel)
+        self.assertIn("test_002_S1_R2_counts_words", (PLUGIN / "agents/test-writer.md").read_text())
 
     def test_the_output_of_test_has_the_forms_the_script_prints(self):
         script = SCRIPTS["slice.py"].read_text()
@@ -257,9 +260,12 @@ class Rules(unittest.TestCase):
         for word in ("stack", "modern", "minimal", "config.md"):
             self.assertIn(word, text)
 
-    def test_the_stubs_raise_the_not_implemented_error(self):
+    def test_the_stubs_fail_with_the_not_implemented_error_of_the_stack(self):
         for rel in ("skills/interface/SKILL.md", "templates/interface.md"):
-            self.assertIn("NotImplementedError", self.read(rel), rel)
+            text = self.read(rel)
+            self.assertIn("not-implemented error", text, rel)
+            self.assertIn('"not implemented"', text, rel)
+            self.assertNotIn("NotImplementedError", text, rel)
 
     def test_the_test_writer_does_not_read_the_stubs(self):
         text = self.read("agents/test-writer.md")
@@ -287,8 +293,34 @@ class Rules(unittest.TestCase):
         self.assertIn("- D1 ", self.read("templates/spec.md"))
         self.assertIn("- Requirements: R1", self.read("templates/slices.md"))
 
-    def test_the_test_names_cite_the_requirement(self):
-        self.assertRegex(self.read("agents/test-writer.md"), r"test_S1_R\d")
+    def test_the_test_names_cite_the_spec_the_slice_and_the_requirement(self):
+        self.assertRegex(self.read("agents/test-writer.md"), r"test_\d{3}_S1_R\d")
+
+    def test_the_stop_is_answered_with_resume(self):
+        self.assertIn("resume", TABLE["subcommands"])
+        for rel in ("skills/build/SKILL.md", "skills/run/SKILL.md"):
+            self.assertIn("slice.py resume <Sn>", self.read(rel), rel)
+
+    def test_the_interface_is_approved_before_the_test_writer_runs(self):
+        template = self.read("templates/interface.md")
+        self.assertRegex(template, r"(?m)^Status: draft$")
+        text = self.read("skills/interface/SKILL.md")
+        self.assertIn("Status: approved", text)
+        self.assertRegex(text, r"(?s)approv.*before the test writer|before the test writer.*approv")
+        entry = TABLE["files"]["slice/NNN-<name>/interface.md"]
+        self.assertIn("Status:", entry["fields"])
+
+    def test_the_changed_line_is_in_the_template_the_skill_and_the_test_writer(self):
+        self.assertIn("- Changed:", self.read("templates/interface.md"))
+        for rel in ("skills/interface/SKILL.md", "agents/test-writer.md"):
+            self.assertIn("Changed:", self.read(rel), rel)
+        self.assertIn("- Changed:", TABLE["files"]["slice/NNN-<name>/interface.md"]["fields"])
+
+    def test_the_source_files_line_is_in_the_config_the_table_and_the_prompts(self):
+        self.assertIn("source files", TABLE["files"]["slice/config.md"]["fields"])
+        self.assertIn("- source files:", self.read("templates/config.md"))
+        for rel in ("agents/implementer.md", "agents/test-writer.md", "skills/interface/SKILL.md"):
+            self.assertIn("source files", self.read(rel), rel)
 
 
 if __name__ == "__main__":

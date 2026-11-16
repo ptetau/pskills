@@ -197,6 +197,13 @@
         "words": 16,
         "evidence": "e2e bench run2 of /pdlc:ship defaults on todo-rust: the Agent tool ran two pdlc:recon agents in the background, the turn ended with 'I will wait', and ship ended after intake (1 of 8 probes)"
       }
+    ],
+    "slice:interface": [
+      {
+        "rule": "After the user approves the surface, set `Status: approved`, before the test writer runs.",
+        "words": 15,
+        "evidence": "slice plugin review, finding 4 (interface approval): `slice.py next` and `commit interface` read the `Status:` line, so the skill must say when to set it; no vet run yet"
+      }
     ]
   },
   "raised": {
