@@ -510,5 +510,321 @@ class Commit(Base):
         self.assertIn("notes.txt", git(self.p.root, "status", "--porcelain"))
 
 
+NUMBERED = fixture.TESTS.replace("test_S1_", "test_001_S1_R1_").replace("test_S2_", "test_001_S2_R2_")
+
+STUB_SHOUT = fixture.GOOD + '''
+
+def shout(text):
+    raise NotImplementedError("not implemented")
+'''
+
+SPEC2 = "# Spec: extra\n\nStatus: ratified\n\n## Requirements\n\n- R1 (shout): the program shouts a text.\n"
+SLICES2 = ("# Slices\n\n## S1: Shout\n\n- Story: As a user, I shout.\n- Requirements: R1\n- Layers: core\n"
+           "- Status: red\n- Test rounds: 0\n- Review rounds: 0\n")
+TESTS2 = ("import unittest\n\nimport wordfreq\n\n\nclass Extra(unittest.TestCase):\n"
+          "    def test_002_S1_R1_shouts(self):\n        self.assertEqual(wordfreq.shout(\"a\"), \"A\")\n")
+
+
+class TwoSpecs(Base):
+    """A second spec folder numbers its slices from S1 again: the test name holds the spec number."""
+
+    def setUp(self):
+        super().setUp()
+        p = self.p
+        p.write("tests/test_wordfreq.py", NUMBERED)
+        p.write("src/wordfreq.py", STUB_SHOUT)
+        p.write("tests/test_extra.py", TESTS2)
+        p.write("slice/002-extra/spec.md", SPEC2)
+        p.write("slice/002-extra/domain.md", "# Domain\n\n## Requirement map\n\n- R1: Text; boundary: caller\n")
+        p.write("slice/002-extra/slices.md", SLICES2)
+        p.write("slice/002-extra/interface.md", "# Interface\n\nStatus: approved\n\n## S1\n\n- shout(text)\n")
+        p.slice("--spec", "001", "set", "S1", "done")
+        p.slice("--spec", "001", "set", "S2", "done")
+        git(p.root, "add", "-A")
+        git(p.root, "commit", "-q", "-m", "second spec")
+
+    def test_belongs_matches_the_spec_number_and_the_slice(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("slice_cli", fixture.SLICE)
+        cli = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cli)
+        self.assertTrue(cli.belongs("test_002_S1_R2_counts_words", "S1", "002"))
+        self.assertFalse(cli.belongs("test_001_S1_R2_counts_words", "S1", "002"))
+        self.assertFalse(cli.belongs("test_002_S10_R2_x", "S1", "002"))
+        self.assertFalse(cli.belongs("test_S1_R2_x", "S1", "002"))
+        self.assertTrue(cli.belongs("test_S1_R2_x", "S1", "001", single=True))
+        self.assertFalse(cli.belongs("test_002_S1_R2_x", "S1", "001", single=True))
+
+    def test_the_tests_of_the_other_spec_are_not_mine(self):
+        r = self.p.slice("test", "S1", "--red")
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertIn("S1 red: 1 tests", r.stdout)
+        self.assertNotIn("001", r.stdout)
+
+    def test_a_test_with_no_number_belongs_to_no_spec_when_there_are_two(self):
+        self.p.write("tests/test_extra.py", TESTS2.replace("test_002_S1_R1", "test_S1_R1"))
+        r = self.p.slice("test", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("no tests found for S1", r.stdout)
+
+    def test_the_spec_option_scopes_the_tests_to_that_spec(self):
+        r = self.p.slice("--spec", "001", "test", "S1")
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertIn("S1: 2 tests, 2 passed", r.stdout)
+
+
+class Regressions(Base):
+    def make_ready(self):
+        self.p.write("src/wordfreq.py", fixture.GOOD.replace("return [w for w, _ in Counter(text.split()).most_common(n)]",
+                                                             "return []"))
+        self.p.slice("set", "S1", "review")
+
+    def other_test(self, body):
+        self.p.write("tests/test_other.py", "import unittest\n\n\nclass Old(unittest.TestCase):\n"
+                                            "    def test_old_thing(self):\n        %s\n" % body)
+        git(self.p.root, "add", "-A")
+        git(self.p.root, "commit", "-q", "-m", "old test")
+
+    def test_a_failing_test_of_a_done_slice_blocks_the_commit(self):
+        self.make_ready()
+        self.p.slice("set", "S2", "done")
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("test_S2_top_word", r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "base")
+        self.assertIn("- Status: review\n", self.p.read("slice/001-wordfreq/slices.md").split("## S2")[0])
+
+    def test_a_failing_test_that_no_slice_owns_blocks_the_commit(self):
+        self.make_ready()
+        self.other_test("self.assertEqual(1, 2)")
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("test_old_thing", r.stderr)
+
+    def test_a_passing_test_that_no_slice_owns_is_fine(self):
+        self.make_ready()
+        self.other_test("self.assertEqual(1, 1)")
+        self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
+
+    def test_the_tests_of_a_slice_that_is_not_done_may_fail(self):
+        self.make_ready()
+        self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
+
+    def test_the_test_command_reports_the_regressions_after_its_own_results(self):
+        self.make_ready()
+        self.p.slice("set", "S2", "done")
+        self.other_test("self.assertEqual(1, 2)")
+        r = self.p.slice("test", "S1")
+        self.assertEqual(r.returncode, 1)
+        own = r.stdout.index("PASS test_S1_counts_words")
+        reg = r.stdout.index("regressions")
+        self.assertLess(own, reg)
+        self.assertIn("test_S2_top_word", r.stdout[reg:])
+        self.assertIn("test_old_thing", r.stdout[reg:])
+        self.assertNotIn("def test_", r.stdout)
+
+    def test_no_regression_no_extra_output(self):
+        self.make_ready()
+        r = self.p.slice("test", "S1")
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertNotIn("regressions", r.stdout)
+
+
+class Resume(Base):
+    def stop(self):
+        for _ in range(5):
+            self.p.slice("round", "S1", "test")
+        self.p.slice("round", "S1", "review")
+        r = self.p.slice("round", "S1", "test")
+        self.assertEqual(r.returncode, 1)
+
+    def test_a_stopped_slice_goes_back_to_building_with_no_rounds_used(self):
+        self.stop()
+        self.assertIn("stopped", self.p.slice("status").stdout)
+        r = self.p.slice("resume", "S1")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        block = self.p.read("slice/001-wordfreq/slices.md").split("## S2")[0]
+        self.assertIn("- Status: building\n", block)
+        self.assertIn("- Test rounds: 0\n", block)
+        self.assertIn("- Review rounds: 0\n", block)
+        self.assertEqual(self.p.slice("next").stdout.strip(), "build S1")
+        self.assertEqual(self.p.slice("round", "S1", "test").returncode, 0)
+
+    def test_only_a_stopped_slice_can_resume(self):
+        for status in ("planned", "red", "building", "review", "done"):
+            self.p.slice("set", "S1", status)
+            r = self.p.slice("resume", "S1")
+            self.assertEqual(r.returncode, 1, status)
+            self.assertIn("not stopped", r.stderr)
+
+    def test_an_unknown_slice_is_a_record_error(self):
+        self.assertEqual(self.p.slice("resume", "S9").returncode, 2)
+
+
+class InterfaceApproval(Base):
+    def set_status(self, word):
+        self.p.write("slice/001-wordfreq/interface.md",
+                     fixture.INTERFACE.replace("Status: approved", "Status: %s" % word))
+
+    def test_a_draft_interface_is_the_next_stage(self):
+        self.set_status("draft")
+        self.assertEqual(self.p.slice("next").stdout.strip(), "interface")
+        self.assertIn("interface: draft", self.p.slice("status").stdout)
+
+    def test_an_interface_with_no_status_is_a_draft(self):
+        self.p.write("slice/001-wordfreq/interface.md", "# Interface\n\n## S1\n\n- x\n")
+        self.assertEqual(self.p.slice("next").stdout.strip(), "interface")
+
+    def test_a_missing_interface_is_the_next_stage(self):
+        (self.p.root / "slice/001-wordfreq/interface.md").unlink()
+        self.assertEqual(self.p.slice("next").stdout.strip(), "interface")
+        self.assertIn("interface: missing", self.p.slice("status").stdout)
+
+    def test_an_approved_interface_lets_the_build_start(self):
+        self.assertEqual(self.p.slice("next").stdout.strip(), "build S1")
+        self.assertIn("interface: approved", self.p.slice("status").stdout)
+
+    def test_commit_interface_refuses_an_interface_that_is_not_approved(self):
+        self.set_status("draft")
+        self.p.write("tests/test_wordfreq.py", fixture.TESTS + "\n# more\n")
+        r = self.p.slice("commit", "interface")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("not approved", r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "base")
+
+
+CHANGED_TESTS = '''import unittest
+
+import wordfreq
+
+
+class Words(unittest.TestCase):
+    def test_S1_R1_counts_words(self):
+        self.assertEqual(wordfreq.count("a b a"), {"a": 2, "b": 1})
+
+    def test_S2_R2_top_word(self):
+        self.assertEqual(wordfreq.top("a b a", 1), ["a"])
+'''
+OLD_COUNT = ('def count(text):\n    return {}\n\n\ndef top(text, n):\n'
+             '    raise NotImplementedError("not implemented")\n')
+
+
+class Changed(Base):
+    def setUp(self):
+        super().setUp()
+        self.p.write("src/wordfreq.py", OLD_COUNT)
+        self.p.write("tests/test_wordfreq.py", CHANGED_TESTS)
+
+    def mark(self, line):
+        text = fixture.INTERFACE.replace("- count(text) -> dict\n- Changed: none", "- count(text) -> dict\n" + line)
+        self.p.write("slice/001-wordfreq/interface.md", text)
+
+    def test_a_plain_failure_is_not_red_for_an_unmarked_requirement(self):
+        r = self.p.slice("test", "S1", "--red")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("does not reach the surface", r.stdout)
+
+    def test_a_plain_failure_is_red_for_a_changed_requirement(self):
+        self.mark("- Changed: R1")
+        r = self.p.slice("test", "S1", "--red")
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertIn("S1 red", r.stdout)
+
+    def test_a_changed_requirement_may_be_in_a_list(self):
+        self.mark("- Changed: R3, R1")
+        self.assertEqual(self.p.slice("test", "S1", "--red").returncode, 0)
+
+    def test_the_marker_covers_only_the_requirements_it_lists(self):
+        self.mark("- Changed: R2")
+        r = self.p.slice("test", "S1", "--red")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("does not reach the surface", r.stdout)
+
+    def test_the_marker_of_another_slice_does_not_count(self):
+        text = fixture.INTERFACE.replace("- top(text, n) -> list\n- Changed: none", "- top(text, n) -> list\n- Changed: R1")
+        self.p.write("slice/001-wordfreq/interface.md", text)
+        self.assertEqual(self.p.slice("test", "S1", "--red").returncode, 1)
+
+    def test_a_pass_is_still_not_red(self):
+        self.mark("- Changed: R1")
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        r = self.p.slice("test", "S1", "--red")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("passes already", r.stdout)
+
+    def test_an_error_that_is_not_the_stub_error_is_still_broken(self):
+        self.mark("- Changed: R1")
+        self.p.write("tests/test_wordfreq.py", CHANGED_TESTS.replace("wordfreq.count(", "missing.count("))
+        r = self.p.slice("test", "S1", "--red")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("broken: ", r.stdout)
+
+    def test_a_skip_is_still_not_red(self):
+        self.mark("- Changed: R1")
+        self.p.write("tests/test_wordfreq.py", CHANGED_TESTS.replace(
+            "    def test_S1_R1_", "    @unittest.skip('later')\n    def test_S1_R1_"))
+        r = self.p.slice("test", "S1", "--red")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("skipped", r.stdout)
+
+
+class SourceFiles(Base):
+    def setUp(self):
+        super().setUp()
+        self.p.write("slice/config.md", fixture.CONFIG + "- source files: `package.json`, `migrations/**`\n")
+        git(self.p.root, "add", "-A")
+        git(self.p.root, "commit", "-q", "-m", "config")
+
+    def test_commit_stages_the_source_files(self):
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.p.write("package.json", "{}\n")
+        self.p.write("migrations/001_init.sql", "create table t(a);\n")
+        self.p.write("notes.txt", "keep me out\n")
+        self.p.slice("set", "S1", "review")
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        files = git(self.p.root, "show", "--name-only", "--format=").split()
+        self.assertIn("package.json", files)
+        self.assertIn("migrations/001_init.sql", files)
+        self.assertNotIn("notes.txt", files)
+
+    def test_commit_interface_stages_the_source_files(self):
+        self.p.write("package.json", "{}\n")
+        self.p.write("migrations/001_init.sql", "create table t(a);\n")
+        self.assertEqual(self.p.slice("commit", "interface").returncode, 0)
+        files = git(self.p.root, "show", "--name-only", "--format=").split()
+        self.assertIn("package.json", files)
+        self.assertIn("migrations/001_init.sql", files)
+
+    def test_a_source_file_pattern_never_stages_the_tests_folder(self):
+        self.p.write("slice/config.md", fixture.CONFIG + "- source files: `**/*.py`\n")
+        git(self.p.root, "add", "-A")
+        git(self.p.root, "commit", "-q", "-m", "config")
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.p.write("tests/test_new.py", "x = 1\n")
+        self.p.slice("set", "S1", "review")
+        r = self.p.slice("commit", "S1")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("commit interface", r.stderr)
+        self.assertEqual(git(self.p.root, "log", "-1", "--format=%s").strip(), "config")
+        self.assertIn("tests/test_new.py", git(self.p.root, "status", "--porcelain"))
+
+    def test_none_means_no_source_files(self):
+        self.p.write("slice/config.md", fixture.CONFIG + "- source files: none\n")
+        self.p.write("none", "x\n")
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.p.slice("set", "S1", "review")
+        self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
+        self.assertNotIn("none", git(self.p.root, "show", "--name-only", "--format=").split())
+
+    def test_the_config_without_the_line_works_as_before(self):
+        self.p.write("slice/config.md", fixture.CONFIG)
+        self.p.write("src/wordfreq.py", fixture.GOOD)
+        self.p.write("package.json", "{}\n")
+        self.p.slice("set", "S1", "review")
+        self.assertEqual(self.p.slice("commit", "S1").returncode, 0)
+        self.assertNotIn("package.json", git(self.p.root, "show", "--name-only", "--format=").split())
+
+
 if __name__ == "__main__":
     unittest.main()

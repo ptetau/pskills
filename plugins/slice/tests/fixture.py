@@ -67,7 +67,8 @@ SLICES = """# Slices
 - Review rounds: 0
 """
 
-INTERFACE = "# Interface\n\n## S1\n\n- count(text) -> dict\n\n## S2\n\n- top(text, n) -> list\n"
+INTERFACE = ("# Interface\n\nStatus: approved\n\n## S1\n\n- count(text) -> dict\n- Changed: none\n\n"
+             "## S2\n\n- top(text, n) -> list\n- Changed: none\n")
 
 STUB = '''def count(text):
     raise NotImplementedError("not implemented")
