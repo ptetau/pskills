@@ -12,7 +12,12 @@ time. A slice is a user story through every layer.
 2. `/slice:plan`: break the spec into vertical slices in `slices.md`. Each slice names its
    requirements.
 3. `/slice:domain`: model the entities, the state machines, and the boundary in
-   `domain.md`. Each requirement must map to the model. It holds no code.
+   `domain.md`. Each requirement must map to the model. It holds no code. A state machine is a
+   `### Machine: <Object>` section (`- States:`, `- Start:`, `- End:`, `- T1: <from> -> <to> on
+   <trigger> [<guard>] / <effect>`, `- X1: <from> on <trigger> refused: <error>`), or the line
+   `- Machines: none`. A requirement cites transitions as `Order.T1`. `status` reports a cited
+   transition that no machine defines, a transition that no requirement cites, a machine with no
+   start state, and an unreachable state; `next` keeps printing `domain` until none is left.
 4. `/slice:interface`: design one test surface for all the slices. The user approves it
    (`Status: approved`). Create it as stubs that fail with the not-implemented error of the
    stack. A `- Changed:` line per slice lists the requirements of existing entries that

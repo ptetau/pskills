@@ -284,8 +284,14 @@ class Rules(unittest.TestCase):
         for word in ("domain.md", "boundary", "gap", "state machine", "no code"):
             self.assertIn(word, text.lower() if word != "domain.md" else text)
         template = self.read("templates/domain.md")
-        for word in ("## Requirement map", "## State machines", "## Bounded contexts", "Not allowed"):
+        for word in ("## Requirement map", "## State machines", "## Bounded contexts", "### Machine:",
+                     "- Machines: none", "- Start:", "- T1:", "- X1:", "refused:"):
             self.assertIn(word, template)
+        fields = TABLE["files"]["slice/NNN-<name>/domain.md"]["fields"]
+        for word in ("### Machine:", "- Machines: none", "- Start:", "- T1:", "- X1:"):
+            self.assertIn(word, fields)
+        for rel in ("skills/domain/SKILL.md", "agents/test-writer.md"):
+            self.assertIn("### Machine:", self.read(rel), rel)
         self.assertIn("domain", self.read("skills/interface/SKILL.md"))
 
     def test_numbered_requirements_in_the_templates(self):

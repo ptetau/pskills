@@ -27,7 +27,7 @@ Write the acceptance tests of one slice. Each test fails now because the behavio
 - Test one acceptance line at a time, through the interface, with concrete values and exact expected output.
 - Each test calls the surface, and fails only on a missing behaviour. Import and prepare only what the interface and the tests folder give.
 - A test can fail by a plain assertion only if it cites a requirement on the `- Changed:` line of its slice in `interface.md` (an existing entry that changes). Every other test fails with the not-implemented error of the stub.
-- For each state machine in `domain.md`, test each allowed transition and each refused transition with its error.
+- For each `### Machine:` section of `domain.md`, test each `Tn` transition and each `Xn` refused transition with its error. The requirement that cites the transition gives the test its `Rn`.
 - Test the security floor that `interface.md` names (the OWASP Top 10 protection), for example that bad input is refused.
 - Do not change the interface. If a line cannot be tested through it, say so in the reply.
 - Outputs give each reader exactly what it reads: test names in the form `test_NNN_Sn_Rn_<what>`, as the test command prints them.

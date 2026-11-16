@@ -923,6 +923,102 @@ class Withheld(Base):
     def test_bad_arguments_are_a_usage_error(self):
         self.assertEqual(self.p.slice("test", "S1", "--nope").returncode, 2)
 
+MACHINE_DOMAIN = """# Domain: shop
+
+## State machines
+
+### Machine: Order
+
+- States: Created, Paid, Shipped
+- Start: Created
+- End: Shipped
+- T1: Created -> Paid on pay [amount > 0] / mark paid
+- T2: Paid -> Shipped on ship / set the ship date
+- X1: Created on ship refused: NotPaid
+
+## Requirement map
+
+- R1: Order, Money; boundary: the caller pays. Order.T1, Order.T2
+- R2: Order.X1
+"""
+
+
+class Machines(Base):
+    """D: the state machines of domain.md have a form that the script reads."""
+
+    def domain(self, text=MACHINE_DOMAIN):
+        self.p.write("slice/001-wordfreq/domain.md", text)
+        return self.p.slice("status").stdout
+
+    def test_a_complete_machine_with_cited_transitions_is_mapped(self):
+        out = self.domain()
+        self.assertIn("domain: mapped", out)
+        self.assertIn("next: build S1", out)
+
+    def test_machines_none_passes_a_spec_with_no_lifecycle(self):
+        self.assertIn("domain: mapped", self.domain(fixture.DOMAIN))
+        self.assertIn("- Machines: none", fixture.DOMAIN)
+
+    def test_no_machine_and_no_machines_none_line_is_a_problem(self):
+        out = self.domain(fixture.DOMAIN.replace("- Machines: none\n", ""))
+        self.assertIn("domain: problems", out)
+        self.assertIn("Machines: none", out)
+        self.assertIn("next: domain", out)
+
+    def test_a_cited_transition_that_no_machine_defines_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("- R2: Order.X1", "- R2: Order.X1, Order.T9, Cart.T1"))
+        self.assertIn("R2 cites Order.T9", out)
+        self.assertIn("R2 cites Cart.T1", out)
+        self.assertIn("next: domain", out)
+
+    def test_a_transition_that_no_requirement_cites_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("Order.T1, Order.T2", "Order.T1"))
+        self.assertIn("Order.T2 is not cited", out)
+        self.assertNotIn("Order.T1 is not cited", out)
+        self.assertIn("next: domain", out)
+
+    def test_a_refused_transition_that_no_requirement_cites_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("- R2: Order.X1", "- R2: Order"))
+        self.assertIn("Order.X1 is not cited", out)
+
+    def test_a_machine_with_no_start_state_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("- Start: Created\n", ""))
+        self.assertIn("Order has no start state", out)
+        out = self.domain(MACHINE_DOMAIN.replace("- Start: Created", "- Start: Nowhere"))
+        self.assertIn("Order has no start state", out)
+
+    def test_an_unreachable_state_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("States: Created, Paid, Shipped", "States: Created, Paid, Shipped, Lost"))
+        self.assertIn("Order: state Lost is unreachable", out)
+        self.assertNotIn("state Paid is unreachable", out)
+
+    def test_a_refused_transition_does_not_make_a_state_reachable(self):
+        out = self.domain(MACHINE_DOMAIN.replace("States: Created, Paid, Shipped", "States: Created, Paid, Shipped, Lost")
+                          .replace("- X1: Created on ship refused: NotPaid", "- X1: Created on ship refused: NotPaid\n"
+                                   "- X2: Lost on ship refused: Gone"))
+        self.assertIn("Order: state Lost is unreachable", out)
+
+    def test_a_transition_that_names_an_unknown_state_is_reported(self):
+        out = self.domain(MACHINE_DOMAIN.replace("-> Shipped on ship", "-> Sent on ship"))
+        self.assertIn("Order.T2: state Sent is not in States", out)
+
+    def test_the_machine_form_is_the_one_in_the_template(self):
+        template = (fixture.PLUGIN / "templates/domain.md").read_text()
+        self.assertIn("### Machine:", template)
+        out = self.domain(template)
+        self.assertNotIn("domain: mapped", out)
+
+    def test_two_machines_each_have_their_own_ids(self):
+        two = MACHINE_DOMAIN.replace("## Requirement map", "### Machine: Cart\n\n- States: Open, Closed\n"
+                                     "- Start: Open\n- End: Closed\n- T1: Open -> Closed on close\n\n## Requirement map"
+                                     ).replace("- R2: Order.X1", "- R2: Order.X1, Cart.T1")
+        self.assertIn("domain: mapped", self.domain(two))
+        self.assertIn("Cart.T1 is not cited", self.domain(two.replace(", Cart.T1", "")))
+
+    def test_requirement_gaps_still_come_first(self):
+        out = self.domain(MACHINE_DOMAIN.replace("- R2: Order.X1", "- R2: GAP"))
+        self.assertIn("domain: gaps R2", out)
+
 
 if __name__ == "__main__":
     unittest.main()

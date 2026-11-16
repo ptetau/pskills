@@ -89,10 +89,15 @@
     "slice/NNN-<name>/domain.md": {
       "producer": "domain",
       "template": "domain.md",
-      "form": "entities, value objects, relationships, invariants, a state machine for each object with a lifecycle, the bounded contexts and the boundary, and a `## Requirement map` with one `- Rn: parts` line for each requirement (`GAP` when none)",
+      "form": "entities, value objects, relationships, invariants, a `### Machine: <Object>` section for each object with a lifecycle (`- States:`, `- Start:`, `- End:`, transitions `- T1: <from> -> <to> on <trigger> [<guard>] / <effect>`, refused lines `- X1: <from> on <trigger> refused: <error>`; the line `- Machines: none` when no object has a lifecycle), the bounded contexts and the boundary, and a `## Requirement map` with one `- Rn: parts` line for each requirement (`GAP` when none; a requirement cites transitions as `Object.T1` or `Object.X1`). `slice.py status` reports a cited transition that no machine defines, a transition that no requirement cites, a machine with no start state, an unreachable state, and a state that States does not list",
       "fields": [
         "## Requirement map",
         "## State machines",
+        "### Machine:",
+        "- Machines: none",
+        "- Start:",
+        "- T1:",
+        "- X1:",
         "## Bounded contexts and boundary"
       ],
       "consumers": [

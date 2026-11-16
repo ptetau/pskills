@@ -247,6 +247,86 @@ def requirement_ids(text):
     return re.findall(r"^[-*]\s+(R\d+)\b", text or "", re.M)
 
 
+MAP_LINE = re.compile(r"^[-*]\s+(R\d+):[ \t]*(.*)$", re.M)
+MACHINE_HEAD = re.compile(r"^###\s+Machine:[ \t]*(\S.*?)[ \t]*$", re.M)
+CITE = re.compile(r"(?<![\w.-])([A-Za-z][\w-]*)\.([TX]\d+)\b")
+TRANSITION = re.compile(r"^[-*]\s+(T\d+):[ \t]*(.+?)[ \t]*->[ \t]*(.+?)[ \t]+on[ \t]+\S.*$", re.M)
+REFUSED = re.compile(r"^[-*]\s+(X\d+):[ \t]*(.+?)[ \t]+on[ \t]+(.+?)[ \t]+refused:[ \t]*\S.*$", re.M)
+MACHINES_NONE = re.compile(r"^[-*]\s+Machines:[ \t]*none\b", re.M | re.I)
+
+
+def clean_state(value):
+    return value.strip().strip("`").strip()
+
+
+def state_list(value):
+    return [s for s in (clean_state(p) for p in value.rstrip(". ").split(",")) if s]
+
+
+def machines(text):
+    """{name: machine} for each `### Machine: <Object>` section of domain.md. A machine holds
+    its states, start, end, transitions {Tn: (from, to)}, and refused {Xn: from}."""
+    heads = list(MACHINE_HEAD.finditer(text))
+    out = {}
+    for m in heads:
+        rest = text[m.end():]
+        stop = re.search(r"^#", rest, re.M)
+        body = rest[:stop.start()] if stop else rest
+        name = clean_state(m.group(1))
+        start = get_field(body, "Start")
+        out[name] = {
+            "states": state_list(get_field(body, "States")),
+            "start": clean_state(start) if start else "",
+            "end": [s for s in state_list(get_field(body, "End")) if s.lower() != "none"],
+            "transitions": {t.group(1): (clean_state(t.group(2)), clean_state(t.group(3)))
+                            for t in TRANSITION.finditer(body)},
+            "refused": {x.group(1): clean_state(x.group(2)) for x in REFUSED.finditer(body)},
+        }
+    return out
+
+
+def machine_problems(text):
+    """Problems of the state machines in domain.md: a missing start, an unreachable state,
+    a state that States does not list, a cited transition that no machine defines, and a
+    transition that no requirement cites."""
+    found = machines(text)
+    problems = []
+    if not found and not MACHINES_NONE.search(text):
+        problems.append("no state machine: add a `### Machine: <Object>` section, or the line `- Machines: none`")
+    cited = set()
+    for line in MAP_LINE.finditer(text):
+        for obj, tid in CITE.findall(line.group(2)):
+            cited.add((obj, tid))
+            if tid not in found.get(obj, {}).get("transitions", {}) and tid not in found.get(obj, {}).get("refused", {}):
+                problems.append("%s cites %s.%s: no machine defines it" % (line.group(1), obj, tid))
+    for name, mc in found.items():
+        states = set(mc["states"])
+        if not mc["start"] or mc["start"] not in states:
+            problems.append("%s has no start state (the Start line names a state of States)" % name)
+        for tid, (src, dst) in mc["transitions"].items():
+            for s in (src, dst):
+                if s not in states:
+                    problems.append("%s.%s: state %s is not in States" % (name, tid, s))
+        for tid, src in mc["refused"].items():
+            if src not in states:
+                problems.append("%s.%s: state %s is not in States" % (name, tid, src))
+        reached, todo = set(), [mc["start"]] if mc["start"] in states else []
+        while todo:
+            s = todo.pop()
+            if s in reached:
+                continue
+            reached.add(s)
+            todo += [dst for src, dst in mc["transitions"].values() if src == s]
+        if mc["start"] in states:
+            for s in mc["states"]:
+                if s not in reached:
+                    problems.append("%s: state %s is unreachable" % (name, s))
+        for tid in list(mc["transitions"]) + list(mc["refused"]):
+            if (name, tid) not in cited:
+                problems.append("%s.%s is not cited by any requirement" % (name, tid))
+    return problems
+
+
 def domain_gaps(root, reqs):
     """The requirements that domain.md does not map. None when domain.md is missing."""
     text = read(root, "domain.md")
@@ -259,6 +339,12 @@ def domain_gaps(root, reqs):
         if not value or value.upper().startswith("GAP") or value.startswith("<"):
             gaps.append(r)
     return gaps
+
+
+def domain_problems(root):
+    """The problems of the state machines of domain.md (none when domain.md is missing)."""
+    text = read(root, "domain.md")
+    return machine_problems(text) if text is not None else []
 
 
 def next_step(root):
@@ -279,7 +365,7 @@ def next_step(root):
         return "spec"
     if not slices or uncovered:
         return "plan"
-    if gaps is None or gaps:
+    if gaps is None or gaps or domain_problems(root):
         return "domain"
     stopped = [r for r in rows if r[1] == "stopped"]
     if stopped:
@@ -321,7 +407,11 @@ def cmd_status(root):
     print("spec: %s" % spec)
     if reqs:
         print("requirements: %d, uncovered by a slice: %s" % (len(reqs), ", ".join(uncovered) or "none"))
-    print("domain: %s" % ("missing" if gaps is None else "gaps %s" % ", ".join(gaps) if gaps else "mapped"))
+    problems = domain_problems(root)
+    print("domain: %s" % ("missing" if gaps is None else "gaps %s" % ", ".join(gaps) if gaps
+                          else "problems" if problems else "mapped"))
+    for problem in problems:
+        print("  - " + problem)
     print("interface: %s" % interface_status(root))
     rows = []
     for sid, title, start, end in slices:

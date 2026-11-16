@@ -17,13 +17,15 @@ This design document holds no code.
 
 ## State machines
 
-One section for each object that has a lifecycle.
+One `### Machine: <Object>` section for each object that has a lifecycle. For none, write the line `- Machines: none`. `slice.py status` reads these lines: the start state, each state reachable from it, each transition cited by a requirement.
 
-### <Object>
+### Machine: <Object>
 
-- States: <all states>. Start: <state>. End: <states>.
-- T1 <from> to <to>: trigger <what starts it>, guard <what must hold>, effect <what changes>.
-- Not allowed: <from> to <to> gives the error <error form>.
+- States: <all states, comma separated>
+- Start: <state>
+- End: <states, or none>
+- T1: <from> -> <to> on <trigger> [<guard>] / <effect>
+- X1: <from> on <trigger> refused: <error form>
 
 ## Bounded contexts and boundary
 
@@ -33,6 +35,6 @@ One section for each object that has a lifecycle.
 
 ## Requirement map
 
-One line for each requirement of the spec. Write `GAP` when no part of the model meets it.
+One line for each requirement of the spec. Write `GAP` when no part of the model meets it. A requirement that changes state cites its transitions as `Object.Tn` or `Object.Xn`. Each transition of each machine is cited by a requirement.
 
-- R1: <entities, invariants, and boundary parts that meet it>. Transitions: <T1, if it changes state>.
+- R1: <entities, invariants, and boundary parts that meet it>, <Object.T1 or Object.X1 for each transition that it needs>

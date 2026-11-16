@@ -36,6 +36,10 @@ Status: ratified
 
 DOMAIN = """# Domain: wordfreq
 
+## State machines
+
+- Machines: none
+
 ## Requirement map
 
 - R1: Text, WordCount; boundary: the caller passes the text
