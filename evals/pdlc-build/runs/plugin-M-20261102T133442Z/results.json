@@ -1,0 +1,645 @@
+{
+ "skill": "pdlc:build",
+ "skillSha256": "d1244b9a66a36be1896fd2b0841a00eba4eabebccb91d9984d08fae13d9fcc0f",
+ "skillTreeSha256": "8672eac1e5644981b700a4a8ec35067c7c030882bbe58b4e35abbae21ddec86d",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "67a92beb077c55551fe8d42401323458ff03dc895c0ade650717f55412ae6f59",
+ "suiteSha256": "bd2c275514ca2d2a3e9a7b1e2bc54fa228cc7e08416020fad0a7aff2256fb0ff",
+ "runId": "plugin-M-20261102T133442Z",
+ "generatedAt": "2026-11-02T13:34:42Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 4,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "session",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "session",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 7,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 95.8,
+  "stability": 83.3,
+  "overall": 89.3,
+  "grade": "B",
+  "confidence": "normal",
+  "usableRuns": 4,
+  "totalRuns": 4
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 2
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 97.2,
+   "stability": 86.7,
+   "overall": 91.8,
+   "grade": "A",
+   "moved": null
+  },
+  {
+   "wave": 2,
+   "runsPerPrompt": 4,
+   "usable": 4,
+   "quality": 95.8,
+   "stability": 83.3,
+   "overall": 89.3,
+   "grade": "B",
+   "moved": -2.5
+  }
+ ],
+ "qualitySpread": {
+  "min": 94.4,
+  "median": 94.4,
+  "max": 100
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "After the last app change, all checks and each acceptance file that build must run pass, and the run reports the result.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "No locked check changed. The diff since `start` touches no check file.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The app does what the requirements say and nothing more. The README states the new behaviour when \"Files\" lists it.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run changes only the files under \"Files\", the change folder, and the specs.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "\"Build CH-0001: <what>\" (`Intent`, `Change`, `Req`) holds the app files, then \"Built CH-0001\" (`Intent`, `Change`) holds the records.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The steps are ticked, the progress log has a new line, and each requirement of the change is `built` in its spec.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The handoff `build \u2192 verify` is in the template form.",
+   "passRate": 62.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply says that `/pdlc:verify` is next.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 4,
+   "quality": 95.8,
+   "stability": 83.3
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-build/runs/plugin-M-20261102T133442Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 94.4,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "`cargo test` passes with 26 checks, including the 18 in `tests/store.rs`. I ran it myself after the builder reported."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "No check changed since the lock at `ad70dc7`."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "`Item` now has a `done` field, load and save handle the `*` form, and `Store::mark_done` is new."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "it changed only `src/store.rs` and `README.md`, which are the files listed under \"Files\"."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Build CH-0001: store keeps the done state\n\nIntent: IN-0001\nChange: CH-0001\nReq: CAP-store.R1, CAP-store.R8, CAP-store.R9, CAP-store.R10"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "CAP-store.R1, R8, R9 and R10 are now `built`. All five steps are ticked, and the progress log has a new line."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Run `/pdlc:verify` on CH-0001 (store keeps the done state). Run all checks and the review remits. (handoff names no way to run the app)"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "CH-0001 (store keeps the done state) is built, and `/pdlc:verify` is next."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-build/runs/plugin-M-20261102T133442Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "`cargo test` passes, including the 18 checks in `tests/store.rs`. No check changed since the lock at `ad70dc7`. No acceptance file applied, because CH-0001 is not the last change of IN-0001."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "No check changed since the lock at `ad70dc7`."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "A done item is stored as `<id>*<TAB><text>`, and old files load as not done. `Store::mark_done` is new. The README describes the data file form."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "The work is in two commits, \"Build CH-0001: store keeps the done state\" and \"Built CH-0001\". `git status` is clean."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Build CH-0001: store keeps the done state\n\nIntent: IN-0001\nChange: CH-0001\nReq: CAP-store.R1, CAP-store.R8, CAP-store.R9, CAP-store.R10"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "All five steps of the change are ticked, and the progress log has a new line."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "The handoff `build \u2192 verify` is written."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "CH-0001 (store done state) is built, and `/pdlc:verify` is next."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-build/runs/plugin-M-20261102T133442Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 94.4,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "`cargo test` passes all 24 checks. No check file has changed since the lock `ad70dc7`. CH-0001 is not the last change of IN-0001, so no acceptance file had to pass."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "No check file has changed since the lock `ad70dc7`."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "`Item` has a `done` field, and the data file marks a done item with `*` after its id. `Store::mark_done` is new, and an old data file loads with every item not done. The README now tells the `*` form."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "the builder changed `src/store.rs` and `README.md`"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Build CH-0001: store keeps the done state\n\nIntent: IN-0001\nChange: CH-0001\nReq: CAP-store.R1, CAP-store.R8, CAP-store.R9, CAP-store.R10 ... Built CH-0001\n\nIntent: IN-0001\nChange: CH-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "I set CAP-store.R1, R8, R9 and R10 to `built` and ticked the five steps. The progress log and the `build \u2192 verify` handoff are written."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "# Handoff \u00b7 CH-0001 \u00b7 build \u2192 verify ... `cargo test` ran 24 checks, and all pass. (no command to run the app; Open: none)"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "CH-0001 (store keeps the done state) is built. The next step is `/pdlc:verify`."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-build/runs/plugin-M-20261102T133442Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "",
+   "quality": 94.4,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "`cargo test` passes, and `git status` is clean. I ran it once more myself after the builder reported, and it passed (24 checks in all)."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "No check changed since the lock (`ad70dc7`), because the diff against that hash shows nothing."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "`Store::mark_done` marks an item, and gives false for an unknown id. The README now tells the data file form and that an old file still loads."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "the builder changed only `src/store.rs` and `README.md`."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Build CH-0001: store keeps the done state\n\nIntent: IN-0001\nChange: CH-0001\nReq: CAP-store.R1, CAP-store.R8, CAP-store.R9, CAP-store.R10 ... Built CH-0001\n\nIntent: IN-0001\nChange: CH-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "It holds the specs, the change spec with ticked steps and a progress log line ... CAP-store.R1, R8, R9 and R10 are `built`."
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "# Handoff \u00b7 CH-0001 \u00b7 build \u2192 verify ... Open: The \"proposed\" marks ... stay for `verify` to remove. (no command to run the app)"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "Next is `/pdlc:verify`."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "All runs report cargo test passing after the build, no check change since the lock, and no acceptance file needed; only check counts and wording differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Reports cargo test passing after the build, no check change since lock, and no acceptance file because CH-0001 is not the last change"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "equivalent",
+   "reason": "All runs touch no check file since the lock and state the lock ad70dc7 is unchanged.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "No check file touched since start; lock at ad70dc7 stated unchanged"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "equivalent",
+   "reason": "All runs add the same done field, '*' suffix, and mark_done code, with README text on the '*' form and old-file loading in slightly different words.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Adds Item.done, '*' suffix in load/save, Store::mark_done returning false for unknown id; README describes the '*' form and old-file loading"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "identical",
+   "reason": "All runs change exactly src/store.rs, README.md, change.md, handoff.md, and CAP-store.md.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Changes only src/store.rs, README.md, change.md, handoff.md, and CAP-store.md"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "identical",
+   "reason": "All runs make the same two commits with the same subjects, trailers, and file split.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Build commit with Intent/Change/Req holding app files, then Built commit with Intent/Change holding records"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "equivalent",
+   "reason": "All runs tick five steps, add one build progress line, and set R1/R8/R9/R10 to built; progress-line wording differs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Five steps ticked, one build line in the progress log, R1/R8/R9/R10 set to built"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "major_drift",
+   "reason": "One run gives a command to run the app and the others do not, and the Open section varies between none and listed items.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#4"
+     ],
+     "description": "Template-form handoff with an Open item about proposed marks, but no command to run the app"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Template-form handoff with Open none and a 'cargo run --release' / 'cargo test' line for running the app"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Template-form handoff with Open none and no command to run the app"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "All runs name /pdlc:verify as next, but one run puts it at the end instead of in the opening sentences.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "First sentence says CH-0001 is built and /pdlc:verify is next"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Names /pdlc:verify as next in a closing line after a long bulleted report"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

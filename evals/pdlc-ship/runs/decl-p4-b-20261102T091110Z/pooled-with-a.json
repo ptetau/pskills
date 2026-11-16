@@ -1,0 +1,548 @@
+{
+ "skill": "pdlc:ship",
+ "skillSha256": "0ee75ecba704a01a10fda29ae63ab76cacf8c7ec5e4d9f5e25150e6f3a99c37c",
+ "skillTreeSha256": "a239db8c6f127274372cdd7587c81de6f08cdf3ab857c1c423fc181ded56fc3d",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "0b5d73d16f541df2dcc810be5c4e9852042cc137f7c92e1db107089e530af4be",
+ "suiteSha256": "c687c9e875e929a2bca3f5c92788a719cdbcbeba469e4d35b21065f6314449fa",
+ "runId": "pooled:decl-p4-a-20261102T090939Z+decl-p4-b-20261102T091110Z",
+ "generatedAt": "2026-11-02T09:09:39Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 84.5,
+  "stability": 57.8,
+  "overall": 69.5,
+  "grade": "F",
+  "confidence": "normal",
+  "usableRuns": 4,
+  "totalRuns": 4
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 80.8,
+   "stability": 44.2,
+   "overall": 59.8,
+   "grade": "F",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 61.5,
+  "median": 80.8,
+  "max": 100
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The run ends only in an end state: each change is proposed, or a commit \"Stop <id>: <why>\" records the stop. It does not end with work half done and no stop record.",
+   "passRate": 100.0,
+   "stabilityWithin": 90.0,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A stop gives the user a clear decision. The reply and \"Open\" in the handoff give the reason in one sentence, the decision, and a recommended answer that obeys the pdlc rules.",
+   "passRate": 75.0,
+   "stabilityWithin": 30.0,
+   "classesWithin": {
+    "P01": "contradictory"
+   },
+   "agreementWithin": 50.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Ship does not settle a contradiction by default. It stops and leaves the choice to the user.",
+   "passRate": 87.5,
+   "stabilityWithin": 57.5,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Ship continues from the latest handoff and does not run a finished stage again.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stage leaves the commit subjects and trailers of its own skill, in the order of \"Stages and handoffs\".",
+   "passRate": 100.0,
+   "stabilityWithin": 90.0,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A case that is not a stop (no remote, a slow agent, a choice of name) does not stop the run.",
+   "passRate": 100.0,
+   "stabilityWithin": 60.0,
+   "classesWithin": {},
+   "agreementWithin": 100.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "At the end, `git status --porcelain` is empty, and each commit has the trailers of \"Commits\".",
+   "passRate": 50.0,
+   "stabilityWithin": 25.0,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The last reply lists the changes in stack order with their proposals and GIFs. It also lists each answer taken by default, and what waits for the user.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 80.8,
+   "stability": 44.2
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/decl-p4-a-20261102T090939Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "Ship ran intake and ready, then stopped on the contradiction (N at most 10 vs the --top 20 example). No change was planned.",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "22b8a1e Stop IN-0001: R5 (top limit) contradicts the example of R4 (top option)"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Stop: R5 (top limit) says N must be 10 or less, but the example of R4 (top option) uses N of 20. / The user must decide: can N be above 10, or must the example use N of 10 or less? / Recommended: N can be any whole number. Keep the example, and drop R5."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "R4 (top option) and R5 (top limit) stay proposed, because they contradict each other."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "new file mode 100644 ... pdlc/inbox/IN-0001-top-option.md"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Commits: \"Specify IN-0001: Top option\", \"Ready IN-0001: Top option\", \"Stop IN-0001: R5 (top limit) contradicts the example of R4 (top option)\"."
+    },
+    {
+     "id": "R6",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Intent: IN-0001\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "Pull requests and GIFs: none, because no change was planned."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/decl-p4-a-20261102T090939Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "Ship stopped at ready on a clash: N must be 10 or less, but the example uses --top 20. Work was in proj/ with 3 commits: Specify, Ready, Stop.",
+   "quality": 61.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Commits: \"Specify IN-0001: Top option\", \"Ready IN-0001: Top option\", and \"Stop IN-0001: clash between the limit of 10 and the example of 20\"."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Why I stopped:\n- R5 (top limit) says N must be 10 or less.\n- The example in R4 (top option) prints 20 words for `--top 20`."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "JOB-report-word-frequencies.R5: what happens when N is more than 10? \u2192 error `error: --top must be 10 or less` and exit code 2 (assumed)"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "new file mode 100644 ... pdlc/inbox/IN-0001-top-option.md"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Commits: \"Specify IN-0001: Top option\", \"Ready IN-0001: Top option\", and \"Stop IN-0001: clash between the limit of 10 and the example of 20\"."
+    },
+    {
+     "id": "R6",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "absent"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/decl-p4-b-20261102T091110Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "Ship stopped at ready by design: the intent's \"N must be 10 or less\" clashes with its example --top 20. Three commits: Specify, Ready, Stop IN-0001. No change or code stage ran.",
+   "quality": 76.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "\"Stop IN-0001: R4 and R5 clash on the limit of N\""
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Stop reason: R4 (top option) and R5 (top limit) clash. N must be 10 or less, and the example runs `--top 20`."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "N must be 10 or less. This requirement clashes with the third line of R4 (top option), which runs `--top 20`. The user decides."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "\"Specify IN-0001: Top option\" - \"Ready IN-0001: Top option\" - \"Stop IN-0001: R4 and R5 clash on the limit of N\""
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "JOB-report-word-frequencies.R4: does --top come before FILE? \u2192 yes, as in the example, and the usage line shows this order (assumed)"
+    },
+    {
+     "id": "R7",
+     "verdict": "missed",
+     "evidence": "git status --porcelain in proj: \"?? .vet-tmp/\" (cap.py, ready.py left uncommitted)"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "No change, branch, or pull request exists yet."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/decl-p4-b-20261102T091110Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "Ship stopped at ready: \"N must be 10 or less\" contradicts the example --top 20. Three commits (Specify, Ready, Stop); no change, branch, or PR.",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop (commit \"Stop IN-0001: limit of 10 clashes with the example of 20\")"
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "Recommended answer: keep the limit of 10, so that `--top 20` is an error. Both requirements stay `proposed` until then."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "N must be 10 or less. This line clashes with the first line of R4 (top option limits the output), which uses N of 20. The clash is open."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Intake (commit \"Specify IN-0001: Top option\") ... Ready (commit \"Ready IN-0001: Top option\")"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "DES-errors: Which code names a bad N? \u2192 TOP_INVALID, caller fault, retry does not help (assumed)"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "`git status --porcelain` is empty."
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "No change, no branch, no pull request and no GIF exist yet."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "Both runs end on a Stop IN-0001 commit after Specify and Ready, and the reply states the stop; only the stop wording differs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Specify, Ready, then Stop IN-0001 as newest commit; reply says it stopped"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "contradictory",
+   "reason": "The runs recommend opposite answers: P01#1 drops the limit, and P01#2 keeps the limit and changes the example.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "One-sentence reason; recommends dropping the limit of 10 and keeping the example, with the other answer listed"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Reason split over two bullets in the reply; recommends keeping the limit of 10 and changing the example to --top 10"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "Both stop at the clash, but P01#2 writes limit-side defaults and an R5 error check while P01#1 stays neutral.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Stops at the clash; no default assumes either side wins"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Stops at the clash, but adds defaults (TOP_TOO_LARGE, R5 error scenario) that assume the limit side"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "equivalent",
+   "reason": "Both leave the same three commit subjects in the same order; only the stop reason wording differs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Three commits: Specify IN-0001, Ready IN-0001, Stop IN-0001: <why>"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "major_drift",
+   "reason": "P01#1 shows correct trailers on each commit; P01#2 omits the commit log, so the trailers are absent from the evidence.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Capture lists each commit with Intent trailer and Co-Authored-By"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Capture has no git log, so trailers and tree state are not shown"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": [],
+ "pooledFrom": [
+  "/home/user/pskills/evals/pdlc-ship/runs/decl-p4-a-20261102T090939Z/results.json",
+  "/home/user/pskills/evals/pdlc-ship/runs/decl-p4-b-20261102T091110Z/results.json"
+ ]
+}

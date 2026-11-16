@@ -6,6 +6,7 @@ description: >
   code. The pdlc acceptance and tests skills use this agent.
 tools: Read, Write, Edit, Glob, Grep
 model: inherit
+effort: medium
 ---
 
 pdlc needs a Sonnet 5.5 class model or above. If you run on a lower model, for example a

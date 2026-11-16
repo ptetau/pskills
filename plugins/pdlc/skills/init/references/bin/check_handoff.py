@@ -5,8 +5,8 @@ Reads the handoff of an intent ("## Handoff" in pdlc/inbox/IN-xxxx-*.md) or of a
 (pdlc/changes/CH-xxxx-*/handoff.md), and compares the working tree with HEAD. A stage runs
 it before its commit. These rules hold:
 
-  1. The title is "Handoff · <ID> · <stage> → <next>", and the pair is one that the handoff
-     template permits for the stage. A leading "#" is accepted. A short description in
+  1. The title is "Handoff · <ID> · <stage> → <next>", and the pair is one that "NEXT"
+     below permits for the stage. A leading "#" is accepted. A short description in
      brackets after the ID is accepted.
   2. "Time: <ISO 8601 time with offset>" is the next line.
   3. The six sections are present, in the order of the template.
@@ -15,8 +15,8 @@ it before its commit. These rules hold:
   5. The lines match the new "(assumed" marks in pdlc/specs/**. A mark is new when the sentence
      that holds it is not in the HEAD version of the file. The owner of a mark is the nearest
      "### <ID> ·" heading above it, or the spec ID under "## Interface" and in a design spec.
-     Each owner has a line. Each line is the owner of a new mark. "- none" fails when a
-     mark is new.
+     Each owner has a line. Each line is the owner of a new mark, unless the HEAD "## Notes" of the intent
+     hold that line: the earlier handoff decided it. "- none" fails when a mark is new.
   6. Each line is also a line of "## Notes" in the intent (intent handoffs only). Each line of
      "## Notes" that holds "(assumed" and is not on HEAD is also a line of "Decided on
      defaults".
@@ -37,16 +37,20 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # do not leave a __pycache__ in pdlc/bin of the project
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pdlclib import section  # noqa: E402
+
 SECTIONS = ["Done", "Decided on defaults", "Open", "Look here", "Don't redo",
             "Next: do this first"]
-# The titles that templates/handoff.md permits for each stage.
+# The titles that each stage permits. This table is the source of the permitted pairs.
 NEXT = {
     "intake": ["ready", "user"],
     "ready": ["change", "user"],
     "change": ["acceptance", "user"],
     "acceptance": ["tests", "build", "user"],
     "tests": ["build", "user"],
-    "build": ["verify", "user"],
+    "build": ["verify", "tests", "acceptance", "user"],
     "verify": ["show", "tests", "build", "acceptance", "user"],
     "show": ["user", "build"],
 }
@@ -58,12 +62,6 @@ REQ_HEADING = re.compile(r"^### ((?:JOB|CAP|DES)-[a-z0-9-]+\.R\d+) ·")
 MARK = "(assumed"
 # Wrong forms of the mark: "(more likely", "*(assumed", and "assumed" inside other brackets.
 BAD_MARK = re.compile(r"\(more likely|\*\(assumed|\((?!assumed)[^()]*\bassumed\b[^()]*\)")
-
-
-def section(text, title):
-    """The text under a '## title' heading, up to the next '## ' heading."""
-    match = re.search(r"^## %s\s*$(.*?)(?=^## |\Z)" % re.escape(title), text, re.M | re.S)
-    return match.group(1) if match else None
 
 
 def spec_of(item):
@@ -139,7 +137,7 @@ def find_handoff(root, item):
     found = [path for path in found if path.exists()]
     if not found:
         return None, None, "%s: no intent file found in pdlc/inbox/" % item
-    body = section(found[0].read_text(), "Handoff")
+    body = section(found[0].read_text(), "Handoff", None)
     if body is None:
         return None, found[0], "%s: the intent has no \"## Handoff\" section" % item
     return body, found[0], None
@@ -206,7 +204,7 @@ def check_decided(item, decided, owners, notes, old_notes=frozenset()):
             problems.append("%s: Decided on defaults, wrong form (need \"- <ID>: <question> → "
                             "<answer> (assumed)\"): %s" % (item, line))
             continue
-        ids.append(found.group(1))
+        ids.append((found.group(1), line))
         if notes is not None and line not in notes:
             same = sorted(n for n in notes if line_id(n) == found.group(1))
             problems.append("%s: this line of Decided on defaults is not in the Notes of the "
@@ -218,12 +216,14 @@ def check_decided(item, decided, owners, notes, old_notes=frozenset()):
                 problems.append("%s: this (assumed) line of the Notes is not in Decided on "
                                 "defaults: %s" % (item, note))
     for owner in sorted(owners):
-        covered = any(i == owner or (spec_of(owner) == owner and spec_of(i) == owner) for i in ids)
+        covered = any(i == owner or (spec_of(owner) == owner and spec_of(i) == owner) for i, _ in ids)
         if not covered:
             what = "a new (assumed) mark" if owners[owner] == 1 else "%d new (assumed) marks" % owners[owner]
             problems.append("%s: %s has %s in the specs, and no line in Decided on defaults" % (
                 item, owner, what))
-    for i in ids:
+    for i, line in ids:
+        if line in old_notes:
+            continue  # kept from the earlier handoff of this intent
         if not any(owner == i or owner == spec_of(i) for owner in owners):
             problems.append("%s: the line for %s has no new (assumed) mark in the specs" % (item, i))
     return problems

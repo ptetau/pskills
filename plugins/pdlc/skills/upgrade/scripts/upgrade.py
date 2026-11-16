@@ -491,7 +491,7 @@ def file_intent(root, plugin, version, problems):
     what = ("pdlc %s reads parts of a spec that some specs of this project do not have. The list\n"
             "below gives each spec and each missing part. Add each part, and keep the behaviour of the\n"
             "app the same.\n\n%s\n\n" % (version, "\n".join("- " + p for p in problems)))
-    notes = "- Awaits approval: Upgrade pdlc filed this intent.\n\n"
+    notes = "Awaits approval: Upgrade pdlc filed this intent.\n\n"
     text = re.sub(r"^# IN-0000 · .*$", "# %s · %s" % (intent_id, title), template, count=1, flags=re.M)
     text = text.replace("Added: YYYY-MM-DD", "Added: " + today)
     text = re.sub(r"^(## What and why\n\n).*?(?=^## )", lambda m: m.group(1) + what, text, count=1,

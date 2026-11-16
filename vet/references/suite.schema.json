@@ -103,6 +103,10 @@
           "type": "string",
           "description": "Where in SKILL.md this comes from: a heading, rule number, or short quote."
         },
+        "check": {
+          "type": "string",
+          "description": "Optional. A command that grades this item by script. It prints a JSON verdict {\"verdict\": \"met|partial|missed\", \"evidence\": \"...\"}. {run} is the absolute path of the run's working directory. {bench} is the folder of the scripted checks. The grader runs the command and copies the verdict; it does not judge the item."
+        },
         "structureRef": {
           "type": "string",
           "pattern": "^S[0-9]+$",
@@ -132,6 +136,14 @@
           "type": "array",
           "items": { "type": "string" },
           "description": "Scripted user replies, used in order whenever the skill waits for the user. Empty for skills that never ask."
+        },
+        "setup": {
+          "type": "string",
+          "description": "Optional. Text for the run agent, not for the skill. It tells how to prepare the project. The agent runner shows the prompt, then the setup, as one text. The plugin runner follows it once, with PLUGIN set to the plugin under test, and gives the real session only the prompt."
+        },
+        "project": {
+          "type": "string",
+          "description": "Optional. The folder of the project that the setup prepares, relative to the worktree, for example \"proj\". The plugin runner starts the real session there. The capture still covers the whole worktree."
         }
       }
     }

@@ -1,4 +1,5 @@
 """Tests for pdlc's commit check hook. Run: python3 -m unittest discover plugins/pdlc/tests"""
+import importlib.util
 import json
 import re
 import shutil
@@ -12,6 +13,7 @@ PLUGIN = Path(__file__).parent.parent
 HOOK = PLUGIN / "hooks/commits.py"
 WRITING = PLUGIN / "skills/init/references/bin/check_writing.py"
 TRAILERS = PLUGIN / "skills/init/references/defaults/DES-pdlc-commit-trailers.md"
+PDLC = PLUGIN / "skills/init/references/bin/pdlc.py"
 
 CHANGE = "# CH-0001 · Email templates\n\nIntent: IN-0001 · Scope: CAP-email · Status: testing · " \
          "Ticket: none · Branch: pdlc/CH-0001-email · Base: main\n"
@@ -57,6 +59,41 @@ class CommitHook(unittest.TestCase):
                              capture_output=True, text=True, timeout=30)
         return run.returncode, run.stderr
 
+    # The hook also fires on pdlc.py, the script that makes pdlc commits
+
+    def test_the_hook_fires_on_pdlc_commit(self):
+        self.commit("Lock tests CH-0001 again")
+        for command in ("python3 pdlc/bin/pdlc.py commit tests CH-0001",
+                        "cd /tmp && python3 pdlc/bin/pdlc.py commit tests CH-0001 --amend",
+                        "python3 pdlc/bin/pdlc.py stop CH-0001 --stage build --json -",
+                        "python3 pdlc/bin/pdlc.py start CH-0001",
+                        "python3 ./pdlc/bin/pdlc.py commit build CH-0001 --text x --req A.R1"):
+            with self.subTest(command=command):
+                code, err = self.hook(command)
+                self.assertEqual(code, 2)
+                self.assertIn('"Lock tests CH-0001 again"', err)
+
+    def test_the_fix_message_names_pdlc_commit_amend(self):
+        self.commit("Lock tests CH-0001 again")
+        code, err = self.hook("python3 pdlc/bin/pdlc.py commit tests CH-0001")
+        self.assertIn("pdlc.py commit", err)
+        self.assertIn("--amend", err)
+
+    def test_the_hook_stays_quiet_for_the_other_pdlc_subcommands(self):
+        self.commit("Lock tests CH-0001 again")
+        for command in ("python3 pdlc/bin/pdlc.py message tests CH-0001",
+                        "python3 pdlc/bin/pdlc.py handoff CH-0001 build verify --json -",
+                        "python3 pdlc/bin/pdlc.py set CH-0001 --status building",
+                        "python3 pdlc/bin/pdlc.py intent new --name x --what y",
+                        "python3 pdlc/bin/pdlc.py change new IN-0001 --scope CAP-a --name b --json -",
+                        "python3 pdlc/bin/check_order.py IN-0001"):
+            with self.subTest(command=command):
+                self.assertEqual(self.hook(command), (0, ""))
+
+    def test_a_good_commit_from_pdlc_commit_passes(self):
+        self.commit("Lock tests CH-0001")
+        self.assertEqual(self.hook("python3 pdlc/bin/pdlc.py commit lock-tests CH-0001"), (0, ""))
+
     # Subjects
 
     def test_a_listed_subject_with_its_trailers_passes(self):
@@ -83,16 +120,26 @@ class CommitHook(unittest.TestCase):
         self.commit("Specify IN-0001: password reset", "Intent: IN-0001", path="pdlc/inbox/IN-0001-reset.md")
         self.assertEqual(self.hook(), (0, ""))
 
-    def test_every_subject_a_skill_names_is_in_the_list(self):
+    def test_every_subject_of_pdlc_py_is_in_the_list(self):
         shapes = re.findall(r"`([^`]+)`", TRAILERS.read_text().split("## Subjects", 1)[1].split("\n## ", 1)[0])
-        named = set()
-        for skill in (PLUGIN / "skills").glob("*/SKILL.md"):
-            named.update(re.findall(r'"((?:[A-Z][a-z]+ )(?:[a-z]+ )?(?:CH|IN)-xxxx[^"]*)"', skill.read_text()))
-        self.assertGreater(len(named), 10)
-        for subject in named:
-            with self.subTest(subject=subject):
+        spec = importlib.util.spec_from_file_location("pdlc_cli", PDLC)
+        sys.path.insert(0, str(PDLC.parent))
+        try:
+            cli = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(cli)
+        finally:
+            sys.path.remove(str(PDLC.parent))
+        ids = {"IN": "IN-xxxx", "CH": "CH-xxxx", "IN|CH": "CH-xxxx", "DES": "<design spec>", None: ""}
+        self.assertGreater(len(cli.KINDS), 10)
+        for kind, (idtype, form) in cli.KINDS.items():
+            subject = re.sub(r"\{(\w+)\}", lambda m: ids[idtype] if m.group(1) == "id" else "<%s>" % m.group(1), form)
+            with self.subTest(kind=kind):
                 self.assertTrue(any(self.fits(subject, shape) for shape in shapes),
                                 "%r is in no shape of DES-pdlc-commit-trailers" % subject)
+        for skill in (PLUGIN / "skills").glob("*/SKILL.md"):
+            for kind in re.findall(r"pdlc\.py commit ([a-z-]+)", skill.read_text()):
+                with self.subTest(skill=skill.parent.name, kind=kind):
+                    self.assertIn(kind, cli.KINDS)
 
     @staticmethod
     def fits(subject, shape):
@@ -170,6 +217,17 @@ class CommitHook(unittest.TestCase):
         git(self.root, "switch", "-q", "main")
         self.commit("Specify IN-0001: password reset", "Intent: IN-0001\nCo-Authored-By: Someone <s@example.com>",
                     path="pdlc/inbox/IN-0001-reset.md")
+        self.assertEqual(self.hook(), (0, ""))
+
+    def test_a_subject_with_no_trailers_by_design_passes_on_a_change_branch(self):
+        for subject in ("Upgrade pdlc", "Set up pdlc", "Record merges", "Board: record card keys"):
+            with self.subTest(subject=subject):
+                self.commit(subject, None, path="pdlc/bin/pdlc.py")
+                self.assertEqual(self.hook(), (0, ""))
+
+    def test_a_subject_with_no_trailers_by_design_passes_on_main(self):
+        git(self.root, "switch", "-q", "main")
+        self.commit("Upgrade pdlc", None, path="pdlc/bin/pdlc.py")
         self.assertEqual(self.hook(), (0, ""))
 
     def test_a_commit_on_main_with_another_subject_is_left_alone(self):

@@ -1,0 +1,663 @@
+{
+ "skill": "pdlc:verify",
+ "skillSha256": "125526a5fb7aa208a86d5fa6b5cc1c81437fe693342ecbc281159056abb12b88",
+ "skillTreeSha256": "fe6d7f0fa68be6d4428ff3037cc6041b037b1da1416ae2ba130c48fe0f3eda48",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "67a92beb077c55551fe8d42401323458ff03dc895c0ade650717f55412ae6f59",
+ "suiteSha256": "8274841c9afd0fa26ad653430d306e262e8f6fbecb44b3e8b52108105cf6d32a",
+ "runId": "plugin-N-20261102T142021Z",
+ "generatedAt": "2026-11-02T14:20:21Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 4,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "session",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "session",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 7,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 96.4,
+  "stability": 71.7,
+  "overall": 83.1,
+  "grade": "B",
+  "confidence": "normal",
+  "usableRuns": 4,
+  "totalRuns": 4
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 2
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 93.1,
+   "stability": 76.7,
+   "overall": 84.5,
+   "grade": "B",
+   "moved": null
+  },
+  {
+   "wave": 2,
+   "runsPerPrompt": 4,
+   "usable": 4,
+   "quality": 96.4,
+   "stability": 71.7,
+   "overall": 83.1,
+   "grade": "B",
+   "moved": -1.4
+  }
+ ],
+ "qualitySpread": {
+  "min": 91.7,
+  "median": 97.2,
+  "max": 100
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The verdict is true. The change is `in review` with each requirement `verified` only when each check and each remit passes. Else the run sends the change back, with each problem given to one stage.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Each remit in `config.md` gets its own packet from `make_packets.py` and its own `result.md` from a separate reviewer.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The handoff `verify \u2192 show` gives the real result of each check run and of each remit, and the pass commit.",
+   "passRate": 87.5,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 25,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each Interface entry of the change loses its ` \u00b7 proposed` mark in the scope spec only.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "New behaviour that a reviewer finds becomes a new intent with `Awaits approval:`, and the run builds nothing for it.",
+   "passRate": 100,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "For a change that is not the last, a failure of \"run acceptance\" does not count as a problem.",
+   "passRate": 87.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "\"Verify CH-0001: round 1\", then \"Verified CH-0001\" or \"Send back CH-0001: <stage>\", each with `Intent` and `Change`. For the last change, `Acceptance-Passed:` holds the pass commit.",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply says that `/pdlc:show` is next, or which stage is next after a send-back.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 4,
+   "quality": 96.4,
+   "stability": 71.7
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-verify/runs/plugin-N-20261102T142021Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 91.7,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "CH-0001 (store keeps the done state) is verified. Its requirements CAP-store.R1, R8, R9 and R10 are now `verified`, and the change is `in review`."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "specification, security, quality and privacy each passed with no problems. Compliance doesn't apply because the project lists no rules, so the packet script wrote its result without a reviewer."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "Only the tail of the output showed, so I did not see the full suite's counts. The branch's own handoff says 24 checks passed."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "I removed the ` \u00b7 proposed` marks from the CAP-store spec, as the verify stage requires."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I filed IN-0002 (atomic store write) as a `new` intent that awaits approval. Nothing in this change waits on it."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "I didn't run acceptance: this isn't the last change of IN-0001, and no earlier intent exists."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Verify CH-0001: round 1\n\nIntent: IN-0001\nChange: CH-0001 ... Verified CH-0001\n\nIntent: IN-0001\nChange: CH-0001"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "**Handoff:** `verify \u2192 show`, ready for `/pdlc:show`."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-verify/runs/plugin-N-20261102T142021Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 94.4,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "CH-0001 (store keeps the done state) passed verify. The requirements CAP-store.R1, R8, R9 and R10 are now `verified`, and the change is `in review`."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "specification, security, quality and privacy all passed with no problems. Compliance doesn't apply, so `make_packets.py` wrote its pass result without a reviewer."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "the handoff is `verify \u2192 show`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "I removed the `proposed` marks from `mark_done` and `Item` in `CAP-store`."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "I filed it as IN-0002 (guard id overflow in add), with \"Awaits approval:\" in its notes."
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "A run of `acceptance/IN_0001.rs` failed 22 of 29 checks. That's expected before CH-0002 and CH-0003 land, and I didn't report it."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Verify CH-0001: round 1\n\nIntent: IN-0001\nChange: CH-0001 ... Verified CH-0001\n\nIntent: IN-0001\nChange: CH-0001"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "The next step is `/pdlc:show` on CH-0001."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-verify/runs/plugin-N-20261102T142021Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "CAP-store.R1, R8, R9 and R10 are now `verified`. The change is `in review`."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "specification, security, quality and privacy each passed with no problems and no follow-ups"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "the next stage is `verify \u2192 show`"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "The `proposed` mark is gone from its Interface entries."
+    },
+    {
+     "id": "R5",
+     "verdict": "n/a",
+     "evidence": "no follow-ups, so I filed no new intents"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "CH-0001 is not the last change of IN-0001, so I did not run acceptance and did not write `Acceptance-Passed:`."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Verified CH-0001\n\nIntent: IN-0001\nChange: CH-0001"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "The next step is `/pdlc:show` on CH-0001."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-verify/runs/plugin-N-20261102T142021Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "",
+   "quality": 100,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "CH-0001 (store keeps the done state) passed verify, and its requirements are `verified`."
+    },
+    {
+     "id": "R2",
+     "verdict": "met",
+     "evidence": "specification, security, quality and privacy each passed with no problems"
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "the handoff is `verify \u2192 show`"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "the `proposed` marks are removed from the change's entries"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "the security review raised three points, and I filed each as a new intent that awaits approval"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "This is not the last change of IN-0001, so I did not run acceptance."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Verified CH-0001\n\nIntent: IN-0001\nChange: CH-0001"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "The next step is `/pdlc:show` on CH-0001."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "All four runs pass every check and remit, mark the requirements verified, set the change in review, and commit Verified CH-0001.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "All checks and remits pass; requirements verified, change in review, Verified commit"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "equivalent",
+   "reason": "Every run has make_packets.py packets for specification, security, quality and privacy, an auto-written compliance result, and results that cite src/store.rs.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "make_packets.py packets for specification, security, quality, privacy; compliance result auto-written; results cite src/store.rs"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "minor_drift",
+   "reason": "All handoffs have the same structure and the same pass results, but they differ in the follow-up intents that they list, the acceptance-skip line, and the Look here entry.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "verify \u2192 show handoff with 24 checks (count taken from an earlier handoff), per-remit results, IN-0002 named by ID; no acceptance line"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "verify \u2192 show handoff with 24 checks, acceptance-skip line, per-remit results, follow-up intent described without ID, Look here path"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "verify \u2192 show handoff with 24 checks and per-remit results, compliance n/a line, no follow-up intents, no acceptance line, Look here none"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "verify \u2192 show handoff with 24 checks and per-remit results, three follow-ups named IN-0002..IN-0004 by ID, Look here points to the security result"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "agreement": 25,
+    "split": "1 / 1 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "equivalent",
+   "reason": "Every run removes the proposed marks in CAP-store only and leaves the JOB spec marks.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Removes proposed marks on mark_done and Item in CAP-store only"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "major_drift",
+   "reason": "Runs file zero, one, or three follow-up intents, because the security reviewer found different new behaviour in each run.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Security follow-up filed as IN-0002 new intent with Awaits approval note; nothing built"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Security reviewer raises no follow-ups; no intent filed"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Security follow-ups filed as three new intents IN-0002..IN-0004 with Awaits approval notes; nothing built"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "Three runs skip the acceptance run because CH-0001 is not the last change, but P01#2 runs it anyway and ignores the failure.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Skips the acceptance run because CH-0001 is not the last change"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Runs the acceptance file anyway (22 of 29 fail) and does not count the failure"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "identical",
+   "reason": "Every run commits Verify CH-0001: round 1 and then Verified CH-0001, both with the Intent and Change trailers.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Verify CH-0001: round 1 then Verified CH-0001, both with Intent and Change"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "Every final reply names /pdlc:show on CH-0001 as the next step.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Reply names /pdlc:show as next step"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

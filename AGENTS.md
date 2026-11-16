@@ -25,9 +25,47 @@ The three most important rules for a conversation are these:
 The same script keeps the shared copies of `check_writing.py` and `c4.md` the same as
 their master files.
 
+## Write a skill, an agent, a plugin, or a prompt
+
+State the goal and the limits. Trust the model to plan the steps. Use these sections, in
+this order:
+
+- `## Goal`: the end state, in 2 to 4 sentences.
+- `## Inputs`: what the text reads, and how it selects an item.
+- `## Outputs`: each file, status, and commit that the text makes.
+- `## Constraints`: at most 8 rules. Each rule is one that the model cannot infer.
+- `## Stages`: only for internal stages. Each `###` stage has the labels Goal, Inputs,
+  Outputs, Done when, and (if needed) Constraints, in this order, in at most 6 lines.
+- `## Done when`: the end conditions that a reader can check.
+
+Do not put these in the text:
+
+- A step-by-step procedure.
+- A rule that a shared reference already states. Name the reference section instead.
+- An example that the reference already has.
+- A reason, unless it stops a known failure (one sentence at most).
+- A list of the cases that a rubric item tests. State the outcome in Goal or Done when.
+- The text of a prompt for an agent. The agent file owns it.
+- A rule that repeats an Outputs or Done-when item.
+
+Keep each hard contract exact. A hard contract is a file name, a commit subject, a header
+field, or a format that a script reads. Write each commit subject in double quotes.
+
+A skill body targets 200 words and holds only critical rules. A critical rule is a
+contract that a script or another skill reads, or a rule that a model gets wrong without
+being told. A body above 200 words must earn each extra rule: a vet shows the failure,
+and the rule fixes it. Record the rule under "earned" in `scripts/skill_budgets.json`,
+with its words and its evidence. Only the user can raise the 200 target.
+
+`scripts/check_skill_form.py` checks the form and the budget (200 plus the earned
+words). It checks each skill in the `enforced` list of `scripts/skill_budgets.json`.
+Each rewrite adds its skill to the `enforced` list. The check does not run on the other
+skills yet.
+
 ## Rewrite a skill
 
-1. Run `/improve-writing <skill>`.
+1. Run `/improve-writing <skill>`. To rewrite a skill in the declarative form, run
+   `/improve-writing <skill> --declarative`.
 2. Do not merge a rewrite if `compare_vet.py` shows "REGRESSION".
 3. If `/vet` did not run, write "not measured" in the pull request. Do not write "no
    regression".
@@ -39,7 +77,13 @@ Run these tests before you commit:
 ```
 python3 improve-writing/scripts/test_check_writing.py
 python3 improve-writing/scripts/test_compare_vet.py
+python3 scripts/test_check_skill_form.py
+python3 scripts/check_skill_form.py
+python3 scripts/test_check_pipeline.py
+python3 scripts/check_pipeline.py
 python3 vet/scripts/test_fingerprint.py
+python3 vet/scripts/test_suite_check.py
+python3 vet/scripts/test_snapshot.py
 python3 scripts/sync_shared.py --check
 python3 quiz-visual/scripts/test_quiz_visual.py
 python3 bench/test_bench.py

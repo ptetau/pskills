@@ -7,6 +7,7 @@ description: >
   `/pdlc:verify` and `/pdlc:show` skills use this agent.
 tools: Read, Write
 model: inherit
+effort: high
 ---
 
 pdlc needs a Sonnet 5.5 class model or above. If you run on a lower model, for example a

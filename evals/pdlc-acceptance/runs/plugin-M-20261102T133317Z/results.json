@@ -1,0 +1,740 @@
+{
+ "skill": "pdlc:acceptance",
+ "skillSha256": "efa834e56f4cdcbe386e66c9963720f463cc3970df5a28109bdd4fb3061ab9ed",
+ "skillTreeSha256": "8672eac1e5644981b700a4a8ec35067c7c030882bbe58b4e35abbae21ddec86d",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "67a92beb077c55551fe8d42401323458ff03dc895c0ade650717f55412ae6f59",
+ "suiteSha256": "a8fd75b654d3fc1fde4ca035b1b00881752425b69603b0003320e999ae159199",
+ "runId": "plugin-M-20261102T133317Z",
+ "generatedAt": "2026-11-02T13:33:17Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 4,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "session",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "session",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 7,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 71.3,
+  "stability": 42,
+  "overall": 54.7,
+  "grade": "F",
+  "confidence": "normal",
+  "usableRuns": 4,
+  "totalRuns": 4
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 2
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 72.5,
+   "stability": 65,
+   "overall": 68.6,
+   "grade": "D",
+   "moved": null
+  },
+  {
+   "wave": 2,
+   "runsPerPrompt": 4,
+   "usable": 4,
+   "quality": 71.3,
+   "stability": 42,
+   "overall": 54.7,
+   "grade": "F",
+   "moved": -13.9
+  }
+ ],
+ "qualitySpread": {
+  "min": 67.5,
+  "median": 70,
+  "max": 77.5
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Each acceptance line of IN-0001 (the intent in the request) that is not a stored-data line has a check. The check drives the app as a user does (the command, or HTTP) and expects the exact output, message, and code of the line.",
+   "passRate": 0,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Before the lock, each check of new behaviour fails because the behaviour is missing, and no check fails because it is broken. The run reports the red run.",
+   "passRate": 50,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "`Acceptance-Locked` names the commit that holds the final acceptance file, and the file does not change after that commit.",
+   "passRate": 100,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A separate reviewer judges the checks from the packet that `make_packets.py` makes for IN-0001 (the intent in the request). The result names a wrong version for each check. A failed review goes back to the test writer, and the run locks again.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The four commits come in order on the intent branch, each with its trailers.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent has `Status: building`, `Branch:`, `Acceptance-File:`, and `Acceptance-Locked:`, and a handoff `acceptance \u2192 tests` in the template form.",
+   "passRate": 87.5,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stored-data line sits in a comment at the top of the acceptance file, with its requirement ID and change. It has no acceptance check.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run writes no app code and changes no requirement text.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply says that `/pdlc:tests` is next.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 75,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 4,
+   "quality": 71.3,
+   "stability": 42
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-acceptance/runs/plugin-M-20261102T133317Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 67.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "missed",
+     "evidence": "let r = handle(store, &Request::new(method, target, body));"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "All 27 checks fail as required, because `Store::mark_done` and `Item.done` do not exist yet."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "The lock is on `Acceptance-Locked:` with commit `e3b6df3`."
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "the first review failed on one problem... The second review passed, using one of the two allowed rounds."
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "Acceptance IN-0001 ... Lock acceptance IN-0001 ... Acceptance IN-0001 ... Lock acceptance IN-0001 ... Review acceptance IN-0001 ... Acceptance reviewed IN-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "I used `IN_0001` (underscored, from the project's ID form)"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Stored-data lines (component checks only): CAP-store.R10 (two lines) and the old data file line of JOB-mark-done.R1 are for CH-0001 and CH-0002."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "I added them as `proposed` to JOB-view-list and CH-0003"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next is `/pdlc:tests` for CH-0001 (store keeps the done state)."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-acceptance/runs/plugin-M-20261102T133317Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 77.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "missed",
+     "evidence": "handle(store, &Request::new(\"GET\", target, \"\"))"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "They are red because `Item.done` and `Store::mark_done` don't exist yet, so the file fails to compile, as the red rule allows. I only compiled it, so I haven't seen any check run."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "**Lock:** `ffcea40` is on `Acceptance-Locked:`."
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "the tests review passed with no problems. Its result is in `pdlc/acceptance/IN-0001-mark-done/review/tests/result.md`."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "the four stage commits are Acceptance, Lock acceptance, Review acceptance and Acceptance reviewed IN-0001."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "I wrote the `acceptance \u2192 tests` handoff in the intent."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "CAP-store.R10, the old-data-file line of JOB-mark-done.R1, and the bad-lines line of JOB-view-list.R2 have no acceptance check. CH-0001, CH-0002 and CH-0003 prove them with component checks."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "I added a `Response { status, content_type, location, body }` entry to the Interface of `JOB-view-list` as `proposed`"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next is `/pdlc:tests` for CH-0001."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-acceptance/runs/plugin-M-20261102T133317Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "",
+   "quality": 67.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "missed",
+     "evidence": "The checks call the app through `handle`, with a Store on a temp file."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "In the red run, 20 fail and 6 pass, and the 6 that pass test behaviour that already exists."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "`Acceptance-Locked:` holds the hash of the second \"Acceptance IN-0001\" commit, `82531bc`."
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "Wrong versions:\n- JOB_view_list_R1_page_is_200_html \u00b7 the page is sent as `text/plain; charset=utf-8` \u00b7 fails"
+    },
+    {
+     "id": "R5",
+     "verdict": "partial",
+     "evidence": "#### 82531bcf320e ... Acceptance IN-0001 ... #### a9110e5b27d7 ... Lock acceptance IN-0001 ... #### 31407e57ff91 ... Review acceptance IN-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "### Handoff \u00b7 IN-0001 \u00b7 acceptance \u2192 tests\n\nTime: 2026-11-02T13:31:36+00:00"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "Stored-data lines: three lines get a component check and no acceptance check"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "I added `Response.content_type` to the JOB-view-list Interface as `proposed`. I also copied it into the CH-0003 change spec."
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "The next step is `/pdlc:tests` for CH-0001 (store keeps the done state)."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-acceptance/runs/plugin-M-20261102T133317Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "",
+   "quality": 72.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "missed",
+     "evidence": "the content type line of JOB-view-list.R1 (`text/html; charset=utf-8`) has no check."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "**Red run:** 21 checks fail and 7 pass. Six prove behaviour that exists already."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "They are locked at `54e0430a6a787212f5113088b0b7fcf54c556f2e`"
+    },
+    {
+     "id": "R4",
+     "verdict": "met",
+     "evidence": "The review passed with no problems."
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "**Commits:** \"Acceptance IN-0001\", \"Lock acceptance IN-0001\", \"Review acceptance IN-0001\" and \"Acceptance reviewed IN-0001\"."
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "The handoff `acceptance \u2192 tests` is in the intent."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "**Stored-data lines:** three lines have no acceptance check and get component checks in their changes instead"
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "absent"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next is `/pdlc:tests`, which starts with CH-0001 (store keeps the done state)."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "minor_drift",
+   "reason": "All runs drive the in-process handle() with a Store, not the real app over HTTP; P01#4 also leaves the content-type line unchecked while P01#3 checks it.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Checks call the in-process handle() and Store methods directly, not the real app over HTTP"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "major_drift",
+   "reason": "Earlier runs report red as a compile failure; the new runs compile and report runtime fail/pass counts.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Reports a check count and red as a compile failure from the missing mark_done and done field"
+    },
+    {
+     "runs": [
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Reports a runtime red run with fail and pass counts, and says the passing checks test existing behaviour"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     2
+    ],
+    "agreement": 50,
+    "split": "2 / 2 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "Half the runs lock twice after a failed review, half lock once; the lock hash is correct in all.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3"
+     ],
+     "description": "Locks two times after a failed review, and Acceptance-Locked names the second Acceptance commit"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#4"
+     ],
+     "description": "Locks one time, and Acceptance-Locked names the single Acceptance commit"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     2
+    ],
+    "agreement": 50,
+    "split": "2 / 2 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "major_drift",
+   "reason": "Runs differ between a single passing review with wrong versions per check and a failed-then-passed review with few or no wrong versions.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "The first review fails and the re-review passes, with no wrong versions listed"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#4"
+     ],
+     "description": "A single review passes and lists a wrong version for each check"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "First review fails, re-review passes and lists a wrong version for only the one fixed check"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "major_drift",
+   "reason": "Some runs make six commits with only one Review commit; others make exactly the four commits.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#3"
+     ],
+     "description": "Six commits: two Acceptance/Lock rounds, and only one Review commit before Acceptance reviewed"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#4"
+     ],
+     "description": "Exactly the four commits in order, each with its trailers"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     2
+    ],
+    "agreement": 50,
+    "split": "2 / 2 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "major_drift",
+   "reason": "P01#4 omits what each change must give the checks, which the other runs state.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Full header fields and an acceptance \u2192 tests handoff with all template sections and what the changes must give"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Full header fields and handoff sections, but the handoff does not say what each change must give the checks"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "All runs list CAP-store.R10, JOB-mark-done.R1 old file and JOB-view-list.R2 bad lines with their changes in a top comment.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "A top comment lists CAP-store.R10, the old file line of JOB-mark-done.R1 and the bad lines of JOB-view-list.R2, each with its change"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "minor_drift",
+   "reason": "No run writes app code; runs differ in which proposed Interface items they add, and P01#4 adds none.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Adds proposed Request::new and Response interface items to JOB-view-list and CH-0003, and no app code"
+    },
+    {
+     "runs": [
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Adds only a proposed Response interface item to JOB-view-list and CH-0003, and no app code"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Changes no spec or change file; only the acceptance file, review files and intent"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "2 / 1 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "minor_drift",
+   "reason": "All runs name /pdlc:tests for CH-0001; P01#4 puts it in the first paragraph instead of the last line.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Last line: Next is /pdlc:tests for CH-0001"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Names /pdlc:tests for CH-0001 in the opening paragraph, not the last line"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

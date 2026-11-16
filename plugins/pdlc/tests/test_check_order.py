@@ -83,10 +83,10 @@ class Base(unittest.TestCase):
         return code, out.getvalue()
 
     def as_command(self, with_merge=True):
-        """Copy the scripts to <root>/pdlc/bin and run check_order.py there."""
+        """Copy the scripts (and the shared module) to <root>/pdlc/bin and run check_order.py there."""
         bin_dir = self.root / "pdlc" / "bin"
         bin_dir.mkdir(parents=True)
-        for name in ("check_order.py", "check_merge.py")[: 2 if with_merge else 1]:
+        for name in ("check_order.py", "check_merge.py", "pdlclib.py")[: 3 if with_merge else 1]:
             shutil.copy(BIN / name, bin_dir / name)
         return subprocess.run([sys.executable, "pdlc/bin/check_order.py", "IN-0001"],
                               cwd=self.root, capture_output=True, text=True)

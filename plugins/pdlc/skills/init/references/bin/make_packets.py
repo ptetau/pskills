@@ -76,6 +76,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # do not leave a __pycache__ in pdlc/bin of the project
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pdlclib import field, section  # noqa: E402
+
 DEFAULT_REMITS = ["tests", "specification", "security", "quality", "compliance", "privacy", "visual"]
 KINDS = {"JOB": "jobs", "CAP": "capabilities", "DES": "design"}
 WRITING_CHECK = Path(__file__).parent / "check_writing.py"
@@ -89,22 +93,6 @@ NO_RULES = "Rules: none listed yet."
 # A file name that holds the word "acceptance" and an intent ID is an acceptance file, also
 # when pdlc/config.md has no "acceptance file:" line.
 ACCEPTANCE_NAME = re.compile(r"(?=.*acceptance)(?=.*(?<![a-z0-9])in[-_]?\d{4}(?!\d))", re.I)
-
-
-def section(text, title):
-    match = re.search(r"^## %s\s*$(.*?)(?=^## |\Z)" % re.escape(title), text, re.M | re.S)
-    return match.group(1) if match else ""
-
-
-def field(text, name):
-    """A header field of a change spec or intent, such as Status or Branch. The value is
-    bare: "IN-0001 (poll-input-errors)" gives "IN-0001", and "`pdlc/CH-0001-x`" gives
-    "pdlc/CH-0001-x"."""
-    match = re.search(r"\b%s:[ \t]*([^·\n]*?)[ \t]*(?:·|$)" % name, text, re.M)
-    if not match:
-        return None
-    value = match.group(1).replace("`", "")
-    return re.sub(r"\s+\(.*\)$", "", value).strip()
 
 
 def git(root, *args):

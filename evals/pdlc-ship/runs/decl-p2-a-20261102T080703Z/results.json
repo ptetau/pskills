@@ -1,0 +1,457 @@
+{
+ "skill": "pdlc:ship",
+ "skillSha256": "9daa82288c28fd91f36e0f55b208fce2d817d5b1658c23cf6dacdeba285ae9cd",
+ "skillTreeSha256": "ba758d894e3b0b8e15d7afc22eff7d6b308ff6b659822957c632f6affe0f81f2",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "0b5d73d16f541df2dcc810be5c4e9852042cc137f7c92e1db107089e530af4be",
+ "suiteSha256": "c687c9e875e929a2bca3f5c92788a719cdbcbeba469e4d35b21065f6314449fa",
+ "runId": "decl-p2-a-20261102T080703Z",
+ "generatedAt": "2026-11-02T08:07:03Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 78.3,
+  "stability": 56.3,
+  "overall": 66.4,
+  "grade": "D",
+  "confidence": "normal",
+  "usableRuns": 2,
+  "totalRuns": 2
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 78.3,
+   "stability": 56.3,
+   "overall": 66.4,
+   "grade": "D",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 73.3,
+  "median": 78.3,
+  "max": 83.3
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The run ends only in an end state: each change is proposed, or a commit \"Stop <id>: <why>\" records the stop. It does not end with work half done and no stop record.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A stop gives the user a clear decision. The reply and \"Open\" in the handoff give the reason in one sentence, the decision, and a recommended answer that obeys the pdlc rules.",
+   "passRate": 50,
+   "stabilityWithin": 0,
+   "classesWithin": {
+    "P01": "contradictory"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Ship does not settle a contradiction by default. It stops and leaves the choice to the user.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Ship continues from the latest handoff and does not run a finished stage again.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stage leaves the commit subjects and trailers of its own skill, in the order of \"Stages and handoffs\".",
+   "passRate": 100,
+   "stabilityWithin": 100,
+   "classesWithin": {
+    "P01": "identical"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A case that is not a stop (no remote, a slow agent, a choice of name) does not stop the run.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "At the end, `git status --porcelain` is empty, and each commit has the trailers of \"Commits\".",
+   "passRate": 50,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The last reply lists the changes in stack order with their proposals and GIFs. It also lists each answer taken by default, and what waits for the user.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 78.3,
+   "stability": 56.3
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/decl-p2-a-20261102T080703Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "Ship stopped after intake and ready on a contradiction (N at most 10 vs example --top 20); three commits made, no build.",
+   "quality": 83.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "3b40d01425d6705c97522b642ff86c313254bf5f Stop IN-0001: limit of 10 clashes with the example of 20"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Stop IN-0001: the intent clashes with itself. `R5` (limit on N) says N must be 10 or less, but `R4` (top N words) has the example `--top 20`."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Clash. R5 and R4 keep the words as given. The user selects in ready."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Commits: \"Specify IN-0001: Top option\", \"Ready IN-0001: Top option\", \"Stop IN-0001: limit of 10 clashes with the example of 20\"."
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Seven defaults are marked `(assumed)` in the intent Notes"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Intent: IN-0001\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> (no git status output in capture)"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/decl-p2-a-20261102T080703Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "Ship ran intake and ready, then stopped on a contradiction (limit of 10 vs the --top 20 example). No scripted replies were used.",
+   "quality": 73.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "8796dedb191d2d7fe6be4fe5822098d192d82df1 Stop IN-0001: limit of 10 clashes with the example of 20"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "R5 (top limit) says N must be 10 or less. R4 (top option) says `wordfreq --top 20 FILE` prints 20 words. Both cannot hold."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "| `TOP_TOO_LARGE` | The number after `--top` is above the limit (assumed) | caller | no |"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "Specify IN-0001: Top option ... Ready IN-0001: Top option ... Stop IN-0001: limit of 10 clashes with the example of 20"
+    },
+    {
+     "id": "R6",
+     "verdict": "met",
+     "evidence": "Decided on defaults (all marked `(assumed)`, listed in the intent Notes)"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "Intent: IN-0001\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com> (no git status output in capture)"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "equivalent",
+   "reason": "Both runs end at the same Stop IN-0001 commit with the same subject; the final replies differ only in wording.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Stops after Specify and Ready with the commit 'Stop IN-0001: limit of 10 clashes with the example of 20'; reply states the stop."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "contradictory",
+   "reason": "The runs recommend opposite sides of the clash: P01#1 recommends raising the limit to 20, and P01#2 recommends keeping the limit of 10.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Offers options A (limit 10, example becomes 10) or B (limit 20), and recommends B, to raise the limit to 20."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Asks the user to choose, and recommends to keep the limit of 10 and change the example."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "Both runs stop at the clash. P01#2 also elaborates the limit side with an assumed error code and a DES-errors row, which P01#1 leaves open.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Keeps R4 and R5 as the user's words, with no error or message for the limit yet."
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Stops at the clash, but R5 spells out the limit side with an assumed TOP_TOO_LARGE error, which is also added to DES-errors."
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "identical",
+   "reason": "Both runs have the same three commit subjects and trailers, in the same order.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Specify, Ready, and Stop IN-0001 commits with Intent trailers, in that order."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "Both runs use the same approach, but the defaults differ: for example, --top 0 prints nothing in P01#1 but is an error in P01#2, and only P01#2 adds TOP_TOO_LARGE.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Takes the defaults for names and messages, and records each as (assumed) in the Notes and the handoff."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "equivalent",
+   "reason": "Both runs have the same trailer pattern and give no evidence of the tree state.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "All commits have the Intent trailer plus the co-author trailers; the capture shows no git status output."
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

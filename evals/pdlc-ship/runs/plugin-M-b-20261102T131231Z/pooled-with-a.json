@@ -1,0 +1,813 @@
+{
+ "skill": "pdlc:ship",
+ "skillSha256": "59f9a2f45b35ce2887bd7329afebec79f6a6f72c1a6cabebe74f0928a6378240",
+ "skillTreeSha256": "8672eac1e5644981b700a4a8ec35067c7c030882bbe58b4e35abbae21ddec86d",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "67a92beb077c55551fe8d42401323458ff03dc895c0ade650717f55412ae6f59",
+ "suiteSha256": "c687c9e875e929a2bca3f5c92788a719cdbcbeba469e4d35b21065f6314449fa",
+ "runId": "pooled:plugin-M-a-20261102T131231Z+plugin-M-b-20261102T131231Z",
+ "generatedAt": "2026-11-02T13:12:31Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 4,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "session",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "session",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 7,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 75.0,
+  "stability": 47.1,
+  "overall": 58.4,
+  "grade": "F",
+  "confidence": "normal",
+  "usableRuns": 8,
+  "totalRuns": 8
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 2
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 83.3,
+   "stability": 88.7,
+   "overall": 86,
+   "grade": "B",
+   "moved": null
+  },
+  {
+   "wave": 2,
+   "runsPerPrompt": 4,
+   "usable": 4,
+   "quality": 73.3,
+   "stability": 29.3,
+   "overall": 46.3,
+   "grade": "F",
+   "moved": -39.7
+  }
+ ],
+ "qualitySpread": {
+  "min": 63.3,
+  "median": 73.3,
+  "max": 83.3
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "The run ends only in an end state: each change is proposed, or a commit \"Stop <id>: <why>\" records the stop. It does not end with work half done and no stop record.",
+   "passRate": 87.5,
+   "stabilityWithin": 57.5,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "A stop gives the user a clear decision. The reply and \"Open\" in the handoff give the reason in one sentence, the decision, and a recommended answer that obeys the pdlc rules.",
+   "passRate": 50.0,
+   "stabilityWithin": 30.0,
+   "classesWithin": {
+    "P01": "contradictory"
+   },
+   "agreementWithin": 75.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Ship does not settle a contradiction by default. It stops and leaves the choice to the user.",
+   "passRate": 68.8,
+   "stabilityWithin": 25.0,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Ship continues from the latest handoff and does not run a finished stage again.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stage leaves the commit subjects and trailers of its own skill, in the order of \"Stages and handoffs\".",
+   "passRate": 100.0,
+   "stabilityWithin": 62.5,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 75.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A case that is not a stop (no remote, a slow agent, a choice of name) does not stop the run.",
+   "passRate": 50.0,
+   "stabilityWithin": 42.5,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 75.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "At the end, `git status --porcelain` is empty, and each commit has the trailers of \"Commits\".",
+   "passRate": 100.0,
+   "stabilityWithin": 80.0,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 100.0,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The last reply lists the changes in stack order with their proposals and GIFs. It also lists each answer taken by default, and what waits for the user.",
+   "passRate": null,
+   "stabilityWithin": null,
+   "classesWithin": {},
+   "agreementWithin": null,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 4,
+   "quality": 73.3,
+   "stability": 29.3
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-a-20261102T131231Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 83.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: top example of 20 contradicts the limit of 10"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "R4 (top option) says that `wordfreq --top 20 FILE` prints 20 lines. R5 (top limit) says that N must be 10 or less. Both cannot be true."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Both come from your own words, so I couldn't pick one for you."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "2 stage commits in order"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "### Decided on defaults\n\n- none"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "0 of 3 pdlc commits have a problem"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-a-20261102T131231Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 83.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: top limit of 10 contradicts the example with 20"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Contradiction in R7 (top option): \"N must be 10 or less\" conflicts with the example. The example is \"wordfreq --top 20 FILE prints the 20 most common words\"."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "With defaults on, pdlc doesn't pick a side for you, so R7 (top option) and R5 (usage rule) stay `proposed`."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "2 stage commits in order"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "### Decided on defaults\n\n- none"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "0 of 3 pdlc commits have a problem"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-a-20261102T131231Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "First prepare failed because a stale proj directory blocked the clone; removed it and reran prepare, then vetrun succeeded.",
+   "quality": 63.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Specify IN-0001: Top option ... Stop IN-0001: R4 example with 20 words contradicts R5 limit of 10 (no Ready IN-0001 commit)"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Reason: R4 (top option) says `--top 20` prints 20 words. R5 (top limit) says N must be 10 or less."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "JOB-report-word-frequencies: which values does `--top` accept? \u2192 whole numbers from 1 to 10 (assumed)"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "1 stage commits in order"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "### Decided on defaults\n\n- none"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "0 of 2 pdlc commits have a problem"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-a-20261102T131231Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "I did not run the setup or the run. The prepare command failed because proj already existed. That proj and a finished capture (with Transcript, Hooks and Repos sections) dated 12:54 were already in this worktree from an earlier attempt at this same task. I reported that capture and did not rerun.",
+   "quality": 63.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Specify IN-0001: top option ... Stop IN-0001: R4 and R5 contradict on the limit of --top (no Ready IN-0001 commit)"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Contradiction: R5 (top limit) says N must be 10 or less. The example in R4 (top option), --top 20, prints 20 words. Both cannot be true."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "Recommended answer: option C with a limit of 20. It keeps the example, and keeps a limit. The next run takes it."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "1 stage commits in order"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "### Decided on defaults\n\n- none"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "0 of 2 pdlc commits have a problem"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-b-20261102T131231Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 73.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: top limit of 10 contradicts the example --top 20"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "Contradiction: the intent says N must be 10 or less, and also that `wordfreq --top 20 FILE` prints 20 words. Both cannot be true."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "JOB-report-word-frequencies.R9: what message and result for N above 10 \u2192 `error: --top needs a whole number from 1 to 10`, exit 2, stderr (assumed)"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "2 stage commits in order"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "The new error code is `TOP_INVALID`."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "0 of 3 pdlc commits have a problem"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-b-20261102T131231Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "",
+   "quality": 88.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: R4 and R5 contradict for N above 10"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "R4 (top option) says `--top 20 FILE` prints 20 words. R5 (limit of the top option) says N must be 10 or less."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Ready takes no default for a contradiction, so both requirements stay `proposed`."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "2 stage commits in order"
+    },
+    {
+     "id": "R6",
+     "verdict": "n/a",
+     "evidence": "**Defaults taken:** none."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "0 of 3 pdlc commits have a problem"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#3",
+   "prompt": "P01",
+   "repeat": 3,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-b-20261102T131231Z/outputs/P01-r03.md",
+   "status": "completed",
+   "note": "First prepare failed because a partial proj dir already existed; I removed it and re-ran prepare, then vetrun succeeded.",
+   "quality": 73.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: limit of 10 contradicts the example with 20"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "you wrote \"N must be 10 or less\", but your example `wordfreq --top 20 FILE` prints 20 words. Both can't hold."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "N above 10: `error: --top must be 10 or less`"
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "2 stage commits in order"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "**Defaults I took (marked `(assumed)` in the spec, so you can change them):**"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "0 of 3 pdlc commits have a problem"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#4",
+   "prompt": "P01",
+   "repeat": 4,
+   "capture": "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-b-20261102T131231Z/outputs/P01-r04.md",
+   "status": "completed",
+   "note": "First prepare failed because proj/ was left over from an earlier run. I removed it and .vet-capture/, then reran prepare and vetrun, which succeeded.",
+   "quality": 73.3,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "met",
+     "evidence": "Stop IN-0001: limit of 10 contradicts the example --top 20"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "- \"N must be 10 or less\" and \"`wordfreq --top 20 FILE` prints the 20 most common words\" can't both hold."
+    },
+    {
+     "id": "R3",
+     "verdict": "partial",
+     "evidence": "An N over 10 gives `error: --top must be 10 or less` and exit 2."
+    },
+    {
+     "id": "R4",
+     "verdict": "n/a",
+     "evidence": "absent"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "2 stage commits in order"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "**Defaults I took (all marked `(assumed)`, so you can change them):**"
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "0 of 3 pdlc commits have a problem"
+    },
+    {
+     "id": "R8",
+     "verdict": "n/a",
+     "evidence": "absent"
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "major_drift",
+   "reason": "P01#1 commits Specify, Ready, then Stop; P01#3 and P01#4 skip the Ready commit and go straight from Specify to Stop.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Specify, Ready, then Stop IN-0001 at the limit/example contradiction; reply says it stopped at ready with nothing built"
+    },
+    {
+     "runs": [
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Specify then Stop IN-0001 at the contradiction, with no Ready IN-0001 commit; reply says it stopped before planning"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     2
+    ],
+    "agreement": 50,
+    "split": "2 / 2 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "contradictory",
+   "reason": "P01#1 and P01#3 recommend keeping the limit of 10 and changing the example; P01#4 recommends raising the limit to 20 and keeping the example, the opposite choice.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3"
+     ],
+     "description": "Open gives a multi-sentence reason, the decision (limit vs example), and recommends keeping the limit of 10 and changing the example to --top 10"
+    },
+    {
+     "runs": [
+      "P01#4"
+     ],
+     "description": "Open gives a multi-sentence reason, three options (keep limit, drop limit, raise limit), and recommends raising the limit to 20 so the example holds"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "major_drift",
+   "reason": "All runs stop and keep both lines in the spec, but P01#3 adds an assumed Note that settles the accepted range to 1-10, which the others do not state as a separate decision.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#4"
+     ],
+     "description": "Stops at the clash, keeps both the limit and the --top 20 example in the spec, leaves requirements proposed"
+    },
+    {
+     "runs": [
+      "P01#3"
+     ],
+     "description": "Stops at the clash and keeps both lines, but a Note assumes --top accepts only 1 to 10, so the limit side wins as an (assumed) default"
+    }
+   ],
+   "tally": {
+    "counts": [
+     3,
+     1
+    ],
+    "agreement": 75,
+    "split": "3 / 1 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "major_drift",
+   "reason": "P01#1 leaves Specify and Ready stage commits; P01#3 and P01#4 leave only Specify.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Specify IN-0001 then Ready IN-0001, in order, with the right trailers"
+    },
+    {
+     "runs": [
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Only the Specify IN-0001 stage commit; no Ready IN-0001 commit"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2,
+     2
+    ],
+    "agreement": 50,
+    "split": "2 / 2 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "minor_drift",
+   "reason": "All runs take error code and message names as assumed defaults in Notes with handoff 'Decided on defaults: none', but the defaults differ (TOP_TOO_LARGE/USAGE vs TOP_INVALID, usage line choices).",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Error code and message names taken as assumed defaults in Notes; handoff 'Decided on defaults' says none; run not stopped for them"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "minor_drift",
+   "reason": "All runs end with a clean tree and full trailers on every commit; the new runs have two commits rather than three.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2",
+      "P01#3",
+      "P01#4"
+     ],
+     "description": "Clean tree; all three commits carry Intent, Co-Authored-By and Claude-Session trailers"
+    }
+   ],
+   "tally": {
+    "counts": [
+     4
+    ],
+    "agreement": 100,
+    "split": "4 of 4",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": [],
+ "pooledFrom": [
+  "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-a-20261102T131231Z/results.json",
+  "/home/user/pskills/evals/pdlc-ship/runs/plugin-M-b-20261102T131231Z/results.json"
+ ]
+}

@@ -1,0 +1,584 @@
+{
+ "skill": "pdlc:acceptance",
+ "skillSha256": "862c336d0ecc4c1f326b507e7171d7a9615da6ff220c94dfff2ffe718ab25419",
+ "skillTreeSha256": "21a036f7e5f532dca5e50228bf2e8893e8a6051f023e773544f33f6ec1117dbb",
+ "skillTree": "plugins/pdlc",
+ "workflowSha256": "0b5d73d16f541df2dcc810be5c4e9852042cc137f7c92e1db107089e530af4be",
+ "suiteSha256": "a8fd75b654d3fc1fde4ca035b1b00881752425b69603b0003320e999ae159199",
+ "runId": "decl200-a-20261102T030933Z",
+ "generatedAt": "2026-11-02T03:09:34Z",
+ "config": {
+  "prompts": [
+   "P01"
+  ],
+  "runs": 2,
+  "wave": 2,
+  "maxTurns": 12,
+  "crossPerPrompt": 2,
+  "agents": {
+   "preset": "minimal",
+   "run": {
+    "model": "claude-sonnet-5-5",
+    "effort": "session"
+   },
+   "grade": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "prompt"
+   },
+   "compare": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "merged"
+   },
+   "cross": {
+    "model": "claude-opus-5-5",
+    "effort": "session",
+    "batch": "all"
+   }
+  },
+  "agentEstimate": 4,
+  "sessionModel": "claude-opus-5-5"
+ },
+ "scores": {
+  "quality": 71.3,
+  "stability": 43.8,
+  "overall": 55.9,
+  "grade": "F",
+  "confidence": "normal",
+  "usableRuns": 2,
+  "totalRuns": 2
+ },
+ "settle": {
+  "settled": false,
+  "settledAt": null,
+  "delta": 2,
+  "patience": 2,
+  "stopWhenSettled": false,
+  "wavesRun": 1
+ },
+ "trajectory": [
+  {
+   "wave": 1,
+   "runsPerPrompt": 2,
+   "usable": 2,
+   "quality": 71.3,
+   "stability": 43.8,
+   "overall": 55.9,
+   "grade": "F",
+   "moved": null
+  }
+ ],
+ "qualitySpread": {
+  "min": 67.5,
+  "median": 71.3,
+  "max": 75
+ },
+ "items": [
+  {
+   "id": "R1",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Each acceptance line of IN-0001 (the intent in the request) that is not a stored-data line has a check. The check drives the app as a user does (the command, or HTTP) and expects the exact output, message, and code of the line.",
+   "passRate": 50,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R2",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "Before the lock, each check of new behaviour fails because the behaviour is missing, and no check fails because it is broken. The run reports the red run.",
+   "passRate": 50,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R3",
+   "kind": "outcome",
+   "weight": 3,
+   "criterion": "`Acceptance-Locked` names the commit that holds the final acceptance file, and the file does not change after that commit.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R4",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "A separate reviewer judges the checks from the packet that `make_packets.py` makes for IN-0001 (the intent in the request). The result names a wrong version for each check. A failed review goes back to the test writer, and the run locks again.",
+   "passRate": 50,
+   "stabilityWithin": 0,
+   "classesWithin": {
+    "P01": "contradictory"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R5",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The four commits come in order on the intent branch, each with its trailers.",
+   "passRate": 100,
+   "stabilityWithin": 60,
+   "classesWithin": {
+    "P01": "minor_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R6",
+   "kind": "structure",
+   "weight": 2,
+   "criterion": "The intent has `Status: building`, `Branch:`, `Acceptance-File:`, and `Acceptance-Locked:`, and a handoff `acceptance \u2192 tests` in the template form.",
+   "passRate": 50,
+   "stabilityWithin": 0,
+   "classesWithin": {
+    "P01": "contradictory"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R7",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "Each stored-data line sits in a comment at the top of the acceptance file, with its requirement ID and change. It has no acceptance check.",
+   "passRate": 75,
+   "stabilityWithin": 25,
+   "classesWithin": {
+    "P01": "major_drift"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R8",
+   "kind": "behavior",
+   "weight": 2,
+   "criterion": "The run writes no app code and changes no requirement text.",
+   "passRate": 100,
+   "stabilityWithin": 90,
+   "classesWithin": {
+    "P01": "equivalent"
+   },
+   "agreementWithin": 100,
+   "stabilityCross": null,
+   "classCross": null
+  },
+  {
+   "id": "R9",
+   "kind": "structure",
+   "weight": 1,
+   "criterion": "The final reply says that `/pdlc:tests` is next.",
+   "passRate": 75,
+   "stabilityWithin": 0,
+   "classesWithin": {
+    "P01": "contradictory"
+   },
+   "agreementWithin": 50,
+   "stabilityCross": null,
+   "classCross": null
+  }
+ ],
+ "prompts": [
+  {
+   "id": "P01",
+   "usableRuns": 2,
+   "quality": 71.3,
+   "stability": 43.8
+  }
+ ],
+ "runs": [
+  {
+   "label": "P01#1",
+   "prompt": "P01",
+   "repeat": 1,
+   "capture": "/home/user/pskills/evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z/outputs/P01-r01.md",
+   "status": "completed",
+   "note": "",
+   "quality": 75,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "Each check drives the app through\n// `handle` and a `Store`, as the page does."
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "20 of 27 fail, and 7 already pass, since they check existing behaviour."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Acceptance-Locked: cf9c68d"
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "- none (no check changed since the earlier review; two checks were removed)"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "ef49e26 Acceptance reviewed IN-0001\nIntent: IN-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "- Each check fails now, as the interface does not exist yet."
+    },
+    {
+     "id": "R7",
+     "verdict": "met",
+     "evidence": "// - CAP-store.R10: \"Given a file with lines 1<TAB>milk and 2<TAB>eggs, when load is\n//   called, then items 1 and 2 are not done\" (CH-0001, store keeps the done state)."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "acceptance/IN-0001.rs | 394 +++"
+    },
+    {
+     "id": "R9",
+     "verdict": "met",
+     "evidence": "Next, run `/pdlc:tests` for CH-0001 (store keeps the done state)."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  },
+  {
+   "label": "P01#2",
+   "prompt": "P01",
+   "repeat": 2,
+   "capture": "/home/user/pskills/evals/pdlc-acceptance/runs/decl200-a-20261102T030933Z/outputs/P01-r02.md",
+   "status": "completed",
+   "note": "Review of the acceptance checks failed once: no check proves the content type of GET / (JOB-view-list.R1) because the Interface names no content-type field. Left as an open handoff acceptance -> user; no second round was run.",
+   "quality": 67.5,
+   "verdicts": [
+    {
+     "id": "R1",
+     "verdict": "partial",
+     "evidence": "No check proves the content type `text/html; charset=utf-8` of `GET /`"
+    },
+    {
+     "id": "R2",
+     "verdict": "partial",
+     "evidence": "17 of the 22 checks fail now, as expected before the build."
+    },
+    {
+     "id": "R3",
+     "verdict": "met",
+     "evidence": "Acceptance-Locked: 660cc04"
+    },
+    {
+     "id": "R4",
+     "verdict": "partial",
+     "evidence": "Result: fail"
+    },
+    {
+     "id": "R5",
+     "verdict": "met",
+     "evidence": "28211e1 Acceptance reviewed IN-0001\nIntent: IN-0001"
+    },
+    {
+     "id": "R6",
+     "verdict": "partial",
+     "evidence": "### Handoff \u00b7 IN-0001 \u00b7 acceptance \u2192 user"
+    },
+    {
+     "id": "R7",
+     "verdict": "partial",
+     "evidence": "// - JOB-mark-done.R1 (mark an item done): the line \"a data file from before this change\", in CH-0002."
+    },
+    {
+     "id": "R8",
+     "verdict": "met",
+     "evidence": "acceptance/IN-0001.rs           | 355 +++"
+    },
+    {
+     "id": "R9",
+     "verdict": "partial",
+     "evidence": "Next step: name that field in the Interface of JOB-view-list. Then run `/pdlc:acceptance` again."
+    }
+   ],
+   "excluded": null,
+   "attempts": 1
+  }
+ ],
+ "similarity": [
+  {
+   "scope": "P01",
+   "item": "R1",
+   "class": "major_drift",
+   "reason": "Both drive the app through handle, but P01#1 covers every line while P01#2 leaves the content-type and malformed-lines lines without a check.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Checks via handle seam cover every non-stored-data line; malformed-lines and unreadable-store lines moved to stored-data list"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Checks via handle seam; content-type line has no check and malformed-lines line is neither checked nor listed"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R2",
+   "class": "minor_drift",
+   "reason": "Both report a red count with a short reason; counts and the stated reason differ.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Reports 20 of 27 red, 7 pass as existing behaviour, before the round-1 fix"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Reports 17 of 22 red 'as expected before the build'"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R3",
+   "class": "equivalent",
+   "reason": "Both lock the hash of the commit that holds the final acceptance file.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Acceptance-Locked names the newest 'Acceptance IN-0001' commit, with no later change to the file"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R4",
+   "class": "contradictory",
+   "reason": "P01#1 loops back and ends with a passing review; P01#2 stops on a failed review.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "First review fails, checks fixed, re-locked and re-reviewed to pass; final result has no wrong versions"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Review fails with per-check wrong versions; run stops and hands to the user with no new lock"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R5",
+   "class": "minor_drift",
+   "reason": "Same commit kinds and trailers; P01#1 adds a second round of commits.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Seven commits: two Acceptance/Lock/Review rounds then Acceptance reviewed, correct trailers"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Four commits in order with correct trailers, despite a failed review"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R6",
+   "class": "contradictory",
+   "reason": "The handoffs name different next stages (tests versus user).",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Header fields set; handoff 'acceptance \u2192 tests' with all sections but no per-change needs"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Header fields set; handoff titled 'acceptance \u2192 user' with an open problem"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R7",
+   "class": "major_drift",
+   "reason": "The runs list different sets of stored-data lines.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Top comment lists four stored-data lines, each with ID and owning change"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Top comment lists two old-file lines; malformed-lines line not listed and unreadable store has a check"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R8",
+   "class": "equivalent",
+   "reason": "Both touch only acceptance, review and intent files.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1",
+      "P01#2"
+     ],
+     "description": "Only the acceptance file, brief, review files and intent change"
+    }
+   ],
+   "tally": {
+    "counts": [
+     2
+    ],
+    "agreement": 100,
+    "split": "2 of 2",
+    "clean": true
+   }
+  },
+  {
+   "scope": "P01",
+   "item": "R9",
+   "class": "contradictory",
+   "reason": "The runs name different next steps.",
+   "groups": [
+    {
+     "runs": [
+      "P01#1"
+     ],
+     "description": "Final reply names /pdlc:tests as next"
+    },
+    {
+     "runs": [
+      "P01#2"
+     ],
+     "description": "Final reply says to fix the Interface and run /pdlc:acceptance again"
+    }
+   ],
+   "tally": {
+    "counts": [
+     1,
+     1
+    ],
+    "agreement": 50,
+    "split": "1 / 1 of 2",
+    "clean": true
+   }
+  }
+ ],
+ "excluded": [],
+ "lostJudges": []
+}

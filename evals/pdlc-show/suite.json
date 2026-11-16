@@ -16,7 +16,7 @@
       },
       {
         "id": "S3",
-        "description": "`pdlc/changes/CH-0001-top-option/handoff.md`, replaced, from the handoff template. The title is `# Handoff · CH-0001 · show → verify`, and a `Time:` line follows. Then six sections follow in this order: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. `Done` tells what the GIF shows, frame by frame. `Done` also tells how many acceptance lines the GIF shows, out of how many."
+        "description": "`pdlc/changes/CH-0001-top-option/handoff.md`, replaced, from the handoff template. The title is `# Handoff · CH-0001 · show → user`, and a `Time:` line follows. Then six sections follow in this order: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. `Done` tells where the recording is, how many key frames it has, and how many acceptance lines it shows, out of how many."
       },
       {
         "id": "S4",
@@ -24,7 +24,7 @@
       },
       {
         "id": "S5",
-        "description": "A final reply to the user that says that `/pdlc:verify` is next."
+        "description": "A final reply to the user that gives the proposal link, or names `/pdlc:build` after a send-back."
       }
     ]
   },
@@ -91,9 +91,9 @@
       "kind": "structure",
       "structureRef": "S3",
       "weight": 2,
-      "criterion": "The handoff to `/pdlc:verify` obeys the template. The handoff tells what the GIF shows, frame by frame, and gives the count of acceptance lines shown.",
-      "pass": "`pdlc/changes/CH-0001-top-option/handoff.md` replaces the build handoff, with the title `# Handoff · CH-0001 · show → verify` (or `show → user` after a stop with no GIF). The `Time:` line holds a `date -Iseconds` value from this run. The six sections follow in the order of the template: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. Each empty section says \"none\". `Done` tells what each frame or step shows, by number. `Done` also gives the count of acceptance lines shown, out of the count in the change spec, for example \"22 of 22\".",
-      "partial": "The handoff has the right title, but one section is missing or out of order. Or the time is a placeholder or a typed value. Or `Done` puts the frames in groups, for example \"frames 4 to 21 show the R7 lines\", not one by one. Or `Done` gives no count of the lines shown.",
+      "criterion": "The handoff to the user obeys the template. The handoff gives the link of the recording, the number of key frames, and the count of acceptance lines shown.",
+      "pass": "`pdlc/changes/CH-0001-top-option/handoff.md` replaces the build handoff, with the title `# Handoff · CH-0001 · show → user` (or `show → build` after a send-back). The `Time:` line holds a `date -Iseconds` value from this run. The six sections follow in the order of the template: `Done`, `Decided on defaults`, `Open`, `Look here`, `Don't redo`, and `Next: do this first`. Each empty section says \"none\". `Done` gives the link of the recording and the number of key frames. `Done` also gives the count of acceptance lines shown, out of the count in the change spec, for example \"22 of 22\".",
+      "partial": "The handoff has the right title, but one section is missing or out of order. Or the time is a placeholder or a typed value. Or `Done` gives no link, no frame count, or no count of the lines shown.",
       "source": "5. Finish, item 1, and `templates/handoff.md`"
     },
     {
@@ -112,9 +112,9 @@
       "kind": "structure",
       "structureRef": "S5",
       "weight": 1,
-      "criterion": "The final reply tells the user that `/pdlc:verify` is next.",
-      "pass": "The last message to the user names `/pdlc:verify` as the next step.",
-      "partial": "The reply tells the user that the `verify` stage is next, but does not name `/pdlc:verify`. Or the reply puts a different step before `/pdlc:verify`, with no reason.",
+      "criterion": "The final reply gives the proposal link, or names `/pdlc:build` after a send-back.",
+      "pass": "The last message to the user gives the link of the proposal (and the GIF). After a send-back, it names `/pdlc:build` as the next step.",
+      "partial": "The reply says that the change is proposed, but gives no link. Or the reply names a stage that does not follow.",
       "appliesWhen": "The run wrote `review.gif`.",
       "source": "5. Finish, item 3"
     },
@@ -131,31 +131,39 @@
   "prompts": [
     {
       "id": "P01",
-      "prompt": "defaults\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults",
       "axis": "typical",
       "exercises": "The run picks the change itself. Then the run makes the full visual review: a script for 22 acceptance lines, the recording, the frame check, the handoff, and the commit.",
-      "replies": []
+      "replies": [],
+      "setup": "Setup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "project": "proj"
     },
     {
       "id": "P02",
-      "prompt": "CH-0001\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "CH-0001",
       "axis": "change named by its ID, without defaults",
       "exercises": "The run uses the change that the user names, without defaults. The outputs are the same as for P01 (typical run), so a question that the skill asks shows as drift.",
-      "replies": []
+      "replies": [],
+      "setup": "Setup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "project": "proj"
     },
     {
       "id": "P03",
-      "prompt": "the top option change\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "the top option change",
       "axis": "ambiguous: the change is named in plain words",
       "exercises": "The run finds CH-0001 (top option) from a name in plain words, and then makes the full visual review.",
-      "replies": []
+      "replies": [],
+      "setup": "Setup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "project": "proj"
     },
     {
       "id": "P04",
-      "prompt": "defaults. R5 (usage line) and R8 (one --top option) look the same on screen as before, so a short GIF is fine.\n\nSetup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "prompt": "defaults. R5 (usage line) and R8 (one --top option) look the same on screen as before, so a short GIF is fine.",
       "axis": "edge but valid: a push to skip the lines with nothing new on screen",
       "exercises": "The run must keep a step for each acceptance line, also for the old behaviour. This prompt tests the rules \"Every change gets its show\" and \"Each line gets a step\".",
-      "replies": []
+      "replies": [],
+      "setup": "Setup, before you start: run `python3 /home/user/pskills/bench/run_bench.py prepare --state show --snapshot wordfreq --dest proj --plugin PLUGIN`. PLUGIN is the folder two levels above the folder of the skill instructions file (the folder that holds `skills/`). Then treat `proj` as the project root: run every command and do all the work in it. The tag `start` marks the state before this request. The work of this request is what changed in `proj` after `start`: new commits on any branch, changed files and new files.",
+      "project": "proj"
     }
   ]
 }

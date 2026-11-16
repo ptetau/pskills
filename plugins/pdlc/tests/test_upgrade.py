@@ -394,7 +394,7 @@ class Apply(Project):
         text = intents[0].read_text()
         self.assertIn("Status: new", text)
         self.assertIn("JOB-report", text)
-        self.assertIn("Awaits approval:", text)
+        self.assertIn("\nAwaits approval:", text)
         self.assertEqual(data["intent"], "IN-0001")
         found = subprocess.run([sys.executable, str(WRITING), str(intents[0])], capture_output=True, text=True)
         self.assertIn("No findings", found.stdout)
@@ -458,6 +458,60 @@ class Apply(Project):
         edited = [f["path"] for f in data["files"]
                   if f["path"].startswith("specs/design/") and f["status"].startswith("edited")]
         self.assertEqual(edited, [])
+
+
+class CommandScripts(Project):
+    """A project from before pdlc.py: it has the old bin/ and neither new file."""
+
+    NEW = ("bin/pdlc.py", "bin/pdlclib.py")
+
+    def make_old_project(self):
+        marker = self.version_file()
+        for rel in self.NEW:
+            (self.root / "pdlc" / rel).unlink()
+            marker["files"].pop(rel, None)
+        marker["pdlc"] = "0.6.0"
+        (self.root / "pdlc/version.json").write_text(json.dumps(marker))
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "old project")
+
+    def test_plugin_ships_both_command_files(self):
+        for rel in self.NEW:
+            self.assertTrue((REFS / rel).is_file(), rel)
+
+    def test_plugin_version_is_newer_than_0_6_0(self):
+        version = json.loads((PLUGIN / ".claude-plugin/plugin.json").read_text())["version"]
+        self.assertGreater(tuple(map(int, version.split("."))), (0, 6, 0))
+
+    def test_upgrade_adds_both_files(self):
+        self.make_old_project()
+        data = self.apply()
+        st = self.statuses(data)
+        for rel in self.NEW:
+            self.assertIn(rel, st)
+            self.assertEqual(self.pdlc(rel), (self.plugin / "skills/init/references" / rel).read_text())
+            self.assertIn(rel, self.version_file()["files"])
+
+    def test_edited_check_handoff_stays_with_a_diff(self):
+        self.make_old_project()
+        rel = "bin/check_handoff.py"
+        mine = self.pdlc(rel) + "\n# my team\n"
+        (self.root / "pdlc" / rel).write_text(mine)
+        git(self.root, "commit", "-qam", "my edit")
+        self.edit_plugin(rel, "\n# a new line from the plugin\n")
+        done = self.run_script("apply")
+        self.assertEqual(self.pdlc(rel), mine)
+        self.assertIn("```diff", done.stdout)
+        self.assertIn("a new line from the plugin", done.stdout)
+        self.assertEqual(self.pdlc("bin/pdlc.py"), (self.plugin / "skills/init/references/bin/pdlc.py").read_text())
+
+    def test_pdlc_py_runs_in_the_upgraded_project(self):
+        self.make_old_project()
+        self.apply()
+        done = subprocess.run([sys.executable, str(self.root / "pdlc/bin/pdlc.py"), "message", "setup"],
+                              cwd=self.root, env=ENV, capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("Set up pdlc", done.stdout)
 
 
 class KnownFiles(unittest.TestCase):

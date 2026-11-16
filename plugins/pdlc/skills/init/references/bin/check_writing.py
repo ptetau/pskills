@@ -88,7 +88,7 @@ PLACEHOLDER = re.compile(r"-(?:0+|x+|name)(?:\.R\d+)?$")
 # What, later in the sentence, shows a name next to the ID.
 NAMED = re.compile(r"\(|\s·\s|:|^[-–—]\w|\s[-–—]{1,2}\s*\w|—\w")
 FIELD = re.compile(r"(?:[-*+]\s+)?(?:Req|Intent|Intents|Change|Changes|Status|Scope|Base|"
-                   r"Branch|Ticket|Review|Tests-Locked|Source):")
+                   r"Branch|Ticket|Review|Tests-Locked|Red|Source):")
 
 CONVERSATION = re.compile(
     r"\b(?:as you asked|as requested|as discussed|per your request|the user asked|"

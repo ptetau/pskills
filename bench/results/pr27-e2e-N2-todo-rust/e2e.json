@@ -1,0 +1,2086 @@
+{
+ "label": "e2e-N2-todo-rust",
+ "plugin_commit": "9794e64",
+ "model": "claude-sonnet-5-5",
+ "effort": "medium",
+ "fixture": "todo-rust",
+ "runs": [
+  {
+   "totals": {
+    "tokens": {
+     "input": 588,
+     "cache_write": 813024,
+     "cache_read": 24017207,
+     "output": 156567
+    },
+    "cost_usd": 6.3217,
+    "duration_s": 1768.7,
+    "turns": 188,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 46,
+    "models": {
+     "claude-sonnet-5-5": 6.3217
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 6,
+      "cache_write": 11099,
+      "cache_read": 106352,
+      "output": 37
+     },
+     "cost_usd": 0.058,
+     "messages": 3,
+     "agents": {},
+     "wall_s": 23.0
+    },
+    "intake": {
+     "tokens": {
+      "input": 44,
+      "cache_write": 86698,
+      "cache_read": 893174,
+      "output": 364
+     },
+     "cost_usd": 0.4154,
+     "messages": 22,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 37276,
+        "cache_read": 63276,
+        "output": 185
+       },
+       "cost_usd": 0.0946,
+       "messages": 10,
+       "calls": 3,
+       "wall_s": 120.2
+      }
+     },
+     "wall_s": 159.1
+    },
+    "ready": {
+     "tokens": {
+      "input": 8,
+      "cache_write": 3568,
+      "cache_read": 365734,
+      "output": 67
+     },
+     "cost_usd": 0.0773,
+     "messages": 4,
+     "agents": {},
+     "wall_s": 19.8
+    },
+    "change": {
+     "tokens": {
+      "input": 18,
+      "cache_write": 13090,
+      "cache_read": 891079,
+      "output": 163
+     },
+     "cost_usd": 0.2039,
+     "messages": 9,
+     "agents": {},
+     "wall_s": 67.3
+    },
+    "acceptance": {
+     "tokens": {
+      "input": 44,
+      "cache_write": 54309,
+      "cache_read": 1787660,
+      "output": 354
+     },
+     "cost_usd": 0.4544,
+     "messages": 22,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 8,
+        "cache_write": 20988,
+        "cache_read": 58593,
+        "output": 51
+       },
+       "cost_usd": 0.0568,
+       "messages": 4,
+       "calls": 1,
+       "wall_s": 57.2
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 19484,
+        "cache_read": 28400,
+        "output": 43
+       },
+       "cost_usd": 0.0481,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 22.5
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 6,
+        "cache_write": 19484,
+        "cache_read": 28400,
+        "output": 43
+       },
+       "cost_usd": 0.0481,
+       "messages": 3,
+       "calls": 1,
+       "wall_s": 22.5
+      }
+     },
+     "wall_s": 162.3
+    },
+    "tests": {
+     "tokens": {
+      "input": 196,
+      "cache_write": 254102,
+      "cache_read": 7773178,
+      "output": 1499
+     },
+     "cost_usd": 1.9967,
+     "messages": 98,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 78,
+        "cache_write": 95289,
+        "cache_read": 486711,
+        "output": 595
+       },
+       "cost_usd": 0.2999,
+       "messages": 39,
+       "calls": 9,
+       "wall_s": 204.8
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 28,
+        "cache_write": 112493,
+        "cache_read": 58244,
+        "output": 140
+       },
+       "cost_usd": 0.2584,
+       "messages": 14,
+       "calls": 7,
+       "wall_s": 109.6
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 28,
+        "cache_write": 112493,
+        "cache_read": 58244,
+        "output": 140
+       },
+       "cost_usd": 0.2584,
+       "messages": 14,
+       "calls": 7,
+       "wall_s": 109.6
+      }
+     },
+     "wall_s": 550.2
+    },
+    "build": {
+     "tokens": {
+      "input": 70,
+      "cache_write": 60158,
+      "cache_read": 2616200,
+      "output": 446
+     },
+     "cost_usd": 0.6122,
+     "messages": 35,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 44,
+        "cache_write": 47345,
+        "cache_read": 297613,
+        "output": 311
+       },
+       "cost_usd": 0.1589,
+       "messages": 22,
+       "calls": 4,
+       "wall_s": 106.9
+      }
+     },
+     "wall_s": 164.0
+    },
+    "verify": {
+     "tokens": {
+      "input": 102,
+      "cache_write": 234615,
+      "cache_read": 2864157,
+      "output": 726
+     },
+     "cost_usd": 1.056,
+     "messages": 51,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 72,
+        "cache_write": 210450,
+        "cache_read": 201672,
+        "output": 433
+       },
+       "cost_usd": 0.5011,
+       "messages": 36,
+       "calls": 16,
+       "wall_s": 151.3
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 46332,
+        "cache_read": 63657,
+        "output": 140
+       },
+       "cost_usd": 0.1141,
+       "messages": 10,
+       "calls": 4,
+       "wall_s": 29.9
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 72221,
+        "cache_read": 54884,
+        "output": 107
+       },
+       "cost_usd": 0.1691,
+       "messages": 9,
+       "calls": 4,
+       "wall_s": 45.3
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 16,
+        "cache_write": 45446,
+        "cache_read": 33068,
+        "output": 83
+       },
+       "cost_usd": 0.1063,
+       "messages": 8,
+       "calls": 4,
+       "wall_s": 38.5
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 46451,
+        "cache_read": 50063,
+        "output": 103
+       },
+       "cost_usd": 0.1117,
+       "messages": 9,
+       "calls": 4,
+       "wall_s": 37.6
+      }
+     },
+     "wall_s": 140.8
+    },
+    "show": {
+     "tokens": {
+      "input": 100,
+      "cache_write": 95385,
+      "cache_read": 6719673,
+      "output": 781
+     },
+     "cost_usd": 1.4478,
+     "messages": 50,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 34,
+        "cache_write": 56013,
+        "cache_read": 121571,
+        "output": 271
+       },
+       "cost_usd": 0.1467,
+       "messages": 17,
+       "calls": 5,
+       "wall_s": 66.6
+      },
+      "pdlc:reviewer/visual": {
+       "tokens": {
+        "input": 34,
+        "cache_write": 56013,
+        "cache_read": 121571,
+        "output": 271
+       },
+       "cost_usd": 0.1467,
+       "messages": 17,
+       "calls": 5,
+       "wall_s": 66.6
+      }
+     },
+     "wall_s": 477.5
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 1769.9,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-store-done",
+     "pdlc/CH-0002-mark-done-route",
+     "pdlc/CH-0003-view-list-done",
+     "pdlc/IN-0001-mark-done"
+    ],
+    "changes": [
+     "CH-0001-store-done",
+     "CH-0002-mark-done-route",
+     "CH-0003-view-list-done"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-store-done": [
+      "ok   CH-0001"
+     ],
+     "pdlc/CH-0002-mark-done-route": [
+      "ok   CH-0002"
+     ],
+     "pdlc/CH-0003-view-list-done": [
+      "ok   CH-0003"
+     ],
+     "pdlc/IN-0001-mark-done": []
+    },
+    "change_status": {
+     "CH-0001-store-done": {
+      "pdlc/CH-0001-store-done": "in review",
+      "pdlc/CH-0002-mark-done-route": "in review",
+      "pdlc/CH-0003-view-list-done": "in review",
+      "pdlc/IN-0001-mark-done": "planned"
+     },
+     "CH-0002-mark-done-route": {
+      "pdlc/CH-0001-store-done": "planned",
+      "pdlc/CH-0002-mark-done-route": "in review",
+      "pdlc/CH-0003-view-list-done": "planned",
+      "pdlc/IN-0001-mark-done": "planned"
+     },
+     "CH-0003-view-list-done": {
+      "pdlc/CH-0001-store-done": "planned",
+      "pdlc/CH-0002-mark-done-route": "in review",
+      "pdlc/CH-0003-view-list-done": "in review",
+      "pdlc/IN-0001-mark-done": "planned"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 4,
+    "proposed": true,
+    "tip": "pdlc/CH-0002-mark-done-route",
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-store-done/change.md",
+      "pdlc/changes/CH-0002-mark-done-route/change.md",
+      "pdlc/changes/CH-0003-view-list-done/change.md",
+      "pdlc/specs/capabilities/CAP-store.md",
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-mark-done.md",
+      "pdlc/specs/jobs/JOB-view-list.md"
+     ],
+     "findings": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 44
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-_hqqlwoc/app",
+   "metrics": {
+    "time": {
+     "wall_s": 1763.9,
+     "api_s": 1621.6,
+     "main_session": {
+      "agent": 695.8,
+      "model": 679.8,
+      "recording": 263.5,
+      "pdlc script": 70.5,
+      "checks": 16.8,
+      "git": 14.9,
+      "other": 14.4,
+      "Skill": 0.7,
+      "Read": 0.6,
+      "TaskStop": 0.0
+     },
+     "work_by_session": {
+      "main": {
+       "checks": 16.8,
+       "recording": 264.4
+      },
+      "pdlc:builder": {
+       "checks": 9.5
+      }
+     }
+    },
+    "context": {
+     "main_turns": 149,
+     "peak": 243414,
+     "mean": 153793
+    },
+    "tokens": {
+     "input": 298,
+     "cache_write": 213686,
+     "cache_read": 22701127,
+     "output": 69828,
+     "cost_usd": 6.321655700000003
+    },
+    "loops": {
+     "acceptance": {
+      "check runs": 2,
+      "check failures": 1,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "tests": {
+      "check runs": 4,
+      "check failures": 4,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "build": {
+      "check runs": 10,
+      "check failures": 1,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "verify": {
+      "check runs": 2,
+      "check failures": 1,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "show": {
+      "check runs": 0,
+      "check failures": 0,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 11,
+      "recording failures": 2
+     }
+    },
+    "builder_check_runs_until_green": [
+     1,
+     1,
+     2,
+     1
+    ],
+    "agents": {
+     "acceptance/pdlc:reviewer": 1,
+     "acceptance/pdlc:test-writer": 1,
+     "build/pdlc:builder": 4,
+     "intake/pdlc:recon": 3,
+     "show/pdlc:reviewer": 5,
+     "tests/pdlc:reviewer": 7,
+     "tests/pdlc:test-writer": 9,
+     "verify/pdlc:reviewer": 16
+    },
+    "failures": {
+     "tool errors": {
+      "Bash (main)": 2,
+      "Read (main)": 1,
+      "Grep (pdlc:test-writer)": 1,
+      "Edit (pdlc:test-writer)": 1
+     },
+     "hook blocks": {
+      "commits: writing": 5,
+      "guard": 1
+     },
+     "hook findings": {
+      "commits: writing": 36,
+      "guard": 0
+     },
+     "permission denials": 1,
+     "rate limits": 13,
+     "is_error": false
+    },
+    "git": {
+     "rounds": {
+      "acceptance locks": 1,
+      "tests locks": 6,
+      "verify rounds": 4,
+      "recordings": 5,
+      "send-backs": {
+       "build": 1
+      },
+      "stops": 0
+     },
+     "reviews": {
+      "compliance": {
+       "results": 3,
+       "failed": 0,
+       "problems": 0
+      },
+      "privacy": {
+       "results": 4,
+       "failed": 0,
+       "problems": 0
+      },
+      "quality": {
+       "results": 4,
+       "failed": 1,
+       "problems": 2
+      },
+      "security": {
+       "results": 4,
+       "failed": 0,
+       "problems": 0
+      },
+      "specification": {
+       "results": 4,
+       "failed": 0,
+       "problems": 0
+      },
+      "tests": {
+       "results": 7,
+       "failed": 3,
+       "problems": 4
+      },
+      "visual": {
+       "results": 5,
+       "failed": 2,
+       "problems": 4
+      }
+     },
+     "work": {
+      "changes": 3,
+      "commits": 57,
+      "intents awaiting approval": 0,
+      "requirement statuses": {
+       "built": 8,
+       "verified": 8
+      },
+      "lines": {
+       "app code added": 66,
+       "app code removed": 11,
+       "checks added": 802,
+       "checks removed": 6,
+       "docs added": 10,
+       "docs removed": 3,
+       "pdlc records added": 2693,
+       "pdlc records removed": 51,
+       "review packets added": 13889,
+       "review packets removed": 0
+      },
+      "requirements with checks": 9
+     }
+    },
+    "quality": {
+     "main": 0,
+     "tip": 23,
+     "new in app code": 0,
+     "new in checks": 23,
+     "new": 23,
+     "linter": "cargo clippy"
+    },
+    "strength": {
+     "faults": 20,
+     "caught": 17,
+     "missed": 3,
+     "escapes": 0,
+     "candidates": 52,
+     "score": 0.85,
+     "details": [
+      {
+       "file": "src/lib.rs",
+       "line": 12,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 19,
+       "fault": "== to !=",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 19,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 33,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 35,
+       "fault": "a letter of a text",
+       "caught": false,
+       "user_sees": false
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 44,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 46,
+       "fault": "remove the line",
+       "caught": false,
+       "user_sees": false
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 51,
+       "fault": "a letter of a text",
+       "caught": false,
+       "user_sees": false
+      },
+      {
+       "file": "src/page.rs",
+       "line": 6,
+       "fault": "|| to &&",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/page.rs",
+       "line": 13,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/page.rs",
+       "line": 26,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/page.rs",
+       "line": 29,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": false
+      },
+      {
+       "file": "src/store.rs",
+       "line": 38,
+       "fault": "true to false",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 38,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 39,
+       "fault": "false to true",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 51,
+       "fault": "false to true",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 60,
+       "fault": "== to !=",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 61,
+       "fault": "false to true",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 63,
+       "fault": "true to false",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 63,
+       "fault": "remove the line",
+       "caught": true,
+       "user_sees": true
+      }
+     ]
+    }
+   },
+   "shiplog": "run ship-20261102T213334Z, started 2026-11-02T21:33:34+00:00 on main at e4924a5, plugin 0.7.0\nstage                    | start    | end      | outcome | last commit | retries | tool errors | rate limits\n-----                    | -----    | ---      | ------- | ----------- | ------- | ----------- | -----------\n(before the first stage) | 21:33:41 | 21:33:41 | none    | -           |       0 |           1 |           0\npdlc:intake              | 21:33:56 | 21:35:09 | none    | -           |       2 |           0 |           0\nend state: left by user (0 blocks, last subject: None)"
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 574,
+     "cache_write": 948107,
+     "cache_read": 23221285,
+     "output": 166836
+    },
+    "cost_usd": 6.6689,
+    "duration_s": 1404.2,
+    "turns": 174,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 44,
+    "models": {
+     "claude-sonnet-5-5": 6.6689
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 16452,
+      "cache_read": 66475,
+      "output": 22
+     },
+     "cost_usd": 0.072,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 8.8
+    },
+    "intake": {
+     "tokens": {
+      "input": 68,
+      "cache_write": 101123,
+      "cache_read": 1492486,
+      "output": 465
+     },
+     "cost_usd": 0.5741,
+     "messages": 32,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 32,
+        "cache_write": 50082,
+        "cache_read": 96733,
+        "output": 224
+       },
+       "cost_usd": 0.1333,
+       "messages": 14,
+       "calls": 4,
+       "wall_s": 160.3
+      }
+     },
+     "wall_s": 215.9
+    },
+    "ready": {
+     "tokens": {
+      "input": 14,
+      "cache_write": 6348,
+      "cache_read": 700813,
+      "output": 109
+     },
+     "cost_usd": 0.1512,
+     "messages": 7,
+     "agents": {},
+     "wall_s": 33.1
+    },
+    "change": {
+     "tokens": {
+      "input": 22,
+      "cache_write": 13355,
+      "cache_read": 1198862,
+      "output": 167
+     },
+     "cost_usd": 0.2676,
+     "messages": 11,
+     "agents": {},
+     "wall_s": 60.5
+    },
+    "acceptance": {
+     "tokens": {
+      "input": 36,
+      "cache_write": 75528,
+      "cache_read": 1439974,
+      "output": 289
+     },
+     "cost_usd": 0.4489,
+     "messages": 18,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 10,
+        "cache_write": 36481,
+        "cache_read": 101523,
+        "output": 56
+       },
+       "cost_usd": 0.1017,
+       "messages": 5,
+       "calls": 1,
+       "wall_s": 61.6
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 29124,
+        "cache_read": 4687,
+        "output": 21
+       },
+       "cost_usd": 0.0671,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 25.8
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 29124,
+        "cache_read": 4687,
+        "output": 21
+       },
+       "cost_usd": 0.0671,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 25.8
+      }
+     },
+     "wall_s": 130.8
+    },
+    "tests": {
+     "tokens": {
+      "input": 136,
+      "cache_write": 227435,
+      "cache_read": 5003748,
+      "output": 1078
+     },
+     "cost_usd": 1.4726,
+     "messages": 68,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 48,
+        "cache_write": 75429,
+        "cache_read": 284674,
+        "output": 330
+       },
+       "cost_usd": 0.2259,
+       "messages": 24,
+       "calls": 6,
+       "wall_s": 133.6
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 28,
+        "cache_write": 123731,
+        "cache_read": 90612,
+        "output": 175
+       },
+       "cost_usd": 0.2988,
+       "messages": 14,
+       "calls": 6,
+       "wall_s": 87.9
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 28,
+        "cache_write": 123731,
+        "cache_read": 90612,
+        "output": 175
+       },
+       "cost_usd": 0.2988,
+       "messages": 14,
+       "calls": 6,
+       "wall_s": 87.9
+      }
+     },
+     "wall_s": 357.0
+    },
+    "build": {
+     "tokens": {
+      "input": 64,
+      "cache_write": 63610,
+      "cache_read": 2571597,
+      "output": 540
+     },
+     "cost_usd": 0.6354,
+     "messages": 32,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 36,
+        "cache_write": 49386,
+        "cache_read": 184232,
+        "output": 269
+       },
+       "cost_usd": 0.148,
+       "messages": 18,
+       "calls": 4,
+       "wall_s": 72.3
+      }
+     },
+     "wall_s": 137.5
+    },
+    "verify": {
+     "tokens": {
+      "input": 98,
+      "cache_write": 286607,
+      "cache_read": 2235948,
+      "output": 695
+     },
+     "cost_usd": 1.0892,
+     "messages": 49,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 76,
+        "cache_write": 267001,
+        "cache_read": 260263,
+        "output": 500
+       },
+       "cost_usd": 0.6576,
+       "messages": 38,
+       "calls": 16,
+       "wall_s": 142.2
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 59891,
+        "cache_read": 53784,
+        "output": 122
+       },
+       "cost_usd": 0.1468,
+       "messages": 9,
+       "calls": 4,
+       "wall_s": 32.3
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 59619,
+        "cache_read": 53792,
+        "output": 107
+       },
+       "cost_usd": 0.146,
+       "messages": 9,
+       "calls": 4,
+       "wall_s": 33.5
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 59987,
+        "cache_read": 64917,
+        "output": 141
+       },
+       "cost_usd": 0.1492,
+       "messages": 10,
+       "calls": 4,
+       "wall_s": 27.5
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 87504,
+        "cache_read": 87770,
+        "output": 130
+       },
+       "cost_usd": 0.2157,
+       "messages": 10,
+       "calls": 4,
+       "wall_s": 48.9
+      }
+     },
+     "wall_s": 120.0
+    },
+    "show": {
+     "tokens": {
+      "input": 128,
+      "cache_write": 149781,
+      "cache_read": 8492393,
+      "output": 1611
+     },
+     "cost_usd": 1.9578,
+     "messages": 64,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 44,
+        "cache_write": 104362,
+        "cache_read": 202291,
+        "output": 272
+       },
+       "cost_usd": 0.276,
+       "messages": 22,
+       "calls": 6,
+       "wall_s": 80.4
+      },
+      "pdlc:reviewer/visual": {
+       "tokens": {
+        "input": 44,
+        "cache_write": 104362,
+        "cache_read": 202291,
+        "output": 272
+       },
+       "cost_usd": 0.276,
+       "messages": 22,
+       "calls": 6,
+       "wall_s": 80.4
+      }
+     },
+     "wall_s": 338.0
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 1405.2,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-store-done-mark",
+     "pdlc/CH-0002-page-hides-done",
+     "pdlc/CH-0003-mark-item-done",
+     "pdlc/IN-0001-mark-done"
+    ],
+    "changes": [
+     "CH-0001-store-done-mark",
+     "CH-0002-page-hides-done",
+     "CH-0003-mark-item-done"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-store-done-mark": [
+      "ok   CH-0001"
+     ],
+     "pdlc/CH-0002-page-hides-done": [
+      "ok   CH-0002"
+     ],
+     "pdlc/CH-0003-mark-item-done": [
+      "ok   CH-0003"
+     ],
+     "pdlc/IN-0001-mark-done": []
+    },
+    "change_status": {
+     "CH-0001-store-done-mark": {
+      "pdlc/CH-0001-store-done-mark": "in review",
+      "pdlc/CH-0002-page-hides-done": "in review",
+      "pdlc/CH-0003-mark-item-done": "in review",
+      "pdlc/IN-0001-mark-done": "planned"
+     },
+     "CH-0002-page-hides-done": {
+      "pdlc/CH-0001-store-done-mark": "planned",
+      "pdlc/CH-0002-page-hides-done": "in review",
+      "pdlc/CH-0003-mark-item-done": "in review",
+      "pdlc/IN-0001-mark-done": "planned"
+     },
+     "CH-0003-mark-item-done": {
+      "pdlc/CH-0001-store-done-mark": "planned",
+      "pdlc/CH-0002-page-hides-done": "planned",
+      "pdlc/CH-0003-mark-item-done": "in review",
+      "pdlc/IN-0001-mark-done": "planned"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 3,
+    "proposed": true,
+    "tip": "pdlc/CH-0003-mark-item-done",
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-store-done-mark/change.md",
+      "pdlc/changes/CH-0002-page-hides-done/change.md",
+      "pdlc/changes/CH-0003-mark-item-done/change.md",
+      "pdlc/specs/capabilities/CAP-store.md",
+      "pdlc/specs/capabilities/CAP-web.md",
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-add-item.md",
+      "pdlc/specs/jobs/JOB-mark-done.md",
+      "pdlc/specs/jobs/JOB-view-list.md"
+     ],
+     "findings": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 47
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-w6jl9b9w/app",
+   "metrics": {
+    "time": {
+     "wall_s": 1401.7,
+     "api_s": 1503.1,
+     "main_session": {
+      "model": 685.0,
+      "agent": 590.1,
+      "pdlc script": 48.2,
+      "recording": 39.9,
+      "checks": 12.8,
+      "other": 10.9,
+      "git": 10.3,
+      "Skill": 0.7,
+      "Read": 0.4
+     },
+     "work_by_session": {
+      "main": {
+       "checks": 12.8,
+       "recording": 40.5
+      },
+      "pdlc:builder": {
+       "checks": 6.8
+      }
+     }
+    },
+    "context": {
+     "main_turns": 146,
+     "peak": 234371,
+     "mean": 151933
+    },
+    "tokens": {
+     "input": 292,
+     "cache_write": 204643,
+     "cache_read": 21977281,
+     "output": 75591,
+     "cost_usd": 6.6688685
+    },
+    "loops": {
+     "acceptance": {
+      "check runs": 1,
+      "check failures": 1,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "tests": {
+      "check runs": 3,
+      "check failures": 2,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "build": {
+      "check runs": 9,
+      "check failures": 1,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "verify": {
+      "check runs": 2,
+      "check failures": 0,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "show": {
+      "check runs": 1,
+      "check failures": 0,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 8,
+      "recording failures": 0
+     }
+    },
+    "builder_check_runs_until_green": [
+     1,
+     2,
+     1,
+     1
+    ],
+    "agents": {
+     "acceptance/pdlc:reviewer": 1,
+     "acceptance/pdlc:test-writer": 1,
+     "build/pdlc:builder": 4,
+     "intake/pdlc:recon": 4,
+     "show/pdlc:reviewer": 6,
+     "tests/pdlc:reviewer": 6,
+     "tests/pdlc:test-writer": 6,
+     "verify/pdlc:reviewer": 16
+    },
+    "failures": {
+     "tool errors": {
+      "Bash (main)": 3,
+      "Read (pdlc:reviewer)": 1
+     },
+     "hook blocks": {
+      "commits: writing": 4,
+      "stdin": 1,
+      "guard": 1
+     },
+     "hook findings": {
+      "commits: writing": 17,
+      "stdin": 0,
+      "guard": 0
+     },
+     "permission denials": 2,
+     "rate limits": 14,
+     "is_error": false
+    },
+    "git": {
+     "rounds": {
+      "acceptance locks": 1,
+      "tests locks": 6,
+      "verify rounds": 3,
+      "recordings": 5,
+      "send-backs": {},
+      "stops": 0
+     },
+     "reviews": {
+      "compliance": {
+       "results": 3,
+       "failed": 0,
+       "problems": 0
+      },
+      "privacy": {
+       "results": 4,
+       "failed": 0,
+       "problems": 0
+      },
+      "quality": {
+       "results": 4,
+       "failed": 1,
+       "problems": 2
+      },
+      "security": {
+       "results": 4,
+       "failed": 0,
+       "problems": 0
+      },
+      "specification": {
+       "results": 4,
+       "failed": 0,
+       "problems": 0
+      },
+      "tests": {
+       "results": 10,
+       "failed": 2,
+       "problems": 3
+      },
+      "visual": {
+       "results": 3,
+       "failed": 0,
+       "problems": 0
+      }
+     },
+     "work": {
+      "changes": 3,
+      "commits": 59,
+      "intents awaiting approval": 0,
+      "requirement statuses": {
+       "built": 24,
+       "verified": 9,
+       "ready": 3
+      },
+      "lines": {
+       "app code added": 56,
+       "app code removed": 7,
+       "checks added": 800,
+       "checks removed": 6,
+       "docs added": 5,
+       "docs removed": 2,
+       "pdlc records added": 2703,
+       "pdlc records removed": 48,
+       "review packets added": 11165,
+       "review packets removed": 0
+      },
+      "requirements with checks": 13
+     }
+    },
+    "quality": {
+     "main": 0,
+     "tip": 16,
+     "new in app code": 0,
+     "new in checks": 16,
+     "new": 16,
+     "linter": "cargo clippy"
+    },
+    "strength": {
+     "error": "the checks of the run do not pass at its tip",
+     "candidates": 41
+    }
+   },
+   "shiplog": "run ship-20261102T220358Z, started 2026-11-02T22:03:58+00:00 on main at 7241e56, plugin 0.7.0\nstage       | start    | end      | outcome | last commit | retries | tool errors | rate limits\n-----       | -----    | ---      | ------- | ----------- | ------- | ----------- | -----------\npdlc:intake | 22:04:06 | 22:05:19 | none    | -           |       3 |           0 |           0\nend state: left by user (0 blocks, last subject: None)"
+  },
+  {
+   "totals": {
+    "tokens": {
+     "input": 548,
+     "cache_write": 789673,
+     "cache_read": 22338317,
+     "output": 132421
+    },
+    "cost_usd": 5.8189,
+    "duration_s": 1245.6,
+    "turns": 180,
+    "is_error": false,
+    "terminal_reason": "completed",
+    "subagents": 41,
+    "models": {
+     "claude-sonnet-5-5": 5.8189
+    }
+   },
+   "stages": {
+    "ship": {
+     "tokens": {
+      "input": 4,
+      "cache_write": 16496,
+      "cache_read": 66475,
+      "output": 27
+     },
+     "cost_usd": 0.0683,
+     "messages": 2,
+     "agents": {},
+     "wall_s": 8.8
+    },
+    "intake": {
+     "tokens": {
+      "input": 44,
+      "cache_write": 63777,
+      "cache_read": 1088222,
+      "output": 269
+     },
+     "cost_usd": 0.3766,
+     "messages": 22,
+     "agents": {
+      "pdlc:recon": {
+       "tokens": {
+        "input": 14,
+        "cache_write": 24461,
+        "cache_read": 45596,
+        "output": 79
+       },
+       "cost_usd": 0.061,
+       "messages": 7,
+       "calls": 2,
+       "wall_s": 44.8
+      }
+     },
+     "wall_s": 130.0
+    },
+    "ready": {
+     "tokens": {
+      "input": 10,
+      "cache_write": 3442,
+      "cache_read": 434238,
+      "output": 66
+     },
+     "cost_usd": 0.0869,
+     "messages": 5,
+     "agents": {},
+     "wall_s": 22.6
+    },
+    "change": {
+     "tokens": {
+      "input": 18,
+      "cache_write": 13567,
+      "cache_read": 857997,
+      "output": 156
+     },
+     "cost_usd": 0.1952,
+     "messages": 9,
+     "agents": {},
+     "wall_s": 54.5
+    },
+    "acceptance": {
+     "tokens": {
+      "input": 38,
+      "cache_write": 65027,
+      "cache_read": 1380347,
+      "output": 304
+     },
+     "cost_usd": 0.3931,
+     "messages": 19,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 10,
+        "cache_write": 30279,
+        "cache_read": 88155,
+        "output": 48
+       },
+       "cost_usd": 0.0805,
+       "messages": 5,
+       "calls": 1,
+       "wall_s": 41.2
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 23867,
+        "cache_read": 4687,
+        "output": 21
+       },
+       "cost_usd": 0.0522,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 20.1
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 4,
+        "cache_write": 23867,
+        "cache_read": 4687,
+        "output": 21
+       },
+       "cost_usd": 0.0522,
+       "messages": 2,
+       "calls": 1,
+       "wall_s": 20.1
+      }
+     },
+     "wall_s": 109.6
+    },
+    "tests": {
+     "tokens": {
+      "input": 122,
+      "cache_write": 184640,
+      "cache_read": 4739912,
+      "output": 1022
+     },
+     "cost_usd": 1.2549,
+     "messages": 61,
+     "agents": {
+      "pdlc:test-writer": {
+       "tokens": {
+        "input": 38,
+        "cache_write": 64907,
+        "cache_read": 233562,
+        "output": 311
+       },
+       "cost_usd": 0.1821,
+       "messages": 19,
+       "calls": 5,
+       "wall_s": 116.9
+      },
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 22,
+        "cache_write": 91612,
+        "cache_read": 60221,
+        "output": 121
+       },
+       "cost_usd": 0.208,
+       "messages": 11,
+       "calls": 5,
+       "wall_s": 76.0
+      },
+      "pdlc:reviewer/tests": {
+       "tokens": {
+        "input": 22,
+        "cache_write": 91612,
+        "cache_read": 60221,
+        "output": 121
+       },
+       "cost_usd": 0.208,
+       "messages": 11,
+       "calls": 5,
+       "wall_s": 76.0
+      }
+     },
+     "wall_s": 324.3
+    },
+    "build": {
+     "tokens": {
+      "input": 62,
+      "cache_write": 66346,
+      "cache_read": 2044843,
+      "output": 511
+     },
+     "cost_usd": 0.5124,
+     "messages": 31,
+     "agents": {
+      "pdlc:builder": {
+       "tokens": {
+        "input": 38,
+        "cache_write": 55039,
+        "cache_read": 174576,
+        "output": 334
+       },
+       "cost_usd": 0.151,
+       "messages": 19,
+       "calls": 5,
+       "wall_s": 79.4
+      }
+     },
+     "wall_s": 126.5
+    },
+    "verify": {
+     "tokens": {
+      "input": 108,
+      "cache_write": 254677,
+      "cache_read": 2939388,
+      "output": 872
+     },
+     "cost_usd": 1.0903,
+     "messages": 54,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 76,
+        "cache_write": 230084,
+        "cache_read": 237508,
+        "output": 483
+       },
+       "cost_usd": 0.5387,
+       "messages": 38,
+       "calls": 16,
+       "wall_s": 147.4
+      },
+      "pdlc:reviewer/security": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 50614,
+        "cache_read": 49561,
+        "output": 103
+       },
+       "cost_usd": 0.118,
+       "messages": 9,
+       "calls": 4,
+       "wall_s": 36.0
+      },
+      "pdlc:reviewer/quality": {
+       "tokens": {
+        "input": 18,
+        "cache_write": 50786,
+        "cache_read": 49554,
+        "output": 104
+       },
+       "cost_usd": 0.1184,
+       "messages": 9,
+       "calls": 4,
+       "wall_s": 32.8
+      },
+      "pdlc:reviewer/privacy": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 50873,
+        "cache_read": 62944,
+        "output": 144
+       },
+       "cost_usd": 0.1212,
+       "messages": 10,
+       "calls": 4,
+       "wall_s": 30.7
+      },
+      "pdlc:reviewer/specification": {
+       "tokens": {
+        "input": 20,
+        "cache_write": 77811,
+        "cache_read": 75449,
+        "output": 132
+       },
+       "cost_usd": 0.1811,
+       "messages": 10,
+       "calls": 4,
+       "wall_s": 47.9
+      }
+     },
+     "wall_s": 138.0
+    },
+    "show": {
+     "tokens": {
+      "input": 142,
+      "cache_write": 121701,
+      "cache_read": 8786895,
+      "output": 1944
+     },
+     "cost_usd": 1.8412,
+     "messages": 71,
+     "agents": {
+      "pdlc:reviewer": {
+       "tokens": {
+        "input": 46,
+        "cache_write": 79009,
+        "cache_read": 206118,
+        "output": 349
+       },
+       "cost_usd": 0.208,
+       "messages": 23,
+       "calls": 6,
+       "wall_s": 81.9
+      },
+      "pdlc:reviewer/visual": {
+       "tokens": {
+        "input": 46,
+        "cache_write": 79009,
+        "cache_read": 206118,
+        "output": 349
+       },
+       "cost_usd": 0.208,
+       "messages": 23,
+       "calls": 6,
+       "wall_s": 81.9
+      }
+     },
+     "wall_s": 329.0
+    }
+   },
+   "waiting": {
+    "messages": 0,
+    "cost_usd": 0.0
+   },
+   "wall_s": 1246.8,
+   "outcome": {
+    "branches": [
+     "main",
+     "pdlc/CH-0001-store-done",
+     "pdlc/CH-0002-hide-done",
+     "pdlc/CH-0003-mark-done-route",
+     "pdlc/IN-0001-mark-done"
+    ],
+    "changes": [
+     "CH-0001-store-done",
+     "CH-0002-hide-done",
+     "CH-0003-mark-done-route"
+    ],
+    "dirty": false,
+    "merge_check": {
+     "pdlc/CH-0001-store-done": [
+      "ok   CH-0001"
+     ],
+     "pdlc/CH-0002-hide-done": [
+      "ok   CH-0002"
+     ],
+     "pdlc/CH-0003-mark-done-route": [
+      "ok   CH-0003"
+     ],
+     "pdlc/IN-0001-mark-done": []
+    },
+    "change_status": {
+     "CH-0001-store-done": {
+      "pdlc/CH-0001-store-done": "in review",
+      "pdlc/CH-0002-hide-done": "in review",
+      "pdlc/CH-0003-mark-done-route": "in review",
+      "pdlc/IN-0001-mark-done": "planned"
+     },
+     "CH-0002-hide-done": {
+      "pdlc/CH-0001-store-done": "planned",
+      "pdlc/CH-0002-hide-done": "in review",
+      "pdlc/CH-0003-mark-done-route": "in review",
+      "pdlc/IN-0001-mark-done": "planned"
+     },
+     "CH-0003-mark-done-route": {
+      "pdlc/CH-0001-store-done": "planned",
+      "pdlc/CH-0002-hide-done": "planned",
+      "pdlc/CH-0003-mark-done-route": "in review",
+      "pdlc/IN-0001-mark-done": "planned"
+     }
+    },
+    "stops": [],
+    "verify_rounds": 4,
+    "proposed": true,
+    "tip": "pdlc/CH-0003-mark-done-route",
+    "writing": {
+     "count": 0,
+     "files": [
+      "README.md",
+      "pdlc/changes/CH-0001-store-done/change.md",
+      "pdlc/changes/CH-0002-hide-done/change.md",
+      "pdlc/changes/CH-0003-mark-done-route/change.md",
+      "pdlc/specs/capabilities/CAP-store.md",
+      "pdlc/specs/design/DES-errors.md",
+      "pdlc/specs/jobs/JOB-mark-done.md",
+      "pdlc/specs/jobs/JOB-view-list.md"
+     ],
+     "findings": []
+    },
+    "unit": {
+     "ok": true,
+     "ran": 49
+    },
+    "probes": {
+     "passed": 8,
+     "total": 8,
+     "failed": []
+    }
+   },
+   "stderr": "",
+   "project": "/tmp/pdlc-bench-3e7qkvmc/app",
+   "metrics": {
+    "time": {
+     "wall_s": 1243.3,
+     "api_s": 1280.6,
+     "main_session": {
+      "model": 565.7,
+      "agent": 529.1,
+      "pdlc script": 57.7,
+      "recording": 33.5,
+      "git": 20.9,
+      "checks": 18.5,
+      "other": 12.6,
+      "writing check": 1.2,
+      "Skill": 0.8,
+      "Read": 0.6
+     },
+     "work_by_session": {
+      "main": {
+       "checks": 18.5,
+       "recording": 33.5
+      },
+      "pdlc:builder": {
+       "checks": 8.0
+      }
+     }
+    },
+    "context": {
+     "main_turns": 150,
+     "peak": 220143,
+     "mean": 143191
+    },
+    "tokens": {
+     "input": 300,
+     "cache_write": 190415,
+     "cache_read": 21287894,
+     "output": 64695,
+     "cost_usd": 5.818942699999999
+    },
+    "loops": {
+     "acceptance": {
+      "check runs": 2,
+      "check failures": 1,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "tests": {
+      "check runs": 3,
+      "check failures": 3,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "build": {
+      "check runs": 10,
+      "check failures": 0,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "verify": {
+      "check runs": 3,
+      "check failures": 0,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 0,
+      "recording failures": 0
+     },
+     "show": {
+      "check runs": 1,
+      "check failures": 0,
+      "builds": 0,
+      "build failures": 0,
+      "recordings": 8,
+      "recording failures": 0
+     }
+    },
+    "builder_check_runs_until_green": [
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "agents": {
+     "acceptance/pdlc:reviewer": 1,
+     "acceptance/pdlc:test-writer": 1,
+     "build/pdlc:builder": 5,
+     "intake/pdlc:recon": 2,
+     "show/pdlc:reviewer": 6,
+     "tests/pdlc:reviewer": 5,
+     "tests/pdlc:test-writer": 5,
+     "verify/pdlc:reviewer": 16
+    },
+    "failures": {
+     "tool errors": {
+      "Bash (main)": 3,
+      "Grep (pdlc:test-writer)": 1
+     },
+     "hook blocks": {
+      "commits: writing": 5,
+      "guard": 1
+     },
+     "hook findings": {
+      "commits: writing": 28,
+      "guard": 0
+     },
+     "permission denials": 1,
+     "rate limits": 7,
+     "is_error": false
+    },
+    "git": {
+     "rounds": {
+      "acceptance locks": 1,
+      "tests locks": 5,
+      "verify rounds": 4,
+      "recordings": 6,
+      "send-backs": {},
+      "stops": 0
+     },
+     "reviews": {
+      "compliance": {
+       "results": 3,
+       "failed": 0,
+       "problems": 0
+      },
+      "privacy": {
+       "results": 4,
+       "failed": 0,
+       "problems": 0
+      },
+      "quality": {
+       "results": 4,
+       "failed": 1,
+       "problems": 2
+      },
+      "security": {
+       "results": 4,
+       "failed": 0,
+       "problems": 0
+      },
+      "specification": {
+       "results": 4,
+       "failed": 0,
+       "problems": 0
+      },
+      "tests": {
+       "results": 6,
+       "failed": 2,
+       "problems": 2
+      },
+      "visual": {
+       "results": 6,
+       "failed": 3,
+       "problems": 8
+      }
+     },
+     "work": {
+      "changes": 3,
+      "commits": 56,
+      "intents awaiting approval": 0,
+      "requirement statuses": {
+       "built": 12,
+       "verified": 12
+      },
+      "lines": {
+       "app code added": 72,
+       "app code removed": 10,
+       "checks added": 738,
+       "checks removed": 6,
+       "docs added": 9,
+       "docs removed": 4,
+       "pdlc records added": 3017,
+       "pdlc records removed": 69,
+       "review packets added": 14835,
+       "review packets removed": 0
+      },
+      "requirements with checks": 12
+     }
+    },
+    "quality": {
+     "main": 0,
+     "tip": 40,
+     "new in app code": 0,
+     "new in checks": 40,
+     "new": 40,
+     "linter": "cargo clippy"
+    },
+    "strength": {
+     "faults": 20,
+     "caught": 17,
+     "missed": 3,
+     "escapes": 0,
+     "candidates": 54,
+     "score": 0.85,
+     "details": [
+      {
+       "file": "src/lib.rs",
+       "line": 14,
+       "fault": "== to !=",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 14,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 28,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 30,
+       "fault": "a letter of a text",
+       "caught": false,
+       "user_sees": false
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 38,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 39,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 39,
+       "fault": "remove the line",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 40,
+       "fault": "remove the line",
+       "caught": false,
+       "user_sees": false
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 45,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/lib.rs",
+       "line": 52,
+       "fault": "a letter of a text",
+       "caught": false,
+       "user_sees": false
+      },
+      {
+       "file": "src/page.rs",
+       "line": 6,
+       "fault": "|| to &&",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/page.rs",
+       "line": 24,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/page.rs",
+       "line": 27,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": false
+      },
+      {
+       "file": "src/store.rs",
+       "line": 38,
+       "fault": "a letter of a text",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 39,
+       "fault": "true to false",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 40,
+       "fault": "false to true",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 52,
+       "fault": "false to true",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 61,
+       "fault": "== to !=",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 62,
+       "fault": "false to true",
+       "caught": true,
+       "user_sees": true
+      },
+      {
+       "file": "src/store.rs",
+       "line": 64,
+       "fault": "true to false",
+       "caught": true,
+       "user_sees": true
+      }
+     ]
+    }
+   },
+   "shiplog": "run ship-20261102T222729Z, started 2026-11-02T22:27:29+00:00 on main at cdf5009, plugin 0.7.0\nstage       | start    | end      | outcome | last commit | retries | tool errors | rate limits\n-----       | -----    | ---      | ------- | ----------- | ------- | ----------- | -----------\npdlc:intake | 22:27:37 | 22:28:10 | none    | -           |       1 |           0 |           0\nend state: left by user (0 blocks, last subject: None)"
+  }
+ ]
+}
