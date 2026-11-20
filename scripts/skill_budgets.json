@@ -222,6 +222,18 @@
         "rule": "A line in `review/<Sn>.tests.md` goes to `slice:test-writer` and not to the implementer. Then run `slice.py commit tests <Sn>`. Failing tests make the slice `building`: run the test loop. A test fix uses no round of its own.",
         "words": 38,
         "evidence": "slice improvement A (reviewer judges the tests): the build skill is the only router of the test findings; no vet run yet"
+      },
+      {
+        "rule": "Give the implementer `model: opus` when the slice says `- Tier: hard`, and from test round 3 of any slice.",
+        "words": 21,
+        "evidence": "Rail stage 0 run (2026-11-20): all jobs on one model wastes tokens; a hard slice on the weaker model costs more in rounds. No vet run yet"
+      }
+    ],
+    "slice:plan": [
+      {
+        "rule": "Give each slice `- Tier: hard` when it creates the structure that later slices extend, or holds inference or proofs. Else `- Tier: standard`.",
+        "words": 25,
+        "evidence": "Rail stage 0 run (2026-11-20): the build skill reads the `- Tier:` line to pick the implementer model, so the plan must write it. No vet run yet"
       }
     ]
   },

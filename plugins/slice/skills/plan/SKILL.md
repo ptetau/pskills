@@ -27,6 +27,7 @@ effort: medium
 - The first slice is the thinnest path that works. Each later slice adds one story.
 - An acceptance line is a concrete check, with exact values, and cites its requirement.
 - Each acceptance line comes from the spec. If the spec lacks one, ask the user.
+- Give each slice `- Tier: hard` when it creates the structure that later slices extend, or holds inference or proofs. Else `- Tier: standard`.
 - Put the title in the heading as `## S1: <title>`. The commit subject uses it.
 - Outputs give each reader exactly what it reads: see `contracts.json`.
 
