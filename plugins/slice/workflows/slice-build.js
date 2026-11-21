@@ -61,7 +61,8 @@ const REVIEW_RULE =
 function testWriter(id, extra, label) {
   return agent(role('test-writer', id) +
     `Write the tests of ${id} in ${ROOT}/tests/Rail.Tests/${testFile(id)} only. Use the helper that interface.md names. ` +
-    `Do not run a build or a test command.\n` + extra,
+    `Do not run a build or a test command. Use only the programs of the acceptance lines. Do not invent a Rail program: ` +
+    `you cannot compile one, and a program that does not compile makes a test that no code can pass.\n` + extra,
     { label: label, phase: A.writeTests && extra.indexOf('review/') < 0 ? 'Tests' : 'Build', model: 'sonnet', effort: 'medium', agentType: 'slice:test-writer' })
 }
 
