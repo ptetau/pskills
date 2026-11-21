@@ -47,7 +47,7 @@ function role(name, id) {
   return `You are the slice ${name} agent of the slice plugin. Where your instructions say \${CLAUDE_PLUGIN_ROOT}, use ${PLUGIN}. ` +
     `Run slice.py as: ${S}\n` +
     `Project root: ${ROOT}. Spec folder: ${DIR}. Slice: ${id}.\n` +
-    `The language reference is ${ROOT}/docs/language.md, with docs/diagnostics.md, docs/format.md, docs/tools.md and docs/examples/. ` +
+    `The language reference is ${ROOT}/docs/language.md, with docs/diagnostics.md, docs/format.md, docs/tools.md, docs/guide.md and docs/examples/. ` +
     `The goal document is docs/rail-spec.md.\n`
 }
 
