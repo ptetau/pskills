@@ -47,14 +47,19 @@ class Layout(unittest.TestCase):
     def test_each_agent_and_skill_is_bound_to_the_model_and_the_effort(self):
         paths = sorted((PLUGIN / "agents").glob("*.md")) + sorted((PLUGIN / "skills").glob("*/SKILL.md"))
         self.assertEqual(len(paths), 9)
+        sonnet = {"test-writer.md", "implementer.md", "build", "run"}
         for path in paths:
             fm = front_matter(path)
-            self.assertEqual(fm.get("model"), "claude-opus-5-5", path)
+            job = path.name if path.parent.name == "agents" else path.parent.name
+            model = "claude-sonnet-5-5" if job in sonnet else "claude-opus-5-5"
+            self.assertEqual(fm.get("model"), model, path)
             self.assertEqual(fm.get("effort"), "high" if path.name == "reviewer.md" else "medium", path)
 
     def test_the_readme_names_the_model_and_the_effort(self):
         text = (PLUGIN / "README.md").read_text()
         self.assertIn("claude-opus-5-5", text)
+        self.assertIn("claude-sonnet-5-5", text)
+        self.assertIn("- Tier: hard", text)
         self.assertIn("medium", text)
         self.assertRegex(text, r"(?i)reviewer.{0,80}\bhigh\b|\bhigh\b.{0,80}reviewer")
 

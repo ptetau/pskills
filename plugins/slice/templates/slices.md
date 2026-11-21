@@ -7,6 +7,7 @@
 - Acceptance:
   - Given <state>, when <action>, then <result>. (R1)
 - Layers: <for example ui, api, store>
+- Tier: <hard | standard>
 - Status: planned
 - Test rounds: 0
 - Review rounds: 0

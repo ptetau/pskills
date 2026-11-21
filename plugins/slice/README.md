@@ -36,10 +36,20 @@ time. A slice is a user story through every layer.
 
 ## Model
 
-Every agent and skill sets `model: claude-opus-5-5` and `effort: medium` in its frontmatter,
-except the reviewer, which sets `effort: high`. Claude Code supports both fields. The bindings have limits:
-`CLAUDE_CODE_EFFORT_LEVEL` overrides `effort`, and a skill's `model` lasts one turn and can be
-dropped by an `availableModels` allowlist or auto mode.
+The frontmatter sets the model of each job.
+
+| Job | Model | Effort |
+|---|---|---|
+| `spec`, `plan`, `domain`, `interface` | `claude-opus-5-5` | medium |
+| `run`, `build`, `slice:test-writer` | `claude-sonnet-5-5` | medium |
+| `slice:implementer` | `claude-sonnet-5-5`. `opus` for `- Tier: hard`, and from test round 3 | medium |
+| `slice:reviewer` | `claude-opus-5-5` | high |
+
+`/slice:plan` writes the `- Tier:` line. `CLAUDE_CODE_EFFORT_LEVEL` overrides `effort`. A skill's `model`
+lasts one turn, and an allowlist or auto mode can drop it.
+
+With no plugin agent loaded, the Workflow script `workflows/slice-build.js` runs the build with this
+routing. The hook does not guard its agents.
 
 ## Records
 

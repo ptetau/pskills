@@ -2,7 +2,7 @@
 name: run
 description: >
   Runs the slice stages from the state in slice/, in the order that `slice.py next` gives: spec, plan, domain, interface, build. Continues where it stopped. Use when the user says "/slice:run", or wants a specification built all the way.
-model: claude-opus-5-5
+model: claude-sonnet-5-5
 effort: medium
 ---
 

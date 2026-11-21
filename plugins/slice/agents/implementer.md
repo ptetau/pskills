@@ -3,7 +3,7 @@ name: implementer
 description: >
   Builds one slice in the app code, from the spec, the slice, the domain, and the interface. A hook blocks the tests, so it does not see them. Gets the test results from a script. The slice build skill uses this agent.
 tools: Read, Write, Edit, MultiEdit, Glob, Grep, Bash
-model: claude-opus-5-5
+model: claude-sonnet-5-5
 effort: medium
 ---
 
