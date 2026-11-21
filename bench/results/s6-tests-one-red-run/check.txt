@@ -1,4 +1,0 @@
-edits apply: 1
-writing check skills/tests/SKILL.md: 0 findings before, 0 after
-plugin tests: OK
-  OK (skipped=10)
