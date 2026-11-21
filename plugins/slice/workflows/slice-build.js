@@ -15,6 +15,9 @@ const PLUGIN = A.plugin
 const SPEC = A.spec
 const S = `python3 ${PLUGIN}/bin/slice.py --root ${ROOT} --spec ${SPEC}`
 const DIR = `${ROOT}/slice/${SPEC}`
+// Spec 001 keeps its first file names. Each later spec puts its number in the name.
+const NUM = SPEC.slice(0, 3)
+const testFile = id => NUM === '001' ? `${id}Tests.cs` : `Spec${NUM}${id}Tests.cs`
 
 const SH_SCHEMA = {
   type: 'object',
@@ -44,7 +47,7 @@ function role(name, id) {
   return `You are the slice ${name} agent of the slice plugin. Where your instructions say \${CLAUDE_PLUGIN_ROOT}, use ${PLUGIN}. ` +
     `Run slice.py as: ${S}\n` +
     `Project root: ${ROOT}. Spec folder: ${DIR}. Slice: ${id}.\n` +
-    `The language reference is ${ROOT}/docs/language.md, with docs/diagnostics.md, docs/format.md and docs/examples/. ` +
+    `The language reference is ${ROOT}/docs/language.md, with docs/diagnostics.md, docs/format.md, docs/tools.md and docs/examples/. ` +
     `The goal document is docs/rail-spec.md.\n`
 }
 
@@ -57,7 +60,7 @@ const REVIEW_RULE =
 
 function testWriter(id, extra, label) {
   return agent(role('test-writer', id) +
-    `Write the tests of ${id} in ${ROOT}/tests/Rail.Tests/${id}Tests.cs only. Use the helper that interface.md names. ` +
+    `Write the tests of ${id} in ${ROOT}/tests/Rail.Tests/${testFile(id)} only. Use the helper that interface.md names. ` +
     `Do not run a build or a test command.\n` + extra,
     { label: label, phase: A.writeTests && extra.indexOf('review/') < 0 ? 'Tests' : 'Build', model: 'sonnet', effort: 'medium', agentType: 'slice:test-writer' })
 }
