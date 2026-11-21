@@ -30,9 +30,6 @@ other runs. To read one, check out an older commit.
 | `pdlc-acceptance`, `pdlc-change`, `pdlc-intake`, `pdlc-ready`, `pdlc-ship` | The `decl*` and `master-base*` runs that `scripts/skill_budgets.json` names | The `evidence` fields of that file name these runs. |
 | `blueprint`, `decompose`, `quiz-visual` | None | These suites have no run yet. |
 
-The `plugin-*-wrongcheckpath` runs of `pdlc-ship` stay, because they match `plugin-M*` and
-`plugin-N*`. They ran with a wrong check path.
-
 Older runs used older suites, runners, or workflow scripts. `compare_vet.py` cannot compare
 them with a new run.
 
