@@ -1,7 +1,7 @@
 # Change Plan: build pdlc v1
 
 **Owner:** `Patrick Te Tau` · **Status:** Draft
-**Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/build-pdlc-v1.plan.md`
+**Branch:** `claude/zen-brown-ww7xi3` · **Plan location:** `plans/archive/build-pdlc-v1.plan.md`
 **Progress:** ██████████░░ 17/20 steps completed (85%)
 
 ## How to use this document (read this first, every session)
@@ -78,9 +78,9 @@ feature in the docs, stop and ask.
 ## Boundaries
 
 - **May modify:** `plugins/pdlc/**`, `.claude-plugin/marketplace.json`,
-  `plans/build-pdlc-v1.plan.md`, `README.md` (pdlc section only), a throwaway test project
+  `plans/archive/build-pdlc-v1.plan.md`, `README.md` (pdlc section only), a throwaway test project
   in the scratchpad, and (step 13 only) a new `pdlc/` state folder at the repo root.
-- **Must not touch:** the other skills in this repo, and `build-probe-skill.plan.md`.
+- **Must not touch:** the other skills in this repo, and `plans/archive/build-probe-skill.plan.md`.
 - **Stop and ask when:** the outline and this plan disagree, or a plugin feature does not
   work as the outline assumes. Also stop and ask when the instructions of a step are
   ambiguous, or when the same fix failed two times.

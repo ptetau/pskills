@@ -1,7 +1,7 @@
 # Plan: align decompose, blueprint, and pdlc
 
 **Owner:** Patrick Te Tau · **Status:** Proposal. Nothing in this plan is built.
-**Plan location:** `plans/align.plan.md`
+**Plan location:** `plans/archive/align.plan.md`
 
 ## The answer first
 
@@ -122,16 +122,16 @@ Each item gives the smallest fix. "Owner" marks a decision that only the owner c
 | Option | Value | Cost | Risk | A person with only decompose or blueprint | A person with only pdlc |
 |---|---|---|---|---|---|
 | A. Change nothing | none now. The three work alone | none | the conflicts stay. Each new pdlc round can widen them | no change | no change |
-| B. The same words, a hand-off section, no code | the marker and the fault words agree. Each tool names its next step. A reader can map a blueprint to pdlc specs by hand | about three hours of text, plus a plugin version bump | low. A rule in a skill is often skipped by the model (read in `plans/pdlc-speed.plan.md`, round 3), so B helps people more than the model | one new paragraph in each skill | one new rule in `init` and `intake` |
+| B. The same words, a hand-off section, no code | the marker and the fault words agree. Each tool names its next step. A reader can map a blueprint to pdlc specs by hand | about three hours of text, plus a plugin version bump | low. A rule in a skill is often skipped by the model (read in `plans/archive/pdlc-speed.plan.md`, round 3), so B helps people more than the model | one new paragraph in each skill | one new rule in `init` and `intake` |
 | C. A bridge: `import_blueprint.py`, an intake rule for a `.blueprint.md`, and the reverse hints | a hand-off with no re-typing. A script is not skipped. The specs start with the names, codes, and signatures that the blueprint decided | one to two days for the script and its tests, plus the test in section 5 | the script decides structure (conflicts 5 and 6). A wrong split costs a round of intake. The stubs are `proposed`, so ready can still change them | no change | one more file in `pdlc/bin/`, used once or not at all |
 | D. Bundle the two skills into the plugin as `pdlc:decompose` and `pdlc:blueprint`, and keep the standalone copies | one install, one namespace | about twenty more files for `sync_shared.py`, and a version bump for each skill change | a person with both installs gets two skills that answer "design a system". The plugin changes its identity from a lifecycle to a method | no change | the plugin grows, with skills that most intents do not use |
 | E. One merged skill | one story | weeks. New evals, a new benchmark, and the loss of each separate use | high. The three have different rhythms: design once, build once, run for years | loses the skills as they are | loses pdlc as it is |
 
-Why A can be right: pdlc changed in seven rounds in two days (read in `plans/pdlc-speed.plan.md`, the progress log). Nobody asked for the chain, and the value of the chain is unmeasured. Text that nobody tests is a cost too.
+Why A can be right: pdlc changed in seven rounds in two days (read in `plans/archive/pdlc-speed.plan.md`, the progress log). Nobody asked for the chain, and the value of the chain is unmeasured. Text that nobody tests is a cost too.
 
 Why B first: B fixes the two conflicts that bite as soon as anyone pastes a blueprint into pdlc. These conflicts are the marker and the fault words, and B costs an afternoon.
 
-Why C waits for a measurement: the last seven rounds teach two lessons (read in `plans/pdlc-speed.plan.md`). Measure a component, not a full run. Prefer a script to a rule. The test in section 5 says whether a blueprint makes better specs, before anyone writes the script.
+Why C waits for a measurement: the last seven rounds teach two lessons (read in `plans/archive/pdlc-speed.plan.md`). Measure a component, not a full run. Prefer a script to a rule. The test in section 5 says whether a blueprint makes better specs, before anyone writes the script.
 
 Why not D and E: see the table. The standalone skills also feed `/quiz-plan`, and that path must stay.
 
@@ -150,7 +150,7 @@ The shape of the brief, as a proposal for the owner:
 - A store: one JSON file, so that state outlives a run.
 - An outside resource: a notifier that tells the team by "email". A stand-in vendor reads an environment variable, so the checks and the GIF need no network.
 - Routing rules: which team gets which kind of ticket.
-- Python 3 with the standard library and `unittest`, as the harden apps were (read in `plans/harden-pdlc.plan.md`, "Rules for every app"). Then `run_unit_checks` and the visual-terminal adapter work with small changes.
+- Python 3 with the standard library and `unittest`, as the harden apps were (read in `plans/archive/harden-pdlc.plan.md`, "Rules for every app"). Then `run_unit_checks` and the visual-terminal adapter work with small changes.
 
 The decompose skill finds about five walls here: a Client, a Manager, a routing Engine, and two ResourceAccess parts (inferred). In pdlc, that is about three jobs and four capabilities, about eight changes, and one stack.
 
@@ -166,7 +166,7 @@ The chain arm needs the two skills in the project. The bench copies `decompose/`
 
 ### 5.3 Two phases
 
-Phase 1 measures the spec stages only. A replay of one stage varies by 10% to 14%, and a full run varies by 35% to 60% (read in `plans/pdlc-speed.plan.md`, "Sections"). Each arm runs intake, ready, and change six times, from the same `pdlc/` folder. Phase 2 runs the full chain and the full alone arm, six times each, only if phase 1 shows a gain.
+Phase 1 measures the spec stages only. A replay of one stage varies by 10% to 14%, and a full run varies by 35% to 60% (read in `plans/archive/pdlc-speed.plan.md`, "Sections"). Each arm runs intake, ready, and change six times, from the same `pdlc/` folder. Phase 2 runs the full chain and the full alone arm, six times each, only if phase 1 shows a gain.
 
 ### 5.4 What to measure
 
@@ -188,7 +188,7 @@ The gate of `run_bench.py` already judges finish, probes, checks, planted defect
 
 | Phase | Runs | Cost for each run | Total | Wall time |
 |---|---|---|---|---|
-| 1. Spec stages | 6 decompose and blueprint runs, then 6 spec-stage runs for each arm | about $3 for a design and a blueprint (inferred, not measured). About $0.70 for the three spec stages (read in `plans/pdlc-speed.plan.md`, the stage table) | about $30 | half a day |
+| 1. Spec stages | 6 decompose and blueprint runs, then 6 spec-stage runs for each arm | about $3 for a design and a blueprint (inferred, not measured). About $0.70 for the three spec stages (read in `plans/archive/pdlc-speed.plan.md`, the stage table) | about $30 | half a day |
 | 2. Full runs | 6 for each arm | about $10 for eight changes, from $0.85 to $1.55 for each change in the reference runs (inferred from `bench/reference.json`) | about $150, up to $200 with repeats | one to two days, with the runs in parallel |
 
 The gate asks for five runs on each side, and six are better (read in `run_bench.py`, `min_runs`). The run budget in `run_experiment.py` is $8 a run (read in `load_spec`). Phase 2 must raise it to about $25.
@@ -205,7 +205,7 @@ The gate asks for five runs on each side, and six are better (read in `run_bench
 
 ### 5.7 How the fixture widens the evidence for pdlc
 
-The evidence for pdlc rests on one fixture with one change (read in `plans/pdlc-speed.plan.md`, "What we accept"). The second fixture exercises, inside the measured harness, the rules that the harden rounds found weak (read in `plans/harden-pdlc.plan.md`, "Still open"):
+The evidence for pdlc rests on one fixture with one change (read in `plans/archive/pdlc-speed.plan.md`, "What we accept"). The second fixture exercises, inside the measured harness, the rules that the harden rounds found weak (read in `plans/archive/harden-pdlc.plan.md`, "Still open"):
 
 - A stack of changes that merge together.
 - Capabilities before jobs.

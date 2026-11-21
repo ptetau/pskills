@@ -64,4 +64,4 @@ An item of work passes these stages in order. Each stage is a skill with its own
 
 - `INSTALL.md`: installation, the merge check for CI, the guard hooks, and how to update.
 - `OUTLINE.md`: the design of pdlc, and the reasons for it.
-- `../../plans/build-pdlc-v1.plan.md`: the build record of version 1.
+- `../../plans/archive/build-pdlc-v1.plan.md`: the build record of version 1.

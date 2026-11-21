@@ -1,7 +1,7 @@
 # Plan: make pdlc faster and cheaper
 
 **Owner:** Patrick Te Tau · **Status:** Rounds 1 and 2 were reverted. Rounds 3, 4, 5, 6, and 7 are kept.
-**Plan location:** `plans/pdlc-speed.plan.md`
+**Plan location:** `plans/archive/pdlc-speed.plan.md`
 
 ## Goal
 

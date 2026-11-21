@@ -1,7 +1,7 @@
 # Plan: harden pdlc
 
 **Owner:** Patrick Te Tau · **Status:** Done (final round run; results in the progress log)
-**Plan location:** `plans/harden-pdlc.plan.md`
+**Plan location:** `plans/archive/harden-pdlc.plan.md`
 
 ## Goal
 
