@@ -41,19 +41,25 @@ async function sh(command, label, phaseName) {
 }
 
 function role(name, id) {
-  return `You act as the slice ${name} agent. Read ${PLUGIN}/agents/${name}.md first and follow it exactly. ` +
-    `Where it says \${CLAUDE_PLUGIN_ROOT}, use ${PLUGIN}. Run slice.py as: ${S}\n` +
+  return `You are the slice ${name} agent of the slice plugin. Where your instructions say \${CLAUDE_PLUGIN_ROOT}, use ${PLUGIN}. ` +
+    `Run slice.py as: ${S}\n` +
     `Project root: ${ROOT}. Spec folder: ${DIR}. Slice: ${id}.\n` +
-    `The guard hook does not run in this session. Obey by yourself each access rule that the agent file says the hook enforces.\n` +
     `The language reference is ${ROOT}/docs/language.md, with docs/diagnostics.md, docs/format.md and docs/examples/. ` +
     `The goal document is docs/rail-spec.md.\n`
 }
+
+// The review rule that the user chose on 2026-11-21 ("Converge + scope").
+const REVIEW_RULE =
+  `Round 1 reviews the whole slice. A later round checks only two things: that each finding of the earlier round is fixed, ` +
+  `and that the fix broke nothing. A new finding of a later round that is not caused by the fix is a minor line. ` +
+  `Slow compile time on an extreme input, and the exact boundary of a safety limit, are minor findings. ` +
+  `A crash, a wrong result, an unmet requirement and a security hole of the interface.md floor stay major.\n`
 
 function testWriter(id, extra, label) {
   return agent(role('test-writer', id) +
     `Write the tests of ${id} in ${ROOT}/tests/Rail.Tests/${id}Tests.cs only. Use the helper that interface.md names. ` +
     `Do not run a build or a test command.\n` + extra,
-    { label: label, phase: A.writeTests && extra.indexOf('review/') < 0 ? 'Tests' : 'Build', model: 'sonnet', effort: 'medium' })
+    { label: label, phase: A.writeTests && extra.indexOf('review/') < 0 ? 'Tests' : 'Build', model: 'sonnet', effort: 'medium', agentType: 'slice:test-writer' })
 }
 
 function implementer(slice, rounds, extra) {
@@ -62,13 +68,13 @@ function implementer(slice, rounds, extra) {
     `Never read or search ${ROOT}/tests. Never run dotnet test: run "${S} test ${slice.id}" for results, as often as you need. ` +
     `You can run "dotnet build src/Rail.Cli" to compile. Emitted code uses the templates of the section "Compiling to C#" of docs/rail-spec.md. ` +
     `Keep each command that a later slice owns failing with NotImplementedException("not implemented").\n` + extra,
-    { label: `implement ${slice.id} (${model}, round ${rounds})`, phase: 'Build', model: model, effort: 'medium' })
+    { label: `implement ${slice.id} (${model}, round ${rounds})`, phase: 'Build', model: model, effort: 'medium', agentType: 'slice:implementer' })
 }
 
 function reviewer(id, round) {
-  return agent(role('reviewer', id) +
+  return agent(role('reviewer', id) + REVIEW_RULE +
     `This is review round ${round}. Return code_major and tests_major: the number of open major lines in review/${id}.md and review/${id}.tests.md.`,
-    { label: `review ${id} (opus, round ${round})`, phase: 'Build', model: 'opus', effort: 'high', schema: REVIEW_SCHEMA })
+    { label: `review ${id} (opus, round ${round})`, phase: 'Build', model: 'opus', effort: 'high', schema: REVIEW_SCHEMA, agentType: 'slice:reviewer' })
 }
 
 // ---- Tests: every slice red before any build ----
@@ -83,7 +89,7 @@ if (A.writeTests) {
     if (i === 3) return { stopped: 'interface', why: 'the tests do not compile', output: b.output }
     await agent(role('test-writer', 'all') +
       `The test project does not compile. Fix only the compile errors below, in the test files that they name. Keep each test's meaning.\n\n${b.output}`,
-      { label: `fix test compile (${i + 1})`, phase: 'Tests', model: 'sonnet', effort: 'medium' })
+      { label: `fix test compile (${i + 1})`, phase: 'Tests', model: 'sonnet', effort: 'medium', agentType: 'slice:test-writer' })
   }
   for (const s of A.slices) {
     for (let i = 0; i < 4; i++) {
