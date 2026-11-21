@@ -9,3 +9,15 @@ bench/results/**/*.stream.jsonl
 bench/results/**/run*.json
 bench/results/*.log
 bench/results/*.progress
+
+# /vet captures and scratch files, in a run project or a worktree
+.vet-capture/
+.vet-tmp/
+
+# slice plugin smoke runs
+/slice/
+
+# pdlc tools that /pdlc:show installs, and other local files
+pdlc/.tools/
+node_modules/
+.DS_Store
