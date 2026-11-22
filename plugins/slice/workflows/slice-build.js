@@ -71,7 +71,10 @@ function implementer(slice, rounds, extra) {
   return agent(role('implementer', slice.id) +
     `Never read or search ${ROOT}/tests. Never run dotnet test: run "${S} test ${slice.id}" for results, as often as you need. ` +
     `You can run "dotnet build src/Rail.Cli" to compile. Emitted code uses the templates of the section "Compiling to C#" of docs/rail-spec.md. ` +
-    `Keep each command that a later slice owns failing with NotImplementedException("not implemented").\n` + extra,
+    `Keep each command that a later slice owns failing with NotImplementedException("not implemented"). ` +
+    `If a test cannot pass because what it expects conflicts with the language reference or with an earlier spec ` +
+    `(for example it expects exit code 0 where the reference says 1), do not spend rounds on it: write no workaround, ` +
+    `and end your reply with one line of the form "IMPOSSIBLE TEST: <test name>: <why>".\n` + extra,
     { label: `implement ${slice.id} (${model}, round ${rounds})`, phase: 'Build', model: model, effort: 'medium', agentType: 'slice:implementer' })
 }
 
@@ -124,7 +127,11 @@ for (const slice of A.slices) {
       const round = await sh(`${S} round ${id} test`, `round ${id}`, 'Build')
       if (round.exit_code !== 0) { stop = { why: 'no test round left', output: r.output }; return }
       rounds++
-      await implementer(slice, rounds, `${note}\nThe last test results:\n\n${r.output}`)
+      const said = await implementer(slice, rounds, `${note}\nThe last test results:\n\n${r.output}`)
+      if (String(said || '').indexOf('IMPOSSIBLE TEST:') >= 0) {
+        stop = { why: 'the implementer reports a test that cannot pass', output: String(said).slice(-1500) }
+        return
+      }
       note = ''
       r = await sh(`${S} test ${id}`, `test ${id}`, 'Build')
     }
