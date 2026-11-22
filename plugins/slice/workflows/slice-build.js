@@ -74,7 +74,7 @@ function implementer(slice, rounds, extra) {
     `Keep each command that a later slice owns failing with NotImplementedException("not implemented"). ` +
     `If a test cannot pass because what it expects conflicts with the language reference or with an earlier spec ` +
     `(for example it expects exit code 0 where the reference says 1), do not spend rounds on it: write no workaround, ` +
-    `and end your reply with one line of the form "IMPOSSIBLE TEST: <test name>: <why>".\n` + extra,
+    `and end your reply with one line of the form "IMPOSSIBLE TEST: <test name>: <why>". Write that line only for such a test, never to say that there is none.\n` + extra,
     { label: `implement ${slice.id} (${model}, round ${rounds})`, phase: 'Build', model: model, effort: 'medium', agentType: 'slice:implementer' })
 }
 
@@ -128,7 +128,7 @@ for (const slice of A.slices) {
       if (round.exit_code !== 0) { stop = { why: 'no test round left', output: r.output }; return }
       rounds++
       const said = await implementer(slice, rounds, `${note}\nThe last test results:\n\n${r.output}`)
-      if (String(said || '').indexOf('IMPOSSIBLE TEST:') >= 0) {
+      if (/IMPOSSIBLE TEST:\s*`?test_/.test(String(said || ''))) {
         stop = { why: 'the implementer reports a test that cannot pass', output: String(said).slice(-1500) }
         return
       }
