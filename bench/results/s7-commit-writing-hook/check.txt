@@ -1,3 +1,0 @@
-edits apply: 6
-plugin tests: OK
-  OK (skipped=10)

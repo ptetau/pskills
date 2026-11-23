@@ -4,7 +4,7 @@ pdlc is a Claude Code plugin. pdlc works in each project that uses git, for all
 languages, frameworks, and types of system.
 
 > pdlc is new. For the design, see `OUTLINE.md`. For the build progress, see
-> `plans/build-pdlc-v1.plan.md` at the root of the repository.
+> `plans/archive/build-pdlc-v1.plan.md` at the root of the repository.
 
 ## What you need
 

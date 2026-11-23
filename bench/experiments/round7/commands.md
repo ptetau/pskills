@@ -247,7 +247,7 @@ cp bench/reference.json bench/reference-after-round-6.json
 python3 bench/run_bench.py freeze bench/results/r7-whole-{1,2,3,4,5,6}/e2e.json --seeds bench/results/r7-whole-seeds/seeds.json --out bench/reference.json --label r7
 ```
 
-Then the orchestrator writes the result in the progress log of `plans/pdlc-speed.plan.md`.
+Then the orchestrator writes the result in the progress log of `plans/archive/pdlc-speed.plan.md`.
 
 ## The budget
 

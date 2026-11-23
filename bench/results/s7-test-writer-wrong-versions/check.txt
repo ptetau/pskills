@@ -1,4 +1,0 @@
-edits apply: 4
-writing check agents/test-writer.md: 0 findings before, 0 after
-plugin tests: OK
-  OK (skipped=10)
