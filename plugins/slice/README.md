@@ -9,15 +9,12 @@ time. A slice is a user story through every layer.
    `ptetau/pskills`.
 2. Open Claude Code in a git project, and run `/slice:run <your specification, or its file path>`.
 3. Answer the questions of `/slice:spec`, one at a time. Then confirm the summary. This is the
-   first of two stops: you ratify the spec. The skill sets `Status: ratified` in
+   only stop: you ratify the spec. The skill sets `Status: ratified` in
    `slice/NNN-<name>/spec.md`.
 4. Wait while `/slice:plan` and `/slice:domain` write `slices.md` and `domain.md`. They ask nothing.
-5. Read the test surface that `/slice:interface` proposes, and approve it. This is the second
-   stop: you approve the interface. The skill sets `Status: approved` in `interface.md`, and
-   the test writer then writes the red tests.
-6. Wait while `/slice:build` builds each slice. To see where the run is, run
+5. Wait while `/slice:build` builds each slice, writes its acceptance tests, and reviews both. To see where the run is, run
    `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py status`.
-7. If a slice stops, read the reason that `slice.py next` prints. Answer it, then run
+6. If a slice stops, read the reason that `slice.py next` prints. Answer it, then run
    `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py resume Sn` (`Sn` is the slice ID), or run `/slice:run` again.
 
 To run one stage alone, use its own command, for example `/slice:spec`.
@@ -37,20 +34,13 @@ To run one stage alone, use its own command, for example `/slice:spec`.
    requirement cites transitions as `Order.T1`. `status` reports an undefined citation, an uncited
    transition, a machine with no start state, and an unreachable state; `next` prints `domain` until
    none is left.
-4. `/slice:interface`: design one test surface for all the slices. The user approves it
-   (`Status: approved`). Create it as stubs that fail with the not-implemented error of the
-   stack. A `- Changed:` line per slice lists the requirements of existing entries that
-   change: their tests can fail by assertion. Then `slice:test-writer` writes red acceptance tests
-   from `interface.md` alone. A script checks that each test is red. The tests and
-   stubs go in one "Interface: NNN-name" commit.
-5. `/slice:build`: for the slice that `next` names, `slice:implementer` writes the code. A hook keeps it out
-   of the tests. A script runs the tests, `slice:reviewer` checks the requirements, the
-   architecture, the security, and the tests, and a script commits the slice. The reviewer
-   writes code findings to `review/Sn.md` (for the implementer) and test findings to
-   `review/Sn.tests.md` (for `slice:test-writer`): each acceptance line needs a test that fails
-   on a plausible wrong version, and no test may assert what the spec does not say. A test fix
-   is one "Tests Sn: <title>" commit (`slice.py commit tests Sn`).
-6. `/slice:run`: loop on `slice.py next` (a stage, `build Sn`, `stop Sn: reason`, or `done`). Run and build recap.
+4. `/slice:build`: for the slice that `next` names, `slice:implementer` builds the code (and optional
+   unit tests in `unit tests folder`). Next, `slice:test-writer` writes acceptance tests against the
+   boundary from `spec.md` and `domain.md` (plus read-only `boundary files`), while `guard.py`
+   hides internal app code and unit tests. `slice:reviewer` immediately checks requirements,
+   architecture, security, and tests (`review/Sn.md` and `review/Sn.tests.md`), any findings go to
+   their owner, and `slice.py commit Sn` commits the slice.
+5. `/slice:run`: loop on `slice.py next` (a stage, `build Sn`, `stop Sn: reason`, or `done`). Run and build recap.
    After the user answers a stop, `slice.py resume Sn` restarts the slice.
 
 ## Model
@@ -59,7 +49,7 @@ The frontmatter sets the model of each job.
 
 | Job | Model | Effort |
 |---|---|---|
-| `spec`, `plan`, `domain`, `interface` | `claude-opus-5-5` | medium |
+| `spec`, `plan`, `domain` | `claude-opus-5-5` | medium |
 | `run`, `build`, `slice:test-writer` | `claude-sonnet-5-5` | medium |
 | `slice:implementer` | `claude-sonnet-5-5`. `opus` for `- Tier: hard`, and from test round 3 | medium |
 | `slice:reviewer` | `claude-opus-5-5` | high |
@@ -74,10 +64,10 @@ test files). Copy it and change those paths for another project.
 
 ## Records
 
-`slice/config.md` (stack, test command, tests folder, source folders, optional `source files`
-such as `package.json, migrations/**`, and optional `security scan`) is at the top of `slice/`.
+`slice/config.md` (stack, test command, tests folder, source folders, optional `unit tests folder`,
+`unit test command`, `source files`, `boundary files`, and `security scan`) is at the top of `slice/`.
 Each spec has a folder, `slice/NNN-<name>/`, with `spec.md`, `slices.md`, `domain.md`,
-`interface.md`, `review/Sn.md`, and `review/Sn.tests.md`. The scripts use the highest number, or
+`review/Sn.md`, and `review/Sn.tests.md`. The scripts use the highest number, or
 the folder that `--spec` names. The templates are in `templates/`. `contracts.json` lists each
 hand-off between the prompts and the scripts.
 

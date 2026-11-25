@@ -12,7 +12,6 @@
   ],
   "statuses": [
     "planned",
-    "red",
     "building",
     "review",
     "done",
@@ -22,25 +21,26 @@
     "spec",
     "plan",
     "domain",
-    "interface",
     "build"
   ],
   "files": {
     "slice/config.md": {
       "producer": "spec",
       "template": "config.md",
-      "form": "`- key: value` lines: stack, test command, result format, tests folder, source folders, and the optional `source files` (single paths and globs outside the source folders, for example `package.json, migrations/**`) and `security scan` (one command that exits non-zero on a finding, for example `bandit -q -r src`; `none` by default)",
+      "form": "`- key: value` lines: stack, test command, result format, tests folder, source folders, and the optional `unit tests folder` (separate from `tests folder`), `unit test command`, `source files` (single paths and globs outside the source folders, for example `package.json, migrations/**`), `boundary files` (read-only public interface files for test-writer), and `security scan` (one command that exits non-zero on a finding, for example `bandit -q -r src`; `none` by default)",
       "fields": [
         "stack",
         "test command",
         "result format",
         "tests folder",
+        "unit tests folder",
+        "unit test command",
         "source folders",
         "source files",
+        "boundary files",
         "security scan"
       ],
       "consumers": [
-        "interface",
         "test-writer",
         "implementer",
         "slice.py",
@@ -60,7 +60,6 @@
       "consumers": [
         "plan",
         "domain",
-        "interface",
         "test-writer",
         "implementer",
         "reviewer",
@@ -80,7 +79,6 @@
       ],
       "consumers": [
         "domain",
-        "interface",
         "build",
         "test-writer",
         "implementer",
@@ -103,25 +101,6 @@
         "## Bounded contexts and boundary"
       ],
       "consumers": [
-        "interface",
-        "test-writer",
-        "implementer",
-        "reviewer",
-        "slice.py"
-      ]
-    },
-    "slice/NNN-<name>/interface.md": {
-      "producer": "interface",
-      "template": "interface.md",
-      "form": "a `Status: draft|approved` line (`approved` only after the user approves the surface, before the test writer runs); for each part of the surface: import line or endpoint, signature or shapes, types, error forms, and the domain concepts it exposes; a security section; one `## Sn` section for each slice, with `- Uses:`, `- Stubs:`, and `- Changed: Rn, Rm` (the requirements whose entries already exist and change, so that their tests may fail by assertion; `none` otherwise)",
-      "fields": [
-        "Status:",
-        "## Surface",
-        "## Security",
-        "## S1",
-        "- Changed:"
-      ],
-      "consumers": [
         "test-writer",
         "implementer",
         "reviewer",
@@ -140,7 +119,7 @@
     },
     "slice/NNN-<name>/review/Sn.tests.md": {
       "producer": "reviewer",
-      "form": "one `- major: [tests] <test name> <what a wrong version would pass, and the fix>` or `- minor: [tests] <test name> <...>` line for each open test finding, or `none`; the wrong version is named as a behaviour, with no test code, no app code, and no file:line. The guard hides it from the implementer. `slice.py commit Sn` refuses on a major line; `slice.py commit tests Sn` needs a line",
+      "form": "one `- major: [tests] <test name> <what a wrong version would pass, and the fix>` or `- minor: [tests] <test name> <...>` line for each open test finding, or `none`; the wrong version is named as a behaviour, with no test code, no app code, and no file:line. The guard hides it from the implementer. `slice.py commit Sn` refuses on a major line",
       "consumers": [
         "test-writer",
         "build",
@@ -152,12 +131,11 @@
   "outputs": {
     "slice.py next": {
       "producer": "slice.py",
-      "form": "one line: `spec`, `plan`, `domain`, `interface` (also while interface.md is missing or not approved), `build Sn`, `stop Sn: reason`, or `done`",
+      "form": "one line: `spec`, `plan`, `domain`, `build Sn`, `stop Sn: reason`, or `done`",
       "forms": [
         "spec",
         "plan",
         "domain",
-        "interface",
         "build Sn",
         "stop Sn: reason",
         "done"
@@ -172,14 +150,8 @@
       "form": "test files in the tests folder; each test name holds the spec number, the slice ID, and the requirement, `test_NNN_Sn_Rn_<what>` (for example `test_002_S1_R2_counts_words`), the form that `belongs()` of slice.py matches. A name with no number belongs to the slice of the only spec of the project, and to no slice when the project has two specs or more",
       "name form": "test_NNN_Sn_Rn_<what>",
       "consumers": [
-        "slice.py"
-      ]
-    },
-    "slice.py commit tests": {
-      "producer": "slice.py",
-      "form": "`commit tests Sn` makes one commit of the tests folder and the records, with the subject `Tests Sn: <title>` and the trailer `Slice: Sn`. It refuses unless Sn is in review, review/Sn.tests.md holds a finding, and the tests folder changed; and it refuses a test that does not load, another error than the not-implemented error, and a skip. A failing assertion or a pass is accepted, and a failing test sets the slice to building. `commit Sn` still refuses a tests folder that no commit holds",
-      "consumers": [
-        "build"
+        "slice.py",
+        "reviewer"
       ]
     },
     "slice.py scan": {
@@ -192,10 +164,11 @@
     },
     "slice.py test": {
       "producer": "slice.py",
-      "form": "a header `Sn: N tests, P passed, F not passed`, then one `PASS|FAIL|ERROR|SKIP <name>` line for each test of the slice; a FAIL or ERROR line is followed by the `acceptance:` lines of slices.md that cite its requirement (all lines when the name cites none); an ERROR (unittest ERROR, junit error) shows its message indented at once; a FAIL (unittest FAIL, junit failure) shows `message withheld` until the slice has used 2 test rounds, then its message, or at once with `--full` (the guard blocks `--full` and `--red` for the implementer); then, when a test outside the slice fails (a done slice, or no slice owns it), `regressions: N tests ...` and the same lines for them; `no tests found for Sn` when no test name holds the spec number and the ID; with --red, `broken:` lines for tests that fail to load, and a plain FAIL is red for a test that cites a requirement of the `- Changed:` line of its slice",
+      "form": "a header `Sn: N tests, P passed, F not passed`, then one `PASS|FAIL|ERROR|SKIP <name>` line for each test of the slice; a FAIL or ERROR line is followed by the `acceptance:` lines of slices.md that cite its requirement (all lines when the name cites none); an ERROR (unittest ERROR, junit error) shows its message indented at once; a FAIL (unittest FAIL, junit failure) shows `message withheld` until the slice has used 2 test rounds, then its message, or at once with `--full` (the guard blocks `--full` for the implementer); then, when a test outside the slice fails (a done slice, or no slice owns it), `regressions: N tests ...` and the same lines for them; `no tests found for Sn` when no test name holds the spec number and the ID",
       "consumers": [
         "implementer",
-        "build"
+        "build",
+        "reviewer"
       ]
     }
   }

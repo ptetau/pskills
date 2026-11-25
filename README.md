@@ -51,10 +51,10 @@ Install only the plugin that you want. `plugins/pdlc/INSTALL.md` gives the full 
 
 | | `pdlc` | `slice` |
 |---|---|---|
-| Size | The full lifecycle: 15 skills and 4 agents | The light harness: 6 skills and 3 agents |
+| Size | The full lifecycle: 15 skills and 4 agents | The light harness: 5 skills and 3 agents |
 | Unit of work | A change: one job or one capability | A slice: one user story through every layer |
 | Records | Intents, specs, changes, and traces in `pdlc/` | A spec folder in `slice/` |
-| Your stops | Each merge, and each question that pdlc cannot answer | Two: ratify the spec, approve the interface |
+| Your stops | Each merge, and each question that pdlc cannot answer | One: ratify the spec |
 | Extras | Board, dashboard, merge check for CI, GIF review | Security scan, workflow script for the build |
 
 Use `slice` when you have a specification and want committed code fast. Use `pdlc` when

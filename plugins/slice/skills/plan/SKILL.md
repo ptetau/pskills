@@ -18,17 +18,17 @@ effort: medium
 
 ## Outputs
 
-- `slice/NNN-<name>/slices.md` from `${CLAUDE_PLUGIN_ROOT}/templates/slices.md`. Read by `domain`, `interface`, `build`, the agents, and `slice.py`. Each slice (`S1`, `S2`) has a story, `Requirements:`, acceptance lines, layers, and `Status: planned`.
+- `slice/NNN-<name>/slices.md` from `${CLAUDE_PLUGIN_ROOT}/templates/slices.md`. Read by `domain`, `build`, agents, and `slice.py`. Each slice (`S1`, `S2`) has a story, `Requirements:`, acceptance lines, layers, and `Status: planned`.
 - The reply lists the slices, and names `/slice:domain`.
 
 ## Constraints
 
-- A slice cuts through each layer that its story needs (for example UI, API, store).
-- The first slice is the thinnest path that works. Each later slice adds one story.
-- An acceptance line is a concrete check, with exact values, and cites its requirement.
-- Each acceptance line comes from the spec. If the spec lacks one, ask the user.
+- Each slice is one logical story that cuts through its layers (UI, API, store).
+- First slice: thinnest working path. Each later slice adds one logical story.
+- Acceptance lines are concrete checks with exact values, citing their requirement.
+- Each acceptance line comes from the spec. Ask the user if missing.
 - Give each slice `- Tier: hard` when it creates the structure that later slices extend, or holds inference or proofs. Else `- Tier: standard`.
-- Put the title in the heading as `## S1: <title>`. The commit subject uses it.
+- Put a clear, specific title in `## S1: <title>` (the commit subject uses it).
 - Outputs give each reader exactly what it reads: see `contracts.json`.
 
 ## Done when

@@ -61,7 +61,7 @@ class Table(unittest.TestCase):
         self.assertEqual(TABLE["statuses"], json.loads(statuses.replace("'", '"')))
         usage = re.findall(r"slice\.py \[--root DIR\] \[--spec NNN\|NAME\] (\w+)", script, re.M)
         self.assertEqual(sorted(set(usage)), sorted(TABLE["subcommands"]))
-        self.assertEqual(TABLE["stages"], ["spec", "plan", "domain", "interface", "build"])
+        self.assertEqual(TABLE["stages"], ["spec", "plan", "domain", "build"])
         for stage in TABLE["stages"]:
             self.assertIn(stage, SKILLS)
 
@@ -156,7 +156,7 @@ class Prompts(unittest.TestCase):
 
     def test_the_numbered_spec_folder_is_the_only_home_of_the_spec_records(self):
         for label, _, path in prompts():
-            self.assertNotRegex(path.read_text(), r"`slice/(spec|slices|interface|domain)\.md`", label)
+            self.assertNotRegex(path.read_text(), r"`slice/(spec|slices|domain)\.md`", label)
 
 
 class Outputs(unittest.TestCase):
@@ -174,7 +174,7 @@ class Outputs(unittest.TestCase):
     def test_the_forms_of_next_are_the_ones_the_script_prints(self):
         forms = TABLE["outputs"]["slice.py next"]["forms"]
         script = SCRIPTS["slice.py"].read_text()
-        body = script[script.index("def next_step"):script.index("def tests_dirty")]
+        body = script[script.index("def next_step"):script.index("def cmd_next")]
         for stage in TABLE["stages"][:-1]:
             self.assertEqual(forms.count(stage), 1, stage)
             self.assertIn('return "%s"' % stage, body)
@@ -211,13 +211,13 @@ class Outputs(unittest.TestCase):
         self.assertTrue(cli.belongs("test_002_S1_R2_counts_words", "S1", "002"))
         self.assertFalse(cli.belongs("test_001_S1_R2_counts_words", "S1", "002"))
         self.assertFalse(cli.belongs("test_002_S10_R2_counts_words", "S1", "002"))
-        for rel in ("agents/test-writer.md", "templates/config.md", "skills/interface/SKILL.md"):
+        for rel in ("agents/test-writer.md", "templates/config.md", "skills/build/SKILL.md"):
             self.assertIn("test_NNN_Sn_Rn_<what>", (PLUGIN / rel).read_text(), rel)
         self.assertIn("test_002_S1_R2_counts_words", (PLUGIN / "agents/test-writer.md").read_text())
 
     def test_the_output_of_test_has_the_forms_the_script_prints(self):
         script = SCRIPTS["slice.py"].read_text()
-        for text in ("%s: %d tests, %d passed, %d not passed", "no tests found for %s", "broken: %s", "PASS", "FAIL"):
+        for text in ("%s: %d tests, %d passed, %d not passed", "no tests found for %s", "PASS", "FAIL"):
             self.assertIn(text, script)
         self.assertIn("slice.py test", (PLUGIN / "agents/implementer.md").read_text())
 
@@ -241,14 +241,11 @@ class Rules(unittest.TestCase):
             self.assertRegex(text, r"(?i)says what starts|names the stage", rel)
             self.assertRegex(text, r"(?i)recap", rel)
 
-    def test_the_interface_stage_runs_red_for_every_slice_before_any_build(self):
-        text = self.read("skills/interface/SKILL.md")
-        self.assertRegex(text, r"every slice")
-        self.assertRegex(text, r"before any build")
-
-    def test_a_slice_whose_tests_pass_at_build_time_goes_to_review(self):
-        text = self.read("skills/build/SKILL.md")
-        self.assertRegex(text, r"(?i)already pass.*review|review.*already pass")
+    def test_the_build_skill_runs_implementer_before_test_writer_and_reviewer(self):
+        text = section(self.read("skills/build/SKILL.md"), "Constraints")
+        self.assertLess(text.index("slice:implementer"), text.index("slice:test-writer"))
+        self.assertLess(text.index("slice:test-writer"), text.index("slice:reviewer"))
+        self.assertIn("right away", text)
 
     def test_the_reviewer_has_the_four_part_remit(self):
         text = self.read("agents/reviewer.md")
@@ -262,44 +259,29 @@ class Rules(unittest.TestCase):
         self.assertIn("test-writer", entry["consumers"])
         self.assertNotIn("implementer", entry["consumers"])
         self.assertIn("- major: [tests]", entry["form"])
-        self.assertIn("commit tests Sn", TABLE["outputs"]["slice.py commit tests"]["form"])
         build = self.read("skills/build/SKILL.md")
-        self.assertIn("and not to the implementer", build)
-        self.assertIn("commit tests <Sn>", build)
-        self.assertIn('"Tests Sn: <title>"', build)
+        self.assertIn("not to the implementer", build)
         self.assertIn("review/<Sn>.tests.md", self.read("agents/test-writer.md"))
         self.assertNotIn("tests.md", self.read("agents/implementer.md"))
         for rel in ("README.md", "bin/slice.py", "hooks/guard.py"):
             self.assertIn("Sn.tests.md", self.read(rel), rel)
 
     def test_the_security_floor_is_in_the_three_prompts(self):
-        for rel in ("skills/interface/SKILL.md", "agents/implementer.md", "agents/reviewer.md"):
+        for rel in ("agents/test-writer.md", "agents/implementer.md", "agents/reviewer.md"):
             self.assertIn("OWASP Top 10", self.read(rel), rel)
-
     def test_the_spec_skill_recommends_a_stack(self):
         text = self.read("skills/spec/SKILL.md")
         for word in ("stack", "modern", "minimal", "config.md"):
             self.assertIn(word, text)
 
-    def test_the_stubs_fail_with_the_not_implemented_error_of_the_stack(self):
-        for rel in ("skills/interface/SKILL.md", "templates/interface.md"):
-            text = self.read(rel)
-            self.assertIn("not-implemented error", text, rel)
-            self.assertIn('"not implemented"', text, rel)
-            self.assertNotIn("NotImplementedError", text, rel)
-
-    def test_the_test_writer_does_not_read_the_stubs(self):
+    def test_the_test_writer_runs_after_implementation_and_reads_boundary_files(self):
         text = self.read("agents/test-writer.md")
-        inputs = section(text, "Inputs")
-        self.assertNotRegex(inputs.lower(), r"stubs")
-        self.assertNotIn("--red", section(text, "Done when"))
+        self.assertIn("after implementation", text)
+        self.assertIn("boundary files", text)
+        self.assertIn("unit tests folder", text)
         self.assertIn("source folders", text)
-
-    def test_the_interface_skill_runs_the_red_check_and_commits_the_interface(self):
-        text = self.read("skills/interface/SKILL.md")
-        self.assertIn("test <Sn> --red", text)
-        self.assertIn("commit interface", text)
-
+        self.assertNotIn("interface.md", text)
+        self.assertNotIn("--red", text)
     def test_the_domain_stage(self):
         text = self.read("skills/domain/SKILL.md")
         for word in ("domain.md", "boundary", "gap", "state machine", "no code"):
@@ -313,7 +295,7 @@ class Rules(unittest.TestCase):
             self.assertIn(word, fields)
         for rel in ("skills/domain/SKILL.md", "agents/test-writer.md"):
             self.assertIn("### Machine:", self.read(rel), rel)
-        self.assertIn("domain", self.read("skills/interface/SKILL.md"))
+        self.assertIn("domain", self.read("skills/run/SKILL.md"))
 
     def test_numbered_requirements_in_the_templates(self):
         self.assertIn("- R1 ", self.read("templates/spec.md"))
@@ -328,21 +310,18 @@ class Rules(unittest.TestCase):
         for rel in ("skills/build/SKILL.md", "skills/run/SKILL.md"):
             self.assertIn("slice.py resume <Sn>", self.read(rel), rel)
 
-    def test_the_interface_is_approved_before_the_test_writer_runs(self):
-        template = self.read("templates/interface.md")
-        self.assertRegex(template, r"(?m)^Status: draft$")
-        text = self.read("skills/interface/SKILL.md")
-        self.assertIn("Status: approved", text)
-        self.assertRegex(text, r"(?s)approv.*before the test writer|before the test writer.*approv")
-        entry = TABLE["files"]["slice/NNN-<name>/interface.md"]
-        self.assertIn("Status:", entry["fields"])
+    def test_the_unit_tests_and_boundary_fields_are_in_config_and_prompts(self):
+        fields = TABLE["files"]["slice/config.md"]["fields"]
+        template = self.read("templates/config.md")
+        for key in ("unit tests folder", "unit test command", "boundary files"):
+            self.assertIn(key, fields)
+            self.assertIn("- %s:" % key, template)
+        self.assertIn("unit tests folder", self.read("agents/implementer.md"))
+        self.assertIn("boundary files", self.read("agents/test-writer.md"))
 
-    def test_the_changed_line_is_in_the_template_the_skill_and_the_test_writer(self):
-        self.assertIn("- Changed:", self.read("templates/interface.md"))
-        for rel in ("skills/interface/SKILL.md", "agents/test-writer.md"):
-            self.assertIn("Changed:", self.read(rel), rel)
-        self.assertIn("- Changed:", TABLE["files"]["slice/NNN-<name>/interface.md"]["fields"])
-
+    def test_slice_commits_carry_a_summary_and_trailer(self):
+        self.assertIn("--summary", self.read("skills/build/SKILL.md"))
+        self.assertIn("--summary", self.read("bin/slice.py"))
     def test_the_security_scan_line_is_in_the_config_the_table_and_the_prompts(self):
         self.assertIn("scan", TABLE["subcommands"])
         self.assertIn("security scan", TABLE["files"]["slice/config.md"]["fields"])
@@ -358,7 +337,7 @@ class Rules(unittest.TestCase):
     def test_the_source_files_line_is_in_the_config_the_table_and_the_prompts(self):
         self.assertIn("source files", TABLE["files"]["slice/config.md"]["fields"])
         self.assertIn("- source files:", self.read("templates/config.md"))
-        for rel in ("agents/implementer.md", "agents/test-writer.md", "skills/interface/SKILL.md"):
+        for rel in ("agents/implementer.md", "agents/test-writer.md", "skills/build/SKILL.md"):
             self.assertIn("source files", self.read(rel), rel)
 
 

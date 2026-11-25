@@ -18,7 +18,6 @@
     "slice:spec",
     "slice:plan",
     "slice:domain",
-    "slice:interface",
     "slice:build",
     "slice:run"
   ],
@@ -40,7 +39,6 @@
   "slice:spec": 200,
   "slice:plan": 200,
   "slice:domain": 200,
-  "slice:interface": 200,
   "slice:build": 200,
   "slice:run": 200,
   "earned": {
@@ -198,13 +196,6 @@
         "evidence": "e2e bench run2 of /pdlc:ship defaults on todo-rust: the Agent tool ran two pdlc:recon agents in the background, the turn ended with 'I will wait', and ship ended after intake (1 of 8 probes)"
       }
     ],
-    "slice:interface": [
-      {
-        "rule": "After the user approves the surface, set `Status: approved`, before the test writer runs.",
-        "words": 15,
-        "evidence": "slice plugin review, finding 4 (interface approval): `slice.py next` and `commit interface` read the `Status:` line, so the skill must say when to set it; no vet run yet"
-      }
-    ],
     "slice:spec": [
       {
         "rule": "Write a `security scan` command that fits the ratified stack in config.md (`none` if none fits).",
@@ -214,12 +205,7 @@
     ],
     "slice:build": [
       {
-        "rule": "Test fix: tests from `slice:test-writer`, then `slice.py commit tests <Sn>`: the subject \"Tests Sn: <title>\" and the trailer `Slice: Sn`.",
-        "words": 21,
-        "evidence": "slice improvement A (reviewer judges the tests): `slice.py commit tests` subject and trailer are a contract; no vet run yet"
-      },
-      {
-        "rule": "A line in `review/<Sn>.tests.md` goes to `slice:test-writer` and not to the implementer. Then run `slice.py commit tests <Sn>`. Failing tests make the slice `building`: run the test loop. A test fix uses no round of its own.",
+        "rule": "Open findings in `review/<Sn>.tests.md` go to `slice:test-writer` and not to the implementer. Then re-run `slice.py test <Sn>`.",
         "words": 38,
         "evidence": "slice improvement A (reviewer judges the tests): the build skill is the only router of the test findings; no vet run yet"
       },

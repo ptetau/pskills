@@ -149,7 +149,7 @@ class Guard(Base):
 
     def test_the_implementer_runs_only_the_test_subcommand_of_slice_py(self):
         slice_py = "python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py"
-        for sub in ("commit S1", "commit interface", "set S1 done", "round S1 test", "next", "status",
+        for sub in ("commit S1", "set S1 done", "round S1 test", "next", "status",
                     "resume S1", "scan"):
             self.assertFalse(self.bash("%s %s" % (slice_py, sub)), sub)
         self.assertFalse(self.bash("%s --root . set S1 done" % slice_py))
@@ -160,7 +160,7 @@ class Guard(Base):
 
     def test_the_implementer_may_not_print_the_withheld_messages(self):
         slice_py = "python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py"
-        for flags in ("S1 --full", "--full S1", "S1 --red", "--spec 001 test S1 --full"):
+        for flags in ("S1 --full", "--full S1", "--spec 001 test S1 --full"):
             self.assertFalse(self.bash("%s test %s" % (slice_py, flags)) if not flags.startswith("--spec")
                              else self.bash("%s %s" % (slice_py, flags)), flags)
         self.assertTrue(self.bash("%s test S1 --full" % slice_py, agent="slice:test-writer"))
@@ -200,7 +200,7 @@ class Guard(Base):
         self.assertFalse(self.bash("cat slice/001-x/review/*", agent=TW))
         self.assertTrue(self.ok(TW, "Read", file_path="slice/001-x/review/S1.tests.md"))
         self.assertTrue(self.ok(TW, "Read", file_path="slice/001-x/spec.md"))
-        self.assertTrue(self.ok(TW, "Read", file_path="slice/001-x/interface.md"))
+        self.assertTrue(self.ok(TW, "Read", file_path="slice/001-x/domain.md"))
 
     def test_the_reviewer_and_the_main_session_read_both(self):
         self.review_files()
@@ -295,7 +295,7 @@ class TestWriter(Base):
         self.assertFalse(self.w("Read", file_path="tests/lnk/a.py"))
 
     def test_allows_the_spec_folder_and_the_tests(self):
-        self.assertTrue(self.w("Read", file_path="slice/001-x/interface.md"))
+        self.assertTrue(self.w("Read", file_path="slice/001-x/domain.md"))
         self.assertTrue(self.w("Read", file_path="slice/config.md"))
         self.assertTrue(self.w("Read", file_path="tests/test_a.py"))
         self.assertTrue(self.w("Write", file_path="tests/test_a.py"))
@@ -303,7 +303,7 @@ class TestWriter(Base):
         self.assertTrue(self.w("Glob", pattern="tests/*.py"))
 
     def test_writes_only_in_the_tests_folder(self):
-        self.assertFalse(self.w("Write", file_path="slice/001-x/interface.md"))
+        self.assertFalse(self.w("Write", file_path="slice/001-x/domain.md"))
         self.assertFalse(self.w("Edit", file_path="notes.md"))
 
     def test_blocks_bash_that_names_the_source(self):
@@ -314,7 +314,7 @@ class TestWriter(Base):
         self.assertFalse(self.wb("cat tests/lnk/a.py"))
 
     def test_allows_bash_in_the_spec_and_tests(self):
-        for command in ("cat slice/001-x/interface.md", "ls tests", "grep -rn x tests", "cat tests/test_a.py"):
+        for command in ("cat slice/001-x/domain.md", "ls tests", "grep -rn x tests", "cat tests/test_a.py"):
             self.assertTrue(self.wb(command), command)
 
     def test_the_test_command_is_not_blocked_for_the_test_writer(self):
@@ -445,7 +445,7 @@ class SourceFiles(Base):
 
     def test_the_test_writer_still_reads_the_records_and_writes_the_tests(self):
         self.config("`**/*.json`, `package.json`")
-        self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="slice/001-x/interface.md"))
+        self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="slice/001-x/domain.md"))
         self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="slice/001-x/data.json"))
         self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="tests/data.json"))
         self.assertTrue(self.ok(self.TEST_WRITER, "Write", file_path="tests/test_a.py"))
@@ -456,6 +456,62 @@ class SourceFiles(Base):
         self.assertTrue(self.ok(IMPL, "Read", file_path="package.json"))
         self.assertTrue(self.bash("cat package.json"))
 
+
+class UnitTests(Base):
+    """When unit tests folder / unit test command are configured, the implementer can write and run unit tests there."""
+
+    TEST_WRITER = "slice:test-writer"
+
+    def config(self, extra):
+        (self.root / "slice/config.md").write_text(fixture.CONFIG + extra)
+
+    def test_implementer_writes_and_runs_scoped_unit_tests(self):
+        self.config("- unit tests folder: `unit_tests`\n")
+        (self.root / "unit_tests").mkdir()
+        self.assertTrue(self.ok(IMPL, "Write", file_path="unit_tests/test_unit.py"))
+        self.assertTrue(self.ok(IMPL, "Read", file_path="unit_tests/test_unit.py"))
+        self.assertTrue(self.bash("pytest unit_tests"))
+        self.assertTrue(self.bash("python3 -m unittest discover -s unit_tests"))
+        self.assertFalse(self.bash("pytest"))
+        self.assertFalse(self.bash("pytest ."))
+        self.assertFalse(self.bash("pytest src"))
+        self.assertFalse(self.bash("pytest tests"))
+        self.assertFalse(self.ok(IMPL, "Read", file_path="tests/a.py"))
+
+    def test_implementer_runs_configured_unit_test_command(self):
+        (self.root / "slice/config.md").write_text(
+            fixture.CONFIG.replace("- tests folder: `tests`", "- tests folder: `tests/acceptance`")
+            + "- unit tests folder: `tests/unit`\n- unit test command: `python3 -m unittest discover -s tests/unit`\n")
+        (self.root / "tests/unit").mkdir(parents=True)
+        (self.root / "tests/acceptance").mkdir(parents=True)
+        self.assertTrue(self.ok(IMPL, "Write", file_path="tests/unit/test_u.py"))
+        self.assertFalse(self.ok(IMPL, "Write", file_path="tests/acceptance/test_a.py"))
+        self.assertTrue(self.bash("python3 -m unittest discover -s tests/unit"))
+        self.assertFalse(self.bash("python3 -m unittest discover -s tests"))
+        self.assertFalse(self.bash("python3 -m unittest discover -s tests/acceptance"))
+
+    def test_test_writer_cannot_read_unit_tests(self):
+        self.config("- unit tests folder: `unit_tests`\n")
+        self.assertFalse(self.ok(self.TEST_WRITER, "Read", file_path="unit_tests/test_unit.py"))
+        self.assertFalse(self.bash("cat unit_tests/test_unit.py", agent=self.TEST_WRITER))
+
+
+class BoundaryFiles(Base):
+    """test-writer may read (never write) configured boundary files even inside source folders."""
+
+    TEST_WRITER = "slice:test-writer"
+
+    def config(self, line):
+        (self.root / "slice/config.md").write_text(fixture.CONFIG + "- boundary files: %s\n" % line)
+
+    def test_test_writer_reads_only_boundary_files_and_cannot_write_them(self):
+        self.config("`src/api.py`, `src/public/*.py`")
+        self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="src/api.py"))
+        self.assertTrue(self.ok(self.TEST_WRITER, "Read", file_path="src/public/types.py"))
+        self.assertFalse(self.ok(self.TEST_WRITER, "Read", file_path="src/internal.py"))
+        self.assertFalse(self.ok(self.TEST_WRITER, "Glob", pattern="src/*.py"))
+        self.assertFalse(self.ok(self.TEST_WRITER, "Write", file_path="src/api.py"))
+        self.assertFalse(self.ok(self.TEST_WRITER, "Edit", file_path="src/api.py"))
 
 if __name__ == "__main__":
     unittest.main()

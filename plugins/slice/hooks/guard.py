@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
 """slice guard. Claude Code runs this before every file tool call and every Bash call.
 
-Hiding is two-way. The slice:implementer agent never sees the tests: it gets the run results
-from `slice.py test`. The slice:test-writer agent never sees the app code: it gets the call
-forms from interface.md. The test writer also writes only in the tests folder. For the
-implementer, this guard blocks:
+Hiding is two-way. The slice:implementer agent never sees the acceptance tests: it gets the run
+results from `slice.py test`. The slice:test-writer agent never sees the internal app code or
+unit tests: it reads spec.md, domain.md, and any configured `boundary files:` (read-only).
+The test writer also writes only in the tests folder. For the implementer, this guard blocks:
   - Read, Glob, Grep, Write, Edit, MultiEdit, and NotebookEdit on any path in the tests
     folder, and a Glob or Grep that can list the folder (a search from the project root).
   - a Bash command that names the tests folder (in the raw text, or in a word after the
     shell removes quotes), a path that a symlink leads into it, a shell wildcard that can
     match it or list it, a recursive search from the project root, a git command that shows
-    file content with no path limit, the configured test runner and every known runner
+    file content with no path limit, the configured test runner and any un-scoped runner
     (python, python3, and python3.X count the same), and any `slice.py` subcommand but `test`.
-  - `slice.py test` with --full or --red (they print the failure messages that the script withholds).
-  - Write, Edit, MultiEdit, and NotebookEdit outside the source folders and the source files.
+  - `slice.py test` with --full (it prints the failure messages that the script withholds).
+  - Write, Edit, MultiEdit, and NotebookEdit outside the source folders, the unit tests
+    folder (if configured), and the source files.
 The source files are the "source files:" line of the config: single paths and globs, relative
 to the project root (`package.json, migrations/**`; `*` stays in one folder, `**` crosses
 folders). A path in the tests folder or in slice/ is never one of them.
+If `unit tests folder:` (or `unit test command:`) is configured, the implementer may read and
+write in `unit tests folder` and run test commands scoped to it (or matching `unit test command`).
 For the test writer, the same rules hide the source folders ("source folders:" line of the
-config; default: src, lib, app) and the source files, including the stubs. The runner is not
-blocked for it.
+config; default: src, lib, app), the unit tests folder, and the source files, except that it
+may read (never write) files matching `boundary files:`. The runner is not blocked for it.
 The review files are hidden the same way, each from the other side: the implementer does not see
 slice/NNN-<name>/review/Sn.tests.md (the test findings), and the test writer does not see
 review/Sn.md (the code findings). The reviewer writes both.
@@ -49,7 +52,7 @@ IMPLEMENTER = "slice:implementer"
 TEST_WRITER = "slice:test-writer"
 HINTS = {
     IMPLEMENTER: "run `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py test <Sn>` for the results",
-    TEST_WRITER: "take the call forms from the interface.md of the spec folder",
+    TEST_WRITER: "take the call forms from spec.md, domain.md, and any configured boundary files",
 }
 RECURSIVE = {"find", "tree", "rg", "ag", "ack", "du", "fd", "grep", "egrep", "fgrep", "ls", "cp", "tar",
              "zip", "xargs", "rsync"}
@@ -104,11 +107,23 @@ def source_folders(root):
     return found or DEFAULT_SOURCES
 
 
-def source_files(root):
-    value = config_value(root, "source files")
+def optional_entries(root, key):
+    value = config_value(root, key)
     found = [f.strip(" `/") for f in (value or "").split(",") if f.strip(" `/")]
     return [f for f in found if f != "none" and not f.startswith("<")]
 
+
+def source_files(root):
+    return optional_entries(root, "source files")
+
+
+def unit_test_folders(root):
+    return [f for f in optional_entries(root, "unit tests folder")
+            if not any(f == t or f.startswith(t + "/") for t in test_folders(root))]
+
+
+def boundary_files(root):
+    return optional_entries(root, "boundary files")
 
 def glob_regex(pattern):
     out, i = "", 0
@@ -127,8 +142,9 @@ def glob_regex(pattern):
 
 
 def barred(rel, root):
-    """True for a path inside slice/ or a tests folder: no source-files pattern opens it."""
-    return any(rel == b or rel.startswith(b + "/") for b in ["slice"] + test_folders(root))
+    """True for a path inside slice/, tests folder, or unit tests folder."""
+    blocked = ["slice"] + test_folders(root) + unit_test_folders(root)
+    return any(rel == b or rel.startswith(b + "/") for b in blocked)
 
 
 def source_file_match(path, root):
@@ -138,6 +154,13 @@ def source_file_match(path, root):
         return False
     return any(glob_regex(p).match(rel) for p in source_files(root))
 
+
+def boundary_file_match(path, root):
+    """True when the resolved path is one of the read-only `boundary files:` of the config."""
+    rel = os.path.relpath(path, root).replace(os.sep, "/")
+    if rel == "." or rel.startswith("..") or barred(rel, root):
+        return False
+    return any(glob_regex(p).match(rel) for p in boundary_files(root))
 
 def source_file_folders(root):
     """The folders (or single paths) that the source files name before any wildcard."""
@@ -153,6 +176,10 @@ def source_file_folders(root):
 def test_command(root):
     return config_value(root, "test command") or ""
 
+
+def unit_test_command(root):
+    cmd = (config_value(root, "unit test command") or "").strip()
+    return "" if not cmd or cmd.lower() == "none" or cmd.startswith("<") else cmd
 
 def under(path, top):
     return path == top or path.startswith(top + os.sep)
@@ -204,9 +231,9 @@ def review_files(agent, root):
 
 
 def hidden_folders(agent, root):
-    base = test_folders(root) if agent == IMPLEMENTER else source_folders(root) + source_file_folders(root)
+    base = (test_folders(root) if agent == IMPLEMENTER
+            else source_folders(root) + source_file_folders(root) + unit_test_folders(root))
     return base + review_files(agent, root)
-
 
 def label(agent):
     return "implementer" if agent == IMPLEMENTER else "test writer"
@@ -231,18 +258,19 @@ def file_decision(call, cwd, root, folders, agent=IMPLEMENTER):
         paths = [base]
     for path in paths:
         root_of = project_root(path) or root
+        if agent == TEST_WRITER and tool in READS and boundary_file_match(path, root_of):
+            continue
         hidden = hidden_folders(agent, root_of)
         if hits(path, root_of, hidden) or (agent == TEST_WRITER and source_file_match(path, root_of)):
             return False, "the %s may not use the %s (%s): %s" % (
                 label(agent), what(agent), os.path.relpath(path, root_of), HINTS[agent])
     if tool in WRITES:
-        allowed = test_folders(root) if agent == TEST_WRITER else source_folders(root)
+        allowed = test_folders(root) if agent == TEST_WRITER else source_folders(root) + unit_test_folders(root)
         if not inside(base, root, allowed) and not (agent == IMPLEMENTER and source_file_match(base, root)):
             return False, "the %s writes only in the %s folders (%s): %s" % (
                 label(agent), "tests" if agent == TEST_WRITER else "source", os.path.relpath(base, root),
                 HINTS[agent])
     return True, ""
-
 
 def words(command):
     try:
@@ -350,9 +378,39 @@ def path_args(toks, here):
     return out
 
 
+def allows_unit_runner(seg, toks, here, root):
+    """True when an implementer test command targets only unit tests (never acceptance tests)."""
+    tests = test_folders(root)
+    for a in path_args(toks[1:], here):
+        target = os.path.realpath(os.path.join(here, os.path.expanduser(a)))
+        if hits(target, root, tests):
+            return False
+    unit_cmd = unit_test_command(root)
+    if unit_cmd and " ".join(seg.split()) == " ".join(unit_cmd.split()):
+        return True
+    unit_folders = unit_test_folders(root)
+    if not unit_folders:
+        return False
+    for a in path_args(toks[1:], here):
+        target = os.path.realpath(os.path.join(here, os.path.expanduser(a)))
+        if inside(target, root, unit_folders):
+            return True
+    return names_folder(seg, unit_folders) is not None
+
+
+def segment_matches_test_cmd(seg, toks, root):
+    sig = runner_signature(test_command(root))
+    if not sig:
+        return False
+    flat_seg = re.sub(r"(?<![\w.\-])(?:[\w./-]*/)?python[\d.]*(?![\w.\-])", "python", " ".join(seg.split()))
+    normal = " ".join(split_flags(toks))
+    normal = re.sub(r"(?<![\w.\-])(?:[\w./-]*/)?python[\d.]*(?![\w.\-])", "python", normal)
+    sig = re.sub(r"^(?:[\w./-]*/)?python[\d.]*", "python", sig)
+    return sig in flat_seg or sig in normal
+
+
 def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
     command = (call.get("tool_input") or {}).get("command") or ""
-    flat = " ".join(command.split())
     hint, noun = HINTS[agent], what(agent)
     if agent == IMPLEMENTER and ".tests.md" in command:
         return False, "the implementer does not read the test findings: %s" % hint
@@ -367,14 +425,6 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
     for token in tokens:
         if re.search(r"[*?\[]", token) and wildcard_hit(token, cwd, root, folders, agent == TEST_WRITER):
             return False, "a wildcard in the command can match or list the %s folder: %s" % (noun, hint)
-    if agent == IMPLEMENTER:
-        sig = runner_signature(test_command(root))
-        normal = " ".join(split_flags(tokens))
-        normal = re.sub(r"(?<![\w.\-])(?:[\w./-]*/)?python[\d.]*(?![\w.\-])", "python", normal)
-        flat_py = re.sub(r"(?<![\w.\-])(?:[\w./-]*/)?python[\d.]*(?![\w.\-])", "python", flat)
-        sig = re.sub(r"^(?:[\w./-]*/)?python[\d.]*", "python", sig)
-        if sig and (sig in flat_py or sig in normal):
-            return False, "the implementer does not run the tests directly: %s" % hint
     # Paths, recursive search, and git content commands, judged by where they point.
     segments = [s for s in re.split(r"\|\||&&|[|;&\n]", command) if s.strip()]
     here = cwd
@@ -391,8 +441,9 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
                 return False, "cd leads into the %s folder: %s" % (noun, hint)
             continue
         prog = os.path.basename(toks[0])
-        if agent == IMPLEMENTER and starts_runner(toks):
-            return False, "the implementer does not run the tests directly: %s" % hint
+        if agent == IMPLEMENTER and (segment_matches_test_cmd(seg, toks, root) or starts_runner(toks)):
+            if not allows_unit_runner(seg, toks, here, root):
+                return False, "the implementer does not run the tests directly: %s" % hint
         if agent == IMPLEMENTER and any(os.path.basename(t) == "slice.py" for t in toks):
             after = toks[[os.path.basename(t) for t in toks].index("slice.py") + 1:]
             sub = []
@@ -407,8 +458,8 @@ def bash_decision(call, cwd, root, folders, agent=IMPLEMENTER):
                     break
             if sub != ["test"]:
                 return False, "the implementer runs only `slice.py test`: %s" % hint
-            if any(t in ("--full", "--red") for t in after):
-                return False, "the implementer may not use --full or --red: they print the withheld messages: %s" % hint
+            if any(t == "--full" for t in after):
+                return False, "the implementer may not use --full: it prints the withheld messages: %s" % hint
         if not any(os.path.basename(t) == "slice.py" for t in toks):
             for a in path_args(toks if "/" in toks[0] else toks[1:], here):
                 target = os.path.realpath(os.path.join(here, os.path.expanduser(a)))
