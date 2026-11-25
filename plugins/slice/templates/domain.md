@@ -18,7 +18,6 @@ This design document holds no code.
 ## State machines
 
 One `### Machine: <Object>` section for each object that has a lifecycle. For none, write the line `- Machines: none`. `slice.py status` reads these lines: the start state, each state reachable from it, each transition cited by a requirement.
-
 ### Machine: <Object>
 
 - States: <all states, comma separated>
@@ -31,7 +30,7 @@ One `### Machine: <Object>` section for each object that has a lifecycle. For no
 
 - Inside: <what the system owns>
 - Outside: <what it does not own>
-- Actors: <each external actor or system, and how it talks to the system>
+- Actors: <each external actor or system, and the public boundary (endpoints, CLI, or module calls) it uses>
 
 ## Requirement map
 

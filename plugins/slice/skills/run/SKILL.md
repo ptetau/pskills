@@ -1,7 +1,7 @@
 ---
 name: run
 description: >
-  Runs the slice stages from the state in slice/, in the order that `slice.py next` gives: spec, plan, domain, interface, build. Continues where it stopped. Use when the user says "/slice:run", or wants a specification built all the way.
+  Runs the slice stages from the state in slice/, in the order that `slice.py next` gives: spec, plan, domain, build. Continues where it stopped. Use when the user says "/slice:run", or wants a specification built all the way.
 model: claude-sonnet-5-5
 effort: medium
 ---
@@ -14,18 +14,18 @@ A specification becomes committed slices, with the fewest stops. It stops only f
 
 ## Inputs
 
-- The output of `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py next`: a stage (`spec`, `plan`, `domain`, `interface`), `build <Sn>`, `stop <Sn>: <reason>`, or `done`.
+- The output of `python3 ${CLAUDE_PLUGIN_ROOT}/bin/slice.py next`: a stage (`spec`, `plan`, `domain`), `build <Sn>`, `stop <Sn>: <reason>`, or `done`.
 - The specification, for a first run: a file path or the words of the user.
 
 ## Outputs
 
-- Each stage runs through its own skill: `/slice:spec`, `/slice:plan`, `/slice:domain`, `/slice:interface`, `/slice:build`.
+- Each stage runs through its own skill: `/slice:spec`, `/slice:plan`, `/slice:domain`, `/slice:build`.
 - Before each stage, one line that names the stage and why it starts. At the end, a short recap: the slices done, the commits, and the slice or question that stopped the run.
 
 ## Constraints
 
-- Loop on `slice.py next`. Run what it prints, then run it again. Never choose or reorder the stages.
-- The user ratifies the spec and approves the interface. Never skip these two stops.
+- Loop on `slice.py next`. Run what it prints, then run it again. Do not choose or reorder the stages.
+- The user ratifies the spec. Do not skip that stop.
 - `stop <Sn>: <reason>` ends the run: show what fails, ask, then run `slice.py resume <Sn>`.
 - Start no stage twice for the same state.
 - Outputs give each reader exactly what it reads: see `contracts.json`.

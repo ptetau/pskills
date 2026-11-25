@@ -1,10 +1,9 @@
 export const meta = {
   name: 'slice-build',
-  description: 'Build one slice spec with the slice harness: red tests, then each slice, with a model for each job',
-  whenToUse: 'After spec.md is ratified and interface.md is approved for a spec folder. Routing rules are in slice/models.md.',
+  description: 'Build one slice spec with the slice harness: implement each slice, write acceptance tests after, then review code and tests',
+  whenToUse: 'After spec.md is ratified and domain.md is mapped for a spec folder. Routing rules are in slice/models.md.',
   phases: [
-    { title: 'Tests', detail: 'test writers (sonnet) write red tests for all slices; haiku runs the red checks' },
-    { title: 'Build', detail: 'implementer (sonnet or opus by tier), reviewer (opus), script steps (haiku)' },
+    { title: 'Build', detail: 'implementer (sonnet or opus by tier), test-writer (sonnet), reviewer (opus), script steps (haiku)' },
   ],
 }
 
@@ -56,14 +55,14 @@ const REVIEW_RULE =
   `Round 1 reviews the whole slice. A later round checks only two things: that each finding of the earlier round is fixed, ` +
   `and that the fix broke nothing. A new finding of a later round that is not caused by the fix is a minor line. ` +
   `Slow compile time on an extreme input, and the exact boundary of a safety limit, are minor findings. ` +
-  `A crash, a wrong result, an unmet requirement and a security hole of the interface.md floor stay major.\n`
+  `A crash, a wrong result, an unmet requirement and a security hole stay major.\n`
 
 function testWriter(id, extra, label) {
   return agent(role('test-writer', id) +
-    `Write the tests of ${id} in ${ROOT}/tests/Rail.Tests/${testFile(id)} only. Use the helper that interface.md names. ` +
+    `Write the acceptance tests of ${id} in ${ROOT}/tests/Rail.Tests/${testFile(id)} only against the public boundary from spec.md and domain.md. ` +
     `Do not run a build or a test command. Use only the programs of the acceptance lines. Do not invent a Rail program: ` +
     `you cannot compile one, and a program that does not compile makes a test that no code can pass.\n` + extra,
-    { label: label, phase: A.writeTests && extra.indexOf('review/') < 0 ? 'Tests' : 'Build', model: 'sonnet', effort: 'medium', agentType: 'slice:test-writer' })
+    { label: label, phase: 'Build', model: 'sonnet', effort: 'medium', agentType: 'slice:test-writer' })
 }
 
 function implementer(slice, rounds, extra) {
@@ -71,7 +70,7 @@ function implementer(slice, rounds, extra) {
   return agent(role('implementer', slice.id) +
     `Never read or search ${ROOT}/tests. Never run dotnet test: run "${S} test ${slice.id}" for results, as often as you need. ` +
     `You can run "dotnet build src/Rail.Cli" to compile. Emitted code uses the templates of the section "Compiling to C#" of docs/rail-spec.md. ` +
-    `Keep each command that a later slice owns failing with NotImplementedException("not implemented"). ` +
+    `You may write and run unit tests in any configured unit tests folder.` +
     `If a test cannot pass because what it expects conflicts with the language reference or with an earlier spec ` +
     `(for example it expects exit code 0 where the reference says 1), do not spend rounds on it: write no workaround, ` +
     `and end your reply with one line of the form "IMPOSSIBLE TEST: <test name>: <why>". Write that line only for such a test, never to say that there is none.\n` + extra,
@@ -84,34 +83,7 @@ function reviewer(id, round) {
     { label: `review ${id} (opus, round ${round})`, phase: 'Build', model: 'opus', effort: 'high', schema: REVIEW_SCHEMA, agentType: 'slice:reviewer' })
 }
 
-// ---- Tests: every slice red before any build ----
-if (A.writeTests) {
-  phase('Tests')
-  await parallel(A.slices.map(s => () => testWriter(s.id, '', `tests ${s.id} (sonnet)`)))
-
-  const BUILD = `cd ${ROOT} && dotnet build tests/Rail.Tests --nologo -v q 2>&1 | grep -E "error|Build succeeded" | sort -u | head -40; test \${PIPESTATUS[0]} -eq 0`
-  for (let i = 0; i < 4; i++) {
-    const b = await sh(BUILD, `compile tests (${i + 1})`, 'Tests')
-    if (b.exit_code === 0) break
-    if (i === 3) return { stopped: 'interface', why: 'the tests do not compile', output: b.output }
-    await agent(role('test-writer', 'all') +
-      `The test project does not compile. Fix only the compile errors below, in the test files that they name. Keep each test's meaning.\n\n${b.output}`,
-      { label: `fix test compile (${i + 1})`, phase: 'Tests', model: 'sonnet', effort: 'medium', agentType: 'slice:test-writer' })
-  }
-  for (const s of A.slices) {
-    for (let i = 0; i < 4; i++) {
-      const r = await sh(`${S} test ${s.id} --red`, `red check ${s.id}`, 'Tests')
-      if (r.exit_code === 0) break
-      if (i === 3) return { stopped: s.id, why: 'the tests are not red', output: r.output }
-      await testWriter(s.id, `The red check of ${s.id} fails. Fix the tests that it names. A "does not reach the surface" test must call the surface before it asserts.\n\n${r.output}`, `fix red ${s.id} (${i + 1})`)
-    }
-  }
-  const setRed = A.slices.map(s => `${S} set ${s.id} red`).join(' && ')
-  const c = await sh(`${setRed} && ${S} commit interface`, 'commit interface', 'Tests')
-  if (c.exit_code !== 0) return { stopped: 'interface', why: 'the interface commit was refused', output: c.output }
-}
-
-// ---- Build: one slice after the other ----
+// ---- Build: one slice after the other (implement -> test-writer -> reviewer -> fix loop -> commit) ----
 phase('Build')
 const done = []
 for (const slice of A.slices) {
@@ -125,20 +97,32 @@ for (const slice of A.slices) {
     let note = extra
     while (r.exit_code !== 0) {
       const round = await sh(`${S} round ${id} test`, `round ${id}`, 'Build')
-      if (round.exit_code !== 0) { stop = { why: 'no test round left', output: r.output }; return }
+      if (round.exit_code !== 0) { stop = { why: 'no test round left', output: r.output }; return r }
       rounds++
       const said = await implementer(slice, rounds, `${note}\nThe last test results:\n\n${r.output}`)
       if (/IMPOSSIBLE TEST:\s*`?test_/.test(String(said || ''))) {
         stop = { why: 'the implementer reports a test that cannot pass', output: String(said).slice(-1500) }
-        return
+        return r
       }
       note = ''
       r = await sh(`${S} test ${id}`, `test ${id}`, 'Build')
     }
+    return r
   }
 
-  await untilGreen(await sh(`${S} set ${id} building && ${S} test ${id}`, `start ${id}`, 'Build'), '')
+  await sh(`${S} set ${id} building`, `start ${id}`, 'Build')
+  await implementer(slice, 0, 'Build this slice from spec.md and domain.md.')
 
+  await testWriter(id, '', `tests ${id} (sonnet)`)
+  const BUILD = `cd ${ROOT} && dotnet build tests/Rail.Tests --nologo -v q 2>&1 | grep -E "error|Build succeeded" | sort -u | head -40; test \${PIPESTATUS[0]} -eq 0`
+  for (let i = 0; i < 4; i++) {
+    const b = await sh(BUILD, `compile tests ${id} (${i + 1})`, 'Build')
+    if (b.exit_code === 0) break
+    if (i === 3) { stop = { why: 'the tests do not compile', output: b.output }; break }
+    await testWriter(id, `The test project does not compile. Fix only the compile errors below, in the test files that they name. Keep each test's meaning.\n\n${b.output}`, `fix test compile ${id} (${i + 1})`)
+  }
+
+  let r = stop ? null : await sh(`${S} test ${id}`, `test ${id}`, 'Build')
   let reviewRound = 0
   while (!stop) {
     const rr = await sh(`${S} set ${id} review && ${S} round ${id} review`, `review round ${id}`, 'Build')
@@ -148,21 +132,25 @@ for (const slice of A.slices) {
     if (!rev) { stop = { why: 'the reviewer returned nothing', output: '' }; break }
     if (rev.tests_major > 0) {
       await testWriter(id, `Fix the open findings of ${DIR}/review/${id}.tests.md.`, `fix tests ${id} (sonnet)`)
-      const ct = await sh(`${S} commit tests ${id}`, `commit tests ${id}`, 'Build')
-      if (ct.exit_code !== 0) { stop = { why: 'the test fix was refused', output: ct.output }; break }
-      await untilGreen(await sh(`${S} test ${id}`, `test ${id}`, 'Build'), 'The tests of the slice changed after a review finding.')
-      if (stop) break
+      r = await sh(`${S} test ${id}`, `test ${id}`, 'Build')
     }
-    if (rev.code_major > 0) {
+    if (rev.code_major > 0 || (r && r.exit_code !== 0)) {
       const round = await sh(`${S} round ${id} test`, `round ${id}`, 'Build')
-      if (round.exit_code !== 0) { stop = { why: 'no test round left for the review fix', output: round.output }; break }
+      if (round.exit_code !== 0) { stop = { why: 'no test round left', output: r ? r.output : '' }; break }
       rounds++
-      await implementer(slice, rounds, `Fix each open major finding of ${DIR}/review/${id}.md. Then make the tests pass again.`)
-      await untilGreen(await sh(`${S} test ${id}`, `test ${id}`, 'Build'), 'A review fix broke a test.')
+      const fixNote = rev.code_major > 0
+        ? `Fix each open major finding of ${DIR}/review/${id}.md. Then make the acceptance tests pass.\n\n${r ? r.output : ''}`
+        : `The acceptance tests of ${id} fail.\n\n${r ? r.output : ''}`
+      const said = await implementer(slice, rounds, fixNote)
+      if (/IMPOSSIBLE TEST:\s*`?test_/.test(String(said || ''))) {
+        stop = { why: 'the implementer reports a test that cannot pass', output: String(said).slice(-1500) }
+        break
+      }
+      r = await untilGreen(await sh(`${S} test ${id}`, `test ${id}`, 'Build'), 'Fix the failing acceptance tests.')
       if (stop) break
     }
-    if (rev.tests_major === 0 && rev.code_major === 0) {
-      const c = await sh(`${S} commit ${id}`, `commit ${id}`, 'Build')
+    if (rev.tests_major === 0 && rev.code_major === 0 && r && r.exit_code === 0) {
+      const c = await sh(`${S} commit ${id} --summary "Implements and verifies ${id} (${slice.tier} tier)."`, `commit ${id}`, 'Build')
       if (c.exit_code !== 0) stop = { why: 'the slice commit was refused', output: c.output }
       break
     }

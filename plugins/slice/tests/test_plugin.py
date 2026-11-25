@@ -46,7 +46,7 @@ class Layout(unittest.TestCase):
 
     def test_each_agent_and_skill_is_bound_to_the_model_and_the_effort(self):
         paths = sorted((PLUGIN / "agents").glob("*.md")) + sorted((PLUGIN / "skills").glob("*/SKILL.md"))
-        self.assertEqual(len(paths), 9)
+        self.assertEqual(len(paths), 8)
         sonnet = {"test-writer.md", "implementer.md", "build", "run"}
         for path in paths:
             fm = front_matter(path)
@@ -73,7 +73,7 @@ class Layout(unittest.TestCase):
         self.assertIn("slice.py test", text)
 
     def test_skills(self):
-        for name in ("spec", "plan", "domain", "interface", "build", "run"):
+        for name in ("spec", "plan", "domain", "build", "run"):
             fm = front_matter(PLUGIN / "skills" / name / "SKILL.md")
             self.assertEqual(fm["name"], name)
 
@@ -94,7 +94,6 @@ class Layout(unittest.TestCase):
         self.assertRegex((t / "domain.md").read_text(), r"(?m)^- R1: ")
         self.assertIn("- Status: planned", (t / "slices.md").read_text())
         self.assertIn("- Test rounds: 0", (t / "slices.md").read_text())
-        self.assertTrue((t / "interface.md").is_file())
 
     def test_the_template_domain_is_a_gap_until_it_is_filled(self):
         import importlib.util

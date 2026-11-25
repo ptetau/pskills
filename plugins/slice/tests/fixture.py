@@ -55,7 +55,7 @@ SLICES = """# Slices
   - Given "a b a", the count of "a" is 2.
 - Requirements: R1
 - Layers: core
-- Status: red
+- Status: planned
 - Test rounds: 0
 - Review rounds: 0
 
@@ -66,13 +66,10 @@ SLICES = """# Slices
   - Given "a b a", the top word is "a".
 - Requirements: R2
 - Layers: core, cli
-- Status: red
+- Status: planned
 - Test rounds: 0
 - Review rounds: 0
 """
-
-INTERFACE = ("# Interface\n\nStatus: approved\n\n## S1\n\n- count(text) -> dict\n- Changed: none\n\n"
-             "## S2\n\n- top(text, n) -> list\n- Changed: none\n")
 
 STUB = '''def count(text):
     raise NotImplementedError("not implemented")
@@ -124,7 +121,7 @@ class Project:
         git(self.root, "config", "commit.gpgsign", "false")
         for rel, text in {"slice/config.md": config, SPEC_DIR + "/spec.md": SPEC,
                           SPEC_DIR + "/domain.md": DOMAIN, SPEC_DIR + "/slices.md": slices,
-                          SPEC_DIR + "/interface.md": INTERFACE, "src/wordfreq.py": stub,
+                          "src/wordfreq.py": stub,
                           "tests/test_wordfreq.py": tests}.items():
             self.write(rel, text)
         git(self.root, "add", "-A")

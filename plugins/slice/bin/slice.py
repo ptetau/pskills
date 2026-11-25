@@ -6,20 +6,19 @@ Usage: slice.py [--root DIR] [--spec NNN|NAME] status
        slice.py [--root DIR] [--spec NNN|NAME] set Sn STATUS [--reason TEXT]
        slice.py [--root DIR] [--spec NNN|NAME] round Sn test|review
        slice.py [--root DIR] [--spec NNN|NAME] resume Sn
-       slice.py [--root DIR] [--spec NNN|NAME] test Sn [--red|--full]
+       slice.py [--root DIR] [--spec NNN|NAME] test Sn [--full]
        slice.py [--root DIR] [--spec NNN|NAME] scan
-       slice.py [--root DIR] [--spec NNN|NAME] commit Sn|interface
-       slice.py [--root DIR] [--spec NNN|NAME] commit tests Sn
+       slice.py [--root DIR] [--spec NNN|NAME] commit Sn [--summary TEXT]
 
 slice/config.md is at the top of slice/. Each spec has its own folder, slice/NNN-<name>/
-(for example slice/001-wordfreq/), with spec.md, domain.md, slices.md, interface.md, and
+(for example slice/001-wordfreq/), with spec.md, domain.md, slices.md, and
 review/Sn.md (the code findings of the reviewer, for the implementer) and review/Sn.tests.md
 (the test findings, for the test writer; the guard hides each file from the other agent). The current spec is the folder with the highest
 number, or the one that --spec names. The script keeps the round counts in slices.md.
 Requirements (R1, R2, ...) and decisions (D1, D2, ...) are numbered in spec.md. A slice names
 its requirements on a `- Requirements:` line, and domain.md maps each requirement.
 
-"next" prints one line and changes nothing: the next stage (spec, plan, domain, interface), "build Sn",
+"next" prints one line and changes nothing: the next stage (spec, plan, domain), "build Sn",
 "stop Sn: <reason>" (a stopped slice: ask the user), or "done". "status" ends with "next: <that line>".
 "resume" puts a stopped slice back to building, with no reason and no rounds used.
 "test" prints test names, pass or fail, and failure messages. It never prints test source.
@@ -33,24 +32,16 @@ slice owns (the tests of a done slice, and tests that no slice owns).
 A test belongs to a slice when its name holds the spec number and the slice, `test_NNN_Sn_Rn_<what>`
 (for example test_002_S1_R2_counts_words). A name with no number belongs to the slice of the
 only spec, and to no slice when there are two specs or more.
-With --red, a test is red only when it fails with the not-implemented error of the stub, or
-(a plain failure) when it cites a requirement that the `- Changed:` line of its slice in
-interface.md lists.
 "scan" runs the command of the config line `- security scan: <command>` (default none) in the
 project folder, prints one short result, and exits 1 when the command exits non-zero or runs
 longer than 300 seconds. The command is the one line of the config: no part of a record is added to it.
-"commit interface" commits the records, the tests, the stubs, and the source files: one
-"Interface: NNN-name" commit. It needs `Status: approved` in interface.md. "commit Sn" commits
-the records, the source folders, and the source files of one slice, and refuses when a
-regression fails. The config line `source files:` lists single paths and globs (`package.json,
-migrations/**`) that lie outside the source folders.
-"commit tests Sn" commits a test fix: the tests folder and the records, as one "Tests Sn: <title>"
-commit with the trailer `Slice: Sn`. It needs the slice in `review`, an open finding (a `- major:` or
-`- minor:` line) in review/Sn.tests.md, and a change in the tests folder. Each test of the slice must
-run: it passes, or it fails by assertion, or it fails with the not-implemented error. A test that
-does not load, another error, or a skip refuses the commit. When a test of the slice still fails, the
-slice goes back to `building`. "commit Sn" refuses an open major line in review/Sn.md and in
-review/Sn.tests.md.
+"commit Sn [--summary TEXT]" commits the records, the source folders, the unit tests folder
+(if configured), the source files, and the tests folder of one slice as "Slice Sn: <title>"
+with a body describing the slice (from --summary or the slice's Story and Requirements) and
+trailer `Slice: Sn`. It refuses when the slice has no tests, a test fails, a regression fails,
+an open major line is in review/Sn.md or review/Sn.tests.md, or the security scan fails. The config
+line `source files:` lists single paths and globs (`package.json, migrations/**`) that lie
+outside the source folders.
 Exit 0: ok. Exit 1: a refusal or a failing check. Exit 2: usage or record error.
 """
 import glob
@@ -61,13 +52,12 @@ import sys
 import tempfile
 import xml.etree.ElementTree as ET
 
-STATUSES = ["planned", "red", "building", "review", "done", "stopped"]
+STATUSES = ["planned", "building", "review", "done", "stopped"]
 LIMITS = {"test": 5, "review": 3}
 FIELDS = {"test": "Test rounds", "review": "Review rounds"}
 USAGE = __doc__.split("\n\n")[0]
 TIMEOUT = 600
 SCAN_TIMEOUT = 300
-UNIMPLEMENTED = re.compile(r"not\s*(yet\s*)?implemented|unimplemented|NotImplemented", re.I)
 
 
 class Fail(Exception):
@@ -156,8 +146,8 @@ def config(root):
 
 
 def folders(value):
-    return [f.strip(" /") for f in (value or "").split(",") if f.strip(" /")]
-
+    return [f.strip(" /") for f in (value or "").split(",")
+            if f.strip(" /") and f.strip(" /") != "none" and not f.strip(" /").startswith("<")]
 
 def source_paths(root, cfg):
     """The files that the `source files:` patterns match now, never in the tests folders or slice/."""
@@ -182,25 +172,6 @@ def spec_status(root):
     m = re.search(r"^Status:\s*(\w+)", text, re.M)
     return m.group(1).lower() if m else "draft"
 
-
-def interface_status(root):
-    """missing, draft, or approved: the `Status:` line of interface.md (a missing line is draft)."""
-    text = read(root, "interface.md")
-    if text is None:
-        return "missing"
-    m = re.search(r"^Status:\s*(\w+)", text, re.M)
-    return m.group(1).lower() if m else "draft"
-
-
-def changed_requirements(root, sid):
-    """The requirement IDs on the `- Changed:` line of the `## Sn` section of interface.md."""
-    text = read(root, "interface.md") or ""
-    heads = list(re.finditer(r"^## (S\d+)\b.*$", text, re.M))
-    for i, m in enumerate(heads):
-        if m.group(1) == sid:
-            end = heads[i + 1].start() if i + 1 < len(heads) else len(text)
-            return set(re.findall(r"R\d+", get_field(text[m.start():end], "Changed")))
-    return set()
 
 
 def sections(text):
@@ -384,23 +355,8 @@ def next_step(root):
     stopped = [r for r in rows if r[1] == "stopped"]
     if stopped:
         return "stop %s: %s" % (stopped[0][0], stopped[0][2] or "no reason recorded")
-    if any(r[1] == "planned" for r in rows) or interface_status(root) != "approved":
-        return "interface"
     open_ = [r for r in rows if r[1] != "done"]
-    fixing = [r for r in open_ if r[1] in ("building", "review")
-              and open_findings(read(root, "review/%s.tests.md" % r[0]))]
-    if open_ and tests_dirty(root) and not fixing:
-        return "interface"
     return "build %s" % open_[0][0] if open_ else "done"
-
-
-def tests_dirty(root):
-    """True while the tests folder holds a change that no commit holds (the interface commit is due)."""
-    try:
-        return bool(dirty(root, folders(config(root).get("tests folder"))))
-    except Fail:
-        return False
-
 
 def cmd_next(root):
     print(next_step(root))
@@ -428,7 +384,6 @@ def cmd_status(root):
                           else "problems" if problems else "mapped"))
     for problem in problems:
         print("  - " + problem)
-    print("interface: %s" % interface_status(root))
     rows = []
     for sid, title, start, end in slices:
         block = text[start:end]
@@ -714,7 +669,7 @@ def show_own(r, lines, withhold):
         print("  " + line)
 
 
-def cmd_test(root, sid, red, full=False):
+def cmd_test(root, sid, full=False):
     text, _ = load_slices(root)
     sec = find(text, sid)
     block = text[sec[2]:sec[3]]
@@ -724,56 +679,20 @@ def cmd_test(root, sid, red, full=False):
         print("no tests found for %s" % sid)
         for line in errors:
             print("  " + line)
-        if red:
-            for r in results:
-                if r["status"] == "error":
-                    print("broken: %s" % r["name"])
-                    print("  " + r["message"].replace("\n", "\n  "))
         return 1
-    if not red:
-        passed = sum(1 for r in mine if r["status"] == "pass")
-        print("%s: %d tests, %d passed, %d not passed" % (sid, len(mine), passed, len(mine) - passed))
-        withhold = not full and int(get_field(block, "Test rounds") or 0) < WITHHOLD_ROUNDS
-        lines = acceptance_lines(block)
-        for r in mine:
-            show_own(r, lines, withhold)
-        broken = regressions(root, results)
-        if broken:
-            print("regressions: %d tests outside %s fail (tests of a done slice, or of no slice)" % (
-                len(broken), sid))
-            for r in broken:
-                show(r)
-        return 0 if passed == len(mine) and not broken else 1
-    changed = changed_requirements(root, sid)
-    bad, red_count = [], 0
+    passed = sum(1 for r in mine if r["status"] == "pass")
+    print("%s: %d tests, %d passed, %d not passed" % (sid, len(mine), passed, len(mine) - passed))
+    withhold = not full and int(get_field(block, "Test rounds") or 0) < WITHHOLD_ROUNDS
+    lines = acceptance_lines(block)
     for r in mine:
-        if r["status"] == "pass":
-            bad.append("passes already: %s" % r["name"])
-        elif r["status"] == "skip":
-            bad.append("skipped: %s" % r["name"])
-        elif UNIMPLEMENTED.search(r["message"]):
-            red_count += 1
-        elif r["status"] == "fail" and changed & set(re.findall(r"(?<![0-9A-Za-z])R\d+(?![0-9])", r["name"])):
-            red_count += 1
-        elif r["status"] == "fail":
-            bad.append("does not reach the surface: %s\n  %s" % (r["name"], r["message"].replace("\n", "\n  ")))
-        else:
-            bad.append("broken: %s\n  %s" % (r["name"], r["message"].replace("\n", "\n  ")))
-    # An error that no slice ID names, for example a test file that does not import.
-    for r in results:
-        if r["status"] == "error" and not re.search(r"(?<![0-9A-Za-z])[Ss]\d+(?![0-9])", r["name"]) \
-                and not UNIMPLEMENTED.search(r["message"]):
-            bad.append("broken: %s\n  %s" % (r["name"], r["message"].replace("\n", "\n  ")))
-    if bad:
-        print("%s not red: %d of %d tests fail for missing behaviour" % (sid, red_count, len(mine)))
-        for b in bad:
-            print(b)
-        return 1
-    print("%s red: %d tests fail for missing behaviour" % (sid, red_count))
-    for r in mine:
-        print("RED %s" % r["name"])
-    return 0
-
+        show_own(r, lines, withhold)
+    broken = regressions(root, results)
+    if broken:
+        print("regressions: %d tests outside %s fail (tests of a done slice, or of no slice)" % (
+            len(broken), sid))
+        for r in broken:
+            show(r)
+    return 0 if passed == len(mine) and not broken else 1
 
 def run_scan(root):
     """Run the security scan of the config. Return (ok, exit code or None, text). With no scanner,
@@ -827,9 +746,18 @@ def open_findings(text, kind=None):
     return [k.lower() for k in FINDING.findall(text or "") if kind is None or k.lower() == kind]
 
 
-def cmd_commit(root, sid):
-    if sid == "interface":
-        return commit_interface(root)
+def slice_summary(block):
+    parts = []
+    story = get_field(block, "Story")
+    reqs = get_field(block, "Requirements")
+    if story and not story.startswith("<"):
+        parts.append(story)
+    if reqs:
+        parts.append("Requirements: %s" % reqs)
+    return "\n\n".join(parts)
+
+
+def cmd_commit(root, sid, summary=""):
     text, _ = load_slices(root)
     sec = find(text, sid)
     block = text[sec[2]:sec[3]]
@@ -854,88 +782,22 @@ def cmd_commit(root, sid):
         raise Fail("%s: the security scan fails%s: %s. Run: slice.py scan" % (
             sid, " (exit %s)" % code if code is not None else "", scan_text.replace("\n", " | ")))
     cfg = config(root)
-    tests = folders(cfg.get("tests folder"))
-    if tests and dirty(root, tests):
-        raise Fail("the tests folder has changes that no commit holds: run slice.py commit interface first "
-                   "(for the fix of a tests finding: slice.py commit tests %s)" % sid)
+    body = summary.strip() or slice_summary(block)
     old = text
     write_status(root, sid, "done")
     try:
-        stage(root, ["slice"] + folders(cfg.get("source folders")) + source_paths(root, cfg))
-        git(root, "commit", "-m", "Slice %s: %s" % (sid, title), "-m", "Slice: %s" % sid)
+        stage(root, ["slice"] + folders(cfg.get("source folders")) + folders(cfg.get("unit tests folder"))
+              + source_paths(root, cfg) + folders(cfg.get("tests folder")))
+        args = ["commit", "-m", "Slice %s: %s" % (sid, title)]
+        if body:
+            args += ["-m", body]
+        args += ["-m", "Slice: %s" % sid]
+        git(root, *args)
     except Fail:
         write(root, "slices.md", old)
         raise
     print("%s committed: Slice %s: %s" % (sid, sid, title))
     return 0
-
-
-def commit_tests(root, sid):
-    """One commit for a test fix that a tests finding asked for. The rules are in the module docstring."""
-    text, _ = load_slices(root)
-    sec = find(text, sid)
-    status, _ = status_of(text[sec[2]:sec[3]])
-    if status != "review":
-        raise Fail("%s is %s: tests change only while the slice is in review" % (sid, status))
-    if not open_findings(read(root, "review/%s.tests.md" % sid)):
-        raise Fail("%s: no tests finding is open in %s: a test changes only for a finding" % (
-            sid, shown(root, "review/%s.tests.md" % sid)))
-    cfg = config(root)
-    tests = folders(cfg.get("tests folder"))
-    if not tests or not dirty(root, tests):
-        raise Fail("%s: the tests folder has no change to commit" % sid)
-    results, _, _ = run_tests(root)
-    mine = mine_of(root, results, sid)
-    bad = []
-    if not mine:
-        bad.append("no tests found for %s" % sid)
-    for r in mine:
-        if r["status"] == "skip":
-            bad.append("skipped: %s" % r["name"])
-        elif r["status"] == "error" and not UNIMPLEMENTED.search(r["message"]):
-            bad.append("broken: %s" % r["name"])
-    for r in results:
-        if r["status"] == "error" and not owner(r["name"]) and not UNIMPLEMENTED.search(r["message"]):
-            bad.append("broken: %s" % r["name"])
-    if bad:
-        raise Fail("%s: the tests do not run as a fix needs: %s" % (sid, "; ".join(bad)))
-    failing = [r for r in mine if r["status"] != "pass"]
-    old = text
-    if failing:
-        write_status(root, sid, "building")
-    try:
-        stage(root, ["slice"] + tests)
-        git(root, "commit", "-m", "Tests %s: %s" % (sid, sec[1]), "-m", "Slice: %s" % sid)
-    except Fail:
-        write(root, "slices.md", old)
-        raise
-    print("%s tests committed: Tests %s: %s" % (sid, sid, sec[1]))
-    if failing:
-        print("%s building: %d tests of the slice fail, the implementer continues" % (sid, len(failing)))
-    return 0
-
-
-def commit_interface(root):
-    """One commit for the records, the tests, and the stubs of all slices, so that a slice
-    commit holds only its own code."""
-    text, secs = load_slices(root)
-    planned = [s[0] for s in secs if status_of(text[s[2]:s[3]])[0] == "planned"]
-    if planned:
-        raise Fail("the interface is not ready: %s still planned. Make each slice red first." % ", ".join(planned))
-    if interface_status(root) != "approved":
-        raise Fail("the interface is not approved: set `Status: approved` in %s after the user approves the surface"
-                   % shown(root, "interface.md"))
-    cfg = config(root)
-    stage(root, ["slice"] + folders(cfg.get("tests folder")) + folders(cfg.get("source folders"))
-          + source_paths(root, cfg))
-    if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=root).returncode == 0:
-        print("interface: nothing to commit")
-        return 0
-    name = spec_name(root)
-    git(root, "commit", "-m", "Interface: %s" % name, "-m", "Slice: interface")
-    print("interface committed: Interface: %s" % name)
-    return 0
-
 
 def git(root, *args):
     p = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True)
@@ -971,15 +833,12 @@ def main(argv):
             return cmd_resume(root, args[0])
         if cmd == "round" and len(args) == 2:
             return cmd_round(root, args[0], args[1])
-        if cmd == "test" and len(args) in (1, 2) and (len(args) == 1 or args[1] in ("--red", "--full")):
-            return cmd_test(root, args[0], len(args) == 2 and args[1] == "--red",
-                            len(args) == 2 and args[1] == "--full")
+        if cmd == "test" and len(args) in (1, 2) and (len(args) == 1 or args[1] == "--full"):
+            return cmd_test(root, args[0], len(args) == 2 and args[1] == "--full")
         if cmd == "scan" and not args:
             return cmd_scan(root)
-        if cmd == "commit" and len(args) == 2 and args[0] == "tests":
-            return commit_tests(root, args[1])
-        if cmd == "commit" and len(args) == 1:
-            return cmd_commit(root, args[0])
+        if cmd == "commit" and len(args) in (1, 3) and (len(args) == 1 or args[1] == "--summary"):
+            return cmd_commit(root, args[0], args[2] if len(args) == 3 else "")
     except Fail as e:
         print(e, file=sys.stderr)
         return e.code

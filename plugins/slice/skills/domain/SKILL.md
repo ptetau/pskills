@@ -1,7 +1,7 @@
 ---
 name: domain
 description: >
-  Models the domain and the boundary of the system before any interface exists, and shows that each numbered requirement is met by the model. Writes a design document only. Use when the user says "/slice:domain", or when the slices are planned.
+  Models the domain and the boundary of the system, and shows that each numbered requirement is met by the model. Writes a design document only. Use when the user says "/slice:domain", or when the slices are planned.
 model: claude-opus-5-5
 effort: medium
 ---
@@ -18,8 +18,8 @@ effort: medium
 
 ## Outputs
 
-- `slice/NNN-<name>/domain.md` from `${CLAUDE_PLUGIN_ROOT}/templates/domain.md`. Read by `interface`, the agents, and `slice.py status`, which reads each `- Rn:` line of the requirement map and each machine.
-- The reply names `/slice:interface`.
+- `slice/NNN-<name>/domain.md` from `${CLAUDE_PLUGIN_ROOT}/templates/domain.md`. Read by the agents and `slice.py status`, which reads each `- Rn:` line of the requirement map and each machine.
+- The reply names `/slice:build`.
 
 ## Constraints
 
