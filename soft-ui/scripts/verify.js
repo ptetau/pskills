@@ -30,7 +30,7 @@ try { ({ chromium } = require("playwright")); } catch (e) { console.log("check s
     novalue: [...document.querySelectorAll(".su-stat-v.su-novalue")].map((e) => e.closest(".su-stat").querySelector(".su-stat-l").textContent) }));
   st.errors.forEach((e) => problems.push(e));
   if (st.novalue.length) problems.push(`stat tile(s) with no value: ${st.novalue.join(", ")}. Give value, or data with col and agg`);
-  if (shot) await page.screenshot({ path: shot, fullPage: true });
+  if (shot) { await page.waitForTimeout(1600); await page.screenshot({ path: shot, fullPage: true }); }
   await page.close();
   for (const w of [768]) {   // tablet: the page must not scroll sideways either
     const tab = await load(w, "light");

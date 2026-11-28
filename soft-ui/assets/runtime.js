@@ -219,6 +219,22 @@
     return { el: bar, apply: (rows) => rows.filter((r) => Object.entries(st.f).every(([c, v]) => !v || String(r[c]) === v) && (!st.q || Object.values(r).some((v) => v != null && String(v).toLowerCase().includes(st.q)))) };
   }
 
+  // ---- motion: a theme turns it on with --su-motion: bounce ---------------------------
+  // Everything is complete at rest; motion plays once, when a part first comes into view.
+  const motion = () => css("--su-motion") === "bounce" && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const io = "IntersectionObserver" in window ? new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return; io.unobserve(e.target); (e.target.__play || []).forEach((f) => { try { f(); } catch (x) { /* motion is optional */ } });
+  }), { threshold: 0.2 }) : null;
+  function seen(el, fn) { if (!io || !motion()) return; (el.__play = el.__play || []).push(fn); io.observe(el); }
+  function countUp(el, v, f) {
+    const t0 = performance.now(), dur = 900;
+    // Numbers ease out and never pass their true value; the tile carries the spring.
+    const step = (now) => { const t = Math.min(1, (now - t0) / dur), x = v * (1 - Math.pow(1 - t, 3));
+      el.firstChild.nodeValue = fmt(Number.isInteger(v) && t < 1 ? Math.round(x) : t < 1 ? +x.toFixed(2) : v, f);
+      if (t < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+
   // ---- components -----------------------------------------------------------------
   const C = {};
   const BOXED = new Set(["chart", "heatmap", "gantt", "tree", "kv", "checklist", "timeline", "meter", "diagram", "graph", "filter", "box", "treemap", "sankey", "er", "classes"]);
@@ -226,6 +242,7 @@
   C.text = (p, el) => { el.className += " su-md"; el.innerHTML = md(p.md); };
   C.callout = (p, el) => {
     const t = normTone(p.tone) || "info";
+    seen(el, () => el.classList.add("su-pop"));
     const icon = { good: "✓", warn: "!", bad: "✕", info: "i", neutral: "•" }[t];
     el.append(h("div", { class: "su-callout su-t-" + t, role: t === "bad" || t === "warn" ? "alert" : "note" },
       h("span", { class: "su-callout-i", "aria-hidden": "true" }, icon), h("div", { class: "su-callout-b su-md", html: md(p.text) })));
@@ -277,6 +294,7 @@
     box.append(v);
     if (p.sub) box.append(h("div", { class: "su-stat-s" }, p.sub));
     const sp = spark(p.spark); if (sp) box.append(sp[0]);
+    if (typeof p.value === "number" && isFinite(p.value)) seen(box, () => { box.classList.add("su-pop"); countUp(v, p.value, p.fmt); });
     return box;
   }
   function aggValue(p, col) {
@@ -947,7 +965,7 @@
     const box = h("div", { class: "su-chart", style: { "--ch": (p.height || 260) + "px" } });
     const cv = h("canvas", { role: "img", "aria-label": (p.title || "chart") + ": " + p.kind + " of " + arr(p.y).map(colKey).join(", ") + " by " + p.x });
     box.append(cv); el.append(box);
-    let chart = null;
+    let chart = null, played = false;
     const draw = () => {
       if (!window.Chart) { el.replaceChildren(h("div", { class: "su-err" }, "Chart.js did not load (no network?).")); return; }
       if (chart) chart.destroy();
@@ -1020,8 +1038,20 @@
         },
         plugins: [refLines],
       };
+      const tipBg = css("--tip-bg");
+      if (tipBg) Object.assign(cfg.options.plugins.tooltip, { backgroundColor: tipBg, titleColor: css("--tip-ink"), bodyColor: css("--tip-ink"), cornerRadius: barR, padding: 9,
+        titleFont: { family: font, weight: "700" }, bodyFont: { family: font }, boxPadding: 4, borderColor: css("--accent"), borderWidth: 0, caretSize: 6 });
       Chart.defaults.font.family = font; Chart.defaults.color = fg;
       chart = new Chart(cv, cfg);
+      if (!played && motion()) seen(box, () => {
+        played = true;
+        const bar = kind === "bar" || kind === "waterfall" || kind0 === "hist";
+        chart.options.animation = { duration: bar ? 950 : 1100, easing: bar ? "easeOutBack" : "easeOutQuart",
+          delay: (c) => (c.type === "data" && c.mode === "default" ? c.dataIndex * (bar ? 55 : 0) + c.datasetIndex * 90 : 0) };
+        if (!bar) chart.options.animations = { y: { from: (c) => (c.chart.chartArea ? c.chart.chartArea.bottom : 0) } };
+        chart.reset(); chart.update();
+        setTimeout(() => { if (chart) { chart.options.animation = false; chart.options.animations = {}; } }, 2600);
+      });
     };
     draw(); subscribe(p.data, draw); LIVE.push(draw);
     let wasNarrow = box.clientWidth < 520;
@@ -1264,7 +1294,7 @@
     n.kids.forEach((k, i) => { const c = node(k, `${path}[${i}]`); if (k.p.span) c.style.setProperty("--span", k.p.span); el.append(c); });
     return titled(n, el);
   };
-  L.section = (n, path) => h("section", { class: "su-section su-node", id: n.p.id }, n.p.title ? h("h2", null, n.p.title) : null, kidsInto(h("div", { class: "su-flow", style: { gap: "var(--gap-m)" } }), n.kids, path), noteEl(n));
+  L.section = (n, path) => h("section", { class: "su-section su-node", id: n.p.id }, n.p.title ? (() => { const t2 = h("h2", null, n.p.title); seen(t2, () => t2.classList.add("su-pop")); return t2; })() : null, kidsInto(h("div", { class: "su-flow", style: { gap: "var(--gap-m)" } }), n.kids, path), noteEl(n));
   L.card = (n, path) => {
     const t = normTone(n.p.tone);
     const head = n.p.title ? h(n.p.collapse ? "summary" : "div", { class: "su-card-h" }, n.p.title, countOf(n)) : (n.p.collapse ? h("summary", { class: "su-card-h" }, "Details") : null);
@@ -1340,8 +1370,10 @@
       if (!fn) throw new Error(`unknown component "${n.c}"`);
       const body = h("div", { class: "su-body" + (BOXED.has(n.c) ? " su-leaf" : ""), style: n.p.h ? { maxHeight: n.p.h + "px", overflow: "auto" } : null });
       const wrap = h("div", { class: "su-node su-c-" + n.c, id: n.p.id });
-      if (n.p.title) wrap.append(h("h3", { class: "su-t" }, n.p.title, n.p.data && ["table", "list"].includes(n.c) ? h("span", { class: "su-count", style: { marginLeft: "8px" } }, rowsFor(n.p).length) : null));
-      wrap.append(body);
+      if (n.p.title) {
+        const win = h("div", { class: "su-win" }, h("h3", { class: "su-t" }, n.p.title, n.p.data && ["table", "list"].includes(n.c) ? h("span", { class: "su-count", style: { marginLeft: "8px" } }, rowsFor(n.p).length) : null), body);
+        wrap.append(win); seen(win, () => win.classList.add("su-pop"));
+      } else wrap.append(body);
       fn(n.p, body, n, path);
       const note = noteEl(n); if (note) wrap.append(note);
       return wrap;

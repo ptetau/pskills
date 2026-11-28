@@ -14,7 +14,8 @@
   --cond: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
   --mono: "IBM Plex Mono", Menlo, Consolas, monospace;
   --r: 0px;
-  --su-yaxis: right; --su-bar-radius: 0; --su-node-radius: 0; --chart-font: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --su-yaxis: right; --su-bar-radius: 0; --su-node-radius: 0; --su-motion: bounce;
+  --tip-bg: #111111; --tip-ink: #f3f2ef; --shadow: #111111; --spring: cubic-bezier(.34, 1.56, .64, 1); --chart-font: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -55,17 +56,17 @@ body { font-family: var(--font); }
 .su-meta .su-badge { font: 600 10.5px/1.9 var(--font); text-transform: uppercase; letter-spacing: .06em; color: var(--fg); padding: 0 8px; }
 
 /* every titled figure is a workstation window: black title bar, the red tag sits where the close box would be */
-.su-node > .su-t, .su-card > .su-card-h, .su-float-h {
+.su-win > .su-t, .su-card > .su-card-h, .su-float-h {
   background: var(--bar); color: var(--bar-ink); margin: 0; padding: 7px 10px 7px 30px; position: relative;
   font: 700 12px/1.25 var(--font); letter-spacing: .02em; border: 1px solid var(--bar);
 }
-.su-node > .su-t::before, .su-card > .su-card-h::before, .su-float-h::before {
+.su-win > .su-t::before, .su-card > .su-card-h::before, .su-float-h::before {
   content: ""; position: absolute; left: 10px; top: 50%; width: 11px; height: 11px; margin-top: -5.5px;
   background: var(--accent); box-shadow: inset 1px 1px 0 rgb(255 255 255 / .35), inset -1px -1px 0 rgb(0 0 0 / .35); transform: none;
 }
 details.su-card > summary::before { transform: none !important; }
-.su-node > .su-t .su-count { color: #9a9993; }
-.su-node > .su-t + .su-body > .su-tw, .su-node > .su-t + .su-leaf, .su-node > .su-t + .su-body > .su-stats .su-stat:first-child { border-top: 0; }
+.su-win > .su-t .su-count { color: #9a9993; }
+.su-win > .su-t + .su-body > .su-tw, .su-win > .su-t + .su-leaf, .su-win > .su-t + .su-body > .su-stats .su-stat:first-child { border-top: 0; }
 .su-leaf, .su-tw, .su-card, .su-diff, .su-item, .su-bcard, .su-lane, .su-float, .su-callout, pre.su-pre { border-radius: 0; }
 .su-leaf, .su-tw, .su-card { border: 1px solid var(--line-2); background: var(--surface); }
 .su-note, .su-note.su-md { font: 400 12px/1.45 var(--font); color: var(--muted); padding-top: 6px; margin-top: 0; max-width: none; }
@@ -126,3 +127,46 @@ pre.su-pre { background: var(--sunk); border: 1px solid var(--line); }
 .su-float-h .su-btn { color: var(--fg); padding: 1px 8px; font: 600 11px var(--font); }
 details.su-card > summary.su-card-h::after { content: "▸"; margin-left: auto; color: var(--bar-ink); transition: transform .15s; }
 details.su-card[open] > summary.su-card-h::after { transform: rotate(90deg); }
+
+/* ---- bounce and personality --------------------------------------------------------- */
+::selection { background: var(--accent); color: #fff; }
+/* windows: a hard workstation shadow; they lift on hover with a spring, and the close box turns */
+.su-win, .su-card, .su-float { box-shadow: 4px 4px 0 var(--shadow); transition: transform .45s var(--spring), box-shadow .45s var(--spring); }
+.su-win:hover, .su-card:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--shadow); }
+.su-win > .su-t::before, .su-card > .su-card-h::before { transition: transform .5s var(--spring); }
+.su-win:hover > .su-t::before, .su-card:hover > .su-card-h::before { transform: rotate(45deg) scale(1.15); }
+.su-win > .su-t + .su-body > .su-tw, .su-win > .su-t + .su-leaf { box-shadow: none; }
+.su-node .su-node .su-win, .su-card .su-win { box-shadow: none; }
+.su-node .su-node .su-win:hover, .su-card .su-win:hover { transform: none; }
+/* keys press in */
+.su-btn, .su-chip, .su-tab, .su-seg button, .su-stat.su-click { transition: transform .25s var(--spring), box-shadow .12s; }
+.su-btn:active, .su-chip:active, .su-tab:active, .su-seg button:active, .su-stat.su-click:active {
+  transform: translate(1px, 1px); box-shadow: inset 1px 1px 0 var(--bevel-lo), inset -1px -1px 0 var(--bevel-hi); }
+.su-chip:hover, .su-tab:hover, .su-btn:hover { transform: translateY(-1px); }
+.su-stat { transition: transform .4s var(--spring), box-shadow .4s var(--spring); }
+.su-stat:hover { transform: translateY(-3px); box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo), 0 4px 0 var(--shadow); }
+/* status LEDs on stat tiles */
+.su-stat.su-tone::before { content: ""; position: absolute; right: 10px; top: 11px; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--tone); box-shadow: 0 0 0 1px rgb(0 0 0 / .35), 0 0 8px var(--tone); }
+.su-stat.su-t-bad::before { animation: su-led 1.6s ease-in-out infinite; }
+@keyframes su-led { 50% { box-shadow: 0 0 0 1px rgb(0 0 0 / .35), 0 0 2px var(--tone); opacity: .55; } }
+/* the standfirst opens with a red drop cap */
+.su-callout-b > p:first-child::first-letter { float: left; font: 700 3.1em/.82 var(--serif); color: var(--accent); margin: .06em .08em 0 0; }
+/* the masthead rule springs out */
+.su-head::before { transform-origin: left; animation: su-rule .9s var(--spring) backwards; }
+@keyframes su-rule { from { transform: scaleX(.25); } }
+/* parts spring a little the first time they come into view (they are visible before and after) */
+.su-pop { animation: su-pop .6s var(--spring) backwards; }
+@keyframes su-pop { from { transform: translateY(10px) scale(.985); } }
+.su-section > h2.su-pop::before { animation: su-rule .8s var(--spring) backwards; transform-origin: left; }
+/* chips bounce when they switch on */
+.su-chip[aria-pressed="true"] { animation: su-press .35s var(--spring); }
+@keyframes su-press { 40% { transform: scale(.92); } }
+@media (prefers-reduced-motion: reduce) {
+  .su-win, .su-card, .su-stat, .su-btn, .su-chip, .su-tab { transition: none; }
+  .su-win:hover, .su-card:hover, .su-stat:hover { transform: none; }
+  .su-stat.su-t-bad::before, .su-head::before, .su-pop, .su-chip[aria-pressed="true"] { animation: none; }
+}
+@media (max-width: 560px) {
+  .su-win, .su-card { box-shadow: 3px 3px 0 var(--shadow); }
+}
