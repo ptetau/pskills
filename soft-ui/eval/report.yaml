@@ -1,0 +1,70 @@
+title: soft-ui comparison
+subtitle: Blind judge, hand-built page vs soft-ui page, same brief and data
+meta: [R1–R18, 21 comparisons, visual style not scored]
+data:
+  full: {file: runs/full/results.csv, add: {round: "'1 · Dev reports'", ratio: "round(bespoke_chars / spec_chars, 1)", mean: "round((information + components + layout + spirit) / 4, 2)"}}
+  wide: {file: runs/round2/results.csv, add: {round: "'2 · Wider areas'", ratio: "round(bespoke_chars / spec_chars, 1)", mean: "round((information + components + layout + spirit) / 4, 2)"}}
+  rerun: {file: runs/round2b/results.csv, add: {round: "'3 · Re-run after fixes'", ratio: "round(bespoke_chars / spec_chars, 1)", mean: "round((information + components + layout + spirit) / 4, 2)"}}
+  all: {from: full, union: [wide]}
+  every: {from: all, union: [rerun]}
+  rounds: {from: every, group: round, mean: [information, components, layout, spirit], sum: [spec_chars, bespoke_chars], then: {less: "round(bespoke_chars / spec_chars, 1)"}}
+  totals: {from: all, group: all, sum: [spec_chars, bespoke_chars], then: {less: "round(bespoke_chars / spec_chars, 1)", spec_kb: "round(spec_chars / 1000, 1)", bespoke_kb: "round(bespoke_chars / 1000, 1)"}}
+  after: {from: rerun, rename: {information: info_after, components: comp_after, layout: layout_after, spirit: spirit_after}}
+  before: {from: wide, where: {report: [R11-pnl, R17-options, R18-business]}, join: {data: after, on: report, cols: [info_after, comp_after, layout_after, spirit_after]}}
+  fixes:
+  - {round: After pilot, fix: "Section crash; severity colours; stats counted by a column; rows that expand; click-to-filter"}
+  - {round: After R1–R10, fix: "Data steps: where, join, explode, group, describe, corr; worst-first sort; tone thresholds; chart marks and bands"}
+  - {round: After R1–R10, fix: "New components: statement, waterfall, hist, box, forest, treemap, decision, truth, sankey, er, classes, compare"}
+  - {round: After R11–R18, fix: "Silent wrong values: pct on fractions, where on nulls, empty stat tiles, scatter marks, truth from a file"}
+  - {round: After R11–R18, fix: "union, pivot, group all, keyword columns; skill rule: open with the answer, note each chart"}
+  - {round: After re-run, fix: "Numbers in text from data, e.g. {{ sum d.col | money }}"}
+layout:
+- callout: >-
+    **All {{ count all }} pairs landed close to the hand-built page, or in the same place.**
+    The soft-ui specs took {{ sum all.bespoke_chars / sum all.spec_chars | .1 }}× less writing
+    ({{ sum all.spec_chars / 1000 | .0 }} KB of YAML against {{ sum all.bespoke_chars / 1000 | .0 }} KB of HTML).
+    The judge still preferred the hand-built page each time, by a small margin: it added analysis such as a budget bridge or sensitivity sliders.
+  tone: good
+- stats:
+  - {label: Comparisons, data: every, agg: count, sub: "R1–R18, plus 3 re-runs"}
+  - {label: Close or same place, data: all, where: {verdict: [close, same place]}, of: true}
+  - {label: Mean spirit, data: all, agg: mean, col: spirit, fmt: num, sub: out of 5}
+  - {label: Less to write, data: totals, agg: max, col: less, unit: "×"}
+  - {label: Spirit after fixes, data: rerun, agg: mean, col: spirit, fmt: num, tone: good, sub: "R11, R17, R18; was {{ mean before.spirit | .1 }}"}
+- row:
+  - bar: {data: rounds, x: round, y: [information, components, layout, spirit], fmt: num, zero: false}
+    title: Mean score by round
+    note: "Round 2 covered finance, research, systems, schema, code, hardware, options and the business, and scored lower. The re-run of its three weakest reports, after the fixes, lifted spirit."
+    w: 3
+  - donut: {data: every, x: verdict, agg: count}
+    title: Verdicts
+    note: "No pair landed in a different place."
+    w: 2
+- section:
+    title: Each report
+    items:
+    - bar: {data: all, x: report, y: [spec_chars, bespoke_chars], labels: {spec_chars: soft-ui spec, bespoke_chars: hand-built HTML}, fmt: k, horizontal: true, height: 560}
+      title: Characters written
+      note: "The bespoke agent wrote {{ min all.ratio | .1 }}× to {{ max all.ratio | .1 }}× more for the same brief. The largest specs are the finance and business reports, which shape the most data."
+    - table:
+        data: every
+        cols: [report, information, components, layout, spirit, mean, verdict, ratio, render_runs]
+        labels: {information: info, components: comp, ratio: "× less", render_runs: renders}
+        group: round
+        tone: {information: {">=5": good, "<=3": warn}, components: {">=5": good, "<=3": warn}, layout: {">=5": good, "<=3": warn}, spirit: {">=5": good, "<=3": warn}}
+        bar: [mean]
+        fmt: {mean: num}
+      note: "Green = 5, amber = 3. Renders = how many times the agent ran render before check ok."
+- section:
+    title: Did the fixes help?
+    items:
+    - row:
+      - bar: {data: before, x: report, y: [spirit, spirit_after], labels: {spirit: before, spirit_after: after fixes}, zero: true}
+        title: Spirit, before and after
+        note: "Mean spirit rose from {{ mean before.spirit | .1 }} to {{ mean before.spirit_after | .1 }}: the pages now open with the answer, and shape their data in the spec."
+      - table: {data: before, cols: [report, information, info_after, components, comp_after, layout, layout_after, spirit, spirit_after], labels: {info_after: "info →", comp_after: "comp →", layout_after: "layout →", spirit_after: "spirit →"}}
+        title: All four scores
+        note: "Components did not move for R11 and R18, where the bespoke pages added a budget bridge and data-quality notes."
+        w: 2
+    - list: {data: fixes, head: fix, badges: [round], group: round}
+      title: What changed in the tool between rounds

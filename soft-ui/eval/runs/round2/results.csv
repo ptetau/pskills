@@ -1,0 +1,9 @@
+report,information,components,layout,spirit,verdict,better,spec_chars,bespoke_chars,render_runs,fixed_lines,error_lines
+R11-pnl,4,3,3,3,close,bespoke,3766,27000,5,0,2
+R12-meta,4,4,4,3,close,bespoke,3156,26300,2,0,0
+R13-system,4,5,4,4,close,bespoke,3644,24750,2,0,0
+R14-schema,4,3,4,4,close,bespoke,2573,19650,2,0,2
+R15-codebase,4,4,5,4,close,bespoke,3940,29900,10,0,6
+R16-hardware,4,4,4,4,close,bespoke,1741,22900,3,0,0
+R17-options,3,3,4,3,close,bespoke,1863,24700,4,1,0
+R18-business,4,3,3,3,close,bespoke,5634,23500,7,4,12

@@ -1,0 +1,11 @@
+report,information,components,layout,spirit,verdict,better,spec_chars,bespoke_chars,render_runs,fixed_lines,error_lines
+R1-probe,5,5,4,4,close,bespoke,973,11900,1,0,0
+R2-vet,4,4,4,4,close,bespoke,1916,10900,1,0,0
+R3-design,4,4,4,4,close,bespoke,3402,19300,3,0,2
+R4-pdlc,4,4,4,4,close,bespoke,1656,10730,2,2,0
+R5-pr,5,5,4,5,same place,bespoke,1018,11400,3,0,0
+R6-tests,4,4,4,4,close,bespoke,1651,10450,1,0,0
+R7-churn,4,4,4,3,close,bespoke,2275,12900,2,1,0
+R8-latency,4,4,4,4,close,bespoke,1932,11400,3,0,0
+R9-migration,4,4,4,3,close,bespoke,1464,15600,2,0,0
+R10-deps,4,4,4,4,close,bespoke,817,10950,1,0,0

@@ -57,7 +57,28 @@ def main(argv):
                 f"{len(r['tool']['fixed_lines'])} fixed lines, {len(r['tool']['error_lines'])} error lines.", "",
                 f"**Friction:** {r['tool']['friction']}", ""]
     (run / "RESULTS.md").write_text("\n".join(out) + "\n")
+    write_csv(run, rows)
     print(f"wrote {run / 'RESULTS.md'}")
+
+
+def write_csv(run, rows):
+    """One flat row per report, for soft-ui and other tools."""
+    import csv
+    cols = ["report", "information", "components", "layout", "spirit", "verdict", "better", "spec_chars",
+            "bespoke_chars", "render_runs", "fixed_lines", "error_lines"]
+    with open(run / "results.csv", "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(cols)
+        for r in rows:
+            j = r.get("judge")
+            if not j:
+                continue
+            b = j["better_for_reader"]
+            who = "tie" if b == "tie" else (r["a"] if b == "A" else ("bespoke" if r["a"] == "tool" else "tool"))
+            t = r["tool"]
+            w.writerow([r["report"], j["information"], j["components"], j["layout"], j["spirit"], j["verdict"], who,
+                        t["spec_chars"], r["bespoke"]["authored_chars"], t["render_runs"], len(t["fixed_lines"]),
+                        len(t["error_lines"])])
 
 
 if __name__ == "__main__":
