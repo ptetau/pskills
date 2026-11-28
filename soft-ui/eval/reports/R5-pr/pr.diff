@@ -1,0 +1,76 @@
+diff --git a/cart/price.py b/cart/price.py
+index 1a2b3c4..4d5e6f7 100644
+--- a/cart/price.py
++++ b/cart/price.py
+@@ -1,24 +1,30 @@
+ from decimal import Decimal
++from cart.discounts import apply_discount
++from web.session import session
+ 
+ TAX = Decimal("0.15")
+ 
+ 
+ def subtotal(cart):
+     return sum(i.price * i.qty for i in cart.items)
+ 
+ 
+ def total(cart):
+     amount = subtotal(cart)
+-    if cart.code:
+-        amount = amount * Decimal("0.9")
++    code = cart.code or session.get("code")
++    if code:
++        amount = apply_discount(amount, code)
+     amount = amount * (1 + TAX)
+-    return amount.quantize(Decimal("0.01"))
++    amount = amount.quantize(Decimal("0.01"))
++    return amount
+ 
+ 
+ def shipping(cart):
+     if subtotal(cart) > 100:
+         return Decimal("0")
+-    return Decimal("9.50")
++    return Decimal("9.90")
+diff --git a/cart/discounts.py b/cart/discounts.py
+new file mode 100644
+index 0000000..b1c2d3e
+--- /dev/null
++++ b/cart/discounts.py
+@@ -0,0 +1,16 @@
++from decimal import Decimal
++from datetime import datetime
++
++CODES = {
++    "SAVE10": {"kind": "percent", "value": 10},
++    "TENOFF": {"kind": "fixed", "value": 10},
++}
++
++
++def apply_discount(amount, code):
++    c = CODES.get(code)
++    if not c:
++        return amount
++    off = amount * Decimal(c["value"]) / 100
++    return (amount - off).quantize(Decimal("0.01"))
++
+diff --git a/tests/test_price.py b/tests/test_price.py
+index 9f8e7d6..0a1b2c3 100644
+--- a/tests/test_price.py
++++ b/tests/test_price.py
+@@ -20,6 +20,18 @@ def test_total_no_code(cart):
+     assert total(cart) == Decimal("115.00")
+ 
+ 
++def test_total_percent_code(cart):
++    cart.code = "SAVE10"
++    assert total(cart) == Decimal("103.50")
++
++
++def test_total_from_session(cart, session):
++    session["code"] = "SAVE10"
++    assert total(cart) == Decimal("103.50")
++
++
+ def test_shipping_free_over_100(cart):
+     assert shipping(cart) == Decimal("0")

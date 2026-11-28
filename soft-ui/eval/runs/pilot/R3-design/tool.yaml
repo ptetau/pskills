@@ -1,0 +1,111 @@
+title: Notifications subsystem design
+subtitle: Design summary from /decompose, for the review tomorrow
+meta: [8 components, 8 calls, 4 contracts, 7 simulated changes]
+data:
+  comps: |
+    name,kind,hides,volatility
+    NotifyClient,Client,web and mobile entry points,low
+    NotificationManager,Manager,the send workflow and its order of steps,high
+    PreferenceEngine,Engine,"rules for who gets what, when (quiet hours, opt-outs)",high
+    TemplateEngine,Engine,message wording and localisation,medium
+    ChannelAccess,ResourceAccess,"email, SMS and push vendors",high
+    NotificationStore,ResourceAccess,storage of sent and queued notifications,medium
+    UserDirectory,ResourceAccess,where user contact details live,low
+    Clock,Utility,time and time zones,low
+  calls: |
+    from,to,via
+    NotifyClient,NotificationManager,send(event)
+    NotificationManager,PreferenceEngine,"decide(user, event)"
+    NotificationManager,TemplateEngine,"render(event, locale)"
+    NotificationManager,ChannelAccess,deliver(msg)
+    NotificationManager,NotificationStore,record(msg)
+    PreferenceEngine,UserDirectory,prefs(user)
+    PreferenceEngine,Clock,now(tz)
+    TemplateEngine,UserDirectory,locale(user)
+  changes: |
+    change,lands_in,components_touched
+    Add WhatsApp as a channel,ChannelAccess,1
+    Quiet hours per country,PreferenceEngine,1
+    Batch daily digest instead of instant send,NotificationManager,1
+    Swap SMS vendor,ChannelAccess,1
+    Translate to Māori,TemplateEngine,1
+    Move user prefs to a new service,UserDirectory,1
+    Retry failed sends with backoff,NotificationManager,2
+layout:
+- stats:
+  - {label: Components, value: 8, sub: "1 Manager, 2 Engines, 3 ResourceAccess"}
+  - {label: High-volatility parts, value: 3, tone: warn, sub: "NotificationManager, PreferenceEngine, ChannelAccess"}
+  - {label: Changes in one place, value: 6, unit: "/ 7", tone: good, sub: retry with backoff touches 2}
+  - {label: Data contracts, value: 4}
+- col:
+    title: Shape of the system
+    items:
+    - row:
+      - graph: {data: calls, from: from, to: to, label: via, dir: TD}
+        title: Who calls whom
+      - table: {data: comps, cols: [name, kind, hides, volatility], group: kind, fmt: {name: code}}
+        title: Components and what each hides
+        w: 2
+- col:
+    title: "Core use case: send an order-shipped notification"
+    items:
+    - diagram: |
+        sequenceDiagram
+          participant C as NotifyClient
+          participant M as NotificationManager
+          participant P as PreferenceEngine
+          participant U as UserDirectory
+          participant K as Clock
+          participant T as TemplateEngine
+          participant A as ChannelAccess
+          participant S as NotificationStore
+          C->>M: send(order.shipped)
+          M->>P: decide(user, event)
+          P->>U: prefs(user)
+          P->>K: now(tz)
+          P-->>M: Decision(send, [email, push])
+          loop each message
+            M->>T: render(event, locale)
+            T->>U: locale(user)
+            M->>A: deliver(msg)
+            A-->>M: DeliveryResult
+            M->>S: record(msg)
+          end
+          M-->>C: summary
+- row:
+  - col:
+      title: Data contracts
+      items:
+      - diagram: |
+          classDiagram
+            class Event {
+              id: EventId
+              kind: EventKind
+              user: UserId
+              payload: Map
+            }
+            class Decision {
+              send: bool
+              channels: Channel[]
+              delay_until: Instant?
+              reason: string
+            }
+            class Message {
+              id: MessageId
+              channel: Channel
+              to: Address
+              body: string
+              event: EventId
+            }
+            class DeliveryResult {
+              message: MessageId
+              status: Sent|Failed|Retry
+              vendor_ref: string?
+            }
+            Message --> Event : event
+            DeliveryResult --> Message : message
+  - col:
+      title: Change simulation
+      items:
+      - table: {data: changes, cols: [change, lands_in, components_touched], sort: -components_touched, bar: [components_touched], fmt: {lands_in: code}}
+      - callout: {text: "6 of 7 likely changes land in one component. **Retry failed sends with backoff** touches 2.", tone: good}

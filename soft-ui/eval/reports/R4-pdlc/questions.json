@@ -1,0 +1,20 @@
+[
+ {
+  "id": "Q-31",
+  "change": "CH-0023",
+  "question": "Should role checks apply to read-only exports?",
+  "asked": "2026-11-26"
+ },
+ {
+  "id": "Q-32",
+  "change": "CH-0025",
+  "question": "Which bank feed format first: OFX or CSV?",
+  "asked": "2026-11-27"
+ },
+ {
+  "id": "Q-33",
+  "change": "CH-0031",
+  "question": "Lock closed periods for admins too?",
+  "asked": "2026-11-27"
+ }
+]

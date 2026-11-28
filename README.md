@@ -22,6 +22,7 @@ and the answer first.
 | Find contradictions in a text | `/argue` | [argue/README.md](argue/README.md) |
 | Rewrite a text to the writing guidelines | `/improve-writing` | [improve-writing/README.md](improve-writing/README.md) |
 | Hunt for bugs in a running app | `/probe` | [probe/README.md](probe/README.md) |
+| Show data, findings, or a diff as a checked page | `/soft-ui` | [soft-ui/README.md](soft-ui/README.md) |
 | Check a skill for quality and stability | `/vet` | [vet/README.md](vet/README.md) |
 
 Words that you do not know are in [docs/GLOSSARY.md](docs/GLOSSARY.md).

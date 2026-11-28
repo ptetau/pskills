@@ -1,0 +1,66 @@
+[
+ {
+  "item": "R1",
+  "rubric": "Asks one question at a time",
+  "baseline": 0.92,
+  "candidate": 0.95,
+  "baseline_spread": 0.04,
+  "candidate_spread": 0.03
+ },
+ {
+  "item": "R2",
+  "rubric": "Writes a Steps section",
+  "baseline": 0.98,
+  "candidate": 0.98,
+  "baseline_spread": 0.02,
+  "candidate_spread": 0.02
+ },
+ {
+  "item": "R3",
+  "rubric": "Each step has Touches",
+  "baseline": 0.81,
+  "candidate": 0.93,
+  "baseline_spread": 0.1,
+  "candidate_spread": 0.05
+ },
+ {
+  "item": "R4",
+  "rubric": "Marks GATED only on request",
+  "baseline": 0.77,
+  "candidate": 0.71,
+  "baseline_spread": 0.12,
+  "candidate_spread": 0.15
+ },
+ {
+  "item": "R5",
+  "rubric": "Red-team pass runs",
+  "baseline": 0.88,
+  "candidate": 0.9,
+  "baseline_spread": 0.06,
+  "candidate_spread": 0.06
+ },
+ {
+  "item": "R6",
+  "rubric": "Parallel groups are correct",
+  "baseline": 0.64,
+  "candidate": 0.79,
+  "baseline_spread": 0.18,
+  "candidate_spread": 0.11
+ },
+ {
+  "item": "R7",
+  "rubric": "Plan file name is right",
+  "baseline": 1.0,
+  "candidate": 1.0,
+  "baseline_spread": 0,
+  "candidate_spread": 0
+ },
+ {
+  "item": "R8",
+  "rubric": "Verification is concrete",
+  "baseline": 0.7,
+  "candidate": 0.66,
+  "baseline_spread": 0.14,
+  "candidate_spread": 0.16
+ }
+]

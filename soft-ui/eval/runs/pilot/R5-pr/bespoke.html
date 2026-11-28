@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PR 212 Review</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1c2128;--mute:#5e6773;--line:#e2e5ea;--add:#e6f6ea;--addk:#1f883d;--del:#fdecec;--delk:#cf222e;--hunk:#eef3fb;
+--high:#cf222e;--highbg:#fdecec;--med:#b35900;--medbg:#fff4e5;--low:#6e7781;--lowbg:#f0f2f4;--accent:#3b5bdb}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1216;--card:#171b21;--ink:#e6e9ee;--mute:#9aa4b1;--line:#2a3038;--add:#12301c;--addk:#4ac26b;--del:#3a1518;--delk:#ff7b72;--hunk:#16233a;
+--high:#ff7b72;--highbg:#3a1518;--med:#f0a14a;--medbg:#3a2a12;--low:#9aa4b1;--lowbg:#232931;--accent:#7c9cff}}
+:root[data-theme=dark]{--bg:#0f1216;--card:#171b21;--ink:#e6e9ee;--mute:#9aa4b1;--line:#2a3038;--add:#12301c;--addk:#4ac26b;--del:#3a1518;--delk:#ff7b72;--hunk:#16233a;--high:#ff7b72;--highbg:#3a1518;--med:#f0a14a;--medbg:#3a2a12;--low:#9aa4b1;--lowbg:#232931;--accent:#7c9cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 48px}
+code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px}
+header.card{padding:20px 22px;display:grid;grid-template-columns:1fr auto;gap:12px 24px;align-items:start}
+h1{font-size:22px;margin:0 0 4px}
+.meta{color:var(--mute);font-size:13px}
+.meta code{background:var(--lowbg);padding:1px 6px;border-radius:4px;color:var(--ink)}
+.verdict{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--medbg);color:var(--med);font-weight:600;white-space:nowrap}
+.verdict::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.summary{grid-column:1/-1;margin:4px 0 0;font-size:15px;border-left:3px solid var(--med);padding:4px 0 4px 12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.stat{padding:14px 16px}.stat b{display:block;font-size:24px;line-height:1.2}.stat span{color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.sev{display:flex;gap:6px;margin-top:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+h2{font-size:15px;margin:0;padding:14px 16px;border-bottom:1px solid var(--line)}
+table{width:100%;border-collapse:collapse}
+td,th{padding:9px 16px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
+th{color:var(--mute);font-weight:500;font-size:12px}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.plus{color:var(--addk)}.minus{color:var(--delk)}
+.bar{display:flex;height:8px;width:120px;border-radius:4px;overflow:hidden;background:var(--lowbg)}
+.bar i{display:block}.bar .a{background:var(--addk)}.bar .d{background:var(--delk)}
+.tag{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--lowbg);color:var(--mute);margin-left:6px}
+.pill{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:4px}
+.pill.high{background:var(--highbg);color:var(--high)}.pill.medium{background:var(--medbg);color:var(--med)}.pill.low{background:var(--lowbg);color:var(--low)}
+.flist a{display:grid;grid-template-columns:auto auto 1fr;gap:4px 10px;padding:10px 16px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;align-items:baseline}
+.flist a:last-child{border-bottom:0}.flist a:hover{background:var(--hunk)}
+.flist .id{font-weight:700;font-family:ui-monospace,monospace;font-size:12px}
+.flist .loc{grid-column:3;color:var(--mute);font-size:12px}
+.file{margin-bottom:16px;overflow:hidden}
+.fh{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card);font-size:13px}
+.fh .mono{font-weight:600}.fh .sp{flex:1}
+.diff{width:100%;border-collapse:collapse;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.diff td{padding:0 10px;border:0;line-height:20px;white-space:pre;font-size:12.5px}
+.diff td.ln{width:44px;text-align:right;color:var(--mute);user-select:none;padding:0 8px;opacity:.8}
+.diff td.sg{width:16px;padding:0 4px;user-select:none;color:var(--mute)}
+.diff tr.add td{background:var(--add)}.diff tr.add td.sg{color:var(--addk)}
+.diff tr.del td{background:var(--del)}.diff tr.del td.sg{color:var(--delk)}
+.diff tr.hk td{background:var(--hunk);color:var(--mute);padding:4px 10px}
+.diff tr.flag td.ln{box-shadow:inset 3px 0 0 var(--fc)}
+.diff tr.note td{padding:6px 12px 10px 60px;white-space:normal;background:var(--card)}
+.cmt{font-family:system-ui,sans-serif;font-size:13.5px;border:1px solid var(--line);border-left:4px solid var(--fc);border-radius:6px;padding:10px 14px;max-width:760px;background:var(--card)}
+.cmt .t{font-weight:600;display:flex;gap:8px;align-items:center;margin-bottom:2px}
+.cmt p{margin:0;color:var(--ink)}
+.cmt code{background:var(--lowbg);padding:0 4px;border-radius:3px;font-size:12.5px}
+.c-high{--fc:var(--high)}.c-medium{--fc:var(--med)}.c-low{--fc:var(--low)}
+.scroll{overflow-x:auto}
+.sec{font-size:13px;color:var(--mute);margin:24px 0 10px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+@media (max-width:760px){.stats{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}header.card{grid-template-columns:1fr}.bar{width:70px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="card" id="hdr"></header>
+<div class="stats" id="stats"></div>
+<div class="grid2">
+  <section class="card"><h2>Findings, most serious first</h2><div class="flist" id="flist"></div></section>
+  <section class="card"><h2>Files changed</h2><table id="files"><thead><tr><th>File</th><th class="num">+</th><th class="num">−</th><th>Change</th><th class="num">Findings</th></tr></thead><tbody></tbody></table></section>
+</div>
+<div class="sec">The change, with review comments inline</div>
+<div id="diffs"></div>
+</div>
+<script>
+const PR={"number":212,"title":"Apply discount codes at checkout","author":"mere-k","base":"main","head":"feat/discounts","commits":4,"verdict":"changes requested","summary":"The discount logic is sound, but the code is read from the session without validation, and rounding happens twice."};
+const REVIEW=[
+ {
+  "id": "C1",
+  "severity": "high",
+  "file": "cart/price.py",
+  "line": 14,
+  "title": "Code from session is not validated",
+  "comment": "`session.get('code')` trusts the client. Look the code up in `Discounts` and check expiry before use."
+ },
+ {
+  "id": "C2",
+  "severity": "medium",
+  "file": "cart/price.py",
+  "line": 18,
+  "title": "Rounding happens twice",
+  "comment": "`apply_discount` rounds, then `total` rounds again. Round once, at the end."
+ },
+ {
+  "id": "C3",
+  "severity": "medium",
+  "file": "cart/discounts.py",
+  "line": 14,
+  "title": "Percent and fixed codes share one branch",
+  "comment": "A fixed code of 10 is read as 10%. Split on `kind`."
+ },
+ {
+  "id": "C4",
+  "severity": "low",
+  "file": "tests/test_price.py",
+  "line": 30,
+  "title": "No test for an expired code",
+  "comment": "Add a case for an expired code; it should not change the total."
+ },
+ {
+  "id": "C5",
+  "severity": "low",
+  "file": "cart/discounts.py",
+  "line": 2,
+  "title": "Unused import",
+  "comment": "`datetime` is imported but not used."
+ }
+];
+const DIFF="diff --git a/cart/price.py b/cart/price.py\nindex 1a2b3c4..4d5e6f7 100644\n--- a/cart/price.py\n+++ b/cart/price.py\n@@ -1,24 +1,30 @@\n from decimal import Decimal\n+from cart.discounts import apply_discount\n+from web.session import session\n \n TAX = Decimal(\"0.15\")\n \n \n def subtotal(cart):\n     return sum(i.price * i.qty for i in cart.items)\n \n \n def total(cart):\n     amount = subtotal(cart)\n-    if cart.code:\n-        amount = amount * Decimal(\"0.9\")\n+    code = cart.code or session.get(\"code\")\n+    if code:\n+        amount = apply_discount(amount, code)\n     amount = amount * (1 + TAX)\n-    return amount.quantize(Decimal(\"0.01\"))\n+    amount = amount.quantize(Decimal(\"0.01\"))\n+    return amount\n \n \n def shipping(cart):\n     if subtotal(cart) > 100:\n         return Decimal(\"0\")\n-    return Decimal(\"9.50\")\n+    return Decimal(\"9.90\")\ndiff --git a/cart/discounts.py b/cart/discounts.py\nnew file mode 100644\nindex 0000000..b1c2d3e\n--- /dev/null\n+++ b/cart/discounts.py\n@@ -0,0 +1,16 @@\n+from decimal import Decimal\n+from datetime import datetime\n+\n+CODES = {\n+    \"SAVE10\": {\"kind\": \"percent\", \"value\": 10},\n+    \"TENOFF\": {\"kind\": \"fixed\", \"value\": 10},\n+}\n+\n+\n+def apply_discount(amount, code):\n+    c = CODES.get(code)\n+    if not c:\n+        return amount\n+    off = amount * Decimal(c[\"value\"]) / 100\n+    return (amount - off).quantize(Decimal(\"0.01\"))\n+\ndiff --git a/tests/test_price.py b/tests/test_price.py\nindex 9f8e7d6..0a1b2c3 100644\n--- a/tests/test_price.py\n+++ b/tests/test_price.py\n@@ -20,6 +20,18 @@ def test_total_no_code(cart):\n     assert total(cart) == Decimal(\"115.00\")\n \n \n+def test_total_percent_code(cart):\n+    cart.code = \"SAVE10\"\n+    assert total(cart) == Decimal(\"103.50\")\n+\n+\n+def test_total_from_session(cart, session):\n+    session[\"code\"] = \"SAVE10\"\n+    assert total(cart) == Decimal(\"103.50\")\n+\n+\n def test_shipping_free_over_100(cart):\n     assert shipping(cart) == Decimal(\"0\")\n";
+const RANK={high:0,medium:1,low:2};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const md=s=>esc(s).replace(/`([^`]+)`/g,"<code>$1</code>");
+// parse unified diff
+function parse(txt){const files=[];let f=null,o=0,n=0;
+ for(const l of txt.split("\n")){
+  if(l.startsWith("diff --git")){f={path:l.split(" b/")[1],lines:[],add:0,del:0,isNew:false};files.push(f);continue}
+  if(!f)continue;
+  if(l.startsWith("new file"))f.isNew=true;
+  if(/^(index |--- |\+\+\+ |new file)/.test(l))continue;
+  const h=l.match(/^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)/);
+  if(h){o=+h[1];n=+h[2];f.lines.push({t:"hk",s:l});continue}
+  if(l.startsWith("+")){f.lines.push({t:"add",n:n++,s:l.slice(1)});f.add++}
+  else if(l.startsWith("-")){f.lines.push({t:"del",o:o++,s:l.slice(1)});f.del++}
+  else if(l.startsWith(" ")||l===""){ if(l===""&&f.lines.length&&f.lines[f.lines.length-1].t==="hk")continue; f.lines.push({t:"ctx",o:o++,n:n++,s:l.slice(1)})}
+ }
+ files.forEach(f=>{while(f.lines.length&&f.lines.at(-1).t==="ctx"&&f.lines.at(-1).s===""&&f.lines.at(-1).o>0){f.lines.pop();}});
+ return files}
+const files=parse(DIFF);
+const findings=[...REVIEW].sort((a,b)=>RANK[a.severity]-RANK[b.severity]||a.id.localeCompare(b.id));
+const byFile=p=>findings.filter(x=>x.file===p);
+const worst=p=>Math.min(...byFile(p).map(x=>RANK[x.severity]),9);
+const tot={add:files.reduce((s,f)=>s+f.add,0),del:files.reduce((s,f)=>s+f.del,0)};
+const cnt=s=>findings.filter(x=>x.severity===s).length;
+
+document.getElementById("hdr").innerHTML=`<div><h1>${esc(PR.title)} <span style="color:var(--mute);font-weight:400">#${PR.number}</span></h1>
+<div class="meta">@${esc(PR.author)} wants to merge <code>${esc(PR.head)}</code> into <code>${esc(PR.base)}</code> · ${PR.commits} commits</div></div>
+<div class="verdict">${esc(PR.verdict[0].toUpperCase()+PR.verdict.slice(1))}</div>
+<p class="summary">${md(PR.summary)}</p>`;
+
+document.getElementById("stats").innerHTML=[
+ [files.length,"Files changed"],
+ [`<span class="plus">+${tot.add}</span> <span class="minus">−${tot.del}</span>`,"Lines"],
+ [findings.length,"Findings",`<div class="sev">${["high","medium","low"].map(s=>`<span class="pill ${s}">${cnt(s)} ${s}</span>`).join("")}</div>`],
+ [PR.commits,"Commits"]
+].map(([v,l,x])=>`<div class="card stat"><span>${l}</span><b>${v}</b>${x||""}</div>`).join("");
+
+const fid=f=>`c-${f.id}`;
+document.getElementById("flist").innerHTML=findings.map(f=>`<a href="#${fid(f)}"><span class="id">${f.id}</span><span class="pill ${f.severity}">${f.severity}</span><span>${md(f.title)}</span><span class="loc mono">${esc(f.file)}:${f.line}</span></a>`).join("");
+
+const maxc=Math.max(...files.map(f=>f.add+f.del));
+document.querySelector("#files tbody").innerHTML=files.map(f=>{const w=120*(f.add+f.del)/maxc;
+ const fs=byFile(f.path);
+ return `<tr><td><a class="mono" style="color:inherit" href="#f-${esc(f.path)}">${esc(f.path)}</a>${f.isNew?'<span class="tag">new</span>':""}</td>
+ <td class="num plus">+${f.add}</td><td class="num minus">−${f.del}</td>
+ <td><div class="bar" style="width:${Math.max(w,6)}px"><i class="a" style="width:${100*f.add/(f.add+f.del)}%"></i><i class="d" style="width:${100*f.del/(f.add+f.del)}%"></i></div></td>
+ <td class="num">${fs.length?fs.map(x=>`<span class="pill ${x.severity}" title="${esc(x.title)}">${x.id}</span>`).join(" "):"—"}</td></tr>`}).join("");
+
+// diffs: files with the most serious findings first
+const ordered=[...files].sort((a,b)=>worst(a.path)-worst(b.path));
+document.getElementById("diffs").innerHTML=ordered.map(f=>{
+ const fs=byFile(f.path);
+ const rows=f.lines.map(l=>{
+  if(l.t==="hk")return `<tr class="hk"><td colspan="4">${esc(l.s)}</td></tr>`;
+  const here=l.t!=="del"?fs.filter(x=>x.line===l.n):[];
+  const cls=l.t+(here.length?` flag c-${here[0].severity}`:"");
+  let r=`<tr class="${cls}"><td class="ln">${l.o??""}</td><td class="ln">${l.n??""}</td><td class="sg">${l.t==="add"?"+":l.t==="del"?"−":" "}</td><td>${esc(l.s)||" "}</td></tr>`;
+  for(const x of here)r+=`<tr class="note" id="${fid(x)}"><td colspan="4"><div class="cmt c-${x.severity}"><div class="t"><span class="pill ${x.severity}">${x.severity}</span><span class="mono" style="font-size:12px">${x.id}</span>${md(x.title)}</div><p>${md(x.comment)}</p></div></td></tr>`;
+  return r}).join("");
+ return `<section class="card file" id="f-${esc(f.path)}"><div class="fh"><span class="mono">${esc(f.path)}</span>${f.isNew?'<span class="tag">new file</span>':""}<span class="sp"></span>${fs.map(x=>`<span class="pill ${x.severity}">${x.id}</span>`).join("")}<span class="plus mono">+${f.add}</span><span class="minus mono">−${f.del}</span></div><div class="scroll"><table class="diff">${rows}</table></div></section>`}).join("");
+</script>
+</body>
+</html>

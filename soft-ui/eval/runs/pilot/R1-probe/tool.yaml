@@ -1,0 +1,27 @@
+title: Shopfront probe findings
+subtitle: 14 verified findings from an exploratory test, for triage
+meta: commit a91f3c2 · 2026-11-26 09:12 UTC · 47 min
+data: {findings: ../../../reports/R1-probe/findings.json}
+layout:
+- stats:
+  - {label: Verified findings, value: 14, sub: 31 raw from 25 probes}
+  - {label: Critical, value: 2, tone: bad}
+  - {label: High, value: 5, tone: bad}
+  - {label: Medium, value: 4, tone: warn}
+  - {label: Low, value: 3, tone: neutral}
+  - {label: Flows probed, value: 5, sub: "browse, search, cart, checkout, account"}
+- callout: {text: "**Checkout is the hot spot:** 5 findings, both criticals (a lost discount and card numbers in the log).", tone: bad}
+- row:
+  - chart: {data: findings, kind: bar, x: flow, agg: count, series: severity, stack: true, sort: -y}
+    title: Findings by flow and severity
+  - heatmap: {data: findings, x: dimension, y: flow, labels: true}
+    title: Flow by kind of problem
+- filter: {data: findings, fields: [flow, severity, dimension]}
+  title: Findings
+- list:
+    data: findings
+    head: title
+    body: evidence
+    badges: [id, severity, flow, dimension, file]
+    code: repro
+    group: severity

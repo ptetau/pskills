@@ -1,0 +1,26 @@
+[
+ {
+  "risk": "Backfill misses rows written during copy",
+  "likelihood": "medium",
+  "impact": "high",
+  "mitigation": "Dual writes before backfill ends; checksum per day"
+ },
+ {
+  "risk": "Holiday freeze overlaps cutover",
+  "likelihood": "high",
+  "impact": "medium",
+  "mitigation": "Cutover by 23 Dec; clean-up in January"
+ },
+ {
+  "risk": "Postgres query plans slower for reports",
+  "likelihood": "medium",
+  "impact": "medium",
+  "mitigation": "Replay top 50 queries before S7"
+ },
+ {
+  "risk": "Rollback after S7 loses writes",
+  "likelihood": "low",
+  "impact": "high",
+  "mitigation": "Keep dual writes for 2 weeks after S7"
+ }
+]

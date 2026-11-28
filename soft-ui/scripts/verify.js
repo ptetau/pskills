@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+// Load a soft-ui page in headless Chromium and report what went wrong.
+// Usage: node verify.js PAGE.html [SHOT.png]
+// Prints "check ok ..." or one "check error ..." line per problem. Exit 1 on any error.
+const path = require("path");
+let chromium;
+try { ({ chromium } = require("playwright")); } catch (e) { console.log("check skipped: playwright is not installed"); process.exit(0); }
+
+(async () => {
+  const [file, shot] = process.argv.slice(2);
+  const url = "file://" + path.resolve(file);
+  const browser = await chromium.launch();
+  const problems = [];
+  const warn = [];
+  async function load(width, theme) {
+    const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme: theme });
+    page.on("pageerror", (e) => problems.push(`script error: ${String(e.message).split("\n")[0]}`));
+    page.on("console", (m) => { if (m.type() === "error" && !/favicon|fonts\.g/.test(m.text())) warn.push(`console: ${m.text().slice(0, 200)}`); });
+    page.on("requestfailed", (r) => { if (!/fonts\.g/.test(r.url())) problems.push(`load failed: ${r.url()}`); });
+    await page.goto(url, { waitUntil: "load", timeout: 45000 });
+    try { await page.waitForFunction(() => window.__softui && window.__softui.done, null, { timeout: 30000 }); }
+    catch (e) { problems.push("the page did not finish drawing in 30 s"); }
+    return page;
+  }
+  const page = await load(1280, "light");
+  const st = await page.evaluate(() => ({ errors: (window.__softui || {}).errors || [], nodes: (window.__softui || {}).nodes || 0,
+    empty: [...document.querySelectorAll(".su-chart canvas")].filter((c) => !c.width).length }));
+  st.errors.forEach((e) => problems.push(e));
+  if (shot) await page.screenshot({ path: shot, fullPage: true });
+  await page.close();
+  const phone = await load(400, "dark");
+  const over = await phone.evaluate(() => {
+    const W = document.documentElement.clientWidth;
+    if (document.documentElement.scrollWidth <= W + 1) return null;
+    const bad = [...document.querySelectorAll(".su-node, .su-leaf, .su-row > *, .su-grid > *")].filter((e) => e.getBoundingClientRect().right > W + 1)
+      .map((e) => (e.className || e.tagName).toString().split(" ").slice(0, 2).join(".")).slice(0, 3);
+    return `${document.documentElement.scrollWidth}px wide at ${W}px (${bad.join(", ") || "unknown element"})`;
+  });
+  if (over) problems.push("page scrolls sideways on a phone: " + over);
+  await phone.close();
+  await browser.close();
+  for (const w of [...new Set(warn)].slice(0, 5)) console.log("check warning " + w);
+  if (problems.length) { [...new Set(problems)].forEach((p) => console.log("check error " + p)); process.exit(1); }
+  console.log(`check ok · ${st.nodes} nodes drawn · no render errors · fits a 400px phone` + (shot ? ` · screenshot ${shot}` : ""));
+})().catch((e) => { console.log("check error " + e.message.split("\n")[0]); process.exit(1); });

@@ -1,0 +1,15 @@
+diff --git a/cart/price.py b/cart/price.py
+index 1a2b3c..4d5e6f 100644
+--- a/cart/price.py
++++ b/cart/price.py
+@@ -10,7 +10,9 @@ def total(cart):
+     subtotal = sum(i.price * i.qty for i in cart.items)
+-    if cart.code:
+-        subtotal = subtotal * 0.9
++    code = cart.code or session.get("code")
++    if code:
++        subtotal = apply_discount(subtotal, code)
++    # rounding happens once, at the end
+     return round(subtotal, 2)
+ 
+ 

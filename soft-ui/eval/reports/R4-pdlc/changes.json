@@ -1,0 +1,110 @@
+[
+ {
+  "id": "CH-0020",
+  "title": "Add CSV export",
+  "intent": "IN-0004",
+  "stage": "build",
+  "owner": "builder",
+  "days_in_stage": 3,
+  "stuck": false
+ },
+ {
+  "id": "CH-0021",
+  "title": "Fix rounding in VAT",
+  "intent": "IN-0005",
+  "stage": "verify",
+  "owner": "builder",
+  "days_in_stage": 9,
+  "stuck": false
+ },
+ {
+  "id": "CH-0022",
+  "title": "Paginate ledger list",
+  "intent": "IN-0006",
+  "stage": "planned",
+  "owner": "test-writer",
+  "days_in_stage": 0,
+  "stuck": false
+ },
+ {
+  "id": "CH-0023",
+  "title": "Role-based access",
+  "intent": "IN-0004",
+  "stage": "verify",
+  "owner": "test-writer",
+  "days_in_stage": 4,
+  "stuck": false
+ },
+ {
+  "id": "CH-0024",
+  "title": "Audit log table",
+  "intent": "IN-0005",
+  "stage": "verify",
+  "owner": "reviewer",
+  "days_in_stage": 8,
+  "stuck": false
+ },
+ {
+  "id": "CH-0025",
+  "title": "Import bank feed",
+  "intent": "IN-0006",
+  "stage": "tests",
+  "owner": "test-writer",
+  "days_in_stage": 5,
+  "stuck": false
+ },
+ {
+  "id": "CH-0026",
+  "title": "Dark mode tokens",
+  "intent": "IN-0004",
+  "stage": "planned",
+  "owner": "builder",
+  "days_in_stage": 9,
+  "stuck": false
+ },
+ {
+  "id": "CH-0027",
+  "title": "Rate limit API",
+  "intent": "IN-0005",
+  "stage": "planned",
+  "owner": "test-writer",
+  "days_in_stage": 7,
+  "stuck": false
+ },
+ {
+  "id": "CH-0028",
+  "title": "Recurring entries",
+  "intent": "IN-0006",
+  "stage": "show",
+  "owner": "you",
+  "days_in_stage": 5,
+  "stuck": false
+ },
+ {
+  "id": "CH-0029",
+  "title": "Attach receipts",
+  "intent": "IN-0004",
+  "stage": "build",
+  "owner": "you",
+  "days_in_stage": 5,
+  "stuck": true
+ },
+ {
+  "id": "CH-0030",
+  "title": "Multi-currency totals",
+  "intent": "IN-0005",
+  "stage": "show",
+  "owner": "test-writer",
+  "days_in_stage": 1,
+  "stuck": false
+ },
+ {
+  "id": "CH-0031",
+  "title": "Close period lock",
+  "intent": "IN-0006",
+  "stage": "verify",
+  "owner": "you",
+  "days_in_stage": 5,
+  "stuck": false
+ }
+]

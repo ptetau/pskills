@@ -1,0 +1,7 @@
+[
+ {"id":"F1","title":"Cart total ignores discount on reload","sev":"high","flow":"checkout","detail":"After a **page reload**, the discount code stays in the form but the total is the full price.","repro":"1. Add item\n2. Apply SAVE10\n3. Reload"},
+ {"id":"F2","title":"Address form accepts empty postcode","sev":"medium","flow":"checkout","detail":"The server returns 500 for an empty postcode.","repro":"POST /address {\"postcode\": \"\"}"},
+ {"id":"F3","title":"Login button has no focus ring","sev":"low","flow":"login","detail":"Keyboard users cannot see focus.","repro":"Tab to the button"},
+ {"id":"F4","title":"Session expires during payment","sev":"high","flow":"payment","detail":"A 15 minute token expires mid-flow.","repro":"Wait 15 min on /pay"},
+ {"id":"F5","title":"Search shows stale results","sev":"medium","flow":"search","detail":"Results cache for 10 min.","repro":"Search, edit product, search"}
+]

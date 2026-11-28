@@ -1,0 +1,14 @@
+{
+ "skill": "quiz-plan",
+ "baseline": "main@b88a77a",
+ "candidate": "declarative@4c1e0d2",
+ "prompts": 12,
+ "runs_per_prompt": 4,
+ "waves": 6,
+ "judge_model": "rubric judge",
+ "verdict": "IMPROVED",
+ "regressions": [
+  "R4",
+  "R8"
+ ]
+}
