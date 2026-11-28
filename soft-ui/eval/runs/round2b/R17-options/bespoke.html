@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hosting Platform Decision</title>
+<style>
+:root{
+  --bg:#f6f5f2; --card:#ffffff; --ink:#1d1f23; --muted:#62666e; --faint:#9a9ea6; --line:#e3e1dc; --grid:#eceae5;
+  --accent:#2f5bd3;
+  --c1:#2f5bd3; --c2:#d9822b; --c3:#1f9e89; --c4:#b0457a;
+  --good:#1f8a4c; --bad:#c0392b;
+  --h1:#eef2fb; --h5:#2f5bd3;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141518; --card:#1d1f23; --ink:#ecedef; --muted:#a3a7ae; --faint:#71757d; --line:#2e3036; --grid:#26282d;
+    --accent:#7d9cf0; --c1:#7d9cf0; --c2:#eaa25a; --c3:#4cc5ae; --c4:#e07aaa; --good:#5cc98a; --bad:#ef7b6d;
+    --h1:#22273a; --h5:#5d7fe0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141518; --card:#1d1f23; --ink:#ecedef; --muted:#a3a7ae; --faint:#71757d; --line:#2e3036; --grid:#26282d;
+  --accent:#7d9cf0; --c1:#7d9cf0; --c2:#eaa25a; --c3:#4cc5ae; --c4:#e07aaa; --good:#5cc98a; --bad:#ef7b6d;
+  --h1:#22273a; --h5:#5d7fe0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:28px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:17px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 4px}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:16px}
+.note{color:var(--muted);font-size:13px;margin:2px 0 14px}
+.verdict{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-top:20px}
+.verdict .card{margin-top:0}
+.big{font-size:20px;line-height:1.35;margin:0}
+.big b{color:var(--accent)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .v{font-size:24px;font-weight:650;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid2 .card{margin-top:0}
+.row2{margin-top:16px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--ink);font-size:12px}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--line)}
+.tbl th{font-size:12px;font-weight:600;color:var(--muted);vertical-align:bottom}
+.tbl td:first-child,.tbl th:first-child{text-align:left}
+.tbl td.s{font-weight:600;border-radius:0}
+.tbl tr.total td{border-bottom:none;font-weight:700;padding-top:12px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.wt{color:var(--faint);font-size:12px;font-weight:400}
+.sliders{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px}
+.sliders label{font-size:12px;color:var(--muted);display:block}
+.sliders input{width:100%;accent-color:var(--accent)}
+.sliders .pct{font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums}
+button.reset{font:inherit;font-size:12px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:3px 10px;cursor:pointer}
+button.reset:hover{color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin:0 0 8px}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.opt{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--oc);border-radius:12px;padding:16px}
+.opt h3{font-size:15px;margin:0 0 2px}
+.opt .meta{font-size:12px;color:var(--muted);margin-bottom:10px;font-variant-numeric:tabular-nums}
+.opt ul{list-style:none;padding:0;margin:0 0 10px}
+.opt li{font-size:13px;padding:2px 0 2px 20px;position:relative}
+.opt li::before{position:absolute;left:0;font-weight:700}
+.opt .pro li::before{content:"+";color:var(--good)}
+.opt .con li::before{content:"\2212";color:var(--bad)}
+.opt .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin:0 0 2px}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;background:var(--h1);color:var(--accent);font-weight:600;margin-left:4px}
+.tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none;z-index:5;font-variant-numeric:tabular-nums}
+.callout{border-left:3px solid var(--accent);padding:4px 0 4px 12px;color:var(--muted);font-size:13px;margin-top:12px}
+@media (max-width:860px){
+  .verdict,.grid2{grid-template-columns:1fr}
+  .opts{grid-template-columns:1fr 1fr}
+  .sliders{grid-template-columns:1fr 1fr}
+}
+@media (max-width:520px){
+  .opts{grid-template-columns:1fr}
+  h1{font-size:23px}
+  .tbl th,.tbl td{padding:6px 4px;font-size:12px}
+  .scroll{overflow-x:auto}
+}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Decision brief · New API hosting</p>
+  <h1>Where should we host the new API?</h1>
+  <p class="sub">Four options, scored 1 to 5 on five weighted criteria (5 is best), with projected monthly cost for the next 12 months in NZD.</p>
+
+  <section class="verdict">
+    <div class="card">
+      <p class="eyebrow">The short answer</p>
+      <p class="big" id="headline"></p>
+      <p class="callout" id="headline2"></p>
+    </div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section class="grid2 row2">
+    <div class="card">
+      <h2>Weighted ranking</h2>
+      <p class="note">Each bar is the sum of score × weight. Segments show what each criterion contributes. The axis runs 0 to 5, so you see the true size of the gap.</p>
+      <div class="legend" id="critLegend"></div>
+      <svg id="rank" viewBox="0 0 480 230" role="img" aria-label="Weighted score by option"></svg>
+    </div>
+    <div class="card">
+      <h2>Side by side</h2>
+      <p class="note">Raw scores per criterion. Darker cells are better. The leader per row is in bold.</p>
+      <div class="scroll"><table class="tbl" id="matrix"></table></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <h2>How fragile is the ranking? Try other weights</h2>
+      <button class="reset" id="reset">Reset to agreed weights</button>
+    </div>
+    <p class="note">Move a slider to change how much a criterion counts. The other weights rescale so the total stays 100%. The ranking, the table and the summary above update.</p>
+    <div class="sliders" id="sliders"></div>
+    <div id="flip" class="callout" style="margin-top:0"></div>
+  </section>
+
+  <section class="card">
+    <h2>Projected monthly cost, next 12 months</h2>
+    <p class="note">NZD per month. Hover the chart to read each month.</p>
+    <div class="legend" id="optLegend"></div>
+    <svg id="cost" viewBox="0 0 1000 340" role="img" aria-label="Monthly cost by option"></svg>
+    <div class="grid2" style="margin-top:14px">
+      <div>
+        <p class="eyebrow" style="margin-bottom:4px">12-month total</p>
+        <svg id="totals" viewBox="0 0 480 150" role="img" aria-label="12-month total cost"></svg>
+      </div>
+      <div id="costNotes" style="font-size:14px"></div>
+    </div>
+  </section>
+
+  <h2 style="margin-top:28px">Pros and cons</h2>
+  <div class="opts" id="opts"></div>
+</main>
+<div class="tip" id="tip"></div>
+
+<script>
+const criteria=[{"criterion":"Cost","weight":0.25},{"criterion":"Latency","weight":0.2},{"criterion":"Ops effort","weight":0.2},{"criterion":"Lock-in","weight":0.15},{"criterion":"Compliance","weight":0.2}];
+const options=[
+ {"option":"Managed Kubernetes","scores":{"Cost":3,"Latency":4,"Ops effort":2,"Lock-in":4,"Compliance":5},"pros":["Full control","Portable"],"cons":["Needs a platform team","Slow to set up"]},
+ {"option":"Serverless functions","scores":{"Cost":4,"Latency":3,"Ops effort":5,"Lock-in":2,"Compliance":4},"pros":["No servers to run","Scales to zero"],"cons":["Cold starts","Vendor lock-in"]},
+ {"option":"PaaS (app platform)","scores":{"Cost":3,"Latency":4,"Ops effort":4,"Lock-in":3,"Compliance":4},"pros":["Fast deploys","Good defaults"],"cons":["Less control of networking"]},
+ {"option":"VMs (self-managed)","scores":{"Cost":5,"Latency":4,"Ops effort":1,"Lock-in":5,"Compliance":3},"pros":["Cheapest at steady load"],"cons":["Patching and on-call","Manual scaling"]}
+];
+const costCsv=`month,option,cost_nzd
+1,Managed Kubernetes,4284
+1,Serverless functions,1635
+1,PaaS (app platform),2730
+1,VMs (self-managed),2163
+2,Managed Kubernetes,4370
+2,Serverless functions,1782
+2,PaaS (app platform),2866
+2,VMs (self-managed),2228
+3,Managed Kubernetes,4457
+3,Serverless functions,1943
+3,PaaS (app platform),3010
+3,VMs (self-managed),2295
+4,Managed Kubernetes,4546
+4,Serverless functions,2117
+4,PaaS (app platform),3160
+4,VMs (self-managed),2364
+5,Managed Kubernetes,4637
+5,Serverless functions,2308
+5,PaaS (app platform),3318
+5,VMs (self-managed),2434
+6,Managed Kubernetes,4730
+6,Serverless functions,2516
+6,PaaS (app platform),3484
+6,VMs (self-managed),2508
+7,Managed Kubernetes,4824
+7,Serverless functions,2742
+7,PaaS (app platform),3658
+7,VMs (self-managed),2583
+8,Managed Kubernetes,4921
+8,Serverless functions,2989
+8,PaaS (app platform),3841
+8,VMs (self-managed),2660
+9,Managed Kubernetes,5019
+9,Serverless functions,3258
+9,PaaS (app platform),4033
+9,VMs (self-managed),2740
+10,Managed Kubernetes,5120
+10,Serverless functions,3551
+10,PaaS (app platform),4235
+10,VMs (self-managed),2822
+11,Managed Kubernetes,5222
+11,Serverless functions,3871
+11,PaaS (app platform),4447
+11,VMs (self-managed),2907
+12,Managed Kubernetes,5327
+12,Serverless functions,4219
+12,PaaS (app platform),4669
+12,VMs (self-managed),2994`;
+
+const NS="http://www.w3.org/2000/svg";
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const optColor=["--c1","--c2","--c3","--c4"];
+const critOpacity=[1,.78,.58,.4,.24];
+const short={"Managed Kubernetes":"Managed K8s","Serverless functions":"Serverless","PaaS (app platform)":"PaaS","VMs (self-managed)":"VMs"};
+const nzd=n=>"$"+Math.round(n).toLocaleString("en-NZ");
+const nzdk=n=>"$"+(n/1000).toFixed(n>=100000?0:1)+"k";
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+
+// costs
+const costs={};options.forEach(o=>costs[o.option]=[]);
+costCsv.trim().split("\n").slice(1).forEach(l=>{const [m,o,c]=l.split(",");costs[o][+m-1]=+c;});
+const totals={};for(const o in costs)totals[o]=costs[o].reduce((a,b)=>a+b,0);
+
+const base=criteria.map(c=>c.weight);
+let weights=base.slice();
+
+function scoreOf(o,w){return criteria.reduce((s,c,i)=>s+o.scores[c.criterion]*w[i],0);}
+function ranked(w){return options.map((o,i)=>({o,i,s:scoreOf(o,w)})).sort((a,b)=>(Math.round(b.s*1e6)-Math.round(a.s*1e6))||a.i-b.i);}
+const f2=n=>n.toFixed(2);
+
+function renderHeadline(){
+  const r=ranked(weights);
+  const gap=r[0].s-r[1].s, spread=r[0].s-r[3].s;
+  const ties=r.filter(x=>Math.abs(x.s-r[1].s)<1e-9).length;
+  const isBase=weights.every((w,i)=>Math.abs(w-base[i])<1e-9);
+  document.getElementById("headline").innerHTML=
+    `<b>${r[0].o.option}</b> ranks first with ${f2(r[0].s)} of 5, but the race is close: only <b>${f2(spread)} points</b> separate first from last${isBase?"":" (with your weights)"}.`;
+  const tieTxt = ties>1 ? `${r[1].o.option} and ${r[2].o.option} tie for second at ${f2(r[1].s)}` : `${r[1].o.option} is second at ${f2(r[1].s)}`;
+  document.getElementById("headline2").textContent=
+    `${tieTxt}, ${f2(gap)} behind. ${r[0].o.option==="Serverless functions"?"Serverless wins on ops effort and its cost score, and loses on latency and lock-in. On 12-month cost, the leader is not the cheapest: VMs cost "+nzd(totals["Serverless functions"]-totals["VMs (self-managed)"])+" less over the year, and serverless costs climb fastest.":"Compare the 12-month totals below."}`;
+  const k=document.getElementById("kpis");
+  const cheapest=Object.entries(totals).sort((a,b)=>a[1]-b[1])[0];
+  const growth=o=>costs[o][11]/costs[o][0]-1;
+  const fastest=Object.keys(costs).sort((a,b)=>growth(b)-growth(a))[0];
+  k.innerHTML=`
+    <div class="kpi"><div class="l">Top weighted score</div><div class="v">${f2(r[0].s)}</div><div class="l">${short[r[0].o.option]}</div></div>
+    <div class="kpi"><div class="l">Gap, first to second</div><div class="v">${f2(gap)}</div><div class="l">on a 1 to 5 scale</div></div>
+    <div class="kpi"><div class="l">Cheapest over 12 months</div><div class="v">${nzdk(cheapest[1])}</div><div class="l">${short[cheapest[0]]}</div></div>
+    <div class="kpi"><div class="l">Fastest cost growth</div><div class="v">+${Math.round(growth(fastest)*100)}%</div><div class="l">${short[fastest]}, month 1 to 12</div></div>`;
+}
+
+function renderRank(){
+  const svg=document.getElementById("rank");svg.innerHTML="";
+  const L=104,R=440,top=8,bh=34,gapy=14;
+  const x=v=>L+(R-L)*v/5;
+  for(let t=0;t<=5;t++){el("line",{x1:x(t),x2:x(t),y1:top,y2:top+4*(bh+gapy)-gapy,stroke:css("--grid")},svg);el("text",{x:x(t),y:top+4*(bh+gapy)+6,"text-anchor":"middle",fill:css("--faint")},svg,t);}
+  const r=ranked(weights);
+  r.forEach((it,k)=>{
+    const y=top+k*(bh+gapy);let acc=0;
+    el("text",{x:L-10,y:y+bh/2+4,"text-anchor":"end","font-weight":k===0?"700":"400"},svg,short[it.o.option]);
+    criteria.forEach((c,ci)=>{
+      const v=it.o.scores[c.criterion]*weights[ci];
+      const rect=el("rect",{x:x(acc),y,width:Math.max(0,x(acc+v)-x(acc)-1),height:bh,fill:css(optColor[it.i]),"fill-opacity":critOpacity[ci],rx:2},svg);
+      rect.addEventListener("mousemove",e=>tip(e,`<b>${it.o.option}</b><br>${c.criterion}: score ${it.o.scores[c.criterion]} × weight ${Math.round(weights[ci]*100)}% = ${v.toFixed(2)}`));
+      rect.addEventListener("mouseleave",hideTip);
+      acc+=v;
+    });
+    el("text",{x:x(acc)+8,y:y+bh/2+4,"font-weight":"700"},svg,f2(it.s));
+  });
+  const lg=document.getElementById("critLegend");
+  lg.innerHTML=criteria.map((c,ci)=>`<span><span class="dot" style="background:var(--muted);opacity:${critOpacity[ci]};border-radius:2px"></span>${c.criterion}</span>`).join("")+`<span style="color:var(--faint)">(left to right in each bar)</span>`;
+}
+
+function renderMatrix(){
+  const t=document.getElementById("matrix");
+  const r=ranked(weights);
+  const order=options.map((o,i)=>i);
+  let h=`<tr><th>Criterion <span class="wt">weight</span></th>${order.map(i=>`<th><span class="dot" style="background:var(${optColor[i]})"></span><br>${short[options[i].option]}</th>`).join("")}</tr>`;
+  criteria.forEach((c,ci)=>{
+    const mx=Math.max(...options.map(o=>o.scores[c.criterion]));
+    h+=`<tr><td>${c.criterion} <span class="wt">${Math.round(weights[ci]*100)}%</span></td>`+order.map(i=>{
+      const s=options[i].scores[c.criterion];
+      const a=(s-1)/4;
+      return `<td class="s" style="background:color-mix(in srgb, var(--h5) ${Math.round(8+a*62)}%, var(--card));color:${a>.6?"#fff":"var(--ink)"};${s===mx?"":"font-weight:400"}">${s}</td>`;
+    }).join("")+`</tr>`;
+  });
+  h+=`<tr class="total"><td>Weighted score</td>${order.map(i=>{const rk=r.findIndex(x=>x.i===i)+1;return `<td>${f2(scoreOf(options[i],weights))}<br><span class="wt">rank ${rk}</span></td>`}).join("")}</tr>`;
+  h+=`<tr class="total"><td>12-month cost</td>${order.map(i=>`<td style="font-weight:500">${nzdk(totals[options[i].option])}</td>`).join("")}</tr>`;
+  t.innerHTML=h;
+}
+
+function renderSliders(){
+  const s=document.getElementById("sliders");
+  s.innerHTML=criteria.map((c,ci)=>`<div><label>${c.criterion} <span class="pct" id="p${ci}"></span></label><input type="range" min="0" max="60" step="1" id="w${ci}" aria-label="${c.criterion} weight"></div>`).join("");
+  criteria.forEach((c,ci)=>{
+    document.getElementById("w"+ci).addEventListener("input",e=>{
+      const nv=+e.target.value/100;
+      const restOld=weights.reduce((a,b,j)=>j===ci?a:a+b,0);
+      const restNew=1-nv;
+      weights=weights.map((w,j)=>j===ci?nv:(restOld>0?w*restNew/restOld:restNew/(weights.length-1)));
+      update(ci);
+    });
+  });
+  syncSliders();
+}
+function syncSliders(skip){criteria.forEach((c,ci)=>{document.getElementById("p"+ci).textContent=Math.round(weights[ci]*100)+"%";if(ci!==skip)document.getElementById("w"+ci).value=Math.round(weights[ci]*100);});}
+
+// For each criterion: the weight at which the leader changes (others rescaled proportionally)
+function flipPoints(){
+  const lead=ranked(base)[0].i;
+  return criteria.map((c,ci)=>{
+    let found=null;
+    for(const dir of [1,-1]){
+      for(let p=Math.round(base[ci]*100)+dir;p>=0&&p<=60;p+=dir){
+        const nv=p/100,restOld=1-base[ci];
+        const w=base.map((b,j)=>j===ci?nv:b*(1-nv)/restOld);
+        const r=ranked(w);
+        if(r[0].i!==lead && r[0].s-r[1].s>1e-9){ if(!found||Math.abs(p-base[ci]*100)<Math.abs(found.p-base[ci]*100))found={p,who:r[0].o.option};break;}
+      }
+    }
+    return {c:c.criterion,base:Math.round(base[ci]*100),found};
+  });
+}
+function renderFlip(){
+  const lead=ranked(base)[0].o.option;
+  const fp=flipPoints().filter(x=>x.found).sort((a,b)=>Math.abs(a.found.p-a.base)-Math.abs(b.found.p-b.base));
+  const items=fp.slice(0,3).map(x=>`${x.c} from ${x.base}% to ${x.found.p}% puts <b>${short[x.found.who]}</b> first`).join("; ");
+  document.getElementById("flip").innerHTML=`Small changes flip the result. With the other weights rescaled: ${items}. Treat ${short[lead]}'s lead as a narrow preference, not a clear win.`;
+}
+
+function renderCost(){
+  const svg=document.getElementById("cost");svg.innerHTML="";
+  const L=64,R=860,T=12,B=300;
+  const all=Object.values(costs).flat();
+  const ymax=Math.ceil(Math.max(...all)/1000)*1000;
+  const x=m=>L+(R-L)*(m-1)/11, y=v=>B-(B-T)*v/ymax;
+  for(let v=0;v<=ymax;v+=1000){el("line",{x1:L,x2:R,y1:y(v),y2:y(v),stroke:css("--grid")},svg);el("text",{x:L-10,y:y(v)+4,"text-anchor":"end",fill:css("--faint")},svg,v===0?"0":"$"+v/1000+"k");}
+  for(let m=1;m<=12;m++)el("text",{x:x(m),y:B+20,"text-anchor":"middle",fill:css("--faint")},svg,"M"+m);
+  // crossover serverless vs VMs
+  const sv=costs["Serverless functions"],vm=costs["VMs (self-managed)"];
+  let cross=null;for(let m=1;m<12;m++){if(sv[m-1]<=vm[m-1]&&sv[m]>vm[m]){const t=(vm[m-1]-sv[m-1])/((sv[m]-sv[m-1])-(vm[m]-vm[m-1]));cross={m:m+t,v:sv[m-1]+t*(sv[m]-sv[m-1])};}}
+  if(cross){
+    el("line",{x1:x(cross.m),x2:x(cross.m),y1:T,y2:B,stroke:css("--muted"),"stroke-dasharray":"3 4"},svg);
+    el("text",{x:x(cross.m)+6,y:T+12,fill:css("--muted")},svg,`Month ${cross.m.toFixed(1)}: serverless passes VMs`);
+  }
+  options.forEach((o,i)=>{
+    const d=costs[o.option].map((v,k)=>(k?"L":"M")+x(k+1)+" "+y(v)).join(" ");
+    el("path",{d,fill:"none",stroke:css(optColor[i]),"stroke-width":2.5,"stroke-linejoin":"round"},svg);
+    costs[o.option].forEach((v,k)=>el("circle",{cx:x(k+1),cy:y(v),r:2.5,fill:css(optColor[i])},svg));
+  });
+  // end labels, nudged apart
+  const ends=options.map((o,i)=>({i,o,v:costs[o.option][11],yy:y(costs[o.option][11])})).sort((a,b)=>a.yy-b.yy);
+  for(let k=1;k<ends.length;k++)if(ends[k].yy-ends[k-1].yy<16)ends[k].yy=ends[k-1].yy+16;
+  ends.forEach(e=>el("text",{x:R+10,y:e.yy+4,fill:css(optColor[e.i]),"font-weight":"600"},svg,`${short[e.o.option]} ${nzdk(e.v)}`));
+  // hover
+  const hl=el("line",{x1:0,x2:0,y1:T,y2:B,stroke:css("--faint"),visibility:"hidden"},svg);
+  const ov=el("rect",{x:L-20,y:T,width:R-L+40,height:B-T,fill:"transparent"},svg);
+  ov.addEventListener("mousemove",e=>{
+    const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+    const m=Math.min(12,Math.max(1,Math.round((p.x-L)/(R-L)*11+1)));
+    hl.setAttribute("x1",x(m));hl.setAttribute("x2",x(m));hl.setAttribute("visibility","visible");
+    const rows=options.map((o,i)=>({o,i,v:costs[o.option][m-1]})).sort((a,b)=>b.v-a.v);
+    tip(e,`<b>Month ${m}</b><br>`+rows.map(r=>`<span class="dot" style="background:var(${optColor[r.i]})"></span>${short[r.o.option]}: ${nzd(r.v)}`).join("<br>"));
+  });
+  ov.addEventListener("mouseleave",()=>{hl.setAttribute("visibility","hidden");hideTip();});
+  document.getElementById("optLegend").innerHTML=options.map((o,i)=>`<span><span class="dot" style="background:var(${optColor[i]})"></span>${o.option}</span>`).join("");
+
+  // totals bars
+  const ts=document.getElementById("totals");ts.innerHTML="";
+  const tl=96,tr=400,bh=24,gy=10;
+  const tmax=Math.max(...Object.values(totals));
+  const sorted=options.map((o,i)=>({o,i,t:totals[o.option]})).sort((a,b)=>a.t-b.t);
+  sorted.forEach((s,k)=>{
+    const yy=4+k*(bh+gy);
+    el("text",{x:tl-10,y:yy+bh/2+4,"text-anchor":"end"},ts,short[s.o.option]);
+    el("rect",{x:tl,y:yy,width:(tr-tl)*s.t/tmax,height:bh,fill:css(optColor[s.i]),rx:2},ts);
+    el("text",{x:tl+(tr-tl)*s.t/tmax+8,y:yy+bh/2+4,"font-weight":"600"},ts,nzdk(s.t));
+  });
+  const vmT=totals["VMs (self-managed)"],svT=totals["Serverless functions"],k8T=totals["Managed Kubernetes"],paT=totals["PaaS (app platform)"];
+  const g=o=>Math.round((costs[o][11]/costs[o][0]-1)*100);
+  document.getElementById("costNotes").innerHTML=`
+    <p style="margin:0 0 8px"><b>VMs are cheapest over the year</b> at ${nzd(vmT)}, ${nzd(svT-vmT)} less than serverless and ${nzd(k8T-vmT)} less than Managed Kubernetes.</p>
+    <p style="margin:0 0 8px"><b>Serverless starts cheapest but grows fastest</b>: ${nzd(sv[0])} in month 1 to ${nzd(sv[11])} in month 12 (+${g("Serverless functions")}%). It passes VMs in month ${cross?Math.ceil(cross.m):"?"}. If load keeps growing after month 12, the gap widens.</p>
+    <p style="margin:0 0 8px"><b>PaaS grows +${g("PaaS (app platform)")}%</b>; Managed Kubernetes and VMs grow about +${g("Managed Kubernetes")}% and +${g("VMs (self-managed)")}%.</p>
+    <p style="margin:0;color:var(--muted);font-size:13px">These figures do not include staff time. VMs and Kubernetes score low on ops effort, so their true cost is higher than these figures show.</p>`;
+}
+
+function renderOpts(){
+  const r=ranked(weights);
+  document.getElementById("opts").innerHTML=r.map((it,k)=>`
+    <div class="opt" style="--oc:var(${optColor[it.i]})">
+      <h3>${it.o.option}${k===0?'<span class="tag">Leads</span>':""}</h3>
+      <div class="meta">Rank ${k+1} · score ${f2(it.s)} · ${nzdk(totals[it.o.option])} / 12 mo</div>
+      <p class="lbl">Pros</p><ul class="pro">${it.o.pros.map(p=>`<li>${p}</li>`).join("")}</ul>
+      <p class="lbl">Cons</p><ul class="con">${it.o.cons.map(p=>`<li>${p}</li>`).join("")}</ul>
+      <div class="meta" style="margin:0">Best at: ${criteria.filter(c=>it.o.scores[c.criterion]>=Math.max(...options.map(o=>o.scores[c.criterion]))).map(c=>c.criterion).join(", ")||"none"}<br>Weakest: ${criteria.filter(c=>it.o.scores[c.criterion]===Math.min(...Object.values(it.o.scores))).map(c=>c.criterion).join(", ")}</div>
+    </div>`).join("");
+}
+
+const tipEl=document.getElementById("tip");
+function tip(e,html){tipEl.innerHTML=html;tipEl.style.display="block";const w=tipEl.offsetWidth;let lx=e.clientX+14;if(lx+w>innerWidth-8)lx=e.clientX-w-14;tipEl.style.left=lx+"px";tipEl.style.top=(e.clientY+14)+"px";}
+function hideTip(){tipEl.style.display="none";}
+
+function update(skip){renderHeadline();renderRank();renderMatrix();renderOpts();syncSliders(skip);}
+document.getElementById("reset").addEventListener("click",()=>{weights=base.slice();update();});
+renderSliders();renderFlip();renderCost();update();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{renderCost();update();});
+</script>
+</body>
+</html>
