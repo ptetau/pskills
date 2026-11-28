@@ -1,0 +1,86 @@
+title: Kōwhai Studio · P&L against budget
+subtitle: Half-year review, July to December 2026 (NZD)
+meta: Source pnl.csv · actual and budget per account per month
+data:
+  pnl: ../../../reports/R11-pnl/pnl.csv
+  signed:
+    from: pnl
+    add:
+      net_a: "actual if section == 'Revenue' else -actual"
+      net_b: "budget if section == 'Revenue' else -budget"
+      cos_a: "actual if section == 'Cost of sales' else 0"
+      cos_b: "budget if section == 'Cost of sales' else 0"
+      rev_a: "actual if section == 'Revenue' else 0"
+      rev_b: "budget if section == 'Revenue' else 0"
+      gp_a: "actual if section == 'Revenue' else (-actual if section == 'Cost of sales' else 0)"
+      gp_b: "budget if section == 'Revenue' else (-budget if section == 'Cost of sales' else 0)"
+      ord: "0 if section == 'Revenue' else (1 if section == 'Cost of sales' else 2)"
+  bridge:
+    from: signed
+    group: [ord, section]
+    sum: [net_a]
+    sort: ord
+  monthly:
+    from: signed
+    group: month
+    sum: [net_a, net_b, rev_a, rev_b]
+    sort: month
+  accounts:
+    from: signed
+    group: [section, account]
+    sum: [actual, budget]
+    then:
+      variance: "actual - budget"
+      var_pct: "round((actual - budget) / budget * 100, 1)"
+      effect: "(actual - budget) if section == 'Revenue' else (budget - actual)"
+      verdict: "'on budget' if abs(actual - budget) < 0.01 * budget else ('favourable' if ((actual - budget) if section == 'Revenue' else (budget - actual)) > 0 else 'adverse')"
+    sort: effect
+layout:
+- callout:
+    tone: bad
+    text: >-
+      **Net profit for the half year is $55,637, which is $20,263 (27%) below the
+      $75,900 budget.** Two accounts cause most of the gap: Contractors cost $12,858
+      more than budget, and Print resale earned $9,533 less. Design fees ended $2,865
+      above budget after a strong November and December.
+- row:
+  - stat: {label: Net profit, data: signed, agg: sum, col: net_a, vs: net_b, fmt: money}
+  - stat: {label: Revenue, data: signed, agg: sum, col: rev_a, vs: rev_b, fmt: money}
+  - stat: {label: Gross profit, data: signed, agg: sum, col: gp_a, vs: gp_b, fmt: money}
+  - stat: {label: Cost of sales, data: signed, agg: sum, col: cos_a, vs: cos_b, fmt: money, good: down}
+- row:
+  - statement:
+      data: pnl
+      section: section
+      line: account
+      values: [actual, budget]
+      order: [Revenue, Cost of sales, Operating expenses]
+      minus: [Cost of sales, Operating expenses]
+      subtotals: [{label: Gross profit, after: Cost of sales}, {label: Net profit, after: Operating expenses}]
+      labels: {actual: Actual, budget: Budget}
+    title: Profit and loss, July to December 2026
+    note: Each line is the six-month sum. Variance is coloured by its effect on profit.
+  - col:
+    - chart: {kind: waterfall, data: bridge, x: section, y: net_a, total: Net profit, subtotals: [{after: Cost of sales, label: Gross profit}], fmt: money}
+      title: From revenue to net profit
+      note: Revenue less cost of sales gives gross profit; operating expenses take it down to net profit.
+    - chart: {kind: bar, data: accounts, x: account, y: effect, horizontal: true, fmt: money, mark: [{y: 0}]}
+      title: Effect of each account on profit
+      note: Bars to the right helped profit and bars to the left hurt it. Contractors and Print resale hurt most.
+- table:
+    data: accounts
+    cols: [account, section, actual, budget, variance, var_pct, effect, verdict]
+    sort: effect
+    fmt: {actual: money, budget: money, variance: money, var_pct: pct, effect: money}
+    good: {effect: up}
+    labels: {account: Account, section: Section, actual: Actual, budget: Budget, variance: Variance, var_pct: "Variance %", effect: Effect on profit, verdict: Verdict}
+    tone: {verdict: {adverse: bad, favourable: good, on budget: neutral}}
+  title: Variance by account
+  note: Sorted with the worst effect on profit first. Over budget is adverse for costs, and under budget is adverse for revenue. Within 1% of budget counts as on budget.
+- row:
+  - chart: {kind: line, data: monthly, x: month, y: [net_a, net_b], fmt: money, labels: {net_a: Actual net profit, net_b: Budget net profit}}
+    title: Net profit by month
+    note: Net profit missed budget in each month from July to October, and beat it in November and December. August was the low point.
+  - chart: {kind: bar, data: monthly, x: month, y: [rev_a, rev_b], fmt: money, labels: {rev_a: Actual revenue, rev_b: Budget revenue}}
+    title: Revenue by month
+    note: Revenue was below budget until November, then rose above it on higher design fees.

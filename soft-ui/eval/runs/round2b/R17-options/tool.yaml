@@ -1,0 +1,69 @@
+title: Choose a hosting platform for the new API
+subtitle: Four options, five weighted criteria, and the projected cost for 12 months
+meta: For the CTO · decision due this week
+base: ../../../reports/R17-options
+data:
+  options: options.json
+  criteria: criteria.json
+  costs: costs.csv
+  totals:
+    from: costs
+    group: option
+    sum: [cost_nzd]
+    pct: [cost_nzd]
+    sort: cost_nzd
+  m12:
+    from: costs
+    where: {month: 12}
+    sort: cost_nzd
+  pros:
+    from: options
+    explode: pros
+    add: {kind: "'pro'", point: "pros"}
+  cons:
+    from: options
+    explode: cons
+    add: {kind: "'con'", point: "cons"}
+  points:
+    from: pros
+    union: [cons]
+layout:
+- callout:
+    tone: warn
+    text: >-
+      **Serverless functions ranks first, but only just.** It leads PaaS and self-managed VMs
+      by 0.1 of a weighted point, and those two tie. The cost trend weakens the lead:
+      serverless cost grows fastest, and by month 12 it costs more than VMs.
+      Self-managed VMs are the cheapest over the year, but score lowest on ops effort.
+- section:
+    title: Weighted ranking
+    items:
+    - decision: {data: options, option: option, scores: scores, weights: criteria, max: 5}
+      note: Each option scores 1 to 5 per criterion. The weighted score uses the criterion weights; the line below the table gives the margin to the runner-up.
+- section:
+    title: Projected monthly cost
+    items:
+    - row:
+      - chart: {kind: line, data: costs, x: month, y: cost_nzd, series: option, fmt: money}
+        title: Monthly cost (NZD), months 1 to 12
+        note: Serverless starts cheapest but grows fastest. VMs grow slowest and are cheapest from month 6 on.
+        w: 2
+      - col:
+        - chart: {kind: bar, data: totals, x: option, y: cost_nzd, fmt: money, horizontal: true}
+          title: Total cost over 12 months (NZD)
+          note: VMs and serverless cost about the same over the year; Kubernetes costs the most.
+        - table:
+            data: m12
+            title: Cost in month 12
+            cols: [option, {key: cost_nzd, label: NZD, fmt: money}]
+            dense: true
+- section:
+    title: Pros and cons
+    items:
+    - board:
+        data: points
+        by: option
+        head: point
+        badges: [kind]
+        tone: {kind: {pro: good, con: bad}}
+      note: The main pros and cons of each option, one column per option.
