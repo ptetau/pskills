@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shopfront Probe Findings</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1b1f24;--mute:#5d6672;--line:#e2e5ea;--crit:#c62828;--high:#e8590c;--med:#d9a400;--low:#6b7f99;--acc:#2f5bd3;--chip:#eef1f5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--card:#1b1e23;--ink:#e7eaee;--mute:#9aa3ae;--line:#2c3138;--chip:#262a31;--acc:#7c9cff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 48px}
+header h1{margin:0;font-size:22px}
+header .meta{color:var(--mute);margin-top:4px;font-size:13px}
+.meta code{font-size:12px;background:var(--chip);padding:1px 5px;border-radius:4px}
+.verdict{margin:16px 0;padding:12px 16px;border-left:4px solid var(--crit);background:var(--card);border-radius:6px;box-shadow:0 1px 2px #0001}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:16px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;cursor:pointer}
+.kpi .n{font-size:28px;font-weight:700;line-height:1}
+.kpi .l{color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
+.kpi.sel{outline:2px solid var(--acc)}
+.kpi .bar{height:4px;border-radius:2px;margin-top:10px}
+.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+table.hm{border-collapse:separate;border-spacing:4px;width:100%}
+.hm th{font-weight:600;font-size:12px;color:var(--mute);text-align:center}
+.hm th.r{text-align:right;padding-right:6px}
+.hm td{height:42px;text-align:center;border-radius:6px;font-weight:700;cursor:pointer;background:var(--chip);color:var(--mute)}
+.hm td.empty{cursor:default;opacity:.5;font-weight:400}
+.hm td.sel{outline:2px solid var(--acc)}
+.hm td.tot{background:none;color:var(--ink);cursor:default}
+.legend{font-size:12px;color:var(--mute);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.flowbar{display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer}
+.flowbar .name{width:72px;text-align:right;color:var(--mute);font-size:13px}
+.flowbar .track{flex:1;display:flex;height:20px;border-radius:4px;overflow:hidden;background:var(--chip)}
+.flowbar .track span{display:block;height:100%}
+.flowbar .c{width:20px;font-weight:600}
+.flowbar.sel .name{color:var(--acc);font-weight:700}
+.filters{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:20px 0 10px}
+.fg{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.fg b{font-size:12px;color:var(--mute);text-transform:uppercase;margin-right:2px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.count{color:var(--mute);font-size:13px;margin-left:auto}
+.clear{background:none;border:none;color:var(--acc);cursor:pointer;font-size:13px}
+.list{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.row{border-top:1px solid var(--line)}
+.row:first-child{border-top:none}
+.row summary{display:grid;grid-template-columns:54px 82px 1fr 90px 110px 190px;gap:10px;align-items:center;padding:10px 14px;cursor:pointer;list-style:none}
+.row summary::-webkit-details-marker{display:none}
+.row summary:hover{background:var(--chip)}
+.id{font-family:ui-monospace,Menlo,monospace;color:var(--mute);font-size:12px}
+.sev{font-size:11px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;color:#fff;text-align:center}
+.tag{font-size:12px;color:var(--mute)}
+.file{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ttl{font-weight:600}
+.detail{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:4px 14px 14px 160px}
+.detail h3{font-size:11px;text-transform:uppercase;color:var(--mute);margin:0 0 4px;letter-spacing:.04em}
+.detail pre{margin:0;white-space:pre-wrap;font:12.5px/1.5 ui-monospace,Menlo,monospace;background:var(--chip);padding:8px 10px;border-radius:6px}
+.thead{display:grid;grid-template-columns:54px 82px 1fr 90px 110px 190px;gap:10px;padding:8px 14px;font-size:11px;text-transform:uppercase;color:var(--mute);background:var(--chip);letter-spacing:.04em}
+.toggle{float:right}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.row summary,.thead{grid-template-columns:44px 72px 1fr}.row summary .tag,.row summary .file,.thead .x{display:none}.detail{grid-template-columns:1fr;padding:4px 14px 14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Shopfront · Probe findings</h1>
+<div class="meta" id="meta"></div>
+</header>
+<div class="verdict" id="verdict"></div>
+<div class="kpis" id="kpis"></div>
+<div class="grid2">
+<div class="card"><h2>Where the problems cluster · flow × kind</h2><table class="hm" id="hm"></table>
+<div class="legend">Cell = number of findings, coloured by worst severity. Click a cell to filter.</div></div>
+<div class="card"><h2>Findings by flow</h2><div id="flows"></div><div class="legend" id="legend"></div></div>
+</div>
+<div class="filters">
+<div class="fg"><b>Flow</b><span id="fflow"></span></div>
+<div class="fg"><b>Severity</b><span id="fsev"></span></div>
+<div class="fg"><b>Kind</b><span id="fdim"></span></div>
+<button class="clear" id="clear">Clear filters</button>
+<span class="count" id="count"></span>
+</div>
+<div class="list"><div class="thead"><span>ID</span><span>Severity</span><span>Finding <button class="clear toggle" id="expand">Expand all</button></span><span class="x">Flow</span><span class="x">Kind</span><span class="x">File</span></div><div id="rows"></div></div>
+</div>
+<script>
+const F=[{"id":"P-01","title":"Discount lost after page reload","severity":"critical","flow":"checkout","dimension":"functional","file":"cart/price.py:52","repro":"1. Add any item\n2. Apply code SAVE10\n3. Reload /checkout\n4. Total shows full price but code still shown","evidence":"Total 120.00 after reload; expected 108.00"},{"id":"P-02","title":"Card number logged in plain text","severity":"critical","flow":"checkout","dimension":"security","file":"pay/gateway.py:88","repro":"1. Pay with test card 4242...\n2. Read app.log","evidence":"log line: card=4242424242424242"},{"id":"P-03","title":"Order placed twice on double click","severity":"high","flow":"checkout","dimension":"functional","file":"web/checkout.tsx:140","repro":"1. Double-click Place order","evidence":"Two orders #9912 and #9913 in 300 ms"},{"id":"P-04","title":"Session expires during payment","severity":"high","flow":"checkout","dimension":"functional","file":"auth/session.py:20","repro":"1. Open /pay\n2. Wait 15 minutes\n3. Submit","evidence":"401 then redirect to login; cart kept"},{"id":"P-05","title":"Search returns stale prices","severity":"high","flow":"search","dimension":"functional","file":"search/index.py:61","repro":"1. Change a price in admin\n2. Search for the product","evidence":"Old price for 10 minutes (cache TTL)"},{"id":"P-06","title":"Search page takes 4.2 s on 'shoes'","severity":"medium","flow":"search","dimension":"performance","file":"search/query.py:33","repro":"1. Search 'shoes'","evidence":"p95 4.2 s over 20 runs; N+1 on variants"},{"id":"P-07","title":"Add-to-cart button has no focus ring","severity":"medium","flow":"browse","dimension":"accessibility","file":"web/Button.tsx:12","repro":"1. Tab to Add to cart","evidence":"outline: none in CSS"},{"id":"P-08","title":"Product images lack alt text","severity":"medium","flow":"browse","dimension":"accessibility","file":"web/ProductCard.tsx:40","repro":"1. Run axe on /products","evidence":"38 images with empty alt"},{"id":"P-09","title":"Cart badge count off by one after remove","severity":"medium","flow":"cart","dimension":"functional","file":"web/CartBadge.tsx:22","repro":"1. Add 2 items\n2. Remove 1","evidence":"Badge shows 2; cart has 1"},{"id":"P-10","title":"Quantity accepts negative numbers","severity":"high","flow":"cart","dimension":"security","file":"cart/api.py:74","repro":"POST /cart/items {\"qty\": -5}","evidence":"Total goes negative: -45.00"},{"id":"P-11","title":"Password reset link never expires","severity":"high","flow":"account","dimension":"security","file":"auth/reset.py:15","repro":"1. Request reset\n2. Use link after 3 days","evidence":"Link still works after 72 h"},{"id":"P-12","title":"Order history pages slowly past 50 orders","severity":"low","flow":"account","dimension":"performance","file":"orders/views.py:90","repro":"1. Log in as heavy user\n2. Open /orders","evidence":"2.1 s; no pagination"},{"id":"P-13","title":"Address form error not read by screen reader","severity":"low","flow":"checkout","dimension":"accessibility","file":"web/AddressForm.tsx:57","repro":"1. Submit empty postcode with VoiceOver","evidence":"No aria-live on error"},{"id":"P-14","title":"Filter chips reset on back navigation","severity":"low","flow":"browse","dimension":"functional","file":"web/Filters.tsx:31","repro":"1. Pick 2 filters\n2. Open product\n3. Press Back","evidence":"Filters cleared"}];
+const R={"app":"Shopfront","commit":"a91f3c2","started":"2026-11-26T09:12:00Z","minutes":47,"flows_probed":["browse","search","cart","checkout","account"],"probes":25,"raw_findings":31,"verified":14};
+const SEV=["critical","high","medium","low"];
+const SC={critical:"var(--crit)",high:"var(--high)",medium:"var(--med)",low:"var(--low)"};
+const FLOWS=R.flows_probed;
+const DIMS=["functional","security","performance","accessibility"];
+const st={flow:null,sev:null,dim:null};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const cnt=(k,v)=>F.filter(f=>f[k]===v).length;
+const worst=a=>SEV.find(s=>a.some(f=>f.severity===s));
+const d=new Date(R.started);
+$("meta").innerHTML=`Commit <code>${R.commit}</code> · ${d.toISOString().slice(0,16).replace("T"," ")} UTC · ${R.minutes} min · ${R.probes} probes over ${FLOWS.length} flows · ${R.raw_findings} raw findings → <b>${R.verified} verified</b>`;
+const crit=F.filter(f=>f.severity==="critical"),co=F.filter(f=>f.flow==="checkout"),sec=F.filter(f=>f.dimension==="security");
+$("verdict").innerHTML=`<b>${crit.length} critical, ${cnt("severity","high")} high.</b> Checkout is the hot spot: ${co.length} of ${F.length} findings, including both criticals (${crit.map(f=>esc(f.title.toLowerCase())).join("; ")}). ${sec.length} security issues span checkout, cart and account.`;
+function kpis(){
+ $("kpis").innerHTML=`<div class="kpi ${st.sev?"":"sel"}" data-s=""><div class="n">${F.length}</div><div class="l">Verified findings</div><div class="bar" style="background:var(--acc)"></div></div>`+
+ SEV.map(s=>`<div class="kpi ${st.sev===s?"sel":""}" data-s="${s}"><div class="n" style="color:${SC[s]}">${cnt("severity",s)}</div><div class="l">${s}</div><div class="bar" style="background:${SC[s]}"></div></div>`).join("");
+ $("kpis").querySelectorAll(".kpi").forEach(e=>e.onclick=()=>{st.sev=e.dataset.s||null;render()});
+}
+function heat(){
+ let h=`<tr><th></th>${DIMS.map(d=>`<th>${d}</th>`).join("")}<th>total</th></tr>`;
+ for(const fl of FLOWS){
+  h+=`<tr><th class="r">${fl}</th>`;
+  for(const dm of DIMS){
+   const a=F.filter(f=>f.flow===fl&&f.dimension===dm);
+   const sel=st.flow===fl&&st.dim===dm;
+   if(!a.length){h+=`<td class="empty">·</td>`;continue}
+   const w=worst(a);
+   h+=`<td class="${sel?"sel":""}" data-f="${fl}" data-d="${dm}" title="${a.map(f=>f.id+" "+esc(f.title)).join("\n")}" style="background:${SC[w]};color:#fff">${a.length}</td>`;
+  }
+  h+=`<td class="tot">${cnt("flow",fl)}</td></tr>`;
+ }
+ h+=`<tr><th class="r">total</th>${DIMS.map(d=>`<td class="tot">${cnt("dimension",d)}</td>`).join("")}<td class="tot">${F.length}</td></tr>`;
+ $("hm").innerHTML=h;
+ $("hm").querySelectorAll("td[data-f]").forEach(e=>e.onclick=()=>{const same=st.flow===e.dataset.f&&st.dim===e.dataset.d;st.flow=same?null:e.dataset.f;st.dim=same?null:e.dataset.d;render()});
+}
+function flows(){
+ const max=Math.max(...FLOWS.map(f=>cnt("flow",f)));
+ $("flows").innerHTML=[...FLOWS].sort((a,b)=>cnt("flow",b)-cnt("flow",a)).map(fl=>{
+  const a=F.filter(f=>f.flow===fl);
+  return `<div class="flowbar ${st.flow===fl?"sel":""}" data-f="${fl}"><span class="name">${fl}</span><div class="track" style="max-width:${a.length/max*100}%">${SEV.map(s=>{const n=a.filter(f=>f.severity===s).length;return n?`<span style="flex:${n};background:${SC[s]}" title="${n} ${s}"></span>`:""}).join("")}</div><span class="c">${a.length}</span></div>`}).join("");
+ $("flows").querySelectorAll(".flowbar").forEach(e=>e.onclick=()=>{st.flow=st.flow===e.dataset.f?null:e.dataset.f;render()});
+ $("legend").innerHTML=SEV.map(s=>`<span><i class="dot" style="background:${SC[s]}"></i>${s}</span>`).join("");
+}
+function chips(id,key,vals){
+ $(id).innerHTML=vals.map(v=>`<button class="chip ${st[key]===v?"on":""}" data-v="${v}">${v} <small>${F.filter(f=>f[key==="sev"?"severity":key==="dim"?"dimension":"flow"]===v).length}</small></button>`).join(" ");
+ $(id).querySelectorAll(".chip").forEach(e=>e.onclick=()=>{st[key]=st[key]===e.dataset.v?null:e.dataset.v;render()});
+}
+function rows(){
+ const a=F.filter(f=>(!st.flow||f.flow===st.flow)&&(!st.sev||f.severity===st.sev)&&(!st.dim||f.dimension===st.dim))
+  .sort((x,y)=>SEV.indexOf(x.severity)-SEV.indexOf(y.severity)||x.id.localeCompare(y.id));
+ $("count").textContent=`Showing ${a.length} of ${F.length}`;
+ $("rows").innerHTML=a.length?a.map(f=>`<details class="row"><summary><span class="id">${f.id}</span><span class="sev" style="background:${SC[f.severity]}">${f.severity}</span><span class="ttl">${esc(f.title)}</span><span class="tag">${f.flow}</span><span class="tag">${f.dimension}</span><span class="file" title="${esc(f.file)}">${esc(f.file)}</span></summary>
+<div class="detail"><div><h3>Repro steps</h3><pre>${esc(f.repro)}</pre></div><div><h3>Evidence</h3><pre>${esc(f.evidence)}</pre><h3 style="margin-top:10px">Location</h3><pre>${esc(f.file)}</pre></div></div></details>`).join(""):`<div style="padding:20px;color:var(--mute)">No findings match these filters.</div>`;
+}
+function render(){kpis();heat();flows();chips("fflow","flow",FLOWS);chips("fsev","sev",SEV);chips("fdim","dim",DIMS);rows()}
+$("clear").onclick=()=>{st.flow=st.sev=st.dim=null;render()};
+let open=false;$("expand").onclick=e=>{e.preventDefault();open=!open;document.querySelectorAll("details.row").forEach(d=>d.open=open);$("expand").textContent=open?"Collapse all":"Expand all"};
+render();
+</script>
+</body>
+</html>

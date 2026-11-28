@@ -1,0 +1,35 @@
+title: "Vet scorecard: quiz-plan"
+subtitle: Baseline main@b88a77a vs candidate declarative@4c1e0d2
+data:
+  run: ../../../reports/R2-vet/run.json
+  scores: {file: ../../../reports/R2-vet/scores.json, add: {delta: "round(candidate - baseline, 2)"}}
+  waves: ../../../reports/R2-vet/waves.csv
+layout:
+- callout: {tone: warn, text: "**Verdict: IMPROVED.** The candidate raises quality and stability overall, but **R4** (marks GATED only on request) and **R8** (verification is concrete) regressed. Fix those two before you merge."}
+- stats:
+  - {label: Quality (wave 6), value: 0.853, delta: "+0.052", sub: baseline 0.801, tone: good}
+  - {label: Stability (wave 6), value: 0.952, delta: "+0.032", sub: baseline 0.920, tone: good}
+  - {label: Items improved, value: 4, sub: R1 R3 R5 R6, tone: good}
+  - {label: Items unchanged, value: 2, sub: R2 R7, tone: neutral}
+  - {label: Items regressed, value: 2, sub: R4 R8, tone: bad}
+- row:
+  - chart: {data: scores, x: item, y: [baseline, candidate], fmt: num, zero: false}
+    title: Score by rubric item
+  - chart: {data: scores, x: item, y: delta, fmt: delta, sort: -y}
+    title: Change per item (candidate - baseline)
+- row:
+  - chart: {kind: line, data: waves, x: wave, y: quality, series: version, fmt: num, zero: false}
+    title: Quality after each wave
+    note: The candidate leads from wave 1; both lines are flat after wave 4.
+  - chart: {kind: line, data: waves, x: wave, y: stability, series: version, fmt: num, zero: false}
+    title: Stability after each wave
+    note: Stability still rises at wave 6 for both versions.
+- table:
+    data: scores
+    cols: [item, rubric, baseline, candidate, delta, baseline_spread, candidate_spread]
+    sort: delta
+    fmt: {delta: delta}
+    bar: [candidate]
+  title: Rubric items
+- kv: {data: run, keys: [skill, baseline, candidate, prompts, runs_per_prompt, waves, judge_model, verdict, regressions]}
+  title: Run facts

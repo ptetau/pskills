@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notifications Design Review</title>
+<style>
+:root{
+  --bg:#f6f7f9;--panel:#fff;--ink:#1b1f24;--muted:#5d6670;--line:#d9dde3;--soft:#eef1f4;
+  --client:#6b7280;--manager:#2563eb;--engine:#7c3aed;--ra:#0f8a6a;--util:#b7791f;
+  --hi:#d6455d;--med:#d08a12;--lo:#3f9b63;--warn-bg:#fff5e6;--warn-ink:#8a5300;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111418;--panel:#1a1e24;--ink:#e6e9ed;--muted:#9aa3ad;--line:#2f353d;--soft:#232830;
+  --client:#9ca3af;--manager:#60a5fa;--engine:#a78bfa;--ra:#34c79c;--util:#e0a84a;
+  --hi:#f0728a;--med:#f0b040;--lo:#5cc488;--warn-bg:#3a2c12;--warn-ink:#f5c46b;}}
+:root[data-theme="dark"]{
+  --bg:#111418;--panel:#1a1e24;--ink:#e6e9ed;--muted:#9aa3ad;--line:#2f353d;--soft:#232830;
+  --client:#9ca3af;--manager:#60a5fa;--engine:#a78bfa;--ra:#34c79c;--util:#e0a84a;
+  --hi:#f0728a;--med:#f0b040;--lo:#5cc488;--warn-bg:#3a2c12;--warn-ink:#f5c46b;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}
+h2{font-size:17px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 14px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-top:18px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:24px}
+.kpi span{color:var(--muted);font-size:12.5px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin:6px 0 10px}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.grid2{display:grid;grid-template-columns:1.15fr 1fr;gap:18px;align-items:start}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;border-bottom:1px solid var(--line);padding:6px 8px}
+td{border-bottom:1px solid var(--soft);padding:7px 8px;vertical-align:top}
+tr.flag td{background:var(--warn-bg)}
+.chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
+.vol{font-size:12px;font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:10px}
+.card{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.card h3{margin:0;font-size:14px;padding:8px 12px;background:var(--soft);font-family:var(--mono)}
+.card ul{list-style:none;margin:0;padding:8px 12px;font-family:var(--mono);font-size:12.5px}
+.card li{padding:2px 0}
+.card li .t{color:var(--engine)}
+.card .use{font-size:12px;color:var(--muted);padding:0 12px 10px}
+.card .use code{font-family:var(--mono)}
+ol.steps{columns:3;column-gap:26px;margin:12px 0 0;padding-left:20px;font-size:13px;color:var(--muted)}
+ol.steps li{break-inside:avoid;margin-bottom:4px}
+.touch{display:inline-flex;gap:4px;vertical-align:middle}
+.touch i{width:12px;height:12px;border-radius:3px;background:var(--ra)}
+.touch i.x{background:var(--med)}
+.callout{background:var(--warn-bg);color:var(--warn-ink);border-radius:8px;padding:10px 12px;font-size:13px;margin-top:12px}
+.verdict{font-size:13px;margin:8px 0 0}
+@media (max-width:860px){.kpis,.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}ol.steps{columns:1}}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+  <h1>Notifications subsystem: design summary</h1>
+  <p class="sub">For tomorrow's design review. Source: <code>/decompose</code> output (<code>design.json</code>).</p>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section>
+    <h2>1 · Shape of the system: who calls whom</h2>
+    <p class="sub">Layers run top to bottom. Calls only go down. Each arrow is labelled with the operation.</p>
+    <div class="legend" id="legend"></div>
+    <div class="grid2">
+      <div class="scroll"><svg id="arch" viewBox="0 0 640 540" role="img" aria-label="Component call graph"></svg></div>
+      <div>
+        <table>
+          <thead><tr><th>Component</th><th>Hides</th><th>Volatility</th><th>Changes</th></tr></thead>
+          <tbody id="comps"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2 · Core use case: <span id="ucname"></span></h2>
+    <p class="sub">Numbers on the arrows match the numbered steps below.</p>
+    <div class="scroll"><svg id="seq" viewBox="0 0 1140 535" role="img" aria-label="Sequence diagram"></svg></div>
+    <ol class="steps" id="steps"></ol>
+  </section>
+
+  <section>
+    <h2>3 · Data contracts</h2>
+    <p class="sub">The four types that cross component boundaries.</p>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section>
+    <h2>4 · Change simulation: does each likely change land in one place?</h2>
+    <p class="verdict" id="verdict"></p>
+    <table style="margin-top:10px">
+      <thead><tr><th style="width:42%">Likely change</th><th>Lands in</th><th>Kind</th><th>Components touched</th></tr></thead>
+      <tbody id="changes"></tbody>
+    </table>
+    <div class="callout" id="callout"></div>
+  </section>
+</main>
+
+<script>
+const D = {
+ components:[
+  {name:"NotifyClient",kind:"Client",hides:"web and mobile entry points",volatility:"low"},
+  {name:"NotificationManager",kind:"Manager",hides:"the send workflow and its order of steps",volatility:"high"},
+  {name:"PreferenceEngine",kind:"Engine",hides:"rules for who gets what, when (quiet hours, opt-outs)",volatility:"high"},
+  {name:"TemplateEngine",kind:"Engine",hides:"message wording and localisation",volatility:"medium"},
+  {name:"ChannelAccess",kind:"ResourceAccess",hides:"email, SMS and push vendors",volatility:"high"},
+  {name:"NotificationStore",kind:"ResourceAccess",hides:"storage of sent and queued notifications",volatility:"medium"},
+  {name:"UserDirectory",kind:"ResourceAccess",hides:"where user contact details live",volatility:"low"},
+  {name:"Clock",kind:"Utility",hides:"time and time zones",volatility:"low"}],
+ calls:[
+  {from:"NotifyClient",to:"NotificationManager",via:"send(event)"},
+  {from:"NotificationManager",to:"PreferenceEngine",via:"decide(user, event)"},
+  {from:"NotificationManager",to:"TemplateEngine",via:"render(event, locale)"},
+  {from:"NotificationManager",to:"ChannelAccess",via:"deliver(msg)"},
+  {from:"NotificationManager",to:"NotificationStore",via:"record(msg)"},
+  {from:"PreferenceEngine",to:"UserDirectory",via:"prefs(user)"},
+  {from:"PreferenceEngine",to:"Clock",via:"now(tz)"},
+  {from:"TemplateEngine",to:"UserDirectory",via:"locale(user)"}],
+ contracts:[
+  {type:"Event",fields:["id: EventId","kind: EventKind","user: UserId","payload: Map"],use:"in <code>send(event)</code>, <code>decide</code>, <code>render</code>"},
+  {type:"Decision",fields:["send: bool","channels: Channel[]","delay_until: Instant?","reason: string"],use:"returned by <code>PreferenceEngine.decide</code>"},
+  {type:"Message",fields:["id: MessageId","channel: Channel","to: Address","body: string","event: EventId"],use:"in <code>deliver(msg)</code>, <code>record(msg)</code>"},
+  {type:"DeliveryResult",fields:["message: MessageId","status: Sent|Failed|Retry","vendor_ref: string?"],use:"returned by <code>ChannelAccess.deliver</code>"}],
+ uc:{name:"Send an order-shipped notification",steps:[
+  "NotifyClient sends event order.shipped to NotificationManager",
+  "NotificationManager asks PreferenceEngine to decide",
+  "PreferenceEngine reads prefs from UserDirectory and the local time from Clock",
+  "PreferenceEngine returns Decision(send, [email, push])",
+  "NotificationManager asks TemplateEngine to render each message",
+  "NotificationManager calls ChannelAccess.deliver for each message",
+  "ChannelAccess returns DeliveryResult",
+  "NotificationManager records each result in NotificationStore",
+  "NotificationManager returns a summary to NotifyClient"]},
+ changes:[
+  {change:"Add WhatsApp as a channel",lands_in:"ChannelAccess",n:1},
+  {change:"Quiet hours per country",lands_in:"PreferenceEngine",n:1},
+  {change:"Batch daily digest instead of instant send",lands_in:"NotificationManager",n:1},
+  {change:"Swap SMS vendor",lands_in:"ChannelAccess",n:1},
+  {change:"Translate to Māori",lands_in:"TemplateEngine",n:1},
+  {change:"Move user prefs to a new service",lands_in:"UserDirectory",n:1},
+  {change:"Retry failed sends with backoff",lands_in:"NotificationManager",n:2}]
+};
+const KIND={Client:"--client",Manager:"--manager",Engine:"--engine",ResourceAccess:"--ra",Utility:"--util"};
+const VOL={high:"--hi",medium:"--med",low:"--lo"};
+const kindOf=n=>D.components.find(c=>c.name===n).kind;
+const v=k=>`var(${k})`;
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;parent&&parent.appendChild(e);return e;}
+
+// KPIs
+const single=D.changes.filter(c=>c.n===1).length;
+document.getElementById("kpis").innerHTML=[
+ [D.components.length,"components in 5 kinds"],
+ [D.calls.length,"call edges, all one-way down"],
+ [D.contracts.length,"data contracts"],
+ [`${single} / ${D.changes.length}`,"likely changes land in one component"]
+].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join("");
+
+// legend
+document.getElementById("legend").innerHTML=Object.entries(KIND).map(([k,c])=>`<span><i class="sw" style="background:${v(c)}"></i>${k}</span>`).join("")+
+ ` <span style="margin-left:10px">Volatility:</span>`+Object.entries(VOL).map(([k,c])=>`<span><i class="dot" style="background:${v(c)}"></i>${k}</span>`).join("");
+
+// architecture graph
+const W=170,H=58;
+const POS={NotifyClient:[320,50],NotificationManager:[320,175],TemplateEngine:[400,330],PreferenceEngine:[560,330],
+ ChannelAccess:[95,495],NotificationStore:[270,495],UserDirectory:[460,495],Clock:[590,495]};
+const arch=document.getElementById("arch");
+// Clock is narrower so the bottom row fits
+const wOf=n=>n==="Clock"?90:(n==="PreferenceEngine"||n==="TemplateEngine")?150:W;
+const defs=el("defs",{},arch);
+const mk=el("marker",{id:"ah",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},defs);
+el("path",{d:"M0,0L10,5L0,10z",fill:"var(--muted)"},mk);
+// layer bands
+[["Client",50],["Manager",175],["Engines",330],["Resource access / utility",495]].forEach(([t,y])=>{
+  el("rect",{x:2,y:y-H/2-19,width:636,height:H+28,rx:8,fill:"var(--soft)",opacity:.55},arch);
+  el("text",{x:10,y:y-H/2-7,"font-size":10,fill:"var(--muted)","letter-spacing":".05em"},arch,t.toUpperCase());
+});
+function boxEdge(n,tx,ty){const[x,y]=POS[n];const w=wOf(n)/2,h=H/2;const dx=tx-x,dy=ty-y;const s=Math.min(w/Math.abs(dx||1e-9),h/Math.abs(dy||1e-9));return[x+dx*s,y+dy*s];}
+const labels=[];
+D.calls.forEach(c=>{
+  const[x2,y2]=POS[c.to],[x1,y1]=POS[c.from];
+  const a=boxEdge(c.from,x2,y2),b=boxEdge(c.to,x1,y1);
+  el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:"var(--muted)","stroke-width":1.4,"marker-end":"url(#ah)"},arch);
+  const t=c.via.startsWith("decide")?0.62:c.via.startsWith("render")?0.4:0.5;
+  labels.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,c.via]);
+});
+D.components.forEach(c=>{
+  const[x,y]=POS[c.name];const w=wOf(c.name);const col=v(KIND[c.kind]);
+  const g=el("g",{},arch);
+  el("rect",{x:x-w/2,y:y-H/2,width:w,height:H,rx:8,fill:"var(--panel)",stroke:col,"stroke-width":2},g);
+  el("rect",{x:x-w/2,y:y-H/2,width:5,height:H,rx:2,fill:col},g);
+  el("text",{x:x,y:y-4,"text-anchor":"middle","font-size":c.name.length>17?12:12.5,"font-weight":600,fill:"var(--ink)"},g,c.name);
+  el("text",{x:x,y:y+13,"text-anchor":"middle","font-size":10.5,fill:"var(--muted)"},g,c.kind);
+  el("circle",{cx:x+w/2-10,cy:y-H/2+10,r:4.5,fill:v(VOL[c.volatility])},g).appendChild(el("title",{},null,c.volatility+" volatility"));
+});
+labels.forEach(([x,y,t])=>{
+  const g=el("g",{},arch);
+  const tw=t.length*5.9+10;
+  el("rect",{x:x-tw/2,y:y-9,width:tw,height:17,rx:4,fill:"var(--panel)",stroke:"var(--line)"},g);
+  el("text",{x:x,y:y+3.5,"text-anchor":"middle","font-size":10.5,"font-family":"ui-monospace,Menlo,monospace",fill:"var(--ink)"},g,t);
+});
+
+// component table
+const changeCount={};D.changes.forEach(c=>changeCount[c.lands_in]=(changeCount[c.lands_in]||0)+1);
+document.getElementById("comps").innerHTML=D.components.map(c=>`<tr>
+ <td><span class="chip" style="background:${v(KIND[c.kind])}">${c.name}</span></td>
+ <td>${c.hides}</td>
+ <td class="vol" style="color:${v(VOL[c.volatility])}">${c.volatility}</td>
+ <td style="text-align:center">${changeCount[c.name]||"–"}</td></tr>`).join("");
+
+// sequence diagram
+document.getElementById("ucname").textContent=D.uc.name;
+document.getElementById("steps").innerHTML=D.uc.steps.map(s=>`<li>${s}</li>`).join("");
+const P=["NotifyClient","NotificationManager","PreferenceEngine","UserDirectory","Clock","TemplateEngine","ChannelAccess","NotificationStore"];
+const seq=document.getElementById("seq");
+const defs2=el("defs",{},seq);
+const m2=el("marker",{id:"ah2",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto"},defs2);
+el("path",{d:"M0,0L10,5L0,10z",fill:"var(--ink)"},m2);
+const m3=el("marker",{id:"ah3",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto"},defs2);
+el("path",{d:"M0,0L10,5L0,10",fill:"none",stroke:"var(--muted)","stroke-width":1.5},m3);
+const X={};P.forEach((p,i)=>X[p]=75+i*141);
+const seqTop=20,bot=525;
+const MSG=[
+ [1,"NotifyClient","NotificationManager","send(order.shipped)"],
+ [2,"NotificationManager","PreferenceEngine","decide(user, event)"],
+ [3,"PreferenceEngine","UserDirectory","prefs(user)"],
+ [3,"PreferenceEngine","Clock","now(tz)"],
+ [4,"PreferenceEngine","NotificationManager","Decision(send, [email, push])",true],
+ ["loop"],
+ [5,"NotificationManager","TemplateEngine","render(event, locale)"],
+ [5,"TemplateEngine","UserDirectory","locale(user)"],
+ [6,"NotificationManager","ChannelAccess","deliver(msg)"],
+ [7,"ChannelAccess","NotificationManager","DeliveryResult",true],
+ [8,"NotificationManager","NotificationStore","record(result)"],
+ ["endloop"],
+ [9,"NotificationManager","NotifyClient","summary",true]
+];
+// lifelines
+P.forEach(p=>{
+  const x=X[p];const col=v(KIND[kindOf(p)]);
+  el("line",{x1:x,y1:seqTop+34,x2:x,y2:bot,stroke:"var(--line)","stroke-width":1.5,"stroke-dasharray":"4 4"},seq);
+  el("rect",{x:x-66,y:seqTop,width:132,height:34,rx:6,fill:"var(--panel)",stroke:col,"stroke-width":2},seq);
+  el("text",{x:x,y:seqTop+21,"text-anchor":"middle","font-size":p.length>17?11:12,"font-weight":600,fill:"var(--ink)"},seq,p);
+});
+let y=seqTop+70;let loopY=0;
+MSG.forEach(m=>{
+  if(m[0]==="loop"){loopY=y-14;y+=24;return;}
+  if(m[0]==="endloop"){
+    const lx=X.NotificationManager-30,rx=X.NotificationStore+40;
+    el("rect",{x:lx,y:loopY,width:rx-lx,height:y-loopY-10,rx:6,fill:"none",stroke:"var(--engine)","stroke-dasharray":"5 3"},seq);
+    el("rect",{x:lx,y:loopY,width:214,height:18,rx:4,fill:"var(--engine)"},seq);
+    el("text",{x:lx+8,y:loopY+13,"font-size":11,"font-weight":600,fill:"#fff"},seq,"loop: each channel (email, push)");
+    y+=12;return;
+  }
+  const[n,f,t,label,ret]=m;const x1=X[f],x2=X[t];const dir=x2>x1?1:-1;
+  el("line",{x1:x1+dir*3,y1:y,x2:x2-dir*3,y2:y,stroke:ret?"var(--muted)":"var(--ink)","stroke-width":1.5,"stroke-dasharray":ret?"6 4":"","marker-end":ret?"url(#ah3)":"url(#ah2)"},seq);
+  const mid=(x1+x2)/2;
+  el("text",{x:mid,y:y-7,"text-anchor":"middle","font-size":11.5,"font-family":"ui-monospace,Menlo,monospace",fill:ret?"var(--muted)":"var(--ink)"},seq,label);
+  const bx=x1+dir*14;
+  el("circle",{cx:bx,cy:y+11,r:8,fill:"var(--manager)"},seq);
+  el("text",{x:bx,y:y+14.5,"text-anchor":"middle","font-size":10,"font-weight":700,fill:"#fff"},seq,n);
+  y+=38;
+});
+
+// contracts
+document.getElementById("cards").innerHTML=D.contracts.map(c=>`<div class="card"><h3>${c.type}</h3><ul>${
+  c.fields.map(f=>{const[a,b]=f.split(": ");return `<li>${a}: <span class="t">${b}</span></li>`}).join("")}</ul><div class="use">${c.use}</div></div>`).join("");
+
+// change simulation
+document.getElementById("verdict").innerHTML=`<b>${single} of ${D.changes.length}</b> likely changes land in exactly one component. Every high-volatility component absorbs at least one change. <b>One exception</b> touches two components (highlighted).`;
+document.getElementById("changes").innerHTML=D.changes.map(c=>{
+  const k=kindOf(c.lands_in);
+  return `<tr class="${c.n>1?"flag":""}"><td>${c.change}</td>
+  <td><span class="chip" style="background:${v(KIND[k])}">${c.lands_in}</span></td><td style="color:var(--muted)">${k}</td>
+  <td><span class="touch">${Array.from({length:c.n},(_,i)=>`<i class="${c.n>1?"x":""}"></i>`).join("")}</span> ${c.n}</td></tr>`}).join("");
+document.getElementById("callout").innerHTML=`<b>For discussion:</b> "Retry failed sends with backoff" lands in NotificationManager but touches 2 components; the design does not name the second. Also, "Move user prefs to a new service" lands in UserDirectory, which the design rates <b>low</b> volatility.`;
+</script>
+</body>
+</html>
