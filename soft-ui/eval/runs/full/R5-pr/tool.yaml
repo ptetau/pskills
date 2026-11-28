@@ -10,14 +10,13 @@ layout:
 - row:
   - kv: {data: pr, keys: [author, base, head, commits, verdict]}
     title: Pull request
-  - chart: {data: files, kind: bar, x: file, y: [added, removed], stack: true, horizontal: true}
-    title: Lines changed by file
   - table: {data: files, cols: [file, status, added, removed], bar: [added, removed], fmt: {file: code}}
     title: Files changed
+    w: 2
 - table:
     data: review
     cols: [id, severity, file, line, title, comment]
-    sort: -severity
+    sort: severity
     fmt: {file: code, comment: md}
   title: Findings, most serious first
 - diff: {patch: ../../../reports/R5-pr/pr.diff, notes: review, mode: split}

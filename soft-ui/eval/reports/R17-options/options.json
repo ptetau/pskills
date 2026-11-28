@@ -1,0 +1,72 @@
+[
+ {
+  "option": "Managed Kubernetes",
+  "scores": {
+   "Cost": 3,
+   "Latency": 4,
+   "Ops effort": 2,
+   "Lock-in": 4,
+   "Compliance": 5
+  },
+  "pros": [
+   "Full control",
+   "Portable"
+  ],
+  "cons": [
+   "Needs a platform team",
+   "Slow to set up"
+  ]
+ },
+ {
+  "option": "Serverless functions",
+  "scores": {
+   "Cost": 4,
+   "Latency": 3,
+   "Ops effort": 5,
+   "Lock-in": 2,
+   "Compliance": 4
+  },
+  "pros": [
+   "No servers to run",
+   "Scales to zero"
+  ],
+  "cons": [
+   "Cold starts",
+   "Vendor lock-in"
+  ]
+ },
+ {
+  "option": "PaaS (app platform)",
+  "scores": {
+   "Cost": 3,
+   "Latency": 4,
+   "Ops effort": 4,
+   "Lock-in": 3,
+   "Compliance": 4
+  },
+  "pros": [
+   "Fast deploys",
+   "Good defaults"
+  ],
+  "cons": [
+   "Less control of networking"
+  ]
+ },
+ {
+  "option": "VMs (self-managed)",
+  "scores": {
+   "Cost": 5,
+   "Latency": 4,
+   "Ops effort": 1,
+   "Lock-in": 5,
+   "Compliance": 3
+  },
+  "pros": [
+   "Cheapest at steady load"
+  ],
+  "cons": [
+   "Patching and on-call",
+   "Manual scaling"
+  ]
+ }
+]

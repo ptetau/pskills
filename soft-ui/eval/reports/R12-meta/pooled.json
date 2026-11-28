@@ -1,0 +1,16 @@
+{
+ "model": "random effects (REML)",
+ "md": -9.8,
+ "ci_low": -12.4,
+ "ci_high": -7.2,
+ "p": "<0.001",
+ "i2": 38,
+ "tau2": 4.1,
+ "q_p": 0.12,
+ "grade": "moderate",
+ "low_bias_only": {
+  "md": -8.6,
+  "ci_low": -10.6,
+  "ci_high": -6.6
+ }
+}

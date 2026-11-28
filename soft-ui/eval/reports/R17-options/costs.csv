@@ -1,0 +1,49 @@
+month,option,cost_nzd
+1,Managed Kubernetes,4284
+1,Serverless functions,1635
+1,PaaS (app platform),2730
+1,VMs (self-managed),2163
+2,Managed Kubernetes,4370
+2,Serverless functions,1782
+2,PaaS (app platform),2866
+2,VMs (self-managed),2228
+3,Managed Kubernetes,4457
+3,Serverless functions,1943
+3,PaaS (app platform),3010
+3,VMs (self-managed),2295
+4,Managed Kubernetes,4546
+4,Serverless functions,2117
+4,PaaS (app platform),3160
+4,VMs (self-managed),2364
+5,Managed Kubernetes,4637
+5,Serverless functions,2308
+5,PaaS (app platform),3318
+5,VMs (self-managed),2434
+6,Managed Kubernetes,4730
+6,Serverless functions,2516
+6,PaaS (app platform),3484
+6,VMs (self-managed),2508
+7,Managed Kubernetes,4824
+7,Serverless functions,2742
+7,PaaS (app platform),3658
+7,VMs (self-managed),2583
+8,Managed Kubernetes,4921
+8,Serverless functions,2989
+8,PaaS (app platform),3841
+8,VMs (self-managed),2660
+9,Managed Kubernetes,5019
+9,Serverless functions,3258
+9,PaaS (app platform),4033
+9,VMs (self-managed),2740
+10,Managed Kubernetes,5120
+10,Serverless functions,3551
+10,PaaS (app platform),4235
+10,VMs (self-managed),2822
+11,Managed Kubernetes,5222
+11,Serverless functions,3871
+11,PaaS (app platform),4447
+11,VMs (self-managed),2907
+12,Managed Kubernetes,5327
+12,Serverless functions,4219
+12,PaaS (app platform),4669
+12,VMs (self-managed),2994

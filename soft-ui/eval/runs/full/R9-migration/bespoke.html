@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orders Migration Plan</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1c1d1f;--mute:#6b6f76;--line:#e3e3df;
+--prep:#5b7fd6;--build:#2f9e8f;--cutover:#d9822b;--clean:#8a6bd1;
+--hi:#d9534f;--med:#e0a030;--lo:#5aa469;--warnbg:#fff6e6;--warnline:#f0c57a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16171a;--card:#1f2125;--ink:#e8e8e6;--mute:#9a9ea6;--line:#33363c;--warnbg:#3a2f1a;--warnline:#7a5a22}}
+:root[data-theme="dark"]{--bg:#16171a;--card:#1f2125;--ink:#e8e8e6;--mute:#9a9ea6;--line:#33363c;--warnbg:#3a2f1a;--warnline:#7a5a22}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:16px;margin:0 0 12px}
+.sub{color:var(--mute);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:22px}.kpi span{color:var(--mute);font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.note{background:var(--warnbg);border:1px solid var(--warnline);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:13px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-bottom:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.gwrap{overflow-x:auto}
+svg text{fill:var(--ink);font-family:inherit}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600;font-size:12px}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;color:#fff}
+.id{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--mute)}
+.matrix{display:grid;grid-template-columns:70px repeat(3,1fr);grid-template-rows:repeat(3,72px) 24px;gap:4px;font-size:12px}
+.cell{border-radius:6px;padding:6px;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+.ax{color:var(--mute);display:flex;align-items:center;justify-content:center;text-align:center}
+.dot{width:24px;height:24px;border-radius:50%;background:var(--card);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px}
+.owner{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.owner:last-child{border-bottom:0}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-size:12px}
+.chip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+</style>
+</head>
+<body>
+<main>
+<h1>Orders migration: MySQL to Postgres</h1>
+<p class="sub">Plan for the engineering manager: timeline, step dependencies, owners, and the main risks.</p>
+
+<div class="kpis" id="kpis"></div>
+
+<section class="card">
+  <h2>Timeline and dependencies</h2>
+  <div class="legend" id="legend"></div>
+  <div class="gwrap"><svg id="gantt"></svg></div>
+  <div class="note" id="note"></div>
+</section>
+
+<div class="grid2">
+  <section class="card">
+    <h2>Who owns what</h2>
+    <div id="owners"></div>
+  </section>
+  <section class="card">
+    <h2>Risk map</h2>
+    <div class="matrix" id="matrix"></div>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Risks and mitigations</h2>
+  <table id="risks"><thead><tr><th>#</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead><tbody></tbody></table>
+</section>
+
+<section class="card">
+  <h2>All steps</h2>
+  <table id="steps"><thead><tr><th>ID</th><th>Step</th><th>Phase</th><th>Owner</th><th>Start</th><th>End</th><th>Days</th><th>After</th></tr></thead><tbody></tbody></table>
+</section>
+</main>
+<script>
+const plan=[
+{id:"S1",step:"Freeze schema changes",phase:"Prep",start:"2026-12-01",end:"2026-12-03",owner:"Ana",after:[]},
+{id:"S2",step:"Set up Postgres cluster",phase:"Prep",start:"2026-12-01",end:"2026-12-08",owner:"Ravi",after:[]},
+{id:"S3",step:"Write dual-write layer",phase:"Build",start:"2026-12-04",end:"2026-12-15",owner:"Ana",after:["S1"]},
+{id:"S4",step:"Backfill history",phase:"Build",start:"2026-12-09",end:"2026-12-19",owner:"Ravi",after:["S2"]},
+{id:"S5",step:"Turn on dual writes",phase:"Cutover",start:"2026-12-16",end:"2026-12-17",owner:"Ana",after:["S3","S4"]},
+{id:"S6",step:"Verify row counts and checksums",phase:"Cutover",start:"2026-12-17",end:"2026-12-22",owner:"Mei",after:["S5"]},
+{id:"S7",step:"Switch reads to Postgres",phase:"Cutover",start:"2026-12-23",end:"2026-12-23",owner:"Ana",after:["S6"]},
+{id:"S8",step:"Remove MySQL writes",phase:"Clean-up",start:"2027-01-06",end:"2027-01-08",owner:"Ravi",after:["S7"]}];
+const risks=[
+{risk:"Backfill misses rows written during copy",likelihood:"medium",impact:"high",mitigation:"Dual writes before backfill ends; checksum per day"},
+{risk:"Holiday freeze overlaps cutover",likelihood:"high",impact:"medium",mitigation:"Cutover by 23 Dec; clean-up in January"},
+{risk:"Postgres query plans slower for reports",likelihood:"medium",impact:"medium",mitigation:"Replay top 50 queries before S7"},
+{risk:"Rollback after S7 loses writes",likelihood:"low",impact:"high",mitigation:"Keep dual writes for 2 weeks after S7"}];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const phaseVar={Prep:"--prep",Build:"--build",Cutover:"--cutover","Clean-up":"--clean"};
+const ownerCol={Ana:"#4a6fc9",Ravi:"#2f8f80",Mei:"#b5652a"};
+const D=s=>new Date(s+"T00:00:00Z");const DAY=864e5;
+const fmt=s=>D(s).toLocaleDateString("en-GB",{day:"numeric",month:"short",timeZone:"UTC"});
+const days=p=>(D(p.end)-D(p.start))/DAY+1;
+const byId=Object.fromEntries(plan.map(p=>[p.id,p]));
+const lv={low:0,medium:1,high:2};const lvCol=["--lo","--med","--hi"];
+
+// critical path: longest chain by end date
+// the chain the dates follow: each step starts the day after its latest finished dependency
+function chain(id){const p=byId[id];const ok=p.after.map(a=>byId[a]).filter(s=>D(s.end)<=D(p.start));if(!ok.length)return[id];const best=ok.sort((a,b)=>D(b.end)-D(a.end))[0];return[...chain(best.id),id];}
+const crit=new Set(chain("S8"));
+
+// KPIs
+const t0=D("2026-12-01"),t1=D("2027-01-08");
+const cut=byId.S7;
+document.getElementById("kpis").innerHTML=[
+ [`${fmt("2026-12-01")} – ${fmt("2027-01-08")}`,`${(t1-t0)/DAY+1} calendar days, 8 steps`],
+ [fmt(cut.start),"Reads switch to Postgres (S7)"],
+ ["3 owners","Ana · Ravi · Mei"],
+ [`${risks.length} risks`,`${risks.filter(r=>r.impact==="high").length} high impact`],
+ [[...crit].join(" → "),"Critical path (no slack)"]
+].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join("");
+
+// legend
+document.getElementById("legend").innerHTML=Object.entries(phaseVar).map(([k,v])=>`<span><i style="background:var(${v})"></i>${k}</span>`).join("")+
+ `<span><i style="background:none;border:2px solid var(--ink)"></i>Critical path</span><span><i style="background:repeating-linear-gradient(45deg,#9993 0 3px,transparent 3px 6px)"></i>No work scheduled</span>`;
+
+// Gantt
+(function(){
+ const svg=document.getElementById("gantt");const NS="http://www.w3.org/2000/svg";
+ const L=250,W=1120,R=20,top=40,rh=36,n=plan.length;
+ const H=top+n*rh+10;
+ const span=(t1-t0)/DAY+1;const x=d=>L+(D(d)-t0)/DAY*(W-L-R)/span;const xe=d=>x(d)+(W-L-R)/span;
+ svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width",W);svg.setAttribute("height",H);
+ const el=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;svg.appendChild(e);return e;};
+ const defs=el("defs",{});defs.innerHTML=`<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="${css('--mute')}"/></marker>
+ <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3" height="6" fill="${css('--mute')}" opacity=".18"/></pattern>`;
+ // gap shading
+ el("rect",{x:xe("2026-12-23"),y:top-6,width:x("2027-01-06")-xe("2026-12-23"),height:n*rh+6,fill:"url(#hatch)"});
+ el("text",{x:(xe("2026-12-23")+x("2027-01-06"))/2,y:top+n*rh-8,"text-anchor":"middle","font-size":11,style:`fill:${css('--mute')}`},"Holiday gap · 24 Dec – 5 Jan");
+ // week gridlines (Mondays)
+ for(let d=new Date(t0);d<=t1;d=new Date(+d+DAY)){
+  const s=d.toISOString().slice(0,10);
+  if(d.getUTCDay()===1){el("line",{x1:x(s),x2:x(s),y1:top-6,y2:top+n*rh,stroke:css('--line')});
+   el("text",{x:x(s)+3,y:top-12,"font-size":11,style:`fill:${css('--mute')}`},fmt(s));}
+ }
+ el("text",{x:L,y:14,"font-size":11,style:`fill:${css('--mute')}`},"Week of (Mondays)");
+ const rowY={};
+ plan.forEach((p,i)=>{
+  const y=top+i*rh;rowY[p.id]=y;
+  if(i%2===0)el("rect",{x:0,y:y,width:L-8,height:rh,fill:css('--line'),opacity:.35,rx:4});
+  el("text",{x:8,y:y+15,"font-size":12,"font-weight":600},`${p.id}  ${p.step}`);
+  el("text",{x:8,y:y+29,"font-size":11,style:`fill:${css('--mute')}`},`${p.owner} · ${fmt(p.start)}${p.start!==p.end?"–"+fmt(p.end):""} · ${days(p)}d`);
+  const bx=x(p.start),bw=xe(p.end)-bx;
+  el("rect",{x:bx,y:y+7,width:bw,height:rh-14,rx:4,fill:css(phaseVar[p.phase]),stroke:crit.has(p.id)?css('--ink'):"none","stroke-width":2});
+ });
+ // arrows
+ plan.forEach(p=>p.after.forEach(a=>{
+  const s=byId[a];const sx=xe(s.end),sy=rowY[a]+rh/2,tx=x(p.start),ty=rowY[p.id]+rh/2;
+  const viol=D(p.start)<D(s.end);
+  const mx=Math.max(sx+8,Math.min(tx-8,sx+14));
+  const dpath=tx>sx+4?`M${sx},${sy} H${mx} V${ty} H${tx}`:`M${sx},${sy} h8 V${ty-rh/2+4} H${tx-8} V${ty} H${tx}`;
+  el("path",{d:dpath,fill:"none",stroke:viol?css('--hi'):css('--mute'),"stroke-width":1.4,"stroke-dasharray":viol?"4 3":"","marker-end":"url(#arr)"});
+ }));
+})();
+
+// overlap note
+const notes=[];
+plan.forEach(p=>p.after.forEach(a=>{const s=byId[a];if(D(p.start)<D(s.end))notes.push(`<b>${p.id}</b> (${p.step}) starts ${fmt(p.start)}, but its dependency <b>${a}</b> (${s.step}) ends ${fmt(s.end)}.`);}));
+document.getElementById("note").innerHTML=`<b>Check the schedule.</b> ${notes.join(" ")} The red dashed arrow marks this overlap. Risk 1 asks for it on purpose (dual writes before the backfill ends), so confirm that S5 needs "S4 has started", not "S4 is done". The dates follow the chain ${[...crit].join(" → ")} with no slack, so a slip in S3 or S6 moves the 23 Dec cutover into the holiday freeze. Clean-up (S8) waits until 6 Jan.`;
+
+// owners
+const owners=[...new Set(plan.map(p=>p.owner))];
+document.getElementById("owners").innerHTML=owners.map(o=>{const st=plan.filter(p=>p.owner===o);const tot=st.reduce((a,p)=>a+days(p),0);
+ return `<div class="owner"><div class="av" style="background:${ownerCol[o]}">${o[0]}</div><div><b>${o}</b> <span class="id">${st.length} step${st.length>1?"s":""} · ${tot} days of work</span>
+ <div class="chips">${st.map(p=>`<span class="chip" title="${fmt(p.start)} – ${fmt(p.end)}"><i style="background:var(${phaseVar[p.phase]})"></i>${p.id} ${p.step}</span>`).join("")}</div></div></div>`}).join("")+
+ `<p class="sub" style="margin:10px 0 0;font-size:12px">Ana owns 4 of the 6 critical-path steps (S1, S3, S5, S7), so she is the main schedule risk. Ravi's backfill (S4) runs alongside the critical path.</p>`;
+
+// matrix
+(function(){
+ const m=document.getElementById("matrix");let h="";const lab=["Low","Medium","High"];
+ for(let li=2;li>=0;li--){h+=`<div class="ax">${lab[li]}</div>`;
+  for(let ii=0;ii<3;ii++){const sc=li+ii;const c=sc>=3?"--hi":sc===2?"--med":"--lo";
+   const ds=risks.map((r,k)=>[r,k]).filter(([r])=>lv[r.likelihood]===li&&lv[r.impact]===ii).map(([r,k])=>`<span class="dot" title="${r.risk}">${k+1}</span>`).join("");
+   h+=`<div class="cell" style="background:color-mix(in srgb,var(${c}) 22%,transparent)">${ds}</div>`;}}
+ h+=`<div class="ax" style="font-size:11px">Likelihood ↑<br>Impact →</div>`+lab.map(l=>`<div class="ax">${l}</div>`).join("");
+ m.innerHTML=h;
+})();
+
+// risks table
+const pill=v=>`<span class="pill" style="background:var(${lvCol[lv[v]]})">${v}</span>`;
+const order=[...risks.keys()].sort((a,b)=>(lv[risks[b].likelihood]+lv[risks[b].impact])-(lv[risks[a].likelihood]+lv[risks[a].impact]));
+document.querySelector("#risks tbody").innerHTML=order.map(k=>{const r=risks[k];return `<tr><td><span class="dot">${k+1}</span></td><td>${r.risk}</td><td>${pill(r.likelihood)}</td><td>${pill(r.impact)}</td><td>${r.mitigation}</td></tr>`}).join("");
+
+// steps table
+document.querySelector("#steps tbody").innerHTML=plan.map(p=>`<tr><td class="id">${p.id}</td><td>${p.step}</td><td><span class="pill" style="background:var(${phaseVar[p.phase]})">${p.phase}</span></td><td>${p.owner}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td><td>${days(p)}</td><td class="id">${p.after.join(", ")||"–"}</td></tr>`).join("");
+</script>
+</body>
+</html>

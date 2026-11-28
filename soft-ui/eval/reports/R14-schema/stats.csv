@@ -1,0 +1,9 @@
+table,rows,size,indexes
+customers,48210,38 MB,3
+addresses,61002,22 MB,2
+orders,392114,410 MB,5
+order_items,1180330,1.2 GB,4
+products,2140,3 MB,3
+payments,401877,350 MB,3
+discount_codes,85,64 kB,1
+order_discounts,30551,4 MB,2

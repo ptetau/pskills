@@ -1,0 +1,38 @@
+title: CI run 4120 · api
+subtitle: Build failed — 7 failed, 9 flaky, 8 skipped of 271 tests
+data:
+  runs: ../../../reports/R6-tests/results.csv
+  fails: ../../../reports/R6-tests/failures.json
+layout:
+- callout: {tone: bad, text: "**Build failed.** 7 tests fail with `expected 200, got 500`; each trace ends in `app/cart/price.py:52` raising `ValueError('code expired')`. 9 tests are flaky (passed on retry)."}
+- row:
+  - stats: {data: runs, by: status, total: Tests, order: [passed, failed, flaky, skipped]}
+    w: 4
+  - stat: {label: Total time, data: runs, agg: sum, col: ms, unit: ms}
+- row:
+  - chart: {data: runs, x: suite, y: ms, agg: sum, sort: -y, horizontal: true, fmt: ms}
+    title: Time by suite
+  - chart: {data: runs, x: suite, y: ms, agg: mean, sort: -y, horizontal: true, fmt: ms}
+    title: Mean test time by suite
+  - chart: {data: runs, x: suite, agg: count, series: status, stack: true}
+    title: Results by suite
+- section:
+    title: Failed tests
+    items:
+    - list: {data: fails, head: test, body: error, badges: [suite], code: trace, group: suite, collapse: true}
+- row:
+  - card:
+      title: Flaky tests
+      items:
+      - table: {data: runs, cols: [suite, test, ms, retries], sort: -ms, fmt: {ms: ms}}
+        where: {status: flaky}
+  - card:
+      title: Slowest tests
+      items:
+      - table: {data: runs, cols: [suite, test, status, ms], sort: -ms, limit: 10, bar: [ms], fmt: {ms: ms}}
+- card:
+    title: All tests
+    collapse: true
+    open: false
+    items:
+    - table: {data: runs, cols: [suite, test, status, ms, retries], group: suite, filter: [status, suite], search: true, sort: -ms, fmt: {ms: ms}}

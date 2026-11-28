@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Dependency Audit</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#1b1f24; --muted:#5d6672; --line:#e3e6ea;
+  --crit:#b3261e; --crit-bg:#fbe9e7; --high:#d9631e; --high-bg:#fdf0e6;
+  --med:#b88a00; --med-bg:#fbf5dc; --low:#4a6fa5; --low-bg:#e8eef7;
+  --ok:#1f7a4d; --code:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111418; --panel:#191d22; --ink:#e7eaee; --muted:#9aa3ad; --line:#2a3038;
+    --crit:#ff8a80; --crit-bg:#3a1d1b; --high:#ffab6e; --high-bg:#3a2717;
+    --med:#e8c454; --med-bg:#342d12; --low:#8fb2e6; --low-bg:#1c2738;
+    --ok:#6fd3a0; --code:#232830;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header h1{margin:0 0 4px;font-size:22px}
+header h1 code{font-size:20px}
+header p{margin:0;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:20px 0 10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;border-top:4px solid var(--c,var(--ink))}
+.kpi .n{font-size:30px;font-weight:700;line-height:1;color:var(--c,var(--ink))}
+.kpi .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:0 0 22px;border:1px solid var(--line)}
+.bar span{display:block}
+.grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:18px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel h2{font-size:15px;margin:0 0 12px}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.filters button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:4px 10px;border-radius:999px;cursor:pointer}
+.filters button.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.pkg{font-weight:600}
+.ver{white-space:nowrap}
+.ver .from{color:var(--muted);text-decoration:line-through}
+.ver .to{color:var(--ok);font-weight:600}
+.sev{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:4px;color:var(--c);background:var(--b)}
+.s-critical{--c:var(--crit);--b:var(--crit-bg)}
+.s-high{--c:var(--high);--b:var(--high-bg)}
+.s-medium{--c:var(--med);--b:var(--med-bg)}
+.s-low{--c:var(--low);--b:var(--low-bg)}
+.via{display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap}
+.chip{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--code);padding:1px 6px;border-radius:4px}
+.direct{font-size:11px;font-weight:700;color:var(--ok);border:1px solid currentColor;padding:1px 6px;border-radius:4px;text-transform:uppercase}
+.arrow{color:var(--muted)}
+.tree{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.9;margin:0;padding:0;list-style:none}
+.tree ul{list-style:none;margin:0;padding-left:18px;border-left:1px dashed var(--line);margin-left:6px}
+.tree li{position:relative}
+.node{padding:1px 6px;border-radius:4px}
+.node.v{font-weight:700;color:var(--c);background:var(--b)}
+.node.root{font-weight:700}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.plan{margin-top:18px}
+.plan ol{margin:0;padding-left:20px}
+.plan li{margin:0 0 8px}
+.plan .muted{color:var(--muted)}
+@media (max-width:860px){
+  .grid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpis .kpi:first-child{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Dependency audit · <code>web</code></h1>
+    <p>9 vulnerable packages: 2 direct, 7 transitive, which arrive through 6 top-level dependencies. Each has a fix version.</p>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+  <div class="bar" id="bar" aria-label="Severity split"></div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Vulnerable packages</h2>
+      <div class="filters" id="filters"></div>
+      <div class="tscroll">
+      <table>
+        <thead><tr><th>Severity</th><th>Package</th><th>Installed → Fixed</th><th>Issue</th><th>How it gets in</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      </div>
+    </section>
+
+    <aside>
+      <section class="panel">
+        <h2>Dependency paths</h2>
+        <ul class="tree" id="tree"></ul>
+        <div class="legend" id="legend"></div>
+      </section>
+      <section class="panel plan">
+        <h2>Upgrade by entry point</h2>
+        <ol id="plan"></ol>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+const vulns = [
+ {package:"lodash",installed:"4.17.15",fixed_in:"4.17.21",severity:"critical",issue:"Prototype pollution",path:"direct"},
+ {package:"minimist",installed:"1.2.0",fixed_in:"1.2.6",severity:"critical",issue:"Prototype pollution",path:"mkdirp > minimist"},
+ {package:"axios",installed:"0.21.0",fixed_in:"1.6.0",severity:"high",issue:"SSRF on redirect",path:"direct"},
+ {package:"semver",installed:"5.7.1",fixed_in:"5.7.2",severity:"high",issue:"ReDoS",path:"eslint > semver"},
+ {package:"follow-redirects",installed:"1.14.0",fixed_in:"1.15.4",severity:"medium",issue:"Header leak on redirect",path:"axios > follow-redirects"},
+ {package:"postcss",installed:"8.4.20",fixed_in:"8.4.31",severity:"medium",issue:"Line return parse",path:"vite > postcss"},
+ {package:"tough-cookie",installed:"4.0.0",fixed_in:"4.1.3",severity:"medium",issue:"Prototype pollution",path:"jsdom > tough-cookie"},
+ {package:"word-wrap",installed:"1.2.3",fixed_in:"1.2.4",severity:"low",issue:"ReDoS",path:"eslint > optionator > word-wrap"},
+ {package:"debug",installed:"2.6.8",fixed_in:"2.6.9",severity:"low",issue:"ReDoS",path:"express > debug"}
+];
+const tree = `web > lodash
+web > mkdirp > minimist
+web > axios
+web > eslint > semver
+web > axios > follow-redirects
+web > vite > postcss
+web > jsdom > tough-cookie
+web > eslint > optionator > word-wrap
+web > express > debug`;
+
+const SEV = ["critical","high","medium","low"];
+const COL = {critical:"var(--crit)",high:"var(--high)",medium:"var(--med)",low:"var(--low)"};
+const byPkg = Object.fromEntries(vulns.map(v=>[v.package,v]));
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// KPIs + bar
+const counts = Object.fromEntries(SEV.map(s=>[s,vulns.filter(v=>v.severity===s).length]));
+document.getElementById("kpis").innerHTML =
+  `<div class="kpi"><div class="n">${vulns.length}</div><div class="l">Total vulnerable</div></div>` +
+  SEV.map(s=>`<div class="kpi" style="--c:${COL[s]}"><div class="n">${counts[s]}</div><div class="l">${s}</div></div>`).join("");
+document.getElementById("bar").innerHTML =
+  SEV.map(s=>`<span title="${s}: ${counts[s]}" style="flex:${counts[s]};background:${COL[s]}"></span>`).join("");
+
+// Table with filter
+let filter = "all";
+function pathCell(v){
+  if(v.path==="direct") return `<span class="direct">direct</span>`;
+  const parts = ["web",...v.path.split(" > ")];
+  return `<span class="via">${parts.map((p,i)=>i===parts.length-1?`<span class="chip" style="font-weight:700">${esc(p)}</span>`:`<span class="chip">${esc(p)}</span><span class="arrow">›</span>`).join("")}</span>`;
+}
+function renderRows(){
+  const list = vulns.filter(v=>filter==="all"||v.severity===filter);
+  document.getElementById("rows").innerHTML = list.map(v=>`<tr>
+    <td><span class="sev s-${v.severity}">${v.severity}</span></td>
+    <td class="pkg mono">${esc(v.package)}</td>
+    <td class="ver mono"><span class="from">${v.installed}</span> → <span class="to">${v.fixed_in}</span></td>
+    <td>${esc(v.issue)}</td>
+    <td>${pathCell(v)}</td></tr>`).join("");
+  document.querySelectorAll("#filters button").forEach(b=>b.classList.toggle("on",b.dataset.f===filter));
+}
+document.getElementById("filters").innerHTML =
+  ["all",...SEV].map(f=>`<button data-f="${f}">${f==="all"?"All ("+vulns.length+")":f+" ("+counts[f]+")"}</button>`).join("");
+document.getElementById("filters").addEventListener("click",e=>{const f=e.target.dataset.f;if(f){filter=f;renderRows();}});
+renderRows();
+
+// Tree from tree.txt
+const root = {name:"web",kids:new Map()};
+tree.trim().split("\n").forEach(line=>{
+  let n = root;
+  line.split(" > ").slice(1).forEach(p=>{ if(!n.kids.has(p)) n.kids.set(p,{name:p,kids:new Map()}); n = n.kids.get(p); });
+});
+function nodeHtml(n,isRoot){
+  const v = byPkg[n.name];
+  const label = isRoot ? `<span class="node root">${n.name}</span>`
+    : v ? `<span class="node v s-${v.severity}" title="${v.severity}: ${esc(v.issue)}">${n.name} <span style="font-weight:400">${v.installed}</span></span>`
+        : `<span class="node">${n.name}</span>`;
+  const kids = [...n.kids.values()];
+  return `<li>${label}${kids.length?`<ul>${kids.map(k=>nodeHtml(k)).join("")}</ul>`:""}</li>`;
+}
+document.getElementById("tree").innerHTML = nodeHtml(root,true);
+document.getElementById("legend").innerHTML =
+  SEV.map(s=>`<span><i style="background:${COL[s]}"></i>${s}</span>`).join("") + `<span><i style="background:var(--line)"></i>parent, not vulnerable</span>`;
+
+// Upgrade plan grouped by top-level entry point
+const groups = new Map();
+vulns.forEach(v=>{
+  const top = v.path==="direct" ? v.package : v.path.split(" > ")[0];
+  if(!groups.has(top)) groups.set(top,[]);
+  groups.get(top).push(v);
+});
+const rank = s=>SEV.indexOf(s);
+const ordered = [...groups.entries()].sort((a,b)=>Math.min(...a[1].map(v=>rank(v.severity)))-Math.min(...b[1].map(v=>rank(v.severity))) || b[1].length-a[1].length);
+document.getElementById("plan").innerHTML = ordered.map(([top,list])=>{
+  const worst = list.map(v=>v.severity).sort((a,b)=>rank(a)-rank(b))[0];
+  const items = list.sort((a,b)=>rank(a.severity)-rank(b.severity)).map(v=>
+    `<code>${v.package}</code> → <code>${v.fixed_in}</code>${v.path==="direct"?" (direct)":""}`).join(", ");
+  return `<li><span class="sev s-${worst}">${worst}</span> <b class="mono">${top}</b><br><span class="muted">${items}</span></li>`;
+}).join("");
+</script>
+</body>
+</html>

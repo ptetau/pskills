@@ -39,7 +39,7 @@ h2{font-size:15px;margin:0 0 12px}
 table{width:100%;border-collapse:collapse}
 th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
 th{font-size:12px;color:var(--muted);font-weight:600}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 tr.reg td{background:var(--badbg)}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
 .sw{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:5px}
@@ -81,7 +81,7 @@ svg text{fill:var(--muted);font-size:11px}
     </div>
   </section>
 
-  <section class="grid2">
+  <section class="grid2" style="grid-template-columns:2fr 1fr">
     <div class="card scroll">
       <h2>All rubric items</h2>
       <table id="tbl"><thead><tr><th>Item</th><th>Rubric</th><th class="n">Baseline</th><th class="n">Candidate</th><th class="n">Δ</th><th class="n">Spread b → c</th></tr></thead><tbody></tbody></table>
@@ -145,7 +145,7 @@ document.getElementById("kpis").innerHTML=[
 // Dumbbell
 (function(){
   const rows=[...scores].sort((a,b)=>(b.c-b.b)-(a.c-a.b));
-  const W=520,rh=34,top=8,H=top+rows.length*rh+24,L=118,R=W-58;
+  const W=560,rh=34,top=8,H=top+rows.length*rh+24,L=228,R=W-58;
   const x=v=>L+(v-0.4)/(1.05-0.4)*(R-L);
   const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",role:"img","aria-label":"Baseline and candidate score per rubric item"});
   [0.4,0.5,0.6,0.7,0.8,0.9,1.0].forEach(t=>{el("line",{x1:x(t),x2:x(t),y1:top,y2:H-20,stroke:"var(--line)"},svg);const tx=el("text",{x:x(t),y:H-6,"text-anchor":"middle"},svg);tx.textContent=t.toFixed(1)});
@@ -153,7 +153,7 @@ document.getElementById("kpis").innerHTML=[
     const y=top+i*rh+rh/2,d=r.c-r.b,reg=regs.includes(r.item);
     if(reg)el("rect",{x:0,y:y-rh/2+2,width:W,height:rh-4,rx:5,fill:"var(--badbg)"},svg);
     const lab=el("text",{x:6,y:y+4,style:"fill:var(--ink);font-weight:600"},svg);lab.textContent=r.item;
-    const lab2=el("text",{x:32,y:y+4},svg);lab2.textContent=r.rubric.length>16?r.rubric.slice(0,15)+"…":r.rubric;
+    const lab2=el("text",{x:32,y:y+4},svg);lab2.textContent=r.rubric;
     el("title",{},lab2).textContent=r.rubric;
     // spreads
     el("line",{x1:x(Math.max(.4,r.b-r.bs)),x2:x(Math.min(1.05,r.b+r.bs)),y1:y-5,y2:y-5,stroke:"var(--base)","stroke-width":2,opacity:.45},svg);
@@ -172,7 +172,7 @@ function lineChart(id,key,label,lo,hi){
   const x=w=>L+(w-1)/5*(R-L),y=v=>Bm-(v-lo)/(hi-lo)*(Bm-T);
   const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",role:"img","aria-label":label+" per wave"});
   const t=el("text",{x:0,y:12,style:"fill:var(--ink);font-weight:600;font-size:12px"},svg);t.textContent=label;
-  for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4;el("line",{x1:L,x2:R,y1:y(v),y2:y(v),stroke:"var(--line)"},svg);const tx=el("text",{x:L-6,y:y(v)+4,"text-anchor":"end"},svg);tx.textContent=v.toFixed(2)}
+  for(let k=0;k<=5;k++){const v=lo+(hi-lo)*k/5;el("line",{x1:L,x2:R,y1:y(v),y2:y(v),stroke:"var(--line)"},svg);const tx=el("text",{x:L-6,y:y(v)+4,"text-anchor":"end"},svg);tx.textContent=v.toFixed(2)}
   for(let w=1;w<=6;w++){const tx=el("text",{x:x(w),y:H-6,"text-anchor":"middle"},svg);tx.textContent="w"+w}
   [["baseline","var(--base)"],["candidate","var(--cand)"]].forEach(([v,c])=>{
     const pts=waves.filter(r=>r.v===v);

@@ -1,0 +1,13 @@
+{
+ "inputs": [
+  "armed",
+  "door_open",
+  "motion",
+  "override"
+ ],
+ "outputs": {
+  "alarm": "armed and (door_open or motion) and not override",
+  "chirp": "not armed and door_open",
+  "led": "armed or override"
+ }
+}
