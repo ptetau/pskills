@@ -186,6 +186,17 @@ table.su-table { border-collapse: collapse; width: 100%; font-size: 13px; }
 .su-pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
 .su-empty { color: var(--faint); font-size: 13px; padding: 12px; text-align: center; }
 
+.su-table tr.su-xrow { cursor: pointer; }
+.su-table tr.su-xrow td:first-child::before { content: "▸ "; color: var(--faint); }
+.su-table tr.su-xrow.su-open td:first-child::before { content: "▾ "; }
+.su-table tr.su-xtr td { background: var(--sunk); padding: 10px 14px 12px; }
+.su-xdet { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; align-items: start; }
+.su-xk { font-size: 12px; color: var(--muted); font-weight: 600; padding-top: 2px; }
+.su-chip-n { margin-left: 6px; font: 500 11px var(--mono); opacity: .7; }
+.su-click { cursor: pointer; } .su-click:hover { border-color: var(--line-2); }
+.su-dim { opacity: .45; }
+.su-heat th.su-tot { font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+
 /* chart */
 .su-chart { position: relative; width: 100%; }
 .su-chart canvas { display: block; }

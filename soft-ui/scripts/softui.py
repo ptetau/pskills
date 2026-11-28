@@ -321,9 +321,19 @@ def to_rows(val, ctx, path, base_key=None):
     return None
 
 
+def diffstat(text):
+    rows = []
+    for f in parse_patch(text):
+        status = "added" if not f["old"] else "deleted" if not f["new"] else "renamed" if f["old"] != f["new"] else "modified"
+        rows.append({"file": f["new"] or f["old"], "status": status, "added": f["add"], "removed": f["del"]})
+    return rows
+
+
 def load_file_raw(p):
     text = p.read_text(encoding="utf-8", errors="replace")
     ext = p.suffix.lower()
+    if ext in (".diff", ".patch"):
+        return diffstat(text)
     if ext == ".json":
         return json.loads(text)
     if ext in (".jsonl", ".ndjson"):
@@ -893,7 +903,7 @@ EXT_LANG = {".py": "python", ".js": "javascript", ".ts": "typescript", ".tsx": "
             ".toml": "ini", ".diff": "diff"}
 
 
-NOTE_COLS = {"file": ["file", "path", "filename"], "line": ["line", "lineno", "line_no", "ln"],
+NOTE_COLS = {"id": ["id", "ref", "key"], "file": ["file", "path", "filename"], "line": ["line", "lineno", "line_no", "ln"],
              "head": ["title", "head", "summary", "name"], "text": ["text", "comment", "body", "message", "note", "detail"],
              "sev": ["severity", "sev", "level", "priority", "tone"]}
 
@@ -1329,6 +1339,23 @@ GROUPS = [("layout", "LAYOUT (hold other nodes)"), ("summary", "SUMMARY"), ("dat
           ("code", "CODE"), ("diagram", "DIAGRAM")]
 
 
+DATA_HELP = """data — named datasets under the page key `data:`. Each node names one with `data: NAME`.
+  rows:        d: [{a: 1, b: x}, {a: 2, b: y}]
+  CSV text:    d: |            (first line = header; quote cells that hold commas)
+                 a,b
+                 1,x
+  TOON text:   d: |
+                 [2]{a,b}:
+                 1,x
+                 2,y
+  file:        d: results.json | .jsonl | .csv | .tsv | .yaml | .diff/.patch (one row per file)
+  inner array: d: design.json#components      or  d: {file: design.json, key: components}
+  all arrays:  d: design.json   → also registers d.components, d.calls, ... for each array inside
+  computed:    d: {file: eps.json, add: {delta: "after - before", pct: "round((after/before-1)*100, 1)"}}
+  single object (e.g. run.json): show it with kv: {data: d, keys: [app, commit]}
+  per node:    where: {sev: [high, critical]}  or  where: {ms: ">500"} keeps matching rows
+Paths resolve from the folder of the spec."""
+
 EXAMPLE = """
 title: Test run 4120
 data: {runs: results.json}          # rows; columns suite, test, status, ms
@@ -1354,6 +1381,7 @@ def catalog():
     print("soft-ui — write a YAML spec, run `softui.py render spec.yaml` → one checked HTML page.")
     print("page: title* subtitle meta data{name: rows|csv-text|toon-text|file.json|file.csv} layout*[nodes] width")
     print("an array inside a JSON file: data: {comps: design.json#components}; also data: {d: design.json} gives d.components, d.calls, ...")
+    print("a .diff/.patch file as data gives one row per file: file, status, added, removed")
     print('computed columns: data: {d: {file: x.json, add: {delta: "after - before", pct: "round((after/before-1)*100, 1)"}}}')
     print("node: - NAME: {props}  or  - NAME: shorthand  (a bare string = markdown text)")
     print("every node also takes: title note span w h where   (* = required)")
@@ -1368,13 +1396,16 @@ def catalog():
     print("example:")
     for ln in EXAMPLE.strip("\n").split("\n"):
         print("  " + ln)
-    print("`softui.py explain table chart` for prop details and examples.")
+    print("`softui.py explain table chart` for prop details and examples; `explain data` for every data form.")
 
 
 def explain(names):
     rc = 0
     for name in names:
         comp, how = lookup_comp(name)
+        if name == "data":
+            print(DATA_HELP)
+            continue
         if name == "page":
             print("page")
             for k, s in R.PAGE_KEYS.items():

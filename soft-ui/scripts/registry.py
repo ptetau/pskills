@@ -178,7 +178,7 @@ comp("text", "summary", "markdown text",
 
 # ---- data ---------------------------------------------------------------------------
 
-comp("table", "data", "sortable table; group, filter, search, inline bars, tones",
+comp("table", "data", "sortable table; group, filter, search, inline bars, tones, rows that expand",
      {"data": P("data", req=True),
       "cols": P("cols", doc="columns to show, in order: name or {key, label, fmt, w}"),
       "sort": P("str", doc="column to sort by; prefix - for descending"),
@@ -189,6 +189,7 @@ comp("table", "data", "sortable table; group, filter, search, inline bars, tones
       "bar": P("cols", doc="numeric columns that get an inline bar"),
       "tone": P("map", doc="{col: {value: tone}} colours cells, e.g. {sev: {high: bad}}"),
       "fmt": P("map", doc="{col: fmt}; fmt is one of " + ", ".join(FMTS)),
+      "expand": P("cols", doc="columns shown when a row is clicked open (long text, repro steps)"),
       "dense": P("bool", default=False)},
      short="data", aliases=["grid-table", "datatable", "tbl"], data=True, example="""
 - table:
@@ -198,6 +199,7 @@ comp("table", "data", "sortable table; group, filter, search, inline bars, tones
     group: flow
     filter: [sev]
     tone: {sev: {high: bad, medium: warn, low: info}}
+    expand: [detail, repro]
 """)
 
 comp("chart", "data", "bar / line / area / scatter / donut; severity series get status colours",
@@ -224,9 +226,12 @@ comp("heatmap", "data", "grid of cells coloured by value (x by y)",
       "v": P("col", doc="value column; omit to count rows"),
       "agg": P("enum", enum=["count", "sum", "mean", "max"], default="sum"),
       "scale": P("enum", enum=["seq", "div"], default="seq", doc="seq = one hue; div = below/above zero"),
-      "fmt": P("enum", enum=FMTS), "labels": P("bool", default=False, doc="print the value in each cell")},
+      "fmt": P("enum", enum=FMTS), "labels": P("bool", default=False, doc="print the value in each cell"),
+      "worst": P("col", doc="colour each cell by the worst value of this severity column"),
+      "totals": P("bool", default=False, doc="add row and column totals")},
      aliases=["matrix"], data=True, example="""
 - heatmap: {data: churn, x: week, y: file, v: lines}
+- heatmap: {data: findings, x: kind, y: flow, worst: sev, totals: true}   # counts, coloured by worst severity
 """)
 
 comp("list", "data", "list of item cards: title, body, badges; groupable",
@@ -286,7 +291,7 @@ comp("tree", "data", "folding file or object tree from paths",
 - tree: {data: changed, path: file, badges: [added, removed]}
 """)
 
-comp("filter", "data", "filter chips + search; filters every node on the same dataset (tables, lists, charts, stats...)",
+comp("filter", "data", "filter chips with counts + search; filters every node on the dataset. Clicking a bar, heatmap cell, or stats-by tile also filters",
      {"data": P("data", req=True), "fields": P("cols", req=True), "search": P("bool", default=True)},
      aliases=["facets", "slicer"], data=True, example="""
 - filter: {data: findings, fields: [sev, flow]}

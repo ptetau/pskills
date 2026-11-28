@@ -153,13 +153,13 @@
     }
     return true;
   }
-  function rowsFor(p) {
+  function rowsFor(p, own) {
     const d = DS[p.data]; if (!d) return [];
     let rows = d.rows;
     if (p.where) rows = rows.filter((r) => matchWhere(r, p.where));
     const f = FILT[p.data];
     if (f) {
-      for (const c in f.f) if (f.f[c].size) rows = rows.filter((r) => f.f[c].has(String(r[c])));
+      for (const c in f.f) if (f.f[c].size && !(own && own.includes(c))) rows = rows.filter((r) => f.f[c].has(String(r[c])));
       if (f.q) { const q = f.q.toLowerCase(); rows = rows.filter((r) => Object.values(r).some((v) => v != null && String(v).toLowerCase().includes(q))); }
     }
     return rows;
@@ -167,6 +167,15 @@
   const typeOf = (ds, c) => (DS[ds] && DS[ds].types[c]) || "str";
   const uniq = (rows, c) => { const s = new Map(); for (const r of rows) { const v = r[c]; if (v != null && !s.has(String(v))) s.set(String(v), v); } return [...s.values()]; };
   function subscribe(ds, fn) { (SUBS[ds] = SUBS[ds] || []).push(fn); }
+  const fstate = (ds) => (FILT[ds] = FILT[ds] || { f: {}, q: "" });
+  function picked(ds, col) { const f = FILT[ds]; return f && f.f[col] && f.f[col].size ? f.f[col] : null; }
+  function toggleFilter(ds, pairs) {
+    // Click on a mark: select its value(s); click the same mark again to clear.
+    const f = fstate(ds);
+    const same = pairs.every(([c, v]) => f.f[c] && f.f[c].size === 1 && f.f[c].has(String(v)));
+    for (const [c, v] of pairs) f.f[c] = new Set(same ? [] : [String(v)]);
+    notify(ds);
+  }
   function notify(ds) { for (const fn of SUBS[ds] || []) fn(); }
   function groupBy(rows, col) {
     const m = new Map();
@@ -269,18 +278,28 @@
       grid.innerHTML = "";
       let items = arr(p.items);
       if (p.data && p.by) {
-        const rows = rowsFor(p), groups = groupBy(rows, p.by);
+        const rows = rowsFor(p, [p.by]), groups = groupBy(rows, p.by);
         const order = p.order ? arr(p.order).map(String) : groups.map((g) => g[0]);
         const m = new Map(groups);
         items = (p.total ? [{ label: p.total === true ? "Total" : p.total, value: rows.length }] : [])
-          .concat(order.map((k) => ({ label: k, value: (m.get(k) || []).length, tone: cellTone(p, p.data, p.by, k) || undefined })));
+          .concat(order.map((k) => ({ label: k, value: (m.get(k) || []).length, tone: cellTone(p, p.data, p.by, k) || undefined, _pick: k })));
       } else if (p.data) {
         const rows = rowsFor(p), d = DS[p.data];
         const lc = p.label || d.cols.find((c) => typeOf(p.data, c) === "str") || d.cols[0];
         const vc = p.value || d.cols.find((c) => typeOf(p.data, c) === "num") || d.cols[1];
         items = rows.map((r) => ({ label: r[lc], value: r[vc], tone: p.tone ? r[p.tone] : null, delta: r.delta, unit: r.unit, sub: r.sub, good: r.good }));
       }
-      for (const it of items) grid.append(statEl(typeof it === "object" ? it : { label: "", value: it }));
+      const sel = p.by && picked(p.data, p.by);
+      for (const it of items) {
+        const t = statEl(typeof it === "object" ? it : { label: "", value: it });
+        if (it && it._pick != null) {
+          t.classList.add("su-click"); t.tabIndex = 0; t.setAttribute("role", "button");
+          if (sel && !sel.has(String(it._pick))) t.classList.add("su-dim");
+          const go = () => toggleFilter(p.data, [[p.by, it._pick]]);
+          t.addEventListener("click", go); t.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+        }
+        grid.append(t);
+      }
     };
     draw(); if (p.data) subscribe(p.data, draw);
     el.append(grid);
@@ -305,6 +324,12 @@
     if (ctl.el) el.append(ctl.el);
     el.append(wrap);
     const bars = new Set(arr(p.bar).map(colKey));
+    const expand = arr(p.expand).map(colKey), open = new Set();
+    if (expand.length) {
+      const btn = h("button", { class: "su-btn", type: "button" }, "Expand all");
+      btn.addEventListener("click", () => { const all = open.size === 0; if (all) rowsFor(p).forEach((r) => open.add(r)); else open.clear(); btn.textContent = all ? "Collapse all" : "Expand all"; draw(); });
+      (ctl.el || el.insertBefore(h("div", { class: "su-ctl" }), wrap)).append(btn);
+    }
     function draw() {
       let rows = ctl.apply(rowsFor(p)).slice();
       if (sort.k) rows.sort((a, b) => sort.d * cmp(a[sort.k], b[sort.k]) || 0);
@@ -317,7 +342,7 @@
       t.append(h("thead", null, tr));
       const tb = h("tbody");
       const rowEl = (r) => {
-        const row = h("tr");
+        const row = h("tr", expand.length ? { class: "su-xrow" + (open.has(r) ? " su-open" : ""), onclick: () => { open.has(r) ? open.delete(r) : open.add(r); draw(); } } : null);
         for (const c of cols) {
           const k = c.key, ty = typeOf(ds, k), f = c.fmt || (p.fmt && p.fmt[k]), v = r[k];
           const td = h("td", { class: (ty === "num" ? "su-num" : "") + (ty === "date" ? " su-mono" : "") });
@@ -327,7 +352,14 @@
           else { const x = fmtCell(v, f, ty); td.append(x); }
           row.append(td);
         }
-        return row;
+        if (!expand.length || !open.has(r)) return row;
+        const det = h("div", { class: "su-xdet" });
+        for (const k of expand) {
+          const v = r[k]; if (v == null || v === "") continue;
+          det.append(h("div", { class: "su-xk" }, k));
+          det.append(/\n/.test(String(v)) || (p.fmt && p.fmt[k] === "code") ? codeEl({ src: String(v) }) : h("div", { class: "su-md", html: md(String(v)) }));
+        }
+        return [row, h("tr", { class: "su-xtr" }, h("td", { colspan: cols.length }, det))];
       };
       if (p.group) {
         for (const [k, rs] of groupBy(rows, p.group)) {
@@ -335,9 +367,9 @@
           const g = h("tr", { class: "su-grp" + (shut.has(k) ? " su-shut" : ""), onclick: () => { shut.has(k) ? shut.delete(k) : shut.add(k); draw(); } },
             h("td", { colspan: cols.length }, tone ? badge(k, tone) : k, " ", h("span", { class: "su-count" }, rs.length)));
           tb.append(g);
-          if (!shut.has(k)) rs.forEach((r) => tb.append(rowEl(r)));
+          if (!shut.has(k)) rs.forEach((r) => tb.append(...[rowEl(r)].flat()));
         }
-      } else rows.forEach((r) => tb.append(rowEl(r)));
+      } else rows.forEach((r) => tb.append(...[rowEl(r)].flat()));
       if (!total) tb.append(h("tr", null, h("td", { colspan: cols.length, class: "su-empty" }, "No rows match.")));
       t.append(tb);
       wrap.replaceChildren(t);
@@ -494,10 +526,18 @@
     draw(); if (ds) subscribe(ds, draw);
   };
   C.filter = (p, el) => {
-    const ds = p.data, f = (FILT[ds] = FILT[ds] || { f: {}, q: "" });
+    const ds = p.data, f = fstate(ds);
     const box = h("div", { class: "su-filter" });
     const count = h("span", { class: "su-count" });
-    const upd = () => { count.textContent = `${rowsFor(p).length} of ${DS[ds].rows.length} rows`; };
+    const chipEls = [];
+    const upd = () => {
+      count.textContent = `${rowsFor(p).length} of ${DS[ds].rows.length} rows`;
+      for (const { b, c, v, n } of chipEls) {
+        const on = !!(f.f[c] && f.f[c].has(String(v)));
+        b.setAttribute("aria-pressed", on);
+        n.textContent = rowsFor(p, [c]).filter((r) => String(r[c]) === String(v)).length;
+      }
+    };
     if (p.search !== false) box.append(h("div", { class: "su-ctl", style: { marginBottom: 0 } }, h("input", { type: "search", placeholder: "Search…", "aria-label": "Search", id: "su-s" + ++uid, oninput: (e) => { f.q = e.target.value; notify(ds); } }), count));
     for (const c0 of arr(p.fields)) {
       const c = colKey(c0); f.f[c] = f.f[c] || new Set();
@@ -505,9 +545,10 @@
       const chips = h("div", { class: "su-chips" });
       for (const v of uniq(DS[ds].rows, c).sort(cmp)) {
         const t = cellTone(p, ds, c, v);
-        const b = h("button", { class: "su-chip", "aria-pressed": "false", type: "button" }, t ? h("span", { class: "su-dot su-t-" + t, style: { marginRight: "5px" } }) : null, String(v));
-        b.addEventListener("click", () => { const s = f.f[c], k = String(v); s.has(k) ? s.delete(k) : s.add(k); b.setAttribute("aria-pressed", s.has(k)); notify(ds); });
-        chips.append(b);
+        const n = h("span", { class: "su-chip-n" });
+        const b = h("button", { class: "su-chip", "aria-pressed": "false", type: "button" }, t ? h("span", { class: "su-dot su-t-" + t, style: { marginRight: "5px" } }) : null, String(v), n);
+        b.addEventListener("click", () => { const s = f.f[c] = f.f[c] || new Set(), k = String(v); s.has(k) ? s.delete(k) : s.add(k); notify(ds); });
+        chips.append(b); chipEls.push({ b, c, v, n });
       }
       row.append(chips); box.append(row);
     }
@@ -530,7 +571,7 @@
     return labels.map((_, i) => ser[i % 8]);
   }
   function chartModel(p) {
-    const ds = p.data, rows = rowsFor(p), x = p.x, ys = arr(p.y).map(colKey), agg = p.agg && p.agg !== "none" ? p.agg : null;
+    const ds = p.data, rows = rowsFor(p, [p.x]), x = p.x, ys = arr(p.y).map(colKey), agg = p.agg && p.agg !== "none" ? p.agg : null;
     const xt = typeOf(ds, x);
     let keys = uniq(rows, x);
     if (xt === "date" || xt === "num" || p.sort === "x") keys.sort(cmp);
@@ -560,7 +601,7 @@
       keys = tot.map((t) => t[0]); sets.forEach((s) => (s.data = tot.map((t) => s.data[t[2]])));
     }
     if (p.limit) { keys = keys.slice(0, p.limit); sets.forEach((s) => (s.data = s.data.slice(0, p.limit))); }
-    return { labels: keys.map((k) => fmt(k, null, xt)), sets, xt };
+    return { labels: keys.map((k) => fmt(k, null, xt)), keys, sets, xt };
   }
   const refLines = {
     id: "suRef",
@@ -592,13 +633,15 @@
       const ser = seriesColors(p, kind === "donut" ? m.labels : m.sets.map((x) => x.label));
       const fg = css("--muted"), grid = css("--line"), font = css("--font");
       const single = m.sets.length === 1;
+      const sel = picked(p.data, p.x);
+      const dim = (c, i) => (sel && !sel.has(String(m.keys[i])) ? c + "40" : c);
       const datasets = m.sets.map((s) => {
         const c = ser[s.idx] || ser[s.idx % 8];
         const base = { label: s.label, data: s.data, borderColor: c, backgroundColor: c };
         if (kind === "line" || kind === "area") return { ...base, borderWidth: 2, pointRadius: m.labels.length > 40 ? 0 : 2.5, pointHoverRadius: 5, tension: 0.25, fill: kind === "area" ? (p.stack ? "stack" : "origin") : false, backgroundColor: kind === "area" ? c + (p.stack ? "cc" : "33") : c, spanGaps: true };
         if (kind === "scatter") return { ...base, data: s.data.map((v, i) => ({ x: +m.labels[i].replace(/,/g, ""), y: v })), pointRadius: 4, pointHoverRadius: 6 };
         if (kind === "donut") return { ...base, backgroundColor: ser, borderColor: css("--surface"), borderWidth: 2 };
-        return { ...base, borderRadius: 4, borderSkipped: "start", maxBarThickness: 38, borderWidth: 0 };
+        return { ...base, backgroundColor: sel ? m.keys.map((_, i) => dim(c, i)) : c, borderRadius: 4, borderSkipped: "start", maxBarThickness: 38, borderWidth: 0 };
       });
       const tick = (v) => fmt(v, p.fmt);
       const vAxis = { beginAtZero: p.zero !== false, stacked: !!p.stack, grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: fg, padding: 6, callback: tick, maxTicksLimit: 6, precision: m.sets.every((s) => s.data.every((v) => v == null || Number.isInteger(v))) ? 0 : undefined } };
@@ -617,6 +660,8 @@
           },
           scales: kind === "donut" ? {} : horiz ? { x: vAxis, y: cAxis } : { x: kind === "scatter" ? { ...vAxis, beginAtZero: false } : cAxis, y: vAxis },
           cutout: kind === "donut" ? "62%" : undefined,
+          onClick: kind === "bar" || kind === "donut" ? (e, els) => { if (els.length) toggleFilter(p.data, [[p.x, m.keys[els[0].index]]]); } : undefined,
+          onHover: kind === "bar" || kind === "donut" ? (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; } : undefined,
         },
         plugins: [refLines],
       };
@@ -629,7 +674,13 @@
   C.heatmap = (p, el) => {
     const ds = p.data, box = h("div", { class: "su-heat" }); el.append(box);
     const draw = () => {
-      const rows = rowsFor(p), xt = typeOf(ds, p.x);
+      const rows = rowsFor(p, [p.x, p.y]), xt = typeOf(ds, p.x);
+      const worst = new Map();
+      if (p.worst) for (const r of rows) {
+        const k = r[p.y] + "\u0001" + r[p.x], rank = sevRank(r[p.worst]);
+        if (rank >= 0 && (!worst.has(k) || rank < sevRank(worst.get(k)))) worst.set(k, r[p.worst]);
+      }
+      const selX = picked(ds, p.x), selY = picked(ds, p.y);
       const xs = uniq(rows, p.x); if (xt === "date" || xt === "num") xs.sort(cmp);
       const cell = new Map(), tot = new Map();
       for (const r of rows) {
@@ -648,20 +699,31 @@
         const t = hi === lo ? 1 : (v - lo) / (hi - lo); return `color-mix(in oklab, var(--seq-hi) ${Math.round(6 + 90 * t)}%, var(--surface))`;
       };
       const t = h("table", { role: "grid" });
-      t.append(h("thead", null, h("tr", null, h("th"), xs.map((x) => h("th", null, fmt(x, null, xt))))));
+      t.append(h("thead", null, h("tr", null, h("th"), xs.map((x) => h("th", null, fmt(x, null, xt))), p.totals ? h("th", null, "Total") : null)));
       const tb = h("tbody");
       for (const y of ys) {
         const tr = h("tr", null, h("th", { class: "su-y", title: y }, y));
         for (const x of xs) {
-          const v = val(cell.get(y + "\u0001" + x)), tt = v == null ? 0 : p.scale === "div" ? Math.abs(v) / amax : (v - lo) / (hi - lo || 1);
-          tr.append(h("td", { style: { background: color(v) }, class: tt > 0.55 && p.scale !== "div" ? "su-hi" : "", title: `${y} · ${fmt(x, null, xt)}: ${v == null ? "—" : fmt(v, p.fmt)}` }, p.labels && v != null ? fmt(v, p.fmt) : ""));
+          const k = y + "\u0001" + x, v = val(cell.get(k)), tt = v == null ? 0 : p.scale === "div" ? Math.abs(v) / amax : (v - lo) / (hi - lo || 1);
+          const wv = worst.get(k), wt = wv != null ? normTone(AUTO[String(wv).toLowerCase()]) : null;
+          const bg = wt ? `color-mix(in oklab, var(--${wt}) ${Math.round(22 + 60 * tt)}%, var(--surface))` : color(v);
+          const on = (!selX || selX.has(String(x))) && (!selY || selY.has(String(y)));
+          const td = h("td", { style: { background: bg, opacity: on ? 1 : 0.3, cursor: v == null ? "" : "pointer" }, class: (tt > 0.55 && p.scale !== "div" && !wt) || (wt && tt > 0.6) ? "su-hi" : "",
+            title: `${y} · ${fmt(x, null, xt)}: ${v == null ? "—" : fmt(v, p.fmt)}` + (wv != null ? ` · worst: ${wv}` : "") }, (p.labels || p.worst) && v != null ? fmt(v, p.fmt) : "");
+          if (v != null) td.addEventListener("click", () => toggleFilter(ds, [[p.x, x], [p.y, y]]));
+          tr.append(td);
         }
+        if (p.totals) tr.append(h("th", { class: "su-tot" }, fmt(tot.get(y), p.fmt)));
         tb.append(tr);
       }
+      if (p.totals) tb.append(h("tr", null, h("th", { class: "su-y" }, "Total"), xs.map((x) => h("th", { class: "su-tot" }, fmt(ys.reduce((s, y) => s + (val(cell.get(y + "\u0001" + x)) || 0), 0), p.fmt))),
+        h("th", { class: "su-tot" }, fmt([...tot.values()].reduce((a, b) => a + b, 0), p.fmt))));
       t.append(tb);
-      const scale = h("div", { class: "su-scale" }, h("span", null, fmt(p.scale === "div" ? -amax : lo, p.fmt)),
+      const scale = p.worst ? h("div", { class: "su-scale" }, ["critical", "high", "medium", "low"].map((k) => h("span", { style: { display: "inline-flex", gap: "5px", alignItems: "center" } }, h("span", { class: "su-dot su-t-" + normTone(AUTO[k]) }), k)), h("span", null, `· colour = worst ${p.worst}; darker = more rows`))
+        : h("div", { class: "su-scale" }, h("span", null, fmt(p.scale === "div" ? -amax : lo, p.fmt)),
         h("i", { style: { background: p.scale === "div" ? "linear-gradient(90deg, var(--div-lo), var(--surface), var(--div-hi))" : "linear-gradient(90deg, color-mix(in oklab, var(--seq-hi) 6%, var(--surface)), var(--seq-hi))" } }),
-        h("span", null, fmt(p.scale === "div" ? amax : hi, p.fmt)), p.v ? h("span", null, `${p.agg || "sum"} of ${p.v}`) : h("span", null, "rows"));
+        h("span", null, fmt(p.scale === "div" ? amax : hi, p.fmt)), p.v ? h("span", null, `${p.agg || "sum"} of ${p.v}`) : h("span", null, "rows"),
+        p.worst ? h("span", null, `· colour = worst ${p.worst}`) : null);
       box.replaceChildren(t, scale);
     };
     draw(); subscribe(ds, draw);
@@ -695,7 +757,7 @@
   function noteRow(n, span) {
     const t = normTone(AUTO[String(n.sev ?? "").toLowerCase()] || n.sev) || "info";
     const card = h("div", { class: "su-cnote su-t-" + t, style: { "--tone": `var(--${t})` } },
-      h("div", { class: "su-cnote-h" }, n.sev ? badge(String(n.sev), t) : null, n.head ? h("b", { html: inline(n.head) }) : null),
+      h("div", { class: "su-cnote-h" }, n.id != null ? h("span", { class: "su-count" }, String(n.id)) : null, n.sev ? badge(String(n.sev), t) : null, n.head ? h("b", { html: inline(n.head) }) : null),
       n.text ? h("div", { class: "su-md", html: md(n.text) }) : null);
     return span ? h("tr", { class: "su-ntr" }, h("td", { colspan: span }, card)) : card;
   }
