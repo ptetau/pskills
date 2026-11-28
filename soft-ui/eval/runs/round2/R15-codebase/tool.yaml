@@ -1,0 +1,112 @@
+title: Structure of the atlas codebase
+subtitle: Where the code is, how the modules depend on each other, and which big files change often
+meta: atlas monorepo · commits from the last 90 days
+data:
+  files: ../../../reports/R15-codebase/files.csv
+  imports: ../../../reports/R15-codebase/imports.csv
+  scored:
+    from: files
+    add: {churn: "loc * commits_90d"}
+    sort: -churn
+  modules:
+    from: files
+    group: module
+    sum: [loc, commits_90d]
+    pct: [loc]
+    sort: -loc
+  links:
+    from: imports
+    rename: {from: src, to: dst}
+  edges:
+    from: links
+    add: {pair: "src + '>' + dst", rev: "dst + '>' + src"}
+  reverse:
+    from: edges
+    rename: {imports: back}
+  paired:
+    from: edges
+    join: {data: reverse, on: [rev, pair], cols: [back]}
+    add: {in_cycle: "'yes' if back else 'no'"}
+  cycles:
+    from: paired
+    where: {in_cycle: "yes"}
+  hot:
+    from: scored
+    where: {loc: ">=300", commits_90d: ">=8"}
+layout:
+- row:
+    min: 150
+    items:
+    - stat: {label: Source files, data: files, agg: count}
+    - stat: {label: Lines of code, data: files, agg: sum, col: loc, fmt: int}
+    - stat: {label: Commits (90 days), data: files, agg: sum, col: commits_90d, fmt: int}
+    - stat: {label: Import edges in a cycle, data: cycles, agg: count, tone: bad}
+    - stat: {label: Big files that change often, data: hot, agg: count, tone: warn}
+- callout:
+    tone: warn
+    text: >-
+      **Cycle: core ⇄ billing.** billing imports core 22 times, and core imports billing
+      4 times. Break the 4 imports from core to billing first. api and jobs reach the cycle
+      through billing too.
+- section:
+    title: Where the code is
+    items:
+    - row:
+      - treemap: {data: files, group: module, size: loc, color: commits_90d, label: path, fmt: int}
+        title: Files by size (area = lines of code, colour = commits in 90 days)
+        w: 2
+      - chart: {data: modules, x: module, y: loc, horizontal: true, fmt: int, height: 320}
+        title: Lines of code by module
+    - table:
+        data: modules
+        cols: [module, count, loc, loc_pct, commits_90d]
+        labels: {count: files, loc: lines of code, loc_pct: share of code, commits_90d: commits (90 d)}
+        fmt: {loc: int, loc_pct: pct, commits_90d: int}
+        bar: [loc, commits_90d]
+        dense: true
+      title: Modules
+- section:
+    title: How the modules depend on each other
+    items:
+    - row:
+      - graph: {data: imports, from: from, to: to, label: imports, dir: LR}
+        title: Import graph (edge label = import statements)
+        w: 2
+      - heatmap: {data: imports, x: to, y: from, v: imports, labels: true}
+        title: Imports from (row) to (column)
+    - table:
+        data: cycles
+        cols: [src, dst, imports]
+        labels: {src: from, dst: to, imports: import statements}
+        sort: imports
+        dense: true
+      title: Edges in a cycle (break the smaller side first)
+- section:
+    title: Big files that change often
+    items:
+    - row:
+      - chart: {kind: scatter, data: files, x: loc, y: commits_90d, series: module, height: 320, mark: [{x: 300, label: 300 lines}, {y: 8, label: 8 commits}]}
+        title: Size against change rate, one dot per file
+        w: 2
+      - table:
+          data: hot
+          cols: [path, loc, commits_90d, churn]
+          labels: {commits_90d: commits, churn: loc × commits}
+          fmt: {loc: int, commits_90d: int, churn: int}
+          bar: [churn]
+          dense: true
+        title: Refactor candidates (300+ lines and 8+ commits)
+- card:
+    title: All files
+    collapse: true
+    items:
+    - table:
+        data: scored
+        cols: [path, module, language, loc, commits_90d, churn]
+        labels: {commits_90d: commits (90 d), churn: loc × commits}
+        sort: -churn
+        filter: [module, language]
+        search: true
+        bar: [loc, commits_90d]
+        fmt: {loc: int, commits_90d: int, churn: int}
+        limit: 25

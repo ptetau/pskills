@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Half-Year P&amp;L Review</title>
+<style>
+:root{
+  --bg:#f6f4ef; --surface:#ffffff; --ink:#1d1b17; --muted:#6b665c; --faint:#9a958a;
+  --line:#e3dfd5; --line2:#cfcabd;
+  --fav:#2563c9; --fav-soft:#dbe6f8; --unf:#c8541f; --unf-soft:#f7e0d4;
+  --budget:#a9a397; --total:#3a3730; --brand:#d9a400;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16150f; --surface:#211f19; --ink:#eeeae0; --muted:#a8a294; --faint:#7d786c;
+    --line:#35322a; --line2:#4a463b;
+    --fav:#6fa0f0; --fav-soft:#1f3150; --unf:#f08a55; --unf-soft:#4a2717;
+    --budget:#77725f; --total:#d6d1c4; --brand:#f0c12a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16150f; --surface:#211f19; --ink:#eeeae0; --muted:#a8a294; --faint:#7d786c;
+  --line:#35322a; --line2:#4a463b;
+  --fav:#6fa0f0; --fav-soft:#1f3150; --unf:#f08a55; --unf-soft:#4a2717;
+  --budget:#77725f; --total:#d6d1c4; --brand:#f0c12a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:32px 16px 64px}
+header .eyebrow{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;letter-spacing:.02em}
+header .dot{width:10px;height:10px;border-radius:50%;background:var(--brand)}
+h1{font-size:30px;line-height:1.2;margin:8px 0 10px;font-weight:650;letter-spacing:-.01em}
+.lede{font-size:17px;max-width:760px;margin:0;color:var(--ink)}
+.lede b{font-weight:650}
+.neg{color:var(--unf)} .pos{color:var(--fav)}
+h2{font-size:19px;margin:0 0 4px;font-weight:650}
+.sub{color:var(--muted);margin:0 0 16px;font-size:14px;max-width:760px}
+section{margin-top:28px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi.hero{border-color:var(--unf);box-shadow:inset 0 3px 0 var(--unf)}
+.kpi .lab{font-size:13px;color:var(--muted)}
+.kpi .val{font-size:26px;font-weight:650;font-variant-numeric:tabular-nums;margin:2px 0}
+.kpi .cmp{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.kpi .var{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--ink);font-family:inherit}
+svg .ax{fill:var(--muted);font-size:12px}
+svg .sm{font-size:11px;fill:var(--muted)}
+svg .lbl{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin:0 0 10px}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.mini h3{font-size:14px;margin:0;font-weight:600}
+.mini .m{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{padding:7px 10px;text-align:right;white-space:nowrap}
+th{font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line2);text-transform:uppercase;letter-spacing:.04em}
+th:first-child,td:first-child{text-align:left}
+td{border-bottom:1px solid var(--line)}
+tr.sec td{font-weight:650;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding-top:16px;border-bottom:none}
+tr.acct td:first-child{padding-left:22px}
+tr.subt td{font-weight:650;border-top:1px solid var(--line2)}
+tr.net td{font-weight:700;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);font-size:15px}
+td.bar{width:26%;padding:4px 10px}
+.tblwrap{overflow-x:auto}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+.callouts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.callout{border-left:3px solid var(--line2);padding:2px 0 2px 12px;font-size:14px}
+.callout.u{border-color:var(--unf)} .callout.f{border-color:var(--fav)}
+.callout b{display:block;font-size:14px}
+@media (max-width:860px){
+  .kpis,.grid4{grid-template-columns:1fr 1fr}
+  .grid2,.callouts{grid-template-columns:1fr}
+  h1{font-size:24px}
+  td.bar{display:none} th.bar{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow"><span class="dot"></span>Kōwhai Studio · Half-year review · July–December 2026 · NZD</div>
+  <h1>Net profit is <span id="hNet"></span>, <span class="neg" id="hGap"></span> below budget</h1>
+  <p class="lede" id="lede"></p>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<section>
+  <h2>How the profit builds up</h2>
+  <p class="sub">Revenue less cost of sales gives gross profit. Gross profit less operating expenses gives net profit. Most of the shortfall is already present at gross profit.</p>
+  <div class="card">
+    <div class="legend"><span><i style="background:var(--total)"></i>Actual</span><span><i style="background:transparent;border:1.5px dashed var(--budget)"></i>Budget</span></div>
+    <svg id="build" viewBox="0 0 1060 340" role="img" aria-label="Waterfall from revenue to net profit, actual against budget"></svg>
+  </div>
+</section>
+
+<section>
+  <h2>Where the <span id="gap2"></span> gap comes from</h2>
+  <p class="sub">The bridge starts at budgeted net profit and adds each account's variance. Orange steps reduce profit; blue steps add to it.</p>
+  <div class="card">
+    <svg id="bridge" viewBox="0 0 1060 360" role="img" aria-label="Bridge from budget net profit to actual net profit by account"></svg>
+    <div class="callouts" id="callouts"></div>
+  </div>
+</section>
+
+<section>
+  <h2>Profit and loss statement</h2>
+  <p class="sub">Variance is shown by its effect on profit: a positive number is favourable (F), a negative number is unfavourable (U).</p>
+  <div class="card tblwrap">
+    <table id="stmt"></table>
+    <p class="note">Bars share one scale across all rows. Accounts within ±$200 of budget show no visible bar.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Monthly trend</h2>
+  <p class="sub" id="trendSub"></p>
+  <div class="grid2">
+    <div class="card">
+      <div class="legend"><span><i style="background:var(--fav)"></i>Above budget</span><span><i style="background:var(--unf)"></i>Below budget</span><span><i style="background:transparent;border-top:2px dashed var(--budget);height:0;border-radius:0"></i>Budget $12,650 a month</span></div>
+      <svg id="monthly" viewBox="0 0 520 280" role="img" aria-label="Net profit by month"></svg>
+    </div>
+    <div class="card">
+      <div class="legend"><span><i style="background:var(--total);height:3px"></i>Actual, cumulative</span><span><i style="background:transparent;border-top:2px dashed var(--budget);height:0;border-radius:0"></i>Budget, cumulative</span></div>
+      <svg id="cumul" viewBox="0 0 520 280" role="img" aria-label="Cumulative net profit against budget"></svg>
+    </div>
+  </div>
+  <h2 style="margin-top:24px;font-size:16px">The four accounts that move most</h2>
+  <p class="sub">Monthly actual (solid) against budget (dashed).</p>
+  <div class="grid4" id="minis"></div>
+  <div class="card tblwrap" style="margin-top:16px">
+    <table id="mtable"></table>
+  </div>
+</section>
+</div>
+
+<script>
+const CSV=`month,section,account,actual,budget
+2026-07,Revenue,Design fees,41400,42000
+2026-07,Revenue,Retainers,18000,18000
+2026-07,Revenue,Print resale,4943,6000
+2026-07,Cost of sales,Contractors,14772,14000
+2026-07,Cost of sales,Print costs,4592,4500
+2026-07,Operating expenses,Wages,25654,26000
+2026-07,Operating expenses,Rent,4132,4200
+2026-07,Operating expenses,Software,1625,1300
+2026-07,Operating expenses,Marketing,1368,2000
+2026-07,Operating expenses,Travel,1281,900
+2026-07,Operating expenses,Insurance,443,450
+2026-08,Revenue,Design fees,36973,42000
+2026-08,Revenue,Retainers,18000,18000
+2026-08,Revenue,Print resale,3648,6000
+2026-08,Cost of sales,Contractors,18186,14000
+2026-08,Cost of sales,Print costs,4385,4500
+2026-08,Operating expenses,Wages,25927,26000
+2026-08,Operating expenses,Rent,4113,4200
+2026-08,Operating expenses,Software,1625,1300
+2026-08,Operating expenses,Marketing,1683,2000
+2026-08,Operating expenses,Travel,905,900
+2026-08,Operating expenses,Insurance,443,450
+2026-09,Revenue,Design fees,42748,42000
+2026-09,Revenue,Retainers,18000,18000
+2026-09,Revenue,Print resale,3316,6000
+2026-09,Cost of sales,Contractors,14688,14000
+2026-09,Cost of sales,Print costs,4562,4500
+2026-09,Operating expenses,Wages,26624,26000
+2026-09,Operating expenses,Rent,4247,4200
+2026-09,Operating expenses,Software,1625,1300
+2026-09,Operating expenses,Marketing,1687,2000
+2026-09,Operating expenses,Travel,1249,900
+2026-09,Operating expenses,Insurance,453,450
+2026-10,Revenue,Design fees,41760,42000
+2026-10,Revenue,Retainers,18000,18000
+2026-10,Revenue,Print resale,4584,6000
+2026-10,Cost of sales,Contractors,17949,14000
+2026-10,Cost of sales,Print costs,4594,4500
+2026-10,Operating expenses,Wages,25649,26000
+2026-10,Operating expenses,Rent,4285,4200
+2026-10,Operating expenses,Software,1625,1300
+2026-10,Operating expenses,Marketing,1833,2000
+2026-10,Operating expenses,Travel,821,900
+2026-10,Operating expenses,Insurance,462,450
+2026-11,Revenue,Design fees,44325,42000
+2026-11,Revenue,Retainers,18000,18000
+2026-11,Revenue,Print resale,4815,6000
+2026-11,Cost of sales,Contractors,14637,14000
+2026-11,Cost of sales,Print costs,4490,4500
+2026-11,Operating expenses,Wages,26340,26000
+2026-11,Operating expenses,Rent,4273,4200
+2026-11,Operating expenses,Software,1625,1300
+2026-11,Operating expenses,Marketing,1223,2000
+2026-11,Operating expenses,Travel,821,900
+2026-11,Operating expenses,Insurance,450,450
+2026-12,Revenue,Design fees,47659,42000
+2026-12,Revenue,Retainers,18000,18000
+2026-12,Revenue,Print resale,5161,6000
+2026-12,Cost of sales,Contractors,16626,14000
+2026-12,Cost of sales,Print costs,4498,4500
+2026-12,Operating expenses,Wages,26661,26000
+2026-12,Operating expenses,Rent,4301,4200
+2026-12,Operating expenses,Software,1625,1300
+2026-12,Operating expenses,Marketing,1382,2000
+2026-12,Operating expenses,Travel,808,900
+2026-12,Operating expenses,Insurance,448,450`;
+
+const rows=CSV.trim().split('\n').slice(1).map(l=>{const [month,section,account,a,b]=l.split(',');return {month,section,account,a:+a,b:+b}});
+const SECTIONS=['Revenue','Cost of sales','Operating expenses'];
+const MONTHS=[...new Set(rows.map(r=>r.month))];
+const MN={'2026-07':'Jul','2026-08':'Aug','2026-09':'Sep','2026-10':'Oct','2026-11':'Nov','2026-12':'Dec'};
+const sign=s=>s==='Revenue'?1:-1;
+const fmt=n=>(n<0?'−':'')+'$'+Math.abs(Math.round(n)).toLocaleString('en-NZ');
+const fmtS=n=>(n>0?'+':n<0?'−':'')+'$'+Math.abs(Math.round(n)).toLocaleString('en-NZ');
+const fmtK=n=>(n<0?'−':'')+'$'+(Math.abs(n)>=1000?(Math.abs(n)/1000).toFixed(Math.abs(n)>=100000?0:1).replace(/\.0$/,'')+'k':Math.abs(n));
+const pct=(v,b)=>b?((v/b)*100).toFixed(1).replace('-','−')+'%':'–';
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+function tip(e,t){el('title',{},e,t);return e}
+
+// aggregates
+const accts=[];const seen={};
+rows.forEach(r=>{const k=r.section+'|'+r.account;if(!seen[k]){seen[k]={section:r.section,account:r.account,a:0,b:0,ma:{},mb:{}};accts.push(seen[k])}const o=seen[k];o.a+=r.a;o.b+=r.b;o.ma[r.month]=r.a;o.mb[r.month]=r.b});
+accts.forEach(o=>o.imp=sign(o.section)*(o.a-o.b));
+const sec={};SECTIONS.forEach(s=>{const l=accts.filter(o=>o.section===s);sec[s]={a:l.reduce((x,o)=>x+o.a,0),b:l.reduce((x,o)=>x+o.b,0)}});
+const T={rev:sec['Revenue'],cos:sec['Cost of sales'],opex:sec['Operating expenses']};
+T.gp={a:T.rev.a-T.cos.a,b:T.rev.b-T.cos.b};
+T.net={a:T.gp.a-T.opex.a,b:T.gp.b-T.opex.b};
+const gap=T.net.a-T.net.b;
+const mon=MONTHS.map(m=>{const r=rows.filter(x=>x.month===m);const s=(sct,f)=>r.filter(x=>x.section===sct).reduce((t,x)=>t+x[f],0);
+  const o={m,rev:s('Revenue','a'),revB:s('Revenue','b'),cos:s('Cost of sales','a'),cosB:s('Cost of sales','b'),opex:s('Operating expenses','a'),opexB:s('Operating expenses','b')};
+  o.net=o.rev-o.cos-o.opex;o.netB=o.revB-o.cosB-o.opexB;return o});
+const byName=n=>accts.find(o=>o.account===n);
+
+// header
+const con=byName('Contractors'),pr=byName('Print resale');
+document.getElementById('hNet').textContent=fmt(T.net.a);
+document.getElementById('hGap').textContent=fmt(-gap)+' ('+Math.abs(gap/T.net.b*100).toFixed(0)+'%)';
+document.getElementById('gap2').textContent=fmt(-gap);
+document.getElementById('lede').innerHTML=`Budget was <b>${fmt(T.net.b)}</b> for the half year. Two accounts explain the gap: <b class="neg">contractors cost ${fmt(-con.imp)} more</b> than budget and <b class="neg">print resale earned ${fmt(-pr.imp)} less</b>. Higher design fees and lower marketing spend recovered about ${fmt(byName('Design fees').imp+byName('Marketing').imp)}. Profit beat budget in November and December after a weak August.`;
+
+// KPIs
+const kpis=[['Revenue',T.rev,1],['Gross profit',T.gp,1],['Operating expenses',T.opex,-1],['Net profit',T.net,1,true]];
+document.getElementById('kpis').innerHTML=kpis.map(([l,v,s,hero])=>{const imp=s*(v.a-v.b);const c=imp>=0?'pos':'neg';
+  return `<div class="kpi${hero?' hero':''}"><div class="lab">${l}</div><div class="val">${fmt(v.a)}</div><div class="cmp">Budget ${fmt(v.b)}</div><div class="var ${c}">${fmtS(imp)} ${imp>=0?'F':'U'} · ${pct(s*(v.a-v.b),v.b)}</div></div>`}).join('');
+
+// Build-up waterfall
+(function(){
+  const svg=document.getElementById('build');const W=1060,H=340,L=64,R=16,Tp=28,B=44;
+  const max=420000;const y=v=>Tp+(H-Tp-B)*(1-v/max);
+  for(let v=0;v<=max;v+=100000){el('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:'var(--line)'},svg);el('text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'ax'},svg,fmtK(v))}
+  const steps=[
+    {n:'Revenue',a:[0,T.rev.a],b:[0,T.rev.b],tot:true,val:T.rev},
+    {n:'Cost of sales',a:[T.rev.a-T.cos.a,T.rev.a],b:[T.rev.b-T.cos.b,T.rev.b],val:T.cos,neg:true},
+    {n:'Gross profit',a:[0,T.gp.a],b:[0,T.gp.b],tot:true,val:T.gp},
+    {n:'Operating expenses',a:[T.gp.a-T.opex.a,T.gp.a],b:[T.gp.b-T.opex.b,T.gp.b],val:T.opex,neg:true},
+    {n:'Net profit',a:[0,T.net.a],b:[0,T.net.b],tot:true,val:T.net}];
+  const cw=(W-L-R)/steps.length;const bw=Math.min(64,cw*0.32);
+  steps.forEach((s,i)=>{const cx=L+cw*i+cw/2;
+    const xb=cx-bw-3,xa=cx+3;
+    // budget bar outline
+    tip(el('rect',{x:xb,y:y(s.b[1]),width:bw,height:y(s.b[0])-y(s.b[1]),fill:'none',stroke:'var(--budget)','stroke-width':1.5,'stroke-dasharray':'4 3',rx:2},svg),`${s.n} budget ${fmt(s.val.b)}`);
+    const col=s.tot?'var(--total)':'var(--line2)';
+    tip(el('rect',{x:xa,y:y(s.a[1]),width:bw,height:y(s.a[0])-y(s.a[1]),fill:s.tot?'var(--total)':'var(--muted)',opacity:s.tot?1:.55,rx:2},svg),`${s.n} actual ${fmt(s.val.a)}`);
+    // connectors
+    if(i<steps.length-1){const nxt=steps[i+1];const lvl=s.tot?s.a[1]:s.a[0];el('line',{x1:xa+bw,x2:L+cw*(i+1)+cw/2+3,y1:y(lvl),y2:y(lvl),stroke:'var(--faint)','stroke-dasharray':'2 3'},svg)}
+    el('text',{x:xa+bw/2,y:y(s.a[1])-8,'text-anchor':'middle',class:'lbl'},svg,(s.neg?'−':'')+fmtK(s.val.a).replace('−',''));
+    el('text',{x:xb+bw/2,y:y(s.b[1])-8,'text-anchor':'middle',class:'sm'},svg,(s.neg?'−':'')+fmtK(s.val.b));
+    el('text',{x:cx,y:H-B+20,'text-anchor':'middle','font-size':13,'font-weight':600},svg,s.n);
+    const imp=(s.neg?-1:1)*(s.val.a-s.val.b);
+    el('text',{x:cx,y:H-B+37,'text-anchor':'middle','font-size':12,'font-weight':600,fill:imp>=0?'var(--fav)':'var(--unf)'},svg,`${fmtS(imp)} vs budget`);
+  });
+})();
+
+// Bridge budget -> actual
+(function(){
+  const svg=document.getElementById('bridge');const W=1060,H=360,L=64,R=16,Tp=30,B=56;
+  const minorNames=['Print costs','Rent','Insurance','Retainers'];
+  const minor=accts.filter(o=>minorNames.includes(o.account));
+  let items=accts.filter(o=>!minorNames.includes(o.account)).map(o=>({n:o.account,v:o.imp,sec:o.section}));
+  items.push({n:'Other 4',v:minor.reduce((t,o)=>t+o.imp,0),sec:'',tipx:minor.map(o=>`${o.account} ${fmtS(o.imp)}`).join(', ')});
+  const negs=items.filter(i=>i.v<0).sort((a,b)=>a.v-b.v),poss=items.filter(i=>i.v>=0).sort((a,b)=>b.v-a.v);
+  // put "Other" last among negatives
+  const oi=negs.findIndex(i=>i.n==='Other 4');if(oi>=0){negs.push(negs.splice(oi,1)[0])}
+  items=[...negs,...poss];
+  const cols=[{n:'Budget net profit',tot:T.net.b},...items,{n:'Actual net profit',tot:T.net.a}];
+  const max=80000;const y=v=>Tp+(H-Tp-B)*(1-v/max);
+  for(let v=0;v<=max;v+=20000){el('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:'var(--line)'},svg);el('text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'ax'},svg,fmtK(v))}
+  const cw=(W-L-R)/cols.length,bw=cw*0.62;let run=T.net.b;
+  cols.forEach((c,i)=>{const x=L+cw*i+(cw-bw)/2;let top,bot,fill,label;
+    if(c.tot!=null){top=c.tot;bot=0;fill='var(--total)';label=fmt(c.tot)}
+    else{const s=run,e=run+c.v;top=Math.max(s,e);bot=Math.min(s,e);fill=c.v<0?'var(--unf)':'var(--fav)';label=fmtS(c.v);run=e}
+    const r=el('rect',{x,y:y(top),width:bw,height:Math.max(1.5,y(bot)-y(top)),fill,rx:2},svg);
+    tip(r,`${c.n}: ${label}${c.tipx?' ('+c.tipx+')':''}`);
+    if(i<cols.length-1){const lvl=c.tot!=null?c.tot:run;el('line',{x1:x+bw,x2:x+cw,y1:y(lvl),y2:y(lvl),stroke:'var(--faint)','stroke-dasharray':'2 3'},svg)}
+    el('text',{x:x+bw/2,y:y(top)-7,'text-anchor':'middle',class:'lbl',fill:c.tot!=null?'var(--ink)':(c.v<0?'var(--unf)':'var(--fav)')},svg,label);
+    const words=c.n.split(' ');const lines=c.tot!=null?[words[0],words.slice(1).join(' ')]:(c.n==='Other 4'?['Other','(4 accounts)']:(words.length>1?[words[0],words.slice(1).join(' ')]:[c.n]));
+    lines.forEach((ln,k)=>el('text',{x:x+bw/2,y:H-B+18+k*15,'text-anchor':'middle','font-size':12.5,'font-weight':c.tot!=null?650:500},svg,ln));
+    if(c.sec){el('text',{x:x+bw/2,y:H-B+18+lines.length*15,'text-anchor':'middle',class:'sm'},svg,c.sec==='Revenue'?'revenue':c.sec==='Cost of sales'?'cost of sales':'opex')}
+  });
+  const sw=byName('Software');
+  document.getElementById('callouts').innerHTML=`
+   <div class="callout u"><b>Contractors ${fmtS(con.imp)}</b>Over budget in every month. August (${fmt(con.ma['2026-08'])}) and October (${fmt(con.ma['2026-10'])}) ran about $4,000 over the $14,000 budget.</div>
+   <div class="callout u"><b>Print resale ${fmtS(pr.imp)}</b>Below the $6,000 budget in every month; the half year reached ${pct(pr.a,pr.b).replace('%','')}% of budget.</div>
+   <div class="callout f"><b>Design fees ${fmtS(byName('Design fees').imp)} · Marketing ${fmtS(byName('Marketing').imp)}</b>Fees recovered from a ${fmt(byName('Design fees').ma['2026-08'])} August to ${fmt(byName('Design fees').ma['2026-12'])} in December. Software ran ${fmt(sw.ma['2026-07']-sw.mb['2026-07'])} a month over budget.</div>`;
+})();
+
+// Statement table
+(function(){
+  const t=document.getElementById('stmt');const maxAbs=Math.max(...accts.map(o=>Math.abs(o.imp)));
+  const bar=imp=>{const w=Math.abs(imp)/maxAbs*48;const c=imp<0?'var(--unf)':'var(--fav)';
+    return `<svg viewBox="0 0 100 14" preserveAspectRatio="none" style="height:14px"><line x1="50" x2="50" y1="0" y2="14" stroke="var(--line2)" vector-effect="non-scaling-stroke"/>${w>0.6?`<rect x="${imp<0?50-w:50}" y="2" width="${w}" height="10" fill="${c}" rx="1"/>`:''}</svg>`};
+  const row=(cls,name,a,b,imp,showBar=true)=>`<tr class="${cls}"><td>${name}</td><td>${fmt(a)}</td><td>${fmt(b)}</td><td class="${imp>0?'pos':imp<0?'neg':''}">${imp===0?'$0':fmtS(imp)+(imp>0?' F':' U')}</td><td class="${imp>0?'pos':imp<0?'neg':''}">${b?(imp>=0?'+':'−')+Math.abs(imp/b*100).toFixed(1)+'%':'–'}</td><td class="bar">${showBar?bar(imp):''}</td></tr>`;
+  let h=`<thead><tr><th>Account</th><th>Actual</th><th>Budget</th><th>Variance</th><th>%</th><th class="bar" style="text-align:center">← Unfavourable · Favourable →</th></tr></thead><tbody>`;
+  SECTIONS.forEach(s=>{h+=`<tr class="sec"><td colspan="6">${s}</td></tr>`;
+    accts.filter(o=>o.section===s).forEach(o=>h+=row('acct',o.account,o.a,o.b,o.imp));
+    const v=sec[s];h+=row('subt','Total '+s.toLowerCase(),v.a,v.b,sign(s)*(v.a-v.b),false);
+    if(s==='Cost of sales')h+=row('subt','Gross profit',T.gp.a,T.gp.b,T.gp.a-T.gp.b,false);
+  });
+  h+=row('net','Net profit',T.net.a,T.net.b,gap,false)+'</tbody>';t.innerHTML=h;
+})();
+
+// Monthly charts
+(function(){
+  const below=mon.filter(m=>m.net<m.netB).length;
+  const aug=mon.find(m=>m.m==='2026-08');
+  document.getElementById('trendSub').textContent=`Net profit was below its $12,650 monthly budget in ${below} of 6 months. August was the low point at ${fmt(aug.net)}, when design fees dipped and contractor costs peaked. November and December both beat budget.`;
+  const W=520,H=280,L=54,R=12,Tp=24,B=32;
+  const svg=document.getElementById('monthly');const max=20000;const y=v=>Tp+(H-Tp-B)*(1-v/max);
+  for(let v=0;v<=max;v+=5000){el('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:'var(--line)'},svg);el('text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'ax'},svg,fmtK(v))}
+  const cw=(W-L-R)/mon.length,bw=cw*0.56;
+  mon.forEach((m,i)=>{const x=L+cw*i+(cw-bw)/2;const c=m.net>=m.netB?'var(--fav)':'var(--unf)';
+    tip(el('rect',{x,y:y(m.net),width:bw,height:y(0)-y(m.net),fill:c,rx:2},svg),`${MN[m.m]}: ${fmt(m.net)} (budget ${fmt(m.netB)}, ${fmtS(m.net-m.netB)})`);
+    el('text',{x:x+bw/2,y:y(m.net)-6,'text-anchor':'middle',class:'lbl'},svg,fmtK(m.net));
+    el('text',{x:x+bw/2,y:H-B+18,'text-anchor':'middle','font-size':12.5},svg,MN[m.m]);
+  });
+  el('line',{x1:L,x2:W-R,y1:y(12650),y2:y(12650),stroke:'var(--budget)','stroke-width':2,'stroke-dasharray':'6 4'},svg);
+
+  const sv2=document.getElementById('cumul');const max2=80000;const y2=v=>Tp+(H-Tp-B)*(1-v/max2);
+  for(let v=0;v<=max2;v+=20000){el('line',{x1:L,x2:W-84,y1:y2(v),y2:y2(v),stroke:'var(--line)'},sv2);el('text',{x:L-8,y:y2(v)+4,'text-anchor':'end',class:'ax'},sv2,fmtK(v))}
+  let ca=0,cb=0;const pa=[],pb=[];const R2=84,cw2=(W-L-R2)/mon.length;const xs=i=>L+cw2*i+cw2/2;
+  mon.forEach((m,i)=>{ca+=m.net;cb+=m.netB;pa.push([xs(i),y2(ca),ca]);pb.push([xs(i),y2(cb),cb])});
+  // gap shading
+  el('path',{d:'M'+pa.map(p=>p[0]+','+p[1]).join('L')+'L'+pb.slice().reverse().map(p=>p[0]+','+p[1]).join('L')+'Z',fill:'var(--unf-soft)',opacity:.8},sv2);
+  el('path',{d:'M'+pb.map(p=>p[0]+','+p[1]).join('L'),fill:'none',stroke:'var(--budget)','stroke-width':2,'stroke-dasharray':'6 4'},sv2);
+  el('path',{d:'M'+pa.map(p=>p[0]+','+p[1]).join('L'),fill:'none',stroke:'var(--total)','stroke-width':2.5},sv2);
+  pa.forEach((p,i)=>{tip(el('circle',{cx:p[0],cy:p[1],r:3.5,fill:'var(--total)'},sv2),`${MN[mon[i].m]} cumulative: ${fmt(p[2])} vs ${fmt(pb[i][2])}`);el('text',{x:p[0],y:H-B+18,'text-anchor':'middle','font-size':12.5},sv2,MN[mon[i].m])});
+  const lA=pa[pa.length-1],lB=pb[pb.length-1];
+  el('text',{x:lB[0]+8,y:lB[1]+4,class:'sm'},sv2,'Budget '+fmtK(lB[2]));
+  el('text',{x:lA[0]+8,y:lA[1]+4,class:'lbl'},sv2,'Actual '+fmtK(lA[2]));
+  el('line',{x1:lA[0]+40,x2:lA[0]+40,y1:lB[1]+10,y2:lA[1]-10,stroke:'var(--unf)','stroke-width':1.5},sv2);
+  el('text',{x:lA[0]+46,y:(lA[1]+lB[1])/2+4,'font-size':12,'font-weight':600,fill:'var(--unf)'},sv2,fmtK(lA[2]-lB[2]));
+
+  // minis
+  const host=document.getElementById('minis');
+  ['Contractors','Print resale','Design fees','Software'].forEach(n=>{const o=byName(n);
+    const d=document.createElement('div');d.className='card mini';d.style.padding='14px';
+    d.innerHTML=`<h3>${n}</h3><div class="m"><span class="${o.imp<0?'neg':'pos'}" style="font-weight:600">${fmtS(o.imp)} ${o.imp<0?'U':'F'}</span> · ${o.section.toLowerCase()}</div>`;
+    host.appendChild(d);
+    const w=240,h=110,l=40,r=8,t=12,b=20;const svg=el('svg',{viewBox:`0 0 ${w} ${h}`},d);
+    const vals=[...Object.values(o.ma),...Object.values(o.mb)];let lo=Math.min(...vals),hi=Math.max(...vals);const pad=(hi-lo)*0.15||100;lo-=pad;hi+=pad;
+    const yy=v=>t+(h-t-b)*(1-(v-lo)/(hi-lo));const xx=i=>l+(w-l-r)*i/(MONTHS.length-1);
+    [lo+pad,hi-pad].forEach(v=>{el('line',{x1:l,x2:w-r,y1:yy(v),y2:yy(v),stroke:'var(--line)'},svg);el('text',{x:l-5,y:yy(v)+3.5,'text-anchor':'end',class:'sm','font-size':10},svg,fmtK(v))});
+    el('path',{d:'M'+MONTHS.map((m,i)=>xx(i)+','+yy(o.mb[m])).join('L'),fill:'none',stroke:'var(--budget)','stroke-width':1.5,'stroke-dasharray':'4 3'},svg);
+    const c=o.imp<0?'var(--unf)':'var(--fav)';
+    el('path',{d:'M'+MONTHS.map((m,i)=>xx(i)+','+yy(o.ma[m])).join('L'),fill:'none',stroke:c,'stroke-width':2},svg);
+    MONTHS.forEach((m,i)=>{tip(el('circle',{cx:xx(i),cy:yy(o.ma[m]),r:2.6,fill:c},svg),`${MN[m]}: ${fmt(o.ma[m])} (budget ${fmt(o.mb[m])})`);if(i%1===0)el('text',{x:xx(i),y:h-4,'text-anchor':'middle',class:'sm','font-size':10},svg,MN[m][0])});
+  });
+
+  // monthly table
+  const tb=document.getElementById('mtable');
+  const line=(lab,f,fb,s,cls='')=>`<tr class="${cls}"><td>${lab}</td>${mon.map(m=>`<td>${fmt(m[f])}</td>`).join('')}<td>${fmt(mon.reduce((t,m)=>t+m[f],0))}</td></tr>`+
+     `<tr><td style="padding-left:22px;color:var(--muted);font-size:12.5px">vs budget</td>${mon.map(m=>{const v=s*(m[f]-m[fb]);return `<td class="${v>0?'pos':v<0?'neg':''}" style="font-size:12.5px">${v===0?'$0':fmtS(v)}</td>`}).join('')}<td style="font-size:12.5px" class="${s*(mon.reduce((t,m)=>t+m[f]-m[fb],0))<0?'neg':'pos'}">${fmtS(s*mon.reduce((t,m)=>t+m[f]-m[fb],0))}</td></tr>`;
+  mon.forEach(m=>{m.gp=m.rev-m.cos;m.gpB=m.revB-m.cosB});
+  tb.innerHTML=`<thead><tr><th>Month</th>${mon.map(m=>`<th>${MN[m.m]}</th>`).join('')}<th>Half year</th></tr></thead><tbody>`+
+    line('Revenue','rev','revB',1)+line('Cost of sales','cos','cosB',-1)+line('Gross profit','gp','gpB',1,'subt')+line('Operating expenses','opex','opexB',-1)+line('Net profit','net','netB',1,'net')+'</tbody>';
+})();
+</script>
+</body>
+</html>

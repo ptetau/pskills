@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas Codebase Structure</title>
+<style>
+:root{
+  --bg:#f7f6f3; --panel:#ffffff; --ink:#1d1f23; --muted:#62666f; --faint:#9a9ea6;
+  --line:#e3e1dc; --grid:#eeece8;
+  --accent:#2f5fd0; --cycle:#d2362f; --hot:#c4501b; --node:#eef1f8; --nodeLine:#b9c3db;
+  --heat-a:#f1ede6; --heat-b:#f3c48a; --heat-c:#c4501b; --heat-d:#7a1f0e;
+  --dot:#a7acb5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171b; --panel:#1d2026; --ink:#e9eaec; --muted:#a2a6ae; --faint:#6f747d;
+    --line:#2d3139; --grid:#262a31;
+    --accent:#7ea2ff; --cycle:#ff6b61; --hot:#ff8a4c; --node:#232a38; --nodeLine:#3d4a66;
+    --heat-a:#2a2d33; --heat-b:#6b4a2a; --heat-c:#c4612a; --heat-d:#ffb07a;
+    --dot:#5d636d;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171b; --panel:#1d2026; --ink:#e9eaec; --muted:#a2a6ae; --faint:#6f747d;
+  --line:#2d3139; --grid:#262a31;
+  --accent:#7ea2ff; --cycle:#ff6b61; --hot:#ff8a4c; --node:#232a38; --nodeLine:#3d4a66;
+  --heat-a:#2a2d33; --heat-b:#6b4a2a; --heat-c:#c4612a; --heat-d:#ffb07a;
+  --dot:#5d636d;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1140px;margin:0 auto;padding:32px 16px 64px}
+header h1{font-size:26px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.lede{font-size:17px;max-width:820px;margin:0 0 20px;color:var(--ink)}
+.lede b{font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi .v{font-size:26px;font-weight:650;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:13px;color:var(--muted);margin-top:4px}
+.kpi.warn .v{color:var(--cycle)}
+.kpi.hot .v{color:var(--hot)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 20px 18px;margin-bottom:20px}
+section h2{font-size:18px;margin:0 0 2px}
+section .sub{color:var(--muted);font-size:14px;margin:0 0 14px;max-width:860px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:12.5px;color:var(--muted);margin:8px 0 0}
+.ramp{display:inline-block;width:140px;height:10px;border-radius:3px;vertical-align:middle;margin:0 6px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+svg text{fill:var(--ink)}
+.two{display:grid;grid-template-columns:1.45fr 1fr;gap:20px;align-items:start}
+.note{font-size:14px;color:var(--ink)}
+.note p{margin:0 0 10px}
+.callout{border-left:3px solid var(--cycle);padding:8px 12px;background:color-mix(in srgb,var(--cycle) 7%,transparent);border-radius:0 8px 8px 0;margin-bottom:12px}
+.callout.hot{border-color:var(--hot);background:color-mix(in srgb,var(--hot) 7%,transparent)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td.n,th.n{text-align:right}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;font-weight:600}
+.tag.hot{color:var(--hot);background:color-mix(in srgb,var(--hot) 14%,transparent)}
+.tag.churn{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.tag.cold{color:var(--muted);background:color-mix(in srgb,var(--muted) 14%,transparent)}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:6px;opacity:0;transition:opacity .1s;z-index:10;max-width:260px;line-height:1.35}
+.share-row{display:grid;grid-template-columns:70px 1fr 1fr;gap:10px;align-items:center;font-size:13px;margin:5px 0}
+.share-row .bar{position:relative;height:16px;background:var(--grid);border-radius:3px}
+.share-row .bar span{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.share-row .bar em{position:absolute;left:calc(var(--w) + 6px);top:-1px;font-style:normal;font-size:12px;color:var(--muted)}
+.share-head{display:grid;grid-template-columns:70px 1fr 1fr;gap:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.scroll{overflow-x:auto}
+footer{color:var(--faint);font-size:12.5px;margin-top:8px}
+@media (max-width:820px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .two{grid-template-columns:1fr}
+  header h1{font-size:22px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Refactor planning · atlas monorepo · last 90 days</div>
+  <h1>Structure of the atlas codebase</h1>
+  <p class="lede">Two modules hold most of the code: <b>web</b> and <b>core</b> have 54% of all lines. The dependency graph has <b>one cycle: core and billing import each other</b>. Five large files also change often, and they are the best places to start a refactor.</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v">32,200</div><div class="l">lines of code in 141 files and 8 modules</div></div>
+    <div class="kpi"><div class="v">54%</div><div class="l">of the lines are in web (10,088) and core (7,279)</div></div>
+    <div class="kpi warn"><div class="v">1 cycle</div><div class="l">core → billing (4 imports) closes a loop with billing → core (22)</div></div>
+    <div class="kpi hot"><div class="v">5 files</div><div class="l">have 400 or more lines and 8 or more commits in 90 days</div></div>
+  </div>
+</header>
+
+<section>
+  <h2>Where the code is</h2>
+  <p class="sub">Each block is one file. Its area shows the lines of code, and its color shows the commits in the last 90 days. Files are grouped by module, and the largest module is at the top left.</p>
+  <div id="treemap"></div>
+  <div class="legend"><span>Commits in 90 days: 0</span><span class="ramp" id="ramp"></span><span>34</span><span style="margin-left:12px">Hover a block for its path.</span></div>
+</section>
+
+<section>
+  <h2>Share of code compared with share of change</h2>
+  <p class="sub">Billing has 7.6% of the lines but gets 23% of all commits. It changes three times more often than its size predicts. Core is the opposite: 23% of the lines and 13% of the commits.</p>
+  <div class="share-head"><div>Module</div><div>Share of lines (32,200)</div><div>Share of commits (745)</div></div>
+  <div id="shares"></div>
+</section>
+
+<section>
+  <h2>How the modules depend on each other</h2>
+  <p class="sub">An arrow points from the module that imports to the module that it imports. The width of an arrow shows the count of import statements. The box size shows the lines of code.</p>
+  <div class="two">
+    <div><svg id="graph" viewBox="0 0 720 500" width="100%" role="img" aria-label="Module dependency graph"></svg></div>
+    <div class="note">
+      <div class="callout"><p><b>The only cycle: core ↔ billing.</b> Core imports billing 4 times, and billing imports core 22 times. Core is the base that api, auth, billing and jobs build on. With this loop, a change in billing can reach every module that imports core.</p><p style="margin:0">Remove the 4 imports from core to billing to make the graph a clean set of layers. Move the shared types into core or shared, or invert the call with an interface.</p></div>
+      <p><b>Core carries the most load.</b> Four modules import core, with 81 import statements in total. Treat its public interface as a contract during the refactor.</p>
+      <p><b>The heaviest edge is web → shared</b> (58 imports). Web uses no other module, so web and shared form a separate front-end group.</p>
+      <p><b>Infra has no import edges.</b> It is Terraform and you can refactor it on its own.</p>
+      <table>
+        <thead><tr><th>From</th><th>To</th><th class="n">Imports</th></tr></thead>
+        <tbody id="edges"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Big files that also change often</h2>
+  <p class="sub">Each dot is one file. A file in the shaded corner is large (400 or more lines) and changes often (8 or more commits in 90 days). These files cost the most each time someone touches them.</p>
+  <div class="two">
+    <div><svg id="scatter" viewBox="0 0 680 440" width="100%" role="img" aria-label="Lines of code compared with commits per file"></svg>
+      <div class="legend"><span><i class="sw" style="background:var(--hot)"></i>Large and changes often</span><span><i class="sw" style="background:var(--accent)"></i>Small, very high churn (20+ commits)</span><span><i class="sw" style="background:var(--dot)"></i>Other files</span></div>
+    </div>
+    <div class="note">
+      <div class="callout hot"><p style="margin:0"><b>Start with these five files.</b> They have 3,325 lines, and they had 60 commits in 90 days. Split each one along its busiest seams first.</p></div>
+      <p><b>Billing has small files with very high churn.</b> <code>billing/handlers/f01.go</code> (34 commits), <code>billing/service/f02.go</code> (33) and <code>billing/views/f00.go</code> (28) are small, but each one changes about every three days. They show unstable logic, not files that are too big.</p>
+      <p><b>Four large files did not change.</b> <code>jobs/util/f02.py</code>, <code>core/model/f05.go</code>, <code>web/tasks/f16.tsx</code> and <code>jobs/model/f06.py</code> each have more than 700 lines and 0 or 1 commits. They are stable, so they have low priority.</p>
+    </div>
+  </div>
+  <h3 style="font-size:15px;margin:18px 0 6px">Top 12 files by lines × commits</h3>
+  <div class="scroll"><table>
+    <thead><tr><th>#</th><th>File</th><th>Module</th><th class="n">Lines</th><th class="n">Commits</th><th class="n">Lines × commits</th><th>Type</th></tr></thead>
+    <tbody id="rank"></tbody>
+  </table></div>
+</section>
+
+<footer>Source: files.csv (141 files: path, module, language, lines of code, commits in the last 90 days) and imports.csv (10 edges between top-level modules).</footer>
+</div>
+<div id="tip"></div>
+
+<script>
+const FILES=`api/views/f00.go,api,Go,375,0
+api/service/f01.go,api,Go,408,5
+api/tasks/f02.go,api,Go,279,0
+api/tasks/f03.go,api,Go,82,0
+api/views/f04.go,api,Go,237,1
+api/service/f05.go,api,Go,120,2
+api/tasks/f06.go,api,Go,289,4
+api/tasks/f07.go,api,Go,38,0
+api/views/f08.go,api,Go,150,3
+api/handlers/f09.go,api,Go,271,7
+api/tasks/f10.go,api,Go,150,0
+api/service/f11.go,api,Go,50,6
+api/handlers/f12.go,api,Go,89,2
+api/model/f13.go,api,Go,156,2
+api/util/f14.go,api,Go,287,0
+api/service/f15.go,api,Go,50,9
+api/model/f16.go,api,Go,93,1
+api/util/f17.go,api,Go,235,4
+core/service/f00.go,core,Go,99,1
+core/util/f01.go,core,Go,290,3
+core/handlers/f02.go,core,Go,430,4
+core/model/f03.go,core,Go,175,0
+core/views/f04.go,core,Go,355,4
+core/model/f05.go,core,Go,1066,0
+core/util/f06.go,core,Go,498,1
+core/service/f07.go,core,Go,215,1
+core/views/f08.go,core,Go,295,8
+core/model/f09.go,core,Go,91,0
+core/handlers/f10.go,core,Go,82,7
+core/model/f11.go,core,Go,204,0
+core/util/f12.go,core,Go,46,0
+core/model/f13.go,core,Go,75,4
+core/util/f14.go,core,Go,118,4
+core/model/f15.go,core,Go,231,0
+core/handlers/f16.go,core,Go,74,3
+core/views/f17.go,core,Go,101,1
+core/tasks/f18.go,core,Go,50,16
+core/tasks/f19.go,core,Go,119,2
+core/handlers/f20.go,core,Go,90,2
+core/util/f21.go,core,Go,247,2
+core/util/f22.go,core,Go,256,3
+core/model/f23.go,core,Go,208,1
+core/service/f24.go,core,Go,590,8
+core/tasks/f25.go,core,Go,496,4
+core/util/f26.go,core,Go,112,7
+core/util/f27.go,core,Go,122,0
+core/model/f28.go,core,Go,227,9
+core/service/f29.go,core,Go,317,0
+billing/views/f00.go,billing,Go,97,28
+billing/handlers/f01.go,billing,Go,128,34
+billing/service/f02.go,billing,Go,217,33
+billing/model/f03.go,billing,Go,200,4
+billing/tasks/f04.go,billing,Go,205,16
+billing/handlers/f05.go,billing,Go,199,6
+billing/service/f06.go,billing,Go,69,3
+billing/tasks/f07.go,billing,Go,127,0
+billing/service/f08.go,billing,Go,207,4
+billing/service/f09.go,billing,Go,30,13
+billing/service/f10.go,billing,Go,212,10
+billing/service/f11.go,billing,Go,270,8
+billing/handlers/f12.go,billing,Go,316,4
+billing/tasks/f13.go,billing,Go,163,9
+auth/model/f00.go,auth,Go,281,8
+auth/util/f01.go,auth,Go,83,0
+auth/model/f02.go,auth,Go,75,2
+auth/tasks/f03.go,auth,Go,85,2
+auth/util/f04.go,auth,Go,735,9
+auth/tasks/f05.go,auth,Go,168,5
+auth/util/f06.go,auth,Go,210,1
+auth/views/f07.go,auth,Go,145,5
+auth/handlers/f08.go,auth,Go,111,3
+web/util/f00.tsx,web,TypeScript,139,7
+web/service/f01.tsx,web,TypeScript,399,8
+web/model/f02.tsx,web,TypeScript,624,0
+web/handlers/f03.tsx,web,TypeScript,216,16
+web/views/f04.tsx,web,TypeScript,406,4
+web/views/f05.tsx,web,TypeScript,310,8
+web/views/f06.tsx,web,TypeScript,186,12
+web/handlers/f07.tsx,web,TypeScript,109,2
+web/model/f08.tsx,web,TypeScript,156,4
+web/handlers/f09.tsx,web,TypeScript,112,0
+web/model/f10.tsx,web,TypeScript,165,2
+web/tasks/f11.tsx,web,TypeScript,172,2
+web/service/f12.tsx,web,TypeScript,356,10
+web/views/f13.tsx,web,TypeScript,335,4
+web/handlers/f14.tsx,web,TypeScript,226,12
+web/service/f15.tsx,web,TypeScript,243,10
+web/tasks/f16.tsx,web,TypeScript,1062,0
+web/handlers/f17.tsx,web,TypeScript,157,11
+web/model/f18.tsx,web,TypeScript,259,1
+web/tasks/f19.tsx,web,TypeScript,181,1
+web/service/f20.tsx,web,TypeScript,188,4
+web/model/f21.tsx,web,TypeScript,351,1
+web/util/f22.tsx,web,TypeScript,223,24
+web/views/f23.tsx,web,TypeScript,234,3
+web/model/f24.tsx,web,TypeScript,82,8
+web/model/f25.tsx,web,TypeScript,34,0
+web/util/f26.tsx,web,TypeScript,146,2
+web/service/f27.tsx,web,TypeScript,112,0
+web/views/f28.tsx,web,TypeScript,190,6
+web/model/f29.tsx,web,TypeScript,370,5
+web/views/f30.tsx,web,TypeScript,70,6
+web/model/f31.tsx,web,TypeScript,1049,9
+web/views/f32.tsx,web,TypeScript,87,11
+web/tasks/f33.tsx,web,TypeScript,181,5
+web/service/f34.tsx,web,TypeScript,59,12
+web/service/f35.tsx,web,TypeScript,179,3
+web/views/f36.tsx,web,TypeScript,95,6
+web/service/f37.tsx,web,TypeScript,306,0
+web/tasks/f38.tsx,web,TypeScript,129,10
+web/handlers/f39.tsx,web,TypeScript,190,5
+shared/model/f00.tsx,shared,TypeScript,276,2
+shared/util/f01.tsx,shared,TypeScript,40,10
+shared/model/f02.tsx,shared,TypeScript,65,2
+shared/views/f03.tsx,shared,TypeScript,212,8
+shared/util/f04.tsx,shared,TypeScript,80,2
+shared/views/f05.tsx,shared,TypeScript,433,22
+shared/model/f06.tsx,shared,TypeScript,110,4
+shared/service/f07.tsx,shared,TypeScript,160,1
+shared/tasks/f08.tsx,shared,TypeScript,212,3
+shared/model/f09.tsx,shared,TypeScript,518,12
+shared/util/f10.tsx,shared,TypeScript,166,11
+shared/model/f11.tsx,shared,TypeScript,152,3
+jobs/model/f00.py,jobs,Python,69,1
+jobs/util/f01.py,jobs,Python,129,8
+jobs/util/f02.py,jobs,Python,1087,1
+jobs/service/f03.py,jobs,Python,161,1
+jobs/views/f04.py,jobs,Python,255,8
+jobs/service/f05.py,jobs,Python,26,7
+jobs/model/f06.py,jobs,Python,737,0
+jobs/handlers/f07.py,jobs,Python,68,2
+jobs/views/f08.py,jobs,Python,398,1
+jobs/util/f09.py,jobs,Python,252,5
+infra/util/f00.tf,infra,HCL,207,2
+infra/views/f01.tf,infra,HCL,164,4
+infra/model/f02.tf,infra,HCL,54,6
+infra/views/f03.tf,infra,HCL,197,0
+infra/service/f04.tf,infra,HCL,346,2
+infra/tasks/f05.tf,infra,HCL,216,11
+infra/tasks/f06.tf,infra,HCL,273,9
+infra/model/f07.tf,infra,HCL,78,15`;
+const EDGES=[["api","core",41],["api","auth",12],["api","billing",9],["billing","core",22],["auth","core",7],["core","shared",3],["web","shared",58],["jobs","core",11],["jobs","billing",6],["core","billing",4]];
+
+const files=FILES.trim().split("\n").map(l=>{const [path,module,lang,loc,c]=l.split(",");return {path,module,lang,loc:+loc,c:+c}});
+const BIG=400, OFTEN=8, CHURN=20;
+files.forEach(f=>{f.hot=f.loc>=BIG&&f.c>=OFTEN; f.churn=!f.hot&&f.c>=CHURN; f.cold=f.loc>=700&&f.c<=1;});
+const mods={};
+files.forEach(f=>{(mods[f.module]??={name:f.module,lang:f.lang,loc:0,c:0,n:0,files:[]});const m=mods[f.module];m.loc+=f.loc;m.c+=f.c;m.n++;m.files.push(f)});
+const modList=Object.values(mods).sort((a,b)=>b.loc-a.loc);
+const TOT=files.reduce((s,f)=>s+f.loc,0), TOTC=files.reduce((s,f)=>s+f.c,0);
+const MAXC=Math.max(...files.map(f=>f.c));
+const NS="http://www.w3.org/2000/svg";
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>n.toLocaleString("en-US");
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+
+// tooltip
+const tip=document.getElementById("tip");
+function showTip(e,html){tip.innerHTML=html;tip.style.opacity=1;const x=Math.min(e.clientX+14,innerWidth-270);tip.style.left=x+"px";tip.style.top=(e.clientY+14)+"px"}
+function hideTip(){tip.style.opacity=0}
+function bindTip(node,fn){node.addEventListener("mousemove",e=>showTip(e,fn()));node.addEventListener("mouseleave",hideTip)}
+const fileTip=f=>`<b>${f.path}</b><br>${f.lang} · ${fmt(f.loc)} lines · ${f.c} commits`;
+
+// color ramp
+function hex(h){h=h.replace("#","");return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16))}
+function mix(a,b,t){return "rgb("+a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(",")+")"}
+function heat(c){
+  const stops=[css("--heat-a"),css("--heat-b"),css("--heat-c"),css("--heat-d")].map(hex);
+  const t=Math.sqrt(c/MAXC)*3; const i=Math.min(2,Math.floor(t));
+  return mix(stops[i],stops[i+1],t-i);
+}
+function lum(rgb){const m=rgb.match(/\d+/g).map(Number);return (0.299*m[0]+0.587*m[1]+0.114*m[2])/255}
+
+// squarified treemap
+function squarify(items,x,y,w,h){
+  const total=items.reduce((s,d)=>s+d.v,0); const out=[]; if(!total) return out;
+  const scale=w*h/total; let rest=items.map(d=>({...d,a:d.v*scale}));
+  let rx=x,ry=y,rw=w,rh=h;
+  while(rest.length){
+    const side=Math.min(rw,rh); let row=[],best=Infinity;
+    while(rest.length){
+      const cand=[...row,rest[0]]; const s=cand.reduce((a,d)=>a+d.a,0);
+      const worst=Math.max(...cand.map(d=>Math.max(side*side*d.a/(s*s),(s*s)/(side*side*d.a))));
+      if(worst<=best){row=cand;best=worst;rest.shift()}else break;
+    }
+    const s=row.reduce((a,d)=>a+d.a,0);
+    if(rw>=rh){const cw=s/rh;let cy=ry;row.forEach(d=>{const ch=d.a/cw;out.push({...d,x:rx,y:cy,w:cw,h:ch});cy+=ch});rx+=cw;rw-=cw}
+    else{const ch=s/rw;let cx=rx;row.forEach(d=>{const cw=d.a/ch;out.push({...d,x:cx,y:ry,w:cw,h:ch});cx+=cw});ry+=ch;rh-=ch}
+  }
+  return out;
+}
+function drawTreemap(){
+  const host=document.getElementById("treemap"); host.innerHTML="";
+  const W=host.clientWidth, H=W<600?Math.round(W*1.1):460;
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:W,height:H,role:"img","aria-label":"Treemap of files by module"},host);
+  const mrects=squarify(modList.map(m=>({v:m.loc,m})),0,0,W,H);
+  const bg=css("--panel");
+  mrects.forEach(r=>{
+    const g=el("g",{},svg); const pad=2, head=18;
+    const frs=squarify([...r.m.files].sort((a,b)=>b.loc-a.loc).map(f=>({v:f.loc,f})),r.x+pad,r.y+head,Math.max(1,r.w-2*pad),Math.max(1,r.h-head-pad));
+    el("rect",{x:r.x,y:r.y,width:r.w,height:r.h,fill:css("--grid"),stroke:bg,"stroke-width":3},g);
+    frs.forEach(fr=>{
+      const f=fr.f, col=heat(f.c);
+      const rect=el("rect",{x:fr.x+.5,y:fr.y+.5,width:Math.max(0,fr.w-1),height:Math.max(0,fr.h-1),fill:col,rx:1.5},g);
+      if(f.hot){rect.setAttribute("stroke",css("--ink"));rect.setAttribute("stroke-width",1.5)}
+      bindTip(rect,()=>fileTip(f)+(f.hot?"<br><b>Large and changes often</b>":""));
+      if(fr.w>54&&fr.h>28){
+        const dark=lum(col)<0.5; const name=f.path.split("/").slice(1).join("/");
+        const t=el("text",{x:fr.x+5,y:fr.y+14,"font-size":10.5,"pointer-events":"none",style:`fill:${dark?"#fff":"#1d1f23"}`},g);
+        t.textContent=fr.w>92?name:name.split("/")[1];
+        if(fr.h>40){const t2=el("text",{x:fr.x+5,y:fr.y+27,"font-size":10,"pointer-events":"none",style:`fill:${dark?"#ffffffcc":"#1d1f23aa"}`},g);t2.textContent=fmt(f.loc)+" · "+f.c+"c"}
+      }
+    });
+    const lab=el("text",{x:r.x+6,y:r.y+13,"font-size":12,"font-weight":650},g);
+    lab.textContent=r.w>120?`${r.m.name}  ${fmt(r.m.loc)} lines · ${(r.m.loc/TOT*100).toFixed(0)}%`:r.m.name;
+  });
+  const ramp=document.getElementById("ramp");
+  ramp.style.background=`linear-gradient(90deg,${[0,.06,.2,.45,.7,1].map(t=>heat(t*MAXC)).join(",")})`;
+}
+
+// share bars
+function drawShares(){
+  const host=document.getElementById("shares"); host.innerHTML="";
+  const maxS=Math.max(...modList.map(m=>Math.max(m.loc/TOT,m.c/TOTC)));
+  modList.forEach(m=>{
+    const a=m.loc/TOT, b=m.c/TOTC; const over=b>a*1.8;
+    const row=document.createElement("div"); row.className="share-row";
+    const w1=(a/maxS*80).toFixed(1)+"%", w2=(b/maxS*80).toFixed(1)+"%";
+    row.innerHTML=`<div style="font-weight:${over?650:500}">${m.name}</div>
+      <div class="bar" style="--w:${w1}"><span style="width:${w1};background:var(--faint)"></span><em>${(a*100).toFixed(1)}% · ${fmt(m.loc)}</em></div>
+      <div class="bar" style="--w:${w2}"><span style="width:${w2};background:${over?"var(--hot)":"var(--accent)"}"></span><em>${(b*100).toFixed(1)}% · ${m.c}${over?" · 3× its size":""}</em></div>`;
+    host.appendChild(row);
+  });
+}
+
+// dependency graph
+function drawGraph(){
+  const svg=document.getElementById("graph"); svg.innerHTML="";
+  const pos={web:[130,60],api:[380,60],jobs:[625,60],auth:[270,195],billing:[605,195],core:[400,330],shared:[150,440],infra:[610,440]};
+  const maxLoc=Math.max(...modList.map(m=>m.loc));
+  const box={}; for(const k in pos){const m=mods[k];const s=Math.sqrt(m.loc/maxLoc);box[k]={cx:pos[k][0],cy:pos[k][1],w:70+70*s,h:34+22*s}}
+  const defs=el("defs",{},svg);
+  [["a",css("--muted")],["c",css("--cycle")]].forEach(([id,col])=>{
+    const mk=el("marker",{id:"arr-"+id,viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:5,markerHeight:5,orient:"auto-start-reverse",markerUnits:"strokeWidth"},defs);
+    el("path",{d:"M0,0 L10,5 L0,10 z",fill:col},mk);
+  });
+  function edgePt(b,dx,dy){const sx=Math.abs(dx)>1e-6?(b.w/2+4)/Math.abs(dx):Infinity, sy=Math.abs(dy)>1e-6?(b.h/2+4)/Math.abs(dy):Infinity;const s=Math.min(sx,sy);return [b.cx+dx*s,b.cy+dy*s]}
+  const maxI=Math.max(...EDGES.map(e=>e[2]));
+  const cyc=new Set(EDGES.filter(([a,b])=>EDGES.some(([c,d])=>c===b&&d===a)).map(([a,b])=>a+">"+b));
+  EDGES.forEach(([a,b,n])=>{
+    const A=box[a],B=box[b]; const isC=cyc.has(a+">"+b);
+    let dx=B.cx-A.cx, dy=B.cy-A.cy; const len=Math.hypot(dx,dy);
+    let off=isC?30:0;
+    const nx=-dy/len, ny=dx/len;
+    const mx=(A.cx+B.cx)/2+nx*off, my=(A.cy+B.cy)/2+ny*off;
+    const p1=edgePt(A,mx-A.cx,my-A.cy), p2=edgePt(B,mx-B.cx,my-B.cy);
+    const col=isC?css("--cycle"):css("--muted");
+    const sw=1.2+6*Math.sqrt(n/maxI);
+    const path=el("path",{d:`M${p1[0]},${p1[1]} Q${mx},${my} ${p2[0]},${p2[1]}`,fill:"none",stroke:col,"stroke-width":sw,"stroke-opacity":isC?.95:.55,"marker-end":`url(#arr-${isC?"c":"a"})`,"stroke-linecap":"round"},svg);
+    if(isC) path.setAttribute("stroke-dasharray", a==="core"?"5 4":"");
+    const lx=(p1[0]+2*mx+p2[0])/4, ly=(p1[1]+2*my+p2[1])/4;
+    const lg=el("g",{},svg);
+    const txt=String(n); const tw=8+txt.length*7;
+    el("rect",{x:lx-tw/2,y:ly-9,width:tw,height:17,rx:8,fill:css("--panel"),stroke:col,"stroke-width":1},lg);
+    const t=el("text",{x:lx,y:ly+4,"text-anchor":"middle","font-size":11,"font-weight":600},lg); t.textContent=txt;
+    if(isC) t.setAttribute("style","fill:"+col);
+    bindTip(path,()=>`<b>${a} → ${b}</b><br>${n} import statements${isC?"<br>Part of the core ↔ billing cycle":""}`);
+  });
+  for(const k in box){
+    const b=box[k], m=mods[k]; const g=el("g",{},svg);
+    const inCyc=k==="core"||k==="billing";
+    const r=el("rect",{x:b.cx-b.w/2,y:b.cy-b.h/2,width:b.w,height:b.h,rx:8,fill:css("--node"),stroke:inCyc?css("--cycle"):css("--nodeLine"),"stroke-width":inCyc?2:1.2},g);
+    if(k==="infra") r.setAttribute("stroke-dasharray","4 3");
+    const t=el("text",{x:b.cx,y:b.cy-2,"text-anchor":"middle","font-size":14,"font-weight":650},g); t.textContent=k;
+    const t2=el("text",{x:b.cx,y:b.cy+13,"text-anchor":"middle","font-size":10.5,style:"fill:"+css("--muted")},g); t2.textContent=`${fmt(m.loc)} lines · ${m.lang==="TypeScript"?"TS":m.lang}`;
+    bindTip(g,()=>`<b>${k}</b><br>${m.n} files · ${fmt(m.loc)} lines · ${m.c} commits<br>Imports: ${EDGES.filter(e=>e[0]===k).map(e=>e[1]+" ("+e[2]+")").join(", ")||"none"}<br>Imported by: ${EDGES.filter(e=>e[1]===k).map(e=>e[0]+" ("+e[2]+")").join(", ")||"none"}`);
+  }
+  const it=el("text",{x:610,y:483,"text-anchor":"middle","font-size":11,style:"fill:"+css("--muted")},svg); it.textContent="no import edges";
+  // edge table
+  const tb=document.getElementById("edges"); tb.innerHTML="";
+  [...EDGES].sort((a,b)=>b[2]-a[2]).forEach(([a,b,n])=>{
+    const c=cyc.has(a+">"+b); const tr=document.createElement("tr");
+    tr.innerHTML=`<td${c?' style="color:var(--cycle);font-weight:600"':""}>${a}</td><td${c?' style="color:var(--cycle);font-weight:600"':""}>${b}</td><td class="n">${n}${c?" · cycle":""}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// scatter
+function drawScatter(){
+  const svg=document.getElementById("scatter"); svg.innerHTML="";
+  const W=680,H=440,m={l:52,r:16,t:14,b:44}; const iw=W-m.l-m.r, ih=H-m.t-m.b;
+  const xMax=1150,yMax=36; const X=v=>m.l+v/xMax*iw, Y=v=>m.t+ih-v/yMax*ih;
+  el("rect",{x:X(BIG),y:Y(yMax),width:X(xMax)-X(BIG),height:Y(OFTEN)-Y(yMax),fill:css("--hot"),"fill-opacity":.08},svg);
+  for(let v=0;v<=1000;v+=200){el("line",{x1:X(v),x2:X(v),y1:m.t,y2:m.t+ih,stroke:css("--grid")},svg);const t=el("text",{x:X(v),y:H-m.b+16,"text-anchor":"middle","font-size":11,style:"fill:"+css("--muted")},svg);t.textContent=fmt(v)}
+  for(let v=0;v<=35;v+=5){el("line",{x1:m.l,x2:m.l+iw,y1:Y(v),y2:Y(v),stroke:css("--grid")},svg);const t=el("text",{x:m.l-8,y:Y(v)+4,"text-anchor":"end","font-size":11,style:"fill:"+css("--muted")},svg);t.textContent=v}
+  el("line",{x1:X(BIG),x2:X(BIG),y1:m.t,y2:m.t+ih,stroke:css("--hot"),"stroke-dasharray":"4 3","stroke-opacity":.7},svg);
+  el("line",{x1:m.l,x2:m.l+iw,y1:Y(OFTEN),y2:Y(OFTEN),stroke:css("--hot"),"stroke-dasharray":"4 3","stroke-opacity":.7},svg);
+  let t=el("text",{x:m.l+iw/2,y:H-6,"text-anchor":"middle","font-size":12,style:"fill:"+css("--muted")},svg);t.textContent="Lines of code";
+  t=el("text",{x:14,y:m.t+ih/2,"text-anchor":"middle","font-size":12,transform:`rotate(-90 14 ${m.t+ih/2})`,style:"fill:"+css("--muted")},svg);t.textContent="Commits in 90 days";
+  t=el("text",{x:X(xMax)-6,y:Y(yMax)+14,"text-anchor":"end","font-size":11.5,"font-weight":650,style:"fill:"+css("--hot")},svg);t.textContent="Large and changes often";
+  const order=[...files].sort((a,b)=>(a.hot||a.churn)-(b.hot||b.churn));
+  order.forEach(f=>{
+    const col=f.hot?css("--hot"):f.churn?css("--accent"):css("--dot");
+    const c=el("circle",{cx:X(f.loc),cy:Y(f.c),r:f.hot||f.churn?6:4.2,fill:col,"fill-opacity":f.hot||f.churn?.95:.7,stroke:css("--panel"),"stroke-width":1},svg);
+    bindTip(c,()=>fileTip(f));
+  });
+  const labels={"shared/views/f05.tsx":[8,-6,"start"],"web/model/f31.tsx":[0,-11,"middle"],"auth/util/f04.go":[0,-11,"middle"],"shared/model/f09.tsx":[8,4,"start"],"core/service/f24.go":[8,14,"start"],
+    "billing/handlers/f01.go":[9,4,"start"],"billing/service/f02.go":[9,12,"start"],"billing/views/f00.go":[9,4,"start"],"web/util/f22.tsx":[9,4,"start"],
+    "jobs/util/f02.py":[-9,-12,"end"],"core/model/f05.go":[-9,-2,"end"]};
+  files.forEach(f=>{const L=labels[f.path];if(!L)return;
+    const col=f.hot?css("--hot"):f.churn?css("--accent"):css("--muted");
+    const tt=el("text",{x:X(f.loc)+L[0],y:Y(f.c)+L[1],"text-anchor":L[2],"font-size":10.5,style:"fill:"+col,"pointer-events":"none"},svg);tt.textContent=f.path});
+  // rank table
+  const tb=document.getElementById("rank"); tb.innerHTML="";
+  [...files].sort((a,b)=>b.loc*b.c-a.loc*a.c).slice(0,12).forEach((f,i)=>{
+    const tag=f.hot?'<span class="tag hot">large, changes often</span>':f.churn?'<span class="tag churn">very high churn</span>':"";
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${i+1}</td><td class="mono">${f.path}</td><td>${f.module}</td><td class="n">${fmt(f.loc)}</td><td class="n">${f.c}</td><td class="n">${fmt(f.loc*f.c)}</td><td>${tag}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function drawAll(){drawTreemap();drawShares();drawGraph();drawScatter()}
+drawAll();
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(drawTreemap,120)});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",drawAll);
+</script>
+</body>
+</html>

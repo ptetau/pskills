@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orders Database Schema</title>
+<style>
+:root{
+  --bg:#f7f6f3; --panel:#ffffff; --ink:#1d1f23; --muted:#62666e; --faint:#9a9ea6;
+  --line:#dcdad4; --soft:#efede8; --accent:#2f62c9; --accent-soft:#e3ebfb;
+  --pk:#b7791f; --pk-soft:#fbf0da; --fk:#2f62c9; --fk-soft:#e3ebfb; --warn:#b4432f; --warn-soft:#fbe7e2;
+  --bar:#2f62c9; --bar2:#7a8aa6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141518; --panel:#1c1e22; --ink:#e8e9ec; --muted:#a2a6ae; --faint:#6e737c;
+    --line:#2f3238; --soft:#24262b; --accent:#7ea4f0; --accent-soft:#22304d;
+    --pk:#e3b45a; --pk-soft:#3a2f1a; --fk:#7ea4f0; --fk-soft:#22304d; --warn:#ee8a76; --warn-soft:#3d231e;
+    --bar:#7ea4f0; --bar2:#8792a6;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141518; --panel:#1c1e22; --ink:#e8e9ec; --muted:#a2a6ae; --faint:#6e737c;
+  --line:#2f3238; --soft:#24262b; --accent:#7ea4f0; --accent-soft:#22304d;
+  --pk:#e3b45a; --pk-soft:#3a2f1a; --fk:#7ea4f0; --fk-soft:#22304d; --warn:#ee8a76; --warn-soft:#3d231e;
+  --bar:#7ea4f0; --bar2:#8792a6;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.wrap{max-width:1160px;margin:0 auto;padding:32px 16px 64px}
+header h1{font-size:28px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:760px}
+h2{font-size:18px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 16px;font-size:14px}
+section{margin-top:36px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:24px}
+.fact{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.fact b{display:block;font-size:13px;color:var(--muted);font-weight:600;margin-bottom:4px}
+.fact span{font-size:14.5px}
+.fact.warn{border-color:var(--warn);background:var(--warn-soft)}
+code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.92em;background:var(--soft);padding:1px 5px;border-radius:4px}
+
+/* ER */
+.er-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#er{display:block;min-width:980px;width:100%;height:auto}
+#er .box rect.frame{fill:var(--panel);stroke:var(--line);stroke-width:1}
+#er .box rect.head{fill:var(--soft)}
+#er .box text{fill:var(--ink);font-size:12px}
+#er .box text.tname{font-weight:700;font-size:13px}
+#er .box text.tmeta{fill:var(--muted);font-size:11px}
+#er .box text.ctype{fill:var(--faint);font-size:11px}
+#er .box text.k-pk{fill:var(--pk);font-weight:700;font-size:10px}
+#er .box text.k-fk{fill:var(--fk);font-weight:700;font-size:10px}
+#er .box{cursor:pointer;transition:opacity .15s}
+#er .edge path{fill:none;stroke:var(--faint);stroke-width:1.4;transition:stroke .15s,opacity .15s}
+#er .edge path.opt{stroke-dasharray:5 4}
+#er .edge .mark{stroke:var(--faint);stroke-width:1.4;fill:none}
+#er.focus .box{opacity:.28}
+#er.focus .edge{opacity:.15}
+#er.focus .box.on{opacity:1}
+#er.focus .edge.on{opacity:1}
+#er .edge.on path,#er .edge.on .mark{stroke:var(--accent);stroke-width:2}
+#er .box.on rect.frame{stroke:var(--accent);stroke-width:1.6}
+#er .rowhl{fill:var(--accent-soft);opacity:0}
+#er .box.on .rowhl.hit{opacity:1}
+.legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;color:var(--muted);font-size:13px;align-items:center}
+.legend svg{vertical-align:middle;margin-right:6px}
+.legend .tag{font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px}
+.tag.pk{color:var(--pk);background:var(--pk-soft)}
+.tag.fk{color:var(--fk);background:var(--fk-soft)}
+
+/* size */
+.size-grid{display:grid;grid-template-columns:150px 1fr 1fr 64px;gap:0 18px;align-items:center}
+.size-grid .hd{font-size:12px;color:var(--muted);font-weight:600;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.size-grid .c{padding:7px 0;border-bottom:1px solid var(--soft);font-size:14px}
+.barcell{display:flex;align-items:center;gap:8px}
+.bar{height:12px;border-radius:3px;background:var(--bar);min-width:2px}
+.bar.r{background:var(--bar2)}
+.barcell span{font-variant-numeric:tabular-nums;white-space:nowrap;font-size:13px;color:var(--muted)}
+.size-grid .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.size-grid a{color:var(--ink);text-decoration:none}
+.size-grid a:hover{color:var(--accent)}
+.tier{font-size:11px;font-weight:600;color:var(--warn);margin-left:6px}
+
+/* detail */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;scroll-margin-top:16px}
+.card:target,.card.flash{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.card h3{margin:0;font-size:16px}
+.card .meta{color:var(--muted);font-size:13px;margin:2px 0 10px}
+.card .role{font-size:13.5px;margin:0 0 10px}
+.card table{width:100%;border-collapse:collapse;font-size:13px}
+.card th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:4px 6px 4px 0}
+.card td{padding:5px 6px 5px 0;border-bottom:1px solid var(--soft);vertical-align:top}
+.card td.t{color:var(--muted)}
+.card .null{color:var(--faint)}
+.card .rel{margin-top:10px;font-size:13px;color:var(--muted)}
+.card .rel a{color:var(--accent);text-decoration:none}
+.card .note{margin-top:10px;font-size:13px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:6px 8px}
+.toggle{float:right;font:inherit;font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+footer{margin-top:40px;color:var(--faint);font-size:12.5px}
+@media (max-width:640px){
+  .size-grid{grid-template-columns:110px 1fr 1fr;gap:0 10px}
+  .size-grid .ix{display:none}
+  .cards{grid-template-columns:1fr}
+  header h1{font-size:23px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <button class="toggle" id="theme" type="button">Theme</button>
+  <h1>The orders database, in one page</h1>
+  <p>Eight tables. Everything hangs off <code>orders</code>: a customer places an order, the order has line items, payments and discounts. Read the map first, then the size table, then the detail of the table you need.</p>
+</header>
+
+<div class="facts">
+  <div class="fact"><b>The hub</b><span><code>orders</code> is the centre. Four tables point at it: <code>order_items</code>, <code>payments</code>, <code>order_discounts</code>, and it points out to <code>customers</code> and <code>addresses</code>.</span></div>
+  <div class="fact"><b>The big ones</b><span><code>order_items</code> is 1.2 GB with 1.18 M rows. <code>orders</code> (410 MB) and <code>payments</code> (350 MB) follow. Together they hold about 97% of the data.</span></div>
+  <div class="fact"><b>Conventions</b><span>Keys are <code>uuid</code>, except <code>discount_codes.code</code> (text). Money is integer cents (<code>*_cents</code>). Status columns use enums: <code>order_status</code>, <code>payment_status</code>.</span></div>
+  <div class="fact warn"><b>Watch for</b><span><code>order_discounts</code> has no primary key in the schema. <code>orders.address_id</code> and <code>orders.placed_at</code> can be null, so not every order has an address or a placed time.</span></div>
+</div>
+
+<section>
+  <h2>How the tables relate</h2>
+  <p class="sub">Each line runs from a foreign key to the key it references. Hover or tap a table to trace its links; click to jump to its detail.</p>
+  <div class="panel">
+    <div class="er-scroll"><svg id="er" viewBox="0 0 1100 470" role="img" aria-label="Entity relationship diagram of the eight tables"></svg></div>
+    <div class="legend">
+      <span><svg width="46" height="14"><path d="M2 7H44" stroke="currentColor" stroke-width="1.4"/><path d="M38 2V12" stroke="currentColor" stroke-width="1.4"/><path d="M2 2L9 7L2 12" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>many to one (fork = many side)</span>
+      <span><svg width="46" height="14"><path d="M2 7H44" stroke="currentColor" stroke-width="1.4" stroke-dasharray="5 4"/></svg>optional (nullable foreign key)</span>
+      <span><span class="tag pk">PK</span> primary key</span>
+      <span><span class="tag fk">FK</span> foreign key</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Which tables are big</h2>
+  <p class="sub">Sorted by size on disk. Bars share one linear scale per column, so the small tables are slivers: that gap is real.</p>
+  <div class="panel"><div class="size-grid" id="sizes"></div></div>
+</section>
+
+<section>
+  <h2>Each table</h2>
+  <p class="sub">In order of the data flow: who buys, what they buy, how they pay.</p>
+  <div class="cards" id="cards"></div>
+</section>
+
+<footer>Source: <span class="mono">schema.json</span> (36 columns, 8 foreign keys) and <span class="mono">stats.csv</span> (row counts, size, index count per table).</footer>
+</div>
+
+<script>
+const SCHEMA = [
+["customers","id","uuid","pk",null,false],["customers","email","text",null,null,false],["customers","name","text",null,null,true],["customers","created_at","timestamptz",null,null,false],
+["addresses","id","uuid","pk",null,false],["addresses","customer_id","uuid","fk","customers.id",false],["addresses","line1","text",null,null,false],["addresses","city","text",null,null,false],["addresses","postcode","text",null,null,true],
+["orders","id","uuid","pk",null,false],["orders","customer_id","uuid","fk","customers.id",false],["orders","address_id","uuid","fk","addresses.id",true],["orders","status","order_status",null,null,false],["orders","total_cents","int",null,null,false],["orders","placed_at","timestamptz",null,null,true],
+["order_items","id","uuid","pk",null,false],["order_items","order_id","uuid","fk","orders.id",false],["order_items","product_id","uuid","fk","products.id",false],["order_items","qty","int",null,null,false],["order_items","price_cents","int",null,null,false],
+["products","id","uuid","pk",null,false],["products","sku","text",null,null,false],["products","name","text",null,null,false],["products","price_cents","int",null,null,false],["products","active","bool",null,null,false],
+["payments","id","uuid","pk",null,false],["payments","order_id","uuid","fk","orders.id",false],["payments","provider","text",null,null,false],["payments","amount_cents","int",null,null,false],["payments","status","payment_status",null,null,false],
+["discount_codes","code","text","pk",null,false],["discount_codes","kind","text",null,null,false],["discount_codes","value","int",null,null,false],["discount_codes","expires_at","timestamptz",null,null,true],
+["order_discounts","order_id","uuid","fk","orders.id",false],["order_discounts","code","text","fk","discount_codes.code",false]
+].map(([table,column,type,key,references,nullable])=>({table,column,type,key,references,nullable}));
+
+const STATS = {
+  customers:{rows:48210,size:"38 MB",indexes:3},
+  addresses:{rows:61002,size:"22 MB",indexes:2},
+  orders:{rows:392114,size:"410 MB",indexes:5},
+  order_items:{rows:1180330,size:"1.2 GB",indexes:4},
+  products:{rows:2140,size:"3 MB",indexes:3},
+  payments:{rows:401877,size:"350 MB",indexes:3},
+  discount_codes:{rows:85,size:"64 kB",indexes:1},
+  order_discounts:{rows:30551,size:"4 MB",indexes:2}
+};
+const ROLE = {
+  customers:"One row per person who can buy. Email is required; name is optional.",
+  addresses:"Delivery addresses. A customer can have many.",
+  orders:"One row per order: who placed it, where it ships, its status and total.",
+  order_items:"The lines of an order: which product, how many, at what price.",
+  products:"The catalogue. The price here is the current price; order_items keeps the price at the time of sale.",
+  payments:"Payment attempts against an order. An order can have more than one.",
+  order_discounts:"Join table: which discount codes were applied to which order.",
+  discount_codes:"Codes customers can enter, with a kind, a value and an optional expiry."
+};
+const ORDER = ["customers","addresses","orders","order_items","products","payments","order_discounts","discount_codes"];
+
+const tables = {};
+SCHEMA.forEach(c=>{(tables[c.table] ||= []).push(c)});
+const fks = SCHEMA.filter(c=>c.key==="fk").map(c=>{const [tt,tc]=c.references.split(".");return {from:c.table,fcol:c.column,to:tt,tcol:tc,opt:c.nullable}});
+
+function bytes(s){const [n,u]=s.split(" ");return parseFloat(n)*({kB:1e3,MB:1e6,GB:1e9}[u])}
+function fmtRows(n){return n>=1e6?(n/1e6).toFixed(2)+" M":n>=1e3?(n/1e3).toFixed(n>=1e5?0:1)+" k":String(n)}
+
+/* ---------- ER diagram ---------- */
+const NS="http://www.w3.org/2000/svg";
+const BW=220, HH=36, RH=21;
+const POS = {
+  customers:[40,40], addresses:[40,250],
+  orders:[330,130],
+  order_items:[620,20], payments:[620,200], order_discounts:[620,380],
+  products:[870,20], discount_codes:[870,300]
+};
+const svg=document.getElementById("er");
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function rowY(t,col){const i=tables[t].findIndex(c=>c.column===col);return POS[t][1]+HH+i*RH+RH/2}
+
+const gEdges=el("g",{},svg), gBoxes=el("g",{},svg);
+const edgeEls=[];
+fks.forEach(f=>{
+  const [sx0,]=POS[f.from], [tx0,]=POS[f.to];
+  const sy=rowY(f.from,f.fcol), ty=rowY(f.to,f.tcol);
+  let sx,tx,d,sdir,tdir;
+  if(tx0>sx0){sx=sx0+BW;tx=tx0;sdir=1;tdir=-1}
+  else if(tx0<sx0){sx=sx0;tx=tx0+BW;sdir=-1;tdir=1}
+  else{sx=sx0;tx=tx0;sdir=-1;tdir=-1}
+  if(sdir===tdir){d=`M${sx} ${sy} C${sx-34} ${sy} ${tx-34} ${ty} ${tx} ${ty}`}
+  else{const mx=(sx+tx)/2;d=`M${sx} ${sy} C${mx} ${sy} ${mx} ${ty} ${tx} ${ty}`}
+  const g=el("g",{class:"edge"},gEdges);
+  g.dataset.from=f.from;g.dataset.to=f.to;
+  el("path",{d,class:f.opt?"opt":""},g);
+  // many fork at source, one bar at target
+  const a=sx+sdir*9;
+  el("path",{class:"mark",d:`M${sx} ${sy-5} L${a} ${sy} L${sx} ${sy+5}`},g);
+  const b=tx+tdir*8;
+  el("path",{class:"mark",d:`M${b} ${ty-6} V${ty+6}`},g);
+  edgeEls.push(g);
+});
+
+const boxEls={};
+Object.keys(POS).forEach(t=>{
+  const [x,y]=POS[t], cols=tables[t], h=HH+cols.length*RH+6;
+  const g=el("g",{class:"box",tabindex:0},gBoxes); g.dataset.t=t; boxEls[t]=g;
+  el("rect",{class:"frame",x,y,width:BW,height:h,rx:8},g);
+  el("rect",{class:"head",x:x+1,y:y+1,width:BW-2,height:HH-2,rx:7},g);
+  el("rect",{class:"head",x:x+1,y:y+HH-10,width:BW-2,height:9},g);
+  const tn=el("text",{class:"tname mono",x:x+12,y:y+23},g); tn.textContent=t;
+  const tm=el("text",{class:"tmeta",x:x+BW-12,y:y+23,"text-anchor":"end"},g); tm.textContent=fmtRows(STATS[t].rows)+" rows";
+  cols.forEach((c,i)=>{
+    const cy=y+HH+i*RH;
+    const hl=el("rect",{class:"rowhl",x:x+1,y:cy,width:BW-2,height:RH},g); hl.dataset.col=c.column;
+    if(c.key){const k=el("text",{class:"k-"+c.key,x:x+10,y:cy+15},g);k.textContent=c.key.toUpperCase()}
+    const cn=el("text",{class:"mono",x:x+36,y:cy+15},g); cn.textContent=c.column+(c.nullable?"?":"");
+    const ct=el("text",{class:"ctype mono",x:x+BW-12,y:cy+15,"text-anchor":"end"},g); ct.textContent=c.type;
+  });
+  const focus=()=>{
+    svg.classList.add("focus");
+    const linked=new Set([t]);
+    edgeEls.forEach(e=>{const on=e.dataset.from===t||e.dataset.to===t;e.classList.toggle("on",on);if(on){linked.add(e.dataset.from);linked.add(e.dataset.to)}});
+    Object.entries(boxEls).forEach(([n,b])=>b.classList.toggle("on",linked.has(n)));
+    // highlight key rows involved
+    gBoxes.querySelectorAll(".rowhl").forEach(r=>r.classList.remove("hit"));
+    fks.forEach(f=>{if(f.from===t||f.to===t){
+      boxEls[f.from].querySelector(`.rowhl[data-col="${f.fcol}"]`).classList.add("hit");
+      boxEls[f.to].querySelector(`.rowhl[data-col="${f.tcol}"]`).classList.add("hit");
+    }});
+  };
+  const blur=()=>{svg.classList.remove("focus");edgeEls.forEach(e=>e.classList.remove("on"));Object.values(boxEls).forEach(b=>b.classList.remove("on"))};
+  g.addEventListener("mouseenter",focus); g.addEventListener("mouseleave",blur);
+  g.addEventListener("focus",focus); g.addEventListener("blur",blur);
+  g.addEventListener("click",()=>jump(t));
+  g.addEventListener("keydown",e=>{if(e.key==="Enter")jump(t)});
+});
+
+function jump(t){
+  const c=document.getElementById("t-"+t); if(!c)return;
+  c.scrollIntoView({behavior:"smooth",block:"start"});
+  c.classList.add("flash"); setTimeout(()=>c.classList.remove("flash"),1600);
+}
+
+/* ---------- sizes ---------- */
+const sz=document.getElementById("sizes");
+const bySize=Object.keys(STATS).sort((a,b)=>bytes(STATS[b].size)-bytes(STATS[a].size));
+const maxB=Math.max(...bySize.map(t=>bytes(STATS[t].size))), maxR=Math.max(...bySize.map(t=>STATS[t].rows));
+const totalB=bySize.reduce((s,t)=>s+bytes(STATS[t].size),0);
+sz.innerHTML=`<div class="hd">Table</div><div class="hd">Size on disk</div><div class="hd">Rows</div><div class="hd num ix">Indexes</div>`+
+bySize.map(t=>{const s=STATS[t],b=bytes(s.size),share=b/totalB;
+  return `<div class="c"><a class="mono" href="#t-${t}">${t}</a>${share>.15?'<span class="tier">'+Math.round(share*100)+'%</span>':''}</div>
+  <div class="c barcell"><div class="bar" style="width:${(b/maxB*72).toFixed(2)}%"></div><span>${s.size}</span></div>
+  <div class="c barcell"><div class="bar r" style="width:${(s.rows/maxR*72).toFixed(2)}%"></div><span>${s.rows.toLocaleString("en-US")}</span></div>
+  <div class="c num ix">${s.indexes}</div>`}).join("");
+
+/* ---------- cards ---------- */
+const cards=document.getElementById("cards");
+ORDER.forEach(t=>{
+  const s=STATS[t], cols=tables[t];
+  const out=fks.filter(f=>f.from===t), inc=fks.filter(f=>f.to===t);
+  const link=n=>`<a href="#t-${n}" class="mono" data-j="${n}">${n}</a>`;
+  const rel=[];
+  if(out.length) rel.push("Points to: "+[...new Set(out.map(f=>f.to))].map(link).join(", "));
+  if(inc.length) rel.push("Referenced by: "+[...new Set(inc.map(f=>f.from))].map(link).join(", "));
+  const hasPk=cols.some(c=>c.key==="pk");
+  const div=document.createElement("article"); div.className="card"; div.id="t-"+t;
+  div.innerHTML=`<h3 class="mono">${t}</h3>
+  <div class="meta">${s.rows.toLocaleString("en-US")} rows · ${s.size} · ${s.indexes} index${s.indexes>1?"es":""}</div>
+  <p class="role">${ROLE[t]}</p>
+  <table><thead><tr><th>Column</th><th>Type</th><th>Key</th><th>Null</th></tr></thead><tbody>
+  ${cols.map(c=>`<tr><td class="mono">${c.column}</td><td class="t mono">${c.type}</td>
+    <td>${c.key?`<span class="tag ${c.key}">${c.key.toUpperCase()}</span>`:""}${c.references?` <span class="mono" style="color:var(--muted);font-size:12px">→ ${c.references}</span>`:""}</td>
+    <td>${c.nullable?"yes":'<span class="null">no</span>'}</td></tr>`).join("")}
+  </tbody></table>
+  ${rel.length?`<div class="rel">${rel.join("<br>")}</div>`:""}
+  ${hasPk?"":`<div class="note">No primary key declared. Nothing in this schema stops the same code being applied twice to one order, unless one of its ${s.indexes} indexes is unique.</div>`}`;
+  cards.appendChild(div);
+});
+cards.addEventListener("click",e=>{const a=e.target.closest("a[data-j]");if(a){e.preventDefault();jump(a.dataset.j)}});
+
+/* ---------- theme ---------- */
+document.getElementById("theme").addEventListener("click",()=>{
+  const r=document.documentElement, cur=r.dataset.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+  r.dataset.theme=cur==="dark"?"light":"dark";
+});
+</script>
+</body>
+</html>

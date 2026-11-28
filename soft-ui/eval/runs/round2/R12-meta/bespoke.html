@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CBT-I Sleep Meta-analysis</title>
+<style>
+:root{
+  --bg:#f7f6f2; --card:#ffffff; --ink:#1d2228; --muted:#5d6670; --faint:#8a929b;
+  --line:#e3e1da; --grid:#ecebe5; --accent:#2f5d8a;
+  --low:#2f7d6d; --some:#c08a1e; --high:#c0463a; --uc:#7a8594; --cbt:#2f5d8a;
+  --pool:#1d2228; --band:rgba(47,93,138,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181c; --card:#1d2126; --ink:#e7e9ec; --muted:#a3abb4; --faint:#78818b;
+    --line:#2e343b; --grid:#272c32; --accent:#7fb0e0;
+    --low:#5cc0a9; --some:#e2b04a; --high:#ec7a6c; --uc:#9aa4b2; --cbt:#7fb0e0;
+    --pool:#e7e9ec; --band:rgba(127,176,224,.14);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181c; --card:#1d2126; --ink:#e7e9ec; --muted:#a3abb4; --faint:#78818b;
+  --line:#2e343b; --grid:#272c32; --accent:#7fb0e0;
+  --low:#5cc0a9; --some:#e2b04a; --high:#ec7a6c; --uc:#9aa4b2; --cbt:#7fb0e0;
+  --pool:#e7e9ec; --band:rgba(127,176,224,.14);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:28px;line-height:1.2;margin:6px 0 10px;font-weight:650}
+.lead{font-size:17px;max-width:760px;margin:0 0 22px}
+.lead b{font-variant-numeric:tabular-nums}
+h2{font-size:19px;margin:0 0 4px;font-weight:650}
+.sub{color:var(--muted);margin:0 0 16px;max-width:760px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin:18px 0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-size:26px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .d{font-size:13px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid2 .card{margin:0}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--ink);font-size:12px;font-variant-numeric:tabular-nums}
+svg .m{fill:var(--muted)} svg .f{fill:var(--faint)}
+.controls{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:5px 11px;font:inherit;color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--card)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-left:auto}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.verdict{border-left:3px solid var(--accent);padding:4px 0 4px 12px;margin:14px 0 0;max-width:820px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.draft p{margin:0 0 10px;max-width:820px}
+.copy{float:right;font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer}
+.note{font-size:13px;color:var(--muted)}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--card);font-size:12px;padding:6px 8px;border-radius:6px;opacity:0;transition:opacity .1s;max-width:240px;z-index:9}
+@media (max-width:760px){
+  .kpis{grid-template-columns:1fr 1fr}
+  .grid2{grid-template-columns:1fr}
+  h1{font-size:23px}
+  .legend{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Meta-analysis · 9 RCTs · CBT-I vs usual care · sleep onset latency</div>
+  <h1>CBT-I shortens sleep onset by about 10 minutes, and the result holds without the high-bias trials</h1>
+  <p class="lead">The random-effects pooled mean difference is <b>−9.8 min (95% CI −12.4 to −7.2; p&lt;0.001)</b>, with moderate certainty (GRADE). Every trial points the same way. Heterogeneity is modest (I² 38%). With only the five low-bias trials, the effect is <b>−8.6 min (−10.6 to −6.6)</b>: smaller, but still clear.</p>
+</header>
+
+<section class="kpis" aria-label="Key results">
+  <div class="kpi"><div class="l">Pooled effect</div><div class="v">−9.8 min</div><div class="d">95% CI −12.4 to −7.2 · REML</div></div>
+  <div class="kpi"><div class="l">Certainty</div><div class="v">Moderate</div><div class="d">GRADE</div></div>
+  <div class="kpi"><div class="l">Heterogeneity</div><div class="v">I² 38%</div><div class="d">τ² 4.1 · Q-test p = 0.12</div></div>
+  <div class="kpi"><div class="l">Low-bias trials only</div><div class="v">−8.6 min</div><div class="d">95% CI −10.6 to −6.6 · 5 trials</div></div>
+</section>
+
+<section class="card" id="forest-card">
+  <h2>How each study compares</h2>
+  <p class="sub">Forest plot of mean difference in sleep onset (minutes; left of zero favours CBT-I). Square area shows the weight in the pooled model. Colour shows risk of bias.</p>
+  <div class="controls">
+    Sort by
+    <div class="seg" role="group" aria-label="Sort studies">
+      <button data-sort="weight" aria-pressed="true">Weight</button>
+      <button data-sort="year" aria-pressed="false">Year</button>
+      <button data-sort="md" aria-pressed="false">Effect</button>
+      <button data-sort="bias" aria-pressed="false">Bias</button>
+    </div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--low)"></span>Low risk</span>
+      <span><span class="sw" style="background:var(--some)"></span>Some concerns</span>
+      <span><span class="sw" style="background:var(--high)"></span>High risk</span>
+    </div>
+  </div>
+  <svg id="forest" role="img" aria-label="Forest plot of nine trials and the pooled effect"></svg>
+  <p class="verdict">All nine point estimates favour CBT-I. Eight of nine confidence intervals exclude zero; only Gupta 2021 (−6.3, CI −14.6 to 2.0) crosses it. The two largest trials, Hale 2022 and Dlamini 2019, carry 47% of the weight and sit close to the pooled line.</p>
+</section>
+
+<div class="grid2">
+  <section class="card">
+    <h2>Do the studies agree?</h2>
+    <p class="sub">Mostly yes. The spread between trials is larger than chance alone would give, but not by much.</p>
+    <svg id="het" role="img" aria-label="Heterogeneity gauge"></svg>
+    <table style="margin-top:12px">
+      <tr><th>Statistic</th><th>Value</th><th>Reading</th></tr>
+      <tr><td>I²</td><td>38%</td><td style="text-align:left">Low to moderate</td></tr>
+      <tr><td>τ²</td><td>4.1 min²</td><td style="text-align:left">Between-trial SD ≈ 2.0 min</td></tr>
+      <tr><td>Cochran Q p</td><td>0.12</td><td style="text-align:left">No clear evidence of heterogeneity</td></tr>
+      <tr><td>95% prediction interval*</td><td>−15.5 to −4.1</td><td style="text-align:left">A new trial would likely still favour CBT-I</td></tr>
+    </table>
+    <p class="note">*Approximate, computed here from the pooled SE (1.33), τ² and t with 7 df. It is not in the source files.</p>
+  </section>
+
+  <section class="card">
+    <h2>Do the high-bias studies drive the result?</h2>
+    <p class="sub">No. They report the largest effects, but they are small and carry only 7.7% of the weight.</p>
+    <svg id="sens" role="img" aria-label="Pooled effect for all trials versus low-bias trials only"></svg>
+    <p class="verdict">Restricting to low-bias trials moves the estimate by 1.2 min toward zero (−9.8 → −8.6). The two confidence intervals overlap and both exclude zero. Report −8.6 as the conservative figure.</p>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Smaller trials report larger effects</h2>
+  <p class="sub">Effect against sample size. The two high-bias trials (n = 48 and 36) give the strongest effects; trials above n = 100 cluster between −8 and −11 min. This pattern fits small-study effects, but 9 trials are too few for a formal funnel-plot test.</p>
+  <svg id="scatter" role="img" aria-label="Scatter plot of effect size against sample size"></svg>
+</section>
+
+<section class="card">
+  <h2>How the outcome is distributed in the largest trial</h2>
+  <p class="sub">Hale 2022, n = 300 (150 per arm), 27.4% of the pooled weight. Raw sleep-onset minutes for each participant. CBT-I bars point up, usual care bars point down; lines mark the medians.</p>
+  <svg id="dist" role="img" aria-label="Back-to-back histogram of sleep onset minutes by arm"></svg>
+  <table id="armtab" style="margin-top:14px"></table>
+  <p class="verdict">The whole CBT-I distribution shifts left, so the mean effect is not the product of a few responders. Both arms are roughly symmetric with a mild right tail, so a mean difference is a fair summary. The raw difference in means (−8.4 min) is a little larger than the −7.8 min that enters the meta-analysis; check whether the trial reported an adjusted estimate.</p>
+</section>
+
+<section class="card draft">
+  <button class="copy" id="copybtn">Copy text</button>
+  <h2>Draft text for the discussion</h2>
+  <div id="drafttext">
+  <p>Across nine randomised trials, CBT-I reduced sleep onset latency by 9.8 minutes compared with usual care (95% CI 7.2 to 12.4; random effects, REML), and the certainty of the evidence was moderate (GRADE). All trials favoured CBT-I, and heterogeneity was modest (I² = 38%, τ² = 4.1, Q-test p = 0.12).</p>
+  <p>The two trials at high risk of bias reported the largest effects (−21.0 and −25.5 minutes) but contributed only 7.7% of the weight. A sensitivity analysis restricted to the five trials at low risk of bias gave a smaller but consistent effect of −8.6 minutes (95% CI −10.6 to −6.6). Smaller trials tended to report larger effects, which suggests possible small-study effects; too few trials were available to test this formally.</p>
+  <p>In the largest trial (n = 300), the distribution of sleep onset shifted as a whole (median 23 vs 31 minutes), which indicates a broad effect across participants and not a response confined to a subgroup.</p>
+  </div>
+</section>
+
+<p class="note">Sources: studies.json (9 trials), pooled.json (random-effects result), outcomes.csv (Hale 2022 participant data). Negative values favour CBT-I.</p>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const studies=[
+ {study:"Ahn 2016",year:2016,n:64,md:-12.1,lo:-21.9,hi:-2.3,w:5.9,bias:"low"},
+ {study:"Berg 2017",year:2017,n:120,md:-9.4,lo:-16.6,hi:-2.2,w:11.0,bias:"low"},
+ {study:"Costa 2018",year:2018,n:48,md:-21.0,lo:-32.3,hi:-9.7,w:4.4,bias:"high"},
+ {study:"Dlamini 2019",year:2019,n:210,md:-8.2,lo:-13.6,hi:-2.8,w:19.2,bias:"low"},
+ {study:"Evans 2019",year:2019,n:36,md:-25.5,lo:-38.6,hi:-12.4,w:3.3,bias:"high"},
+ {study:"Fujita 2020",year:2020,n:150,md:-10.9,lo:-17.3,hi:-4.5,w:13.7,bias:"some"},
+ {study:"Gupta 2021",year:2021,n:90,md:-6.3,lo:-14.6,hi:2.0,w:8.2,bias:"low"},
+ {study:"Hale 2022",year:2022,n:300,md:-7.8,lo:-12.3,hi:-3.3,w:27.4,bias:"low"},
+ {study:"Ito 2023",year:2023,n:75,md:-14.6,lo:-23.7,hi:-5.5,w:6.9,bias:"some"}
+];
+const pooled={md:-9.8,lo:-12.4,hi:-7.2,i2:38,tau2:4.1,qp:0.12,low:{md:-8.6,lo:-10.6,hi:-6.6}};
+const arms={"CBT-I":[19,23,28,36,17,16,31,14,28,19,23,8,30,19,16,43,30,56,28,21,25,38,24,28,29,16,25,19,13,32,30,25,16,6,28,23,9,23,10,24,25,27,26,26,14,21,19,22,26,30,39,3,28,22,44,32,9,28,19,33,15,23,23,23,19,7,28,33,23,15,26,29,22,24,37,14,19,7,18,17,15,18,40,22,23,44,23,8,28,16,39,13,19,10,25,15,23,21,18,32,32,25,16,14,26,46,20,17,18,14,15,22,37,24,19,9,26,24,13,14,24,33,30,26,21,27,24,44,14,21,35,22,37,24,25,21,12,15,44,30,29,33,29,33,22,22,33,21,12,22],"Usual care":[26,39,24,20,28,49,31,34,32,35,42,47,14,47,32,28,58,30,53,43,21,37,40,31,6,28,30,20,52,29,28,29,23,23,33,35,26,31,17,38,24,34,22,26,34,19,59,32,31,24,50,47,35,17,26,39,26,19,19,24,32,25,32,63,52,21,36,33,30,43,28,28,28,31,46,41,17,27,23,41,34,42,31,11,37,35,38,18,33,24,24,36,36,22,13,5,26,44,31,7,23,37,50,45,36,34,20,27,28,23,33,28,36,48,40,37,29,15,31,38,21,46,28,36,28,18,55,19,42,26,35,23,27,42,53,23,32,42,25,40,23,39,37,45,36,19,39,20,40,49]};
+
+const NS="http://www.w3.org/2000/svg";
+const BC={low:"var(--low)",some:"var(--some)",high:"var(--high)"};
+const BL={low:"Low risk",some:"Some concerns",high:"High risk"};
+const fmt=v=>(v<0?"−":"")+Math.abs(v).toFixed(1);
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+const tip=document.getElementById("tip");
+function hover(node,html){node.style.cursor="default";
+  node.addEventListener("mousemove",e=>{tip.innerHTML=html;tip.style.opacity=1;tip.style.left=Math.min(e.clientX+12,innerWidth-250)+"px";tip.style.top=(e.clientY+12)+"px";});
+  node.addEventListener("mouseleave",()=>tip.style.opacity=0);}
+
+/* ---------- Forest plot ---------- */
+let sortKey="weight";
+function drawForest(){
+  const svg=document.getElementById("forest");svg.innerHTML="";
+  const narrow=svg.clientWidth<620;
+  const W=narrow?640:1000, rowH=30, top=34, nRows=studies.length;
+  const H=top+nRows*rowH+90;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const cols=narrow?{name:0,n:150,x0:180,x1:W-150,ci:W-140,w:W-8}:{name:0,n:170,bias:215,x0:330,x1:W-230,ci:W-215,w:W-10};
+  const dom=[-40,5]; const x=v=>cols.x0+(v-dom[0])/(dom[1]-dom[0])*(cols.x1-cols.x0);
+  const order=[...studies];
+  const bo={high:0,some:1,low:2};
+  if(sortKey==="weight")order.sort((a,b)=>b.w-a.w);
+  if(sortKey==="year")order.sort((a,b)=>a.year-b.year||a.study.localeCompare(b.study));
+  if(sortKey==="md")order.sort((a,b)=>a.md-b.md);
+  if(sortKey==="bias")order.sort((a,b)=>bo[a.bias]-bo[b.bias]||b.w-a.w);
+  // header
+  el("text",{x:cols.name,y:16,class:"m","font-weight":600},svg,"Study");
+  el("text",{x:cols.n,y:16,class:"m","text-anchor":"end","font-weight":600},svg,"n");
+  if(!narrow)el("text",{x:cols.bias,y:16,class:"m","font-weight":600},svg,"Risk of bias");
+  el("text",{x:cols.ci,y:16,class:"m","font-weight":600},svg,"MD [95% CI]");
+  el("text",{x:cols.w,y:16,class:"m","text-anchor":"end","font-weight":600},svg,"Weight");
+  // pooled CI band + gridlines
+  const yEnd=top+nRows*rowH+46;
+  el("rect",{x:x(pooled.lo),y:top-6,width:x(pooled.hi)-x(pooled.lo),height:yEnd-top+6,fill:"var(--band)"},svg);
+  for(let t=-40;t<=5;t+=5){
+    el("line",{x1:x(t),x2:x(t),y1:top-6,y2:yEnd,stroke:t===0?"var(--muted)":"var(--grid)","stroke-width":t===0?1.2:1},svg);
+    el("text",{x:x(t),y:yEnd+16,class:"f","text-anchor":"middle"},svg,t===0?"0":fmt(t).replace(".0",""));
+  }
+  el("line",{x1:x(pooled.md),x2:x(pooled.md),y1:top-6,y2:yEnd,stroke:"var(--pool)","stroke-dasharray":"3 3","stroke-width":1},svg);
+  el("text",{x:x(-25),y:yEnd+34,class:"m","text-anchor":"middle"},svg,"← favours CBT-I");
+  el("text",{x:x(0)+6,y:yEnd+34,class:"m"},svg,"usual care →");
+  const maxW=Math.max(...studies.map(s=>s.w));
+  order.forEach((s,i)=>{
+    const y=top+i*rowH+rowH/2;
+    const g=el("g",{},svg);
+    el("rect",{x:0,y:y-rowH/2,width:W,height:rowH,fill:"transparent"},g);
+    el("text",{x:cols.name,y:y+4},g,s.study);
+    el("text",{x:cols.n,y:y+4,"text-anchor":"end",class:"m"},g,s.n);
+    if(!narrow){el("rect",{x:cols.bias,y:y-5,width:10,height:10,rx:2,fill:BC[s.bias]},g);el("text",{x:cols.bias+16,y:y+4,class:"m"},g,BL[s.bias]);}
+    el("line",{x1:x(s.lo),x2:x(s.hi),y1:y,y2:y,stroke:BC[s.bias],"stroke-width":1.6},g);
+    const sz=6+16*Math.sqrt(s.w/maxW);
+    el("rect",{x:x(s.md)-sz/2,y:y-sz/2,width:sz,height:sz,fill:BC[s.bias]},g);
+    el("text",{x:cols.ci,y:y+4},g,`${fmt(s.md)} [${fmt(s.lo)}, ${fmt(s.hi)}]`);
+    el("text",{x:cols.w,y:y+4,"text-anchor":"end",class:"m"},g,s.w.toFixed(1)+"%");
+    hover(g,`<b>${s.study}</b> · n = ${s.n}<br>MD ${fmt(s.md)} min [${fmt(s.lo)}, ${fmt(s.hi)}]<br>Weight ${s.w}% · ${BL[s.bias]}`);
+  });
+  // diamonds
+  const diamond=(d,y,label,fill,sub)=>{
+    const h=8;const g=el("g",{},svg);
+    el("polygon",{points:`${x(d.lo)},${y} ${x(d.md)},${y-h} ${x(d.hi)},${y} ${x(d.md)},${y+h}`,fill:fill,stroke:fill},g);
+    el("text",{x:cols.name,y:y+4,"font-weight":650},g,label);
+    if(sub)el("text",{x:cols.n,y:y+4,"text-anchor":"end",class:"m"},g,sub);
+    el("text",{x:cols.ci,y:y+4,"font-weight":650},g,`${fmt(d.md)} [${fmt(d.lo)}, ${fmt(d.hi)}]`);
+    return g;
+  };
+  const y1=top+nRows*rowH+14;
+  diamond(pooled,y1,"Pooled, all 9 (RE)","var(--pool)","1093");
+  const g2=diamond(pooled.low,y1+26,"Low-bias only (5)","var(--low)","784");
+  el("text",{x:cols.w,y:y1+4,"text-anchor":"end",class:"m"},svg,"100%");
+}
+document.querySelectorAll("[data-sort]").forEach(b=>b.addEventListener("click",()=>{
+  sortKey=b.dataset.sort;
+  document.querySelectorAll("[data-sort]").forEach(o=>o.setAttribute("aria-pressed",o===b));
+  drawForest();
+}));
+
+/* ---------- Heterogeneity gauge ---------- */
+function drawHet(){
+  const svg=document.getElementById("het");svg.innerHTML="";
+  const W=460,H=74;svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const x=v=>10+v/100*(W-20);
+  const bands=[[0,25,"Low"],[25,50,"Moderate"],[50,75,"Substantial"],[75,100,"Considerable"]];
+  bands.forEach(([a,b,l],i)=>{
+    el("rect",{x:x(a),y:22,width:x(b)-x(a)-2,height:14,rx:3,fill:"var(--accent)","fill-opacity":0.12+i*0.14},svg);
+    el("text",{x:(x(a)+x(b))/2,y:54,class:"m","text-anchor":"middle"},svg,l);
+  });
+  [0,25,50,75,100].forEach(t=>el("text",{x:x(t),y:70,class:"f","text-anchor":"middle","font-size":11},svg,t+"%"));
+  el("polygon",{points:`${x(38)-6},6 ${x(38)+6},6 ${x(38)},18`,fill:"var(--ink)"},svg);
+  el("line",{x1:x(38),x2:x(38),y1:18,y2:38,stroke:"var(--ink)","stroke-width":2},svg);
+  el("text",{x:x(38)+10,y:15,"font-weight":650},svg,"I² = 38%");
+}
+
+/* ---------- Sensitivity ---------- */
+function drawSens(){
+  const svg=document.getElementById("sens");svg.innerHTML="";
+  const W=460,H=210;svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const x0=150,x1=W-14,dom=[-30,0];const x=v=>x0+(v-dom[0])/(dom[1]-dom[0])*(x1-x0);
+  const rows=[
+    {l:"All 9 trials",d:pooled,c:"var(--pool)",s:"pooled RE"},
+    {l:"Low-bias only (5)",d:pooled.low,c:"var(--low)",s:"pooled RE"},
+    {l:"Costa 2018",d:studies[2],c:"var(--high)",s:"high bias · 4.4%",st:true},
+    {l:"Evans 2019",d:studies[4],c:"var(--high)",s:"high bias · 3.3%",st:true}
+  ];
+  for(let t=-30;t<=0;t+=10){el("line",{x1:x(t),x2:x(t),y1:8,y2:H-30,stroke:t===0?"var(--muted)":"var(--grid)"},svg);el("text",{x:x(t),y:H-14,class:"f","text-anchor":"middle"},svg,t===0?"0":fmt(t).replace(".0",""));}
+  rows.forEach((r,i)=>{
+    const y=26+i*42;const d=r.d;const lo=d.lo??d.ci_low, hi=d.hi;
+    el("text",{x:0,y:y,"font-weight":r.st?400:650},svg,r.l);
+    el("text",{x:0,y:y+16,class:"m","font-size":11},svg,`${fmt(d.md)} [${fmt(lo)}, ${fmt(hi)}] · ${r.s}`);
+    el("line",{x1:x(Math.max(lo,dom[0])),x2:x(hi),y1:y+4,y2:y+4,stroke:r.c,"stroke-width":r.st?1.5:3},svg);
+    if(r.st){el("rect",{x:x(d.md)-5,y:y-1,width:10,height:10,fill:r.c},svg);if(lo<dom[0])el("text",{x:x(dom[0])-2,y:y+8,"text-anchor":"end",fill:r.c},svg,"‹");}
+    else el("polygon",{points:`${x(lo)},${y+4} ${x(d.md)},${y-4} ${x(hi)},${y+4} ${x(d.md)},${y+12}`,fill:r.c},svg);
+  });
+}
+
+/* ---------- Scatter ---------- */
+function drawScatter(){
+  const svg=document.getElementById("scatter");svg.innerHTML="";
+  const narrow=svg.clientWidth<620;
+  const W=narrow?640:1000,H=narrow?340:300;svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const m={l:50,r:20,t:14,b:44};
+  const x=v=>m.l+Math.log(v/30)/Math.log(330/30)*(W-m.l-m.r);
+  const y=v=>m.t+(v-(-2))/(-28-(-2))*(H-m.t-m.b);
+  [-5,-10,-15,-20,-25].forEach(t=>{el("line",{x1:m.l,x2:W-m.r,y1:y(t),y2:y(t),stroke:"var(--grid)"},svg);el("text",{x:m.l-8,y:y(t)+4,class:"f","text-anchor":"end"},svg,fmt(t).replace(".0",""));});
+  [30,50,100,200,300].forEach(t=>{el("line",{x1:x(t),x2:x(t),y1:m.t,y2:H-m.b,stroke:"var(--grid)"},svg);el("text",{x:x(t),y:H-m.b+16,class:"f","text-anchor":"middle"},svg,t);});
+  el("text",{x:(W+m.l)/2,y:H-6,class:"m","text-anchor":"middle"},svg,"Sample size (log scale)");
+  el("text",{x:14,y:(H-m.b)/2,class:"m","text-anchor":"middle",transform:`rotate(-90 14 ${(H-m.b)/2})`},svg,"Mean difference (min)");
+  el("line",{x1:m.l,x2:W-m.r,y1:y(pooled.md),y2:y(pooled.md),stroke:"var(--pool)","stroke-dasharray":"4 3"},svg);
+  el("text",{x:m.l+6,y:y(pooled.md)-6,class:"m"},svg,"pooled −9.8");
+  const maxW=27.4;
+  studies.forEach(s=>{
+    const r=4+9*Math.sqrt(s.w/maxW);
+    const c=el("circle",{cx:x(s.n),cy:y(s.md),r:r,fill:BC[s.bias],"fill-opacity":.85,stroke:"var(--card)","stroke-width":1.5},svg);
+    const right=s.n<200, dy=s.study==="Hale 2022"?r+14:s.study==="Dlamini 2019"?-r-6:4;
+    el("text",{x:right?x(s.n)+r+5:(dy===4?x(s.n)-r-5:x(s.n)),y:y(s.md)+dy,"text-anchor":right?"start":(dy===4?"end":"middle"),"font-size":11.5},svg,s.study);
+    hover(c,`<b>${s.study}</b> · n = ${s.n}<br>MD ${fmt(s.md)} min · ${BL[s.bias]}`);
+  });
+}
+
+/* ---------- Distribution ---------- */
+const stat=a=>{const s=[...a].sort((p,q)=>p-q);const n=s.length;const mean=s.reduce((p,q)=>p+q,0)/n;
+  const sd=Math.sqrt(s.reduce((p,q)=>p+(q-mean)**2,0)/(n-1));
+  const qt=p=>{const i=(n-1)*p,f=Math.floor(i);return s[f]+(s[Math.min(f+1,n-1)]-s[f])*(i-f);};
+  return {n,mean,sd,q1:qt(.25),med:qt(.5),q3:qt(.75),min:s[0],max:s[n-1]};};
+function drawDist(){
+  const svg=document.getElementById("dist");svg.innerHTML="";
+  const narrow=svg.clientWidth<620;
+  const W=narrow?640:1000,H=372;svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const m={l:110,r:20};const mid=170;const amp=120;
+  const bw=5,bins=[];for(let b=0;b<65;b+=bw)bins.push(b);
+  const x=v=>m.l+v/65*(W-m.l-m.r);
+  const counts=k=>bins.map(b=>arms[k].filter(v=>v>=b&&v<b+bw).length);
+  const cc=counts("CBT-I"),cu=counts("Usual care");const mx=Math.max(...cc,...cu);
+  const h=c=>c/mx*amp;
+  [10,20,30].forEach(t=>{const yy=t/mx*amp;
+    el("line",{x1:m.l,x2:W-m.r,y1:mid-yy,y2:mid-yy,stroke:"var(--grid)"},svg);
+    el("line",{x1:m.l,x2:W-m.r,y1:mid+yy,y2:mid+yy,stroke:"var(--grid)"},svg);
+    el("text",{x:m.l-8,y:mid-yy+4,class:"f","text-anchor":"end"},svg,t);
+    el("text",{x:m.l-8,y:mid+yy+4,class:"f","text-anchor":"end"},svg,t);});
+  bins.forEach((b,i)=>{
+    const a=el("rect",{x:x(b)+1,y:mid-h(cc[i]),width:x(bw)-x(0)-2,height:h(cc[i]),fill:"var(--cbt)",rx:2},svg);
+    const u=el("rect",{x:x(b)+1,y:mid,width:x(bw)-x(0)-2,height:h(cu[i]),fill:"var(--uc)",rx:2},svg);
+    hover(a,`CBT-I · ${b}–${b+bw-1} min<br>${cc[i]} participants`);
+    hover(u,`Usual care · ${b}–${b+bw-1} min<br>${cu[i]} participants`);
+  });
+  el("line",{x1:m.l,x2:W-m.r,y1:mid,y2:mid,stroke:"var(--muted)"},svg);
+  const sc=stat(arms["CBT-I"]),su=stat(arms["Usual care"]);
+  [[sc,"var(--cbt)",mid-amp-14,"CBT-I median 23"],[su,"var(--uc)",mid+amp+22,"Usual care median 31"]].forEach(([s,c,ly,l],i)=>{
+    el("line",{x1:x(s.med),x2:x(s.med),y1:i?mid:mid-amp-4,y2:i?mid+amp+4:mid,stroke:"var(--ink)","stroke-width":2,"stroke-dasharray":"5 3"},svg);
+    el("text",{x:x(s.med)+6,y:ly+4,fill:c,"font-weight":650},svg,l);
+  });
+  el("text",{x:0,y:mid-amp/2,"font-weight":650,fill:"var(--cbt)"},svg,"CBT-I");
+  el("text",{x:0,y:mid-amp/2+16,class:"m","font-size":11},svg,"n = 150");
+  el("text",{x:0,y:mid+amp/2,"font-weight":650,fill:"var(--uc)"},svg,"Usual care");
+  el("text",{x:0,y:mid+amp/2+16,class:"m","font-size":11},svg,"n = 150");
+  for(let t=0;t<=65;t+=10)el("text",{x:x(t),y:H-24,class:"f","text-anchor":"middle"},svg,t);
+  el("text",{x:(m.l+W-m.r)/2,y:H-4,class:"m","text-anchor":"middle"},svg,"Minutes to fall asleep (5-minute bins)");
+  // table
+  const tb=document.getElementById("armtab");
+  const r=(l,s)=>`<tr><td>${l}</td><td>${s.n}</td><td>${s.mean.toFixed(1)}</td><td>${s.sd.toFixed(1)}</td><td>${s.med}</td><td>${+s.q1.toFixed(1)}–${+s.q3.toFixed(1)}</td><td>${s.min}–${s.max}</td></tr>`;
+  tb.innerHTML=`<tr><th>Arm</th><th>n</th><th>Mean</th><th>SD</th><th>Median</th><th>IQR</th><th>Range</th></tr>`+r("CBT-I",sc)+r("Usual care",su)+
+   `<tr><td><b>Difference</b></td><td></td><td><b>${fmt(sc.mean-su.mean)}</b></td><td></td><td><b>${fmt(sc.med-su.med)}</b></td><td></td><td></td></tr>`;
+}
+
+function drawAll(){drawForest();drawHet();drawSens();drawScatter();drawDist();}
+drawAll();
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(drawAll,150);});
+document.getElementById("copybtn").addEventListener("click",()=>{
+  const t=[...document.querySelectorAll("#drafttext p")].map(p=>p.textContent.trim()).join("\n\n");
+  try{navigator.clipboard.writeText(t).then(()=>{copybtn.textContent="Copied";setTimeout(()=>copybtn.textContent="Copy text",1500);});}catch(e){}
+});
+</script>
+</body>
+</html>

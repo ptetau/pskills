@@ -1,0 +1,139 @@
+title: Kōwhai Studio — how the business is doing
+subtitle: Xero snapshot for Monday morning. All amounts in NZD, year to date is January to November 2026.
+meta: {As of: 2026-11-28, Source: Xero, Currency: NZD}
+data:
+  m:
+    file: ../../../reports/R18-business/xero.json
+    key: monthly
+    add:
+      profit: "revenue - expenses"
+      margin: "100 * (revenue - expenses) / revenue"
+      growth: "100 * (revenue - revenue_last_year) / revenue_last_year"
+  ytd:
+    from: m
+    add: {period: "'Year to date'"}
+    group: period
+    sum: [revenue, expenses, revenue_last_year, profit]
+    then:
+      margin: "100 * profit / revenue"
+      growth: "100 * (revenue - revenue_last_year) / revenue_last_year"
+  cash:
+    file: ../../../reports/R18-business/xero.json
+    key: cash
+    add:
+      item: "'Bank account' if key == 'bank' else ('Savings' if key == 'savings' else ('Owed to us' if key == 'owed_to_us' else 'We owe'))"
+      signed: "0 - value if key == 'we_owe' else value"
+  on_hand:
+    from: cash
+    where: {key: [bank, savings]}
+    add: {g: "'cash'"}
+    group: g
+    sum: [value]
+  position:
+    from: cash
+    add: {g: "'net'"}
+    group: g
+    sum: [signed]
+  ageing: ../../../reports/R18-business/xero.json#receivables_ageing
+  overdue: ../../../reports/R18-business/xero.json#overdue_invoices
+  customers:
+    file: ../../../reports/R18-business/xero.json
+    key: top_customers
+    pct: [revenue]
+  spend:
+    file: ../../../reports/R18-business/xero.json
+    key: expenses_by_category
+    sort: -amount
+    pct: [amount]
+layout:
+- grid:
+    min: 170
+    items:
+    - stat: {label: Revenue YTD, data: ytd, agg: sum, col: revenue, fmt: money}
+    - stat: {label: Expenses YTD, data: ytd, agg: sum, col: expenses, fmt: money}
+    - stat: {label: Net profit YTD, data: ytd, agg: sum, col: profit, fmt: money, tone: good}
+    - stat: {label: Profit margin, data: ytd, agg: sum, col: margin, fmt: pct}
+    - stat: {label: Revenue vs last year, data: ytd, agg: sum, col: growth, fmt: pct, tone: good, sub: same months of 2025}
+- grid:
+    min: 170
+    items:
+    - stat: {label: Cash on hand, data: on_hand, agg: sum, col: value, fmt: money, sub: bank + savings, tone: good}
+    - stat: {label: Owed to us, data: cash, where: {key: owed_to_us}, agg: sum, col: value, fmt: money}
+    - stat: {label: Overdue, data: overdue, agg: sum, col: amount, fmt: money, tone: warn, sub: invoices past their due date}
+    - stat: {label: We owe, data: cash, where: {key: we_owe}, agg: sum, col: value, fmt: money}
+    - stat: {label: Net position, data: position, agg: sum, col: signed, fmt: money, sub: cash + owed to us - we owe}
+- callout:
+    tone: warn
+    text: >-
+      The business is healthy: revenue is ahead of last year and each month made a profit.
+      **Chase two old invoices:** Moa Retail (INV-0377, 120 days)
+      and Kererū Media (INV-0398, 91 days).
+- section:
+    title: This year vs last year
+    items:
+    - row:
+      - chart: {kind: line, data: m, x: month, y: [revenue, revenue_last_year], fmt: money, labels: {revenue: "2026", revenue_last_year: "2025"}}
+        title: Revenue by month
+        w: 2
+      - col:
+        - stat: {label: Months ahead of last year, data: m, where: {growth: ">0"}, of: true}
+        - stat: {label: Months in profit, data: m, where: {profit: ">0"}, of: true, tone: good}
+    - row:
+      - chart: {kind: bar, data: m, x: month, y: [revenue, expenses], fmt: money}
+        title: Revenue and expenses
+      - chart: {kind: bar, data: m, x: month, y: profit, fmt: money}
+        title: Profit by month
+    - card:
+        title: Monthly figures
+        collapse: true
+        open: false
+        items:
+        - table:
+            data: m
+            cols: [month, revenue, revenue_last_year, growth, expenses, profit, margin]
+            labels: {revenue: Revenue 2026, revenue_last_year: Revenue 2025, growth: vs 2025}
+            fmt: {revenue: money, revenue_last_year: money, growth: pct, expenses: money, profit: money, margin: pct}
+            good: {growth: up}
+            bar: [profit]
+- section:
+    title: Who owes us money
+    items:
+    - row:
+      - chart: {kind: bar, data: ageing, x: bucket, y: amount, fmt: money, horizontal: true}
+        title: Receivables by age
+      - table:
+          data: overdue
+          cols: [customer, invoice, amount, due, days_overdue]
+          sort: -days_overdue
+          labels: {days_overdue: Days late}
+          fmt: {amount: money, due: date}
+          tone: {days_overdue: {">90": bad, ">30": warn}}
+          bar: [amount]
+        title: Overdue invoices, oldest first
+        w: 2
+- section:
+    title: Where the money goes
+    items:
+    - row:
+      - compare:
+          mode: toggle
+          items:
+          - treemap: {data: spend, size: amount, label: category, fmt: money, height: 300}
+            title: Treemap
+          - chart: {kind: bar, data: spend, x: category, y: amount, fmt: money, horizontal: true}
+            title: Bar
+          - table: {data: spend, cols: [category, amount, amount_pct], fmt: {amount: money, amount_pct: pct}, labels: {amount_pct: Share}}
+            title: Table
+        title: Expenses by category, this year
+      - table:
+          data: customers
+          cols: [customer, revenue, revenue_pct]
+          fmt: {revenue: money, revenue_pct: pct}
+          labels: {revenue_pct: Share}
+          bar: [revenue]
+        title: Top customers by revenue
+- section:
+    title: Cash position
+    items:
+    - chart: {kind: waterfall, data: cash, x: item, y: signed, total: Net position, fmt: money, height: 240}
+      title: From cash in the bank to net position

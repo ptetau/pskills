@@ -1,0 +1,67 @@
+title: CBT-I vs usual care — sleep onset meta-analysis
+subtitle: 9 randomised trials · mean difference in sleep onset time (minutes; negative favours CBT-I)
+data:
+  studies: ../../../reports/R12-meta/studies.json
+  pooled: ../../../reports/R12-meta/pooled.json
+  low:
+    from: studies
+    where: {bias: low}
+  bybias:
+    from: studies
+    group: bias
+    sum: [n, weight]
+    mean: [md]
+    sort: md
+  outcomes: ../../../reports/R12-meta/outcomes.csv
+  arms:
+    from: outcomes
+    describe: [minutes]
+    by: arm
+layout:
+- stats:
+  - {label: Pooled mean difference, value: -9.8, unit: min, sub: "95% CI -12.4 to -7.2 · p < 0.001", tone: good}
+  - {label: Heterogeneity I², value: 38, unit: "%", sub: "τ² 4.1 · Q p = 0.12", tone: info}
+  - {label: GRADE certainty, value: moderate, tone: warn}
+  - {label: Low-bias studies only, value: -8.6, unit: min, sub: "95% CI -10.6 to -6.6 · 5 trials", tone: good}
+- callout:
+    tone: info
+    text: "All 9 trials favour CBT-I and 8 of 9 CIs exclude zero. Heterogeneity is moderate (I² 38%, Q p = 0.12). The two **high-bias** trials are the smallest and show the largest effects; without them and the *some*-bias trials the effect shrinks from −9.8 to −8.6 min but stays clear of zero."
+- section:
+    title: How each study compares
+    items:
+    - compare:
+        mode: toggle
+        items:
+        - forest: {data: studies, label: study, est: md, lo: ci_low, hi: ci_high, weight: weight, group: bias,
+                   pooled: {est: -9.8, lo: -12.4, hi: -7.2, label: Pooled (RE)}, left: favours CBT-I, right: favours usual care}
+          title: All 9 trials
+        - forest: {data: low, label: study, est: md, lo: ci_low, hi: ci_high, weight: weight, group: bias,
+                   pooled: {est: -8.6, lo: -10.6, hi: -6.6, label: Pooled (low bias only)}, left: favours CBT-I, right: favours usual care}
+          title: Low-bias trials only
+- section:
+    title: Do the high-bias studies drive the result?
+    items:
+    - row:
+      - chart: {kind: scatter, data: studies, x: n, y: md, series: bias, zero: false}
+        title: Effect by sample size
+        note: Small trials show larger effects — a small-study pattern.
+      - table: {data: bybias, cols: [bias, count, n, weight, md], fmt: {md: num, weight: num},
+                labels: {count: trials, n: participants, weight: "weight %", md: "mean MD (unweighted)"}}
+        title: By risk of bias
+- section:
+    title: Outcome distribution in the largest trial (Hale 2022, n = 300)
+    items:
+    - row:
+      - box: {data: outcomes, y: minutes, by: arm}
+        title: Sleep onset by arm
+      - chart: {kind: hist, data: outcomes, x: minutes, series: arm, bins: 12}
+        title: Distribution
+    - table: {data: arms, fmt: {mean: num, sd: num}}
+      title: Summary by arm
+- card:
+    title: Study details
+    collapse: true
+    items:
+    - table: {data: studies, cols: [study, year, n, md, ci_low, ci_high, weight, bias], sort: -weight, bar: [weight],
+              labels: {md: MD, ci_low: CI low, ci_high: CI high, weight: "weight %"}}
+    - kv: {data: pooled, keys: [model, md, ci_low, ci_high, p, i2, tau2, q_p, grade]}

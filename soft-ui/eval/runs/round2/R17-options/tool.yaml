@@ -19,13 +19,11 @@ data:
 layout:
 - callout: >-
     The weighted ranking is close: all four options score within about 0.15 of each other
-    on a 5-point scale. Cost over the year separates them more clearly than the scores do.
+    on a 5-point scale. Serverless leads VMs by only 0.10. Cost separates them more:
+    Serverless starts cheapest but grows fastest, and passes VMs at about month 6.
   tone: info
-- stats:
-  - {label: 12-month cost · VMs, data: costs, where: {option: VMs (self-managed)}, agg: sum, col: cost_nzd, fmt: money}
-  - {label: 12-month cost · Serverless, data: costs, where: {option: Serverless functions}, agg: sum, col: cost_nzd, fmt: money}
-  - {label: 12-month cost · PaaS, data: costs, where: {option: PaaS (app platform)}, agg: sum, col: cost_nzd, fmt: money}
-  - {label: 12-month cost · Kubernetes, data: costs, where: {option: Managed Kubernetes}, agg: sum, col: cost_nzd, fmt: money}
+- stats: {data: totals, label: option, value: cost_nzd}
+  title: 12-month projected cost (NZD)
 - section:
     title: Weighted ranking
     items:
@@ -45,11 +43,13 @@ layout:
 - section:
     title: Pros and cons
     items:
-    - compare:
-      - list: {data: pros, head: pros, group: option}
-        title: Pros
-      - list: {data: cons, head: cons, group: option}
-        title: Cons
+    - row:
+        min: 280
+        items:
+        - list: {data: pros, head: pros, group: option}
+          title: Pros
+        - list: {data: cons, head: cons, group: option}
+          title: Cons
 - card:
     title: Criteria weights
     collapse: true
