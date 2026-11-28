@@ -1,0 +1,57 @@
+title: Choose a hosting platform for the new API
+subtitle: Four options, five weighted criteria, and 12 months of projected cost
+meta: For the CTO · decision this week
+data:
+  options: ../../../reports/R17-options/options.json
+  criteria: ../../../reports/R17-options/criteria.json
+  costs: ../../../reports/R17-options/costs.csv
+  totals:
+    from: costs
+    group: option
+    sum: [cost_nzd]
+    sort: cost_nzd
+  pros:
+    from: options
+    explode: pros
+  cons:
+    from: options
+    explode: cons
+layout:
+- callout: >-
+    The weighted ranking is close: all four options score within about 0.15 of each other
+    on a 5-point scale. Cost over the year separates them more clearly than the scores do.
+  tone: info
+- stats:
+  - {label: 12-month cost · VMs, data: costs, where: {option: VMs (self-managed)}, agg: sum, col: cost_nzd, fmt: money}
+  - {label: 12-month cost · Serverless, data: costs, where: {option: Serverless functions}, agg: sum, col: cost_nzd, fmt: money}
+  - {label: 12-month cost · PaaS, data: costs, where: {option: PaaS (app platform)}, agg: sum, col: cost_nzd, fmt: money}
+  - {label: 12-month cost · Kubernetes, data: costs, where: {option: Managed Kubernetes}, agg: sum, col: cost_nzd, fmt: money}
+- section:
+    title: Weighted ranking
+    items:
+    - decision: {data: options, option: option, scores: scores, weights: criteria}
+- section:
+    title: Cost over time (NZD per month)
+    items:
+    - compare:
+        mode: toggle
+        items:
+        - chart: {kind: line, data: costs, x: month, y: cost_nzd, series: option, fmt: money}
+          title: Monthly cost
+        - chart: {kind: bar, data: totals, x: option, y: cost_nzd, fmt: money, horizontal: true}
+          title: 12-month total
+        - table: {data: totals, cols: [option, cost_nzd], fmt: {cost_nzd: money}}
+          title: As a table
+- section:
+    title: Pros and cons
+    items:
+    - compare:
+      - list: {data: pros, head: pros, group: option}
+        title: Pros
+      - list: {data: cons, head: cons, group: option}
+        title: Cons
+- card:
+    title: Criteria weights
+    collapse: true
+    items:
+    - table: {data: criteria, fmt: {weight: pct}}
