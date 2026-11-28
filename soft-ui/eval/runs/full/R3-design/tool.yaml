@@ -1,0 +1,95 @@
+title: Notifications subsystem design
+subtitle: "Review pack from /decompose: shape, core flow, contracts, and change simulation"
+data:
+  d: ../../../reports/R3-design/design.json
+  steps: ../../../reports/R3-design/design.json#core_use_case.steps
+layout:
+- stats:
+  - {label: Components, value: 8}
+  - {label: Call edges, value: 8}
+  - {label: Data contracts, value: 4}
+  - {label: Changes simulated, value: 7}
+  - {label: Land in one place, value: 6, unit: "/ 7", tone: good}
+- callout: {tone: warn, text: "One change does not land in one place: **Retry failed sends with backoff** touches 2 components (NotificationManager and ChannelAccess). Review this first."}
+- section:
+    title: Shape of the system
+    items:
+    - row:
+      - graph: {data: d.calls, from: from, to: to, label: via, dir: TD, nodes: d.components, by: kind, tone: {volatility: {high: bad, medium: warn, low: good}}}
+        title: Who calls whom
+        note: Boxes group by kind; colour shows volatility.
+        w: 3
+      - table: {data: d.components, cols: [name, kind, hides, volatility], group: kind}
+        title: Components and what each hides
+        w: 2
+- section:
+    title: "Core use case: send an order-shipped notification"
+    items:
+    - tabs:
+      - diagram:
+          src: |
+            sequenceDiagram
+              participant C as NotifyClient
+              participant M as NotificationManager
+              participant P as PreferenceEngine
+              participant U as UserDirectory
+              participant K as Clock
+              participant T as TemplateEngine
+              participant A as ChannelAccess
+              participant S as NotificationStore
+              C->>M: send(order.shipped)
+              M->>P: decide(user, event)
+              P->>U: prefs(user)
+              P->>K: now(tz)
+              P-->>M: Decision(send, [email, push])
+              loop each message
+                M->>T: render(event, locale)
+                T->>U: locale(user)
+                M->>A: deliver(msg)
+                A-->>M: DeliveryResult
+                M->>S: record(msg)
+              end
+              M-->>C: summary
+        title: Sequence
+      - table: {data: steps}
+        title: Steps
+- section:
+    title: Data contracts
+    items:
+    - diagram: |
+        classDiagram
+          class Event {
+            id: EventId
+            kind: EventKind
+            user: UserId
+            payload: Map
+          }
+          class Decision {
+            send: bool
+            channels: Channel[]
+            delay_until: Instant?
+            reason: string
+          }
+          class Message {
+            id: MessageId
+            channel: Channel
+            to: Address
+            body: string
+            event: EventId
+          }
+          class DeliveryResult {
+            message: MessageId
+            status: Sent|Failed|Retry
+            vendor_ref: string?
+          }
+          Message --> Event : event
+          DeliveryResult --> Message : message
+- section:
+    title: Change simulation
+    items:
+    - row:
+      - table: {data: d.change_simulation, cols: [change, lands_in, components_touched], sort: -components_touched, tone: {components_touched: {1: good, 2: warn}}}
+        title: Where each likely change lands
+        w: 2
+      - chart: {data: d.change_simulation, x: lands_in, agg: count, horizontal: true, sort: -y}
+        title: Changes per component

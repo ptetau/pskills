@@ -1,0 +1,130 @@
+title: Kōwhai Studio — how the business is doing
+subtitle: Xero snapshot, 1 Jan to 28 Nov 2026, NZD
+meta: {As of: 2026-11-28, Source: Xero}
+data:
+  monthly:
+    file: ../../../reports/R18-business/xero.json#monthly
+    add: {profit: "revenue - expenses", margin: "(revenue - expenses) / revenue", growth: "(revenue - revenue_last_year) / revenue_last_year"}
+  cash:
+    file: ../../../reports/R18-business/xero.json
+    key: cash
+    rename: {bank: Bank, savings: Savings, owed_to_us: Owed to us, we_owe: We owe}
+  ageing: ../../../reports/R18-business/xero.json#receivables_ageing
+  overdue:
+    file: ../../../reports/R18-business/xero.json#overdue_invoices
+    sort: -days_overdue
+  customers:
+    file: ../../../reports/R18-business/xero.json#top_customers
+    pct: [revenue]
+    sort: -revenue
+  spend:
+    file: ../../../reports/R18-business/xero.json#expenses_by_category
+    pct: [amount]
+    sort: -amount
+layout:
+- callout:
+    tone: good
+    text: >-
+      **The business is healthy.** Revenue this year is **$662k**, up **12.6%** on the same
+      11 months last year, and November was the best month yet. Profit is **$96.7k** (a 14.6%
+      margin). Cash in the bank and savings is **$124k**, about 2.4 months of expenses.
+      **Watch:** $33.1k of invoices are overdue; Tui Foods and Harbour Board owe $22.2k of it.
+- section:
+    title: Revenue, profit and cash
+    items:
+    - row:
+        min: 150
+        items:
+        - stat: {label: Revenue this year, data: monthly, agg: sum, col: revenue, vs: revenue_last_year, fmt: money}
+        - stat: {label: Expenses this year, data: monthly, agg: sum, col: expenses, fmt: money}
+        - stat: {label: Profit this year, data: monthly, agg: sum, col: profit, fmt: money, tone: good}
+        - stat: {label: Revenue last year (Jan–Nov), data: monthly, agg: sum, col: revenue_last_year, fmt: money}
+    - stats:
+        data: cash
+        cols: [Bank, Savings, Owed to us, We owe]
+        fmt: money
+- section:
+    title: This year against last year
+    items:
+    - row:
+        min: 300
+        items:
+        - chart:
+            kind: line
+            data: monthly
+            x: month
+            y: [revenue, revenue_last_year]
+            labels: {revenue: "2026", revenue_last_year: "2025"}
+            fmt: money
+            zero: false
+          title: Monthly revenue, 2026 against 2025
+          note: Revenue beat last year in 10 of 11 months; only January was lower. The gap was widest in November.
+        - chart:
+            kind: bar
+            data: monthly
+            x: month
+            y: [revenue, expenses]
+            labels: {revenue: Revenue, expenses: Expenses}
+            fmt: money
+          title: Revenue and expenses each month
+          note: Expenses rose too, so the margin each month moves between 3% and 28%.
+    - card:
+        title: Month by month
+        collapse: true
+        open: false
+        items:
+          - table:
+              data: monthly
+              cols: [month, revenue, revenue_last_year, growth, expenses, profit, margin]
+              labels: {month: Month, revenue: Revenue, revenue_last_year: Last year, growth: vs last year, expenses: Expenses, profit: Profit, margin: Margin}
+              fmt: {revenue: money, revenue_last_year: money, growth: ratio, expenses: money, profit: money, margin: ratio}
+              good: {growth: up}
+              bar: [profit]
+              dense: true
+- section:
+    title: Who owes money
+    items:
+    - row:
+        min: 300
+        items:
+        - chart:
+            kind: bar
+            data: ageing
+            x: bucket
+            y: amount
+            fmt: money
+          title: Money owed to us, by age
+          note: Most of the money owed is current or less than 30 days late; $7.1k is more than 60 days late.
+        - table:
+            data: overdue
+            cols: [invoice, customer, amount, due, days_overdue]
+            labels: {invoice: Invoice, customer: Customer, amount: Amount, due: Due, days_overdue: Days late}
+            fmt: {amount: money, due: date}
+            tone: {days_overdue: {">=90": bad, ">=30": warn}}
+            bar: [amount]
+          title: Overdue invoices, most late first
+          w: 2
+- section:
+    title: Where the money comes from and goes
+    items:
+    - row:
+        min: 300
+        items:
+        - chart:
+            kind: bar
+            horizontal: true
+            data: spend
+            x: category
+            y: amount
+            fmt: money
+          title: Expenses this year, by category
+          note: Wages and contractors are 77% of all expenses.
+        - chart:
+            kind: bar
+            horizontal: true
+            data: customers
+            x: customer
+            y: revenue
+            fmt: money
+          title: Revenue by customer
+          note: Harbour Board is the largest single customer; "Others" is many small clients.

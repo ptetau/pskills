@@ -1,0 +1,13 @@
+wave,version,quality,stability
+1,baseline,0.796,0.870
+1,candidate,0.825,0.892
+2,baseline,0.803,0.880
+2,candidate,0.822,0.904
+3,baseline,0.811,0.890
+3,candidate,0.861,0.916
+4,baseline,0.801,0.900
+4,candidate,0.865,0.928
+5,baseline,0.801,0.910
+5,candidate,0.863,0.940
+6,baseline,0.801,0.920
+6,candidate,0.853,0.952

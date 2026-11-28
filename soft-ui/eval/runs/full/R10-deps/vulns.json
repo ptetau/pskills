@@ -1,0 +1,74 @@
+[
+ {
+  "package": "lodash",
+  "installed": "4.17.15",
+  "fixed_in": "4.17.21",
+  "severity": "critical",
+  "issue": "Prototype pollution",
+  "path": "direct"
+ },
+ {
+  "package": "minimist",
+  "installed": "1.2.0",
+  "fixed_in": "1.2.6",
+  "severity": "critical",
+  "issue": "Prototype pollution",
+  "path": "mkdirp > minimist"
+ },
+ {
+  "package": "axios",
+  "installed": "0.21.0",
+  "fixed_in": "1.6.0",
+  "severity": "high",
+  "issue": "SSRF on redirect",
+  "path": "direct"
+ },
+ {
+  "package": "semver",
+  "installed": "5.7.1",
+  "fixed_in": "5.7.2",
+  "severity": "high",
+  "issue": "ReDoS",
+  "path": "eslint > semver"
+ },
+ {
+  "package": "follow-redirects",
+  "installed": "1.14.0",
+  "fixed_in": "1.15.4",
+  "severity": "medium",
+  "issue": "Header leak on redirect",
+  "path": "axios > follow-redirects"
+ },
+ {
+  "package": "postcss",
+  "installed": "8.4.20",
+  "fixed_in": "8.4.31",
+  "severity": "medium",
+  "issue": "Line return parse",
+  "path": "vite > postcss"
+ },
+ {
+  "package": "tough-cookie",
+  "installed": "4.0.0",
+  "fixed_in": "4.1.3",
+  "severity": "medium",
+  "issue": "Prototype pollution",
+  "path": "jsdom > tough-cookie"
+ },
+ {
+  "package": "word-wrap",
+  "installed": "1.2.3",
+  "fixed_in": "1.2.4",
+  "severity": "low",
+  "issue": "ReDoS",
+  "path": "eslint > optionator > word-wrap"
+ },
+ {
+  "package": "debug",
+  "installed": "2.6.8",
+  "fixed_in": "2.6.9",
+  "severity": "low",
+  "issue": "ReDoS",
+  "path": "express > debug"
+ }
+]

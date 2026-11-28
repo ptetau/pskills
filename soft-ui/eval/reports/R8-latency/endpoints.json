@@ -1,0 +1,42 @@
+[
+ {
+  "endpoint": "GET /v1/products",
+  "p95_before": 180,
+  "p95_after": 190
+ },
+ {
+  "endpoint": "GET /v1/products/:id",
+  "p95_before": 95,
+  "p95_after": 98
+ },
+ {
+  "endpoint": "POST /v1/cart",
+  "p95_before": 240,
+  "p95_after": 410
+ },
+ {
+  "endpoint": "GET /v1/cart",
+  "p95_before": 120,
+  "p95_after": 125
+ },
+ {
+  "endpoint": "POST /v1/checkout",
+  "p95_before": 380,
+  "p95_after": 520
+ },
+ {
+  "endpoint": "GET /v1/orders",
+  "p95_before": 210,
+  "p95_after": 205
+ },
+ {
+  "endpoint": "POST /v1/login",
+  "p95_before": 150,
+  "p95_after": 152
+ },
+ {
+  "endpoint": "GET /v1/search",
+  "p95_before": 290,
+  "p95_after": 330
+ }
+]

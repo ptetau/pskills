@@ -1,0 +1,45 @@
+title: Orders migration · MySQL to Postgres
+subtitle: Plan, dependencies, owners, and risks for the engineering manager
+data:
+  plan: ../../../reports/R9-migration/plan.json
+  risks: ../../../reports/R9-migration/risks.json
+  deps: |
+    from,to
+    S1,S3
+    S2,S4
+    S3,S5
+    S4,S5
+    S5,S6
+    S6,S7
+    S7,S8
+layout:
+- stats:
+  - {label: Steps, value: 8}
+  - {label: Start, value: 1 Dec 2026}
+  - {label: Reads switch, value: 23 Dec 2026, tone: warn, sub: before holiday freeze}
+  - {label: Finish, value: 8 Jan 2027}
+  - {label: Risks, value: 4, sub: 2 with high impact, tone: bad}
+- section:
+    title: Timeline
+    items:
+    - gantt: {data: plan, task: step, start: start, end: end, group: phase}
+- row:
+  - graph: {data: deps, from: from, to: to, dir: LR, nodes: plan, key: id, by: phase}
+    title: Step dependencies
+    note: "Critical path: S1 → S3 → S5 → S6 → S7 → S8"
+    w: 2
+  - chart: {data: plan, x: owner, agg: count, horizontal: true}
+    title: Steps per owner
+- section:
+    title: Risks
+    items:
+    - row:
+      - heatmap: {data: risks, x: impact, y: likelihood, labels: true}
+        title: Likelihood by impact
+      - table: {data: risks, cols: [risk, likelihood, impact, mitigation], sort: -impact}
+        title: Risks and mitigations
+        w: 3
+- section:
+    title: Steps
+    items:
+    - table: {data: plan, cols: [id, step, owner, start, end, after], group: phase, filter: [owner], fmt: {start: date, end: date}}

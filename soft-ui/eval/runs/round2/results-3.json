@@ -1,0 +1,267 @@
+{
+  "summary": "Build report pages bespoke and with soft-ui, then judge each pair blind for intent match",
+  "agentCount": 6,
+  "logs": [],
+  "result": [
+    {
+      "report": "R17-options",
+      "a": "bespoke",
+      "judge": {
+        "information": 3,
+        "components": 3,
+        "layout": 4,
+        "spirit": 3,
+        "verdict": "close",
+        "a_only": [
+          "Weight-sensitivity sliders with a live re-rank, plus a note that small weight shifts (for example Ops effort 20% to 17%) put VMs first",
+          "Stacked weighted-ranking bars that show how much each criterion contributes on a 0 to 5 axis",
+          "KPI tiles for top score, gap from first to second, cheapest option, and fastest cost growth (+158%)",
+          "Annotation of the month-6 crossover on the line chart, and end-of-line labels for month-12 cost",
+          "Cost commentary: savings in NZD between the options, growth % per option, and a caveat that staff time is not included",
+          "Weighted score and 12-month cost rows under the score matrix, so the side-by-side view is in one table",
+          "Pros and cons as one card per option, with rank, score, cost, best-at and weakest-at criteria",
+          "Tie-break order that puts PaaS second and VMs third"
+        ],
+        "b_only": [
+          "12-month totals shown first as large stat tiles, above the ranking",
+          "Ranking table that merges rank, the score heatmap, criterion weights and a weighted bar in one view",
+          "Cost section in toggle tabs: monthly line chart, 12-month total bar, and a table",
+          "Pros and cons split into a pros column and a cons column, grouped by option",
+          "Collapsed criteria-weights table at the end",
+          "Tie-break order that puts VMs second and PaaS third"
+        ],
+        "better_for_reader": "A",
+        "why": "A answers the CTO's key question, \"how close is it?\", directly: it has sensitivity sliders, the score gaps, and the cost crossover with savings in NZD. A also keeps the pros and cons of each option in one card. B shows the same core data, but it states the closeness only in a callout, and its pros and cons are split into columns, so a side-by-side read of each option is harder."
+      },
+      "bespoke": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2/R17-options/bespoke.html",
+        "authored_chars": 24700,
+        "tool_calls": 8,
+        "notes": "The page opens with the verdict. Serverless leads at 3.70, and only 0.15 points separate first from last; four KPI tiles sit beside this. Below it, a stacked weighted-ranking bar chart on a 0 to 5 axis sits next to a heatmap score matrix, followed by weight sliders that re-rank live and a note on which weight changes flip the leader. Next come a 12-month cost line chart, with the serverless/VM crossover near month 6 marked, plus a bar chart of 12-month totals. Pros and cons cards close the page, in rank order. Everything is plain inline SVG with no libraries, uses light and dark tokens, and computes every number in the text from the embedded data."
+      },
+      "tool": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2/R17-options/tool.html",
+        "spec_chars": 1863,
+        "tool_calls": 9,
+        "render_runs": 4,
+        "fixed_lines": [
+          "fixed layout[1].stats: dropped unknown prop \"fmt\". Next time: use only known props (stats props: items, data, label, value, tone, by, total, order)"
+        ],
+        "error_lines": [],
+        "friction": "1) A silent failure. The first spec used a stats list whose items were stat props with data/where/agg/col (one tile per option, 12-month cost sum). `explain stat` says a stat takes data, agg, and col. Inside `stats: [...]` the props were accepted with no \"fixed\" or \"error\" line. Each tile rendered as an em dash, and render still printed \"check ok\". I found the problem only in a --shot screenshot. The check should flag a tile with no value, or `stats` items should support data+agg. 2) The stats tiles cannot format values. `fmt` is dropped, so the 12-month costs show as 30,698 and not as $30,698. 3) In my first run, `compare:` with two lists stacked Pros above Cons, and they did not show side by side. I switched to `row` with `min: 280`, and the lists then sat side by side. I did not find out why `compare` did not use columns there. 4) I wanted one card for each option that shows its pros and cons together. Two list columns grouped by option is a workaround. There is no way to union datasets, or to show the two list columns of one row in one card. 5) I wanted a mark on the line chart at the cost crossover (Serverless passes VMs at about month 6), with the decision rank tied to cost. The decision component cannot show a cost column from a different dataset, so the ranking and the money stay in separate sections. 6) The callout states the score spread (0.15) and the crossover month as hand-read facts. There is no computed-text or annotation primitive that gets them from the data. 7) The render output does not say that the page draws in the client, so plain-text grep of the HTML shows nothing. To verify the content, use --shot."
+      }
+    },
+    {
+      "report": "R18-business",
+      "a": "tool",
+      "judge": {
+        "information": 4,
+        "components": 3,
+        "layout": 3,
+        "spirit": 3,
+        "verdict": "close",
+        "a_only": [
+          "Expenses YTD as its own KPI tile",
+          "Owed to us, We owe and Net position as KPI tiles at the top (B shows them only in the cash section)",
+          "Stat tiles 'Months ahead of last year 10/11' and 'Months in profit 11/11' (B states 10 of 11 only in text)",
+          "A separate grouped bar chart of revenue and expenses for each month",
+          "A folded 'Monthly figures' table with revenue, 2025 revenue, growth, expenses, profit and margin for each month",
+          "Expenses by category as a treemap, with a toggle to a bar chart or a table",
+          "Cash position as a waterfall chart from bank account to net position",
+          "Receivables by age as a horizontal bar chart"
+        ],
+        "b_only": [
+          "A verdict sentence first that also warns that costs rise almost as fast as revenue",
+          "A one-line takeaway for each card, for example November was 24% above last November and expenses rose 16% from Q1",
+          "Expenses 2026 drawn on the revenue line chart, with a shaded profit band and a tap or hover readout for each month",
+          "Profit bars with data labels, an average line ($8.8k), and amber highlights for thin-margin months",
+          "Cash runway: cash covers about 2.2 months of costs",
+          "Receivables as one stacked bar with the percentage of each age bucket, and $7,120 more than 60 days late",
+          "Totals rows for overdue invoices, expense categories and customers",
+          "Data-quality notes: category and customer totals do not match the monthly totals, a bucket mismatch for Kereru Media, and no 2025 expenses"
+        ],
+        "better_for_reader": "B",
+        "why": "B gives the owner the verdict first, adds a takeaway for each chart, and adds cash runway, the cost-growth warning and data caveats. These answer \"is the business healthy\" faster on a phone. A has more raw views and KPI tiles, but it leaves the reader to interpret them, and it puts cash last."
+      },
+      "bespoke": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2/R18-business/bespoke.html",
+        "authored_chars": 23500,
+        "tool_calls": 12,
+        "notes": "The page opens with a one-line verdict and four KPI tiles: revenue YTD against last year, profit and margin, cash with months of costs it covers, and overdue invoices. Below them are the charts and lists, all hand-drawn in SVG or HTML with no libraries: a revenue-vs-last-year line chart with expenses and a shaded profit band, a monthly profit bar chart with thin months in amber, a cash table and a receivables ageing bar, an overdue invoices table sorted oldest first, and bar lists for expenses and customers. The charts resize to their container, so the text stays readable at phone width. Footnotes point out where the data does not add up: category expenses are $68,993 short of the monthly total, customer revenue is $30,343 short of the monthly revenue, and Kererū Media is in a different ageing bucket than its days late suggest."
+      },
+      "tool": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2/R18-business/tool.html",
+        "spec_chars": 5634,
+        "tool_calls": 19,
+        "render_runs": 7,
+        "fixed_lines": [
+          "fixed layout[0].stats.items[0]: dropped unknown prop \"stat\". Next time: use only known props (stat props: label, value, unit, delta, good, tone, sub, spark, fmt, data, of, agg, col)",
+          "fixed layout[0].stats.items[1]: dropped unknown prop \"stat\". Next time: use only known props",
+          "fixed layout[0].stats.items[2]: dropped unknown prop \"stat\". Next time: use only known props",
+          "fixed layout[0].stats.items[3]: dropped unknown prop \"stat\". Next time: use only known props"
+        ],
+        "error_lines": [
+          "error data.cash.add: add.on_hand: no column \"bank\". Columns: key, value",
+          "error data.cash.add: add.on_hand: no column \"savings\". Columns: key, value",
+          "error data.cash.add: add.net: no column \"bank\". Columns: key, value",
+          "error data.cash.add: add.net: no column \"owed_to_us\". Columns: key, value",
+          "error data.cash.add: add.net: no column \"savings\". Columns: key, value",
+          "error data.cash.add: add.net: no column \"we_owe\". Columns: key, value",
+          "error data.cash.add: add.item: not allowed in an expression: Subscript(value=Dict(keys=[Constant(valu. Allowed: + - * / % **, comparisons, x if c else y, round, abs, min, max, len, str, int, float",
+          "error data.on_hand: from: no dataset \"cash\" above this one. Datasets: m, ytd",
+          "error data.position: from: no dataset \"cash\" above this one. Datasets: m, ytd",
+          "error layout[2].table: no dataset \"on_hand\". Datasets: m, ytd, ageing, overdue, customers, spend",
+          "error layout[3].table: no dataset \"position\". Datasets: m, ytd, ageing, overdue, customers, spend",
+          "error layout[4].table: no dataset \"cash\". Datasets: m, ytd, ageing, overdue, customers, spend"
+        ],
+        "friction": "The page renders with \"check ok\". I found the problems below by looking at screenshots from headless Chrome.\n\n1. A silent false pass. I put tiles with data/agg/col inside a `stats:` items list. The render printed \"check ok\" and the phone fit passed, but every tile showed \"—\". The catalog says stats items are \"a list of stat props\", so a data-driven stat looks valid there. The fix was a grid of `stat:` nodes. Two changes would help: support data/agg in stats items, or make the check fail on a tile with an empty value.\n\n2. The pct format scale is unclear. `fmt: pct` showed a 0.146 ratio as \"0.1%\", but the `pct:` dataset step gives a 0-100 share that shows correctly. Neither the catalog nor `explain` says that pct expects 0-100. I had to multiply by 100 in the expressions. The check did not catch the wrong values.\n\n3. A single JSON object loads as key/value rows. The `cash` object in xero.json became columns key and value, so `add` with bank + savings failed. A pivot step or object-to-one-row option is missing. I worked around it with where + a constant group + sum, and with a signed column for \"we owe\". A dict lookup in an expression is not allowed, so mapping keys to labels took a nested if/else.\n\n4. A one-row summary needs a hack. I had to add a constant column and group by it (\"group all\"). A `group: all` or `total` step would help.\n\n5. Stat delta and spark take only literal values, not data. I wanted Revenue YTD with a delta vs last year and a monthly sparkline. Those would be hand-copied numbers, which the skill forbids, so the growth shows as its own tile with no sparkline.\n\n6. Each dataset needs `key:` or `#key` for every array, plus the path `../../../reports/...` repeated five times. A shared base file for several datasets would make the spec shorter.\n\n7. The treemap cells show only the category names, not the amounts. The waterfall cannot colour the bars by meaning.\n\n8. There is no union or concat step. So I could not build a revenue-to-expense-categories-to-profit waterfall or Sankey from the separate arrays.\n\n9. The data does not add up across arrays. Expenses by category total 496,500 against 565,493 in the monthly expenses. Top customers total 631,850 against 662,193 in revenue. I could not show this gap without computing it by hand, so the page does not mention it.\n\n10. The callout text (\"revenue ahead of last year\", \"each month made a profit\") is my own reading. The \"Months ahead\" and \"Months in profit\" stats on the page back it with data."
+      }
+    }
+  ],
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Build"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Judge"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "bespoke:R17-options",
+      "phaseIndex": 1,
+      "phaseTitle": "Build",
+      "agentId": "a73b6cca2b73a46ac",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795834976052,
+      "queuedAt": 1795834976047,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "/home/user/pskills/soft-ui/eval/runs/round2/R17-options/bes…",
+      "promptPreview": "Build a report page for a user, by hand.\nRead the brief at /home/user/pskills/soft-ui/eval/reports/R17-options/brief.md and the data files in that folder.\nBuild one self-contained HTML page that presents this to the reader in the brief, the way you would if the user asked you directly. You may load libraries from cdnjs.cloudflare.com or cdn.jsdelivr.net.\nWrite the page to /home/user/pskills/soft-u…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835115530,
+      "tokens": 93390,
+      "toolCalls": 7,
+      "durationMs": 137124,
+      "resultPreview": "{\"out_file\":\"/home/user/pskills/soft-ui/eval/runs/round2/R17-options/bespoke.html\",\"authored_chars\":24700,\"tool_calls\":8,\"notes\":\"The page opens with the verdict. Serverless leads at 3.70, and only 0.15 points separate first from last; four KPI tiles sit beside this. Below it, a stacked weighted-ranking bar chart on a 0 to 5 axis sits next to a heatmap score matrix, followed by weight sliders that…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "soft-ui:R17-options",
+      "phaseIndex": 1,
+      "phaseTitle": "Build",
+      "agentId": "aaeb8e4d546e8abfb",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795834976053,
+      "queuedAt": 1795834976047,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "/home/user/pskills/soft-ui/eval/runs/round2/R17-options/too…",
+      "promptPreview": "Build a report page for a user with the soft-ui skill.\nRead /home/user/pskills/soft-ui/SKILL.md and follow it. The script is /home/user/pskills/soft-ui/scripts/softui.py.\nRead the brief at /home/user/pskills/soft-ui/eval/reports/R17-options/brief.md and the data files in that folder.\nWrite the spec to /home/user/pskills/soft-ui/eval/runs/round2/R17-options/tool.yaml and render it to /home/user/psk…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835048207,
+      "tokens": 92157,
+      "toolCalls": 12,
+      "durationMs": 67996,
+      "resultPreview": "{\"out_file\":\"/home/user/pskills/soft-ui/eval/runs/round2/R17-options/tool.html\",\"spec_chars\":1863,\"tool_calls\":9,\"render_runs\":4,\"fixed_lines\":[\"fixed layout[1].stats: dropped unknown prop \\\"fmt\\\". Next time: use only known props (stats props: items, data, label, value, tone, by, total, order)\"],\"error_lines\":[],\"friction\":\"1) A silent failure. The first spec used a stats list whose items were sta…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "bespoke:R18-business",
+      "phaseIndex": 1,
+      "phaseTitle": "Build",
+      "agentId": "aaa644492d27a07b1",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835048212,
+      "queuedAt": 1795834976053,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "/home/user/pskills/soft-ui/eval/runs/round2/R18-business/be…",
+      "promptPreview": "Build a report page for a user, by hand.\nRead the brief at /home/user/pskills/soft-ui/eval/reports/R18-business/brief.md and the data files in that folder.\nBuild one self-contained HTML page that presents this to the reader in the brief, the way you would if the user asked you directly. You may load libraries from cdnjs.cloudflare.com or cdn.jsdelivr.net.\nWrite the page to /home/user/pskills/soft-…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835213138,
+      "tokens": 99835,
+      "toolCalls": 15,
+      "durationMs": 164926,
+      "resultPreview": "{\"out_file\":\"/home/user/pskills/soft-ui/eval/runs/round2/R18-business/bespoke.html\",\"authored_chars\":23500,\"tool_calls\":12,\"notes\":\"The page opens with a one-line verdict and four KPI tiles: revenue YTD against last year, profit and margin, cash with months of costs it covers, and overdue invoices. Below them are the charts and lists, all hand-drawn in SVG or HTML with no libraries: a revenue-vs-l…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "soft-ui:R18-business",
+      "phaseIndex": 1,
+      "phaseTitle": "Build",
+      "agentId": "ab4113fcded25db28",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835115534,
+      "queuedAt": 1795834976053,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "/home/user/pskills/soft-ui/eval/runs/round2/R18-business/to…",
+      "promptPreview": "Build a report page for a user with the soft-ui skill.\nRead /home/user/pskills/soft-ui/SKILL.md and follow it. The script is /home/user/pskills/soft-ui/scripts/softui.py.\nRead the brief at /home/user/pskills/soft-ui/eval/reports/R18-business/brief.md and the data files in that folder.\nWrite the spec to /home/user/pskills/soft-ui/eval/runs/round2/R18-business/tool.yaml and render it to /home/user/p…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835260953,
+      "tokens": 99470,
+      "toolCalls": 19,
+      "durationMs": 145419,
+      "resultPreview": "{\"out_file\":\"/home/user/pskills/soft-ui/eval/runs/round2/R18-business/tool.html\",\"spec_chars\":5634,\"tool_calls\":19,\"render_runs\":7,\"fixed_lines\":[\"fixed layout[0].stats.items[0]: dropped unknown prop \\\"stat\\\". Next time: use only known props (stat props: label, value, unit, delta, good, tone, sub, spark, fmt, data, of, agg, col)\",\"fixed layout[0].stats.items[1]: dropped unknown prop \\\"stat\\\". Next…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "judge:R17-options",
+      "phaseIndex": 2,
+      "phaseTitle": "Judge",
+      "agentId": "acf86f7ab16040358",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835213145,
+      "queuedAt": 1795835115573,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "close",
+      "promptPreview": "Compare two report pages that two people built from the same brief.\nBrief: /home/user/pskills/soft-ui/eval/reports/R17-options/brief.md (the data is in the same folder).\nPage A: /home/user/pskills/soft-ui/eval/runs/round2/R17-options/bespoke.html\nPage B: /home/user/pskills/soft-ui/eval/runs/round2/R17-options/tool.html\nTake a full-page screenshot of each: `node /home/user/pskills/soft-ui/eval/shoo…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835240612,
+      "tokens": 80513,
+      "toolCalls": 5,
+      "durationMs": 27466,
+      "resultPreview": "{\"information\":3,\"components\":3,\"layout\":4,\"spirit\":3,\"verdict\":\"close\",\"a_only\":[\"Weight-sensitivity sliders with a live re-rank, plus a note that small weight shifts (for example Ops effort 20% to 17%) put VMs first\",\"Stacked weighted-ranking bars that show how much each criterion contributes on a 0 to 5 axis\",\"KPI tiles for top score, gap from first to second, cheapest option, and fastest cost …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "judge:R18-business",
+      "phaseIndex": 2,
+      "phaseTitle": "Judge",
+      "agentId": "a19087e6249106db7",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835260959,
+      "queuedAt": 1795835260956,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "close",
+      "promptPreview": "Compare two report pages that two people built from the same brief.\nBrief: /home/user/pskills/soft-ui/eval/reports/R18-business/brief.md (the data is in the same folder).\nPage A: /home/user/pskills/soft-ui/eval/runs/round2/R18-business/tool.html\nPage B: /home/user/pskills/soft-ui/eval/runs/round2/R18-business/bespoke.html\nTake a full-page screenshot of each: `node /home/user/pskills/soft-ui/eval/s…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835289592,
+      "tokens": 84896,
+      "toolCalls": 5,
+      "durationMs": 28633,
+      "resultPreview": "{\"information\":4,\"components\":3,\"layout\":3,\"spirit\":3,\"verdict\":\"close\",\"a_only\":[\"Expenses YTD as its own KPI tile\",\"Owed to us, We owe and Net position as KPI tiles at the top (B shows them only in the cash section)\",\"Stat tiles 'Months ahead of last year 10/11' and 'Months in profit 11/11' (B states 10 of 11 only in text)\",\"A separate grouped bar chart of revenue and expenses for each month\",\"A…"
+    }
+  ],
+  "totalTokens": 550261,
+  "totalToolCalls": 63
+}

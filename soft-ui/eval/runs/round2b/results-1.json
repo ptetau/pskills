@@ -1,0 +1,196 @@
+{
+  "summary": "Build report pages bespoke and with soft-ui, then judge each pair blind for intent match",
+  "agentCount": 4,
+  "logs": [],
+  "result": [
+    {
+      "report": "R11-pnl",
+      "a": "tool",
+      "judge": {
+        "information": 4,
+        "components": 3,
+        "layout": 3,
+        "spirit": 4,
+        "verdict": "close",
+        "a_only": [
+          "Cost of sales KPI card (B has an operating expenses card instead)",
+          "Separate variance-by-account table sorted by effect on profit, with section and adverse, favourable or on-budget verdict tags",
+          "Monthly revenue actual vs budget bar chart"
+        ],
+        "b_only": [
+          "Budget shown as ghost bars beside the actuals in the revenue-to-net waterfall",
+          "Bridge from budgeted net profit to actual net profit, built from each account's variance, with the 4 small accounts grouped as Other",
+          "Annotated callouts that explain the Contractors, Print resale and Design fees/Marketing variances month by month (for example August and October contractor spikes)",
+          "Inline variance bars in each row of the P&L statement",
+          "Cumulative net profit actual vs budget chart",
+          "Small multiples of monthly actual vs budget for the four accounts that move most",
+          "Month-by-month P&L table (revenue, cost of sales, gross profit, opex, net profit, each with its variance against budget)",
+          "Net profit by month as bars coloured above or below budget, with values labelled",
+          "Headline stating that higher design fees and lower marketing recovered about $5,689"
+        ],
+        "better_for_reader": "B",
+        "why": "Both pages answer the same four questions in roughly the same order: verdict, KPIs, profit build-up, account variances and monthly trend. B shows the budget inside the waterfall and adds a budget-to-actual bridge, explanations for each driver and a monthly P&L table, so the owner and the accountant can see why each variance happened. A only shows that the variances exist."
+      },
+      "bespoke": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2b/R11-pnl/bespoke.html",
+        "reused": true,
+        "authored_chars": 27000,
+        "tool_calls": 9
+      },
+      "tool": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2b/R11-pnl/tool.html",
+        "spec_chars": 4586,
+        "tool_calls": 11,
+        "render_runs": 2,
+        "fixed_lines": [],
+        "error_lines": [],
+        "friction": "Both renders printed \"check ok\", with no \"fixed\" or \"error\" lines. The statement component did the hard part well. These were the problems:\n(1) The callout cannot take values from the data. The headline numbers (net profit $55,637 against $75,900, and the Contractors and Print resale variances) are typed by hand into the callout. I computed them outside the tool, which goes against the \"do not type numbers\" rule.\n(2) The stat with data+vs shows the raw column name in its sub line (\"vs $75,900 net_b\"). No prop sets a label for the comparison.\n(3) To get section-signed totals (net profit, gross profit, revenue for the stats), I had to add a separate signed column for each section to the dataset with if/else expressions. A dataset step for \"sign by section\", or a statement-totals dataset, would be easier.\n(4) A waterfall made from only the section subtotals (Revenue, Cost of sales, Gross profit, Operating expenses, Net profit) needs a separate grouped dataset with an ord column for the section order. The waterfall cannot read the statement's section/minus/subtotals config. At about 400px wide its x labels overlapped (\"Gross profitOperating expenses\"). I fixed this by changing the layout. The tool did not warn about the overlap.\n(5) The table `good: {effect: up}` did not visibly colour the money-formatted effect column. Only the tone map on the verdict column gave colour. The variance column cannot be coloured by its effect on profit, as the statement does it, because cost lines need the reverse sign.\n(6) fmt pct shows \"-0%\" for a tiny negative value (Insurance).\n(7) There is no single bridge chart of the budget-to-actual net profit variance by account (budget net, then each account's effect, then actual net). A waterfall with a start bar would show it. I used a horizontal bar of effect on profit instead.\n(8) No sparkline shows the monthly trend on the stat tiles without a typed list."
+      }
+    },
+    {
+      "report": "R17-options",
+      "a": "bespoke",
+      "judge": {
+        "information": 4,
+        "components": 4,
+        "layout": 4,
+        "spirit": 4,
+        "verdict": "close",
+        "a_only": [
+          "KPI tiles: top score 3.70, gap to second 0.10, cheapest over 12 months $30.7k, fastest cost growth +158%",
+          "Stacked bar of weighted ranking that shows how much each criterion adds to each option's score",
+          "Interactive weight sliders with a sensitivity note on which weight changes flip the winner to VMs",
+          "12-month cost total as a row in the comparison table, and exact 12-month totals with differences ($2,233 less than serverless, $26,759 less than K8s)",
+          "A marker for the crossover month on the line chart, and direct labels on the lines",
+          "Cost growth percentages for each option (+158%, +71%, +24%, +38%)",
+          "Caveat that the costs leave out staff time",
+          "Rank, score, 12-month cost, best criterion and weakest criterion on each pros and cons card"
+        ],
+        "b_only": [
+          "Table of month-12 cost for each option",
+          "Ranking table sorted by rank, with the criterion scores in line (A shows the score heatmap in a separate side-by-side table)",
+          "Explicit note on the audience: 'For the CTO, decision due this week'"
+        ],
+        "better_for_reader": "A",
+        "why": "Both pages give the same verdict first (\"serverless leads, but only just\") and the same sections in the same order: ranking with a score heatmap, a cost line chart with a 12-month total bar, then pros and cons per option. A serves the CTO better because it shows how close the ranking is, with a stacked contribution bar, a gap tile and weight sliders that show which small weight changes flip the result, and it gives exact cost totals, growth rates and the crossover month that B leaves out."
+      },
+      "bespoke": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2b/R17-options/bespoke.html",
+        "reused": true,
+        "authored_chars": 24700,
+        "tool_calls": 8
+      },
+      "tool": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2b/R17-options/tool.html",
+        "spec_chars": 2376,
+        "tool_calls": 7,
+        "render_runs": 2,
+        "fixed_lines": [],
+        "error_lines": [],
+        "friction": "Both renders printed \"check ok\" and no \"fixed\" or \"error\" lines. The decision component matched the brief exactly. It read the scores map and the weights from the criteria file, and it printed the margin itself (\"leads by 0.10 (2.8%)\"). One problem: PaaS and VMs tie at 3.60, but the component ranks them 2 and 3 with no mark that they tie. I had to say so in the callout.\n\nThings that were hard or missing:\n(1) Pros and cons are lists inside each option. To show them, I had to explode pros and cons into two datasets, add a \"kind\" column to each, and union them. Then a board showed one column per option. That works, but it takes 3 datasets for a common need. A \"list of strings\" field in list or decision, for example `pros: pros, cons: cons` shown as bullets per option, would help.\n(2) No step finds where two series cross. The callout and the chart notes say things like \"VMs are cheapest from month 6 on\". I had to work out those numbers by hand from the CSV, and my first draft said month 4, which was wrong. A crossover or \"rank by month\" helper, or chart marks from data, would stop this mistake.\n(3) The decision table has no join to cost data. I could not put the 12-month cost total next to the weighted score in one table.\n(4) In the row layout, the line chart (w: 2) next to a col with a chart and a table leaves a big empty space under the line chart. There is no way to make the cells the same height or to line them up.\n(5) The decision shows the margin only for the leader against the runner-up. It does not show each option's distance from the leader.\n(6) I could not tie a stated value, such as \"0.1 of a weighted point\", to the computed result, so the callout text is typed by hand."
+      }
+    }
+  ],
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Build"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Judge"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "soft-ui:R11-pnl",
+      "phaseIndex": 1,
+      "phaseTitle": "Build",
+      "agentId": "a21d446111548d874",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835628111,
+      "queuedAt": 1795835628106,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "/home/user/pskills/soft-ui/eval/runs/round2b/R11-pnl/tool.h…",
+      "promptPreview": "Build a report page for a user with the soft-ui skill.\nRead /home/user/pskills/soft-ui/SKILL.md and follow it. The script is /home/user/pskills/soft-ui/scripts/softui.py.\nRead the brief at /home/user/pskills/soft-ui/eval/reports/R11-pnl/brief.md and the data files in that folder.\nWrite the spec to /home/user/pskills/soft-ui/eval/runs/round2b/R11-pnl/tool.yaml and render it to /home/user/pskills/so…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835709244,
+      "tokens": 94667,
+      "toolCalls": 11,
+      "durationMs": 81133,
+      "resultPreview": "{\"out_file\":\"/home/user/pskills/soft-ui/eval/runs/round2b/R11-pnl/tool.html\",\"spec_chars\":4586,\"tool_calls\":11,\"render_runs\":2,\"fixed_lines\":[],\"error_lines\":[],\"friction\":\"Both renders printed \\\"check ok\\\", with no \\\"fixed\\\" or \\\"error\\\" lines. The statement component did the hard part well. These were the problems:\\n(1) The callout cannot take values from the data. The headline numbers (net prof…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "soft-ui:R17-options",
+      "phaseIndex": 1,
+      "phaseTitle": "Build",
+      "agentId": "a1da59d324f86fbf4",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835628143,
+      "queuedAt": 1795835628140,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "/home/user/pskills/soft-ui/eval/runs/round2b/R17-options/to…",
+      "promptPreview": "Build a report page for a user with the soft-ui skill.\nRead /home/user/pskills/soft-ui/SKILL.md and follow it. The script is /home/user/pskills/soft-ui/scripts/softui.py.\nRead the brief at /home/user/pskills/soft-ui/eval/reports/R17-options/brief.md and the data files in that folder.\nWrite the spec to /home/user/pskills/soft-ui/eval/runs/round2b/R17-options/tool.yaml and render it to /home/user/ps…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835680241,
+      "tokens": 86761,
+      "toolCalls": 8,
+      "durationMs": 49953,
+      "resultPreview": "{\"out_file\":\"/home/user/pskills/soft-ui/eval/runs/round2b/R17-options/tool.html\",\"spec_chars\":2376,\"tool_calls\":7,\"render_runs\":2,\"fixed_lines\":[],\"error_lines\":[],\"friction\":\"Both renders printed \\\"check ok\\\" and no \\\"fixed\\\" or \\\"error\\\" lines. The decision component matched the brief exactly. It read the scores map and the weights from the criteria file, and it printed the margin itself (\\\"lead…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "judge:R17-options",
+      "phaseIndex": 2,
+      "phaseTitle": "Judge",
+      "agentId": "af285b59546b4bc1a",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835680250,
+      "queuedAt": 1795835680245,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "close",
+      "promptPreview": "Compare two report pages that two people built from the same brief.\nBrief: /home/user/pskills/soft-ui/eval/reports/R17-options/brief.md (the data is in the same folder).\nPage A: /home/user/pskills/soft-ui/eval/runs/round2b/R17-options/bespoke.html\nPage B: /home/user/pskills/soft-ui/eval/runs/round2b/R17-options/tool.html\nTake a full-page screenshot of each: `node /home/user/pskills/soft-ui/eval/sh…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835705689,
+      "tokens": 79810,
+      "toolCalls": 6,
+      "durationMs": 25439,
+      "resultPreview": "{\"information\":4,\"components\":4,\"layout\":4,\"spirit\":4,\"verdict\":\"close\",\"a_only\":[\"KPI tiles: top score 3.70, gap to second 0.10, cheapest over 12 months $30.7k, fastest cost growth +158%\",\"Stacked bar of weighted ranking that shows how much each criterion adds to each option's score\",\"Interactive weight sliders with a sensitivity note on which weight changes flip the winner to VMs\",\"12-month cost…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "judge:R11-pnl",
+      "phaseIndex": 2,
+      "phaseTitle": "Judge",
+      "agentId": "afa8571cb9335ab83",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835709249,
+      "queuedAt": 1795835709246,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "close",
+      "promptPreview": "Compare two report pages that two people built from the same brief.\nBrief: /home/user/pskills/soft-ui/eval/reports/R11-pnl/brief.md (the data is in the same folder).\nPage A: /home/user/pskills/soft-ui/eval/runs/round2b/R11-pnl/tool.html\nPage B: /home/user/pskills/soft-ui/eval/runs/round2b/R11-pnl/bespoke.html\nTake a full-page screenshot of each: `node /home/user/pskills/soft-ui/eval/shoot.js <page…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835732364,
+      "tokens": 78730,
+      "toolCalls": 5,
+      "durationMs": 23114,
+      "resultPreview": "{\"information\":4,\"components\":3,\"layout\":3,\"spirit\":4,\"verdict\":\"close\",\"a_only\":[\"Cost of sales KPI card (B has an operating expenses card instead)\",\"Separate variance-by-account table sorted by effect on profit, with section and adverse, favourable or on-budget verdict tags\",\"Monthly revenue actual vs budget bar chart\"],\"b_only\":[\"Budget shown as ghost bars beside the actuals in the revenue-to-n…"
+    }
+  ],
+  "totalTokens": 339968,
+  "totalToolCalls": 30
+}

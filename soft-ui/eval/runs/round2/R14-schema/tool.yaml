@@ -1,0 +1,68 @@
+title: Orders database schema
+subtitle: Tables, relations, and size of the orders service database
+meta: For a new engineer · source schema.json and stats.csv
+data:
+  schema: ../../../reports/R14-schema/schema.json
+  stats: ../../../reports/R14-schema/stats.csv
+  fks:
+    from: schema
+    where: {key: fk}
+  percol:
+    from: schema
+    add: {fk: "1 if key == 'fk' else 0", null_ok: "1 if nullable else 0"}
+    group: table
+    sum: [fk, null_ok]
+  tables:
+    from: percol
+    join: {data: stats, on: table, cols: [rows, size, indexes]}
+    sort: -rows
+layout:
+- row:
+  - stat: {label: Tables, data: stats, agg: count}
+  - stat: {label: Columns, data: schema, agg: count}
+  - stat: {label: Foreign keys, data: fks, agg: count}
+  - stat: {label: Total rows, data: stats, agg: sum, col: rows, fmt: k}
+- callout:
+    tone: info
+    text: "**orders** is the hub: order_items, payments, and order_discounts point to it, and it points to customers and addresses. **order_items** is the biggest table by rows and by disk. **order_discounts** has no primary key; it is a link table between orders and discount_codes."
+- section:
+    title: How the tables relate
+    items:
+    - row:
+      - er: {data: schema, table: table, column: column, type: type, key: key, ref: references}
+        title: Entity-relationship diagram
+        w: 2
+      - table:
+          data: fks
+          cols: [table, column, references, nullable]
+          labels: {table: From table, column: FK column, references: Points to}
+          fmt: {column: code, references: code}
+          group: table
+        title: Foreign keys
+- section:
+    title: Which tables are big
+    items:
+    - row:
+      - chart: {data: stats, x: table, y: rows, horizontal: true, sort: -y, fmt: k}
+        title: Rows by table
+      - treemap: {data: stats, size: rows, label: table, color: indexes, fmt: k, height: 300}
+        title: Share of all rows (colour = index count)
+    - table:
+        data: tables
+        cols: [table, rows, size, indexes, count, fk, null_ok]
+        labels: {count: Columns, fk: Foreign keys, null_ok: Nullable columns, size: Disk size}
+        fmt: {rows: int, table: code}
+        bar: [rows]
+      title: Per-table summary
+- section:
+    title: Each table in detail
+    items:
+    - table:
+        data: schema
+        cols: [table, column, type, key, references, nullable]
+        group: table
+        filter: [table, key]
+        search: true
+        fmt: {column: code, type: code, references: code}
+        tone: {key: {pk: good, fk: info}}
+      title: All columns, grouped by table

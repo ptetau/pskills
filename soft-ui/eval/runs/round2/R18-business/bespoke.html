@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kōwhai Studio Health</title>
+<style>
+:root{
+  --bg:#f6f5f1; --card:#ffffff; --ink:#1d1f22; --muted:#666b73; --line:#e3e1da; --grid:#ecebe6;
+  --rev:#2f6fb3; --rev-ly:#a9b4c2; --exp:#c2703d; --good:#2e8655; --warn:#b7791f; --bad:#c0392b;
+  --a1:#d9e9da; --a2:#f3e3b8; --a3:#f1c9a0; --a4:#e9a08f; --a5:#d0605a; --cur:#bcd7ee;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141518; --card:#1d1f23; --ink:#e9e8e4; --muted:#9a9ea6; --line:#2e3036; --grid:#26282d;
+    --rev:#6aa6e8; --rev-ly:#5d6672; --exp:#e0935f; --good:#5cc08a; --warn:#e0b04f; --bad:#ef6b5e;
+    --a1:#2f4a37; --a2:#5a4c25; --a3:#6b4a2c; --a4:#7a3f36; --a5:#a8433d; --cur:#2c4a66;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141518; --card:#1d1f23; --ink:#e9e8e4; --muted:#9a9ea6; --line:#2e3036; --grid:#26282d;
+  --rev:#6aa6e8; --rev-ly:#5d6672; --exp:#e0935f; --good:#5cc08a; --warn:#e0b04f; --bad:#ef6b5e;
+  --a1:#2f4a37; --a2:#5a4c25; --a3:#6b4a2c; --a4:#7a3f36; --a5:#a8433d; --cur:#2c4a66;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:1080px;margin:0 auto;padding:24px 16px 48px}
+header h1{font-size:22px;margin:0 0 2px;letter-spacing:-.01em}
+header .sub{color:var(--muted);font-size:13px}
+.verdict{margin:16px 0 20px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--good);border-radius:10px;font-size:16px}
+.verdict b{font-weight:650}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi .lab{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .val{font-size:26px;font-weight:650;margin:2px 0;letter-spacing:-.02em}
+.kpi .note{font-size:13px;color:var(--muted)}
+.up{color:var(--good)} .down{color:var(--bad)} .amber{color:var(--warn)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.card.wide{grid-column:1/-1}
+.card h2{font-size:16px;margin:0 0 2px}
+.card .take{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.legend i.sq{width:10px;height:10px;border-radius:2px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--muted);font-size:11px;font-family:inherit}
+.readout{font-size:13px;min-height:20px;color:var(--ink);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:500;padding:6px 6px;border-bottom:1px solid var(--line)}
+td{padding:8px 6px;border-bottom:1px solid var(--grid)}
+td.num,th.num{text-align:right}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;color:#1d1f22}
+.hbar{display:grid;grid-template-columns:minmax(96px,150px) 1fr 100px;align-items:center;gap:10px;font-size:14px;margin:7px 0}
+.hbar .track{height:14px;background:var(--grid);border-radius:4px;overflow:hidden}
+.hbar .fill{height:100%;border-radius:4px}
+.hbar .amt{text-align:right}
+.hbar .pct{color:var(--muted);font-size:12px}
+.stack{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:6px 0 10px}
+.stack div{height:100%}
+.ageleg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:12px}
+.ageleg div b{display:block;font-size:14px;color:var(--ink)}
+.ageleg span.sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+.cashrow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--grid);font-size:14px}
+.cashrow.total{font-weight:650;border-bottom:none;border-top:2px solid var(--line);margin-top:2px}
+.cashrow .m{color:var(--muted)}
+.notes{font-size:12.5px;color:var(--muted);margin-top:20px}
+.notes li{margin:4px 0}
+@media (max-width:820px){
+  .kpis{grid-template-columns:1fr 1fr}
+  .grid2{grid-template-columns:1fr}
+  .kpi .val{font-size:22px}
+}
+@media (max-width:420px){
+  .ageleg{grid-template-columns:repeat(3,1fr)}
+  .hbar{grid-template-columns:96px 1fr 92px;gap:8px}
+  td,th{padding:7px 4px}
+  .hide-sm{display:none}
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Kōwhai Studio: how the business is doing</h1>
+  <div class="sub">Xero snapshot, Saturday 28 November 2026 · NZD · year to date is January to November</div>
+</header>
+
+<div class="verdict" id="verdict"></div>
+
+<section class="kpis" id="kpis"></section>
+
+<section class="grid2">
+  <div class="card wide">
+    <h2>Revenue against last year, and what it costs to earn it</h2>
+    <p class="take" id="take-rev"></p>
+    <div class="legend">
+      <span><i style="background:var(--rev)"></i>Revenue 2026</span>
+      <span><i style="background:var(--rev-ly)"></i>Revenue 2025</span>
+      <span><i style="background:var(--exp)"></i>Expenses 2026</span>
+    </div>
+    <div id="chart-rev"></div>
+    <div class="readout" id="readout">Tap or hover a month for its numbers.</div>
+  </div>
+
+  <div class="card wide">
+    <h2>Profit each month</h2>
+    <p class="take" id="take-profit"></p>
+    <div id="chart-profit"></div>
+  </div>
+</section>
+
+<section class="grid2">
+  <div class="card">
+    <h2>Cash position</h2>
+    <p class="take" id="take-cash"></p>
+    <div id="cash"></div>
+  </div>
+
+  <div class="card">
+    <h2>Who owes us, and how late</h2>
+    <p class="take" id="take-age"></p>
+    <div class="stack" id="age-stack"></div>
+    <div class="ageleg" id="age-leg"></div>
+  </div>
+
+  <div class="card wide">
+    <h2>Overdue invoices to chase</h2>
+    <p class="take" id="take-overdue"></p>
+    <table>
+      <thead><tr><th>Customer</th><th class="hide-sm">Invoice</th><th class="hide-sm">Due</th><th class="num">Days late</th><th class="num">Amount</th></tr></thead>
+      <tbody id="overdue"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="grid2">
+  <div class="card">
+    <h2>Where the money goes</h2>
+    <p class="take" id="take-exp"></p>
+    <div id="exp"></div>
+  </div>
+  <div class="card">
+    <h2>Who the money comes from</h2>
+    <p class="take" id="take-cust"></p>
+    <div id="cust"></div>
+  </div>
+</section>
+
+<ul class="notes" id="notes"></ul>
+</main>
+
+<script>
+const D = {"as_of":"2026-11-28","org":"Kōwhai Studio","currency":"NZD",
+"monthly":[
+{"month":"2026-01","revenue":48511,"expenses":46166,"revenue_last_year":52350},
+{"month":"2026-02","revenue":58294,"expenses":44524,"revenue_last_year":53250},
+{"month":"2026-03","revenue":54568,"expenses":52674,"revenue_last_year":52777},
+{"month":"2026-04","revenue":59687,"expenses":43036,"revenue_last_year":51212},
+{"month":"2026-05","revenue":56656,"expenses":53206,"revenue_last_year":53014},
+{"month":"2026-06","revenue":68471,"expenses":51272,"revenue_last_year":58214},
+{"month":"2026-07","revenue":57266,"expenses":53782,"revenue_last_year":47680},
+{"month":"2026-08","revenue":61656,"expenses":54974,"revenue_last_year":50830},
+{"month":"2026-09","revenue":60945,"expenses":52062,"revenue_last_year":57012},
+{"month":"2026-10","revenue":62758,"expenses":57036,"revenue_last_year":52238},
+{"month":"2026-11","revenue":73381,"expenses":56761,"revenue_last_year":59377}],
+"cash":{"bank":84210,"savings":40000,"owed_to_us":61540,"we_owe":23870},
+"receivables_ageing":[{"bucket":"Current","amount":28400},{"bucket":"1-30 days","amount":16220},{"bucket":"31-60 days","amount":9800},{"bucket":"61-90 days","amount":4120},{"bucket":"90+ days","amount":3000}],
+"top_customers":[{"customer":"Harbour Board","revenue":88200},{"customer":"Tui Foods","revenue":61400},{"customer":"Pōhutukawa Trust","revenue":40250},{"customer":"Nikau Labs","revenue":33900},{"customer":"Rātā Health","revenue":27100},{"customer":"Others","revenue":381000}],
+"expenses_by_category":[{"category":"Wages","amount":286000},{"category":"Contractors","amount":98000},{"category":"Rent","amount":46200},{"category":"Software","amount":15100},{"category":"Marketing","amount":19800},{"category":"Travel","amount":9900},{"category":"Other","amount":21500}],
+"overdue_invoices":[
+{"invoice":"INV-0412","customer":"Tui Foods","amount":9800,"due":"2026-09-30","days_overdue":59},
+{"invoice":"INV-0398","customer":"Kererū Media","amount":4120,"due":"2026-08-29","days_overdue":91},
+{"invoice":"INV-0431","customer":"Harbour Board","amount":12400,"due":"2026-10-31","days_overdue":28},
+{"invoice":"INV-0377","customer":"Moa Retail","amount":3000,"due":"2026-07-31","days_overdue":120},
+{"invoice":"INV-0440","customer":"Nikau Labs","amount":3820,"due":"2026-11-14","days_overdue":14}]};
+
+const $ = id => document.getElementById(id);
+const sum = (a,f) => a.reduce((s,x)=>s+f(x),0);
+const nz = n => "$" + Math.round(n).toLocaleString("en-NZ");
+const k = n => "$" + (Math.abs(n)>=1000 ? (n/1000).toFixed(Math.abs(n)>=100000?0:1).replace(/\.0$/,"") + "k" : Math.round(n));
+const pct = (n,d=1) => (n*100).toFixed(d) + "%";
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+const M = D.monthly.map(x => ({...x, m: MON[+x.month.slice(5)-1], profit: x.revenue - x.expenses}));
+const rev = sum(M,x=>x.revenue), exp = sum(M,x=>x.expenses), ly = sum(M,x=>x.revenue_last_year);
+const profit = rev - exp, margin = profit/rev, yoy = (rev-ly)/ly;
+const cashOnHand = D.cash.bank + D.cash.savings;
+const recent3 = M.slice(-3), burn3 = sum(recent3,x=>x.expenses)/3;
+const runway = cashOnHand / burn3;
+const overdueTotal = sum(D.overdue_invoices,x=>x.amount);
+const recvTotal = sum(D.receivables_ageing,x=>x.amount);
+const late60 = sum(D.overdue_invoices.filter(x=>x.days_overdue>60),x=>x.amount);
+const nov = M[M.length-1];
+const novYoy = (nov.revenue-nov.revenue_last_year)/nov.revenue_last_year;
+const expFirst3 = sum(M.slice(0,3),x=>x.expenses)/3;
+const expGrowth = (burn3-expFirst3)/expFirst3;
+
+/* Verdict */
+$("verdict").innerHTML = `<b>Healthy, and growing.</b> Revenue is up ${pct(yoy)} on last year and November was the best month of the year. `
+ + `The business made ${nz(profit)} profit so far (${pct(margin)} margin) and holds ${nz(cashOnHand)} in the bank. `
+ + `Watch two things: costs are rising almost as fast as revenue, and ${nz(overdueTotal)} of invoices are overdue.`;
+
+/* KPI tiles */
+const kpis = [
+ {lab:"Revenue YTD", val:nz(rev), note:`<span class="up">▲ ${pct(yoy)}</span> vs ${nz(ly)} last year`},
+ {lab:"Profit YTD", val:nz(profit), note:`${pct(margin)} margin · Nov ${nz(nov.profit)}`},
+ {lab:"Cash on hand", val:nz(cashOnHand), note:`About ${runway.toFixed(1)} months of costs`},
+ {lab:"Overdue invoices", val:nz(overdueTotal), note:`<span class="amber">${D.overdue_invoices.length} invoices</span> · ${nz(late60)} over 60 days`}
+];
+$("kpis").innerHTML = kpis.map(t=>`<div class="kpi"><div class="lab">${t.lab}</div><div class="val">${t.val}</div><div class="note">${t.note}</div></div>`).join("");
+
+/* SVG helpers */
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const a in attrs) e.setAttribute(a,attrs[a]); if(parent) parent.appendChild(e); return e; }
+function niceMax(v, step){ return Math.ceil(v/step)*step; }
+
+/* Chart 1: revenue vs last year + expenses */
+function revChart(){
+  const W=Math.max(300,$("chart-rev").clientWidth||1000),H=W<600?230:300,L=40,R=8,T=14,B=26, iw=W-L-R, ih=H-T-B;
+  $("chart-rev").innerHTML="";
+  const svg = el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Monthly revenue 2026 against 2025, with 2026 expenses"});
+  const lo=30000, hi=niceMax(Math.max(...M.map(x=>x.revenue)),10000);
+  const x = i => L + iw*(i+0.5)/12, y = v => T + ih*(1-(v-lo)/(hi-lo));
+  for(let v=lo; v<=hi; v+=10000){
+    el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:css("--grid")},svg);
+    el("text",{x:L-8,y:y(v)+4,"text-anchor":"end"},svg).textContent=k(v);
+  }
+  MON.forEach((m,i)=>{ el("text",{x:x(i),y:H-8,"text-anchor":"middle",opacity:i<M.length?1:.45},svg).textContent=W<600?m[0]:m; });
+  // profit gap shading between revenue and expenses
+  const area = M.map((d,i)=>`${x(i)},${y(d.revenue)}`).join(" ") + " " + M.slice().reverse().map((d,j)=>`${x(M.length-1-j)},${y(d.expenses)}`).join(" ");
+  el("polygon",{points:area,fill:css("--good"),opacity:.10},svg);
+  const line=(key,color,w,dash)=>el("polyline",{points:M.map((d,i)=>`${x(i)},${y(d[key])}`).join(" "),fill:"none",stroke:color,"stroke-width":w,"stroke-linejoin":"round","stroke-linecap":"round","stroke-dasharray":dash||""},svg);
+  line("revenue_last_year",css("--rev-ly"),2,"5 5");
+  line("expenses",css("--exp"),2);
+  line("revenue",css("--rev"),3);
+  M.forEach((d,i)=>el("circle",{cx:x(i),cy:y(d.revenue),r:3.5,fill:css("--rev")},svg));
+  const last=M.length-1;
+  el("text",{x:x(last),y:y(nov.revenue)-10,"text-anchor":"middle",style:`fill:${css("--rev")};font-weight:600;font-size:12px`},svg).textContent=k(nov.revenue);
+  // hover columns
+  const guide = el("line",{y1:T,y2:T+ih,stroke:css("--muted"),"stroke-dasharray":"2 3",opacity:0},svg);
+  M.forEach((d,i)=>{
+    const r = el("rect",{x:L+iw*i/12,y:T,width:iw/12,height:ih,fill:"transparent",style:"cursor:pointer"},svg);
+    const show=()=>{ guide.setAttribute("x1",x(i)); guide.setAttribute("x2",x(i)); guide.setAttribute("opacity",1);
+      const g=(d.revenue-d.revenue_last_year)/d.revenue_last_year;
+      $("readout").innerHTML=`<b>${d.m} 2026</b>: revenue ${nz(d.revenue)} (<span class="${g>=0?'up':'down'}">${g>=0?'▲':'▼'} ${pct(Math.abs(g))}</span> vs ${nz(d.revenue_last_year)}), expenses ${nz(d.expenses)}, profit <b>${nz(d.profit)}</b>`; };
+    r.addEventListener("mouseenter",show); r.addEventListener("click",show);
+  });
+  $("chart-rev").appendChild(svg);
+  const ahead = M.filter(d=>d.revenue>d.revenue_last_year).length;
+  $("take-rev").textContent = `2026 beat 2025 in ${ahead} of ${M.length} months, and November (${nz(nov.revenue)}) was ${pct(novYoy,0)} above last November. Expenses climbed from about ${k(expFirst3)} a month in Q1 to ${k(burn3)} in the last three months (+${pct(expGrowth,0)}). The shaded band is profit.`;
+}
+
+/* Chart 2: monthly profit bars */
+function profitChart(){
+  const W=Math.max(300,$("chart-profit").clientWidth||1000),H=W<600?170:200,L=40,R=8,T=18,B=26, iw=W-L-R, ih=H-T-B, narrow=W<600;
+  $("chart-profit").innerHTML="";
+  const svg = el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Monthly profit 2026"});
+  const hi = niceMax(Math.max(...M.map(d=>d.profit)),5000);
+  const y = v => T + ih*(1-v/hi), bw = iw/12*0.62;
+  for(let v=0; v<=hi; v+=5000){
+    el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:css("--grid")},svg);
+    el("text",{x:L-8,y:y(v)+4,"text-anchor":"end"},svg).textContent=k(v);
+  }
+  const avg = profit/M.length;
+  M.forEach((d,i)=>{
+    const cx = L + iw*(i+0.5)/12, mg = d.profit/d.revenue;
+    const col = mg < 0.08 ? css("--warn") : css("--good");
+    const b = el("rect",{x:cx-bw/2,y:y(d.profit),width:bw,height:y(0)-y(d.profit),rx:3,fill:col},svg);
+    el("title",{},b).textContent = `${d.m}: ${nz(d.profit)} profit, ${pct(mg)} margin`;
+    if(!narrow) el("text",{x:cx,y:y(d.profit)-5,"text-anchor":"middle",style:"font-size:11px"},svg).textContent=k(d.profit);
+    el("text",{x:cx,y:H-8,"text-anchor":"middle"},svg).textContent=narrow?d.m[0]:d.m;
+  });
+  el("line",{x1:L,x2:W-R,y1:y(avg),y2:y(avg),stroke:css("--ink"),"stroke-dasharray":"4 4",opacity:.5},svg);
+  el("text",{x:W-R,y:y(avg)-5,"text-anchor":"end",style:`fill:${css("--ink")}`},svg).textContent=`average ${k(avg)}`;
+  $("chart-profit").appendChild(svg);
+  const thin = M.filter(d=>d.profit/d.revenue<0.08).map(d=>d.m);
+  $("take-profit").textContent = `Every month was profitable, but unevenly: margins swing between ${pct(Math.min(...M.map(d=>d.profit/d.revenue)),0)} and ${pct(Math.max(...M.map(d=>d.profit/d.revenue)),0)}. Amber bars are thin months under 8% margin (${thin.join(", ")}).`;
+}
+
+/* Cash */
+function cash(){
+  const c=D.cash, net = cashOnHand + c.owed_to_us - c.we_owe;
+  const rows = [
+    ["Bank account", c.bank, ""],
+    ["Savings", c.savings, ""],
+    ["Owed to us (receivables)", c.owed_to_us, `of which ${nz(overdueTotal)} overdue`],
+    ["We owe (payables)", -c.we_owe, ""],
+  ];
+  $("cash").innerHTML = rows.map(r=>`<div class="cashrow"><span>${r[0]}${r[2]?`<br><span class="m" style="font-size:12px">${r[2]}</span>`:""}</span><span class="${r[1]<0?'down':''}">${r[1]<0?'−':''}${nz(Math.abs(r[1]))}</span></div>`).join("")
+    + `<div class="cashrow total"><span>Net position</span><span>${nz(net)}</span></div>`;
+  $("take-cash").textContent = `${nz(cashOnHand)} cash covers about ${runway.toFixed(1)} months of costs at the recent rate of ${k(burn3)} a month. Bills due (${nz(c.we_owe)}) are well covered.`;
+}
+
+/* Ageing */
+function ageing(){
+  const cols = ["--cur","--a2","--a3","--a4","--a5"];
+  $("age-stack").innerHTML = D.receivables_ageing.map((b,i)=>`<div title="${b.bucket}: ${nz(b.amount)}" style="width:${b.amount/recvTotal*100}%;background:var(${cols[i]})"></div>`).join("");
+  $("age-leg").innerHTML = D.receivables_ageing.map((b,i)=>`<div><span class="sw" style="background:var(${cols[i]})"></span>${b.bucket}<b>${k(b.amount)}</b><span style="font-size:11px">${pct(b.amount/recvTotal,0)}</span></div>`).join("");
+  $("take-age").textContent = `${nz(recvTotal)} is owed to us. ${pct(D.receivables_ageing[0].amount/recvTotal,0)} is not due yet; ${nz(overdueTotal)} (${pct(overdueTotal/recvTotal,0)}) is late, and ${nz(late60)} of that is more than 60 days late.`;
+}
+
+/* Overdue table */
+function overdue(){
+  const rows = D.overdue_invoices.slice().sort((a,b)=>b.days_overdue-a.days_overdue);
+  const sev = d => d>90 ? ["var(--a5)","#fff"] : d>60 ? ["var(--a4)",""] : d>30 ? ["var(--a3)",""] : ["var(--a2)",""];
+  const fmtDate = s => { const [y,m,dd]=s.split("-"); return `${+dd} ${MON[+m-1]}`; };
+  $("overdue").innerHTML = rows.map(r=>{ const [bg,fg]=sev(r.days_overdue);
+    return `<tr><td>${r.customer}</td><td class="hide-sm">${r.invoice}</td><td class="hide-sm">${fmtDate(r.due)}</td><td class="num"><span class="pill" style="background:${bg};${fg?`color:${fg}`:''}">${r.days_overdue}</span></td><td class="num">${nz(r.amount)}</td></tr>`; }).join("")
+    + `<tr><td><b>Total</b></td><td class="hide-sm"></td><td class="hide-sm"></td><td></td><td class="num"><b>${nz(overdueTotal)}</b></td></tr>`;
+  const big = D.overdue_invoices.slice().sort((a,b)=>b.amount-a.amount)[0];
+  $("take-overdue").textContent = `Oldest first. Moa Retail (120 days) and Kererū Media (91 days) are the collection risks. The largest is ${big.customer} at ${nz(big.amount)}, ${big.days_overdue} days late. ${big.customer} and Tui Foods are also the two biggest customers, so a friendly call is worth it.`;
+}
+
+/* Horizontal bars */
+function hbars(target, items, color, total, totalLabel){
+  const max = Math.max(...items.map(i=>i.v));
+  $(target).innerHTML = items.map(i=>`<div class="hbar"><span>${i.l}</span><div class="track"><div class="fill" style="width:${i.v/max*100}%;background:${i.c||color}"></div></div><span class="amt">${k(i.v)} <span class="pct">${pct(i.v/total,0)}</span></span></div>`).join("")
+   + `<div class="hbar" style="border-top:1px solid var(--line);padding-top:6px"><b>${totalLabel}</b><span></span><b class="amt">${k(total)}</b></div>`;
+}
+function expenses(){
+  const items = D.expenses_by_category.slice().sort((a,b)=>b.amount-a.amount).map(x=>({l:x.category,v:x.amount}));
+  const tot = sum(items,x=>x.v);
+  hbars("exp", items, "var(--exp)", tot, "Total");
+  const people = items[0].v + items[1].v;
+  $("take-exp").textContent = `People are the business: wages and contractors are ${pct(people/tot,0)} of categorised spend. Rent is the next largest at ${pct(items[2].v/tot,0)}; everything else is small.`;
+}
+function customers(){
+  const named = D.top_customers.filter(x=>x.customer!=="Others").map(x=>({l:x.customer,v:x.revenue}));
+  const others = D.top_customers.find(x=>x.customer==="Others");
+  const tot = sum(D.top_customers,x=>x.revenue);
+  hbars("cust", named.concat([{l:"All others",v:others.revenue,c:"var(--rev-ly)"}]), "var(--rev)", tot, "Total");
+  const top5 = sum(named,x=>x.v);
+  $("take-cust").textContent = `No single customer dominates. Harbour Board is the largest at ${pct(named[0].v/tot,0)}; the top five together bring ${pct(top5/tot,0)}.`;
+}
+
+revChart(); profitChart(); cash();
+let rz; let lastW=innerWidth; addEventListener("resize",()=>{ if(innerWidth===lastW) return; lastW=innerWidth; clearTimeout(rz); rz=setTimeout(()=>{revChart();profitChart();},150); }); ageing(); overdue(); expenses(); customers();
+
+/* Data notes */
+const catTot = sum(D.expenses_by_category,x=>x.amount), custTot = sum(D.top_customers,x=>x.revenue);
+$("notes").innerHTML = [
+  `Expenses by category add up to ${nz(catTot)}, but monthly expenses add up to ${nz(exp)}. ${nz(exp-catTot)} is missing from the category view, so its percentages are shares of the categorised spend only.`,
+  `Customer revenue adds up to ${nz(custTot)}, which is ${nz(rev-custTot)} less than the monthly revenue of ${nz(rev)}. The customer report probably uses a different period or excludes some income; treat its shares as approximate.`,
+  `Xero puts the Kererū Media invoice (91 days late) in the 61–90 day bucket. The table shows the days late from the invoice list.`,
+  `The snapshot has no expenses for 2025, so profit cannot be compared with last year. "Months of costs" uses the average of the last three months' expenses (${nz(burn3)}).`
+].map(s=>`<li>${s}</li>`).join("");
+</script>
+</body>
+</html>

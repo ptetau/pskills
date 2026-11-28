@@ -1,0 +1,48 @@
+title: Billing service volatility
+subtitle: Git churn, 2026-W36 to W47 (12 weeks), from /decompose
+meta: {reader: architect, source: churn.csv + commits.csv}
+data:
+  churn: ../../../reports/R7-churn/churn.csv
+  commits: ../../../reports/R7-churn/commits.csv
+  hot: |
+    file,lines,commits,share,verdict
+    billing/rules/vat.py,1518,57,27.1,wall
+    billing/rules/discount.py,1287,46,23.0,wall
+    billing/tax.py,799,29,14.3,wall
+    billing/invoice.py,773,30,13.8,watch
+    billing/emails.py,287,12,5.1,stable
+    billing/currency.py,246,12,4.4,stable
+    billing/models.py,246,12,4.4,stable
+    billing/store.py,199,12,3.6,stable
+    billing/pdf.py,170,11,3.0,stable
+    billing/api.py,156,11,2.8,stable
+layout:
+- stats:
+  - {label: Lines changed, value: 5681, sub: "10 files, 12 weeks"}
+  - {label: Commits, value: 289, sub: 84 days with commits}
+  - {label: Top 2 files share, value: 50, unit: "%", tone: bad, sub: rules/vat.py + rules/discount.py}
+  - {label: Peak week, value: 890, unit: lines, tone: warn, sub: 2026-W41}
+- callout:
+    tone: warn
+    text: "**Hot spots:** `rules/vat.py` and `rules/discount.py` hold half of all churn and change in the same weeks. `tax.py` and `invoice.py` spike with them in W41-W42. Put the tax and discount rules behind an Engine wall; `invoice.py` is the Manager that calls them."
+- row:
+  - chart: {data: churn, x: file, y: lines, agg: sum, horizontal: true, sort: -y}
+    title: Lines changed by file
+  - chart: {data: churn, kind: line, x: week, y: lines, agg: sum, series: file}
+    title: Lines changed each week, by file
+    w: 2
+- heatmap: {data: churn, x: week, y: file, v: lines, totals: true}
+  title: Change together - lines by file and week
+  note: Rows that darken in the same columns change together.
+- chart: {data: commits, kind: bar, x: date, y: commits, height: 200}
+  title: Commits each day
+- row:
+  - table:
+      data: hot
+      cols: [file, lines, commits, {key: share, label: "share %", fmt: num}, verdict]
+      sort: -lines
+      bar: [lines]
+      tone: {verdict: {wall: bad, watch: warn, stable: good}}
+    title: Hot spots - candidates for a wall
+  - table: {data: churn, cols: [file, week, lines, commits], group: file, filter: [file], sort: -lines, dense: true, limit: 20}
+    title: Weekly detail

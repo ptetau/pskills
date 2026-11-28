@@ -1,0 +1,290 @@
+[
+ {
+  "table": "customers",
+  "column": "id",
+  "type": "uuid",
+  "key": "pk",
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "customers",
+  "column": "email",
+  "type": "text",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "customers",
+  "column": "name",
+  "type": "text",
+  "key": null,
+  "references": null,
+  "nullable": true
+ },
+ {
+  "table": "customers",
+  "column": "created_at",
+  "type": "timestamptz",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "addresses",
+  "column": "id",
+  "type": "uuid",
+  "key": "pk",
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "addresses",
+  "column": "customer_id",
+  "type": "uuid",
+  "key": "fk",
+  "references": "customers.id",
+  "nullable": false
+ },
+ {
+  "table": "addresses",
+  "column": "line1",
+  "type": "text",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "addresses",
+  "column": "city",
+  "type": "text",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "addresses",
+  "column": "postcode",
+  "type": "text",
+  "key": null,
+  "references": null,
+  "nullable": true
+ },
+ {
+  "table": "orders",
+  "column": "id",
+  "type": "uuid",
+  "key": "pk",
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "orders",
+  "column": "customer_id",
+  "type": "uuid",
+  "key": "fk",
+  "references": "customers.id",
+  "nullable": false
+ },
+ {
+  "table": "orders",
+  "column": "address_id",
+  "type": "uuid",
+  "key": "fk",
+  "references": "addresses.id",
+  "nullable": true
+ },
+ {
+  "table": "orders",
+  "column": "status",
+  "type": "order_status",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "orders",
+  "column": "total_cents",
+  "type": "int",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "orders",
+  "column": "placed_at",
+  "type": "timestamptz",
+  "key": null,
+  "references": null,
+  "nullable": true
+ },
+ {
+  "table": "order_items",
+  "column": "id",
+  "type": "uuid",
+  "key": "pk",
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "order_items",
+  "column": "order_id",
+  "type": "uuid",
+  "key": "fk",
+  "references": "orders.id",
+  "nullable": false
+ },
+ {
+  "table": "order_items",
+  "column": "product_id",
+  "type": "uuid",
+  "key": "fk",
+  "references": "products.id",
+  "nullable": false
+ },
+ {
+  "table": "order_items",
+  "column": "qty",
+  "type": "int",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "order_items",
+  "column": "price_cents",
+  "type": "int",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "products",
+  "column": "id",
+  "type": "uuid",
+  "key": "pk",
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "products",
+  "column": "sku",
+  "type": "text",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "products",
+  "column": "name",
+  "type": "text",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "products",
+  "column": "price_cents",
+  "type": "int",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "products",
+  "column": "active",
+  "type": "bool",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "payments",
+  "column": "id",
+  "type": "uuid",
+  "key": "pk",
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "payments",
+  "column": "order_id",
+  "type": "uuid",
+  "key": "fk",
+  "references": "orders.id",
+  "nullable": false
+ },
+ {
+  "table": "payments",
+  "column": "provider",
+  "type": "text",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "payments",
+  "column": "amount_cents",
+  "type": "int",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "payments",
+  "column": "status",
+  "type": "payment_status",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "discount_codes",
+  "column": "code",
+  "type": "text",
+  "key": "pk",
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "discount_codes",
+  "column": "kind",
+  "type": "text",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "discount_codes",
+  "column": "value",
+  "type": "int",
+  "key": null,
+  "references": null,
+  "nullable": false
+ },
+ {
+  "table": "discount_codes",
+  "column": "expires_at",
+  "type": "timestamptz",
+  "key": null,
+  "references": null,
+  "nullable": true
+ },
+ {
+  "table": "order_discounts",
+  "column": "order_id",
+  "type": "uuid",
+  "key": "fk",
+  "references": "orders.id",
+  "nullable": false
+ },
+ {
+  "table": "order_discounts",
+  "column": "code",
+  "type": "text",
+  "key": "fk",
+  "references": "discount_codes.code",
+  "nullable": false
+ }
+]

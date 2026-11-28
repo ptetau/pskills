@@ -1,0 +1,194 @@
+{
+ "as_of": "2026-11-28",
+ "org": "Kōwhai Studio",
+ "currency": "NZD",
+ "monthly": [
+  {
+   "month": "2026-01",
+   "revenue": 48511,
+   "expenses": 46166,
+   "revenue_last_year": 52350
+  },
+  {
+   "month": "2026-02",
+   "revenue": 58294,
+   "expenses": 44524,
+   "revenue_last_year": 53250
+  },
+  {
+   "month": "2026-03",
+   "revenue": 54568,
+   "expenses": 52674,
+   "revenue_last_year": 52777
+  },
+  {
+   "month": "2026-04",
+   "revenue": 59687,
+   "expenses": 43036,
+   "revenue_last_year": 51212
+  },
+  {
+   "month": "2026-05",
+   "revenue": 56656,
+   "expenses": 53206,
+   "revenue_last_year": 53014
+  },
+  {
+   "month": "2026-06",
+   "revenue": 68471,
+   "expenses": 51272,
+   "revenue_last_year": 58214
+  },
+  {
+   "month": "2026-07",
+   "revenue": 57266,
+   "expenses": 53782,
+   "revenue_last_year": 47680
+  },
+  {
+   "month": "2026-08",
+   "revenue": 61656,
+   "expenses": 54974,
+   "revenue_last_year": 50830
+  },
+  {
+   "month": "2026-09",
+   "revenue": 60945,
+   "expenses": 52062,
+   "revenue_last_year": 57012
+  },
+  {
+   "month": "2026-10",
+   "revenue": 62758,
+   "expenses": 57036,
+   "revenue_last_year": 52238
+  },
+  {
+   "month": "2026-11",
+   "revenue": 73381,
+   "expenses": 56761,
+   "revenue_last_year": 59377
+  }
+ ],
+ "cash": {
+  "bank": 84210,
+  "savings": 40000,
+  "owed_to_us": 61540,
+  "we_owe": 23870
+ },
+ "receivables_ageing": [
+  {
+   "bucket": "Current",
+   "amount": 28400
+  },
+  {
+   "bucket": "1-30 days",
+   "amount": 16220
+  },
+  {
+   "bucket": "31-60 days",
+   "amount": 9800
+  },
+  {
+   "bucket": "61-90 days",
+   "amount": 4120
+  },
+  {
+   "bucket": "90+ days",
+   "amount": 3000
+  }
+ ],
+ "top_customers": [
+  {
+   "customer": "Harbour Board",
+   "revenue": 88200
+  },
+  {
+   "customer": "Tui Foods",
+   "revenue": 61400
+  },
+  {
+   "customer": "Pōhutukawa Trust",
+   "revenue": 40250
+  },
+  {
+   "customer": "Nikau Labs",
+   "revenue": 33900
+  },
+  {
+   "customer": "Rātā Health",
+   "revenue": 27100
+  },
+  {
+   "customer": "Others",
+   "revenue": 381000
+  }
+ ],
+ "expenses_by_category": [
+  {
+   "category": "Wages",
+   "amount": 286000
+  },
+  {
+   "category": "Contractors",
+   "amount": 98000
+  },
+  {
+   "category": "Rent",
+   "amount": 46200
+  },
+  {
+   "category": "Software",
+   "amount": 15100
+  },
+  {
+   "category": "Marketing",
+   "amount": 19800
+  },
+  {
+   "category": "Travel",
+   "amount": 9900
+  },
+  {
+   "category": "Other",
+   "amount": 21500
+  }
+ ],
+ "overdue_invoices": [
+  {
+   "invoice": "INV-0412",
+   "customer": "Tui Foods",
+   "amount": 9800,
+   "due": "2026-09-30",
+   "days_overdue": 59
+  },
+  {
+   "invoice": "INV-0398",
+   "customer": "Kererū Media",
+   "amount": 4120,
+   "due": "2026-08-29",
+   "days_overdue": 91
+  },
+  {
+   "invoice": "INV-0431",
+   "customer": "Harbour Board",
+   "amount": 12400,
+   "due": "2026-10-31",
+   "days_overdue": 28
+  },
+  {
+   "invoice": "INV-0377",
+   "customer": "Moa Retail",
+   "amount": 3000,
+   "due": "2026-07-31",
+   "days_overdue": 120
+  },
+  {
+   "invoice": "INV-0440",
+   "customer": "Nikau Labs",
+   "amount": 3820,
+   "due": "2026-11-14",
+   "days_overdue": 14
+  }
+ ]
+}

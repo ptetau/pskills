@@ -1,0 +1,28 @@
+title: Dependency audit · web
+subtitle: 9 vulnerable packages — fix versions and how each one enters the app
+data: {v: vulns.json}
+layout:
+- stats: {data: v, by: severity, total: Vulnerable, order: [critical, high, medium, low]}
+- filter: {data: v, fields: [severity, path]}
+- row:
+  - table:
+      data: v
+      cols: [package, severity, installed, fixed_in, issue, path]
+      sort: severity
+      group: severity
+      fmt: {installed: code, fixed_in: code}
+    title: Packages to upgrade
+    w: 2
+  - tree:
+      paths:
+      - web/lodash
+      - web/mkdirp/minimist
+      - web/axios
+      - web/axios/follow-redirects
+      - web/eslint/semver
+      - web/eslint/optionator/word-wrap
+      - web/vite/postcss
+      - web/jsdom/tough-cookie
+      - web/express/debug
+      open: 4
+    title: Dependency paths

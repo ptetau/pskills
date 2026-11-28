@@ -1,0 +1,42 @@
+[
+ {
+  "id": "C1",
+  "severity": "high",
+  "file": "cart/price.py",
+  "line": 14,
+  "title": "Code from session is not validated",
+  "comment": "`session.get('code')` trusts the client. Look the code up in `Discounts` and check expiry before use."
+ },
+ {
+  "id": "C2",
+  "severity": "medium",
+  "file": "cart/price.py",
+  "line": 18,
+  "title": "Rounding happens twice",
+  "comment": "`apply_discount` rounds, then `total` rounds again. Round once, at the end."
+ },
+ {
+  "id": "C3",
+  "severity": "medium",
+  "file": "cart/discounts.py",
+  "line": 14,
+  "title": "Percent and fixed codes share one branch",
+  "comment": "A fixed code of 10 is read as 10%. Split on `kind`."
+ },
+ {
+  "id": "C4",
+  "severity": "low",
+  "file": "tests/test_price.py",
+  "line": 30,
+  "title": "No test for an expired code",
+  "comment": "Add a case for an expired code; it should not change the total."
+ },
+ {
+  "id": "C5",
+  "severity": "low",
+  "file": "cart/discounts.py",
+  "line": 2,
+  "title": "Unused import",
+  "comment": "`datetime` is imported but not used."
+ }
+]

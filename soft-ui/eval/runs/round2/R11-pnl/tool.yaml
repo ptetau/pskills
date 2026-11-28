@@ -1,0 +1,97 @@
+title: Kōwhai Studio · Profit and loss, July to December 2026
+subtitle: Half-year review. Actual against budget, NZD.
+data:
+  pnl:
+    file: ../../../reports/R11-pnl/pnl.csv
+    add:
+      sign: "1 if section == 'Revenue' else -1"
+      ord: "1 if section == 'Revenue' else (2 if section == 'Cost of sales' else 3)"
+      net_a: "actual * (1 if section == 'Revenue' else -1)"
+      net_b: "budget * (1 if section == 'Revenue' else -1)"
+      rev_a: "actual if section == 'Revenue' else 0"
+      rev_b: "budget if section == 'Revenue' else 0"
+      cos_a: "actual if section == 'Cost of sales' else 0"
+      cos_b: "budget if section == 'Cost of sales' else 0"
+      fav: "(actual - budget) * (1 if section == 'Revenue' else -1)"
+      half: "'H1'"
+  half:
+    from: pnl
+    group: half
+    sum: [net_a, net_b, rev_a, rev_b, cos_a, cos_b]
+    then:
+      net_var: "net_a - net_b"
+      net_var_pct: "100 * (net_a - net_b) / abs(net_b)"
+      gp_a: "rev_a - cos_a"
+      gp_b: "rev_b - cos_b"
+      gm_a: "100 * (rev_a - cos_a) / rev_a"
+      nm_a: "100 * net_a / rev_a"
+  bridge:
+    from: pnl
+    group: [ord, section, account]
+    sum: [net_a]
+    then: {key: "ord * 10000000 - net_a"}
+    sort: key
+  accounts:
+    from: pnl
+    group: [section, account]
+    sum: [actual, budget, fav]
+    then:
+      variance: "actual - budget"
+      variance_pct: "100 * (actual - budget) / budget"
+    sort: fav
+  monthly:
+    from: pnl
+    group: month
+    sum: [net_a, net_b, rev_a, rev_b]
+    sort: month
+layout:
+- row:
+  min: 140
+  items:
+  - stat: {label: Net profit, data: half, agg: sum, col: net_a, fmt: money}
+  - stat: {label: Budgeted net profit, data: half, agg: sum, col: net_b, fmt: money}
+  - stat: {label: Net profit vs budget, data: half, agg: sum, col: net_var, fmt: money, tone: bad}
+  - stat: {label: Net profit vs budget, data: half, agg: sum, col: net_var_pct, fmt: pct, tone: bad}
+  - stat: {label: Gross margin, data: half, agg: sum, col: gm_a, fmt: pct}
+  - stat: {label: Net margin, data: half, agg: sum, col: nm_a, fmt: pct}
+- row:
+  - chart: {kind: waterfall, data: bridge, x: account, y: net_a, total: Net profit, fmt: money}
+    title: How net profit builds up, half year actual
+    w: 2
+  - chart: {kind: line, data: monthly, x: month, y: [net_a, net_b], fmt: money, labels: {net_a: Actual, net_b: Budget}}
+    title: Net profit by month
+- section:
+    title: Statement
+    items:
+    - statement:
+        data: pnl
+        section: section
+        line: account
+        values: [actual, budget]
+        order: [Revenue, Cost of sales, Operating expenses]
+        minus: [Cost of sales, Operating expenses]
+        subtotals: [{label: Gross profit, after: Cost of sales}, {label: Net profit, after: Operating expenses}]
+      title: Profit and loss, July to December 2026
+- section:
+    title: Variance by account
+    items:
+    - row:
+      - chart: {kind: bar, horizontal: true, data: accounts, x: account, y: fav, fmt: money}
+        title: Effect on net profit (negative = hurts profit)
+      - heatmap: {data: pnl, x: month, y: account, v: fav, scale: div, fmt: money, labels: true, totals: true}
+        title: Effect on net profit by month
+        w: 2
+    - table:
+        data: accounts
+        cols: [section, account, actual, budget, variance, variance_pct, fav]
+        labels: {variance: Over or under budget, variance_pct: "%", fav: Effect on profit}
+        fmt: {actual: money, budget: money, variance: money, variance_pct: pct, fav: money}
+        good: {fav: up}
+        group: section
+        sort: fav
+      title: All accounts
+- section:
+    title: Monthly trend
+    items:
+    - chart: {kind: bar, data: monthly, x: month, y: [rev_a, rev_b], fmt: money, labels: {rev_a: Actual, rev_b: Budget}}
+      title: Revenue by month

@@ -1,0 +1,20 @@
+title: "PR #212 · Apply discount codes at checkout"
+subtitle: "mere-k · feat/discounts → main · 4 commits"
+data:
+  pr: ../../../reports/R5-pr/pr.json
+  review: ../../../reports/R5-pr/review.json
+  files:
+  - {file: cart/price.py, status: modified, added: 8, removed: 4}
+  - {file: cart/discounts.py, status: added, added: 16, removed: 0}
+  - {file: tests/test_price.py, status: modified, added: 10, removed: 0}
+layout:
+- callout: {tone: bad, text: "**Changes requested.** The discount logic is sound, but the code is read from the session without validation, and rounding happens twice."}
+- stats: {data: review, by: severity, total: Findings, order: [high, medium, low]}
+- row:
+  - table: {data: files, cols: [file, added, removed], bar: [added], fmt: {file: code}}
+    title: Files changed
+  - table: {data: review, cols: [id, severity, title, file, line], sort: severity, fmt: {file: code}}
+    title: Findings, most serious first
+    w: 2
+- diff: {patch: ../../../reports/R5-pr/pr.diff, mode: split, notes: review}
+  title: The change, with review notes

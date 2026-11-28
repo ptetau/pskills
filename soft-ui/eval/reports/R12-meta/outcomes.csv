@@ -1,0 +1,301 @@
+arm,participant,minutes
+CBT-I,c0,19
+CBT-I,c1,23
+CBT-I,c2,28
+CBT-I,c3,36
+CBT-I,c4,17
+CBT-I,c5,16
+CBT-I,c6,31
+CBT-I,c7,14
+CBT-I,c8,28
+CBT-I,c9,19
+CBT-I,c10,23
+CBT-I,c11,8
+CBT-I,c12,30
+CBT-I,c13,19
+CBT-I,c14,16
+CBT-I,c15,43
+CBT-I,c16,30
+CBT-I,c17,56
+CBT-I,c18,28
+CBT-I,c19,21
+CBT-I,c20,25
+CBT-I,c21,38
+CBT-I,c22,24
+CBT-I,c23,28
+CBT-I,c24,29
+CBT-I,c25,16
+CBT-I,c26,25
+CBT-I,c27,19
+CBT-I,c28,13
+CBT-I,c29,32
+CBT-I,c30,30
+CBT-I,c31,25
+CBT-I,c32,16
+CBT-I,c33,6
+CBT-I,c34,28
+CBT-I,c35,23
+CBT-I,c36,9
+CBT-I,c37,23
+CBT-I,c38,10
+CBT-I,c39,24
+CBT-I,c40,25
+CBT-I,c41,27
+CBT-I,c42,26
+CBT-I,c43,26
+CBT-I,c44,14
+CBT-I,c45,21
+CBT-I,c46,19
+CBT-I,c47,22
+CBT-I,c48,26
+CBT-I,c49,30
+CBT-I,c50,39
+CBT-I,c51,3
+CBT-I,c52,28
+CBT-I,c53,22
+CBT-I,c54,44
+CBT-I,c55,32
+CBT-I,c56,9
+CBT-I,c57,28
+CBT-I,c58,19
+CBT-I,c59,33
+CBT-I,c60,15
+CBT-I,c61,23
+CBT-I,c62,23
+CBT-I,c63,23
+CBT-I,c64,19
+CBT-I,c65,7
+CBT-I,c66,28
+CBT-I,c67,33
+CBT-I,c68,23
+CBT-I,c69,15
+CBT-I,c70,26
+CBT-I,c71,29
+CBT-I,c72,22
+CBT-I,c73,24
+CBT-I,c74,37
+CBT-I,c75,14
+CBT-I,c76,19
+CBT-I,c77,7
+CBT-I,c78,18
+CBT-I,c79,17
+CBT-I,c80,15
+CBT-I,c81,18
+CBT-I,c82,40
+CBT-I,c83,22
+CBT-I,c84,23
+CBT-I,c85,44
+CBT-I,c86,23
+CBT-I,c87,8
+CBT-I,c88,28
+CBT-I,c89,16
+CBT-I,c90,39
+CBT-I,c91,13
+CBT-I,c92,19
+CBT-I,c93,10
+CBT-I,c94,25
+CBT-I,c95,15
+CBT-I,c96,23
+CBT-I,c97,21
+CBT-I,c98,18
+CBT-I,c99,32
+CBT-I,c100,32
+CBT-I,c101,25
+CBT-I,c102,16
+CBT-I,c103,14
+CBT-I,c104,26
+CBT-I,c105,46
+CBT-I,c106,20
+CBT-I,c107,17
+CBT-I,c108,18
+CBT-I,c109,14
+CBT-I,c110,15
+CBT-I,c111,22
+CBT-I,c112,37
+CBT-I,c113,24
+CBT-I,c114,19
+CBT-I,c115,9
+CBT-I,c116,26
+CBT-I,c117,24
+CBT-I,c118,13
+CBT-I,c119,14
+CBT-I,c120,24
+CBT-I,c121,33
+CBT-I,c122,30
+CBT-I,c123,26
+CBT-I,c124,21
+CBT-I,c125,27
+CBT-I,c126,24
+CBT-I,c127,44
+CBT-I,c128,14
+CBT-I,c129,21
+CBT-I,c130,35
+CBT-I,c131,22
+CBT-I,c132,37
+CBT-I,c133,24
+CBT-I,c134,25
+CBT-I,c135,21
+CBT-I,c136,12
+CBT-I,c137,15
+CBT-I,c138,44
+CBT-I,c139,30
+CBT-I,c140,29
+CBT-I,c141,33
+CBT-I,c142,29
+CBT-I,c143,33
+CBT-I,c144,22
+CBT-I,c145,22
+CBT-I,c146,33
+CBT-I,c147,21
+CBT-I,c148,12
+CBT-I,c149,22
+Usual care,u0,26
+Usual care,u1,39
+Usual care,u2,24
+Usual care,u3,20
+Usual care,u4,28
+Usual care,u5,49
+Usual care,u6,31
+Usual care,u7,34
+Usual care,u8,32
+Usual care,u9,35
+Usual care,u10,42
+Usual care,u11,47
+Usual care,u12,14
+Usual care,u13,47
+Usual care,u14,32
+Usual care,u15,28
+Usual care,u16,58
+Usual care,u17,30
+Usual care,u18,53
+Usual care,u19,43
+Usual care,u20,21
+Usual care,u21,37
+Usual care,u22,40
+Usual care,u23,31
+Usual care,u24,6
+Usual care,u25,28
+Usual care,u26,30
+Usual care,u27,20
+Usual care,u28,52
+Usual care,u29,29
+Usual care,u30,28
+Usual care,u31,29
+Usual care,u32,23
+Usual care,u33,23
+Usual care,u34,33
+Usual care,u35,35
+Usual care,u36,26
+Usual care,u37,31
+Usual care,u38,17
+Usual care,u39,38
+Usual care,u40,24
+Usual care,u41,34
+Usual care,u42,22
+Usual care,u43,26
+Usual care,u44,34
+Usual care,u45,19
+Usual care,u46,59
+Usual care,u47,32
+Usual care,u48,31
+Usual care,u49,24
+Usual care,u50,50
+Usual care,u51,47
+Usual care,u52,35
+Usual care,u53,17
+Usual care,u54,26
+Usual care,u55,39
+Usual care,u56,26
+Usual care,u57,19
+Usual care,u58,19
+Usual care,u59,24
+Usual care,u60,32
+Usual care,u61,25
+Usual care,u62,32
+Usual care,u63,63
+Usual care,u64,52
+Usual care,u65,21
+Usual care,u66,36
+Usual care,u67,33
+Usual care,u68,30
+Usual care,u69,43
+Usual care,u70,28
+Usual care,u71,28
+Usual care,u72,28
+Usual care,u73,31
+Usual care,u74,46
+Usual care,u75,41
+Usual care,u76,17
+Usual care,u77,27
+Usual care,u78,23
+Usual care,u79,41
+Usual care,u80,34
+Usual care,u81,42
+Usual care,u82,31
+Usual care,u83,11
+Usual care,u84,37
+Usual care,u85,35
+Usual care,u86,38
+Usual care,u87,18
+Usual care,u88,33
+Usual care,u89,24
+Usual care,u90,24
+Usual care,u91,36
+Usual care,u92,36
+Usual care,u93,22
+Usual care,u94,13
+Usual care,u95,5
+Usual care,u96,26
+Usual care,u97,44
+Usual care,u98,31
+Usual care,u99,7
+Usual care,u100,23
+Usual care,u101,37
+Usual care,u102,50
+Usual care,u103,45
+Usual care,u104,36
+Usual care,u105,34
+Usual care,u106,20
+Usual care,u107,27
+Usual care,u108,28
+Usual care,u109,23
+Usual care,u110,33
+Usual care,u111,28
+Usual care,u112,36
+Usual care,u113,48
+Usual care,u114,40
+Usual care,u115,37
+Usual care,u116,29
+Usual care,u117,15
+Usual care,u118,31
+Usual care,u119,38
+Usual care,u120,21
+Usual care,u121,46
+Usual care,u122,28
+Usual care,u123,36
+Usual care,u124,28
+Usual care,u125,18
+Usual care,u126,55
+Usual care,u127,19
+Usual care,u128,42
+Usual care,u129,26
+Usual care,u130,35
+Usual care,u131,23
+Usual care,u132,27
+Usual care,u133,42
+Usual care,u134,53
+Usual care,u135,23
+Usual care,u136,32
+Usual care,u137,42
+Usual care,u138,25
+Usual care,u139,40
+Usual care,u140,23
+Usual care,u141,39
+Usual care,u142,37
+Usual care,u143,45
+Usual care,u144,36
+Usual care,u145,19
+Usual care,u146,39
+Usual care,u147,20
+Usual care,u148,40
+Usual care,u149,49

@@ -1,0 +1,92 @@
+[
+ {
+  "study": "Ahn 2016",
+  "year": 2016,
+  "n": 64,
+  "md": -12.1,
+  "ci_low": -21.9,
+  "ci_high": -2.3,
+  "weight": 5.9,
+  "bias": "low"
+ },
+ {
+  "study": "Berg 2017",
+  "year": 2017,
+  "n": 120,
+  "md": -9.4,
+  "ci_low": -16.6,
+  "ci_high": -2.2,
+  "weight": 11.0,
+  "bias": "low"
+ },
+ {
+  "study": "Costa 2018",
+  "year": 2018,
+  "n": 48,
+  "md": -21.0,
+  "ci_low": -32.3,
+  "ci_high": -9.7,
+  "weight": 4.4,
+  "bias": "high"
+ },
+ {
+  "study": "Dlamini 2019",
+  "year": 2019,
+  "n": 210,
+  "md": -8.2,
+  "ci_low": -13.6,
+  "ci_high": -2.8,
+  "weight": 19.2,
+  "bias": "low"
+ },
+ {
+  "study": "Evans 2019",
+  "year": 2019,
+  "n": 36,
+  "md": -25.5,
+  "ci_low": -38.6,
+  "ci_high": -12.4,
+  "weight": 3.3,
+  "bias": "high"
+ },
+ {
+  "study": "Fujita 2020",
+  "year": 2020,
+  "n": 150,
+  "md": -10.9,
+  "ci_low": -17.3,
+  "ci_high": -4.5,
+  "weight": 13.7,
+  "bias": "some"
+ },
+ {
+  "study": "Gupta 2021",
+  "year": 2021,
+  "n": 90,
+  "md": -6.3,
+  "ci_low": -14.6,
+  "ci_high": 2.0,
+  "weight": 8.2,
+  "bias": "low"
+ },
+ {
+  "study": "Hale 2022",
+  "year": 2022,
+  "n": 300,
+  "md": -7.8,
+  "ci_low": -12.3,
+  "ci_high": -3.3,
+  "weight": 27.4,
+  "bias": "low"
+ },
+ {
+  "study": "Ito 2023",
+  "year": 2023,
+  "n": 75,
+  "md": -14.6,
+  "ci_low": -23.7,
+  "ci_high": -5.5,
+  "weight": 6.9,
+  "bias": "some"
+ }
+]

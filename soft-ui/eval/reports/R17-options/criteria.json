@@ -1,0 +1,22 @@
+[
+ {
+  "criterion": "Cost",
+  "weight": 0.25
+ },
+ {
+  "criterion": "Latency",
+  "weight": 0.2
+ },
+ {
+  "criterion": "Ops effort",
+  "weight": 0.2
+ },
+ {
+  "criterion": "Lock-in",
+  "weight": 0.15
+ },
+ {
+  "criterion": "Compliance",
+  "weight": 0.2
+ }
+]

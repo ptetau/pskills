@@ -1,0 +1,41 @@
+title: Component gallery
+currency: NZD
+data:
+  pnl: ../eval/reports/R11-pnl/pnl.csv
+  costs: {from: pnl, where: {section: [Cost of sales, Operating expenses]}}
+  bridge: {from: pnl, add: {v: "actual if section == 'Revenue' else -actual"}, group: section, sum: [v]}
+  st: ../eval/reports/R12-meta/studies.json
+  out: ../eval/reports/R12-meta/outcomes.csv
+  m: ../eval/reports/R13-system/model.json
+  sim: ../eval/reports/R13-system/sim.csv
+  sch: ../eval/reports/R14-schema/schema.json
+  files: ../eval/reports/R15-codebase/files.csv
+  opts: ../eval/reports/R17-options/options.json
+  crit: ../eval/reports/R17-options/criteria.json
+  contracts: ../eval/reports/R3-design/design.json#contracts
+layout:
+- callout: "Net profit is {{ sum pnl.actual - 2 * sum costs.actual | money }} against a budget of {{ sum pnl.budget - 2 * sum costs.budget | money }}."
+  tone: warn
+- row:
+  - statement: {data: pnl, section: section, line: account, values: [actual, budget], minus: [Cost of sales, Operating expenses], subtotals: [{label: Gross profit, after: Cost of sales}, {label: Net profit, after: Operating expenses}]}
+    w: 2
+  - chart: {kind: waterfall, data: bridge, x: section, y: v, total: Net profit, fmt: money}
+- forest: {data: st, label: study, est: md, lo: ci_low, hi: ci_high, weight: weight, group: bias, tone: {bias: {low: good, some: warn, high: bad}}, pooled: {est: -9.8, lo: -12.4, hi: -7.2, label: Pooled (RE)}, left: favours CBT-I, right: favours usual care}
+- row:
+  - box: {data: out, y: minutes, by: arm}
+  - chart: {kind: hist, data: out, x: minutes, series: arm}
+- row:
+  - graph: {data: m.links, from: from, to: to, sign: polarity, nodes: m.variables, by: type, dir: LR}
+  - line: {data: sim, x: month, y: customers, series: scenario, mark: [{x: 12, label: review}], band: [{from: 18, to: 24, label: forecast}]}
+- compare:
+  - er: {data: sch, table: table, column: column, type: type, key: key, ref: references}
+    title: Diagram
+  - table: {data: sch, group: table, cols: [column, type, key, references]}
+    title: Table
+  mode: toggle
+- treemap: {data: files, group: module, size: loc, color: commits_90d, label: path}
+- decision: {data: opts, option: option, scores: scores, weights: crit}
+- row:
+  - truth: {inputs: [armed, door_open, motion, override], outputs: {alarm: "armed and (door_open or motion) and not override", led: armed or override}, highlight: alarm}
+  - classes: {data: contracts, name: type, fields: fields}
+- sankey: {data: [{a: Revenue, b: Wages, v: 286}, {a: Revenue, b: Contractors, v: 98}, {a: Revenue, b: Rent, v: 46}, {a: Revenue, b: Profit, v: 60}], from: a, to: b, value: v}

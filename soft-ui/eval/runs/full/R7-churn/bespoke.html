@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Billing Volatility Map</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1f23;--mute:#6b7079;--line:#e4e4e0;--hot:#d9480f;--warm:#f08c00;--cool:#4c6ef5;--calm:#adb5bd;--h0:#f1f3f5;--pos:#c2410c;--neg:#2563eb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171a;--card:#1e2125;--ink:#e9ecef;--mute:#9aa1aa;--line:#30343a;--calm:#5c636b;--h0:#262a2f}}
+:root[data-theme="dark"]{--bg:#15171a;--card:#1e2125;--ink:#e9ecef;--mute:#9aa1aa;--line:#30343a;--calm:#5c636b;--h0:#262a2f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1200px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:24px;margin:0 0 4px}
+h2{font-size:15px;margin:0 0 2px}
+.sub{color:var(--mute);margin:0 0 20px}
+.cap{color:var(--mute);font-size:12.5px;margin:0 0 12px}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:16px}
+.two{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.kpi .v{font-size:26px;font-weight:650}
+.kpi .l{color:var(--mute);font-size:12.5px}
+.verdict{border-left:4px solid var(--hot);margin-bottom:16px}
+.verdict ul{margin:6px 0 0;padding-left:18px}
+.verdict li{margin:3px 0}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--ink);font-size:11px}
+svg .m{fill:var(--mute)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mute);font-weight:600;font-size:12px}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600}
+.t-hot{background:color-mix(in srgb,var(--hot) 18%,transparent);color:var(--hot)}
+.t-warm{background:color-mix(in srgb,var(--warm) 20%,transparent);color:var(--warm)}
+.t-calm{background:color-mix(in srgb,var(--calm) 25%,transparent);color:var(--mute)}
+code{font:12.5px ui-monospace,Menlo,monospace}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--mute);font-size:12px;margin-top:8px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:5px 8px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .1s;z-index:9}
+</style>
+</head>
+<body>
+<main>
+<h1>Billing service: where the change lives</h1>
+<p class="sub">Git volatility, ISO weeks 36 to 47 of 2026 (1 Sep to 23 Nov). Lines changed for each file each week, and commits for each day.</p>
+
+<div class="grid kpis" id="kpis"></div>
+
+<div class="card verdict">
+<h2>Recommendation: two walls</h2>
+<ul>
+<li><b>Rules engine</b> around <code>rules/vat.py</code>, <code>rules/discount.py</code> and <code>tax.py</code>. These 3 files hold <b id="k-rules"></b> of all changed lines, and they change in almost every week.</li>
+<li><b>Invoice workflow</b> around <code>invoice.py</code>. It moves with <code>models.py</code> and <code>emails.py</code> (weekly correlation 0.75 and 0.72), so the wall must keep those changes inside it.</li>
+<li>The other 6 files are calm: under 300 lines each in 12 weeks, about 1 commit a week. Leave them as they are.</li>
+</ul>
+</div>
+
+<div class="grid two">
+<div class="card">
+<h2>Which files change most</h2>
+<p class="cap">Total lines changed in 12 weeks. The label shows commits.</p>
+<div id="rank"></div>
+<div class="legend"><span><i class="sw" style="background:var(--hot)"></i>Hot spot: rules engine</span><span><i class="sw" style="background:var(--warm)"></i>Hot spot: invoice workflow</span><span><i class="sw" style="background:var(--calm)"></i>Calm</span></div>
+</div>
+<div class="card">
+<h2>When the change happened</h2>
+<p class="cap">Lines changed for each file in each week. A darker cell is more lines. W41 to W42 (5 to 18 Oct) is the peak.</p>
+<div class="scroll"><div id="heat" style="min-width:560px"></div></div>
+</div>
+</div>
+
+<div class="card" style="margin-top:16px">
+<h2>Commits each day</h2>
+<p class="cap">The busy period runs from 29 Sep to 19 Oct. The highest day is <b id="k-peak"></b>.</p>
+<div class="scroll"><div id="daily" style="min-width:700px"></div></div>
+</div>
+
+<div class="grid two" style="margin-top:16px">
+<div class="card">
+<h2>Which files change together</h2>
+<p class="cap">Correlation of weekly lines changed between two files. Orange is "change in the same weeks". Blue is "change in different weeks".</p>
+<div class="scroll"><div id="corr" style="min-width:420px"></div></div>
+</div>
+<div class="card">
+<h2>Hot spot table</h2>
+<p class="cap">Sorted by lines changed. Active weeks is the count of the 12 weeks with a change.</p>
+<div class="scroll" id="tbl"></div>
+</div>
+</div>
+</main>
+<div id="tip"></div>
+<script>
+const CHURN=[["billing/invoice.py","2026-W36",89,3],["billing/invoice.py","2026-W37",5,1],["billing/invoice.py","2026-W38",98,3],["billing/invoice.py","2026-W39",30,1],["billing/invoice.py","2026-W40",76,3],["billing/invoice.py","2026-W41",212,8],["billing/invoice.py","2026-W42",126,5],["billing/invoice.py","2026-W43",79,3],["billing/invoice.py","2026-W44",37,1],["billing/invoice.py","2026-W46",4,1],["billing/invoice.py","2026-W47",17,1],["billing/tax.py","2026-W36",98,3],["billing/tax.py","2026-W37",69,2],["billing/tax.py","2026-W38",82,3],["billing/tax.py","2026-W39",143,5],["billing/tax.py","2026-W40",21,1],["billing/tax.py","2026-W41",65,2],["billing/tax.py","2026-W42",188,7],["billing/tax.py","2026-W43",3,1],["billing/tax.py","2026-W45",56,2],["billing/tax.py","2026-W46",17,1],["billing/tax.py","2026-W47",57,2],["billing/rules/discount.py","2026-W36",53,2],["billing/rules/discount.py","2026-W37",140,5],["billing/rules/discount.py","2026-W38",141,5],["billing/rules/discount.py","2026-W39",49,1],["billing/rules/discount.py","2026-W40",149,5],["billing/rules/discount.py","2026-W41",205,8],["billing/rules/discount.py","2026-W42",58,2],["billing/rules/discount.py","2026-W43",224,8],["billing/rules/discount.py","2026-W44",58,2],["billing/rules/discount.py","2026-W45",35,1],["billing/rules/discount.py","2026-W46",22,1],["billing/rules/discount.py","2026-W47",153,6],["billing/rules/vat.py","2026-W36",174,6],["billing/rules/vat.py","2026-W37",156,6],["billing/rules/vat.py","2026-W38",80,3],["billing/rules/vat.py","2026-W39",52,2],["billing/rules/vat.py","2026-W40",2,1],["billing/rules/vat.py","2026-W41",232,9],["billing/rules/vat.py","2026-W42",202,8],["billing/rules/vat.py","2026-W43",70,2],["billing/rules/vat.py","2026-W44",129,5],["billing/rules/vat.py","2026-W45",88,3],["billing/rules/vat.py","2026-W46",187,7],["billing/rules/vat.py","2026-W47",146,5],["billing/api.py","2026-W36",7,1],["billing/api.py","2026-W37",28,1],["billing/api.py","2026-W38",1,1],["billing/api.py","2026-W39",17,1],["billing/api.py","2026-W40",12,1],["billing/api.py","2026-W41",13,1],["billing/api.py","2026-W42",3,1],["billing/api.py","2026-W43",24,1],["billing/api.py","2026-W45",17,1],["billing/api.py","2026-W46",30,1],["billing/api.py","2026-W47",4,1],["billing/store.py","2026-W36",6,1],["billing/store.py","2026-W37",19,1],["billing/store.py","2026-W38",16,1],["billing/store.py","2026-W39",20,1],["billing/store.py","2026-W40",26,1],["billing/store.py","2026-W41",10,1],["billing/store.py","2026-W42",17,1],["billing/store.py","2026-W43",9,1],["billing/store.py","2026-W44",1,1],["billing/store.py","2026-W45",28,1],["billing/store.py","2026-W46",25,1],["billing/store.py","2026-W47",22,1],["billing/pdf.py","2026-W37",27,1],["billing/pdf.py","2026-W38",23,1],["billing/pdf.py","2026-W39",14,1],["billing/pdf.py","2026-W40",23,1],["billing/pdf.py","2026-W41",26,1],["billing/pdf.py","2026-W42",13,1],["billing/pdf.py","2026-W43",3,1],["billing/pdf.py","2026-W44",7,1],["billing/pdf.py","2026-W45",1,1],["billing/pdf.py","2026-W46",10,1],["billing/pdf.py","2026-W47",23,1],["billing/currency.py","2026-W36",22,1],["billing/currency.py","2026-W37",27,1],["billing/currency.py","2026-W38",22,1],["billing/currency.py","2026-W39",8,1],["billing/currency.py","2026-W40",17,1],["billing/currency.py","2026-W41",25,1],["billing/currency.py","2026-W42",45,1],["billing/currency.py","2026-W43",16,1],["billing/currency.py","2026-W44",8,1],["billing/currency.py","2026-W45",20,1],["billing/currency.py","2026-W46",30,1],["billing/currency.py","2026-W47",6,1],["billing/models.py","2026-W36",28,1],["billing/models.py","2026-W38",8,1],["billing/models.py","2026-W39",7,1],["billing/models.py","2026-W40",23,1],["billing/models.py","2026-W41",54,2],["billing/models.py","2026-W42",42,1],["billing/models.py","2026-W43",10,1],["billing/models.py","2026-W44",28,1],["billing/models.py","2026-W45",10,1],["billing/models.py","2026-W46",7,1],["billing/models.py","2026-W47",29,1],["billing/emails.py","2026-W36",20,1],["billing/emails.py","2026-W37",22,1],["billing/emails.py","2026-W38",21,1],["billing/emails.py","2026-W39",31,1],["billing/emails.py","2026-W40",15,1],["billing/emails.py","2026-W41",48,1],["billing/emails.py","2026-W42",40,1],["billing/emails.py","2026-W43",27,1],["billing/emails.py","2026-W44",13,1],["billing/emails.py","2026-W45",23,1],["billing/emails.py","2026-W46",18,1],["billing/emails.py","2026-W47",9,1]];
+const DAILY=[["2026-09-01",4],["2026-09-02",7],["2026-09-03",2],["2026-09-04",3],["2026-09-05",0],["2026-09-06",0],["2026-09-07",3],["2026-09-08",1],["2026-09-09",1],["2026-09-10",2],["2026-09-11",2],["2026-09-12",0],["2026-09-13",0],["2026-09-14",3],["2026-09-15",6],["2026-09-16",3],["2026-09-17",1],["2026-09-18",1],["2026-09-19",0],["2026-09-20",0],["2026-09-21",1],["2026-09-22",3],["2026-09-23",1],["2026-09-24",2],["2026-09-25",1],["2026-09-26",0],["2026-09-27",0],["2026-09-28",2],["2026-09-29",6],["2026-09-30",4],["2026-10-01",9],["2026-10-02",2],["2026-10-03",0],["2026-10-04",0],["2026-10-05",7],["2026-10-06",8],["2026-10-07",10],["2026-10-08",10],["2026-10-09",10],["2026-10-10",0],["2026-10-11",0],["2026-10-12",8],["2026-10-13",7],["2026-10-14",7],["2026-10-15",8],["2026-10-16",11],["2026-10-17",0],["2026-10-18",0],["2026-10-19",14],["2026-10-20",2],["2026-10-21",3],["2026-10-22",2],["2026-10-23",4],["2026-10-24",0],["2026-10-25",0],["2026-10-26",5],["2026-10-27",6],["2026-10-28",6],["2026-10-29",7],["2026-10-30",5],["2026-10-31",0],["2026-11-01",0],["2026-11-02",1],["2026-11-03",6],["2026-11-04",5],["2026-11-05",5],["2026-11-06",1],["2026-11-07",0],["2026-11-08",0],["2026-11-09",6],["2026-11-10",6],["2026-11-11",9],["2026-11-12",8],["2026-11-13",5],["2026-11-14",0],["2026-11-15",0],["2026-11-16",1],["2026-11-17",7],["2026-11-18",1],["2026-11-19",7],["2026-11-20",9],["2026-11-21",0],["2026-11-22",0],["2026-11-23",2]];
+
+const short=f=>f.replace(/^billing\//,'');
+const files=[...new Set(CHURN.map(r=>r[0]))];
+const weeks=[...new Set(CHURN.map(r=>r[1]))].sort();
+const M={};files.forEach(f=>{M[f]={};weeks.forEach(w=>M[f][w]=0)});
+const C={};files.forEach(f=>C[f]=0);
+CHURN.forEach(([f,w,l,c])=>{M[f][w]=l;C[f]+=c});
+const tot=f=>weeks.reduce((s,w)=>s+M[f][w],0);
+files.sort((a,b)=>tot(b)-tot(a));
+const ALL=files.reduce((s,f)=>s+tot(f),0);
+const RULES=['billing/rules/vat.py','billing/rules/discount.py','billing/tax.py'];
+const INV=['billing/invoice.py'];
+const grp=f=>RULES.includes(f)?'hot':INV.includes(f)?'warm':'calm';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
+const svg=(w,h,host)=>el('svg',{viewBox:`0 0 ${w} ${h}`},document.getElementById(host));
+const txt=(p,x,y,s,a={})=>{const t=el('text',{x,y,...a},p);t.textContent=s;return t};
+const tip=document.getElementById('tip');
+const hover=(e,s)=>{e.addEventListener('mousemove',ev=>{tip.textContent=s;tip.style.opacity=1;tip.style.left=ev.clientX+12+'px';tip.style.top=ev.clientY+12+'px'});e.addEventListener('mouseleave',()=>tip.style.opacity=0)};
+const pct=x=>Math.round(x*100)+'%';
+const totalCommits=DAILY.reduce((s,d)=>s+d[1],0);
+const peak=DAILY.reduce((a,b)=>b[1]>a[1]?b:a);
+const fmtD=s=>new Date(s+'T00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
+const rulesShare=RULES.reduce((s,f)=>s+tot(f),0)/ALL;
+const hotShare=[...RULES,...INV].reduce((s,f)=>s+tot(f),0)/ALL;
+document.getElementById('k-rules').textContent=pct(rulesShare);
+document.getElementById('k-peak').textContent=fmtD(peak[0])+' ('+peak[1]+' commits)';
+
+// KPIs
+[[ALL.toLocaleString('en'),'lines changed in 12 weeks'],[totalCommits,'commits ('+files.length+' files)'],[pct(hotShare),'of lines are in 4 of 10 files'],['W41','peak week: '+weeks.map(w=>files.reduce((s,f)=>s+M[f][w],0))[5]+' lines']]
+.forEach(([v,l])=>{const d=document.createElement('div');d.className='card kpi';d.innerHTML=`<div class="v">${v}</div><div class="l">${l}</div>`;document.getElementById('kpis').appendChild(d)});
+
+// Ranked bars
+(()=>{const W=440,lw=118,rh=26,H=files.length*rh+4,max=tot(files[0]);const s=svg(W,H,'rank');
+files.forEach((f,i)=>{const y=i*rh,bw=(W-lw-70)*tot(f)/max;
+ txt(s,lw-8,y+16,short(f),{'text-anchor':'end'});
+ const r=el('rect',{x:lw,y:y+4,width:bw,height:rh-9,rx:3,fill:css('--'+grp(f))},s);
+ txt(s,lw+bw+6,y+16,tot(f).toLocaleString('en')+' · '+C[f]+'c',{class:'m'});
+ hover(r,`${short(f)}: ${tot(f)} lines, ${C[f]} commits, ${pct(tot(f)/ALL)} of all lines`)})})();
+
+// Heatmap
+(()=>{const lw=118,cw=46,rh=26,top=20,W=lw+weeks.length*cw+50,H=top+files.length*rh;const s=svg(W,H,'heat');
+ const max=Math.max(...files.flatMap(f=>weeks.map(w=>M[f][w])));
+ weeks.forEach((w,j)=>txt(s,lw+j*cw+cw/2,13,w.slice(5),{'text-anchor':'middle',class:'m'}));
+ txt(s,W-4,13,'total',{'text-anchor':'end',class:'m'});
+ files.forEach((f,i)=>{const y=top+i*rh;txt(s,lw-8,y+16,short(f),{'text-anchor':'end'});
+  const base=css('--'+(grp(f)==='calm'?'cool':grp(f)));
+  weeks.forEach((w,j)=>{const v=M[f][w];const a=v?0.12+0.88*Math.sqrt(v/max):0;
+   const r=el('rect',{x:lw+j*cw+1,y:y+1,width:cw-2,height:rh-2,rx:3,fill:v?base:css('--h0'),'fill-opacity':v?a:1},s);
+   if(v>=150)txt(s,lw+j*cw+cw/2,y+16,v,{'text-anchor':'middle',style:'fill:#fff;font-size:10px;font-weight:600'});
+   hover(r,`${short(f)} · ${w}: ${v} lines`)});
+  txt(s,W-4,y+16,tot(f),{'text-anchor':'end',class:'m'})});
+ [5,6].forEach(j=>el('rect',{x:lw+j*cw,y:top-2,width:cw,height:files.length*rh+3,fill:'none',stroke:css('--ink'),'stroke-width':1,'stroke-dasharray':'3 3',rx:3},s))})();
+
+// Daily commits
+(()=>{const W=1100,H=190,l=30,b=36,t=10,n=DAILY.length,bw=(W-l)/n,max=16;const s=svg(W,H,'daily');
+ [0,5,10,15].forEach(v=>{const y=H-b-(H-b-t)*v/max;el('line',{x1:l,x2:W,y1:y,y2:y,stroke:css('--line')},s);txt(s,l-6,y+4,v,{'text-anchor':'end',class:'m'})});
+ const i0=DAILY.findIndex(d=>d[0]==='2026-09-29'),i1=DAILY.findIndex(d=>d[0]==='2026-10-19');
+ el('rect',{x:l+i0*bw,y:t,width:(i1-i0+1)*bw,height:H-b-t,fill:css('--hot'),'fill-opacity':0.08},s);
+ txt(s,l+i0*bw+4,t+12,'busy period',{style:`fill:${css('--hot')};font-weight:600`});
+ DAILY.forEach(([d,c],i)=>{const h=(H-b-t)*c/max,x=l+i*bw;
+  const r=el('rect',{x:x+1,y:H-b-h,width:bw-2,height:Math.max(h,0),rx:1.5,fill:d===peak[0]?css('--hot'):css('--cool')},s);
+  hover(r,`${fmtD(d)}: ${c} commits`);
+  const dt=new Date(d+'T00:00Z');if(dt.getUTCDay()===1&&x<W-50){el('line',{x1:x,x2:x,y1:H-b,y2:H-b+5,stroke:css('--mute')},s);txt(s,x+2,H-b+16,fmtD(d),{class:'m'})}});
+ txt(s,l,H-4,'Weekends show 0. Ticks mark each Monday.',{class:'m'})})();
+
+// Correlation matrix
+(()=>{const n=files.length,lw=118,cs=30,top=80,W=lw+n*cs+4,H=top+n*cs+4;const s=svg(W,H,'corr');
+ const v=f=>weeks.map(w=>M[f][w]);
+ const cor=(a,b)=>{const ma=a.reduce((x,y)=>x+y)/a.length,mb=b.reduce((x,y)=>x+y)/b.length;let n=0,da=0,db=0;a.forEach((x,i)=>{n+=(x-ma)*(b[i]-mb);da+=(x-ma)**2;db+=(b[i]-mb)**2});return n/Math.sqrt(da*db)};
+ files.forEach((f,j)=>{const g=el('g',{transform:`translate(${lw+j*cs+cs/2},${top-6}) rotate(-50)`},s);txt(g,0,0,short(f),{class:'m'})});
+ files.forEach((a,i)=>{txt(s,lw-8,top+i*cs+cs/2+4,short(a),{'text-anchor':'end'});
+  files.forEach((b,j)=>{if(j>i)return;const r=i===j?1:cor(v(a),v(b));
+   const c=el('rect',{x:lw+j*cs+1,y:top+i*cs+1,width:cs-2,height:cs-2,rx:3,fill:i===j?css('--h0'):css(r>=0?'--pos':'--neg'),'fill-opacity':i===j?1:Math.min(1,Math.abs(r)*1.15)},s);
+   if(i!==j&&Math.abs(r)>=0.45)txt(s,lw+j*cs+cs/2,top+i*cs+cs/2+4,r.toFixed(2).replace('0.','.'),{'text-anchor':'middle',style:'fill:#fff;font-size:9.5px;font-weight:600'});
+   if(i!==j)hover(c,`${short(a)} with ${short(b)}: r = ${r.toFixed(2)}`)})})})();
+
+// Table
+(()=>{const lab={hot:['Rules engine','t-hot'],warm:['Invoice workflow','t-warm'],calm:['Calm','t-calm']};
+ let h='<table><tr><th>File</th><th>Lines</th><th>Share</th><th>Commits</th><th>Active wks</th><th>Wall</th></tr>';
+ files.forEach(f=>{const [n,c]=lab[grp(f)];const act=weeks.filter(w=>M[f][w]).length;
+  h+=`<tr><td><code>${short(f)}</code></td><td class="n">${tot(f).toLocaleString('en')}</td><td class="n">${pct(tot(f)/ALL)}</td><td class="n">${C[f]}</td><td class="n">${act}/12</td><td><span class="tag ${c}">${n}</span></td></tr>`});
+ document.getElementById('tbl').innerHTML=h+'</table>'})();
+</script>
+</body>
+</html>

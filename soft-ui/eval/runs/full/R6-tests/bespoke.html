@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CI Run 4120</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--fg:#1d1d1f;--mut:#6b6b70;--line:#e4e4e0;--pass:#2f9e5b;--fail:#d6453d;--flaky:#d99a1e;--skip:#9a9aa0;--accent:#3c6fd8;--code:#f2f2ee}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--card:#1c1c1f;--fg:#ececee;--mut:#9a9aa2;--line:#2c2c31;--code:#232327}}
+:root[data-theme="dark"]{--bg:#141416;--card:#1c1c1f;--fg:#ececee;--mut:#9a9aa2;--line:#2c2c31;--code:#232327}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:22px;margin:0}
+h2{font-size:16px;margin:0 0 12px}
+.sub{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-top:16px}
+.hero{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+.badge{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:700;color:#fff;background:var(--fail);letter-spacing:.04em}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.stack{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:14px;background:var(--line)}
+.cause{border-left:4px solid var(--fail)}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+pre{background:var(--code);padding:10px 12px;border-radius:6px;overflow:auto;margin:8px 0 0;white-space:pre}
+.grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.grid2 .card{margin-top:0}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.bar{position:relative;height:16px;background:var(--line);border-radius:3px;min-width:80px}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--accent)}
+.pill{font-size:11px;padding:1px 8px;border-radius:999px;color:#fff;font-weight:600}
+.p-failed{background:var(--fail)}.p-flaky{background:var(--flaky)}.p-passed{background:var(--pass)}.p-skipped{background:var(--skip)}
+details summary{cursor:pointer;color:var(--accent);font-size:12.5px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.tools input,.tools select{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg)}
+.scroll{max-height:420px;overflow:auto}
+.hot{color:var(--fail);font-weight:600}
+.tablewrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+  <div class="hero">
+    <div>
+      <h1>CI run 4120 &middot; <code>api</code> service</h1>
+      <div class="sub" id="heroSub"></div>
+    </div>
+    <span class="badge">BUILD FAILED</span>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="stack" id="stack" title="Status share of all tests"></div>
+
+  <div class="card cause">
+    <h2>Likely root cause: one bug breaks all 7 failures</h2>
+    <p style="margin:0">Every failed test, across 4 suites, returns HTTP 500 from the same line:
+      <code>app/cart/price.py:52</code> in <code>total()</code> raises <code>ValueError: code expired</code>.
+      Fix the expired-code handling in <code>price.total</code> first, then rerun.</p>
+    <pre>app/&lt;suite&gt;/views.py:88  create  →  total = price.total(cart)
+app/cart/price.py:52      total   →  raise ValueError('code expired')</pre>
+  </div>
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="card">
+      <h2>Suites by total duration</h2>
+      <div class="tablewrap"><table id="suites"></table></div>
+    </div>
+    <div class="card">
+      <h2>Slowest tests</h2>
+      <div class="tablewrap"><table id="slow"></table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Failed tests <span class="sub" id="failN"></span></h2>
+    <div class="tablewrap"><table id="failed"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Flaky tests <span class="sub" id="flakyN"></span></h2>
+    <p class="sub" style="margin:-6px 0 10px">Passed after 1 retry. They do not fail the build, but they hide real breaks.</p>
+    <div class="tablewrap"><table id="flaky"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>All tests</h2>
+    <div class="tools">
+      <input id="q" placeholder="Filter by name" aria-label="Filter by name">
+      <select id="fs" aria-label="Suite"><option value="">All suites</option></select>
+      <select id="fst" aria-label="Status"><option value="">All statuses</option><option>failed</option><option>flaky</option><option>skipped</option><option>passed</option></select>
+    </div>
+    <div class="scroll tablewrap"><table id="all"></table></div>
+  </div>
+</main>
+<script id="csv" type="text/plain">suite,test,status,ms,retries
+auth,test_auth_00,passed,44,0
+auth,test_auth_01,passed,65,0
+auth,test_auth_02,passed,140,0
+auth,test_auth_03,passed,32,0
+auth,test_auth_04,passed,79,0
+auth,test_auth_05,passed,184,0
+auth,test_auth_06,passed,114,0
+auth,test_auth_07,passed,82,0
+auth,test_auth_08,passed,42,0
+auth,test_auth_09,skipped,0,0
+auth,test_auth_10,passed,24,0
+auth,test_auth_11,passed,58,0
+auth,test_auth_12,passed,42,0
+auth,test_auth_13,passed,40,0
+auth,test_auth_14,passed,35,0
+auth,test_auth_15,passed,57,0
+auth,test_auth_16,passed,70,0
+auth,test_auth_17,passed,120,0
+auth,test_auth_18,passed,18,0
+auth,test_auth_19,passed,34,0
+auth,test_auth_20,passed,54,0
+auth,test_auth_21,failed,56,0
+auth,test_auth_22,passed,78,0
+auth,test_auth_23,passed,49,0
+auth,test_auth_24,passed,61,0
+auth,test_auth_25,passed,32,0
+auth,test_auth_26,passed,106,0
+auth,test_auth_27,flaky,210,1
+auth,test_auth_28,passed,70,0
+auth,test_auth_29,passed,91,0
+auth,test_auth_30,passed,79,0
+auth,test_auth_31,passed,11,0
+auth,test_auth_32,passed,289,0
+auth,test_auth_33,passed,68,0
+auth,test_auth_34,flaky,30,1
+auth,test_auth_35,passed,24,0
+auth,test_auth_36,passed,157,0
+auth,test_auth_37,passed,44,0
+billing,test_billing_00,passed,297,0
+billing,test_billing_01,passed,62,0
+billing,test_billing_02,passed,118,0
+billing,test_billing_03,passed,112,0
+billing,test_billing_04,passed,170,0
+billing,test_billing_05,passed,42,0
+billing,test_billing_06,passed,44,0
+billing,test_billing_07,passed,97,0
+billing,test_billing_08,passed,35,0
+billing,test_billing_09,passed,41,0
+billing,test_billing_10,passed,31,0
+billing,test_billing_11,passed,59,0
+billing,test_billing_12,passed,48,0
+billing,test_billing_13,passed,154,0
+billing,test_billing_14,passed,66,0
+billing,test_billing_15,passed,23,0
+billing,test_billing_16,passed,31,0
+billing,test_billing_17,passed,73,0
+billing,test_billing_18,passed,90,0
+billing,test_billing_19,passed,73,0
+billing,test_billing_20,passed,129,0
+billing,test_billing_21,passed,55,0
+billing,test_billing_22,passed,69,0
+billing,test_billing_23,passed,71,0
+billing,test_billing_24,passed,462,0
+billing,test_billing_25,passed,34,0
+billing,test_billing_26,passed,107,0
+billing,test_billing_27,passed,61,0
+billing,test_billing_28,passed,15,0
+billing,test_billing_29,passed,164,0
+billing,test_billing_30,passed,32,0
+billing,test_billing_31,passed,52,0
+billing,test_billing_32,passed,74,0
+billing,test_billing_33,flaky,38,1
+billing,test_billing_34,passed,34,0
+billing,test_billing_35,flaky,105,1
+billing,test_billing_36,passed,23,0
+billing,test_billing_37,passed,47,0
+billing,test_billing_38,passed,88,0
+billing,test_billing_39,passed,60,0
+billing,test_billing_40,passed,150,0
+billing,test_billing_41,passed,148,0
+billing,test_billing_42,passed,159,0
+billing,test_billing_43,passed,26,0
+billing,test_billing_44,passed,38,0
+billing,test_billing_45,skipped,0,0
+billing,test_billing_46,passed,103,0
+billing,test_billing_47,passed,36,0
+billing,test_billing_48,flaky,124,1
+billing,test_billing_49,passed,41,0
+billing,test_billing_50,passed,130,0
+billing,test_billing_51,passed,129,0
+cart,test_cart_00,passed,21,0
+cart,test_cart_01,passed,87,0
+cart,test_cart_02,passed,46,0
+cart,test_cart_03,passed,88,0
+cart,test_cart_04,passed,42,0
+cart,test_cart_05,passed,61,0
+cart,test_cart_06,passed,46,0
+cart,test_cart_07,failed,50,0
+cart,test_cart_08,passed,32,0
+cart,test_cart_09,failed,48,0
+cart,test_cart_10,passed,49,0
+cart,test_cart_11,passed,76,0
+cart,test_cart_12,passed,54,0
+cart,test_cart_13,passed,14,0
+cart,test_cart_14,passed,235,0
+cart,test_cart_15,passed,103,0
+cart,test_cart_16,passed,68,0
+cart,test_cart_17,passed,171,0
+cart,test_cart_18,passed,136,0
+cart,test_cart_19,passed,55,0
+cart,test_cart_20,passed,80,0
+cart,test_cart_21,passed,101,0
+cart,test_cart_22,failed,275,0
+cart,test_cart_23,passed,75,0
+cart,test_cart_24,passed,97,0
+cart,test_cart_25,passed,23,0
+cart,test_cart_26,passed,65,0
+cart,test_cart_27,passed,171,0
+cart,test_cart_28,passed,80,0
+cart,test_cart_29,passed,21,0
+cart,test_cart_30,passed,72,0
+cart,test_cart_31,passed,28,0
+cart,test_cart_32,passed,89,0
+cart,test_cart_33,passed,61,0
+cart,test_cart_34,passed,120,0
+cart,test_cart_35,passed,50,0
+cart,test_cart_36,passed,61,0
+cart,test_cart_37,passed,131,0
+cart,test_cart_38,passed,27,0
+cart,test_cart_39,passed,73,0
+cart,test_cart_40,passed,65,0
+cart,test_cart_41,failed,65,0
+cart,test_cart_42,passed,34,0
+cart,test_cart_43,passed,433,0
+catalog,test_catalog_00,passed,131,0
+catalog,test_catalog_01,passed,78,0
+catalog,test_catalog_02,passed,50,0
+catalog,test_catalog_03,passed,117,0
+catalog,test_catalog_04,passed,44,0
+catalog,test_catalog_05,passed,36,0
+catalog,test_catalog_06,passed,409,0
+catalog,test_catalog_07,passed,82,0
+catalog,test_catalog_08,skipped,0,0
+catalog,test_catalog_09,passed,85,0
+catalog,test_catalog_10,skipped,0,0
+catalog,test_catalog_11,passed,28,0
+catalog,test_catalog_12,passed,74,0
+catalog,test_catalog_13,passed,39,0
+catalog,test_catalog_14,passed,66,0
+catalog,test_catalog_15,passed,39,0
+catalog,test_catalog_16,passed,54,0
+catalog,test_catalog_17,passed,33,0
+catalog,test_catalog_18,passed,111,0
+catalog,test_catalog_19,passed,69,0
+catalog,test_catalog_20,passed,32,0
+catalog,test_catalog_21,passed,26,0
+catalog,test_catalog_22,passed,116,0
+catalog,test_catalog_23,passed,40,0
+catalog,test_catalog_24,passed,164,0
+catalog,test_catalog_25,passed,24,0
+catalog,test_catalog_26,passed,38,0
+catalog,test_catalog_27,passed,141,0
+catalog,test_catalog_28,passed,59,0
+catalog,test_catalog_29,flaky,103,1
+catalog,test_catalog_30,passed,85,0
+catalog,test_catalog_31,passed,29,0
+catalog,test_catalog_32,passed,71,0
+catalog,test_catalog_33,passed,29,0
+catalog,test_catalog_34,failed,42,0
+catalog,test_catalog_35,passed,297,0
+catalog,test_catalog_36,passed,43,0
+catalog,test_catalog_37,passed,95,0
+catalog,test_catalog_38,flaky,66,1
+catalog,test_catalog_39,passed,27,0
+catalog,test_catalog_40,passed,47,0
+catalog,test_catalog_41,passed,119,0
+catalog,test_catalog_42,passed,151,0
+catalog,test_catalog_43,passed,44,0
+catalog,test_catalog_44,passed,66,0
+catalog,test_catalog_45,passed,49,0
+catalog,test_catalog_46,passed,33,0
+catalog,test_catalog_47,passed,18,0
+catalog,test_catalog_48,passed,144,0
+catalog,test_catalog_49,passed,52,0
+catalog,test_catalog_50,passed,44,0
+catalog,test_catalog_51,passed,38,0
+catalog,test_catalog_52,passed,131,0
+catalog,test_catalog_53,skipped,0,0
+catalog,test_catalog_54,passed,37,0
+catalog,test_catalog_55,passed,25,0
+catalog,test_catalog_56,passed,131,0
+catalog,test_catalog_57,passed,137,0
+catalog,test_catalog_58,passed,24,0
+catalog,test_catalog_59,passed,33,0
+catalog,test_catalog_60,passed,55,0
+orders,test_orders_00,passed,59,0
+orders,test_orders_01,passed,267,0
+orders,test_orders_02,passed,153,0
+orders,test_orders_03,passed,47,0
+orders,test_orders_04,passed,35,0
+orders,test_orders_05,passed,48,0
+orders,test_orders_06,flaky,73,1
+orders,test_orders_07,passed,48,0
+orders,test_orders_08,passed,66,0
+orders,test_orders_09,passed,38,0
+orders,test_orders_10,passed,152,0
+orders,test_orders_11,passed,83,0
+orders,test_orders_12,passed,37,0
+orders,test_orders_13,passed,95,0
+orders,test_orders_14,passed,46,0
+orders,test_orders_15,passed,76,0
+orders,test_orders_16,passed,12,0
+orders,test_orders_17,passed,56,0
+orders,test_orders_18,passed,50,0
+orders,test_orders_19,passed,151,0
+orders,test_orders_20,passed,61,0
+orders,test_orders_21,passed,90,0
+orders,test_orders_22,passed,55,0
+orders,test_orders_23,passed,31,0
+orders,test_orders_24,passed,34,0
+orders,test_orders_25,passed,50,0
+orders,test_orders_26,passed,70,0
+orders,test_orders_27,passed,50,0
+orders,test_orders_28,passed,37,0
+orders,test_orders_29,passed,57,0
+orders,test_orders_30,passed,147,0
+orders,test_orders_31,passed,49,0
+orders,test_orders_32,passed,170,0
+orders,test_orders_33,passed,94,0
+orders,test_orders_34,failed,154,0
+orders,test_orders_35,passed,25,0
+orders,test_orders_36,passed,79,0
+orders,test_orders_37,passed,18,0
+orders,test_orders_38,passed,67,0
+orders,test_orders_39,passed,93,0
+orders,test_orders_40,passed,62,0
+orders,test_orders_41,passed,43,0
+orders,test_orders_42,passed,201,0
+orders,test_orders_43,skipped,0,0
+orders,test_orders_44,passed,151,0
+orders,test_orders_45,passed,103,0
+orders,test_orders_46,passed,40,0
+search,test_search_00,passed,207,0
+search,test_search_01,passed,66,0
+search,test_search_02,passed,56,0
+search,test_search_03,passed,63,0
+search,test_search_04,passed,249,0
+search,test_search_05,passed,238,0
+search,test_search_06,passed,178,0
+search,test_search_07,flaky,264,1
+search,test_search_08,passed,844,0
+search,test_search_09,passed,96,0
+search,test_search_10,passed,91,0
+search,test_search_11,passed,173,0
+search,test_search_12,skipped,0,0
+search,test_search_13,passed,396,0
+search,test_search_14,skipped,0,0
+search,test_search_15,passed,320,0
+search,test_search_16,passed,159,0
+search,test_search_17,passed,96,0
+search,test_search_18,passed,386,0
+search,test_search_19,passed,84,0
+search,test_search_20,passed,124,0
+search,test_search_21,passed,159,0
+search,test_search_22,passed,1576,0
+search,test_search_23,passed,294,0
+search,test_search_24,passed,258,0
+search,test_search_25,passed,234,0
+search,test_search_26,passed,259,0
+search,test_search_27,passed,231,0
+search,test_search_28,passed,184,0
+</script>
+<script id="fail" type="application/json">[
+ {
+  "test": "test_auth_21",
+  "suite": "auth",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/auth/test_api.py:121: in test_auth_21\n    resp = client.post('/auth', json=payload)\napp/auth/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_cart_07",
+  "suite": "cart",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/cart/test_api.py:107: in test_cart_07\n    resp = client.post('/cart', json=payload)\napp/cart/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_cart_09",
+  "suite": "cart",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/cart/test_api.py:109: in test_cart_09\n    resp = client.post('/cart', json=payload)\napp/cart/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_cart_22",
+  "suite": "cart",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/cart/test_api.py:122: in test_cart_22\n    resp = client.post('/cart', json=payload)\napp/cart/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_cart_41",
+  "suite": "cart",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/cart/test_api.py:141: in test_cart_41\n    resp = client.post('/cart', json=payload)\napp/cart/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_catalog_34",
+  "suite": "catalog",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/catalog/test_api.py:134: in test_catalog_34\n    resp = client.post('/catalog', json=payload)\napp/catalog/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_orders_34",
+  "suite": "orders",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/orders/test_api.py:134: in test_orders_34\n    resp = client.post('/orders', json=payload)\napp/orders/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ }
+]</script>
+<script>
+const rows=document.getElementById('csv').textContent.trim().split('\n').slice(1).map(l=>{const[s,t,st,ms,r]=l.split(',');return{suite:s,test:t,status:st,ms:+ms,retries:+r}});
+const fails=JSON.parse(document.getElementById('fail').textContent);
+const C={passed:'var(--pass)',failed:'var(--fail)',flaky:'var(--flaky)',skipped:'var(--skip)'};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pill=s=>`<span class="pill p-${s}">${s}</span>`;
+const fmt=ms=>ms>=1000?(ms/1000).toFixed(2)+' s':ms+' ms';
+const cnt={passed:0,failed:0,flaky:0,skipped:0};rows.forEach(r=>cnt[r.status]++);
+const total=rows.reduce((a,r)=>a+r.ms,0);
+document.getElementById('heroSub').textContent=`${rows.length} tests in ${new Set(rows.map(r=>r.suite)).size} suites · ${(total/1000).toFixed(1)} s of test time · ${cnt.failed} failed, ${cnt.flaky} flaky`;
+document.getElementById('kpis').innerHTML=[['failed',cnt.failed],['flaky',cnt.flaky],['passed',cnt.passed],['skipped',cnt.skipped]].map(([k,v])=>`<div class="kpi"><span><i class="dot" style="background:${C[k]}"></i>${k}</span><b>${v}</b></div>`).join('')+`<div class="kpi"><span>pass rate</span><b>${(100*(cnt.passed+cnt.flaky)/(rows.length-cnt.skipped)).toFixed(1)}%</b></div>`;
+document.getElementById('stack').innerHTML=['failed','flaky','skipped','passed'].map(k=>`<div style="width:${100*cnt[k]/rows.length}%;background:${C[k]}"></div>`).join('');
+// suites
+const S={};rows.forEach(r=>{const s=S[r.suite]||(S[r.suite]={name:r.suite,n:0,ms:0,max:0,maxT:'',passed:0,failed:0,flaky:0,skipped:0});s.n++;s.ms+=r.ms;s[r.status]++;if(r.ms>s.max){s.max=r.ms;s.maxT=r.test}});
+const suites=Object.values(S).sort((a,b)=>b.ms-a.ms);const topMs=suites[0].ms;
+document.getElementById('suites').innerHTML='<tr><th>Suite</th><th>Total</th><th class="n">Tests</th><th class="n">Avg</th><th class="n">Fail / flaky</th></tr>'+suites.map(s=>`<tr><td><b>${s.name}</b></td><td><div class="bar" title="${s.ms} ms"><i style="width:${100*s.ms/topMs}%"></i></div><span class="sub" style="font-size:12px">${fmt(s.ms)}</span></td><td class="n">${s.n}</td><td class="n ${s.ms/s.n>150?'hot':''}">${Math.round(s.ms/s.n)} ms</td><td class="n">${s.failed?`<span class="hot">${s.failed}</span>`:'0'} / ${s.flaky}</td></tr>`).join('');
+const slow=[...rows].sort((a,b)=>b.ms-a.ms).slice(0,8);
+document.getElementById('slow').innerHTML='<tr><th>Test</th><th>Suite</th><th class="n">Time</th></tr>'+slow.map(r=>`<tr><td><code>${r.test}</code> ${r.status!=='passed'?pill(r.status):''}</td><td>${r.suite}</td><td class="n ${r.ms>=800?'hot':''}">${fmt(r.ms)}</td></tr>`).join('')+`<tr><td colspan="3" class="sub" style="border:0;font-size:12.5px"><b>search</b> is slowest: 29 tests take ${fmt(S.search.ms)}, and 2 tests (search_22, search_08) take a third of it.</td></tr>`;
+// failed
+const byT=Object.fromEntries(rows.map(r=>[r.test,r]));
+document.getElementById('failN').textContent=`(${fails.length})`;
+document.getElementById('failed').innerHTML='<tr><th>Test</th><th>Suite</th><th>Error</th><th class="n">Time</th></tr>'+fails.map(f=>{const first=f.trace.split('\n')[0];return `<tr><td><code>${f.test}</code></td><td>${f.suite}</td><td><div>${esc(f.error)}</div><div class="sub" style="font-size:12.5px">at <code>${esc(first.replace(/: in .*/,''))}</code> → <code>ValueError: code expired</code></div><details><summary>Stack trace</summary><pre>${esc(f.trace)}</pre></details></td><td class="n">${byT[f.test]?fmt(byT[f.test].ms):''}</td></tr>`}).join('');
+const fl=rows.filter(r=>r.status==='flaky');
+document.getElementById('flakyN').textContent=`(${fl.length})`;
+document.getElementById('flaky').innerHTML='<tr><th>Test</th><th>Suite</th><th class="n">Retries</th><th class="n">Time</th></tr>'+fl.map(r=>`<tr><td><code>${r.test}</code></td><td>${r.suite}</td><td class="n">${r.retries}</td><td class="n">${fmt(r.ms)}</td></tr>`).join('');
+// all
+const fs=document.getElementById('fs');suites.map(s=>s.name).sort().forEach(n=>fs.insertAdjacentHTML('beforeend',`<option>${n}</option>`));
+const order={failed:0,flaky:1,skipped:2,passed:3};
+function draw(){const q=document.getElementById('q').value.toLowerCase(),s=fs.value,st=document.getElementById('fst').value;
+ const v=rows.filter(r=>(!q||r.test.includes(q))&&(!s||r.suite===s)&&(!st||r.status===st)).sort((a,b)=>order[a.status]-order[b.status]||b.ms-a.ms);
+ document.getElementById('all').innerHTML=`<tr><th>Test</th><th>Suite</th><th>Status</th><th class="n">Time</th><th class="n">Retries</th></tr>`+v.map(r=>`<tr><td><code>${r.test}</code></td><td>${r.suite}</td><td>${pill(r.status)}</td><td class="n">${fmt(r.ms)}</td><td class="n">${r.retries}</td></tr>`).join('')+`<tr><td colspan="5" class="sub" style="border:0">${v.length} of ${rows.length} tests</td></tr>`;}
+['q','fs','fst'].forEach(id=>document.getElementById(id).addEventListener('input',draw));draw();
+</script>
+</body>
+</html>

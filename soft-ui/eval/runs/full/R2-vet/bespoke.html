@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vet: quiz-plan</title>
+<style>
+:root{
+  --bg:#f7f7f5;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--line:#e3e2dd;
+  --base:#8a8f98;--cand:#2f6fdb;--good:#1f8a4c;--bad:#c4412f;--warn:#b7791f;
+  --goodbg:#e7f4ec;--badbg:#fbeae7;--warnbg:#fbf2e1;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#9c9b95;--line:#33332f;
+  --base:#9aa0aa;--cand:#6b9cf0;--good:#4cc07c;--bad:#ef7a68;--warn:#e0a84a;
+  --goodbg:#18301f;--badbg:#3a1f1a;--warnbg:#352a15;}}
+:root[data-theme="dark"]{
+  --bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#9c9b95;--line:#33332f;
+  --base:#9aa0aa;--cand:#6b9cf0;--good:#4cc07c;--bad:#ef7a68;--warn:#e0a84a;
+  --goodbg:#18301f;--badbg:#3a1f1a;--warnbg:#352a15;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:15px;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 18px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.verdict{display:flex;gap:16px;align-items:flex-start;border-left:5px solid var(--good);margin-bottom:16px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:.04em}
+.b-good{background:var(--goodbg);color:var(--good)}.b-bad{background:var(--badbg);color:var(--bad)}.b-warn{background:var(--warnbg);color:var(--warn)}
+.verdict p{margin:6px 0 0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi .l{color:var(--muted);font-size:12px}
+.kpi .v{font-size:24px;font-weight:700;margin-top:2px}
+.kpi .d{font-size:12.5px;margin-top:2px}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-bottom:16px}
+.pos{color:var(--good)}.neg{color:var(--bad)}.zero{color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.reg td{background:var(--badbg)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:5px}
+svg text{fill:var(--muted);font-size:11px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0}
+.facts dt{color:var(--muted)}.facts dd{margin:0}
+.note{color:var(--muted);font-size:12.5px;margin-top:8px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.verdict{flex-direction:column}}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+  <h1>Vet scorecard: quiz-plan</h1>
+  <p class="sub">Baseline <span class="mono">main@b88a77a</span> vs candidate <span class="mono">declarative@4c1e0d2</span> · 12 prompts × 4 runs · 6 waves</p>
+
+  <section class="card verdict">
+    <div><span class="badge b-good">IMPROVED</span></div>
+    <div>
+      <strong>Recommendation: merge, after a look at R4 and R8.</strong>
+      <p>The candidate scores higher on quality (+0.052) and on stability (+0.032), and the scores settled from wave 3. Two items dropped: R4 (marks GATED only on request) by 0.06 and R8 (verification is concrete) by 0.04. Both drops are smaller than the run-to-run spread of those items, so they may be noise, but they are the two weakest items in both versions.</p>
+    </div>
+  </section>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>Score change by rubric item</h2>
+      <div class="legend"><span><i class="sw" style="background:var(--base)"></i>baseline</span><span><i class="sw" style="background:var(--cand)"></i>candidate</span><span>bar = ± spread</span></div>
+      <div id="dumbbell"></div>
+    </div>
+    <div class="card">
+      <h2>Did the scores settle?</h2>
+      <div class="legend"><span><i class="sw" style="background:var(--base)"></i>baseline</span><span><i class="sw" style="background:var(--cand)"></i>candidate</span></div>
+      <div id="wq"></div>
+      <div id="ws"></div>
+      <p class="note">Candidate quality moved less than 0.012 over waves 3 to 6. Stability still rises for both versions.</p>
+    </div>
+  </section>
+
+  <section class="grid2" style="grid-template-columns:2fr 1fr">
+    <div class="card scroll">
+      <h2>All rubric items</h2>
+      <table id="tbl"><thead><tr><th>Item</th><th>Rubric</th><th class="n">Baseline</th><th class="n">Candidate</th><th class="n">Δ</th><th class="n">Spread b → c</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Run facts</h2>
+      <dl class="facts">
+        <dt>Skill</dt><dd class="mono">quiz-plan</dd>
+        <dt>Baseline</dt><dd class="mono">main@b88a77a</dd>
+        <dt>Candidate</dt><dd class="mono">declarative@4c1e0d2</dd>
+        <dt>Prompts</dt><dd>12</dd>
+        <dt>Runs per prompt</dt><dd>4</dd>
+        <dt>Waves</dt><dd>6</dd>
+        <dt>Judge</dt><dd>rubric judge</dd>
+        <dt>Verdict</dt><dd><span class="badge b-good">IMPROVED</span></dd>
+        <dt>Regressions</dt><dd><span class="badge b-bad">R4</span> <span class="badge b-bad">R8</span></dd>
+      </dl>
+    </div>
+  </section>
+</main>
+<script>
+const scores=[
+ {item:"R1",rubric:"Asks one question at a time",b:0.92,c:0.95,bs:0.04,cs:0.03},
+ {item:"R2",rubric:"Writes a Steps section",b:0.98,c:0.98,bs:0.02,cs:0.02},
+ {item:"R3",rubric:"Each step has Touches",b:0.81,c:0.93,bs:0.1,cs:0.05},
+ {item:"R4",rubric:"Marks GATED only on request",b:0.77,c:0.71,bs:0.12,cs:0.15},
+ {item:"R5",rubric:"Red-team pass runs",b:0.88,c:0.9,bs:0.06,cs:0.06},
+ {item:"R6",rubric:"Parallel groups are correct",b:0.64,c:0.79,bs:0.18,cs:0.11},
+ {item:"R7",rubric:"Plan file name is right",b:1.0,c:1.0,bs:0,cs:0},
+ {item:"R8",rubric:"Verification is concrete",b:0.7,c:0.66,bs:0.14,cs:0.16}];
+const waves=`1,baseline,0.796,0.870
+1,candidate,0.825,0.892
+2,baseline,0.803,0.880
+2,candidate,0.822,0.904
+3,baseline,0.811,0.890
+3,candidate,0.861,0.916
+4,baseline,0.801,0.900
+4,candidate,0.865,0.928
+5,baseline,0.801,0.910
+5,candidate,0.863,0.940
+6,baseline,0.801,0.920
+6,candidate,0.853,0.952`.split("\n").map(l=>{const[w,v,q,s]=l.split(",");return{w:+w,v,q:+q,s:+s}});
+const regs=["R4","R8"];
+const f2=x=>x.toFixed(2),f3=x=>x.toFixed(3);
+const sgn=(d,p=2)=>(d>0?"+":d<0?"−":"±")+Math.abs(d).toFixed(p);
+const cls=d=>Math.abs(d)<1e-9?"zero":d>0?"pos":"neg";
+const NS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+
+// KPIs
+const last=v=>waves.filter(r=>r.v===v&&r.w===6)[0];
+const B=last("baseline"),C=last("candidate");
+const improved=scores.filter(s=>s.c-s.b>1e-9).length;
+document.getElementById("kpis").innerHTML=[
+ ["Quality (wave 6)",f3(C.q),`${sgn(C.q-B.q,3)} vs baseline ${f3(B.q)}`,cls(C.q-B.q)],
+ ["Stability (wave 6)",f3(C.s),`${sgn(C.s-B.s,3)} vs baseline ${f3(B.s)}`,cls(C.s-B.s)],
+ ["Items improved",`${improved} of 8`,"R3 +0.12, R6 +0.15 lead","pos"],
+ ["Items regressed",`${regs.length} of 8`,"R4 −0.06, R8 −0.04","neg"]
+].map(([l,v,d,c])=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="d ${c}">${d}</div></div>`).join("");
+
+// Dumbbell
+(function(){
+  const rows=[...scores].sort((a,b)=>(b.c-b.b)-(a.c-a.b));
+  const W=560,rh=34,top=8,H=top+rows.length*rh+24,L=228,R=W-58;
+  const x=v=>L+(v-0.4)/(1.05-0.4)*(R-L);
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",role:"img","aria-label":"Baseline and candidate score per rubric item"});
+  [0.4,0.5,0.6,0.7,0.8,0.9,1.0].forEach(t=>{el("line",{x1:x(t),x2:x(t),y1:top,y2:H-20,stroke:"var(--line)"},svg);const tx=el("text",{x:x(t),y:H-6,"text-anchor":"middle"},svg);tx.textContent=t.toFixed(1)});
+  rows.forEach((r,i)=>{
+    const y=top+i*rh+rh/2,d=r.c-r.b,reg=regs.includes(r.item);
+    if(reg)el("rect",{x:0,y:y-rh/2+2,width:W,height:rh-4,rx:5,fill:"var(--badbg)"},svg);
+    const lab=el("text",{x:6,y:y+4,style:"fill:var(--ink);font-weight:600"},svg);lab.textContent=r.item;
+    const lab2=el("text",{x:32,y:y+4},svg);lab2.textContent=r.rubric;
+    el("title",{},lab2).textContent=r.rubric;
+    // spreads
+    el("line",{x1:x(Math.max(.4,r.b-r.bs)),x2:x(Math.min(1.05,r.b+r.bs)),y1:y-5,y2:y-5,stroke:"var(--base)","stroke-width":2,opacity:.45},svg);
+    el("line",{x1:x(Math.max(.4,r.c-r.cs)),x2:x(Math.min(1.05,r.c+r.cs)),y1:y+5,y2:y+5,stroke:"var(--cand)","stroke-width":2,opacity:.45},svg);
+    el("line",{x1:x(r.b),x2:x(r.c),y1:y,y2:y,stroke:d>0?"var(--good)":d<0?"var(--bad)":"var(--line)","stroke-width":3},svg);
+    el("circle",{cx:x(r.b),cy:y,r:5.5,fill:"var(--base)"},svg);
+    el("circle",{cx:x(r.c),cy:y,r:5.5,fill:"var(--cand)"},svg);
+    const dt=el("text",{x:W-4,y:y+4,"text-anchor":"end",style:`font-weight:700;fill:var(--${d>1e-9?"good":d<-1e-9?"bad":"muted"})`},svg);dt.textContent=sgn(d);
+  });
+  document.getElementById("dumbbell").appendChild(svg);
+})();
+
+// Wave lines
+function lineChart(id,key,label,lo,hi){
+  const W=400,H=150,L=40,R=W-12,T=20,Bm=H-24;
+  const x=w=>L+(w-1)/5*(R-L),y=v=>Bm-(v-lo)/(hi-lo)*(Bm-T);
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",role:"img","aria-label":label+" per wave"});
+  const t=el("text",{x:0,y:12,style:"fill:var(--ink);font-weight:600;font-size:12px"},svg);t.textContent=label;
+  for(let k=0;k<=5;k++){const v=lo+(hi-lo)*k/5;el("line",{x1:L,x2:R,y1:y(v),y2:y(v),stroke:"var(--line)"},svg);const tx=el("text",{x:L-6,y:y(v)+4,"text-anchor":"end"},svg);tx.textContent=v.toFixed(2)}
+  for(let w=1;w<=6;w++){const tx=el("text",{x:x(w),y:H-6,"text-anchor":"middle"},svg);tx.textContent="w"+w}
+  [["baseline","var(--base)"],["candidate","var(--cand)"]].forEach(([v,c])=>{
+    const pts=waves.filter(r=>r.v===v);
+    el("polyline",{points:pts.map(p=>`${x(p.w)},${y(p[key])}`).join(" "),fill:"none",stroke:c,"stroke-width":2.5},svg);
+    pts.forEach(p=>{const cc=el("circle",{cx:x(p.w),cy:y(p[key]),r:3.5,fill:c},svg);el("title",{},cc).textContent=`${v} wave ${p.w}: ${f3(p[key])}`});
+    const lp=pts[pts.length-1];const tx=el("text",{x:x(6)-4,y:y(lp[key])+(v==="candidate"?-8:14),"text-anchor":"end",style:`fill:${c};font-weight:700`},svg);tx.textContent=f3(lp[key]);
+  });
+  document.getElementById(id).appendChild(svg);
+}
+lineChart("wq","q","Quality",0.78,0.88);
+lineChart("ws","s","Stability",0.86,0.96);
+
+// Table
+document.querySelector("#tbl tbody").innerHTML=scores.map(r=>{const d=r.c-r.b,reg=regs.includes(r.item);
+ return `<tr class="${reg?"reg":""}"><td><strong>${r.item}</strong>${reg?' <span class="badge b-bad">REG</span>':""}</td><td>${r.rubric}</td><td class="n">${f2(r.b)}</td><td class="n">${f2(r.c)}</td><td class="n ${cls(d)}"><strong>${sgn(d)}</strong></td><td class="n">${f2(r.bs)} → <span class="${r.cs<r.bs?"pos":r.cs>r.bs?"neg":"zero"}">${f2(r.cs)}</span></td></tr>`}).join("");
+</script>
+</body>
+</html>

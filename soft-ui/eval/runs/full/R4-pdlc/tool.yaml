@@ -1,0 +1,54 @@
+title: ledger · pdlc dashboard
+subtitle: Where each change is, what is stuck, and what waits for you
+data:
+  changes: ../../../reports/R4-pdlc/changes.json
+  questions: ../../../reports/R4-pdlc/questions.json
+  intents: ../../../reports/R4-pdlc/intents.json
+layout:
+- stats:
+  - {label: Changes in flight, value: 12}
+  - {label: Stuck, value: 1, tone: bad, sub: CH-0029 Attach receipts}
+  - {label: Questions for you, value: 3, tone: warn}
+  - {label: Changes owned by you, value: 3, tone: warn}
+  - {label: Intents, value: 3, sub: "2 building, 1 ready"}
+- callout:
+    text: "**Stuck:** CH-0029 (Attach receipts) has been in build for 5 days and waits on you. CH-0021 (Fix rounding in VAT) and CH-0024 (Audit log table) have been in verify for 8 to 9 days."
+    tone: bad
+- row:
+  - list:
+      data: questions
+      head: question
+      badges: [id, change, asked]
+    title: Questions that wait for you
+  - chart:
+      data: changes
+      kind: bar
+      x: intent
+      agg: count
+      series: stage
+      stack: true
+      horizontal: true
+    title: Intent progress (changes by stage)
+- board:
+    data: changes
+    by: stage
+    head: title
+    order: [planned, tests, build, verify, show, done]
+    badges: [id, intent, owner, days_in_stage]
+    tone: {stuck: {true: bad}}
+  title: Pipeline
+- row:
+  - table:
+      data: changes
+      cols: [id, title, stage, owner, days_in_stage, stuck]
+      sort: -days_in_stage
+      group: intent
+      filter: [stage, owner]
+      bar: [days_in_stage]
+      tone: {stuck: {true: bad}}
+    title: Changes by intent
+    w: 2
+  - table:
+      data: intents
+      cols: [id, title, status]
+    title: Intents

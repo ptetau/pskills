@@ -1,0 +1,23 @@
+title: Shopfront probe findings
+subtitle: 14 verified findings from /probe, for triage
+data:
+  f: ../../../reports/R1-probe/findings.json
+  run: ../../../reports/R1-probe/run.json
+layout:
+- kv: {data: run, keys: [app, commit, started, minutes, flows_probed, probes, raw_findings, verified], cols: 4}
+  title: Run
+- stats: {data: f, by: severity, total: Findings, order: [critical, high, medium, low]}
+- filter: {data: f, fields: [flow, severity, dimension]}
+- row:
+  - heatmap: {data: f, x: dimension, y: flow, worst: severity, totals: true, labels: true}
+    title: Where problems cluster (count, coloured by worst severity)
+  - chart: {kind: bar, data: f, x: flow, agg: count, series: severity, stack: true, sort: -y}
+    title: Findings by flow
+- table:
+    data: f
+    title: All findings
+    cols: [id, title, severity, flow, dimension, {key: file, fmt: code}]
+    sort: -severity
+    filter: [severity, flow, dimension]
+    search: true
+    expand: [repro, evidence]

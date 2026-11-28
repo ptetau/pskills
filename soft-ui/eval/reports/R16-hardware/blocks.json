@@ -1,0 +1,106 @@
+{
+ "blocks": [
+  {
+   "name": "Battery 2xAA",
+   "domain": "3V0",
+   "kind": "power"
+  },
+  {
+   "name": "Buck-boost 3V3",
+   "domain": "3V3",
+   "kind": "power"
+  },
+  {
+   "name": "MCU nRF52840",
+   "domain": "3V3",
+   "kind": "compute"
+  },
+  {
+   "name": "Reed switch",
+   "domain": "3V3",
+   "kind": "sensor"
+  },
+  {
+   "name": "PIR sensor",
+   "domain": "3V3",
+   "kind": "sensor"
+  },
+  {
+   "name": "Accelerometer",
+   "domain": "1V8",
+   "kind": "sensor"
+  },
+  {
+   "name": "LDO 1V8",
+   "domain": "1V8",
+   "kind": "power"
+  },
+  {
+   "name": "BLE antenna",
+   "domain": "RF",
+   "kind": "radio"
+  },
+  {
+   "name": "Buzzer",
+   "domain": "3V3",
+   "kind": "output"
+  },
+  {
+   "name": "Status LED",
+   "domain": "3V3",
+   "kind": "output"
+  }
+ ],
+ "links": [
+  {
+   "from": "Battery 2xAA",
+   "to": "Buck-boost 3V3",
+   "signal": "VBAT"
+  },
+  {
+   "from": "Buck-boost 3V3",
+   "to": "MCU nRF52840",
+   "signal": "3V3"
+  },
+  {
+   "from": "Buck-boost 3V3",
+   "to": "LDO 1V8",
+   "signal": "3V3"
+  },
+  {
+   "from": "LDO 1V8",
+   "to": "Accelerometer",
+   "signal": "1V8"
+  },
+  {
+   "from": "Reed switch",
+   "to": "MCU nRF52840",
+   "signal": "GPIO P0.11 (IRQ)"
+  },
+  {
+   "from": "PIR sensor",
+   "to": "MCU nRF52840",
+   "signal": "GPIO P0.12"
+  },
+  {
+   "from": "Accelerometer",
+   "to": "MCU nRF52840",
+   "signal": "I2C (level shifted)"
+  },
+  {
+   "from": "MCU nRF52840",
+   "to": "BLE antenna",
+   "signal": "RF 2.4 GHz"
+  },
+  {
+   "from": "MCU nRF52840",
+   "to": "Buzzer",
+   "signal": "PWM P0.20"
+  },
+  {
+   "from": "MCU nRF52840",
+   "to": "Status LED",
+   "signal": "GPIO P0.13"
+  }
+ ]
+}

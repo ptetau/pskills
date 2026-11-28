@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gateway 3.14 Latency</title>
+<style>
+:root{
+  --bg:#f7f7f5;--card:#fff;--ink:#1d1d1f;--muted:#6b6b70;--line:#e3e3e0;
+  --bad:#c2372b;--bad-bg:#fbe9e7;--warn:#b26a00;--warn-bg:#fdf1dc;--ok:#2e7d4f;--ok-bg:#e6f4ea;
+  --before:#9aa3ad;--after:#2f5fd0;--p50:#8fb0f0;--slo:#c2372b;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141416;--card:#1e1e21;--ink:#ececee;--muted:#9a9aa2;--line:#323236;
+  --bad:#ff7a6e;--bad-bg:#3a1f1d;--warn:#f0b354;--warn-bg:#382c17;--ok:#6fcf97;--ok-bg:#1b3325;
+  --before:#6c747d;--after:#6f97ff;--p50:#41609e;--slo:#ff7a6e;}}
+:root[data-theme="dark"]{
+  --bg:#141416;--card:#1e1e21;--ink:#ececee;--muted:#9a9aa2;--line:#323236;
+  --bad:#ff7a6e;--bad-bg:#3a1f1d;--warn:#f0b354;--warn-bg:#382c17;--ok:#6fcf97;--ok-bg:#1b3325;
+  --before:#6c747d;--after:#6f97ff;--p50:#41609e;--slo:#ff7a6e;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:24px;margin:0 0 4px}
+h2{font-size:16px;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 20px}
+.verdict{background:var(--bad-bg);border-left:4px solid var(--bad);padding:14px 18px;border-radius:8px;margin-bottom:20px}
+.verdict b{color:var(--bad)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.kpi,.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.kpi .lbl{color:var(--muted);font-size:13px}
+.kpi .val{font-size:26px;font-weight:650;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:13px;color:var(--muted)}
+.kpi .d .up{color:var(--bad);font-weight:600}
+.card{margin-bottom:20px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:6px}
+svg{display:block;width:100%;height:auto}
+svg text{fill:var(--muted);font-size:11px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+th:first-child,td:first-child{text-align:left}
+td.ep{font-family:ui-monospace,Menlo,monospace;font-size:13px}
+td.barc{width:34%;min-width:180px}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.tag.bad{background:var(--bad-bg);color:var(--bad)}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.ok{background:var(--ok-bg);color:var(--ok)}
+.pos{color:var(--bad);font-weight:600}
+.neg{color:var(--ok)}
+.tablewrap{overflow-x:auto}
+.note{font-size:13px;color:var(--muted);margin-top:10px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Gateway 3.14: latency regression</h1>
+  <p class="sub">Released 2026-11-20 · 10 days before vs 10 days after · SLO: p95 ≤ 300 ms</p>
+
+  <div class="verdict" id="verdict"></div>
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card">
+    <h2>Daily latency, before and after the release</h2>
+    <div class="legend">
+      <span><i style="background:var(--after)"></i>p95 (ms)</span>
+      <span><i style="background:var(--p50)"></i>p50</span>
+      <span><i style="background:var(--slo);height:0;border-top:2px dashed var(--slo)"></i>SLO 300 ms</span>
+      <span><i style="background:var(--muted);width:2px;height:12px"></i>Release 3.14</span>
+    </div>
+    <div id="chart"></div>
+  </section>
+
+  <section class="card">
+    <h2>p95 by endpoint, sorted by change</h2>
+    <div class="legend">
+      <span><i style="background:var(--before);height:8px"></i>Before</span>
+      <span><i style="background:var(--after);height:8px"></i>After</span>
+      <span><i style="background:var(--slo);width:2px;height:12px"></i>SLO 300 ms</span>
+    </div>
+    <div class="tablewrap"><table id="ep"></table></div>
+    <p class="note" id="epnote"></p>
+  </section>
+</main>
+<script>
+const daily=`2026-11-10,114,273,114000
+2026-11-11,112,256,85000
+2026-11-12,115,258,107000
+2026-11-13,120,262,83000
+2026-11-14,122,262,111000
+2026-11-15,115,246,111000
+2026-11-16,109,249,112000
+2026-11-17,117,283,98000
+2026-11-18,121,242,94000
+2026-11-19,116,262,120000
+2026-11-20,131,330,115000
+2026-11-21,132,328,102000
+2026-11-22,138,352,85000
+2026-11-23,125,347,103000
+2026-11-24,131,347,114000
+2026-11-25,127,340,120000
+2026-11-26,131,350,114000
+2026-11-27,125,333,118000
+2026-11-28,128,334,100000
+2026-11-29,123,338,108000`.split("\n").map(l=>{const[d,a,b,r]=l.split(",");return{d,p50:+a,p95:+b,req:+r}});
+const eps=[
+ ["GET /v1/products",180,190],["GET /v1/products/:id",95,98],["POST /v1/cart",240,410],
+ ["GET /v1/cart",120,125],["POST /v1/checkout",380,520],["GET /v1/orders",210,205],
+ ["POST /v1/login",150,152],["GET /v1/search",290,330]].map(([e,b,a])=>({e,b,a}));
+const SLO=300,REL="2026-11-20";
+const pre=daily.filter(x=>x.d<REL),post=daily.filter(x=>x.d>=REL);
+const avg=(a,k)=>a.reduce((s,x)=>s+x[k],0)/a.length;
+const f0=n=>Math.round(n), pct=(a,b)=>((b-a)/a*100);
+const p95b=avg(pre,"p95"),p95a=avg(post,"p95"),p50b=avg(pre,"p50"),p50a=avg(post,"p50");
+const daysOver=post.filter(x=>x.p95>SLO).length, preOver=pre.filter(x=>x.p95>SLO).length;
+eps.forEach(x=>{x.dd=x.a-x.b;x.dp=pct(x.b,x.a)});
+eps.sort((x,y)=>y.dd-x.dd);
+const epOver=eps.filter(x=>x.a>SLO);
+
+document.getElementById("verdict").innerHTML=
+ `<b>Yes, 3.14 made the gateway slower, and the SLO is broken.</b> Daily p95 rose from about ${f0(p95b)} ms to ${f0(p95a)} ms (+${f0(p95a-p95b)} ms, +${f0(pct(p95b,p95a))}%). It has been above 300 ms on all ${daysOver} days since the release, and on ${preOver} days before it. Most of the change comes from <b>POST /v1/cart</b> (+170 ms) and <b>POST /v1/checkout</b> (+140 ms). <b>GET /v1/search</b> moved from just under the SLO to over it.`;
+
+const kpi=(l,v,d)=>`<div class="kpi"><div class="lbl">${l}</div><div class="val">${v}</div><div class="d">${d}</div></div>`;
+document.getElementById("kpis").innerHTML=
+ kpi("Gateway p95, 10-day mean",`${f0(p95a)} ms`,`<span class="up">+${f0(p95a-p95b)} ms (+${f0(pct(p95b,p95a))}%)</span> from ${f0(p95b)} ms`)+
+ kpi("Gateway p50, 10-day mean",`${f0(p50a)} ms`,`<span class="up">+${f0(p50a-p50b)} ms (+${f0(pct(p50b,p50a))}%)</span> from ${f0(p50b)} ms`)+
+ kpi("Days over SLO since release",`${daysOver} / ${post.length}`,`Before: ${preOver} / ${pre.length}`)+
+ kpi("Endpoints over SLO",`${epOver.length} / ${eps.length}`,`Before: ${eps.filter(x=>x.b>SLO).length} / ${eps.length} (checkout)`);
+
+// line chart
+(function(){
+ const W=1040,H=300,m={l:44,r:16,t:14,b:30},iw=W-m.l-m.r,ih=H-m.t-m.b;
+ const ymax=400,x=i=>m.l+i*iw/(daily.length-1),y=v=>m.t+ih-v/ymax*ih;
+ let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily p50 and p95 latency">`;
+ const ri=daily.findIndex(d=>d.d===REL);
+ s+=`<rect x="${x(ri)-iw/(daily.length-1)/2}" y="${m.t}" width="${W-m.r-(x(ri)-iw/(daily.length-1)/2)}" height="${ih}" fill="var(--bad-bg)" opacity=".55"/>`;
+ for(let v=0;v<=ymax;v+=100){s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${m.l-8}" y="${y(v)+4}" text-anchor="end">${v}</text>`}
+  daily.forEach((d,i)=>{if(i%2===0)s+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${d.d.slice(5)}</text>`});
+ s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(SLO)}" y2="${y(SLO)}" stroke="var(--slo)" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+ s+=`<text x="${m.l+6}" y="${y(SLO)-6}" style="fill:var(--slo)">SLO 300 ms</text>`;
+ const rx=x(ri)-iw/(daily.length-1)/2;
+ s+=`<line x1="${rx}" x2="${rx}" y1="${m.t}" y2="${m.t+ih}" stroke="var(--muted)" stroke-width="1.5"/>`;
+ s+=`<text x="${rx+6}" y="${m.t+12}" style="fill:var(--ink);font-weight:600">Release 3.14 · 11-20</text>`;
+ const path=k=>daily.map((d,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(d[k]).toFixed(1)).join("");
+ s+=`<path d="${path("p50")}" fill="none" stroke="var(--p50)" stroke-width="2.5"/>`;
+ s+=`<path d="${path("p95")}" fill="none" stroke="var(--after)" stroke-width="2.5"/>`;
+ daily.forEach((d,i)=>{s+=`<circle cx="${x(i)}" cy="${y(d.p95)}" r="3.5" fill="${d.p95>SLO?'var(--bad)':'var(--after)'}"><title>${d.d}: p95 ${d.p95} ms, p50 ${d.p50} ms, ${d.req.toLocaleString()} requests</title></circle>`;
+  s+=`<circle cx="${x(i)}" cy="${y(d.p50)}" r="2.5" fill="var(--p50)"><title>${d.d}: p50 ${d.p50} ms</title></circle>`});
+ // mean annotations
+ const mx=(a,b)=>(x(a)+x(b))/2;
+ s+=`<line x1="${x(0)}" x2="${x(ri-1)}" y1="${y(p95b)}" y2="${y(p95b)}" stroke="var(--after)" stroke-dasharray="2 3" opacity=".6"/>`;
+ s+=`<text x="${mx(0,ri-1)}" y="${y(p95b)+34}" text-anchor="middle">mean p95 ${f0(p95b)} ms</text>`;
+ s+=`<line x1="${x(ri)}" x2="${x(daily.length-1)}" y1="${y(p95a)}" y2="${y(p95a)}" stroke="var(--after)" stroke-dasharray="2 3" opacity=".6"/>`;
+ s+=`<text x="${mx(ri,daily.length-1)}" y="${y(p95a)-24}" text-anchor="middle" style="fill:var(--bad);font-weight:600">mean p95 ${f0(p95a)} ms</text>`;
+ s+="</svg>";
+ document.getElementById("chart").innerHTML=s;
+})();
+
+// endpoint table
+(function(){
+ const max=560;
+ const bar=(b,a)=>{const W=260,H=30,sx=v=>v/max*W;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:30px">
+   <rect x="0" y="4" width="${sx(b)}" height="9" rx="2" fill="var(--before)"/>
+   <rect x="0" y="16" width="${sx(a)}" height="9" rx="2" fill="${a>SLO?'var(--bad)':'var(--after)'}"/>
+   <line x1="${sx(SLO)}" x2="${sx(SLO)}" y1="0" y2="${H}" stroke="var(--slo)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>`};
+ const status=x=>{
+  if(x.a>SLO&&x.b<=SLO)return`<span class="tag bad">Now breaks SLO</span>`;
+  if(x.a>SLO)return`<span class="tag bad">Over SLO, worse</span>`;
+  if(x.dp>=20)return`<span class="tag warn">Regressed</span>`;
+  return`<span class="tag ok">OK</span>`};
+ let h=`<thead><tr><th>Endpoint</th><th>Before</th><th>After</th><th>Change</th><th></th><th>Status</th></tr></thead><tbody>`;
+ eps.forEach(x=>{const c=x.dd>0?"pos":"neg";const big=x.dp>=10;
+  h+=`<tr><td class="ep">${x.e}</td><td>${x.b} ms</td><td><b>${x.a} ms</b></td>
+  <td class="${big?c:''}">${x.dd>0?"+":""}${x.dd} ms (${x.dd>0?"+":""}${x.dp.toFixed(0)}%)</td>
+  <td class="barc">${bar(x.b,x.a)}</td><td>${status(x)}</td></tr>`});
+ document.getElementById("ep").innerHTML=h+"</tbody>";
+ document.getElementById("epnote").textContent=
+  "Three endpoints regressed by 10% or more: POST /v1/cart, POST /v1/checkout and GET /v1/search. The other five moved by 5% or less. POST /v1/checkout was already over the SLO before 3.14.";
+})();
+</script>
+</body>
+</html>

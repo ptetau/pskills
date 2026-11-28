@@ -1,0 +1,111 @@
+{
+  "summary": "Build report pages bespoke and with soft-ui, then judge each pair blind for intent match",
+  "agentCount": 2,
+  "logs": [],
+  "result": [
+    {
+      "report": "R18-business",
+      "a": "tool",
+      "judge": {
+        "information": 4,
+        "components": 3,
+        "layout": 4,
+        "spirit": 4,
+        "verdict": "close",
+        "a_only": [
+          "Expenses this year as its own KPI ($565,493)",
+          "Revenue last year (Jan-Nov) as its own KPI card",
+          "Bank, savings, owed to us, and we owe shown as separate KPI cards",
+          "Folded month-by-month table with revenue, last year, growth, expenses, profit, and margin each month",
+          "Separate revenue-vs-expenses grouped bar chart"
+        ],
+        "b_only": [
+          "A KPI for total overdue invoices ($33,140, with $7,120 over 60 days)",
+          "Profit-each-month bar chart that marks thin-margin months and shows the average",
+          "Net position line ($161,880) in a cash-position ledger",
+          "Overdue total row and a call-to-action note on who to chase",
+          "Percentage shares and amounts for each expense category and each customer",
+          "Data-quality footnotes (categories and customers do not add up to the monthly totals, no 2025 expenses, Kereru bucket)",
+          "The note that costs are rising almost as fast as revenue"
+        ],
+        "better_for_reader": "B",
+        "why": "B puts revenue, last year, and expenses on one chart with profit shaded, and adds a profit-by-month view, so the owner sees the health and the cost trend at a glance. B also labels each bar with its amount and share, and flags the data gaps; A puts the per-month numbers in a folded table and charts \"Others\" as the largest customer bar."
+      },
+      "bespoke": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2b/R18-business/bespoke.html",
+        "reused": true,
+        "authored_chars": 23500,
+        "tool_calls": 12
+      },
+      "tool": {
+        "out_file": "/home/user/pskills/soft-ui/eval/runs/round2b/R18-business/tool.html",
+        "spec_chars": 4900,
+        "tool_calls": 11,
+        "render_runs": 4,
+        "fixed_lines": [
+          "fixed layout[2].section[1].table: dropped unknown prop \"collapse\". Next time: use only known props (table props: data, cols, sort, group, filter, search, limit, bar, tone, fmt, expand, top, order, labels, good, dense)"
+        ],
+        "error_lines": [],
+        "friction": "(1) The callout cannot reference computed values. A headline such as \"revenue $662k, up 12.6%, profit $96.7k, cash = 2.4 months of expenses, $33.1k overdue\" had to be computed outside the tool with a Python one-liner and typed in by hand. That conflicts with the rule \"do not type numbers that the data holds\". Chart notes such as \"10 of 11 months\" and \"77% of expenses\" have the same problem. A template form like {{sum monthly.revenue | money}} in callout and note would fix it. (2) The stat `vs` subline prints the raw column name (\"vs $587,954 revenue_last_year\"). I found no prop to label it. (3) The stats `cols` tiles use column names as labels, so I had to add a `rename` step on the dataset to get \"Owed to us\". A `labels` map on stats would be simpler. (4) Only a card can collapse. I first put `collapse` on a table, which was auto-fixed (dropped), and then wrapped the table in a card. (5) The data does not reconcile, and the page does not say so: expenses_by_category sums to $496.5k but the monthly expenses sum to $565.5k, and top_customers sums to $631.9k against $662.2k of revenue. A reconciliation or check step would help. (6) I wanted things I could not easily show: a derived cash-runway stat (cash / mean monthly expenses) computed from two datasets, a profit-margin line on the revenue/expense chart (a second axis or combo bar+line), and a mark on the ageing chart at the 60-day overdue boundary for a category axis. I also could not give stat tiles a sparkline from a data column (`spark` takes only a typed list). (7) Sorting by `days_overdue` puts the oldest debts first, which was right. My first title, \"latest first\", described that order wrongly; I fixed it to \"most late first\", which still reads awkwardly."
+      }
+    }
+  ],
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Build"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Judge"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "soft-ui:R18-business",
+      "phaseIndex": 1,
+      "phaseTitle": "Build",
+      "agentId": "a5755be782a2d2d46",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835628166,
+      "queuedAt": 1795835628162,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "/home/user/pskills/soft-ui/eval/runs/round2b/R18-business/t…",
+      "promptPreview": "Build a report page for a user with the soft-ui skill.\nRead /home/user/pskills/soft-ui/SKILL.md and follow it. The script is /home/user/pskills/soft-ui/scripts/softui.py.\nRead the brief at /home/user/pskills/soft-ui/eval/reports/R18-business/brief.md and the data files in that folder.\nWrite the spec to /home/user/pskills/soft-ui/eval/runs/round2b/R18-business/tool.yaml and render it to /home/user/…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835708407,
+      "tokens": 94863,
+      "toolCalls": 12,
+      "durationMs": 78115,
+      "resultPreview": "{\"out_file\":\"/home/user/pskills/soft-ui/eval/runs/round2b/R18-business/tool.html\",\"spec_chars\":4900,\"tool_calls\":11,\"render_runs\":4,\"fixed_lines\":[\"fixed layout[2].section[1].table: dropped unknown prop \\\"collapse\\\". Next time: use only known props (table props: data, cols, sort, group, filter, search, limit, bar, tone, fmt, expand, top, order, labels, good, dense)\"],\"error_lines\":[],\"friction\":\"(…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "judge:R18-business",
+      "phaseIndex": 2,
+      "phaseTitle": "Judge",
+      "agentId": "aaad97a7606a93332",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1795835708414,
+      "queuedAt": 1795835708410,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "close",
+      "promptPreview": "Compare two report pages that two people built from the same brief.\nBrief: /home/user/pskills/soft-ui/eval/reports/R18-business/brief.md (the data is in the same folder).\nPage A: /home/user/pskills/soft-ui/eval/runs/round2b/R18-business/tool.html\nPage B: /home/user/pskills/soft-ui/eval/runs/round2b/R18-business/bespoke.html\nTake a full-page screenshot of each: `node /home/user/pskills/soft-ui/eval…",
+      "promptFramed": true,
+      "lastProgressAt": 1795835732825,
+      "tokens": 80009,
+      "toolCalls": 6,
+      "durationMs": 24411,
+      "resultPreview": "{\"information\":4,\"components\":3,\"layout\":4,\"spirit\":4,\"verdict\":\"close\",\"a_only\":[\"Expenses this year as its own KPI ($565,493)\",\"Revenue last year (Jan-Nov) as its own KPI card\",\"Bank, savings, owed to us, and we owe shown as separate KPI cards\",\"Folded month-by-month table with revenue, last year, growth, expenses, profit, and margin each month\",\"Separate revenue-vs-expenses grouped bar chart\"],…"
+    }
+  ],
+  "totalTokens": 174872,
+  "totalToolCalls": 18
+}

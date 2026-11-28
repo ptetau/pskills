@@ -1,0 +1,270 @@
+{
+ "variables": [
+  {
+   "name": "Customers",
+   "type": "stock"
+  },
+  {
+   "name": "Signups",
+   "type": "flow"
+  },
+  {
+   "name": "Churn",
+   "type": "flow"
+  },
+  {
+   "name": "Word of mouth",
+   "type": "aux"
+  },
+  {
+   "name": "Support load",
+   "type": "aux"
+  },
+  {
+   "name": "Support quality",
+   "type": "aux"
+  },
+  {
+   "name": "Satisfaction",
+   "type": "aux"
+  },
+  {
+   "name": "Revenue",
+   "type": "aux"
+  },
+  {
+   "name": "Marketing spend",
+   "type": "aux"
+  },
+  {
+   "name": "Support staff",
+   "type": "stock"
+  }
+ ],
+ "links": [
+  {
+   "from": "Signups",
+   "to": "Customers",
+   "polarity": "+"
+  },
+  {
+   "from": "Churn",
+   "to": "Customers",
+   "polarity": "−"
+  },
+  {
+   "from": "Customers",
+   "to": "Word of mouth",
+   "polarity": "+"
+  },
+  {
+   "from": "Word of mouth",
+   "to": "Signups",
+   "polarity": "+"
+  },
+  {
+   "from": "Customers",
+   "to": "Support load",
+   "polarity": "+"
+  },
+  {
+   "from": "Support load",
+   "to": "Support quality",
+   "polarity": "−"
+  },
+  {
+   "from": "Support staff",
+   "to": "Support quality",
+   "polarity": "+"
+  },
+  {
+   "from": "Support quality",
+   "to": "Satisfaction",
+   "polarity": "+"
+  },
+  {
+   "from": "Satisfaction",
+   "to": "Churn",
+   "polarity": "−"
+  },
+  {
+   "from": "Satisfaction",
+   "to": "Word of mouth",
+   "polarity": "+"
+  },
+  {
+   "from": "Customers",
+   "to": "Revenue",
+   "polarity": "+"
+  },
+  {
+   "from": "Revenue",
+   "to": "Marketing spend",
+   "polarity": "+"
+  },
+  {
+   "from": "Marketing spend",
+   "to": "Signups",
+   "polarity": "+"
+  },
+  {
+   "from": "Revenue",
+   "to": "Support staff",
+   "polarity": "+"
+  }
+ ],
+ "loops": [
+  {
+   "id": "R1",
+   "type": "reinforcing",
+   "name": "Word of mouth",
+   "path": [
+    "Customers",
+    "Word of mouth",
+    "Signups",
+    "Customers"
+   ]
+  },
+  {
+   "id": "R2",
+   "type": "reinforcing",
+   "name": "Growth spend",
+   "path": [
+    "Customers",
+    "Revenue",
+    "Marketing spend",
+    "Signups",
+    "Customers"
+   ]
+  },
+  {
+   "id": "B1",
+   "type": "balancing",
+   "name": "Support strain",
+   "path": [
+    "Customers",
+    "Support load",
+    "Support quality",
+    "Satisfaction",
+    "Churn",
+    "Customers"
+   ]
+  },
+  {
+   "id": "R3",
+   "type": "reinforcing",
+   "name": "Hire to serve",
+   "path": [
+    "Customers",
+    "Revenue",
+    "Support staff",
+    "Support quality",
+    "Satisfaction",
+    "Churn",
+    "Customers"
+   ]
+  }
+ ],
+ "influence": [
+  {
+   "team": "Product",
+   "variable": "Signups",
+   "strength": 1
+  },
+  {
+   "team": "Product",
+   "variable": "Churn",
+   "strength": 2
+  },
+  {
+   "team": "Product",
+   "variable": "Satisfaction",
+   "strength": 3
+  },
+  {
+   "team": "Product",
+   "variable": "Support quality",
+   "strength": 0
+  },
+  {
+   "team": "Product",
+   "variable": "Revenue",
+   "strength": 0
+  },
+  {
+   "team": "Marketing",
+   "variable": "Signups",
+   "strength": 3
+  },
+  {
+   "team": "Marketing",
+   "variable": "Churn",
+   "strength": 0
+  },
+  {
+   "team": "Marketing",
+   "variable": "Satisfaction",
+   "strength": 0
+  },
+  {
+   "team": "Marketing",
+   "variable": "Support quality",
+   "strength": 0
+  },
+  {
+   "team": "Marketing",
+   "variable": "Revenue",
+   "strength": 1
+  },
+  {
+   "team": "Support",
+   "variable": "Signups",
+   "strength": 0
+  },
+  {
+   "team": "Support",
+   "variable": "Churn",
+   "strength": 2
+  },
+  {
+   "team": "Support",
+   "variable": "Satisfaction",
+   "strength": 2
+  },
+  {
+   "team": "Support",
+   "variable": "Support quality",
+   "strength": 3
+  },
+  {
+   "team": "Support",
+   "variable": "Revenue",
+   "strength": 0
+  },
+  {
+   "team": "Finance",
+   "variable": "Signups",
+   "strength": 0
+  },
+  {
+   "team": "Finance",
+   "variable": "Churn",
+   "strength": 0
+  },
+  {
+   "team": "Finance",
+   "variable": "Satisfaction",
+   "strength": 0
+  },
+  {
+   "team": "Finance",
+   "variable": "Support quality",
+   "strength": 0
+  },
+  {
+   "team": "Finance",
+   "variable": "Revenue",
+   "strength": 1
+  }
+ ]
+}

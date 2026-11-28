@@ -1,0 +1,32 @@
+title: Latency after release 3.14
+subtitle: The gateway is slower since 2026-11-20, and p95 breaks the 300 ms SLO
+meta: {release: "3.14", shipped: 2026-11-20, window: 10 days before vs 10 days after}
+data:
+  lat: ../../../reports/R8-latency/latency.csv
+  eps: {file: ../../../reports/R8-latency/endpoints.json, add: {delta: "p95_after - p95_before", pct: "round((p95_after/p95_before-1)*100, 1)", before: "p95_before", after: "p95_after"}}
+layout:
+- callout: {tone: bad, text: "**Yes, 3.14 made the gateway slower.** Daily p95 went from 259 ms to 340 ms (+31%) and is above the 300 ms SLO on every day since the release. Two endpoints cause most of it: **POST /v1/cart** (+71%) and **POST /v1/checkout** (+37%)."}
+- stats:
+  - {label: p95 after, value: 340, unit: ms, delta: +31%, good: down, tone: bad, sub: "before: 259 ms (10-day mean)"}
+  - {label: p50 after, value: 129, unit: ms, delta: +11%, good: down, tone: warn, sub: "before: 116 ms"}
+  - {label: Days over SLO, value: "10 / 10", tone: bad, sub: "since release; 0 / 10 before"}
+  - {label: Endpoints regressed, value: 3, tone: bad, sub: "of 8 with p95 +10% or more"}
+- row:
+  - chart: {kind: line, data: lat, x: date, y: [p50, p95], fmt: ms, mark: [{y: 300, label: SLO 300 ms}]}
+    title: Daily latency
+    note: Release 3.14 shipped on 2026-11-20
+    w: 2
+  - chart: {kind: bar, data: eps, x: endpoint, y: [before, after], horizontal: true, sort: -y, fmt: ms, mark: [{y: 300, label: SLO}]}
+    title: p95 by endpoint, before and after
+- table:
+    data: eps
+    title: Endpoints by change in p95
+    cols: [endpoint, {key: p95_before, label: p95 before}, {key: p95_after, label: p95 after}, {key: delta, label: change}, {key: pct, label: change %}]
+    sort: -pct
+    bar: [pct]
+    fmt: {p95_before: ms, p95_after: ms, delta: delta, pct: pct}
+- card:
+    title: Daily data
+    collapse: true
+    items:
+    - table: {data: lat, fmt: {p50: ms, p95: ms, requests: int}}

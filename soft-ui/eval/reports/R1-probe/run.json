@@ -1,0 +1,2 @@
+{"app": "Shopfront", "commit": "a91f3c2", "started": "2026-11-26T09:12:00Z", "minutes": 47,
+ "flows_probed": ["browse", "search", "cart", "checkout", "account"], "probes": 25, "raw_findings": 31, "verified": 14}

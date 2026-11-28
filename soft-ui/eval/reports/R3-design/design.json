@@ -1,0 +1,47 @@
+{
+ "components": [
+  {"name":"NotifyClient","kind":"Client","hides":"web and mobile entry points","volatility":"low"},
+  {"name":"NotificationManager","kind":"Manager","hides":"the send workflow and its order of steps","volatility":"high"},
+  {"name":"PreferenceEngine","kind":"Engine","hides":"rules for who gets what, when (quiet hours, opt-outs)","volatility":"high"},
+  {"name":"TemplateEngine","kind":"Engine","hides":"message wording and localisation","volatility":"medium"},
+  {"name":"ChannelAccess","kind":"ResourceAccess","hides":"email, SMS and push vendors","volatility":"high"},
+  {"name":"NotificationStore","kind":"ResourceAccess","hides":"storage of sent and queued notifications","volatility":"medium"},
+  {"name":"UserDirectory","kind":"ResourceAccess","hides":"where user contact details live","volatility":"low"},
+  {"name":"Clock","kind":"Utility","hides":"time and time zones","volatility":"low"}
+ ],
+ "calls": [
+  {"from":"NotifyClient","to":"NotificationManager","via":"send(event)"},
+  {"from":"NotificationManager","to":"PreferenceEngine","via":"decide(user, event)"},
+  {"from":"NotificationManager","to":"TemplateEngine","via":"render(event, locale)"},
+  {"from":"NotificationManager","to":"ChannelAccess","via":"deliver(msg)"},
+  {"from":"NotificationManager","to":"NotificationStore","via":"record(msg)"},
+  {"from":"PreferenceEngine","to":"UserDirectory","via":"prefs(user)"},
+  {"from":"PreferenceEngine","to":"Clock","via":"now(tz)"},
+  {"from":"TemplateEngine","to":"UserDirectory","via":"locale(user)"}
+ ],
+ "contracts": [
+  {"type":"Event","fields":["id: EventId","kind: EventKind","user: UserId","payload: Map"]},
+  {"type":"Decision","fields":["send: bool","channels: Channel[]","delay_until: Instant?","reason: string"]},
+  {"type":"Message","fields":["id: MessageId","channel: Channel","to: Address","body: string","event: EventId"]},
+  {"type":"DeliveryResult","fields":["message: MessageId","status: Sent|Failed|Retry","vendor_ref: string?"]}
+ ],
+ "core_use_case": {"name":"Send an order-shipped notification","steps":[
+  "NotifyClient sends event order.shipped to NotificationManager",
+  "NotificationManager asks PreferenceEngine to decide",
+  "PreferenceEngine reads prefs from UserDirectory and the local time from Clock",
+  "PreferenceEngine returns Decision(send, [email, push])",
+  "NotificationManager asks TemplateEngine to render each message",
+  "NotificationManager calls ChannelAccess.deliver for each message",
+  "ChannelAccess returns DeliveryResult",
+  "NotificationManager records each result in NotificationStore",
+  "NotificationManager returns a summary to NotifyClient"]},
+ "change_simulation": [
+  {"change":"Add WhatsApp as a channel","lands_in":"ChannelAccess","components_touched":1},
+  {"change":"Quiet hours per country","lands_in":"PreferenceEngine","components_touched":1},
+  {"change":"Batch daily digest instead of instant send","lands_in":"NotificationManager","components_touched":1},
+  {"change":"Swap SMS vendor","lands_in":"ChannelAccess","components_touched":1},
+  {"change":"Translate to Māori","lands_in":"TemplateEngine","components_touched":1},
+  {"change":"Move user prefs to a new service","lands_in":"UserDirectory","components_touched":1},
+  {"change":"Retry failed sends with backoff","lands_in":"NotificationManager","components_touched":2}
+ ]
+}

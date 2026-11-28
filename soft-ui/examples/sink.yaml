@@ -1,0 +1,82 @@
+title: Kitchen sink
+subtitle: Every component once, to test the renderer
+meta: {build: "#4120", branch: feat/cart}
+data:
+  findings: sink/findings.json
+  lat: |
+    day,p50,p95,errors
+    2026-11-01,120,300,2
+    2026-11-02,125,320,1
+    2026-11-03,140,410,6
+    2026-11-04,132,380,3
+  churn: |
+    [6]{file,week,lines}:
+    cart/price.py,W44,120
+    cart/price.py,W45,40
+    api/auth.py,W44,10
+    api/auth.py,W45,200
+    ui/login.tsx,W44,5
+    ui/login.tsx,W45,60
+  plan:
+    - {step: Schema, start: 2026-11-02, end: 2026-11-09, phase: Prep}
+    - {step: Backfill, start: 2026-11-09, end: 2026-11-20, phase: Move, status: late}
+    - {step: Cutover, start: 2026-11-20, days: 2, phase: Move}
+  deps:
+    - {src: web, dst: api}
+    - {src: api, dst: db, label: SQL}
+    - {src: api, dst: cache}
+layout:
+  - stats:
+    - {label: Findings, value: 5}
+    - {label: High, value: 2, tone: bad}
+    - {label: p95, value: 380, unit: ms, delta: +18%, good: down, spark: [300, 320, 410, 380]}
+  - filter: {data: findings, fields: [sev, flow]}
+  - row:
+    - table: {data: findings, cols: [id, title, sev, flow], sort: sev, group: flow}
+      title: Findings
+      w: 2
+    - bar: {data: findings, x: sev, agg: count, series: flow, stack: true}
+      title: By severity
+  - tabs:
+    - list: {data: findings, head: title, body: detail, badges: [sev, flow], code: repro, group: sev}
+      title: Detail
+    - line: {data: lat, x: day, y: [p50, p95], fmt: ms, mark: [{y: 350, label: SLO}]}
+      title: Latency
+    - heatmap: {data: churn, x: week, y: file, v: lines, labels: true}
+      title: Churn
+  - grid:
+    - gantt: {data: plan, task: step, start: start, end: end, days: days, group: phase, tone: {status: {late: bad}}, today: 2026-11-12}
+      title: Plan
+      span: 2
+    - board: {data: findings, by: sev, head: title, order: [high, medium, low], badges: [flow]}
+      title: Board
+      span: 2
+    - checklist: ["[x] Lock checks", "[x] Build", "[ ] Verify"]
+      title: Steps
+    - kv: {Owner: platform, Build: "#4120", Base: main}
+      title: Facts
+    - meter: {label: Coverage, value: 81, tone: good}
+    - callout: {tone: warn, text: "2 findings are **high**."}
+    - tree: {paths: [cart/price.py, cart/tests/test_price.py, api/auth.py, ui/login.tsx]}
+      title: Files
+    - timeline: {data: plan, at: start, text: step}
+      title: Events
+  - sidebar:
+      side:
+      - kv: {Files: 1, Added: 4, Removed: 2}
+      main:
+      - diff: {patch: sink/change.diff}
+  - row:
+    - diagram: |
+        sequenceDiagram
+          Client->>API: POST /cart
+          API-->>Client: 201
+      title: Sequence
+    - graph: {data: deps, from: src, to: dst, label: label}
+      title: Deps
+    - code: {src: sink/change.diff, lang: diff, mark: [12]}
+      title: Raw patch
+  - float:
+      title: Legend
+      items:
+      - text: "**high** = fix before release"

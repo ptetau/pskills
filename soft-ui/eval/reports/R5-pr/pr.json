@@ -1,0 +1,1 @@
+{"number":212,"title":"Apply discount codes at checkout","author":"mere-k","base":"main","head":"feat/discounts","commits":4,"verdict":"changes requested","summary":"The discount logic is sound, but the code is read from the session without validation, and rounding happens twice."}

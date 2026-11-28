@@ -1,0 +1,49 @@
+title: "Sensor node: block diagram and alarm logic"
+subtitle: Battery-powered door sensor, for the firmware engineer who joins the project
+data:
+  hw: ../../../reports/R16-hardware/blocks.json
+  links_a:
+    from: hw.links
+    join: {data: hw.blocks, on: [from, name], cols: [domain]}
+    rename: {domain: from_domain}
+  links:
+    from: links_a
+    join: {data: hw.blocks, on: [to, name], cols: [domain]}
+    add: {crossing: "'crosses domain' if from_domain != domain else 'same domain'"}
+    rename: {domain: to_domain}
+layout:
+- stats: {data: hw.blocks, by: domain, total: Blocks}
+  title: Blocks per voltage domain
+- section:
+    title: Block diagram
+    items:
+    - text: "Boxes group the blocks by voltage domain. Edge labels name the power rail, bus, or pin. Node colours show the kind of block: amber = power, blue = compute, green = sensor, red = output, grey = radio."
+    - graph:
+        data: hw.links
+        from: from
+        to: to
+        label: signal
+        dir: LR
+        nodes: hw.blocks
+        key: name
+        by: domain
+        tone: {kind: {power: warn, compute: info, sensor: good, radio: neutral, output: bad}}
+- section:
+    title: Alarm logic
+    items:
+    - truth:
+        inputs: [armed, door_open, motion, override]
+        outputs:
+          alarm: "armed and (door_open or motion) and not override"
+          chirp: "not armed and door_open"
+          led: "armed or override"
+        highlight: alarm
+      title: Full truth table (rows that raise the alarm are highlighted)
+- section:
+    title: Signals and buses
+    items:
+    - table:
+        data: links
+        cols: [from, to, signal, from_domain, to_domain, crossing]
+        group: crossing
+        tone: {crossing: {crosses domain: warn}}

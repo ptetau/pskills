@@ -1,0 +1,87 @@
+[
+ {
+  "id": "S1",
+  "step": "Freeze schema changes",
+  "phase": "Prep",
+  "start": "2026-12-01",
+  "end": "2026-12-03",
+  "owner": "Ana",
+  "after": []
+ },
+ {
+  "id": "S2",
+  "step": "Set up Postgres cluster",
+  "phase": "Prep",
+  "start": "2026-12-01",
+  "end": "2026-12-08",
+  "owner": "Ravi",
+  "after": []
+ },
+ {
+  "id": "S3",
+  "step": "Write dual-write layer",
+  "phase": "Build",
+  "start": "2026-12-04",
+  "end": "2026-12-15",
+  "owner": "Ana",
+  "after": [
+   "S1"
+  ]
+ },
+ {
+  "id": "S4",
+  "step": "Backfill history",
+  "phase": "Build",
+  "start": "2026-12-09",
+  "end": "2026-12-19",
+  "owner": "Ravi",
+  "after": [
+   "S2"
+  ]
+ },
+ {
+  "id": "S5",
+  "step": "Turn on dual writes",
+  "phase": "Cutover",
+  "start": "2026-12-16",
+  "end": "2026-12-17",
+  "owner": "Ana",
+  "after": [
+   "S3",
+   "S4"
+  ]
+ },
+ {
+  "id": "S6",
+  "step": "Verify row counts and checksums",
+  "phase": "Cutover",
+  "start": "2026-12-17",
+  "end": "2026-12-22",
+  "owner": "Mei",
+  "after": [
+   "S5"
+  ]
+ },
+ {
+  "id": "S7",
+  "step": "Switch reads to Postgres",
+  "phase": "Cutover",
+  "start": "2026-12-23",
+  "end": "2026-12-23",
+  "owner": "Ana",
+  "after": [
+   "S6"
+  ]
+ },
+ {
+  "id": "S8",
+  "step": "Remove MySQL writes",
+  "phase": "Clean-up",
+  "start": "2027-01-06",
+  "end": "2027-01-08",
+  "owner": "Ravi",
+  "after": [
+   "S7"
+  ]
+ }
+]

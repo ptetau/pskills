@@ -1,0 +1,44 @@
+[
+ {
+  "test": "test_auth_21",
+  "suite": "auth",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/auth/test_api.py:121: in test_auth_21\n    resp = client.post('/auth', json=payload)\napp/auth/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_cart_07",
+  "suite": "cart",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/cart/test_api.py:107: in test_cart_07\n    resp = client.post('/cart', json=payload)\napp/cart/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_cart_09",
+  "suite": "cart",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/cart/test_api.py:109: in test_cart_09\n    resp = client.post('/cart', json=payload)\napp/cart/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_cart_22",
+  "suite": "cart",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/cart/test_api.py:122: in test_cart_22\n    resp = client.post('/cart', json=payload)\napp/cart/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_cart_41",
+  "suite": "cart",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/cart/test_api.py:141: in test_cart_41\n    resp = client.post('/cart', json=payload)\napp/cart/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_catalog_34",
+  "suite": "catalog",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/catalog/test_api.py:134: in test_catalog_34\n    resp = client.post('/catalog', json=payload)\napp/catalog/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ },
+ {
+  "test": "test_orders_34",
+  "suite": "orders",
+  "error": "AssertionError: expected 200, got 500",
+  "trace": "tests/orders/test_api.py:134: in test_orders_34\n    resp = client.post('/orders', json=payload)\napp/orders/views.py:88: in create\n    total = price.total(cart)\napp/cart/price.py:52: in total\n    raise ValueError('code expired')\nValueError: code expired"
+ }
+]
