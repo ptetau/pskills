@@ -156,6 +156,7 @@ class Ctx:
         self.count = 0
         self.anon = 0
         self.told = set()
+        self.currency = None
 
     def fix(self, path, what, hint):
         # Give a long props list only the first time.
@@ -810,6 +811,9 @@ def build(ctx, comp, props_in, path):
                         + (f" Columns: {', '.join(ctx.data[ds]['cols'])}" if ds and spec["t"] == "col" else ""))
     check_cols(ctx, comp, node, ds, path)
     finish(ctx, comp, node, path)
+    if node["p"].pop("fold", False) and comp not in ("card",):
+        title = node["p"].pop("title", None) or comp
+        return {"c": "card", "p": {"title": title, "collapse": True}, "kids": [node]}
     return node
 
 
@@ -1202,6 +1206,11 @@ def finish(ctx, comp, node, path):
         p["pairs"] = pairs
     elif comp == "stats" and "data" not in p and isinstance(p.get("items"), dict):
         p["items"] = [{"label": k, "value": v} for k, v in p["items"].items()]
+    if comp == "stat" and p.get("data") in ctx.data and isinstance(p.get("spark"), list) and len(p["spark"]) == 1 \
+            and isinstance(p["spark"][0], str):
+        c = col_fix(ctx, p["data"], p["spark"][0], path, "spark")
+        if c:
+            p["spark"] = [r.get(c) for r in ctx.data[p["data"]]["rows"] if isinstance(r.get(c), (int, float))]
     if comp == "stats" and isinstance(p.get("items"), list):
         items = []
         for i, it in enumerate(p["items"]):
@@ -1598,6 +1607,98 @@ def normalise_page(ctx, spec):
     return page
 
 
+TEMPLATE_KEYS = {"md", "text", "note", "title", "sub", "label", "subtitle", "unit", "delta", "vs_label"}
+TPL = re.compile(r"\{\{(.+?)\}\}")
+AGG_REF = re.compile(r"\b(sum|mean|median|min|max|count|first|last)\s+([A-Za-z_][\w.#\-]*)")
+
+
+def py_fmt(v, f, currency=None):
+    """Format a template value the way the page formats it."""
+    if v is None:
+        return "—"
+    if isinstance(v, str):
+        return v
+    f = (f or "").strip()
+    if f == "money":
+        sym = {"NZD": "$", "USD": "$", "AUD": "$", "CAD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}.get(currency or "", currency or "$")
+        a = abs(v)
+        return ("−" if v < 0 else "") + sym + (f"{a:,.2f}" if a < 100 and a != int(a) else f"{a:,.0f}")
+    if f == "pct":
+        return f"{v:,.1f}%".replace(".0%", "%").replace("-", "−")
+    if f == "ratio":
+        return f"{v * 100:,.1f}%".replace(".0%", "%").replace("-", "−")
+    if f == "k":
+        return f"{v / 1e6:.1f}M" if abs(v) >= 1e6 else f"{v / 1e3:.1f}k" if abs(v) >= 1e3 else f"{v:g}"
+    if f == "int":
+        return f"{round(v):,}"
+    if f == "delta":
+        return ("+" if v > 0 else "−" if v < 0 else "") + f"{abs(v):,.2f}".rstrip("0").rstrip(".")
+    if f.startswith(".") and f[1:].isdigit():
+        return f"{v:,.{int(f[1:])}f}"
+    if isinstance(v, float) and not v.is_integer():
+        return f"{v:,.2f}".rstrip("0").rstrip(".")
+    return f"{int(v):,}" if isinstance(v, (int, float)) else str(v)
+
+
+def template(ctx, text, path):
+    """Fill {{ sum d.col - sum d.budget | money }} from the datasets."""
+    def one(m):
+        body = m.group(1)
+        expr, _, f = body.partition("|")
+        env = {}
+
+        def ref(mm):
+            agg, r = mm.group(1), mm.group(2)
+            ds = max((d for d in ctx.data if r == d or r.startswith(d + ".")), key=len, default=None)
+            if ds is None:
+                raise ValueError(f'no dataset in "{r}". Datasets: {", ".join(ctx.data)}')
+            col = r[len(ds) + 1:] if len(r) > len(ds) else None
+            rows = ctx.data[ds]["rows"]
+            if agg == "count":
+                v = len(rows) if not col else sum(1 for x in rows if x.get(col) not in (None, "", 0, False))
+            else:
+                if not col or col not in ctx.data[ds]["cols"]:
+                    raise ValueError(f'{agg} needs a column: {ds}.<col>. Columns: {", ".join(ctx.data[ds]["cols"])}')
+                vals = [x.get(col) for x in rows if x.get(col) is not None]
+                nums = [float(x) for x in vals if isinstance(x, (int, float)) and not isinstance(x, bool)]
+                if agg in ("first", "last"):
+                    v = (vals[0] if agg == "first" else vals[-1]) if vals else None
+                elif not nums:
+                    v = None
+                else:
+                    v = {"sum": sum(nums), "mean": sum(nums) / len(nums), "min": min(nums), "max": max(nums),
+                         "median": sorted(nums)[len(nums) // 2] if len(nums) % 2 else sum(sorted(nums)[len(nums) // 2 - 1:len(nums) // 2 + 1]) / 2}[agg]
+            name = f"_t{len(env)}"
+            env[name] = v
+            return name
+        try:
+            e = AGG_REF.sub(ref, expr.strip())
+            v = safe_eval(ast.parse(e, mode="eval"), env)
+        except (ValueError, SyntaxError, KeyError, TypeError, ZeroDivisionError) as ex:
+            ctx.err(path, f"{{{{{body.strip()}}}}}: {ex}. Form: {{{{ sum data.col - sum data.other | money }}}}")
+            return m.group(0)
+        return py_fmt(v, f, ctx.currency)
+    return TPL.sub(one, text)
+
+
+def fill_templates(ctx, nodes, path="layout"):
+    for i, n in enumerate(nodes):
+        here = f"{path}[{i}].{n['c']}"
+        for k, v in list(n["p"].items()):
+            if k in TEMPLATE_KEYS and isinstance(v, str) and "{{" in v:
+                n["p"][k] = template(ctx, v, here)
+            elif k == "items" and isinstance(v, list):
+                for it in v:
+                    if isinstance(it, dict):
+                        for k2, v2 in list(it.items()):
+                            if k2 in TEMPLATE_KEYS and isinstance(v2, str) and "{{" in v2:
+                                it[k2] = template(ctx, v2, here)
+        fill_templates(ctx, n["kids"], here)
+        for k in ("side", "main"):
+            if isinstance(n["p"].get(k), list):
+                fill_templates(ctx, n["p"][k], f"{here}.{k}")
+
+
 def compile_spec(spec, base):
     ctx = Ctx(base)
     page = normalise_page(ctx, spec)
@@ -1612,7 +1713,12 @@ def compile_spec(spec, base):
         if rows is not None:
             register(ctx, str(name), rows)
             register_parts(ctx, str(name), val)
+    ctx.currency = page.get("currency")
     layout = norm_nodes(ctx, page["layout"], "layout")
+    fill_templates(ctx, layout)
+    for k in ("title", "subtitle"):
+        if isinstance(page.get(k), str) and "{{" in page[k]:
+            page[k] = template(ctx, page[k], "page")
     width = page.get("width", "normal")
     if width not in R.PAGE_KEYS["width"]["enum"]:
         width = "normal"
@@ -1757,6 +1863,9 @@ SHAPE a dataset (steps run in this order; any subset):
   expressions: + - * / % **, == != < > <= >=, and or not, x if cond else y, round abs min max len str int float,
                bytes('1.2 GB'), num('$1,200'), lower, upper, split(x, '.', 0). `odd name` in backticks for any column.
   page key base: ../../data   makes every data path start from that folder.
+NUMBERS IN TEXT: any title, text, callout, note, label or sub can hold {{ AGG data.col [op ...] | fmt }},
+  AGG = sum mean median min max count first last; e.g. "Net {{ sum h.actual - sum h.budget | money }},
+  {{ count fails }} failed, {{ sum h.actual / sum h.budget - 1 | ratio }} off budget". fmt: money pct ratio int k delta .1
   single object (e.g. run.json): show it with kv: {data: d, keys: [app, commit]}
   per node:    where: {sev: [high, critical]}  or  where: {ms: ">500"} keeps matching rows
 Paths resolve from the folder of the spec."""
@@ -1802,6 +1911,7 @@ def catalog():
     for ln in EXAMPLE.strip("\n").split("\n"):
         print("  " + ln)
     print("`softui.py explain table chart` for props and examples; `explain data` for data forms and steps.")
+    print("numbers in text from data: \"Net {{ sum h.actual - sum h.budget | money }}\" (any text, callout, note, title)")
     print("render spec.yaml --shot page.png also saves a screenshot to look at; --artifact for the Artifact tool.")
 
 

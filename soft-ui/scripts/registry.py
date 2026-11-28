@@ -21,6 +21,7 @@ COMMON = {
     "h": P("int", doc="max height in px; content scrolls"),
     "id": P("str", doc="anchor id"),
     "where": P("map", doc="keep rows that match, e.g. {sev: high} or {sev: [high, med]}"),
+    "fold": P("bool", default=False, doc="put the node in a folded card titled by its title"),
 }
 
 C = {}
@@ -137,11 +138,12 @@ comp("stat", "summary", "one big number with label, delta and optional sparkline
       "delta": P("any", doc="change vs before, e.g. -12% or 3"),
       "good": P("enum", enum=["up", "down"], default="up", doc="which delta direction is good"),
       "tone": P("enum", enum=TONES), "sub": P("str", doc="small line under the value"),
-      "spark": P("list", doc="list of numbers for a sparkline"),
+      "spark": P("list", doc="list of numbers for a sparkline, or a column name (with data)"),
       "fmt": P("enum", enum=FMTS),
       "data": P("data", doc="compute value from data (follows filters)"),
       "of": P("any", doc="with data + where: true shows 'n / total rows' and a percent"),
       "vs": P("col", doc="with data: compare with the same agg of this column (e.g. budget); sets delta and tone"),
+      "vs_label": P("str", doc="name of the vs value in the sub line, e.g. budget"),
       "agg": P("enum", enum=["count", "sum", "mean", "min", "max"], default="count", doc="with data"),
       "col": P("col", doc="column to aggregate (with data)")},
      aliases=["kpi", "metric"], example="""
@@ -156,6 +158,7 @@ comp("stats", "summary", "row of stat tiles: a list, one tile per row of `data`,
       "total": P("str", doc="with by: add a first tile with this label and the total count"),
       "order": P("list", doc="with by: tile order"),
       "cols": P("cols", doc="with data: one tile per column, summed (e.g. [revenue, expenses, profit])"),
+      "labels": P("map", doc="{column: tile label}"),
       "fmt": P("enum", enum=FMTS)},
      short="items", aliases=["kpis", "metrics", "tiles-row"], data=True, example="""
 - stats:
@@ -179,7 +182,7 @@ comp("meter", "summary", "progress bar for value out of max",
 - meter: {label: Coverage, value: 81, max: 100, tone: good}
 """)
 
-comp("callout", "summary", "highlighted message box (markdown)",
+comp("callout", "summary", "highlighted message box (markdown); {{ sum d.col | money }} fills numbers from data",
      {"text": P("text", req=True), "tone": P("enum", enum=TONES, default="info")},
      short="text", aliases=["alert", "admonition", "banner", "warning", "info", "tip", "notice"], example="""
 - callout: {tone: warn, text: "3 tests are **flaky** and were retried."}
@@ -480,6 +483,7 @@ PAGE_KEYS = {
 
 # Common wrong prop names, mapped to the right one. Fuzzy matching catches the rest.
 PROP_ALIASES = {
+    "collapse": "fold", "collapsed": "fold", "folded": "fold", "folding": "fold",
     "columns": "cols", "fields": "cols", "group_by": "group", "groupby": "group", "groupBy": "group",
     "sort_by": "sort", "sortby": "sort", "orderby": "sort", "order_by": "sort",
     "type": "kind", "chart": "kind", "x_axis": "x", "xaxis": "x", "y_axis": "y", "yaxis": "y",

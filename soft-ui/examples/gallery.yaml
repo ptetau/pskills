@@ -2,6 +2,7 @@ title: Component gallery
 currency: NZD
 data:
   pnl: ../eval/reports/R11-pnl/pnl.csv
+  costs: {from: pnl, where: {section: [Cost of sales, Operating expenses]}}
   bridge: {from: pnl, add: {v: "actual if section == 'Revenue' else -actual"}, group: section, sum: [v]}
   st: ../eval/reports/R12-meta/studies.json
   out: ../eval/reports/R12-meta/outcomes.csv
@@ -13,6 +14,8 @@ data:
   crit: ../eval/reports/R17-options/criteria.json
   contracts: ../eval/reports/R3-design/design.json#contracts
 layout:
+- callout: "Net profit is {{ sum pnl.actual - 2 * sum costs.actual | money }} against a budget of {{ sum pnl.budget - 2 * sum costs.budget | money }}."
+  tone: warn
 - row:
   - statement: {data: pnl, section: section, line: account, values: [actual, budget], minus: [Cost of sales, Operating expenses], subtotals: [{label: Gross profit, after: Cost of sales}, {label: Net profit, after: Operating expenses}]}
     w: 2

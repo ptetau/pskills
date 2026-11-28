@@ -295,7 +295,7 @@
     if (p.vs) {
       const b = aggValue(p, p.vs), d = v - b, good = (p.good || "up") === "up";
       out.delta = (d >= 0 ? "+" : "-") + fmt(Math.abs(d), p.fmt) + (b ? ` (${(d >= 0 ? "+" : "-") + Math.abs((100 * d) / b).toFixed(1)}%)` : "");
-      out.sub = p.sub ?? `vs ${fmt(b, p.fmt)} ${p.vs}`;
+      out.sub = p.sub ?? `vs ${fmt(b, p.fmt)} ${p.vs_label || String(p.vs).replace(/_/g, " ")}`;
       if (!p.tone && d) out.tone = (d > 0) === good ? "good" : "bad";
     }
     return out;

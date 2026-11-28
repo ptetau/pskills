@@ -182,6 +182,23 @@ class RoundTwoFixes(unittest.TestCase):
         self.assertEqual(plan["data"]["c"]["rows"], [{"bank": 5, "savings": 7, "total": 12}])
 
 
+class Templates(unittest.TestCase):
+    def test_template_fills_numbers(self):
+        ctx, plan = compile_yaml("title: T\ncurrency: NZD\ndata:\n  h: [{a: 100, b: 80}, {a: 50, b: 90}]\n"
+                                 "layout:\n- callout: 'Net {{ sum h.a - sum h.b | money }} over {{ count h }} months, {{ sum h.a / sum h.b - 1 | ratio }}'")
+        self.assertEqual(ctx.errors, [])
+        self.assertEqual(plan["layout"][0]["p"]["text"], "Net −$20 over 2 months, −11.8%")
+
+    def test_template_error_lists_columns(self):
+        ctx, _ = compile_yaml("title: T\ndata: {h: [{a: 1}]}\nlayout:\n- text: '{{ sum h.zz }}'")
+        self.assertTrue(any("Columns: a" in e for e in ctx.errors))
+
+    def test_fold_wraps_in_card(self):
+        ctx, plan = compile_yaml("title: T\ndata: {h: [{a: 1}]}\nlayout:\n- table: h\n  title: Raw\n  collapse: true")
+        n = plan["layout"][0]
+        self.assertEqual((n["c"], n["p"]["title"], n["p"]["collapse"], n["kids"][0]["c"]), ("card", "Raw", True, "table"))
+
+
 class Repairs(unittest.TestCase):
     def test_typo_component_alias_and_prop(self):
         ctx, plan = compile_yaml("title: T\ndata: {d: [{Name: a, n: 1}]}\nlayout:\n"
@@ -254,7 +271,7 @@ class Cli(unittest.TestCase):
         self.assertEqual(rc, 0)
         for name in softui.R.C:
             self.assertIn(f"  {name}:", out)
-        self.assertLess(len(out), 5600)
+        self.assertLess(len(out), 5800)
 
     def test_explain_alias(self):
         rc, out = run("explain", "kanban")

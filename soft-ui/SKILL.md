@@ -33,9 +33,9 @@ spec. `scripts/softui.py` builds and checks the page.
 
 ## Constraints
 
-- Run `catalog` before the first spec of a session. Do not read the scripts.
+- Run `catalog` first. Do not read the scripts.
 - Give each data file by its path, and shape it with the dataset steps. Do not type
-  numbers that the data holds.
+  numbers that the data holds: write `{{ sum d.col | money }}` in text.
 - Open with a `callout` that answers the question of the reader. Give each chart a
   `note` that says what the chart shows.
 - When `render` prints "fixed", use the "Next time" form in later specs.
