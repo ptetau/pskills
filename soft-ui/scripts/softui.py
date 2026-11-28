@@ -1745,12 +1745,31 @@ def scan_libs(nodes, libs):
                 scan_libs(n["p"][k], libs)
 
 
-def emit(plan, libs, artifact):
+CACHE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "soft-ui"
+
+
+def lib_source(name):
+    """Return the text of a CDN library, from the cache or downloaded once into it."""
+    url = LIBS[name]
+    f = CACHE / url.split("/")[-1].replace(".min.js", f"-{name}.min.js")
+    if not f.exists():
+        CACHE.mkdir(parents=True, exist_ok=True)
+        r = subprocess.run(["curl", "-sfL", "--max-time", "60", "-o", str(f), url], capture_output=True)
+        if r.returncode or not f.exists() or f.stat().st_size < 1000:
+            f.unlink(missing_ok=True)
+            raise SpecError(f"--inline could not download {url}. Render without --inline, or try again with network")
+    return f.read_text(encoding="utf-8").replace("</script", "<\\/script")
+
+
+def emit(plan, libs, artifact, inline=False):
     css = (ASSETS / "style.css").read_text()
     js = (ASSETS / "runtime.js").read_text()
     data = json.dumps(plan, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     title = html.escape(plan["title"])
-    scripts = "".join(f'<script src="{LIBS[k]}"></script>\n' for k in ("chart", "hljs", "mermaid") if k in libs)
+    if inline:
+        scripts = "".join(f"<script>\n{lib_source(k)}\n</script>\n" for k in ("chart", "hljs", "mermaid") if k in libs)
+    else:
+        scripts = "".join(f'<script src="{LIBS[k]}"></script>\n' for k in ("chart", "hljs", "mermaid") if k in libs)
     body = (f'<title>{title}</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
             f'<link rel="preconnect" href="https://fonts.googleapis.com">\n'
             f'<link rel="stylesheet" href="{FONTS}">\n<style>\n{css}\n</style>\n'
@@ -1788,7 +1807,7 @@ def render(args):
     scan_libs(plan["layout"], libs)
     out = Path(args.out) if args.out else (
         Path(args.spec).with_suffix(".html") if args.spec != "-" else Path("soft-ui.html"))
-    page = emit(plan, libs, args.artifact)
+    page = emit(plan, libs, args.artifact, args.inline)
     kb = len(page.encode()) // 1024
     out.write_text(page, encoding="utf-8")
     print(f"wrote {out} · {ctx.count} nodes · {len(plan['data'])} datasets · {kb} KB"
@@ -1796,11 +1815,11 @@ def render(args):
     if kb > MAX_INLINE_KB:
         print(f"warning: the page is {kb} KB. Use `where`, fewer columns, or a smaller file.")
     if not args.fast or args.shot:
-        return browser_check(out, args.shot, args.artifact)
+        return browser_check(out, args.shot, args.artifact, args.inline)
     return 0
 
 
-def browser_check(path, shot=None, artifact=False):
+def browser_check(path, shot=None, artifact=False, offline=False):
     target = path
     if artifact:
         tmp = Path(tempfile.mkdtemp()) / "page.html"
@@ -1809,7 +1828,8 @@ def browser_check(path, shot=None, artifact=False):
                        '<meta name="viewport" content="width=device-width, initial-scale=1"></head><body>'
                        + body + "</body></html>")
         target = tmp
-    cmd = ["node", str(HERE / "verify.js"), str(Path(target).resolve())] + ([str(Path(shot).resolve())] if shot else [])
+    cmd = ["node", str(HERE / "verify.js"), str(Path(target).resolve())] + ([str(Path(shot).resolve())] if shot else []) \
+        + (["--offline"] if offline else [])
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     except (FileNotFoundError, subprocess.TimeoutExpired) as e:
@@ -1912,7 +1932,8 @@ def catalog():
         print("  " + ln)
     print("`softui.py explain table chart` for props and examples; `explain data` for data forms and steps.")
     print("numbers in text from data: \"Net {{ sum h.actual - sum h.budget | money }}\" (any text, callout, note, title)")
-    print("render spec.yaml --shot page.png also saves a screenshot to look at; --artifact for the Artifact tool.")
+    print("render spec.yaml --shot page.png also saves a screenshot to look at; --artifact for the Artifact tool;")
+    print("  --inline puts the libraries in the page, for a file sent to the user (viewers that block CDN scripts).")
 
 
 def explain(names):
@@ -1960,6 +1981,8 @@ def main(argv=None):
         r.add_argument("-o", "--out")
         r.add_argument("--artifact", action="store_true")
         r.add_argument("--fast", action="store_true", help="skip the browser check")
+        r.add_argument("--inline", action="store_true",
+                       help="put the chart, code and diagram libraries inside the page, for viewers that block CDN scripts")
         r.add_argument("--shot", help="also save a screenshot (PNG) of the page")
     a = ap.parse_args(argv)
     try:

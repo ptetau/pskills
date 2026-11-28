@@ -7,16 +7,18 @@ let chromium;
 try { ({ chromium } = require("playwright")); } catch (e) { console.log("check skipped: playwright is not installed"); process.exit(0); }
 
 (async () => {
-  const [file, shot] = process.argv.slice(2);
+  const args = process.argv.slice(2), offline = args.includes("--offline");
+  const [file, shot] = args.filter((a) => a !== "--offline");
   const url = "file://" + path.resolve(file);
   const browser = await chromium.launch();
   const problems = [];
   const warn = [];
   async function load(width, theme) {
     const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme: theme });
+    if (offline) await page.route(/^https?:\/\/(?!fonts\.)/, (r) => r.abort());   // an inline page must draw with no network
     page.on("pageerror", (e) => problems.push(`script error: ${String(e.message).split("\n")[0]}`));
     page.on("console", (m) => { if (m.type() === "error" && !/favicon|fonts\.g/.test(m.text())) warn.push(`console: ${m.text().slice(0, 200)}`); });
-    page.on("requestfailed", (r) => { if (!/fonts\.g/.test(r.url())) problems.push(`load failed: ${r.url()}`); });
+    page.on("requestfailed", (r) => { if (!/fonts\.g/.test(r.url()) && !offline) problems.push(`load failed: ${r.url()}`); });
     await page.goto(url, { waitUntil: "load", timeout: 45000 });
     try { await page.waitForFunction(() => window.__softui && window.__softui.done, null, { timeout: 30000 }); }
     catch (e) { problems.push("the page did not finish drawing in 30 s"); }
@@ -43,5 +45,5 @@ try { ({ chromium } = require("playwright")); } catch (e) { console.log("check s
   await browser.close();
   for (const w of [...new Set(warn)].slice(0, 5)) console.log("check warning " + w);
   if (problems.length) { [...new Set(problems)].forEach((p) => console.log("check error " + p)); process.exit(1); }
-  console.log(`check ok · ${st.nodes} nodes drawn · no render errors · fits a 400px phone` + (shot ? ` · screenshot ${shot}` : ""));
+  console.log(`check ok · ${st.nodes} nodes drawn · no render errors · fits a 400px phone` + (offline ? " · draws with no network" : "") + (shot ? ` · screenshot ${shot}` : ""));
 })().catch((e) => { console.log("check error " + e.message.split("\n")[0]); process.exit(1); });

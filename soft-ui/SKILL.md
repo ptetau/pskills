@@ -22,14 +22,15 @@ spec. `scripts/softui.py` builds and checks the page.
 
 ## Inputs
 
-- The data: rows, CSV text, or files that a different skill wrote.
+- The data: rows, CSV text, or files.
 - `python3 scripts/softui.py catalog`, then `explain NAME` or `explain data`.
 
 ## Outputs
 
 - `<name>.yaml`: the spec.
 - `<name>.html` and `<name>.png`, from `render <name>.yaml --shot <name>.png`. With the
-  Artifact tool, also add `--artifact` and publish the page.
+  Artifact tool, also add `--artifact` and publish the page. For a file that the user
+  opens, add `--inline`.
 
 ## Constraints
 
@@ -38,8 +39,8 @@ spec. `scripts/softui.py` builds and checks the page.
   numbers that the data holds: write `{{ sum d.col | money }}` in text.
 - Open with a `callout` that answers the question of the reader. Give each chart a
   `note` that says what the chart shows.
-- When `render` prints "fixed", use the "Next time" form in later specs.
-- When `render` prints "error", fix the spec. Do not write HTML by hand.
+- After a "fixed" line, use its "Next time" form. After an "error", fix the spec. Do
+  not write HTML by hand.
 
 ## Done when
 
