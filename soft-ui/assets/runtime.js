@@ -356,7 +356,15 @@
     if (p.sort) { sort.k = p.sort.replace(/^-/, ""); sort.d = p.sort.startsWith("-") ? -1 : 1; }
     const shut = new Set();
     let page = 0;
-    const wrap = h("div", { class: "su-tw" + (p.h ? " su-scroll" : "") + (cols.length > 4 && p.stack !== false ? " su-stack" : ""), style: p.h ? { maxHeight: p.h + "px" } : null });
+    const wrap = h("div", { class: "su-tw" + (p.h ? " su-scroll" : ""), style: p.h ? { maxHeight: p.h + "px" } : null });
+    // A table with more than four columns that does not fit its box becomes one card per row.
+    const fit = () => {
+      if (cols.length <= 4 || p.stack === false || !wrap.clientWidth) return;
+      wrap.classList.remove("su-stacked");
+      if (wrap.scrollWidth > wrap.clientWidth + 2) wrap.classList.add("su-stacked");
+    };
+    let lastW = 0;
+    new ResizeObserver(() => { const w = wrap.parentElement ? wrap.parentElement.clientWidth : 0; if (w !== lastW) { lastW = w; fit(); } }).observe(el);
     const ctl = localControls(p, ds, () => { page = 0; draw(); });
     if (ctl.el) el.append(ctl.el);
     el.append(wrap);
@@ -379,11 +387,12 @@
       const tr = h("tr"); for (const c of cols) tr.append(headCell(c, ds, p, sort, draw));
       t.append(h("thead", null, tr));
       const tb = h("tbody");
+      const short = new Set(cols.map((c) => c.key).filter((k) => rows.slice(0, 50).every((r) => r[k] == null || String(r[k]).length <= 12)));
       const rowEl = (r) => {
         const row = h("tr", expand.length ? { class: "su-xrow" + (open.has(r) ? " su-open" : ""), onclick: () => { open.has(r) ? open.delete(r) : open.add(r); draw(); } } : null);
         for (const c of cols) {
           const k = c.key, ty = typeOf(ds, k), f = c.fmt || (p.fmt && p.fmt[k]), v = r[k];
-          const td = h("td", { class: (ty === "num" ? "su-num" : "") + (ty === "date" ? " su-mono" : ""), "data-label": c.label || k });
+          const td = h("td", { class: (ty === "num" ? "su-num" : "") + (ty === "date" ? " su-mono" : "") + (short.has(k) ? " su-nw" : ""), "data-label": c.label || k });
           const tone = cellTone(p, ds, k, v);
           if (bars.has(k) && isNum(+v)) td.append(h("div", { class: "su-cellbar" }, h("i", { style: { width: Math.round((Math.abs(+v) / max[k]) * 80) + "px" } }), h("span", null, fmt(v, f, ty))));
           else if (tone) td.append(badge(fmt(v, f, ty), tone));
@@ -413,6 +422,7 @@
       if (!total) tb.append(h("tr", null, h("td", { colspan: cols.length, class: "su-empty" }, "No rows match.")));
       t.append(tb);
       wrap.replaceChildren(t);
+      requestAnimationFrame(fit);
       if (lim && total > lim) {
         const pages = Math.ceil(total / lim);
         wrap.append(h("div", { class: "su-pager" }, h("span", null, `${page * lim + 1}–${Math.min(total, page * lim + lim)} of ${total}`),
@@ -944,7 +954,8 @@
       const kind0 = p.kind || "bar";
       const m = kind0 === "hist" ? histModel(p) : chartModel(p), kind = kind0 === "hist" ? "bar" : kind0;
       const ser = seriesColors(p, kind === "donut" ? m.labels : m.sets.map((x) => x.label));
-      const fg = css("--muted"), grid = css("--line"), font = css("--font");
+      const fg = css("--muted"), grid = css("--line"), font = css("--chart-font") || css("--font");
+      const yRight = css("--su-yaxis") === "right", barR = css("--su-bar-radius") === "" ? 4 : parseFloat(css("--su-bar-radius")), axisC = css("--axis") || css("--line-2");
       const single = m.sets.length === 1;
       const sel = picked(p.data, p.x);
       const dim = (c, i) => (sel && !sel.has(String(m.keys[i])) ? c + "40" : c);
@@ -969,7 +980,7 @@
           return { ...base, data: fl, backgroundColor: cols, borderRadius: 3, borderSkipped: false, maxBarThickness: 46, borderWidth: 0 };
         }
         if (kind === "donut") return { ...base, backgroundColor: ser, borderColor: css("--surface"), borderWidth: 2 };
-        return { ...base, backgroundColor: sel ? m.keys.map((_, i) => dim(c, i)) : c, borderRadius: 4, borderSkipped: "start", maxBarThickness: 38, borderWidth: 0 };
+        return { ...base, backgroundColor: sel ? m.keys.map((_, i) => dim(c, i)) : c, borderRadius: barR, borderSkipped: "start", maxBarThickness: 38, borderWidth: 0 };
       });
       if (kind === "waterfall" && m.wlabels) m.labels = m.wlabels;
       if (kind === "scatter" && p.trend) {
@@ -983,7 +994,7 @@
       const narrow = box.clientWidth < 520;
       const tick = (v) => fmt(v, p.fmt);
       const vAxis = { beginAtZero: p.zero !== false, stacked: !!p.stack, grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: fg, padding: 6, callback: tick, maxTicksLimit: narrow ? 4 : 6, maxRotation: 0, font: { size: narrow ? 10.5 : 12 }, precision: m.sets.every((s) => s.data.every((v) => v == null || Number.isInteger(v))) ? 0 : undefined } };
-      const cAxis = { stacked: !!p.stack, grid: { display: false }, border: { color: css("--line-2") },
+      const cAxis = { stacked: !!p.stack, grid: { display: false }, border: { color: axisC, width: yRight ? 1.5 : 1 },
         ticks: { color: fg, autoSkip: true, autoSkipPadding: 6, maxRotation: narrow ? 50 : 40, minRotation: 0, font: { size: narrow ? 10.5 : 12 } } };
       const horiz = !!p.horizontal && kind === "bar";
       const cfg = {
@@ -993,16 +1004,16 @@
           responsive: true, maintainAspectRatio: false, animation: false, indexAxis: horiz ? "y" : "x",
           interaction: { mode: kind === "scatter" || kind === "donut" ? "nearest" : "index", intersect: kind === "scatter" || kind === "donut" },
           plugins: {
-            legend: { display: (!single || kind === "donut" || (kind === "scatter" && p.trend)) && kind !== "waterfall", position: kind === "donut" && !narrow ? "right" : "top", align: "start", labels: { color: fg, boxWidth: 10, boxHeight: 10, font: { family: font, size: narrow ? 11 : 12 }, padding: narrow ? 8 : 12 } },
+            legend: { display: (!single || kind === "donut" || (kind === "scatter" && p.trend)) && kind !== "waterfall", position: kind === "donut" && !narrow ? "right" : "top", align: "start", labels: { color: css("--fg") || fg, boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: barR ? 2 : 0, font: { family: font, size: narrow ? 11 : 12.5 }, padding: narrow ? 8 : 12 } },
             tooltip: { callbacks: { label: (c) => {
               if (kind === "waterfall") { const r = c.raw; return ` ${fmt(r[1] - r[0], p.fmt)} → ${fmt(r[1], p.fmt)}`; }
               if (kind === "scatter") return ` ${c.dataset.label}: (${fmt(c.parsed.x)}, ${fmt(c.parsed.y, p.fmt)})`;
               return ` ${c.dataset.label}: ${fmt(c.parsed && typeof c.parsed === "object" ? (horiz ? c.parsed.x : c.parsed.y) : c.parsed, p.fmt)}`; } } },
             suRef: { marks: arr(p.mark), bands: arr(p.band), keys: m.keys },
           },
-          scales: kind === "donut" ? {} : horiz ? { x: vAxis, y: cAxis }
+          scales: kind === "donut" ? {} : horiz ? { x: { ...vAxis, position: yRight ? "top" : "bottom" }, y: cAxis }
             : { x: kind === "scatter" ? { ...vAxis, type: "linear", beginAtZero: false, title: { display: true, text: (p.labels && p.labels[p.x]) || p.x, color: fg } } : { ...cAxis, ...(kind0 === "hist" ? { title: { display: true, text: p.x, color: fg } } : {}) },
-                y: kind === "scatter" ? { ...vAxis, beginAtZero: false, title: { display: true, text: (p.labels && p.labels[arr(p.y).map(colKey)[0]]) || arr(p.y).map(colKey)[0], color: fg } } : vAxis },
+                y: { ...(kind === "scatter" ? { ...vAxis, beginAtZero: false, title: { display: true, text: (p.labels && p.labels[arr(p.y).map(colKey)[0]]) || arr(p.y).map(colKey)[0], color: fg } } : vAxis), position: yRight ? "right" : "left" } },
           cutout: kind === "donut" ? "62%" : undefined,
           onClick: kind === "bar" || kind === "donut" ? (e, els) => { if (els.length) toggleFilter(p.data, [[p.x, m.keys[els[0].index]]]); } : undefined,
           onHover: kind === "bar" || kind === "donut" ? (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; } : undefined,
@@ -1204,7 +1215,8 @@
         actorBkg: css("--sunk"), actorBorder: css("--line-2"), actorTextColor: css("--fg"), signalColor: css("--fg"), signalTextColor: css("--fg"),
         labelBoxBkgColor: css("--sunk"), labelBoxBorderColor: css("--line-2"), labelTextColor: css("--fg"), loopTextColor: css("--fg"), activationBkgColor: css("--line"),
         edgeLabelBackground: css("--surface"), classText: css("--fg") },
-      flowchart: { htmlLabels: true, curve: "basis" }, sequence: { useMaxWidth: true }, themeCSS: ".node rect, .node polygon { rx: 6; ry: 6; }",
+      flowchart: { htmlLabels: true, curve: "basis" }, sequence: { useMaxWidth: true },
+      themeCSS: `.node rect, .node polygon { rx: ${css("--su-node-radius") || 6}; ry: ${css("--su-node-radius") || 6}; }`,
     });
     mermaidReady = true; return true;
   }

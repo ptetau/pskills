@@ -479,6 +479,8 @@ PAGE_KEYS = {
     "accent": P("str", doc="CSS colour for the accent"),
     "currency": P("str", doc="for fmt money: NZD, USD, EUR, GBP or a symbol"),
     "base": P("str", doc="folder that data paths start from, e.g. ../../reports/R1"),
+    "theme": P("enum", enum=["default", "quarterly"], default="default",
+               doc="look: default, or quarterly (editorial print on a black-and-grey workstation)"),
 }
 
 # Common wrong prop names, mapped to the right one. Fuzzy matching catches the rest.

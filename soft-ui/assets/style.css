@@ -365,22 +365,24 @@ table.su-ftable { border-collapse: collapse; width: 100%; font-size: 13px; }
 @media (max-width: 560px) { .su-head h1 { font-size: 22px; } .su-stat-v { font-size: 22px; } .su-float { position: static; width: auto; max-height: none; box-shadow: none; } }
 
 /* ---- responsive: each component answers to the width of its own box ---------------- */
-/* Tables with many columns become one card per row in a narrow box. */
-@container (max-width: 540px) {
-  .su-tw.su-stack { border: 0; background: none; overflow: visible; }
-  .su-stack table.su-table, .su-stack .su-table tbody, .su-stack .su-table tr, .su-stack .su-table td { display: block; width: 100%; }
-  .su-stack .su-table thead { display: none; }
-  .su-stack .su-table tbody tr:not(.su-grp):not(.su-xtr) { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; margin-bottom: 8px; }
-  .su-stack .su-table td { border: 0; padding: 3px 0; display: grid; grid-template-columns: minmax(84px, 40%) minmax(0, 1fr); gap: 10px; align-items: baseline; text-align: right; }
-  .su-stack .su-table td::before { content: attr(data-label); color: var(--muted); font-size: 12px; text-align: left; white-space: normal; }
-  .su-stack .su-table td:first-child { font-weight: 600; }
-  .su-stack .su-table tr.su-grp td, .su-stack .su-table tr.su-xtr td { display: block; text-align: left; border-radius: 6px; margin: 4px 0 8px; }
-  .su-stack .su-table tr.su-grp td::before, .su-stack .su-table tr.su-xtr td::before { content: none; }
-  .su-stack .su-cellbar { justify-content: flex-end; }
-  .su-stack .su-table td > * { justify-self: end; }
-  .su-stack .su-table tbody tr:hover td { background: none; }
-  .su-stack .su-pager { border: 0; }
-}
+/* A table with many columns that does not fit its box becomes one card per row (the runtime adds su-stacked). */
+.su-tw.su-stacked { border: 0; background: none; overflow: visible; }
+.su-stacked table.su-table, .su-stacked .su-table tbody, .su-stacked .su-table tr, .su-stacked .su-table td { display: block; width: 100%; }
+.su-stacked .su-table thead { display: none; }
+.su-stacked .su-table tbody { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 8px; }
+.su-stacked .su-table tbody tr.su-grp, .su-stacked .su-table tbody tr.su-xtr { grid-column: 1 / -1; }
+.su-stacked .su-table tbody tr:not(.su-grp):not(.su-xtr) { margin-bottom: 0; }
+.su-stacked .su-table tbody tr:not(.su-grp):not(.su-xtr) { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; margin-bottom: 8px; }
+.su-stacked .su-table td { border: 0; padding: 3px 0; display: grid; grid-template-columns: minmax(84px, 40%) minmax(0, 1fr); gap: 10px; align-items: baseline; text-align: right; white-space: normal; }
+.su-stacked .su-table td > * { justify-self: end; }
+.su-stacked .su-table td::before { content: attr(data-label); color: var(--muted); font-size: 12px; text-align: left; white-space: normal; }
+.su-stacked .su-table td:first-child { font-weight: 600; }
+.su-stacked .su-table tr.su-grp td, .su-stacked .su-table tr.su-xtr td { display: block; text-align: left; border-radius: 6px; margin: 4px 0 8px; }
+.su-stacked .su-table tr.su-grp td::before, .su-stacked .su-table tr.su-xtr td::before { content: none; }
+.su-stacked .su-cellbar { justify-content: flex-end; }
+.su-stacked .su-table tbody tr:hover td { background: none; }
+.su-stacked .su-pager { border: 0; }
+.su-table td.su-nw { white-space: nowrap; }
 /* Statement in a narrow box: the line name on its own row, the amounts in aligned columns below. */
 @container (max-width: 560px) {
   .su-stmt th:last-child:not(:first-child), .su-stmt td:last-child:not(:first-child) { display: none; }

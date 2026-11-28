@@ -47,6 +47,17 @@ A `filter` node filters every node on the same dataset. Tables and lists also ha
 own `group`, `filter`, and `search`. Values such as `high`, `fail`, and `done` get a tone
 colour with no extra props.
 
+## Look
+
+The page key `theme` sets the look, and `render --theme NAME` sets it from the command line.
+
+| Theme | Look |
+|---|---|
+| `default` | A calm engineering workbench: cool grey ground, rounded panels, and a sans face |
+| `quarterly` | An editorial print page that runs on a black-and-grey workstation. It has a serif masthead and standfirst, and a black title bar on each figure, with a red tag in the place of the close box. It also has bevelled grey tiles, square bars, condensed chart labels, and y labels on the right |
+
+Both themes have a light and a dark mode, and use colour-blind-safe series colours.
+
 ## Data
 
 Give each dataset in `data:` as one of these:

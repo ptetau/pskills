@@ -1,5 +1,6 @@
 title: soft-ui comparison
 subtitle: Blind judge, hand-built page vs soft-ui page, same brief and data
+theme: quarterly
 meta: [R1–R18, 21 comparisons, visual style not scored]
 data:
   full: {file: runs/full/results.csv, add: {round: "'1 · Dev reports'", ratio: "round(bespoke_chars / spec_chars, 1)", mean: "round((information + components + layout + spirit) / 4, 2)"}}

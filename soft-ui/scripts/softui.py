@@ -44,6 +44,13 @@ LIBS = {
 FONTS = ("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&"
          "family=IBM+Plex+Sans:wght@400;500;600;700&display=swap")
 MAX_INLINE_KB = 1500
+THEMES = {
+    "default": {"css": None, "fonts": FONTS},
+    "quarterly": {"css": "themes/quarterly.css",
+                  "fonts": ("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&"
+                            "family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&"
+                            "family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap")},
+}
 
 
 class SpecError(Exception):
@@ -1714,6 +1721,10 @@ def compile_spec(spec, base):
             register(ctx, str(name), rows)
             register_parts(ctx, str(name), val)
     ctx.currency = page.get("currency")
+    if page.get("theme") and page["theme"] not in THEMES:
+        m = close(str(page["theme"]), THEMES, 0.5)
+        ctx.fix("page", f'theme "{page["theme"]}" → "{m or "default"}"', f"theme: one of {', '.join(THEMES)}")
+        page["theme"] = m
     layout = norm_nodes(ctx, page["layout"], "layout")
     fill_templates(ctx, layout)
     for k in ("title", "subtitle"):
@@ -1729,6 +1740,7 @@ def compile_spec(spec, base):
         meta = [meta]
     plan = {"title": str(page["title"]), "subtitle": page.get("subtitle"), "meta": meta or [], "width": width,
             "accent": page.get("accent"), "currency": page.get("currency"), "layout": layout,
+            "theme": page.get("theme") if page.get("theme") in THEMES else None,
             "data": {k: {"rows": v["rows"], "cols": v["cols"], "types": v["types"]} for k, v in ctx.data.items()}}
     return ctx, plan
 
@@ -1762,7 +1774,10 @@ def lib_source(name):
 
 
 def emit(plan, libs, artifact, inline=False):
+    theme = THEMES.get(plan.get("theme") or "default", THEMES["default"])
     css = (ASSETS / "style.css").read_text()
+    if theme["css"]:
+        css += "\n" + (ASSETS / theme["css"]).read_text()
     js = (ASSETS / "runtime.js").read_text()
     data = json.dumps(plan, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     title = html.escape(plan["title"])
@@ -1772,8 +1787,8 @@ def emit(plan, libs, artifact, inline=False):
         scripts = "".join(f'<script src="{LIBS[k]}"></script>\n' for k in ("chart", "hljs", "mermaid") if k in libs)
     body = (f'<title>{title}</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
             f'<link rel="preconnect" href="https://fonts.googleapis.com">\n'
-            f'<link rel="stylesheet" href="{FONTS}">\n<style>\n{css}\n</style>\n'
-            f'<div id="su-root" class="su-page su-w-{plan["width"]}"></div>\n'
+            f'<link rel="stylesheet" href="{theme["fonts"]}">\n<style>\n{css}\n</style>\n'
+            f'<div id="su-root" class="su-page su-w-{plan["width"]}" data-su-theme="{plan.get("theme") or "default"}"></div>\n'
             f'<script type="application/json" id="su-plan">{data}</script>\n{scripts}<script>\n{js}\n</script>\n')
     if artifact:
         return body
@@ -1794,6 +1809,8 @@ def read_spec(arg):
 def render(args):
     text, base = read_spec(args.spec)
     spec = load_yaml(text)
+    if getattr(args, "theme", None) and isinstance(spec, dict):
+        spec["theme"] = args.theme
     ctx, plan = compile_spec(spec, base)
     for f in ctx.fixes:
         print(f)
@@ -1982,6 +1999,7 @@ def main(argv=None):
         r.add_argument("-o", "--out")
         r.add_argument("--artifact", action="store_true")
         r.add_argument("--fast", action="store_true", help="skip the browser check")
+        r.add_argument("--theme", help="look of the page: " + ", ".join(THEMES))
         r.add_argument("--inline", action="store_true",
                        help="put the chart, code and diagram libraries inside the page, for viewers that block CDN scripts")
         r.add_argument("--shot", help="also save a screenshot (PNG) of the page")
