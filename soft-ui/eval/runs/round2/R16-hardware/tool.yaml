@@ -2,7 +2,6 @@ title: "Sensor node: block diagram and alarm logic"
 subtitle: Battery-powered door sensor, for the firmware engineer who joins the project
 data:
   hw: ../../../reports/R16-hardware/blocks.json
-  logic: ../../../reports/R16-hardware/logic.json
   links_a:
     from: hw.links
     join: {data: hw.blocks, on: [from, name], cols: [domain]}
@@ -18,7 +17,7 @@ layout:
 - section:
     title: Block diagram
     items:
-    - text: "Boxes group the blocks by voltage domain. Edge labels name the power rail, bus, or pin."
+    - text: "Boxes group the blocks by voltage domain. Edge labels name the power rail, bus, or pin. Node colours show the kind of block: amber = power, blue = compute, green = sensor, red = output, grey = radio."
     - graph:
         data: hw.links
         from: from
@@ -32,10 +31,12 @@ layout:
 - section:
     title: Alarm logic
     items:
-    - kv: {"alarm": "armed and (door_open or motion) and not override", "chirp": "not armed and door_open", "led": "armed or override"}
-      title: Output expressions
     - truth:
-        data: logic
+        inputs: [armed, door_open, motion, override]
+        outputs:
+          alarm: "armed and (door_open or motion) and not override"
+          chirp: "not armed and door_open"
+          led: "armed or override"
         highlight: alarm
       title: Full truth table (rows that raise the alarm are highlighted)
 - section:

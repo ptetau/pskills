@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tīeke System Model</title>
+<style>
+:root{
+  --bg:#f6f5f1; --card:#ffffff; --ink:#1d1f22; --muted:#61656c; --faint:#9a9ea5; --line:#e3e1db;
+  --grid:#ecebe6; --base:#8a8f98; --dbl:#0f7b6c; --dbl-soft:#d6efe9;
+  --pos:#2b6cb0; --neg:#c2410c; --reinf:#b7791f; --bal:#6b46c1;
+  --stock:#1d1f22; --heat0:#f3f2ee; --heat3:#0f7b6c;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141518; --card:#1d1f23; --ink:#ececec; --muted:#a3a7ae; --faint:#6e737b; --line:#2e3036;
+    --grid:#26282d; --base:#9aa0a9; --dbl:#3cc4ae; --dbl-soft:#183a35;
+    --pos:#6ba6e8; --neg:#f08a5d; --reinf:#e0a84a; --bal:#a78bfa;
+    --stock:#ececec; --heat0:#24262b; --heat3:#3cc4ae;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141518; --card:#1d1f23; --ink:#ececec; --muted:#a3a7ae; --faint:#6e737b; --line:#2e3036;
+  --grid:#26282d; --base:#9aa0a9; --dbl:#3cc4ae; --dbl-soft:#183a35;
+  --pos:#6ba6e8; --neg:#f08a5d; --reinf:#e0a84a; --bal:#a78bfa;
+  --stock:#ececec; --heat0:#24262b; --heat3:#3cc4ae;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:28px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:19px;margin:0 0 4px}
+.lede{color:var(--muted);max-width:760px;margin:0 0 24px;font-size:16px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:20px}
+.sub{color:var(--muted);margin:0 0 16px;font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .l{font-size:12.5px;color:var(--muted)}
+.kpi .v{font-size:26px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .d{font-size:12.5px;color:var(--muted)}
+.kpi .v small{font-size:14px;color:var(--faint);font-weight:500}
+.up{color:var(--dbl)}
+.cld-grid{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start}
+svg text{fill:var(--ink)}
+.loops{display:flex;flex-direction:column;gap:8px}
+.loop{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;background:transparent;text-align:left;color:inherit;font:inherit;transition:border-color .15s, background .15s}
+.loop:hover,.loop.on{border-color:var(--ink)}
+.loop .t{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.tag{font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;color:#fff}
+.tag.R{background:var(--reinf)} .tag.B{background:var(--bal)}
+.loop .p{font-size:12.5px;color:var(--muted);margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px}
+.charts{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.chart h3{font-size:14px;margin:0 0 2px}
+.chart .note{font-size:12.5px;color:var(--muted);margin:0 0 6px;min-height:36px}
+.series-key{display:flex;gap:18px;font-size:13px;margin-bottom:14px;color:var(--muted)}
+.series-key i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.heat{width:100%;border-collapse:separate;border-spacing:4px;font-variant-numeric:tabular-nums}
+.heat th{font-size:12.5px;font-weight:600;color:var(--muted);text-align:center;padding:4px}
+.heat th.row{text-align:left;color:var(--ink);font-size:14px;width:110px}
+.heat td{height:46px;border-radius:8px;text-align:center;font-weight:650;font-size:15px}
+.heat td.lever{outline:2px solid var(--ink);outline-offset:-2px}
+.heat .tot{font-size:12.5px;color:var(--muted);font-weight:500;background:transparent}
+.heat-grid{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+.reads{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.reads li{font-size:13.5px;border-left:3px solid var(--line);padding-left:10px}
+.reads b{display:block;font-size:13.5px}
+.takeaways{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.takeaways div{font-size:14px}
+.takeaways b{display:block;margin-bottom:2px}
+.colhead{font-size:11px;color:var(--faint)}
+@media (max-width:860px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .cld-grid,.heat-grid{grid-template-columns:1fr}
+  .charts,.takeaways{grid-template-columns:1fr}
+  h1{font-size:23px}
+  .heat th{font-size:11px}
+  .heat th.row{width:auto;font-size:12.5px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Strategy offsite · System model</div>
+  <h1>Tīeke grows by word of mouth and spend, and support strain is the brake</h1>
+  <p class="lede">Doubling support staff ends month 24 with <b>3,405 customers instead of 2,002</b> (+70%). Better support cuts churn, so the growth loops compound faster. Support quality still falls in both scenarios, because load grows with the customer base.</p>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card">
+    <h2>1 · What drives what</h2>
+    <p class="sub">Arrows show cause and effect. <b style="color:var(--pos)">+</b> means the two move the same way; <b style="color:var(--neg)">−</b> means they move in opposite ways. Select a loop to trace its path.</p>
+    <div class="cld-grid">
+      <div><svg id="cld" viewBox="110 20 790 470" width="100%" role="img" aria-label="Causal loop diagram of the Tīeke model"></svg>
+        <div class="legend">
+          <span><svg width="22" height="14"><rect x="1" y="1" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>Stock (accumulates)</span>
+          <span><svg width="22" height="14"><rect x="1" y="1" width="20" height="12" rx="6" fill="none" stroke="currentColor" stroke-dasharray="3 2"/></svg>Flow (rate per month)</span>
+          <span><svg width="22" height="14"><rect x="1" y="1" width="20" height="12" rx="6" fill="none" stroke="currentColor" opacity=".35"/></svg>Auxiliary</span>
+          <span><span class="sw" style="background:var(--reinf)"></span>Reinforcing loop</span>
+          <span><span class="sw" style="background:var(--bal)"></span>Balancing loop</span>
+        </div>
+      </div>
+      <div class="loops" id="loops"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>2 · How the stocks move over 24 months</h2>
+    <p class="sub">Simulation of the two scenarios. Both start at month 0 from the same plan.</p>
+    <div class="series-key"><span><i style="background:var(--base)"></i>Baseline</span><span><i style="background:var(--dbl)"></i>Double support staff</span></div>
+    <div class="charts" id="charts"></div>
+  </section>
+
+  <section class="card">
+    <h2>3 · Where each team has the most effect</h2>
+    <p class="sub">Strength of each team's influence on a variable, from 0 (none) to 3 (strong). The outlined cell is each team's strongest lever.</p>
+    <div class="heat-grid">
+      <div style="overflow-x:auto"><table class="heat" id="heat"></table></div>
+      <ul class="reads" id="reads"></ul>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>For discussion</h2>
+    <div class="takeaways">
+      <div><b>Fund the balancing loop, not only growth.</b>Marketing pushes Signups, but B1 (support strain) turns new customers into load. More staff weakens that brake from month 0.</div>
+      <div><b>Staffing must keep pace.</b>Even with double staff, support quality slides from 0.94 to 0.57. R3 (hire to serve) only helps if revenue turns into hires as the base grows.</div>
+      <div><b>Churn is a shared lever.</b>Product and Support each act on Churn and Satisfaction. A joint target for those two teams covers the loop that slows growth.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+const MODEL = {"variables":[{"name":"Customers","type":"stock"},{"name":"Signups","type":"flow"},{"name":"Churn","type":"flow"},{"name":"Word of mouth","type":"aux"},{"name":"Support load","type":"aux"},{"name":"Support quality","type":"aux"},{"name":"Satisfaction","type":"aux"},{"name":"Revenue","type":"aux"},{"name":"Marketing spend","type":"aux"},{"name":"Support staff","type":"stock"}],
+"links":[{"from":"Signups","to":"Customers","polarity":"+"},{"from":"Churn","to":"Customers","polarity":"−"},{"from":"Customers","to":"Word of mouth","polarity":"+"},{"from":"Word of mouth","to":"Signups","polarity":"+"},{"from":"Customers","to":"Support load","polarity":"+"},{"from":"Support load","to":"Support quality","polarity":"−"},{"from":"Support staff","to":"Support quality","polarity":"+"},{"from":"Support quality","to":"Satisfaction","polarity":"+"},{"from":"Satisfaction","to":"Churn","polarity":"−"},{"from":"Satisfaction","to":"Word of mouth","polarity":"+"},{"from":"Customers","to":"Revenue","polarity":"+"},{"from":"Revenue","to":"Marketing spend","polarity":"+"},{"from":"Marketing spend","to":"Signups","polarity":"+"},{"from":"Revenue","to":"Support staff","polarity":"+"}],
+"loops":[{"id":"R1","type":"reinforcing","name":"Word of mouth","path":["Customers","Word of mouth","Signups","Customers"]},{"id":"R2","type":"reinforcing","name":"Growth spend","path":["Customers","Revenue","Marketing spend","Signups","Customers"]},{"id":"B1","type":"balancing","name":"Support strain","path":["Customers","Support load","Support quality","Satisfaction","Churn","Customers"]},{"id":"R3","type":"reinforcing","name":"Hire to serve","path":["Customers","Revenue","Support staff","Support quality","Satisfaction","Churn","Customers"]}],
+"influence":[{"team":"Product","variable":"Signups","strength":1},{"team":"Product","variable":"Churn","strength":2},{"team":"Product","variable":"Satisfaction","strength":3},{"team":"Product","variable":"Support quality","strength":0},{"team":"Product","variable":"Revenue","strength":0},{"team":"Marketing","variable":"Signups","strength":3},{"team":"Marketing","variable":"Churn","strength":0},{"team":"Marketing","variable":"Satisfaction","strength":0},{"team":"Marketing","variable":"Support quality","strength":0},{"team":"Marketing","variable":"Revenue","strength":1},{"team":"Support","variable":"Signups","strength":0},{"team":"Support","variable":"Churn","strength":2},{"team":"Support","variable":"Satisfaction","strength":2},{"team":"Support","variable":"Support quality","strength":3},{"team":"Support","variable":"Revenue","strength":0},{"team":"Finance","variable":"Signups","strength":0},{"team":"Finance","variable":"Churn","strength":0},{"team":"Finance","variable":"Satisfaction","strength":0},{"team":"Finance","variable":"Support quality","strength":0},{"team":"Finance","variable":"Revenue","strength":1}]};
+
+const CSV = `month,scenario,customers,support_quality,churn_rate
+0,baseline,1055,0.78,0.029
+1,baseline,1111,0.76,0.030
+2,baseline,1167,0.74,0.030
+3,baseline,1222,0.73,0.031
+4,baseline,1277,0.71,0.032
+5,baseline,1331,0.69,0.032
+6,baseline,1384,0.67,0.033
+7,baseline,1436,0.66,0.034
+8,baseline,1486,0.64,0.034
+9,baseline,1534,0.62,0.035
+10,baseline,1580,0.61,0.036
+11,baseline,1624,0.59,0.036
+12,baseline,1666,0.58,0.037
+13,baseline,1706,0.57,0.037
+14,baseline,1744,0.55,0.038
+15,baseline,1779,0.54,0.038
+16,baseline,1812,0.53,0.039
+17,baseline,1843,0.52,0.039
+18,baseline,1871,0.51,0.040
+19,baseline,1898,0.50,0.040
+20,baseline,1922,0.49,0.040
+21,baseline,1945,0.48,0.041
+22,baseline,1966,0.48,0.041
+23,baseline,1985,0.47,0.041
+24,baseline,2002,0.46,0.041
+0,double support staff,1068,0.94,0.022
+1,double support staff,1139,0.93,0.023
+2,double support staff,1215,0.92,0.023
+3,double support staff,1296,0.91,0.024
+4,double support staff,1381,0.89,0.024
+5,double support staff,1471,0.88,0.025
+6,double support staff,1566,0.86,0.025
+7,double support staff,1666,0.85,0.026
+8,double support staff,1772,0.83,0.027
+9,double support staff,1879,0.82,0.027
+10,double support staff,1989,0.80,0.028
+11,double support staff,2100,0.78,0.029
+12,double support staff,2211,0.76,0.029
+13,double support staff,2323,0.75,0.030
+14,double support staff,2434,0.73,0.031
+15,double support staff,2544,0.71,0.032
+16,double support staff,2652,0.69,0.032
+17,double support staff,2758,0.68,0.033
+18,double support staff,2861,0.66,0.034
+19,double support staff,2962,0.64,0.034
+20,double support staff,3058,0.63,0.035
+21,double support staff,3151,0.61,0.036
+22,double support staff,3240,0.60,0.036
+23,double support staff,3325,0.58,0.037
+24,double support staff,3405,0.57,0.037`;
+
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+const fmt=n=>n.toLocaleString('en-US');
+
+/* ---------- data ---------- */
+const rows=CSV.trim().split('\n').slice(1).map(l=>{const [m,s,c,q,r]=l.split(',');return {m:+m,s,c:+c,q:+q,r:+r};});
+const S={base:rows.filter(r=>r.s==='baseline'),dbl:rows.filter(r=>r.s==='double support staff')};
+const last=k=>S[k][S[k].length-1];
+
+/* ---------- KPIs ---------- */
+(function(){
+  const b=last('base'),d=last('dbl');
+  const k=[
+    ['Customers at month 24',fmt(d.c),`vs ${fmt(b.c)} baseline · <span class="up">+${fmt(d.c-b.c)} (+${Math.round((d.c/b.c-1)*100)}%)</span>`],
+    ['Monthly churn at month 24',(d.r*100).toFixed(1)+'%',`vs ${(b.r*100).toFixed(1)}% baseline`],
+    ['Support quality at month 24',d.q.toFixed(2)+' <small>/ 1</small>',`vs ${b.q.toFixed(2)} · starts at ${S.dbl[0].q.toFixed(2)}`],
+    ['Feedback loops','4',`3 reinforcing · 1 balancing`]
+  ];
+  document.getElementById('kpis').innerHTML=k.map(([l,v,d])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join('');
+})();
+
+/* ---------- causal loop diagram ---------- */
+const POS={
+  'Customers':[440,300],'Signups':[175,300],'Churn':[440,150],
+  'Word of mouth':[250,165],'Marketing spend':[230,450],'Revenue':[440,450],
+  'Support staff':[730,450],'Support load':[640,275],'Support quality':[810,280],'Satisfaction':[700,80]
+};
+const TYPE=Object.fromEntries(MODEL.variables.map(v=>[v.name,v.type]));
+const LOOPC={R1:[300,240],R2:[300,385],B1:[575,200],R3:[640,370]};
+// curvature per edge (positive bends right of travel direction)
+const BEND={'Satisfaction>Word of mouth':0.28,'Revenue>Support staff':0,'Support staff>Support quality':0,'Customers>Support load':0.1,'Satisfaction>Churn':0.1,'Word of mouth>Signups':0.12,'Customers>Word of mouth':0.1,'Marketing spend>Signups':0.1,'Revenue>Marketing spend':0,'Support quality>Satisfaction':0.15,'Support load>Support quality':0};
+const svg=document.getElementById('cld');
+const defs=el('defs',{},svg);
+[['pos','var(--pos)'],['neg','var(--neg)']].forEach(([id,c])=>{
+  const m=el('marker',{id:'ar-'+id,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);
+  el('path',{d:'M0,0 L10,5 L0,10 z',fill:c},m);
+});
+const size={};
+const gEdges=el('g',{},svg), gLoops=el('g',{},svg), gNodes=el('g',{},svg);
+// measure + draw nodes
+MODEL.variables.forEach(v=>{
+  const [x,y]=POS[v.name];
+  const g=el('g',{class:'node','data-n':v.name},gNodes);
+  const t=el('text',{x,y:y+5,'text-anchor':'middle','font-size':v.type==='stock'?16:14,'font-weight':v.type==='stock'?700:500},g);
+  t.textContent=v.name;
+  const w=(v.type==='stock'?9.6:7.8)*v.name.length+28, h=v.type==='stock'?40:32;
+  size[v.name]=[w,h];
+  const r=el('rect',{x:x-w/2,y:y-h/2,width:w,height:h,rx:v.type==='stock'?4:h/2,fill:'var(--card)',stroke:'var(--stock)'},g);
+  if(v.type==='stock'){r.setAttribute('stroke-width',2.2);}
+  else if(v.type==='flow'){r.setAttribute('stroke-dasharray','5 3');r.setAttribute('stroke-width',1.3);}
+  else {r.setAttribute('stroke-opacity',.3);}
+  g.insertBefore(r,t);
+});
+function clip(name,px,py){ // point on node boundary toward (px,py)
+  const [x,y]=POS[name],[w,h]=size[name];const dx=px-x,dy=py-y;
+  const s=Math.min((w/2+4)/Math.abs(dx||1e-6),(h/2+4)/Math.abs(dy||1e-6));
+  return [x+dx*s,y+dy*s];
+}
+const edgeEls={};
+MODEL.links.forEach(l=>{
+  const key=l.from+'>'+l.to;const b=BEND[key]??0.1;
+  const [x1,y1]=POS[l.from],[x2,y2]=POS[l.to];
+  const mx=(x1+x2)/2,my=(y1+y2)/2,dx=x2-x1,dy=y2-y1;
+  const cx=mx-dy*b,cy=my+dx*b;
+  const [sx,sy]=clip(l.from,cx,cy),[ex,ey]=clip(l.to,cx,cy);
+  const pos=l.polarity==='+';
+  const g=el('g',{class:'edge'},gEdges);
+  el('path',{d:`M${sx},${sy} Q${cx},${cy} ${ex},${ey}`,fill:'none',stroke:pos?'var(--pos)':'var(--neg)','stroke-width':1.8,'marker-end':`url(#ar-${pos?'pos':'neg'})`},g);
+  // polarity badge near the head (t=0.78 on the curve)
+  const t=0.75,qx=(1-t)*(1-t)*sx+2*(1-t)*t*cx+t*t*ex,qy=(1-t)*(1-t)*sy+2*(1-t)*t*cy+t*t*ey;
+  el('circle',{cx:qx,cy:qy,r:10,fill:'var(--card)',stroke:pos?'var(--pos)':'var(--neg)','stroke-width':1.2},g);
+  const tx=el('text',{x:qx,y:qy+4.5,'text-anchor':'middle','font-size':14,'font-weight':700},g);
+  tx.style.fill=pos?'var(--pos)':'var(--neg)';tx.textContent=pos?'+':'−';
+  edgeEls[key]=g;
+});
+// loop markers
+MODEL.loops.forEach(lp=>{
+  const [x,y]=LOOPC[lp.id];const R=lp.type==='reinforcing';
+  const g=el('g',{class:'lm','data-l':lp.id,style:'cursor:pointer'},gLoops);
+  el('path',{d:`M${x+15},${y-6} A16,16 0 1,${R?1:0} ${x+6},${y+15}`,fill:'none',stroke:R?'var(--reinf)':'var(--bal)','stroke-width':2},g);
+  el('circle',{cx:x,cy:y,r:13,fill:R?'var(--reinf)':'var(--bal)'},g);
+  const t=el('text',{x,y:y+4.5,'text-anchor':'middle','font-size':12,'font-weight':700},g);t.style.fill='#fff';t.textContent=lp.id;
+  g.addEventListener('click',()=>toggle(lp.id));
+});
+const DESC={
+  R1:'More customers tell more people, which brings more signups.',
+  R2:'More customers bring revenue, which funds marketing and more signups.',
+  B1:'More customers raise support load. Quality and satisfaction fall, so churn rises and slows growth.',
+  R3:'Revenue funds support staff. Better support lifts satisfaction and cuts churn.'
+};
+const loopsBox=document.getElementById('loops');
+MODEL.loops.forEach(lp=>{
+  const b=document.createElement('button');b.className='loop';b.dataset.l=lp.id;
+  const R=lp.type==='reinforcing';
+  b.innerHTML=`<div class="t"><span class="tag ${R?'R':'B'}">${lp.id}</span>${lp.name}<span style="margin-left:auto;font-size:11.5px;color:var(--faint);font-weight:500">${R?'reinforcing':'balancing'}</span></div><div class="p">${DESC[lp.id]}</div><div class="p" style="color:var(--faint)">${lp.path.join(' → ')}</div>`;
+  b.addEventListener('click',()=>toggle(lp.id));
+  loopsBox.appendChild(b);
+});
+let active=null;
+function toggle(id){
+  active=active===id?null:id;
+  const lp=MODEL.loops.find(l=>l.id===active);
+  const keys=new Set(), nodes=new Set();
+  if(lp){for(let i=0;i<lp.path.length-1;i++){keys.add(lp.path[i]+'>'+lp.path[i+1]);nodes.add(lp.path[i]);}}
+  for(const k in edgeEls) edgeEls[k].style.opacity=!lp||keys.has(k)?1:.12;
+  gNodes.querySelectorAll('.node').forEach(n=>n.style.opacity=!lp||nodes.has(n.dataset.n)?1:.3);
+  gLoops.querySelectorAll('.lm').forEach(n=>n.style.opacity=!lp||n.dataset.l===active?1:.25);
+  loopsBox.querySelectorAll('.loop').forEach(b=>b.classList.toggle('on',b.dataset.l===active));
+}
+
+/* ---------- small multiples ---------- */
+const CH=[
+  {k:'c',t:'Customers',f:v=>fmt(v),ax:v=>fmt(v),min:0,max:3600,ticks:[0,1000,2000,3000],
+   note:'Both curves bend as B1 takes hold. Double staff adds about 110 customers a month at its peak, baseline about 56.'},
+  {k:'q',t:'Support quality (0 to 1)',f:v=>v.toFixed(2),ax:v=>v.toFixed(1),min:0.4,max:1,ticks:[0.4,0.6,0.8,1],
+   note:'Quality falls in both. Double staff at month 24 (0.57) is about where baseline is at month 12.'},
+  {k:'r',t:'Monthly churn rate',f:v=>(v*100).toFixed(1)+'%',ax:v=>(v*100).toFixed(0)+'%',min:0.015,max:0.045,ticks:[0.02,0.03,0.04],
+   note:'Churn rises as quality drops. Double staff stays about 0.5 to 0.7 points lower all the way.'}
+];
+const chartsBox=document.getElementById('charts');
+CH.forEach(c=>{
+  const d=document.createElement('div');d.className='chart';
+  d.innerHTML=`<h3>${c.t}</h3><p class="note">${c.note}</p>`;
+  chartsBox.appendChild(d);
+  const W=330,H=220,L=42,Rm=58,T=10,B=26;
+  const s=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%'},d);
+  const X=m=>L+(W-L-Rm)*m/24, Y=v=>T+(H-T-B)*(1-(v-c.min)/(c.max-c.min));
+  c.ticks.forEach(t=>{
+    el('line',{x1:L,x2:W-Rm,y1:Y(t),y2:Y(t),stroke:'var(--grid)'},s);
+    const tx=el('text',{x:L-6,y:Y(t)+4,'text-anchor':'end','font-size':10.5},s);tx.style.fill='var(--faint)';tx.textContent=c.ax(t);
+  });
+  [0,6,12,18,24].forEach(m=>{const tx=el('text',{x:X(m),y:H-8,'text-anchor':'middle','font-size':10.5},s);tx.style.fill='var(--faint)';tx.textContent=m===0?'Month 0':m;});
+  if(c.k==='c'){ // shade the gap
+    const top=S.dbl.map(r=>`${X(r.m)},${Y(r.c)}`).join(' '),bot=S.base.slice().reverse().map(r=>`${X(r.m)},${Y(r.c)}`).join(' ');
+    el('polygon',{points:top+' '+bot,fill:'var(--dbl-soft)',opacity:.8},s);
+    const t=el('text',{x:X(17),y:Y(2050),'text-anchor':'middle','font-size':10.5,'font-weight':600},s);t.style.fill='var(--dbl)';t.textContent='+'+fmt(last('dbl').c-last('base').c);
+  }
+  [['base','var(--base)'],['dbl','var(--dbl)']].forEach(([k,col])=>{
+    el('polyline',{points:S[k].map(r=>`${X(r.m)},${Y(r[c.k])}`).join(' '),fill:'none',stroke:col,'stroke-width':2.4,'stroke-linejoin':'round'},s);
+    const e=last(k);el('circle',{cx:X(24),cy:Y(e[c.k]),r:3.5,fill:col},s);
+    const tx=el('text',{x:X(24)+7,y:Y(e[c.k])+4,'font-size':11.5,'font-weight':650},s);tx.style.fill=col;tx.textContent=c.f(e[c.k]);
+  });
+  // hover
+  const hl=el('line',{y1:T,y2:H-B,stroke:'var(--faint)','stroke-dasharray':'3 3',opacity:0},s);
+  const tip=el('text',{x:L+4,y:T+12,'font-size':11},s);tip.style.fill='var(--muted)';
+  const ov=el('rect',{x:L,y:T,width:W-L-Rm,height:H-T-B,fill:'transparent'},s);
+  ov.addEventListener('mousemove',ev=>{
+    const p=s.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;const q=p.matrixTransform(s.getScreenCTM().inverse());
+    const m=Math.max(0,Math.min(24,Math.round((q.x-L)/(W-L-Rm)*24)));
+    hl.setAttribute('x1',X(m));hl.setAttribute('x2',X(m));hl.setAttribute('opacity',1);
+    tip.textContent=`M${m}: ${c.f(S.base[m][c.k])} → ${c.f(S.dbl[m][c.k])}`;
+  });
+  ov.addEventListener('mouseleave',()=>{hl.setAttribute('opacity',0);tip.textContent='';});
+});
+
+/* ---------- influence heatmap ---------- */
+const teams=[...new Set(MODEL.influence.map(i=>i.team))];
+const vars=['Signups','Churn','Satisfaction','Support quality','Revenue'];
+const LOOPOF={'Signups':'R1 R2','Churn':'B1 R3','Satisfaction':'B1 R3','Support quality':'B1 R3','Revenue':'R2 R3'};
+const get=(t,v)=>MODEL.influence.find(i=>i.team===t&&i.variable===v).strength;
+const shade=s=>s===0?'var(--heat0)':`color-mix(in srgb, var(--heat3) ${[0,28,58,100][s]}%, var(--heat0))`;
+let h='<thead><tr><th></th>'+vars.map(v=>`<th>${v}<div class="colhead">${LOOPOF[v]}</div></th>`).join('')+'<th class="tot">Total</th></tr></thead><tbody>';
+teams.forEach(t=>{
+  const vals=vars.map(v=>get(t,v)),mx=Math.max(...vals);
+  h+=`<tr><th class="row">${t}</th>`+vals.map(s=>`<td class="${s===mx&&s>0?'lever':''}" style="background:${shade(s)};color:${s>=2?'#fff':'var(--ink)'}">${s===0?'<span style="color:var(--faint);font-weight:400">·</span>':s}</td>`).join('')+`<td class="tot">${vals.reduce((a,b)=>a+b,0)}</td></tr>`;
+});
+h+='<tr><th class="row" style="color:var(--muted);font-weight:500;font-size:12.5px">Total</th>'+vars.map(v=>`<td class="tot">${teams.reduce((a,t)=>a+get(t,v),0)}</td>`).join('')+'<td></td></tr></tbody>';
+document.getElementById('heat').innerHTML=h;
+document.getElementById('reads').innerHTML=[
+  ['Support owns the brake.','Support is the only team that moves Support quality (3), the variable where B1 and R3 meet.'],
+  ['Product moves satisfaction most.','Product scores 3 on Satisfaction and 2 on Churn, so it also acts on B1 and R3.'],
+  ['Marketing feeds the growth loops.','Marketing scores 3 on Signups, the entry point of R1 and R2.'],
+  ['Finance has a light touch.','Finance acts only on Revenue (1). Revenue is the source of hiring in R3.']
+].map(([b,t])=>`<li><b>${b}</b>${t}</li>`).join('');
+</script>
+</body>
+</html>

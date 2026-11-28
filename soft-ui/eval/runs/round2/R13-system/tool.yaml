@@ -3,7 +3,9 @@ subtitle: What drives what, how the stocks move over 24 months, and where each t
 meta: Strategy offsite · system-dynamics model · two scenarios
 data:
   m: ../../../reports/R13-system/model.json
-  sim: ../../../reports/R13-system/sim.csv
+  sim:
+    file: ../../../reports/R13-system/sim.csv
+    add: {quality_pct: "support_quality * 100", churn_pct: "churn_rate * 100"}
   base24:
     from: sim
     where: {month: 24, scenario: baseline}
@@ -12,13 +14,13 @@ data:
     from: sim
     where: {month: 24, scenario: double support staff}
     join: {data: base24, on: month, cols: [base_customers, base_quality]}
-    add: {lift: "customers / base_customers - 1", extra: "customers - base_customers"}
+    add: {lift: "(customers / base_customers - 1) * 100", extra: "customers - base_customers"}
 layout:
 - row:
-  - stat: {label: "Customers at month 24 · baseline", data: sim, where: {month: 24, scenario: baseline}, agg: sum, col: customers, fmt: int, sub: "from 1,055 at month 0"}
+  - stat: {label: "Customers at month 24 · baseline", data: sim, where: {month: 24, scenario: baseline}, agg: sum, col: customers, fmt: int}
   - stat: {label: "Customers at month 24 · double support", data: sim, where: {month: 24, scenario: double support staff}, agg: sum, col: customers, fmt: int, tone: good}
   - stat: {label: "Lift from double support staff", data: lift24, agg: max, col: lift, fmt: pct, tone: good}
-  - stat: {label: "Feedback loops", data: m.loops, agg: count, sub: "3 reinforcing · 1 balancing"}
+  - stat: {label: "Feedback loops", data: m.loops, agg: count}
 - callout:
     tone: info
     text: "Growth is driven by three **reinforcing** loops (R1 word of mouth, R2 growth spend, R3 hire to serve). One **balancing** loop (B1 support strain) holds it back: more customers raise support load, which lowers support quality and satisfaction, and so raises churn. Doubling support staff weakens B1, so the reinforcing loops run for longer."
@@ -26,9 +28,9 @@ layout:
     title: Structure of the system
     items:
     - row:
-      - graph: {data: m.links, from: from, to: to, sign: polarity, nodes: m.variables, key: name, by: type, dir: LR, tone: {type: {stock: info, flow: good, aux: neutral}}}
+      - graph: {data: m.links, from: from, to: to, sign: polarity, nodes: m.variables, key: name, dir: LR, tone: {type: {stock: info, flow: good, aux: neutral}}}
         title: Causal loop diagram
-        note: "Solid arrow = + (same direction). Dashed red arrow = − (opposite direction). Boxes group stocks, flows and auxiliaries."
+        note: "Solid arrow = + (same direction). Dashed red arrow = − (opposite direction). Blue = stock, green = flow, grey = auxiliary."
         w: 2
       - table: {data: m.loops, cols: [id, name, type, path], tone: {type: {reinforcing: info, balancing: warn}}}
         title: Feedback loops
@@ -38,9 +40,9 @@ layout:
     - chart: {kind: line, data: sim, x: month, y: customers, series: scenario, fmt: int}
       title: Customers
     - row:
-      - chart: {kind: line, data: sim, x: month, y: support_quality, series: scenario, fmt: pct}
+      - chart: {kind: line, data: sim, x: month, y: quality_pct, series: scenario, fmt: pct}
         title: Support quality
-      - chart: {kind: line, data: sim, x: month, y: churn_rate, series: scenario, fmt: pct}
+      - chart: {kind: line, data: sim, x: month, y: churn_pct, series: scenario, fmt: pct}
         title: Monthly churn rate
 - section:
     title: Where each team has the most effect
@@ -60,5 +62,5 @@ layout:
         title: Causal links
       - table: {data: m.variables, cols: [name, type], group: type}
         title: Variables
-      - table: {data: sim, cols: [month, scenario, customers, support_quality, churn_rate], filter: [scenario], fmt: {support_quality: pct, churn_rate: pct}}
+      - table: {data: sim, cols: [month, scenario, customers, quality_pct, churn_pct], filter: [scenario], fmt: {quality_pct: pct, churn_pct: pct}, labels: {quality_pct: support quality, churn_pct: churn rate}}
         title: Simulation rows
