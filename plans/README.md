@@ -10,6 +10,7 @@ To make a plan, run `/quiz-plan`. To run a plan, run `/quiz-plan-execute`.
 | Plan | State | What it does |
 |---|---|---|
 | [tidy-up.plan.md](tidy-up.plan.md) | open | Gives the repository one front door, one place for plans, and smaller eval and bench data. |
+| [soft-ui-80ms.plan.md](soft-ui-80ms.plan.md) | draft | Makes soft-ui build a page in 80 ms, and makes the page drawn in 80 ms on a desktop and on a phone. |
 
 ## Archive
 
