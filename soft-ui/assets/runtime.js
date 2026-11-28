@@ -80,22 +80,33 @@
   function cmp(a, b) {
     if (a == null && b == null) return 0; if (a == null) return 1; if (b == null) return -1;
     const ra = sevRank(a), rb = sevRank(b);
-    if (ra >= 0 && rb >= 0) return ra - rb;
+    if (ra >= 0 && rb >= 0) return rb - ra;   // as values: critical > high > medium > low
     if (isNum(a) && isNum(b)) return a - b;
     return String(a).localeCompare(String(b), undefined, { numeric: true });
   }
+  const allSev = (xs) => xs.length > 0 && xs.every((v) => v == null || v === "—" || sevRank(v) >= 0);
+  const worstFirst = (a, b) => -cmp(a, b);   // lists of groups, chips, series: worst first
   function autoTone(ds, col) {
     const d = DS[ds]; if (!d || !col) return false;
     const vals = new Set(d.rows.map((r) => r[col]).filter((v) => v != null).map((v) => String(v).toLowerCase()));
     return vals.size > 0 && vals.size <= 12 && [...vals].every((v) => v in AUTO);
   }
+  function mapTone(m, v) {
+    // Exact value first, then thresholds such as ">300", ">=0.1", "<0".
+    if (!m || v == null) return null;
+    const t = m[v] ?? m[String(v)] ?? m[String(v).toLowerCase()];
+    if (t) return normTone(t);
+    const n = +v;
+    for (const k in m) {
+      const mm = String(k).match(/^\s*(>=|<=|>|<|!=)\s*(-?[\d.]+)\s*$/);
+      if (mm && isFinite(n) && ({ ">=": n >= +mm[2], "<=": n <= +mm[2], ">": n > +mm[2], "<": n < +mm[2], "!=": n !== +mm[2] })[mm[1]]) return normTone(m[k]);
+    }
+    return null;
+  }
   function toneOf(p, row, ds, cols) {
     if (p.tone && typeof p.tone === "object") for (const c in p.tone) {
       const m = p.tone[c], v = row[c];
-      if (m && typeof m === "object" && v != null) {
-        const t = m[v] ?? m[String(v)] ?? m[String(v).toLowerCase()];
-        if (t) return normTone(t);
-      }
+      if (m && typeof m === "object" && v != null) { const t = mapTone(m, v); if (t) return t; }
     }
     for (const c of arr(cols)) if (autoTone(ds, c)) return normTone(AUTO[String(row[c]).toLowerCase()]);
     return null;
@@ -103,7 +114,7 @@
   function cellTone(p, ds, col, v) {
     if (v == null) return null;
     const m = p.tone && p.tone[col];
-    if (m) return normTone(m[v] ?? m[String(v)] ?? m[String(v).toLowerCase()]);
+    if (m) return mapTone(m, v);
     if (autoTone(ds, col)) return normTone(AUTO[String(v).toLowerCase()]);
     return null;
   }
@@ -121,6 +132,10 @@
       case "ms": return isNaN(n) ? String(v) : n >= 1000 ? (n / 1000).toLocaleString("en", { maximumFractionDigits: 2 }) + " s" : Math.round(n * 10) / 10 + " ms";
       case "s": return isNaN(n) ? String(v) : n >= 120 ? (n / 60).toFixed(1) + " min" : n.toLocaleString("en", { maximumFractionDigits: 2 }) + " s";
       case "bytes": { if (isNaN(n)) return String(v); const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0, x = n; while (x >= 1024 && i < 4) { x /= 1024; i++; } return x.toLocaleString("en", { maximumFractionDigits: 1 }) + " " + u[i]; }
+      case "money": { if (isNaN(n)) return String(v); const a = Math.abs(n), cur = PLAN.currency || "$";
+        const sym = /^[A-Z]{3}$/.test(cur) ? ({ NZD: "$", USD: "$", AUD: "$", CAD: "$", EUR: "€", GBP: "£", JPY: "¥" }[cur] || cur + " ") : cur;
+        return (n < 0 ? "−" : "") + sym + a.toLocaleString("en", { minimumFractionDigits: a < 100 && !Number.isInteger(a) ? 2 : 0, maximumFractionDigits: a < 100 ? 2 : 0 }); }
+      case "k": return isNaN(n) ? String(v) : Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(1) + "M" : Math.abs(n) >= 1e3 ? (n / 1e3).toFixed(1) + "k" : String(n);
       case "date": return String(v).slice(0, 10);
       case "time": return String(v).replace("T", " ").slice(0, 16);
       case "delta": return isNaN(n) ? String(v) : (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toLocaleString("en", { maximumFractionDigits: 2 });
@@ -131,12 +146,14 @@
         return String(v);
     }
   }
-  function fmtCell(v, f, t) {
+  function fmtCell(v, f, t, good) {
     if (f === "md") return h("span", { class: "su-md", html: inline(v ?? "") });
     if (f === "code") return v == null ? "" : h("code", { class: "su-code-inline" }, String(v));
     if (f === "delta") {
       const s = fmt(v, f, t); const n = parseFloat(String(v));
-      return h("span", { style: { color: n > 0 ? "var(--bad-ink)" : n < 0 ? "var(--good-ink)" : "" } }, s);
+      if (!good || !n) return s;
+      const ok = (n > 0) === (good === "up");
+      return h("span", { style: { color: ok ? "var(--good-ink)" : "var(--bad-ink)" } }, s);
     }
     return fmt(v, f, t);
   }
@@ -181,7 +198,7 @@
     const m = new Map();
     for (const r of rows) { const k = r[col] == null ? "—" : String(r[col]); if (!m.has(k)) m.set(k, []); m.get(k).push(r); }
     const keys = [...m.keys()];
-    if (keys.every((k) => sevRank(k) >= 0 || k === "—")) keys.sort(cmp);
+    if (allSev(keys)) keys.sort(worstFirst);
     return keys.map((k) => [k, m.get(k)]);
   }
   function localControls(p, ds, onChange) {
@@ -192,7 +209,7 @@
     const bar = h("div", { class: "su-ctl" });
     if (p.search) bar.append(h("input", { type: "search", placeholder: "Search…", "aria-label": "Search", id: "su-q" + ++uid, oninput: (e) => { st.q = e.target.value.toLowerCase(); onChange(); } }));
     for (const c of cols) {
-      const vals = uniq(DS[ds].rows, c).sort(cmp);
+      const vals = uniq(DS[ds].rows, c); vals.sort(allSev(vals) ? worstFirst : cmp);
       const sel = h("select", { "aria-label": c, id: "su-f" + ++uid, onchange: (e) => { st.f[c] = e.target.value; onChange(); } },
         h("option", { value: "" }, `${c}: all`), vals.map((v) => h("option", { value: String(v) }, String(v))));
       bar.append(sel);
@@ -202,7 +219,7 @@
 
   // ---- components -----------------------------------------------------------------
   const C = {};
-  const BOXED = new Set(["chart", "heatmap", "gantt", "tree", "kv", "checklist", "timeline", "meter", "diagram", "graph", "filter"]);
+  const BOXED = new Set(["chart", "heatmap", "gantt", "tree", "kv", "checklist", "timeline", "meter", "diagram", "graph", "filter", "box", "treemap", "sankey", "er", "classes"]);
 
   C.text = (p, el) => { el.className += " su-md"; el.innerHTML = md(p.md); };
   C.callout = (p, el) => {
@@ -269,7 +286,11 @@
   }
   C.stat = (p, el) => {
     if (!p.data) { el.append(statEl(p)); return; }
-    const draw = () => el.replaceChildren(statEl({ ...p, value: aggValue(p) }));
+    const draw = () => {
+      const v = aggValue(p);
+      const of = p.of ? (p.of === true ? rowsFor({ ...p, where: null }).length : p.of) : null;
+      el.replaceChildren(statEl({ ...p, value: v, unit: of != null ? `/ ${fmt(of)}` : p.unit, sub: p.sub ?? (of ? `${Math.round((100 * v) / (of || 1))}%` : null) }));
+    };
     draw(); subscribe(p.data, draw);
   };
   C.stats = (p, el) => {
@@ -314,7 +335,8 @@
   }
   C.table = (p, el) => {
     const ds = p.data, d = DS[ds];
-    const cols = (p.cols && p.cols.length ? p.cols : d.cols.filter((c) => c !== p.group)).map((c) => (typeof c === "object" ? c : { key: c }));
+    const cols = (p.cols && p.cols.length ? p.cols : d.cols.filter((c) => c !== p.group)).map((c) => (typeof c === "object" ? c : { key: c }))
+      .map((c) => (p.labels && p.labels[c.key] && !c.label ? { ...c, label: p.labels[c.key] } : c));
     const sort = { k: null, d: 1 };
     if (p.sort) { sort.k = p.sort.replace(/^-/, ""); sort.d = p.sort.startsWith("-") ? -1 : 1; }
     const shut = new Set();
@@ -333,6 +355,7 @@
     function draw() {
       let rows = ctl.apply(rowsFor(p)).slice();
       if (sort.k) rows.sort((a, b) => sort.d * cmp(a[sort.k], b[sort.k]) || 0);
+      if (p.top) rows = rows.slice(0, p.top);
       const max = {}; for (const b of bars) max[b] = Math.max(1e-9, ...rows.map((r) => Math.abs(+r[b] || 0)));
       const total = rows.length;
       const lim = p.limit && !p.group ? p.limit : 0;
@@ -349,7 +372,7 @@
           const tone = cellTone(p, ds, k, v);
           if (bars.has(k) && isNum(+v)) td.append(h("div", { class: "su-cellbar" }, h("i", { style: { width: Math.round((Math.abs(+v) / max[k]) * 80) + "px" } }), h("span", null, fmt(v, f, ty))));
           else if (tone) td.append(badge(fmt(v, f, ty), tone));
-          else { const x = fmtCell(v, f, ty); td.append(x); }
+          else { const x = fmtCell(v, f, ty, p.good && p.good[k]); td.append(x); }
           row.append(td);
         }
         if (!expand.length || !open.has(r)) return row;
@@ -500,18 +523,20 @@
     const ds = p.data;
     const draw = () => {
       const root = { kids: new Map(), row: null };
-      const items = p.data ? rowsFor(p).map((r) => [String(r[p.path || "path"] ?? ""), r]) : arr(p.paths).map((s) => [String(s), null]);
+      const pc = p.path || (p.data && DS[p.data].cols.includes("path") ? "path" : "value");
+      const items = p.data ? rowsFor(p).map((r) => [String(r[pc] ?? ""), r]) : arr(p.paths).map((s) => [String(s), null]);
+      const sep = p.sep || (items.some(([x]) => x.includes(" > ")) ? ">" : "/");
       for (const [path, r] of items) {
         let n = root;
-        for (const part of path.split("/").filter(Boolean)) { if (!n.kids.has(part)) n.kids.set(part, { kids: new Map(), row: null }); n = n.kids.get(part); }
+        for (const part of path.split(sep).map((x) => x.trim()).filter(Boolean)) { if (!n.kids.has(part)) n.kids.set(part, { kids: new Map(), row: null }); n = n.kids.get(part); }
         n.row = r || n.row;
       }
       const ul = (n, depth) => {
         const list = h("ul");
         const entries = [...n.kids.entries()].sort((a, b) => (b[1].kids.size > 0) - (a[1].kids.size > 0) || a[0].localeCompare(b[0]));
         for (let [name, k] of entries) {
-          while (k.kids.size === 1 && !k.row && [...k.kids.values()][0].kids.size) { const [n2, k2] = [...k.kids.entries()][0]; name += "/" + n2; k = k2; }
-          if (k.kids.size) list.append(h("li", null, h("details", { open: depth < (p.open ?? 2) }, h("summary", null, name + "/", h("span", { class: "su-count" }, " " + countLeaves(k))), ul(k, depth + 1))));
+          while (sep === "/" && k.kids.size === 1 && !k.row && [...k.kids.values()][0].kids.size) { const [n2, k2] = [...k.kids.entries()][0]; name += "/" + n2; k = k2; }
+          if (k.kids.size) list.append(h("li", null, h("details", { open: depth < (p.open ?? 2) }, h("summary", null, name + (sep === "/" ? "/" : ""), h("span", { class: "su-count" }, " " + countLeaves(k))), ul(k, depth + 1))));
           else {
             const r = k.row, tone = r ? toneOf(p, r, ds, arr(p.badges)) : null;
             list.append(h("li", null, h("div", { class: "su-leafrow" }, tone ? h("span", { class: "su-dot su-t-" + tone }) : null, h("span", null, name),
@@ -543,7 +568,8 @@
       const c = colKey(c0); f.f[c] = f.f[c] || new Set();
       const row = h("div", { class: "su-filter-row" }, h("b", null, c));
       const chips = h("div", { class: "su-chips" });
-      for (const v of uniq(DS[ds].rows, c).sort(cmp)) {
+      const chipVals = uniq(DS[ds].rows, c); chipVals.sort(allSev(chipVals) ? worstFirst : cmp);
+      for (const v of chipVals) {
         const t = cellTone(p, ds, c, v);
         const n = h("span", { class: "su-chip-n" });
         const b = h("button", { class: "su-chip", "aria-pressed": "false", type: "button" }, t ? h("span", { class: "su-dot su-t-" + t, style: { marginRight: "5px" } }) : null, String(v), n);
@@ -553,6 +579,213 @@
       row.append(chips); box.append(row);
     }
     el.append(box); upd(); subscribe(ds, upd);
+  };
+
+  // ---- finance, statistics, structure ----------------------------------------------
+  C.statement = (p, el) => {
+    const ds = p.data, vals = arr(p.values).map(colKey), minus = new Set(arr(p.minus).map(String)), f = p.fmt || "money";
+    const wrap = h("div", { class: "su-tw" }); el.append(wrap);
+    const draw = () => {
+      const rows = rowsFor(p), secs = new Map();
+      for (const r of rows) {
+        const sec = String(r[p.section] ?? "—"), ln = String(r[p.line] ?? "—");
+        if (!secs.has(sec)) secs.set(sec, new Map());
+        const m = secs.get(sec); if (!m.has(ln)) m.set(ln, vals.map(() => 0));
+        const a = m.get(ln); vals.forEach((v, i) => (a[i] += +r[v] || 0));
+      }
+      const order = p.order ? arr(p.order).map(String).filter((x) => secs.has(x)).concat([...secs.keys()].filter((x) => !arr(p.order).map(String).includes(x))) : [...secs.keys()];
+      const variance = p.variance !== false && vals.length === 2;
+      const t = h("table", { class: "su-table su-stmt" });
+      const head = h("tr", null, h("th", null, ""), vals.map((v) => h("th", { class: "su-num" }, (p.labels && p.labels[v]) || v)),
+        variance ? [h("th", { class: "su-num" }, "Variance"), h("th", { class: "su-num" }, "%")] : null);
+      t.append(h("thead", null, head));
+      const tb = h("tbody"), run = vals.map(() => 0);
+      const cells = (a, sign, strong) => {
+        const out = a.map((x) => h("td", { class: "su-num" + (strong ? " su-strong" : "") }, fmt(x, f)));
+        if (variance) {
+          const d = a[0] - a[1], pc = a[1] ? (100 * d) / Math.abs(a[1]) : null, good = sign * d >= 0;
+          const col = Math.abs(d) < 1e-9 ? "" : good ? "var(--good-ink)" : "var(--bad-ink)";
+          out.push(h("td", { class: "su-num", style: { color: col } }, (d > 0 ? "+" : d < 0 ? "−" : "") + fmt(Math.abs(d), f)),
+            h("td", { class: "su-num", style: { color: col } }, pc == null ? "" : (pc > 0 ? "+" : pc < 0 ? "−" : "") + Math.abs(pc).toFixed(1) + "%"));
+        }
+        return out;
+      };
+      const subs = arr(p.subtotals);
+      for (const sec of order) {
+        const sign = minus.has(sec) ? -1 : 1, lines = secs.get(sec), tot = vals.map(() => 0);
+        tb.append(h("tr", { class: "su-stmt-sec" }, h("td", { colspan: 1 + vals.length + (variance ? 2 : 0) }, sec)));
+        for (const [ln, a] of lines) { a.forEach((x, i) => (tot[i] += x)); tb.append(h("tr", null, h("td", { class: "su-stmt-line" }, ln), cells(a, sign))); }
+        tb.append(h("tr", { class: "su-stmt-tot" }, h("td", null, "Total " + sec.toLowerCase()), cells(tot, sign, true)));
+        tot.forEach((x, i) => (run[i] += sign * x));
+        for (const st of subs.filter((x) => String(x.after) === sec)) tb.append(h("tr", { class: "su-stmt-sub" }, h("td", null, st.label), cells(run.slice(), 1, true)));
+      }
+      t.append(tb); wrap.replaceChildren(t);
+    };
+    draw(); subscribe(ds, draw);
+  };
+
+  function quart(v) {
+    const q = (p) => { const i = (v.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return v[lo] + (v[hi] - v[lo]) * (i - lo); };
+    return { q1: q(0.25), med: q(0.5), q3: q(0.75) };
+  }
+  const svgEl = (w, hgt, inner, cls) => { const s2 = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s2.setAttribute("viewBox", `0 0 ${w} ${hgt}`); s2.setAttribute("width", "100%"); s2.setAttribute("class", cls || ""); s2.innerHTML = inner; return s2; };
+  function niceTicks(lo, hi, n) {
+    const raw = (hi - lo) / (n || 5) || 1, mag = Math.pow(10, Math.floor(Math.log10(raw))), step = [1, 2, 2.5, 5, 10].map((k) => k * mag).find((k) => k >= raw);
+    const out = []; for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) out.push(+t.toFixed(10)); return out;
+  }
+  C.box = (p, el) => {
+    const ds = p.data, box = h("div", { class: "su-box" }); el.append(box);
+    const draw = () => {
+      const rows = rowsFor(p), groups = p.by ? groupBy(rows, p.by) : [[p.y, rows]];
+      const stats = groups.map(([g, rs]) => {
+        const v = rs.map((r) => +r[p.y]).filter(isFinite).sort((a, b) => a - b); if (!v.length) return null;
+        const { q1, med, q3 } = quart(v), iqr = q3 - q1, lo = v.find((x) => x >= q1 - 1.5 * iqr), hi = [...v].reverse().find((x) => x <= q3 + 1.5 * iqr);
+        return { g, v, q1, med, q3, lo, hi, mean: v.reduce((a, b) => a + b, 0) / v.length, out: v.filter((x) => x < lo || x > hi) };
+      }).filter(Boolean);
+      if (!stats.length) { box.replaceChildren(h("div", { class: "su-empty" }, "No numeric values.")); return; }
+      const all = stats.flatMap((s2) => s2.v), mn = Math.min(...all), mx = Math.max(...all), ticks = niceTicks(mn, mx, 6);
+      const lo = Math.min(mn, ticks[0]), hi = Math.max(mx, ticks[ticks.length - 1]);
+      const W = 640, L = 120, R = 16, RH = 44, H = stats.length * RH + 28, X = (x) => L + ((x - lo) / (hi - lo || 1)) * (W - L - R);
+      let g = ticks.map((t) => `<line x1="${X(t)}" x2="${X(t)}" y1="4" y2="${H - 22}" class="gr"/><text x="${X(t)}" y="${H - 6}" class="tk" text-anchor="middle">${esc(fmt(t, p.fmt))}</text>`).join("");
+      const ser = SER();
+      stats.forEach((s2, i) => {
+        const y = 10 + i * RH, c = ser[i % 8], m = y + 14;
+        g += `<text x="${L - 10}" y="${m + 4}" class="lb" text-anchor="end">${esc(s2.g)}</text>
+          <line x1="${X(s2.lo)}" x2="${X(s2.hi)}" y1="${m}" y2="${m}" class="wh"/><line x1="${X(s2.lo)}" x2="${X(s2.lo)}" y1="${m - 7}" y2="${m + 7}" class="wh"/><line x1="${X(s2.hi)}" x2="${X(s2.hi)}" y1="${m - 7}" y2="${m + 7}" class="wh"/>
+          <rect x="${X(s2.q1)}" y="${y}" width="${Math.max(1, X(s2.q3) - X(s2.q1))}" height="28" rx="3" fill="${c}" fill-opacity=".22" stroke="${c}" stroke-width="1.5"><title>${esc(s2.g)}: n ${s2.v.length}, median ${fmt(s2.med)}, IQR ${fmt(s2.q1)}–${fmt(s2.q3)}, mean ${fmt(s2.mean)}</title></rect>
+          <line x1="${X(s2.med)}" x2="${X(s2.med)}" y1="${y}" y2="${y + 28}" stroke="${c}" stroke-width="2.5"/>` +
+          (p.mean !== false ? `<path d="M${X(s2.mean)} ${m - 4}l4 4-4 4-4-4z" class="mn"/>` : "") +
+          s2.out.map((o) => `<circle cx="${X(o)}" cy="${m}" r="2.5" fill="none" stroke="${c}"/>`).join("");
+      });
+      box.replaceChildren(svgEl(W, H, g, "su-svgplot"), h("div", { class: "su-note" }, `Box = quartiles, line = median, ◆ = mean, whiskers = 1.5 × IQR, ○ = outliers. n = ${stats.map((s2) => `${s2.g} ${s2.v.length}`).join(", ")}.`));
+    };
+    draw(); subscribe(ds, draw);
+  };
+
+  C.forest = (p, el) => {
+    const ds = p.data, box = h("div", { class: "su-forest" }); el.append(box);
+    const draw = () => {
+      const rows = rowsFor(p).filter((r) => isFinite(+r[p.est]));
+      const pool = p.pooled && isFinite(+p.pooled.est) ? p.pooled : null;
+      const tr = (x) => (p.log ? Math.log(x) : x);
+      const all = rows.flatMap((r) => [+r[p.lo], +r[p.hi]]).concat(pool ? [+pool.lo, +pool.hi] : []).concat([p.null ?? (p.log ? 1 : 0)]).filter(isFinite);
+      let lo = tr(Math.min(...all)), hi = tr(Math.max(...all)); const pad = (hi - lo) * 0.06 || 1; lo -= pad; hi += pad;
+      const W = 360, X = (x) => 8 + ((tr(x) - lo) / (hi - lo)) * (W - 16), nul = p.null ?? (p.log ? 1 : 0);
+      const wmax = p.weight ? Math.max(...rows.map((r) => +r[p.weight] || 0)) || 1 : 1;
+      const t = h("table", { class: "su-ftable" });
+      t.append(h("thead", null, h("tr", null, h("th", null, p.label), p.group ? h("th", null, p.group) : null, h("th", { class: "su-fplot" }, ""), h("th", { class: "su-num" }, `${p.est} [95% CI]`), p.weight ? h("th", { class: "su-num" }, p.weight) : null)));
+      const tb = h("tbody");
+      const rowSvg = (e, l, u, size, diamond, tone) => {
+        const c = tone ? css("--" + tone) : css("--fg");
+        let g = `<line x1="${X(nul)}" x2="${X(nul)}" y1="0" y2="26" class="nl"/>`;
+        if (diamond) g += `<path d="M${X(l)} 13L${X(e)} 4L${X(u)} 13L${X(e)} 22Z" fill="${css("--accent")}"/>`;
+        else g += `<line x1="${X(l)}" x2="${X(u)}" y1="13" y2="13" stroke="${c}" stroke-width="1.6"/><rect x="${X(e) - size / 2}" y="${13 - size / 2}" width="${size}" height="${size}" fill="${c}"/>`;
+        return svgEl(W, 26, g, "su-fsvg");
+      };
+      for (const r of rows) {
+        const tone = p.group ? cellTone(p, ds, p.group, r[p.group]) : null;
+        const size = p.weight ? 5 + 9 * Math.sqrt((+r[p.weight] || 0) / wmax) : 8;
+        tb.append(h("tr", null, h("td", null, r[p.label]), p.group ? h("td", null, badge(String(r[p.group]), tone)) : null,
+          h("td", { class: "su-fplot" }, rowSvg(+r[p.est], +r[p.lo], +r[p.hi], size, false, tone)),
+          h("td", { class: "su-num su-mono" }, `${fmt(+r[p.est], p.fmt)} [${fmt(+r[p.lo], p.fmt)}, ${fmt(+r[p.hi], p.fmt)}]`),
+          p.weight ? h("td", { class: "su-num" }, fmt(r[p.weight])) : null));
+      }
+      if (pool) tb.append(h("tr", { class: "su-fpool" }, h("td", null, pool.label || "Pooled"), p.group ? h("td") : null,
+        h("td", { class: "su-fplot" }, rowSvg(+pool.est, +pool.lo, +pool.hi, 0, true)),
+        h("td", { class: "su-num su-mono" }, `${fmt(+pool.est, p.fmt)} [${fmt(+pool.lo, p.fmt)}, ${fmt(+pool.hi, p.fmt)}]`), p.weight ? h("td", { class: "su-num" }, "100") : null));
+      const ticks = niceTicks(p.log ? Math.exp(lo) : lo, p.log ? Math.exp(hi) : hi, 5);
+      const ax = ticks.map((k) => `<line x1="${X(k)}" x2="${X(k)}" y1="0" y2="4" class="gr"/><text x="${X(k)}" y="15" text-anchor="middle" class="tk">${esc(fmt(k, p.fmt))}</text>`).join("");
+      tb.append(h("tr", { class: "su-faxis" }, h("td"), p.group ? h("td") : null, h("td", { class: "su-fplot" }, svgEl(W, 20, ax, "su-fsvg"),
+        p.left || p.right ? h("div", { class: "su-fsides" }, h("span", null, p.left ? "← " + p.left : ""), h("span", null, p.right ? p.right + " →" : "")) : null), h("td"), p.weight ? h("td") : null));
+      t.append(tb); box.replaceChildren(h("div", { class: "su-tw" }, t));
+    };
+    draw(); subscribe(ds, draw);
+  };
+
+  function squarify(items, x, y, w, hgt) {
+    // items: [{v, ...}] sorted desc; returns [{...item, x, y, w, h}]
+    const out = [], total = items.reduce((a, b) => a + b.v, 0) || 1;
+    let rest = items.slice(), X0 = x, Y0 = y, W0 = w, H0 = hgt, sum = total;
+    while (rest.length) {
+      const horiz = W0 >= H0, side = horiz ? H0 : W0, area = W0 * H0;
+      let row = [rest[0]], best = Infinity;
+      const worst = (r) => { const s2 = r.reduce((a, b) => a + b.v, 0) * area / sum, mx = Math.max(...r.map((q) => q.v * area / sum)), mn = Math.min(...r.map((q) => q.v * area / sum)); return Math.max((side * side * mx) / (s2 * s2), (s2 * s2) / (side * side * mn)); };
+      best = worst(row);
+      for (let i = 1; i < rest.length; i++) { const cand = rest.slice(0, i + 1), wv = worst(cand); if (wv > best) break; row = cand; best = wv; }
+      const rs = row.reduce((a, b) => a + b.v, 0), thick = (rs / sum) * (horiz ? W0 : H0);
+      let off = 0;
+      for (const it of row) { const len = (it.v / rs) * side; out.push(horiz ? { ...it, x: X0, y: Y0 + off, w: thick, h: len } : { ...it, x: X0 + off, y: Y0, w: len, h: thick }); off += len; }
+      if (horiz) { X0 += thick; W0 -= thick; } else { Y0 += thick; H0 -= thick; }
+      sum -= rs; rest = rest.slice(row.length);
+    }
+    return out;
+  }
+  C.treemap = (p, el) => {
+    const ds = p.data, box = h("div", { class: "su-tmap", style: { height: (p.height || 420) + "px" } }); el.append(box);
+    const lab = p.label || DS[ds].cols.find((c) => typeOf(ds, c) === "str" && c !== p.group);
+    const draw = () => {
+      const rows = rowsFor(p).filter((r) => +r[p.size] > 0), W = box.clientWidth || 800, Hh = p.height || 420;
+      const cvals = p.color ? rows.map((r) => +r[p.color]).filter(isFinite) : [], cmax = cvals.length ? Math.max(...cvals) : 1;
+      const groups = p.group ? groupBy(rows, p.group).map(([g, rs]) => ({ g, rs, v: rs.reduce((a, r) => a + +r[p.size], 0) })).sort((a, b) => b.v - a.v) : [{ g: null, rs: rows, v: rows.reduce((a, r) => a + +r[p.size], 0) }];
+      const ser = SER(); box.replaceChildren();
+      squarify(groups, 0, 0, W, Hh).forEach((G, gi) => {
+        const top = p.group ? 18 : 0, gEl = h("div", { class: "su-tm-g", style: { left: G.x + "px", top: G.y + "px", width: G.w + "px", height: G.h + "px" } });
+        if (p.group) gEl.append(h("div", { class: "su-tm-gh", title: `${G.g}: ${fmt(G.v, p.fmt)}` }, `${G.g} · ${fmt(G.v, p.fmt)}`));
+        const kids = G.rs.map((r) => ({ v: +r[p.size], r })).sort((a, b) => b.v - a.v);
+        squarify(kids, 1, top, Math.max(0, G.w - 2), Math.max(0, G.h - top - 1)).forEach((c) => {
+          const t = p.color && isFinite(+c.r[p.color]) ? +c.r[p.color] / (cmax || 1) : null;
+          const bg = t != null ? `color-mix(in oklab, var(--seq-hi) ${Math.round(8 + 80 * t)}%, var(--surface))` : `color-mix(in oklab, ${ser[gi % 8]} 28%, var(--surface))`;
+          const name = String(c.r[lab] ?? "").split("/").pop();
+          gEl.append(h("div", { class: "su-tm-c" + (t != null && t > 0.6 ? " su-hi" : ""), style: { left: c.x + "px", top: c.y + "px", width: Math.max(0, c.w - 1) + "px", height: Math.max(0, c.h - 1) + "px", background: bg },
+            title: `${c.r[lab]}: ${fmt(c.v, p.fmt)}${p.color ? ` · ${p.color} ${fmt(c.r[p.color])}` : ""}` }, c.w > 46 && c.h > 18 ? name : ""));
+        });
+        box.append(gEl);
+      });
+      if (p.color) el.querySelector(".su-tm-legend")?.remove(), el.append(h("div", { class: "su-scale su-tm-legend" }, h("span", null, "size = " + p.size), h("span", null, "· colour = " + p.color + ": 0"),
+        h("i", { style: { background: "linear-gradient(90deg, color-mix(in oklab, var(--seq-hi) 8%, var(--surface)), var(--seq-hi))" } }), h("span", null, fmt(cmax))));
+    };
+    requestAnimationFrame(draw); subscribe(ds, draw); new ResizeObserver(() => draw()).observe(box);
+  };
+
+  C.decision = (p, el) => {
+    const ds = p.data, rows = rowsFor(p), max = p.max || 5;
+    const crit = p.criteria ? arr(p.criteria).map(String) : p.scores ? Object.keys(rows[0]?.[p.scores] || {}) : [];
+    const W = p.weights || {}, wsum = crit.reduce((a, c) => a + (+W[c] || (W[c] == null ? 1 : 0)), 0) || 1;
+    const sc = (r, c) => +(p.scores ? (r[p.scores] || {})[c] : r[c]);
+    const res = rows.map((r) => ({ r, name: r[p.option], total: crit.reduce((a, c) => a + (isFinite(sc(r, c)) ? sc(r, c) : 0) * (W[c] == null ? 1 : +W[c]), 0) / wsum })).sort((a, b) => b.total - a.total);
+    const t = h("table", { class: "su-table su-dec" });
+    t.append(h("thead", null, h("tr", null, h("th", null, "Rank"), h("th", null, p.option), crit.map((c) => h("th", { class: "su-num" }, c, h("div", { class: "su-count" }, W[c] != null ? `× ${fmt(+W[c])}` : ""))), h("th", { class: "su-num" }, "Weighted"))));
+    const tb = h("tbody");
+    res.forEach((x, i) => {
+      tb.append(h("tr", { class: i === 0 ? "su-win" : "" }, h("td", null, i === 0 ? badge("1st", "good") : String(i + 1)), h("td", { class: "su-strong" }, x.name),
+        crit.map((c) => { const v = sc(x.r, c), tt = isFinite(v) ? v / max : 0; return h("td", { class: "su-num su-dcell", style: { background: `color-mix(in oklab, var(--seq-hi) ${Math.round(6 + 60 * tt)}%, var(--surface))`, color: tt > 0.7 ? "var(--surface)" : "" } }, isFinite(v) ? fmt(v) : "—"); }),
+        h("td", { class: "su-num" }, h("div", { class: "su-cellbar" }, h("i", { style: { width: Math.round((x.total / max) * 90) + "px", background: i === 0 ? "var(--good)" : "var(--s1)" } }), h("span", { class: "su-strong" }, x.total.toFixed(2))))));
+    });
+    t.append(tb);
+    const gap = res.length > 1 ? res[0].total - res[1].total : null;
+    el.append(h("div", { class: "su-tw" }, t), gap != null ? h("div", { class: "su-note" }, `${res[0].name} leads ${res[1].name} by ${gap.toFixed(2)} (${((100 * gap) / (res[1].total || 1)).toFixed(1)}%). Scores 1–${max}; higher is better.`) : null);
+  };
+
+  C.truth = (p, el) => {
+    const rows = p.rows || rowsFor(p), cols = p.cols || (p.data ? DS[p.data].cols : []);
+    const outs = p.exprs ? Object.keys(p.exprs) : cols.slice(-1), ins = cols.filter((c) => !outs.includes(c));
+    const hi = p.highlight || null; let only = !!p.only;
+    const wrap = h("div"); el.append(wrap);
+    const draw = () => {
+      const t = h("table", { class: "su-table su-truth" });
+      t.append(h("thead", null, h("tr", null, ins.map((c) => h("th", { class: "su-tin" }, c)), outs.map((c) => h("th", { class: "su-tout", title: p.exprs ? p.exprs[c] : "" }, c)))));
+      const tb = h("tbody");
+      for (const r of rows) {
+        const hot = hi && +r[hi] === 1; if (only && !hot) continue;
+        tb.append(h("tr", { class: hot ? "su-hot" : "" }, ins.map((c) => h("td", { class: "su-b su-b" + (+r[c] ? 1 : 0) }, +r[c] ? "1" : "0")),
+          outs.map((c) => h("td", { class: "su-b su-o su-b" + (+r[c] ? 1 : 0) }, +r[c] ? "1" : "0"))));
+      }
+      t.append(tb);
+      const n = hi ? rows.filter((r) => +r[hi] === 1).length : 0;
+      const ctl = hi ? h("div", { class: "su-ctl" }, h("label", null, h("input", { type: "checkbox", id: "su-only" + ++uid, checked: only, onchange: (e) => { only = e.target.checked; draw(); } }), `Only rows where ${hi} = 1 (${n} of ${rows.length})`)) : null;
+      wrap.replaceChildren(...[ctl, h("div", { class: "su-tw" }, t), p.exprs ? h("dl", { class: "su-kv su-exprs" }, Object.entries(p.exprs).flatMap(([k, v]) => [h("dt", null, k), h("dd", null, h("code", { class: "su-code-inline" }, v))])) : null].filter(Boolean));
+    };
+    draw();
   };
 
   // ---- charts ---------------------------------------------------------------------
@@ -576,7 +809,7 @@
     let keys = uniq(rows, x);
     if (xt === "date" || xt === "num" || p.sort === "x") keys.sort(cmp);
     const sdom = p.series ? uniq(DS[ds].rows, p.series).map(String) : null; // full data: colours stay put when filtered
-    if (sdom && sdom.every((s) => sevRank(s) >= 0)) sdom.sort(cmp);
+    if (sdom && allSev(sdom)) sdom.sort(worstFirst);
     const reduce = (rs, y) => {
       if (agg === "count" || !y) return rs.length;
       const v = rs.map((r) => +r[y]).filter(isFinite);
@@ -606,12 +839,29 @@
   const refLines = {
     id: "suRef",
     afterDatasetsDraw(chart, _a, opts) {
-      const marks = opts.marks || []; if (!marks.length) return;
+      const marks = opts.marks || [], bands = opts.bands || [], keys = (opts.keys || []).map(String);
+      if (!marks.length && !bands.length) return;
       const { ctx, chartArea: a } = chart, horiz = chart.options.indexAxis === "y";
-      const sc = horiz ? chart.scales.x : chart.scales.y;
-      ctx.save(); ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = css("--bad"); ctx.fillStyle = css("--muted"); ctx.font = "11px " + css("--mono");
+      const sc = horiz ? chart.scales.x : chart.scales.y, cat = horiz ? chart.scales.y : chart.scales.x;
+      const catPx = (x) => { const i = keys.indexOf(String(x)); if (i >= 0) return cat.getPixelForValue(i);
+        // between two keys (e.g. a date not in the data): place by order
+        const j = keys.findIndex((k) => k > String(x)); return j <= 0 ? (j === 0 ? cat.getPixelForValue(0) : null) : (cat.getPixelForValue(j - 1) + cat.getPixelForValue(j)) / 2; };
+      ctx.save(); ctx.font = "11px " + css("--mono");
+      for (const b of bands) {
+        const p1 = catPx(b.from), p2 = catPx(b.to ?? keys[keys.length - 1]); if (p1 == null || p2 == null) continue;
+        ctx.fillStyle = css("--accent") + "14";
+        if (horiz) ctx.fillRect(a.left, Math.min(p1, p2), a.right - a.left, Math.abs(p2 - p1)); else ctx.fillRect(Math.min(p1, p2), a.top, Math.abs(p2 - p1), a.bottom - a.top);
+        if (b.label) { ctx.fillStyle = css("--muted"); ctx.textAlign = "left"; ctx.fillText(b.label, horiz ? a.left + 4 : Math.min(p1, p2) + 4, horiz ? Math.min(p1, p2) + 12 : a.top + 12); }
+      }
+      ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = css("--bad"); ctx.fillStyle = css("--muted");
       for (const m of marks) {
-        const v = m.y ?? m.x ?? m.value; if (v == null) continue;
+        if (m.x != null && m.y == null) {
+          const px = catPx(m.x); if (px == null) continue;
+          ctx.beginPath(); if (horiz) { ctx.moveTo(a.left, px); ctx.lineTo(a.right, px); } else { ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); } ctx.stroke();
+          if (m.label) { ctx.textAlign = "left"; ctx.fillText(m.label, horiz ? a.left + 4 : px + 4, horiz ? px - 4 : a.top + 24); }
+          continue;
+        }
+        const v = m.y ?? m.value; if (v == null) continue;
         const px = sc.getPixelForValue(+v);
         ctx.beginPath();
         if (horiz) { ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); } else { ctx.moveTo(a.left, px); ctx.lineTo(a.right, px); }
@@ -621,6 +871,31 @@
       ctx.restore();
     },
   };
+  function histModel(p) {
+    const rows = rowsFor(p), x = p.x, vals = rows.map((r) => +r[x]).filter(isFinite);
+    if (!vals.length) return { labels: [], keys: [], sets: [] };
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const n = p.bins || Math.max(5, Math.min(30, Math.ceil(Math.log2(vals.length) + 1)));
+    const raw = (hi - lo) / n || 1, mag = Math.pow(10, Math.floor(Math.log10(raw))), step = [1, 2, 2.5, 5, 10].map((k) => k * mag).find((k) => k >= raw);
+    const start = Math.floor(lo / step) * step, nb = Math.max(1, Math.ceil((hi - start) / step + 1e-9));
+    const keys = Array.from({ length: nb }, (_, i) => start + i * step);
+    const labels = keys.map((k) => `${fmt(k, p.fmt)}–${fmt(k + step, p.fmt)}`);
+    const groups = p.series ? uniq(DS[p.data].rows, p.series).map(String) : [null];
+    const sets = groups.map((g, gi) => {
+      const counts = new Array(nb).fill(0);
+      for (const r of rows) { if (g != null && String(r[p.series]) !== g) continue; const v = +r[x]; if (!isFinite(v)) continue; counts[Math.min(nb - 1, Math.floor((v - start) / step))]++; }
+      return { label: g ?? "count", idx: gi, data: counts };
+    });
+    return { labels, keys, sets };
+  }
+  function linreg(pts) {
+    const n = pts.length; if (n < 3) return null;
+    const mx = pts.reduce((a, q) => a + q.x, 0) / n, my = pts.reduce((a, q) => a + q.y, 0) / n;
+    let sxy = 0, sxx = 0, syy = 0; for (const q of pts) { sxy += (q.x - mx) * (q.y - my); sxx += (q.x - mx) ** 2; syy += (q.y - my) ** 2; }
+    if (!sxx) return null;
+    const b = sxy / sxx, a = my - b * mx, r2 = syy ? (sxy * sxy) / (sxx * syy) : 0;
+    return { a, b, r2 };
+  }
   C.chart = (p, el) => {
     const box = h("div", { class: "su-chart", style: { height: (p.height || 260) + "px" } });
     const cv = h("canvas", { role: "img", "aria-label": (p.title || "chart") + ": " + p.kind + " of " + arr(p.y).map(colKey).join(", ") + " by " + p.x });
@@ -629,7 +904,8 @@
     const draw = () => {
       if (!window.Chart) { el.replaceChildren(h("div", { class: "su-err" }, "Chart.js did not load (no network?).")); return; }
       if (chart) chart.destroy();
-      const m = chartModel(p), kind = p.kind || "bar";
+      const kind0 = p.kind || "bar";
+      const m = kind0 === "hist" ? histModel(p) : chartModel(p), kind = kind0 === "hist" ? "bar" : kind0;
       const ser = seriesColors(p, kind === "donut" ? m.labels : m.sets.map((x) => x.label));
       const fg = css("--muted"), grid = css("--line"), font = css("--font");
       const single = m.sets.length === 1;
@@ -637,28 +913,52 @@
       const dim = (c, i) => (sel && !sel.has(String(m.keys[i])) ? c + "40" : c);
       const datasets = m.sets.map((s) => {
         const c = ser[s.idx] || ser[s.idx % 8];
-        const base = { label: s.label, data: s.data, borderColor: c, backgroundColor: c };
+        const base = { label: (p.labels && p.labels[s.label]) || s.label, data: s.data, borderColor: c, backgroundColor: c };
         if (kind === "line" || kind === "area") return { ...base, borderWidth: 2, pointRadius: m.labels.length > 40 ? 0 : 2.5, pointHoverRadius: 5, tension: 0.25, fill: kind === "area" ? (p.stack ? "stack" : "origin") : false, backgroundColor: kind === "area" ? c + (p.stack ? "cc" : "33") : c, spanGaps: true };
-        if (kind === "scatter") return { ...base, data: s.data.map((v, i) => ({ x: +m.labels[i].replace(/,/g, ""), y: v })), pointRadius: 4, pointHoverRadius: 6 };
+        if (kind === "scatter") {
+          const rows = rowsFor(p), y = arr(p.y).map(colKey)[0];
+          const pts = rows.filter((r) => (!p.series || String(r[p.series]) === s.label) && isFinite(+r[p.x]) && isFinite(+r[y])).map((r) => ({ x: +r[p.x], y: +r[y] }));
+          return { ...base, label: p.series ? base.label : (p.labels && p.labels[y]) || y, data: pts, pointRadius: 4, pointHoverRadius: 6, backgroundColor: c + "b3" };
+        }
+        if (kind === "waterfall") {
+          let cum = 0; const fl = s.data.map((v) => { const a = cum; cum += +v || 0; return [a, cum]; });
+          if (p.total) fl.push([0, cum]);
+          const cols = s.data.map((v) => css(+v >= 0 ? "--good" : "--bad")); if (p.total) cols.push(css("--s1"));
+          return { ...base, data: fl, backgroundColor: cols, borderRadius: 3, borderSkipped: false, maxBarThickness: 46, borderWidth: 0 };
+        }
         if (kind === "donut") return { ...base, backgroundColor: ser, borderColor: css("--surface"), borderWidth: 2 };
         return { ...base, backgroundColor: sel ? m.keys.map((_, i) => dim(c, i)) : c, borderRadius: 4, borderSkipped: "start", maxBarThickness: 38, borderWidth: 0 };
       });
+      if (kind === "waterfall" && p.total) m.labels = m.labels.concat([p.total]);
+      if (kind === "scatter" && p.trend) {
+        for (const d of datasets.slice()) {
+          const lr = linreg(d.data); if (!lr) continue;
+          const xs = d.data.map((q) => q.x), x0 = Math.min(...xs), x1 = Math.max(...xs);
+          datasets.push({ type: "line", label: `${d.label} trend (r² ${lr.r2.toFixed(2)})`, data: [{ x: x0, y: lr.a + lr.b * x0 }, { x: x1, y: lr.a + lr.b * x1 }],
+            borderColor: d.borderColor, borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, fill: false });
+        }
+      }
       const tick = (v) => fmt(v, p.fmt);
       const vAxis = { beginAtZero: p.zero !== false, stacked: !!p.stack, grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: fg, padding: 6, callback: tick, maxTicksLimit: 6, precision: m.sets.every((s) => s.data.every((v) => v == null || Number.isInteger(v))) ? 0 : undefined } };
-      const cAxis = { stacked: !!p.stack, grid: { display: false }, border: { color: css("--line-2") }, ticks: { color: fg, autoSkip: true, maxRotation: 0, maxTicksLimit: 12 } };
+      const cAxis = { stacked: !!p.stack, grid: { display: false }, border: { color: css("--line-2") }, ticks: { color: fg, autoSkip: m.labels.length > 14, maxRotation: m.labels.length > 8 ? 40 : 0, maxTicksLimit: m.labels.length > 14 ? 12 : undefined } };
       const horiz = !!p.horizontal && kind === "bar";
       const cfg = {
-        type: kind === "area" ? "line" : kind === "donut" ? "doughnut" : kind,
+        type: kind === "area" ? "line" : kind === "donut" ? "doughnut" : kind === "waterfall" ? "bar" : kind,
         data: { labels: m.labels, datasets },
         options: {
           responsive: true, maintainAspectRatio: false, animation: false, indexAxis: horiz ? "y" : "x",
           interaction: { mode: kind === "scatter" || kind === "donut" ? "nearest" : "index", intersect: kind === "scatter" || kind === "donut" },
           plugins: {
-            legend: { display: !single || kind === "donut", position: "top", align: "start", labels: { color: fg, boxWidth: 10, boxHeight: 10, font: { family: font, size: 12 }, padding: 12 } },
-            tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${fmt(c.parsed && typeof c.parsed === "object" ? (horiz ? c.parsed.x : c.parsed.y) : c.parsed, p.fmt)}` } },
-            suRef: { marks: arr(p.mark) },
+            legend: { display: (!single || kind === "donut" || (kind === "scatter" && p.trend)) && kind !== "waterfall", position: "top", align: "start", labels: { color: fg, boxWidth: 10, boxHeight: 10, font: { family: font, size: 12 }, padding: 12 } },
+            tooltip: { callbacks: { label: (c) => {
+              if (kind === "waterfall") { const r = c.raw; return ` ${fmt(r[1] - r[0], p.fmt)} → ${fmt(r[1], p.fmt)}`; }
+              if (kind === "scatter") return ` ${c.dataset.label}: (${fmt(c.parsed.x)}, ${fmt(c.parsed.y, p.fmt)})`;
+              return ` ${c.dataset.label}: ${fmt(c.parsed && typeof c.parsed === "object" ? (horiz ? c.parsed.x : c.parsed.y) : c.parsed, p.fmt)}`; } } },
+            suRef: { marks: arr(p.mark), bands: arr(p.band), keys: m.keys },
           },
-          scales: kind === "donut" ? {} : horiz ? { x: vAxis, y: cAxis } : { x: kind === "scatter" ? { ...vAxis, beginAtZero: false } : cAxis, y: vAxis },
+          scales: kind === "donut" ? {} : horiz ? { x: vAxis, y: cAxis }
+            : { x: kind === "scatter" ? { ...vAxis, type: "linear", beginAtZero: false, title: { display: true, text: (p.labels && p.labels[p.x]) || p.x, color: fg } } : { ...cAxis, ...(kind0 === "hist" ? { title: { display: true, text: p.x, color: fg } } : {}) },
+                y: kind === "scatter" ? { ...vAxis, beginAtZero: false, title: { display: true, text: (p.labels && p.labels[arr(p.y).map(colKey)[0]]) || arr(p.y).map(colKey)[0], color: fg } } : vAxis },
           cutout: kind === "donut" ? "62%" : undefined,
           onClick: kind === "bar" || kind === "donut" ? (e, els) => { if (els.length) toggleFilter(p.data, [[p.x, m.keys[els[0].index]]]); } : undefined,
           onHover: kind === "bar" || kind === "donut" ? (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; } : undefined,
@@ -681,7 +981,8 @@
         if (rank >= 0 && (!worst.has(k) || rank < sevRank(worst.get(k)))) worst.set(k, r[p.worst]);
       }
       const selX = picked(ds, p.x), selY = picked(ds, p.y);
-      const xs = uniq(rows, p.x); if (xt === "date" || xt === "num") xs.sort(cmp);
+      const xs = uniq(rows, p.x); if (xt === "date" || xt === "num" || allSev(xs)) xs.sort(cmp);
+      if (p.xorder) { const o = arr(p.xorder).map(String); xs.sort((a, b) => (o.indexOf(String(a)) + 1 || 1e9) - (o.indexOf(String(b)) + 1 || 1e9)); }
       const cell = new Map(), tot = new Map();
       for (const r of rows) {
         const k = r[p.y] + "\u0001" + r[p.x]; if (!cell.has(k)) cell.set(k, []);
@@ -690,7 +991,9 @@
       const val = (a) => !a ? null : p.agg === "mean" ? a.reduce((s, b) => s + b, 0) / a.length : p.agg === "max" ? Math.max(...a) : p.agg === "count" ? a.length : a.reduce((s, b) => s + b, 0);
       const ys = uniq(rows, p.y);
       for (const y of ys) tot.set(y, xs.reduce((s, x) => s + (val(cell.get(y + "\u0001" + x)) || 0), 0));
-      if (typeOf(ds, p.y) !== "date") ys.sort((a, b) => tot.get(b) - tot.get(a)); else ys.sort(cmp);
+      if (p.yorder) { const o = arr(p.yorder).map(String); ys.sort((a, b) => (o.indexOf(String(a)) + 1 || 1e9) - (o.indexOf(String(b)) + 1 || 1e9)); }
+      else if (allSev(ys)) ys.sort(worstFirst);
+      else if (typeOf(ds, p.y) !== "date") ys.sort((a, b) => tot.get(b) - tot.get(a)); else ys.sort(cmp);
       const all = [...cell.values()].map(val).filter(isNum);
       const lo = Math.min(0, ...all), hi = Math.max(...all, 0), amax = Math.max(Math.abs(lo), Math.abs(hi)) || 1;
       const color = (v) => {
@@ -879,7 +1182,7 @@
     PENDING.push(job);
     LIVE.push(() => { if (!PENDING.includes(job)) { mermaidReady = false; PENDING.push(job); } });
   };
-  C.graph = C.diagram;
+  C.graph = C.diagram; C.sankey = C.diagram; C.er = C.diagram; C.classes = C.diagram;
 
   // ---- layout ---------------------------------------------------------------------
   function kidsInto(container, kids, path) { kids.forEach((k, i) => container.append(node(k, `${path}[${i}]`))); return container; }
@@ -927,6 +1230,22 @@
     if (n.p.title) wrap.append(h("h3", { class: "su-t" }, n.p.title));
     wrap.append(bar, ...panels, noteEl(n) || "");
     return wrap;
+  };
+  L.compare = (n, path) => {
+    if ((n.p.mode || "side") === "side") {
+      const el = h("div", { class: "su-compare", style: { "--n": Math.min(n.kids.length, 4) } });
+      n.kids.forEach((k, i) => el.append(node(k, `${path}[${i}]`)));
+      return titled(n, el);
+    }
+    const bar = h("div", { class: "su-seg", role: "tablist" }), panels = [];
+    n.kids.forEach((k, i) => {
+      const kk = { ...k, p: { ...k.p, title: null } };
+      const panel = h("div", { class: "su-panel", hidden: i !== 0 }, node(kk, `${path}[${i}]`));
+      const b = h("button", { type: "button", role: "tab", "aria-selected": i === 0 ? "true" : "false" }, k.p.title || `View ${i + 1}`);
+      b.addEventListener("click", () => { bar.querySelectorAll("button").forEach((x) => x.setAttribute("aria-selected", "false")); b.setAttribute("aria-selected", "true"); panels.forEach((q) => (q.hidden = q !== panel)); flushPending(); window.dispatchEvent(new Event("resize")); });
+      bar.append(b); panels.push(panel);
+    });
+    return titled(n, h("div", { class: "su-col su-gap-s" }, bar, ...panels));
   };
   L.sidebar = (n, path) => {
     const side = kidsInto(h("aside", { class: "su-side-a" }), n.p.side || [], path + ".side");

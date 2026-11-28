@@ -33,6 +33,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import registry as R  # noqa: E402
+import transforms as T  # noqa: E402
 
 ASSETS = HERE.parent / "assets"
 LIBS = {
@@ -216,6 +217,8 @@ def safe_eval(node, row):
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
         v = safe_eval(node.operand, row)
         return None if v is None else -v
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        return not safe_eval(node.operand, row)
     if isinstance(node, ast.Compare) and len(node.ops) == 1 and type(node.ops[0]) in CMPOPS:
         return CMPOPS[type(node.ops[0])](safe_eval(node.left, row), safe_eval(node.comparators[0], row))
     if isinstance(node, ast.BoolOp):
@@ -260,12 +263,41 @@ def add_columns(ctx, rows, adds, path):
 
 def to_rows(val, ctx, path, base_key=None):
     """Turn any data form into a list of dict rows. Return None on error."""
-    if isinstance(val, dict) and "add" in val and any(k in val for k in ("file", "path", "src", "rows", "csv")):
+    if T.is_transform(val):
         val = dict(val)
-        adds = val.pop("add")
-        inner = val.pop("rows", None) or val.pop("csv", None)
-        rows = to_rows(inner if inner is not None else val, ctx, path)
-        return None if rows is None else add_columns(ctx, [dict(r) for r in rows], adds, path)
+        steps = {k: val.pop(k) for k in list(val) if k in T.STEP_KEYS}
+        if "from" in val:
+            src = val.pop("from")
+            if src not in ctx.data:
+                m = close(str(src), ctx.data.keys(), 0.6)
+                ctx.err(path, f'from: no dataset "{src}" above this one' + (f' (did you mean "{m}"?)' if m else
+                        f". Datasets: {', '.join(ctx.data) or 'none'}"))
+                return None
+            rows = ctx.data[src]["rows"]
+        else:
+            inner = val.pop("rows", None)
+            if inner is None:
+                inner = val.pop("csv", None)
+            rows = to_rows(inner if inner is not None else val, ctx, path)
+        if rows is None:
+            return None
+        n_err = len(ctx.errors)
+
+        def fix_col(cols, name, where):
+            name = str(name)
+            if name in cols:
+                return name
+            for c in cols:
+                if c.lower() == name.lower():
+                    return c
+            m = close(name, cols, 0.6)
+            if m:
+                ctx.fix(where, f'column "{name}" → "{m}"', m)
+                return m
+            ctx.err(where, f'no column "{name}". Columns: {", ".join(cols)}')
+            return None
+        out = T.apply(ctx, rows, steps, path, fix_col, add_columns)
+        return out if len(ctx.errors) == n_err else None
     if isinstance(val, dict) and ("file" in val or "path" in val or "src" in val):
         f = val.get("file") or val.get("src") or val.get("path")
         rows = to_rows(f, ctx, path)
@@ -314,7 +346,6 @@ def to_rows(val, ctx, path, base_key=None):
             return [{"id": k, **v} for k, v in val.items()]
         if all(isinstance(v, list) for v in val.values()):
             n = max(len(v) for v in val.values())
-            ctx.fix(path, "converted a map of columns to rows", "a list of rows or CSV text")
             return [{k: (v[i] if i < len(v) else None) for k, v in val.items()} for i in range(n)]
         return [{"key": k, "value": v} for k, v in val.items()]
     ctx.err(path, "data must be rows (a list of maps), CSV text, TOON text, or a file path")
@@ -334,6 +365,8 @@ def load_file_raw(p):
     ext = p.suffix.lower()
     if ext in (".diff", ".patch"):
         return diffstat(text)
+    if ext in (".txt", ".lst", ".list"):
+        return [{"n": i + 1, "value": ln.rstrip()} for i, ln in enumerate(text.splitlines()) if ln.strip()]
     if ext == ".json":
         return json.loads(text)
     if ext in (".jsonl", ".ndjson"):
@@ -361,22 +394,31 @@ def col_type(vals):
 
 
 def register_parts(ctx, name, val):
-    """A JSON object file also gives one dataset per array inside it: name.key."""
+    """A JSON or YAML object file also gives one dataset per part inside it: name.key, name.key.sub.
+
+    A list of objects becomes rows. A list of plain values becomes rows of n and value.
+    An object of plain values becomes key/value rows (for kv)."""
     if not (isinstance(val, str) and looks_like_path(val) and "#" not in val):
         return
     p = ctx.file(val.strip())
     if p.suffix.lower() not in (".json", ".yaml", ".yml") or not p.exists():
         return
     raw = load_file_raw(p)
-    if not isinstance(raw, dict):
-        return
-    for k, v in raw.items():
-        if isinstance(v, list) and v and all(isinstance(x, dict) for x in v):
-            register(ctx, f"{name}.{k}", v)
-        elif isinstance(v, dict) and v and all(isinstance(x, (list, dict)) for x in v.values()):
-            for k2, v2 in v.items():
-                if isinstance(v2, list) and v2 and all(isinstance(x, dict) for x in v2):
-                    register(ctx, f"{name}.{k}.{k2}", v2)
+
+    def walk(obj, prefix, depth):
+        if depth > 3 or not isinstance(obj, dict):
+            return
+        for k, v in obj.items():
+            nm = f"{prefix}.{k}"
+            if isinstance(v, list) and v and all(isinstance(x, dict) for x in v):
+                register(ctx, nm, v)
+            elif isinstance(v, list) and v and all(not isinstance(x, (dict, list)) for x in v):
+                register(ctx, nm, [{"n": i + 1, "value": x} for i, x in enumerate(v)])
+            elif isinstance(v, dict) and v:
+                if all(not isinstance(x, (dict, list)) for x in v.values()):
+                    register(ctx, nm, [{"key": a, "value": b} for a, b in v.items()])
+                walk(v, nm, depth + 1)
+    walk(raw, name, 0)
 
 
 def register(ctx, name, rows):
@@ -413,9 +455,13 @@ def load_yaml(text):
 
     class Loader(yaml.SafeLoader):
         pass
-    # Keep dates as strings: the page formats them.
+    # Keep dates as strings (the page formats them), and read only true/false as booleans:
+    # YAML 1.1 also reads on/off/yes/no as booleans, so a key such as `on:` would break.
     for ch, resolvers in list(Loader.yaml_implicit_resolvers.items()):
-        Loader.yaml_implicit_resolvers[ch] = [(t, r) for t, r in resolvers if t != "tag:yaml.org,2002:timestamp"]
+        Loader.yaml_implicit_resolvers[ch] = [(t, r) for t, r in resolvers
+                                              if t not in ("tag:yaml.org,2002:timestamp", "tag:yaml.org,2002:bool")]
+    Loader.add_implicit_resolver("tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"),
+                                 list("tTfF"))
     try:
         return yaml.load(text, Loader=Loader)
     except yaml.YAMLError as e:
@@ -763,6 +809,14 @@ def default_required(ctx, comp, k, node, path):
 def resolve_data(ctx, val, path):
     if isinstance(val, str) and val in ctx.data:
         return val
+    if isinstance(val, str) and "\n" not in val and "." in val and val.split(".")[0] in ctx.data and not ctx.file(val).exists():
+        parts = [k for k in ctx.data if k.startswith(val.split(".")[0] + ".")]
+        m = close(val, parts, 0.6)
+        if m:
+            ctx.fix(path, f'data "{val}" → "{m}"', f"data: {m}")
+            return m
+        ctx.err(path, f'no dataset "{val}". Parts: {", ".join(parts) or "none"}. For any inner array: file.json#a.b')
+        return None
     if isinstance(val, str) and "\n" not in val and not looks_like_path(val):
         m = close(val, ctx.data.keys(), 0.6) or next((k for k in ctx.data if k.lower() == val.lower()), None)
         if m:
@@ -1012,14 +1066,52 @@ def finish(ctx, comp, node, path):
                 p["tone"] = tm
         p["src"] = edges_to_mermaid(ctx.data[p["data"]]["rows"], p, nodes)
         ctx.libs.add("mermaid")
+    elif comp == "chart" and p.get("kind") in ("hist",):
+        ctx.libs.add("chart")
     elif comp == "chart":
         ctx.libs.add("chart")
+        if p.get("kind") == "waterfall" and not p.get("y"):
+            ctx.err(path, "a waterfall needs y: the signed amount of each step")
         if not p.get("y") and p.get("agg", "none") == "none":
             p["agg"] = "count"
             ctx.fix(path, "chart had no `y`; counted rows per x", "y: <column>, or agg: count")
         if isinstance(p.get("y"), list) and len(p["y"]) > 1 and p.get("series"):
             ctx.fix(path, "chart has several y columns and a series; used the first y", "one y with series, or several y without")
             p["y"] = p["y"][:1]
+    elif comp == "sankey" and p.get("data") in ctx.data and all(k in p for k in ("from", "to", "value")):
+        q = lambda x: '"' + str(x).replace('"', "'") + '"' if re.search(r'[,"]', str(x)) else str(x)
+        lines = ["sankey-beta", ""]
+        for r in ctx.data[p["data"]]["rows"]:
+            v = r.get(p["value"])
+            if r.get(p["from"]) is None or r.get(p["to"]) is None or not isinstance(v, (int, float)) or v <= 0:
+                continue
+            lines.append(f"{q(r[p['from']])},{q(r[p['to']])},{v}")
+        cyc = find_cycle([(r.get(p["from"]), r.get(p["to"])) for r in ctx.data[p["data"]]["rows"]])
+        if cyc:
+            ctx.err(path, f"sankey cannot show a cycle: {' → '.join(map(str, cyc))}. Use graph for loops, "
+                          f"or a where: that drops one edge")
+            return
+        p["src"] = "\n".join(lines)
+        ctx.libs.add("mermaid")
+    elif comp == "er" and p.get("data") in ctx.data and "table" in p and "column" in p:
+        p["src"] = er_mermaid(ctx.data[p["data"]]["rows"], p)
+        ctx.libs.add("mermaid")
+    elif comp == "classes" and p.get("data") in ctx.data and "name" in p:
+        p["src"] = classes_mermaid(ctx.data[p["data"]]["rows"], p)
+        ctx.libs.add("mermaid")
+    elif comp == "truth":
+        truth_rows(ctx, p, path)
+    elif comp == "decision":
+        w = p.get("weights")
+        if isinstance(w, str):
+            ds = resolve_data(ctx, w, path + ".weights")
+            if ds:
+                cols = ctx.data[ds]["cols"]
+                kc = next((c for c in cols if ctx.data[ds]["types"].get(c) == "str"), cols[0])
+                vc = next((c for c in cols if ctx.data[ds]["types"].get(c) == "num"), cols[-1])
+                p["weights"] = {str(r.get(kc)): r.get(vc) for r in ctx.data[ds]["rows"]}
+        elif isinstance(w, list):
+            p["weights"] = {str(r.get("criterion") or r.get("name")): r.get("weight") for r in w if isinstance(r, dict)}
     elif comp == "list" and p.get("code"):
         ctx.libs.add("hljs")
     elif comp == "kv" and isinstance(p.get("pairs"), list):
@@ -1040,6 +1132,124 @@ def finish(ctx, comp, node, path):
         p["items"] = items
     elif comp == "checklist" and isinstance(p.get("items"), dict):
         p["items"] = [("[x] " if v else "[ ] ") + str(k) for k, v in p["items"].items()]
+
+
+def find_cycle(edges):
+    graph = {}
+    for a, b in edges:
+        if a is not None and b is not None:
+            graph.setdefault(a, []).append(b)
+    state, stack = {}, []
+
+    def visit(n):
+        state[n] = 1
+        stack.append(n)
+        for m in graph.get(n, []):
+            if state.get(m) == 1:
+                return stack[stack.index(m):] + [m]
+            if not state.get(m):
+                c = visit(m)
+                if c:
+                    return c
+        state[n] = 2
+        stack.pop()
+        return None
+    for n in list(graph):
+        if not state.get(n):
+            c = visit(n)
+            if c:
+                return c
+    return None
+
+
+def _ident(x):
+    return re.sub(r"[^A-Za-z0-9_]", "_", str(x)) or "_"
+
+
+def er_mermaid(rows, p):
+    tables, rels = {}, []
+    for r in rows:
+        t, c = r.get(p["table"]), r.get(p["column"])
+        if t is None or c is None:
+            continue
+        key = str(r.get(p["key"]) or "").lower() if p.get("key") else ""
+        tables.setdefault(t, [])
+        if p.get("keys_only") and not key:
+            continue
+        kk = " PK" if "pk" in key or "primary" in key else " FK" if "fk" in key or "foreign" in key else ""
+        tables[t].append(f"    {_ident(r.get(p['type']) if p.get('type') else 'col')} {_ident(c)}{kk}")
+        ref = r.get(p["ref"]) if p.get("ref") else None
+        if ref:
+            rt = str(ref).split(".")[0]
+            card = "|o--o{" if r.get("nullable") in (True, "yes", "true") else "||--o{"
+            rels.append(f'  {_ident(rt)} {card} {_ident(t)} : "{c}"')
+    out = ["erDiagram"]
+    for t, cols in tables.items():
+        out.append(f"  {_ident(t)} {{")
+        out.extend(cols)
+        out.append("  }")
+    return "\n".join(out + rels)
+
+
+def classes_mermaid(rows, p):
+    names = {str(r.get(p["name"])) for r in rows}
+    out, links = ["classDiagram"], []
+
+    def items(v):
+        if v is None:
+            return []
+        return [str(x).strip() for x in (v if isinstance(v, list) else str(v).split(",")) if str(x).strip()]
+    for r in rows:
+        n = _ident(r.get(p["name"]))
+        out.append(f"  class {n} {{")
+        for f in items(r.get(p["fields"])) if p.get("fields") else []:
+            out.append("    " + f.replace("{", "(").replace("}", ")"))
+            if p.get("link", True) and ":" in f:
+                ty = re.sub(r"[\[\]?]", "", f.split(":", 1)[1]).strip()
+                if ty in names and _ident(ty) != n:
+                    links.append(f"  {n} --> {_ident(ty)} : {f.split(':', 1)[0].strip()}")
+        for m in items(r.get(p["methods"])) if p.get("methods") else []:
+            out.append("    " + (m if "(" in m else m + "()"))
+        out.append("  }")
+        if p.get("extends") and r.get(p["extends"]):
+            links.append(f"  {_ident(r[p['extends']])} <|-- {n}")
+    return "\n".join(out + links)
+
+
+def truth_rows(ctx, p, path):
+    if p.get("data"):
+        return
+    ins = [str(x) for x in (p.get("inputs") or [])]
+    outs = p.get("outputs") or {}
+    if not ins or not outs:
+        ctx.err(path, "truth needs inputs: [a, b] and outputs: {y: 'a and not b'} (or data: rows)")
+        return
+    if len(ins) > 8:
+        ctx.err(path, "truth supports at most 8 inputs (256 rows)")
+        return
+    trees = {}
+    for name, expr in outs.items():
+        e = str(expr).replace("&&", " and ").replace("||", " or ").replace("!", " not ").replace(" & ", " and ") \
+            .replace(" | ", " or ").replace("~", " not ").replace("xor", "!=").replace(" ^ ", " != ")
+        try:
+            trees[name] = ast.parse(e, mode="eval")
+        except SyntaxError:
+            ctx.err(path, f'outputs.{name}: "{expr}" is not a valid expression (use and, or, not, xor)')
+            return
+        bad = {n.id for n in ast.walk(trees[name]) if isinstance(n, ast.Name)} - set(ins)
+        if bad:
+            ctx.err(path, f"outputs.{name}: unknown input(s) {', '.join(sorted(bad))}. Inputs: {', '.join(ins)}")
+            return
+    rows = []
+    for i in range(2 ** len(ins)):
+        row = {k: (i >> (len(ins) - 1 - j)) & 1 for j, k in enumerate(ins)}
+        env = {k: bool(v) for k, v in row.items()}
+        for name, tree in trees.items():
+            row[name] = int(bool(safe_eval(tree, env)))
+        rows.append(row)
+    p["rows"] = rows
+    p["cols"] = ins + list(outs)
+    p["exprs"] = {k: str(v) for k, v in outs.items()}
 
 
 def guess_mermaid(src):
@@ -1071,16 +1281,21 @@ AUTO_TONE = {"critical": "bad", "high": "bad", "fail": "bad", "failed": "bad", "
 
 
 def edges_to_mermaid(rows, p, nodes=None):
+    """Build a Mermaid flowchart from edge rows (and optional node rows)."""
     ids = {}
     out = [f"flowchart {p.get('dir', 'LR')}"]
     groups = {}
     edges = []
+    styles = []
     attrs = {}
+    text = {}
     if nodes:
         key = p.get("key") or next((c for c in nodes["cols"] if c.lower() in ("name", "id", "node", "key")), nodes["cols"][0])
         for r in nodes["rows"]:
             attrs[r.get(key)] = r
             mid(r.get(key), ids)
+            if p.get("text") and r.get(p["text"]) not in (None, ""):
+                text[r.get(key)] = f"{r.get(key)}: {r.get(p['text'])}" if str(r.get(key)) != str(r.get(p["text"])) else r.get(key)
             if p.get("by"):
                 groups.setdefault(str(r.get(p["by"])), set()).add(r.get(key))
     for r in rows:
@@ -1094,17 +1309,25 @@ def edges_to_mermaid(rows, p, nodes=None):
             continue
         ib = mid(b, ids)
         lab = r.get(p["label"]) if p.get("label") else None
-        edges.append(f"  {ia} -->|{mlabel(lab)}| {ib}" if lab not in (None, "") else f"  {ia} --> {ib}")
+        sign = str(r.get(p["sign"])).strip() if p.get("sign") else ""
+        neg = sign in ("-", "−", "–", "neg", "negative", "minus")
+        if p.get("sign"):
+            lab = ("−" if neg else "+") + (f" {lab}" if lab not in (None, "") else "")
+        arrow = "-.->" if neg else "-->"
+        edges.append(f"  {ia} {arrow}|{mlabel(lab)}| {ib}" if lab not in (None, "") else f"  {ia} {arrow} {ib}")
+        if p.get("sign"):
+            styles.append(f"  linkStyle {len(edges) - 1} stroke:{'#dc3c3d' if neg else '#0a8a1f'},stroke-width:1.6px")
+    shown = {name: text.get(name, name) for name in ids}
     grouped = set()
     for gi, (g, members) in enumerate(groups.items()):
         out.append(f"  subgraph g{gi}[{mlabel(g)}]")
         for m in members:
-            out.append(f"    {ids[m]}[{mlabel(m)}]")
+            out.append(f"    {ids[m]}[{mlabel(shown[m])}]")
             grouped.add(m)
         out.append("  end")
     for name, i in ids.items():
         if name not in grouped:
-            out.append(f"  {i}[{mlabel(name)}]")
+            out.append(f"  {i}[{mlabel(shown[name])}]")
     tone = p.get("tone")
     if tone and attrs:
         col, tmap = next(iter(tone.items())) if isinstance(tone, dict) and tone else (None, None)
@@ -1119,7 +1342,7 @@ def edges_to_mermaid(rows, p, nodes=None):
         for t in sorted(used):
             fill, stroke = TONE_FILL[t]
             out.append(f"  classDef t_{t} fill:{fill},stroke:{stroke},color:#1b2029,stroke-width:1.5px")
-    return "\n".join(out + edges)
+    return "\n".join(out + edges + styles)
 
 
 HUNK = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@ ?(.*)")
@@ -1238,7 +1461,7 @@ def compile_spec(spec, base):
     elif isinstance(meta, str):
         meta = [meta]
     plan = {"title": str(page["title"]), "subtitle": page.get("subtitle"), "meta": meta or [], "width": width,
-            "accent": page.get("accent"), "layout": layout,
+            "accent": page.get("accent"), "currency": page.get("currency"), "layout": layout,
             "data": {k: {"rows": v["rows"], "cols": v["cols"], "types": v["types"]} for k, v in ctx.data.items()}}
     return ctx, plan
 
@@ -1247,7 +1470,7 @@ def scan_libs(nodes, libs):
     for n in nodes:
         if n["c"] in ("chart",):
             libs.add("chart")
-        if n["c"] in ("diagram", "graph"):
+        if n["c"] in ("diagram", "graph", "sankey", "er", "classes"):
             libs.add("mermaid")
         scan_libs(n["kids"], libs)
         for k in ("side", "main"):
@@ -1351,7 +1574,24 @@ DATA_HELP = """data — named datasets under the page key `data:`. Each node nam
   file:        d: results.json | .jsonl | .csv | .tsv | .yaml | .diff/.patch (one row per file)
   inner array: d: design.json#components      or  d: {file: design.json, key: components}
   all arrays:  d: design.json   → also registers d.components, d.calls, ... for each array inside
-  computed:    d: {file: eps.json, add: {delta: "after - before", pct: "round((after/before-1)*100, 1)"}}
+  text lines:  d: tree.txt  → rows n, value (one per line)
+SHAPE a dataset (steps run in this order; any subset):
+  d:
+    file: results.csv          # or rows: [...], csv: |..., or from: <a dataset defined above>
+    where: {status: [failed, flaky], ms: ">500", day: ">=2026-11-20"}
+    explode: after             # one row per item of a list column (e.g. dependencies)
+    join: {data: failures, on: test, cols: [error]}     # on: [left, right] when names differ
+    add: {delta: "after - before", period: "'after' if day >= '2026-11-20' else 'before'"}
+    group: [suite]             # one row per group, with count ...
+    sum: [ms]                  # ... and sum / mean / min / max of columns
+    pct: [ms]                  # adds ms_pct = share of the total
+    describe: [minutes]        # n mean sd min q1 median q3 max  (by: arm for one row per group)
+    corr: [a, b, c]            # rows a, b, r (Pearson) → heatmap {x: a, y: b, v: r, scale: div}
+    then: {secs: "ms / 1000"}  # computed columns after group
+    sort: -ms
+    top: 10
+    rename: {ms: Time}
+  expressions: + - * / % **, == != < > <= >=, and or not, x if cond else y, round abs min max len str int float
   single object (e.g. run.json): show it with kv: {data: d, keys: [app, commit]}
   per node:    where: {sev: [high, critical]}  or  where: {ms: ">500"} keeps matching rows
 Paths resolve from the folder of the spec."""
@@ -1369,12 +1609,12 @@ layout:
 """
 
 
-def sig(name):
+def sig(name, n_opt=5):
     c = R.C[name]
-    parts = []
-    for k, s in c["props"].items():
-        parts.append(k + ("*" if s["req"] else ""))
-    return f"{name}: {' '.join(parts)}"
+    req = [k + "*" for k, x in c["props"].items() if x["req"]]
+    opt = [k for k, x in c["props"].items() if not x["req"]]
+    more = f" +{len(opt) - n_opt}" if len(opt) > n_opt else ""
+    return f"{name}: {' '.join(req + opt[:n_opt])}{more}"
 
 
 def catalog():
@@ -1382,15 +1622,14 @@ def catalog():
     print("page: title* subtitle meta data{name: rows|csv-text|toon-text|file.json|file.csv} layout*[nodes] width")
     print("an array inside a JSON file: data: {comps: design.json#components}; also data: {d: design.json} gives d.components, d.calls, ...")
     print("a .diff/.patch file as data gives one row per file: file, status, added, removed")
-    print('computed columns: data: {d: {file: x.json, add: {delta: "after - before", pct: "round((after/before-1)*100, 1)"}}}')
+    print('shape data: d: {file: x.csv, where: {status: failed}, join: {data: o, on: id}, add: {delta: "b - a"}, group: suite, sum: [ms], sort: -ms, top: 10}  (`explain data`)')
     print("node: - NAME: {props}  or  - NAME: shorthand  (a bare string = markdown text)")
     print("every node also takes: title note span w h where   (* = required)")
     for g, label in GROUPS:
         print(label)
         for name, c in R.C.items():
             if c["group"] == g:
-                short = f" (short: {c['short']})" if c["short"] else ""
-                print(f"  {sig(name)}{short} — {c['doc']}")
+                print(f"  {sig(name)} — {c['doc']}")
     print("fmt values: " + " ".join(R.FMTS) + " · tone values: " + " ".join(R.TONES))
     print("Values such as high/medium/low and pass/fail/done get tone colours without a tone map.")
     print("example:")

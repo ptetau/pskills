@@ -35,11 +35,13 @@ problem. A page that took a long hand-written HTML file takes a spec of about 30
 
 | Part | What it is |
 |---|---|
-| Layout | `row`, `col`, `grid`, `tabs`, `card`, `section`, `sidebar`, `float` |
+| Layout | `row`, `col`, `grid`, `tabs`, `card`, `section`, `sidebar`, `compare`, `float` |
 | Summary | `stat`, `stats`, `kv`, `meter`, `callout`, `text` |
-| Data | `table`, `chart`, `heatmap`, `list`, `board`, `checklist`, `timeline`, `gantt`, `tree`, `filter` |
+| Data | `table`, `chart` (bar, line, area, scatter with trend, donut, waterfall, hist), `heatmap`, `list`, `board`, `checklist`, `timeline`, `gantt`, `tree`, `filter` |
+| Finance and statistics | `statement` (P&L with subtotals and variance), `box`, `forest` |
+| Structure and choices | `treemap`, `decision` (weighted options), `truth` (truth table from expressions) |
 | Code | `code`, `diff` (both take review `notes` that show under their line) |
-| Diagram | `diagram` (Mermaid source), `graph` (an edge list in data) |
+| Diagram | `diagram` (Mermaid source), `graph` (edges, with groups, tones, and + / − signs), `sankey`, `er`, `classes` |
 
 A `filter` node filters every node on the same dataset. Tables and lists also have their
 own `group`, `filter`, and `search`. Values such as `high`, `fail`, and `done` get a tone
@@ -54,7 +56,9 @@ Give each dataset in `data:` as one of these:
 - A path to a `.json`, `.jsonl`, `.csv`, `.tsv`, or `.yaml` file. Add `{file: x.json, key: a.b}`
   to select an array inside the file.
 
-A node can also take its data inline.
+A node can also take its data inline. A dataset can also shape its rows with `where`,
+`explode`, `join`, `add`, `group` with `sum`, `mean`, `min`, or `max`, `pct`, `describe`,
+`corr`, `sort`, and `top`. Run `softui.py explain data` for the full list.
 
 ## Why YAML and not TOON
 
@@ -72,7 +76,8 @@ tokens on flat tables, so soft-ui accepts TOON text for a dataset.
 | `scripts/registry.py` | Each component: props, aliases, and example. The catalog reads it. |
 | `scripts/verify.js` | The browser check |
 | `assets/runtime.js`, `assets/style.css` | The page runtime and style, put into each page |
-| `examples/sink.yaml` | One node of each kind |
+| `examples/sink.yaml` | One node of each core kind |
+| `examples/gallery.yaml` | The finance, statistics, structure, logic, and options components |
 | `eval/` | The comparison of hand-built pages and soft-ui pages |
 
 ## Needs

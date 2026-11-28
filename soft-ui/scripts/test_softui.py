@@ -60,6 +60,79 @@ class Computed(unittest.TestCase):
         self.assertTrue(any("add.y" in e for e in ctx.errors))
 
 
+class Transforms(unittest.TestCase):
+    def test_group_sum_sort_top_pct(self):
+        ctx, plan = compile_yaml("title: T\ndata:\n  r: [{s: a, ms: 1}, {s: a, ms: 3}, {s: b, ms: 10}, {s: c, ms: 2}]\n"
+                                 "  g: {from: r, group: s, sum: [ms], pct: [ms], sort: -ms, top: 2}\nlayout: [{table: g}]")
+        self.assertEqual(ctx.errors, [])
+        self.assertEqual(plan["data"]["g"]["rows"], [{"s": "b", "count": 1, "ms": 10, "ms_pct": 62.5},
+                                                     {"s": "a", "count": 2, "ms": 4, "ms_pct": 25.0}])
+
+    def test_where_join_explode(self):
+        ctx, plan = compile_yaml("title: T\ndata:\n  names: [{id: S1, step: Freeze}, {id: S2, step: Build}]\n"
+                                 "  plan:\n    rows: [{id: S2, after: [S1]}, {id: S3, after: [S1, S2]}]\n"
+                                 "    explode: after\n    join: {data: names, on: [after, id], cols: [step]}\n"
+                                 "    where: {id: '!=S9'}\nlayout: [{table: plan}]")
+        self.assertEqual(ctx.errors, [])
+        rows = plan["data"]["plan"]["rows"]
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(rows[0]["step"], "Freeze")
+
+    def test_describe_and_corr(self):
+        ctx, plan = compile_yaml("title: T\ndata:\n  o: {rows: [{arm: a, m: 1, k: 2}, {arm: a, m: 3, k: 6}, {arm: b, m: 5, k: 1}, {arm: b, m: 7, k: 0}],"
+                                 " describe: [m], by: arm}\n  c: {rows: [{x: 1, y: 2}, {x: 2, y: 4}, {x: 3, y: 6}], corr: [x, y]}\nlayout: [{table: o}]")
+        self.assertEqual(ctx.errors, [])
+        d = plan["data"]["o"]["rows"]
+        self.assertEqual((d[0]["arm"], d[0]["n"], d[0]["mean"]), ("a", 2, 2.0))
+        self.assertEqual(plan["data"]["c"]["rows"][1]["r"], 1.0)
+
+    def test_bad_column_names_the_columns(self):
+        ctx, _ = compile_yaml("title: T\ndata:\n  g: {rows: [{suite: a}], group: zzz}\nlayout: [{table: g}]")
+        self.assertTrue(any("Columns: suite" in e for e in ctx.errors))
+
+    def test_nested_parts(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "x.json").write_text('{"cash": {"bank": 5}, "uc": {"name": "n", "steps": ["a", "b"]}}')
+        ctx, plan = compile_yaml("title: T\ndata: {x: x.json}\nlayout: [{table: x.uc.steps}, {kv: {data: x.cash}}]", d)
+        self.assertEqual(ctx.errors, [])
+        self.assertEqual(plan["data"]["x.uc.steps"]["rows"][1], {"n": 2, "value": "b"})
+
+
+class NewComponents(unittest.TestCase):
+    def test_truth_table_rows(self):
+        ctx, plan = compile_yaml("title: T\nlayout:\n- truth: {inputs: [a, b], outputs: {y: a and not b, x: a xor b}}")
+        self.assertEqual(ctx.errors, [])
+        rows = plan["layout"][0]["p"]["rows"]
+        self.assertEqual([(r["y"], r["x"]) for r in rows], [(0, 0), (0, 1), (1, 1), (0, 0)])
+
+    def test_truth_unknown_input(self):
+        ctx, _ = compile_yaml("title: T\nlayout:\n- truth: {inputs: [a], outputs: {y: a and c}}")
+        self.assertTrue(any("unknown input(s) c" in e for e in ctx.errors))
+
+    def test_er_and_classes(self):
+        ctx, plan = compile_yaml("title: T\ndata:\n  s: [{t: users, c: id, ty: uuid, k: pk}, {t: orders, c: user_id, ty: uuid, k: fk, r: users.id}]\n"
+                                 "  k: [{n: Order, f: 'id: Id, buyer: User'}, {n: User, f: [id: Id]}]\n"
+                                 "layout:\n- er: {data: s, table: t, column: c, type: ty, key: k, ref: r}\n- classes: {data: k, name: n, fields: f}")
+        self.assertEqual(ctx.errors, [])
+        self.assertIn('users ||--o{ orders : "user_id"', plan["layout"][0]["p"]["src"])
+        self.assertIn("Order --> User : buyer", plan["layout"][1]["p"]["src"])
+
+    def test_sankey_cycle_is_an_error(self):
+        ctx, _ = compile_yaml("title: T\ndata: {f: [{a: x, b: y, v: 1}, {a: y, b: x, v: 1}]}\nlayout:\n- sankey: {data: f, from: a, to: b, value: v}")
+        self.assertTrue(any("cycle: x → y → x" in e for e in ctx.errors))
+
+    def test_decision_weights_from_dataset(self):
+        ctx, plan = compile_yaml("title: T\ndata:\n  o: [{name: A, scores: {cost: 3}}]\n  w: [{criterion: cost, weight: 0.5}]\n"
+                                 "layout:\n- decision: {data: o, option: name, scores: scores, weights: w}")
+        self.assertEqual(plan["layout"][0]["p"]["weights"], {"cost": 0.5})
+
+    def test_signed_graph_edges(self):
+        ctx, plan = compile_yaml("title: T\ndata: {e: [{a: x, b: y, s: '-'}]}\nlayout:\n- graph: {data: e, from: a, to: b, sign: s}")
+        src = plan["layout"][0]["p"]["src"]
+        self.assertIn("-.->", src)
+        self.assertIn("linkStyle 0 stroke:#dc3c3d", src)
+
+
 class Repairs(unittest.TestCase):
     def test_typo_component_alias_and_prop(self):
         ctx, plan = compile_yaml("title: T\ndata: {d: [{Name: a, n: 1}]}\nlayout:\n"
@@ -132,7 +205,7 @@ class Cli(unittest.TestCase):
         self.assertEqual(rc, 0)
         for name in softui.R.C:
             self.assertIn(f"  {name}:", out)
-        self.assertLess(len(out), 4500)
+        self.assertLess(len(out), 5200)
 
     def test_explain_alias(self):
         rc, out = run("explain", "kanban")

@@ -5,7 +5,7 @@ aliases, and its example. The catalog, the explain text, and the spec checks all
 """
 
 TONES = ["good", "warn", "bad", "info", "neutral"]
-FMTS = ["int", "num", "pct", "ms", "s", "bytes", "date", "time", "delta", "code", "md", "raw"]
+FMTS = ["int", "num", "pct", "money", "k", "ms", "s", "bytes", "date", "time", "delta", "code", "md", "raw"]
 
 
 def P(t, req=False, enum=None, default=None, doc=""):
@@ -108,6 +108,17 @@ comp("sidebar", "layout", "narrow side column next to a main column",
     - diff: {patch: changes.diff}
 """)
 
+comp("compare", "layout", "the same thing several ways, or options side by side: equal columns, or a toggle",
+     {"items": P("nodes", req=True), "mode": P("enum", enum=["side", "toggle"], default="side",
+                                                 doc="side = equal columns; toggle = one at a time with a switch")},
+     short="items", aliases=["versus", "vs", "side-by-side", "alternatives", "views"], example="""
+- compare:
+  - chart: {kind: bar, data: v, x: account, y: variance}
+    title: As a chart
+  - table: {data: v}
+    title: As a table
+""")
+
 comp("float", "layout", "floating island pinned to a corner of the screen; folds",
      {"items": P("nodes", req=True), "at": P("enum", enum=["br", "bl", "tr", "tl"], default="br"),
       "width": P("int", default=320)},
@@ -127,7 +138,9 @@ comp("stat", "summary", "one big number with label, delta and optional sparkline
       "good": P("enum", enum=["up", "down"], default="up", doc="which delta direction is good"),
       "tone": P("enum", enum=TONES), "sub": P("str", doc="small line under the value"),
       "spark": P("list", doc="list of numbers for a sparkline"),
+      "fmt": P("enum", enum=FMTS),
       "data": P("data", doc="compute value from data (follows filters)"),
+      "of": P("any", doc="with data + where: true shows 'n / total rows' and a percent"),
       "agg": P("enum", enum=["count", "sum", "mean", "min", "max"], default="count", doc="with data"),
       "col": P("col", doc="column to aggregate (with data)")},
      aliases=["kpi", "metric"], example="""
@@ -187,9 +200,12 @@ comp("table", "data", "sortable table; group, filter, search, inline bars, tones
       "search": P("bool", default=False, doc="add a text search box"),
       "limit": P("int", doc="rows per page"),
       "bar": P("cols", doc="numeric columns that get an inline bar"),
-      "tone": P("map", doc="{col: {value: tone}} colours cells, e.g. {sev: {high: bad}}"),
+      "tone": P("map", doc="{col: {value: tone}} colours cells, e.g. {sev: {high: bad}} or thresholds {p95: {'>300': bad}}"),
       "fmt": P("map", doc="{col: fmt}; fmt is one of " + ", ".join(FMTS)),
       "expand": P("cols", doc="columns shown when a row is clicked open (long text, repro steps)"),
+      "top": P("int", doc="show only the first N rows after sort"),
+      "labels": P("map", doc="{col: header label}"),
+      "good": P("map", doc="{col: up|down} colours a delta column: which direction is good"),
       "dense": P("bool", default=False)},
      short="data", aliases=["grid-table", "datatable", "tbl"], data=True, example="""
 - table:
@@ -202,8 +218,8 @@ comp("table", "data", "sortable table; group, filter, search, inline bars, tones
     expand: [detail, repro]
 """)
 
-comp("chart", "data", "bar / line / area / scatter / donut; severity series get status colours",
-     {"data": P("data", req=True), "kind": P("enum", enum=["bar", "line", "area", "scatter", "donut"], default="bar"),
+comp("chart", "data", "bar, line, area, scatter (+trend), donut, waterfall, hist; x marks and bands",
+     {"data": P("data", req=True), "kind": P("enum", enum=["bar", "line", "area", "scatter", "donut", "waterfall", "hist"], default="bar"),
       "x": P("col", req=True, doc="category or time column"),
       "y": P("cols", doc="value column(s); omit with agg: count"),
       "agg": P("enum", enum=["none", "count", "sum", "mean", "min", "max"], default="none",
@@ -214,11 +230,19 @@ comp("chart", "data", "bar / line / area / scatter / donut; severity series get 
       "limit": P("int", doc="keep the first N x values after sort"),
       "fmt": P("enum", enum=FMTS, doc="value format"),
       "zero": P("bool", default=True, doc="start the value axis at zero"),
-      "mark": P("list", doc="reference lines: [{y: 300, label: SLO}]"),
+      "mark": P("list", doc="reference lines: [{y: 300, label: SLO}] or [{x: 2026-11-20, label: release}]"),
+      "band": P("list", doc="shaded x ranges: [{from: 2026-11-20, to: 2026-11-29, label: after}]"),
+      "labels": P("map", doc="{column or series value: legend label}"),
+      "trend": P("bool", default=False, doc="scatter: add a least-squares line and r²"),
+      "bins": P("int", doc="hist: number of bins (default: auto)"),
+      "total": P("str", doc="waterfall: label of a final total bar, e.g. Net profit"),
       "height": P("int", default=260)},
      aliases=["plot"], data=True, example="""
 - chart: {kind: line, data: lat, x: day, y: [p50, p95], fmt: ms, mark: [{y: 300, label: SLO}]}
 - chart: {kind: bar, data: findings, x: sev, agg: count, series: flow, stack: true}
+- chart: {kind: hist, data: outcomes, x: minutes, series: arm, bins: 12}
+- chart: {kind: scatter, data: runs, x: size, y: ms, trend: true}
+- chart: {kind: waterfall, data: bridge, x: step, y: amount, total: Net profit, fmt: money}
 """)
 
 comp("heatmap", "data", "grid of cells coloured by value (x by y)",
@@ -228,7 +252,8 @@ comp("heatmap", "data", "grid of cells coloured by value (x by y)",
       "scale": P("enum", enum=["seq", "div"], default="seq", doc="seq = one hue; div = below/above zero"),
       "fmt": P("enum", enum=FMTS), "labels": P("bool", default=False, doc="print the value in each cell"),
       "worst": P("col", doc="colour each cell by the worst value of this severity column"),
-      "totals": P("bool", default=False, doc="add row and column totals")},
+      "totals": P("bool", default=False, doc="add row and column totals"),
+      "xorder": P("list", doc="x value order, e.g. [low, medium, high]"), "yorder": P("list")},
      aliases=["matrix"], data=True, example="""
 - heatmap: {data: churn, x: week, y: file, v: lines}
 - heatmap: {data: findings, x: kind, y: flow, worst: sev, totals: true}   # counts, coloured by worst severity
@@ -286,7 +311,8 @@ comp("gantt", "data", "bars on a time axis: one per task",
 comp("tree", "data", "folding file or object tree from paths",
      {"paths": P("list", doc="list of paths a/b/c"), "data": P("data"),
       "path": P("col", doc="path column (with data)"), "badges": P("cols"),
-      "tone": P("map"), "open": P("int", default=2, doc="levels open at start")},
+      "tone": P("map"), "open": P("int", default=2, doc="levels open at start"),
+      "sep": P("str", doc="path separator; default / (or > when paths use ' > ')")},
      short="paths", aliases=["filetree", "hierarchy", "outline"], data=True, example="""
 - tree: {data: changed, path: file, badges: [added, removed]}
 """)
@@ -295,6 +321,71 @@ comp("filter", "data", "filter chips with counts + search; filters every node on
      {"data": P("data", req=True), "fields": P("cols", req=True), "search": P("bool", default=True)},
      aliases=["facets", "slicer"], data=True, example="""
 - filter: {data: findings, fields: [sev, flow]}
+""")
+
+comp("statement", "data", "financial statement (P&L): sections, lines, subtotals, variance",
+     {"data": P("data", req=True), "section": P("col", req=True, doc="e.g. Revenue, Cost of sales, Operating expenses"),
+      "line": P("col", req=True, doc="account name"), "values": P("cols", req=True, doc="amount columns, e.g. [actual, budget]; rows are summed"),
+      "minus": P("list", doc="sections subtracted from the running total, e.g. [Cost of sales, Operating expenses]"),
+      "subtotals": P("list", doc="[{label: Gross profit, after: Cost of sales}, {label: Net profit, after: Operating expenses}]"),
+      "variance": P("bool", default=True, doc="with 2 values: add difference and % (coloured good/bad by section sign)"),
+      "fmt": P("enum", enum=FMTS, default="money"), "order": P("list", doc="section order"),
+      "labels": P("map", doc="{value column: header label}")},
+     aliases=["pnl", "p&l", "income-statement", "profit-and-loss", "financials"], data=True, example="""
+- statement:
+    data: pnl
+    section: section
+    line: account
+    values: [actual, budget]
+    minus: [Cost of sales, Operating expenses]
+    subtotals: [{label: Gross profit, after: Cost of sales}, {label: Net profit, after: Operating expenses}]
+""")
+
+comp("box", "data", "box plots: median, quartiles, whiskers and outliers per group",
+     {"data": P("data", req=True), "y": P("col", req=True, doc="numeric column"), "by": P("col", doc="one box per value"),
+      "fmt": P("enum", enum=FMTS), "mean": P("bool", default=True, doc="mark the mean")},
+     aliases=["boxplot", "box-plot", "whisker"], data=True, example="""
+- box: {data: outcomes, y: minutes, by: arm}
+""")
+
+comp("forest", "data", "forest plot: estimate and confidence interval per row, with a pooled diamond",
+     {"data": P("data", req=True), "label": P("col", req=True), "est": P("col", req=True), "lo": P("col", req=True),
+      "hi": P("col", req=True), "weight": P("col", doc="marker size and a weight column"),
+      "group": P("col", doc="colour (and badge) by this column, e.g. risk of bias"),
+      "pooled": P("map", doc="{est, lo, hi, label} drawn as a diamond"),
+      "null": P("num", default=0, doc="line of no effect (1 for ratios)"), "log": P("bool", default=False),
+      "left": P("str", doc="label under the left side, e.g. favours treatment"), "right": P("str"),
+      "fmt": P("enum", enum=FMTS), "tone": P("map")},
+     aliases=["forestplot", "meta-analysis", "ci", "intervals"], data=True, example="""
+- forest: {data: studies, label: study, est: md, lo: ci_low, hi: ci_high, weight: weight, group: bias,
+           pooled: {est: -9.8, lo: -12.4, hi: -7.2, label: Pooled (RE)}, left: favours CBT-I, right: favours usual care}
+""")
+
+comp("treemap", "data", "nested rectangles sized by a value: code size, spend, disk use",
+     {"data": P("data", req=True), "size": P("col", req=True), "group": P("col", doc="outer boxes"),
+      "label": P("col", doc="cell label (default: first text column)"),
+      "color": P("col", doc="numeric column for a sequential colour, e.g. commits"), "fmt": P("enum", enum=FMTS),
+      "height": P("int", default=420)},
+     aliases=["tree-map", "sizemap"], data=True, example="""
+- treemap: {data: files, group: module, size: loc, color: commits_90d, label: path}
+""")
+
+comp("decision", "data", "options x criteria matrix with weights, weighted score, rank and margin",
+     {"data": P("data", req=True), "option": P("col", req=True), "criteria": P("list", doc="score columns (or keys of a scores map)"),
+      "scores": P("col", doc="column holding a {criterion: score} map"),
+      "weights": P("any", doc="{criterion: weight} map, or a dataset with criterion and weight columns"),
+      "max": P("num", default=5, doc="top of the score scale")},
+     aliases=["matrix-decision", "options", "scorecard", "weighted"], data=True, example="""
+- decision: {data: options, option: option, scores: scores, weights: criteria}
+""")
+
+comp("truth", "data", "truth table from boolean expressions (or rows); highlights rows where an output is 1",
+     {"inputs": P("list", doc="input names, e.g. [armed, door_open, motion]"),
+      "outputs": P("map", doc="{name: expression}, e.g. {alarm: armed and (door_open or motion)}"),
+      "data": P("data", doc="or rows of 0/1 values"), "highlight": P("str", doc="output whose 1-rows are highlighted"),
+      "only": P("bool", default=False, doc="start with only the highlighted rows shown")},
+     aliases=["truthtable", "truth-table", "logic", "logic-table"], example="""
+- truth: {inputs: [armed, door_open, motion], outputs: {alarm: "armed and (door_open or motion)"}, highlight: alarm}
 """)
 
 # ---- code ---------------------------------------------------------------------------
@@ -342,10 +433,33 @@ comp("graph", "diagram", "flowchart drawn from an edge list in data",
       "nodes": P("data", doc="node rows (name + attributes) for by and tone"),
       "key": P("str", doc="node name column in nodes (default name/id)"),
       "by": P("str", doc="box nodes by this column of nodes, e.g. kind"),
-      "tone": P("map", doc="{nodes column: {value: tone}}; colours nodes")},
+      "tone": P("map", doc="{nodes column: {value: tone}}; colours nodes"),
+      "text": P("str", doc="nodes column used as the node label (e.g. step name for id S1)"),
+      "sign": P("col", doc="edge polarity column (+ / −): + solid, − dashed red, as in causal loop diagrams")},
      aliases=["network", "dag", "dependency-graph"], data=True, example="""
 - graph: {data: deps, from: src, to: dst, dir: LR}
 - graph: {data: d.calls, from: from, to: to, label: via, nodes: d.components, by: kind, tone: {volatility: {high: bad}}}
+""")
+
+comp("sankey", "diagram", "flows between nodes, width by value (budget, energy, traffic)",
+     {"data": P("data", req=True), "from": P("col", req=True), "to": P("col", req=True), "value": P("col", req=True)},
+     aliases=["flows", "alluvial"], data=True, example="""
+- sankey: {data: flows, from: source, to: target, value: amount}
+""")
+
+comp("er", "diagram", "entity-relationship diagram from schema rows (table, column, type, key, references)",
+     {"data": P("data", req=True), "table": P("col", req=True), "column": P("col", req=True), "type": P("col"),
+      "key": P("col", doc="pk / fk"), "ref": P("col", doc="referenced table.column for a foreign key"),
+      "keys_only": P("bool", default=False, doc="show only key columns (large schemas)")},
+     aliases=["erd", "schema", "entity-relationship", "db-diagram"], data=True, example="""
+- er: {data: schema, table: table, column: column, type: type, key: key, ref: references}
+""")
+
+comp("classes", "diagram", "class / type diagram from rows (name, fields, methods, extends)",
+     {"data": P("data", req=True), "name": P("col", req=True), "fields": P("col", doc="list or comma text, e.g. 'id: Id'"),
+      "methods": P("col"), "extends": P("col"), "link": P("bool", default=True, doc="draw arrows for fields typed as another class")},
+     aliases=["classdiagram-data", "types", "contracts", "uml-classes"], data=True, example="""
+- classes: {data: contracts, name: type, fields: fields}
 """)
 
 PAGE_KEYS = {
@@ -353,6 +467,7 @@ PAGE_KEYS = {
     "data": P("map", doc="named datasets"), "layout": P("nodes", req=True),
     "width": P("enum", enum=["narrow", "normal", "wide", "full"], default="normal"),
     "accent": P("str", doc="CSS colour for the accent"),
+    "currency": P("str", doc="for fmt money: NZD, USD, EUR, GBP or a symbol"),
 }
 
 # Common wrong prop names, mapped to the right one. Fuzzy matching catches the rest.
@@ -375,7 +490,7 @@ PROP_ALIASES = {
 }
 
 # Words an agent uses for a chart kind, mapped to a chart. `bar: {...}` = `chart: {kind: bar, ...}`.
-CHART_KINDS = {"bar": "bar", "bars": "bar", "barchart": "bar", "column-chart": "bar", "histogram": "bar",
+CHART_KINDS = {"waterfall": "waterfall", "bridge": "waterfall", "hist": "hist", "histogram": "hist", "bar": "bar", "bars": "bar", "barchart": "bar", "column-chart": "bar",
                "line": "line", "linechart": "line", "lines": "line", "area": "area", "areachart": "area",
                "scatter": "scatter", "scatterplot": "scatter", "dots": "scatter", "pie": "donut",
                "donut": "donut", "doughnut": "donut", "piechart": "donut"}

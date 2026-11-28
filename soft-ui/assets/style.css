@@ -308,6 +308,51 @@ pre.su-pre .su-cnote { margin: 4px 14px 6px 5.5ch; }
 tr.su-ntr td { background: var(--sunk); padding: 0; }
 .su-cnotes { padding: 8px 4px; border-top: 1px solid var(--line); }
 
+/* statement */
+.su-stmt td.su-stmt-line { padding-left: 26px; }
+.su-stmt tr.su-stmt-sec td { font-weight: 600; background: var(--sunk); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.su-stmt tr.su-stmt-tot td { font-weight: 600; border-top: 1px solid var(--line-2); }
+.su-stmt tr.su-stmt-sub td { font-weight: 700; border-top: 2px solid var(--fg); border-bottom: 1px solid var(--line-2); background: color-mix(in oklab, var(--accent) 5%, var(--surface)); }
+.su-strong { font-weight: 600; }
+/* svg plots */
+.su-svgplot, .su-fsvg { display: block; overflow: visible; }
+.su-svgplot .gr, .su-fsvg .gr { stroke: var(--line); }
+.su-svgplot .tk, .su-fsvg .tk { fill: var(--muted); font: 11px var(--mono); }
+.su-svgplot .lb { fill: var(--fg); font: 12.5px var(--font); }
+.su-svgplot .wh { stroke: var(--muted); stroke-width: 1.4; }
+.su-svgplot .mn { fill: var(--fg); }
+.su-fsvg .nl { stroke: var(--muted); stroke-dasharray: 3 3; }
+table.su-ftable { border-collapse: collapse; width: 100%; font-size: 13px; }
+.su-ftable th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--line-2); background: var(--sunk); white-space: nowrap; }
+.su-ftable td { padding: 0 8px; height: 28px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.su-ftable .su-fplot { width: 45%; min-width: 220px; padding: 0 4px; }
+.su-ftable tr.su-fpool td { font-weight: 700; border-top: 2px solid var(--line-2); }
+.su-ftable tr.su-faxis td { border-bottom: 0; height: auto; padding-top: 2px; }
+.su-ftable .su-num { text-align: right; font-variant-numeric: tabular-nums; }
+.su-fsides { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); padding: 0 4px; }
+/* treemap */
+.su-tmap { position: relative; width: 100%; overflow: hidden; }
+.su-tm-g { position: absolute; border: 1px solid var(--surface); box-sizing: border-box; }
+.su-tm-gh { position: absolute; left: 0; right: 0; top: 0; height: 18px; font: 600 11.5px/18px var(--font); padding: 0 5px; color: var(--fg); background: var(--sunk); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.su-tm-c { position: absolute; font: 11px/1.2 var(--mono); padding: 3px 4px; overflow: hidden; color: var(--fg); box-sizing: border-box; border-radius: 2px; white-space: nowrap; text-overflow: ellipsis; }
+.su-tm-c.su-hi { color: var(--surface); }
+/* decision, truth, compare */
+.su-dec tr.su-win td { background: color-mix(in oklab, var(--good) 7%, var(--surface)); }
+.su-dec td.su-dcell { text-align: center; font-weight: 600; }
+.su-truth { width: auto; min-width: 50%; }
+.su-truth th, .su-truth td { text-align: center; font-family: var(--mono); }
+.su-truth th.su-tout { background: color-mix(in oklab, var(--accent) 10%, var(--sunk)); color: var(--fg); }
+.su-truth td.su-b0 { color: var(--faint); }
+.su-truth td.su-o.su-b1 { background: color-mix(in oklab, var(--accent) 16%, var(--surface)); font-weight: 700; }
+.su-truth tr.su-hot td { background: color-mix(in oklab, var(--bad) 10%, var(--surface)); }
+.su-truth tr.su-hot td.su-o.su-b1 { background: color-mix(in oklab, var(--bad) 28%, var(--surface)); color: var(--bad-ink); }
+.su-exprs { margin-top: 10px; font-size: 12.5px; }
+.su-compare { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: var(--gap-m); align-items: start; }
+@media (max-width: 760px) { .su-compare { grid-template-columns: minmax(0, 1fr); } }
+.su-seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 8px; padding: 2px; gap: 2px; align-self: flex-start; background: var(--sunk); }
+.su-seg button { appearance: none; border: 0; background: none; padding: 5px 12px; border-radius: 6px; font: 500 13px var(--font); color: var(--muted); cursor: pointer; }
+.su-seg button[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
+
 /* diagram */
 .su-diagram { overflow-x: auto; text-align: center; }
 .su-diagram svg { max-width: 100%; height: auto; }
