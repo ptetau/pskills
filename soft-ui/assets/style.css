@@ -49,6 +49,7 @@ body { background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font); marg
 
 /* nodes */
 .su-node { min-width: 0; }
+.su-body { container-type: inline-size; min-width: 0; }
 .su-t { font-size: 13px; font-weight: 600; margin: 0 0 8px; color: var(--fg); letter-spacing: 0.01em; }
 .su-note { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
 .su-note p { margin: 0; }
@@ -176,7 +177,8 @@ table.su-table { border-collapse: collapse; width: 100%; font-size: 13px; }
 .su-table tr:last-child td { border-bottom: 0; }
 .su-table tbody tr:hover td { background: color-mix(in oklab, var(--accent) 4%, var(--surface)); }
 .su-table .su-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.su-table .su-mono { font-family: var(--mono); font-size: 12.5px; }
+.su-table .su-mono { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+.su-table th { white-space: nowrap; }
 .su-table tr.su-grp td { background: var(--sunk); font-weight: 600; cursor: pointer; font-size: 12.5px; }
 .su-table tr.su-grp td::before { content: "▾ "; color: var(--faint); }
 .su-table tr.su-grp.su-shut td::before { content: "▸ "; }
@@ -198,7 +200,8 @@ table.su-table { border-collapse: collapse; width: 100%; font-size: 13px; }
 .su-heat th.su-tot { font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
 
 /* chart */
-.su-chart { position: relative; width: 100%; }
+.su-chart { position: relative; width: 100%; height: var(--ch, 260px); }
+@media (max-width: 560px) { .su-chart { height: calc(var(--ch, 260px) * 0.85); } }
 .su-chart canvas { display: block; }
 .su-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
 .su-legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -250,13 +253,13 @@ details.su-item > summary::-webkit-details-marker { display: none; }
 
 /* gantt */
 .su-gantt { overflow-x: auto; font-size: 12.5px; }
-.su-gantt-in { min-width: 560px; }
-.su-g-row { display: grid; grid-template-columns: minmax(120px, 220px) 1fr; align-items: center; min-height: 28px; border-bottom: 1px solid var(--line); }
+.su-gantt-in { min-width: 0; }
+.su-g-row { display: grid; grid-template-columns: minmax(90px, min(220px, 32%)) 1fr; align-items: center; min-height: 28px; border-bottom: 1px solid var(--line); }
 .su-g-row.su-g-grp { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; background: var(--sunk); }
 .su-g-name { padding: 4px 10px 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .su-g-track { position: relative; height: 28px; }
 .su-g-bar { position: absolute; top: 6px; height: 16px; border-radius: 4px; background: var(--tone, var(--s1)); min-width: 4px; }
-.su-g-axis { display: grid; grid-template-columns: minmax(120px, 220px) 1fr; font: 11px var(--mono); color: var(--faint); border-bottom: 1px solid var(--line-2); }
+.su-g-axis { display: grid; grid-template-columns: minmax(90px, min(220px, 32%)) 1fr; font: 11px var(--mono); color: var(--faint); border-bottom: 1px solid var(--line-2); }
 .su-g-ticks { position: relative; height: 22px; }
 .su-g-ticks span { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; }
 .su-g-today { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed var(--bad); z-index: 1; }
@@ -360,3 +363,54 @@ table.su-ftable { border-collapse: collapse; width: 100%; font-size: 13px; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 @media (max-width: 560px) { .su-head h1 { font-size: 22px; } .su-stat-v { font-size: 22px; } .su-float { position: static; width: auto; max-height: none; box-shadow: none; } }
+
+/* ---- responsive: each component answers to the width of its own box ---------------- */
+/* Tables with many columns become one card per row in a narrow box. */
+@container (max-width: 540px) {
+  .su-tw.su-stack { border: 0; background: none; overflow: visible; }
+  .su-stack table.su-table, .su-stack .su-table tbody, .su-stack .su-table tr, .su-stack .su-table td { display: block; width: 100%; }
+  .su-stack .su-table thead { display: none; }
+  .su-stack .su-table tbody tr:not(.su-grp):not(.su-xtr) { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; margin-bottom: 8px; }
+  .su-stack .su-table td { border: 0; padding: 3px 0; display: grid; grid-template-columns: minmax(84px, 40%) minmax(0, 1fr); gap: 10px; align-items: baseline; text-align: right; }
+  .su-stack .su-table td::before { content: attr(data-label); color: var(--muted); font-size: 12px; text-align: left; white-space: normal; }
+  .su-stack .su-table td:first-child { font-weight: 600; }
+  .su-stack .su-table tr.su-grp td, .su-stack .su-table tr.su-xtr td { display: block; text-align: left; border-radius: 6px; margin: 4px 0 8px; }
+  .su-stack .su-table tr.su-grp td::before, .su-stack .su-table tr.su-xtr td::before { content: none; }
+  .su-stack .su-cellbar { justify-content: flex-end; }
+  .su-stack .su-table td > * { justify-self: end; }
+  .su-stack .su-table tbody tr:hover td { background: none; }
+  .su-stack .su-pager { border: 0; }
+}
+/* Statement in a narrow box: the line name on its own row, the amounts in aligned columns below. */
+@container (max-width: 560px) {
+  .su-stmt th:last-child:not(:first-child), .su-stmt td:last-child:not(:first-child) { display: none; }
+  .su-stmt, .su-stmt thead, .su-stmt tbody { display: block; }
+  .su-stmt tr { display: grid; grid-template-columns: repeat(var(--nc, 3), minmax(0, 1fr)); column-gap: 0; }
+  .su-stmt tr > :first-child { grid-column: 1 / -1; padding-bottom: 0; }
+  .su-stmt thead tr > :first-child { display: none; }
+  .su-stmt td.su-stmt-line { padding-left: 10px; }
+  .su-stmt td.su-num, .su-stmt th.su-num { padding: 2px 6px 6px; font-size: 12.5px; }
+  .su-stmt tr.su-stmt-sec, .su-stmt tr.su-stmt-sec td { display: block; }
+  .su-stmt tr.su-stmt-tot, .su-stmt tr.su-stmt-sub { border-top: 1px solid var(--line-2); }
+  .su-stmt tr.su-stmt-tot td, .su-stmt tr.su-stmt-sub td { border-top: 0; }
+  .su-ftable th:nth-child(2), .su-ftable td:nth-child(2) { display: none; }
+  .su-ftable th:last-child, .su-ftable td:last-child { display: none; }
+  .su-ftable td { white-space: normal; padding: 0 4px; font-size: 12px; }
+  .su-dec th, .su-dec td, .su-truth th, .su-truth td { padding: 5px 6px; font-size: 12px; }
+}
+/* Kanban lanes stack in a narrow box. */
+@container (max-width: 560px) {
+  .su-board { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: minmax(0, 1fr); overflow: visible; }
+  .su-g-ticks span:nth-child(even) { display: none; }
+  .su-kv { grid-template-columns: minmax(0, max-content) minmax(0, 1fr) !important; }
+  .su-ftable .su-fplot { min-width: 140px; }
+}
+@media (max-width: 560px) {
+  .su-page { padding-block: 18px 48px; }
+  .su-flow { gap: 20px; }
+  .su-stats { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .su-stat { padding: 10px 12px; }
+  .su-card > .su-card-b { padding: 12px; }
+  .su-leaf { padding: 12px; }
+  .su-head .su-sub { font-size: 14px; }
+}

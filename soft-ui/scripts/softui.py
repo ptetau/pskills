@@ -1809,11 +1809,12 @@ def render(args):
         Path(args.spec).with_suffix(".html") if args.spec != "-" else Path("soft-ui.html"))
     page = emit(plan, libs, args.artifact, args.inline)
     kb = len(page.encode()) // 1024
+    data_kb = len(json.dumps(plan["data"]).encode()) // 1024
     out.write_text(page, encoding="utf-8")
     print(f"wrote {out} · {ctx.count} nodes · {len(plan['data'])} datasets · {kb} KB"
           + (f" · {len(ctx.fixes)} fixed" if ctx.fixes else ""))
-    if kb > MAX_INLINE_KB:
-        print(f"warning: the page is {kb} KB. Use `where`, fewer columns, or a smaller file.")
+    if data_kb > MAX_INLINE_KB:
+        print(f"warning: the page holds {data_kb} KB of data. Use `where`, `select`, or `top` to send less.")
     if not args.fast or args.shot:
         return browser_check(out, args.shot, args.artifact, args.inline)
     return 0

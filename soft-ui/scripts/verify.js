@@ -32,7 +32,12 @@ try { ({ chromium } = require("playwright")); } catch (e) { console.log("check s
   if (st.novalue.length) problems.push(`stat tile(s) with no value: ${st.novalue.join(", ")}. Give value, or data with col and agg`);
   if (shot) await page.screenshot({ path: shot, fullPage: true });
   await page.close();
-  const phone = await load(400, "dark");
+  for (const w of [768]) {   // tablet: the page must not scroll sideways either
+    const tab = await load(w, "light");
+    if (await tab.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)) problems.push(`page scrolls sideways at ${w}px`);
+    await tab.close();
+  }
+  const phone = await load(390, "dark");
   const over = await phone.evaluate(() => {
     const W = document.documentElement.clientWidth;
     if (document.documentElement.scrollWidth <= W + 1) return null;
@@ -41,9 +46,12 @@ try { ({ chromium } = require("playwright")); } catch (e) { console.log("check s
     return `${document.documentElement.scrollWidth}px wide at ${W}px (${bad.join(", ") || "unknown element"})`;
   });
   if (over) problems.push("page scrolls sideways on a phone: " + over);
+  const inner = await phone.evaluate(() => [...document.querySelectorAll(".su-tw, .su-gantt, .su-board, .su-heat, .su-diff-w")]
+    .filter((e) => e.scrollWidth > e.clientWidth + 2).map((e) => { const n = e.closest(".su-node"); return n?.querySelector(".su-t")?.textContent || (n?.className.match(/su-c-(\w+)/) || [])[1] || "table"; }));
+  if (inner.length) warn.push(`on a phone these scroll sideways inside their box: ${[...new Set(inner)].slice(0, 5).join(", ")}`);
   await phone.close();
   await browser.close();
   for (const w of [...new Set(warn)].slice(0, 5)) console.log("check warning " + w);
   if (problems.length) { [...new Set(problems)].forEach((p) => console.log("check error " + p)); process.exit(1); }
-  console.log(`check ok · ${st.nodes} nodes drawn · no render errors · fits a 400px phone` + (offline ? " · draws with no network" : "") + (shot ? ` · screenshot ${shot}` : ""));
+  console.log(`check ok · ${st.nodes} nodes drawn · no render errors · fits phone, tablet and desktop` + (offline ? " · draws with no network" : "") + (shot ? ` · screenshot ${shot}` : ""));
 })().catch((e) => { console.log("check error " + e.message.split("\n")[0]); process.exit(1); });

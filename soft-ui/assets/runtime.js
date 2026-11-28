@@ -356,7 +356,7 @@
     if (p.sort) { sort.k = p.sort.replace(/^-/, ""); sort.d = p.sort.startsWith("-") ? -1 : 1; }
     const shut = new Set();
     let page = 0;
-    const wrap = h("div", { class: "su-tw" + (p.h ? " su-scroll" : ""), style: p.h ? { maxHeight: p.h + "px" } : null });
+    const wrap = h("div", { class: "su-tw" + (p.h ? " su-scroll" : "") + (cols.length > 4 && p.stack !== false ? " su-stack" : ""), style: p.h ? { maxHeight: p.h + "px" } : null });
     const ctl = localControls(p, ds, () => { page = 0; draw(); });
     if (ctl.el) el.append(ctl.el);
     el.append(wrap);
@@ -383,7 +383,7 @@
         const row = h("tr", expand.length ? { class: "su-xrow" + (open.has(r) ? " su-open" : ""), onclick: () => { open.has(r) ? open.delete(r) : open.add(r); draw(); } } : null);
         for (const c of cols) {
           const k = c.key, ty = typeOf(ds, k), f = c.fmt || (p.fmt && p.fmt[k]), v = r[k];
-          const td = h("td", { class: (ty === "num" ? "su-num" : "") + (ty === "date" ? " su-mono" : "") });
+          const td = h("td", { class: (ty === "num" ? "su-num" : "") + (ty === "date" ? " su-mono" : ""), "data-label": c.label || k });
           const tone = cellTone(p, ds, k, v);
           if (bars.has(k) && isNum(+v)) td.append(h("div", { class: "su-cellbar" }, h("i", { style: { width: Math.round((Math.abs(+v) / max[k]) * 80) + "px" } }), h("span", null, fmt(v, f, ty))));
           else if (tone) td.append(badge(fmt(v, f, ty), tone));
@@ -517,9 +517,10 @@
       if (!isNaN(today)) { lo = Math.min(lo, today); hi = Math.max(hi, today); }
       const span = hi - lo || DAY, pos = (t) => ((t - lo) / span) * 100;
       const inner = h("div", { class: "su-gantt-in" });
-      const days = span / DAY, step = [1, 2, 7, 14, 30, 61, 91, 182, 365].find((s) => days / s <= 7) || 365;
+      const cap = Math.max(3, Math.floor(((box.clientWidth || 600) * 0.66) / 64));
+      const days = span / DAY, step = [1, 2, 7, 14, 30, 61, 91, 182, 365].find((s) => days / s <= cap) || 365;
       const ticks = h("div", { class: "su-g-ticks" });
-      for (let t = lo; t <= hi; t += step * DAY) ticks.append(h("span", { style: { left: pos(t) + "%" } }, new Date(t).toISOString().slice(5, 10)));
+      for (let t = lo; t <= hi; t += step * DAY) ticks.append(h("span", { style: { left: pos(t) + "%" } }, shortDate(new Date(t).toISOString().slice(0, 10), [])));
       inner.append(h("div", { class: "su-g-axis" }, h("div"), ticks));
       const groups = p.group ? groupBy(rows.map((x) => ({ ...x.r, __x: x })), p.group).map(([k, rs]) => [k, rs.map((r) => r.__x)]) : [[null, rows]];
       for (const [g, xs] of groups) {
@@ -535,6 +536,7 @@
       box.append(inner);
     };
     draw(); subscribe(ds, draw);
+    let lastW = 0; new ResizeObserver(() => { const w = box.clientWidth; if (Math.abs(w - lastW) > 60) { lastW = w; draw(); } }).observe(box);
   };
   C.tree = (p, el) => {
     const ds = p.data;
@@ -612,7 +614,7 @@
       }
       const order = p.order ? arr(p.order).map(String).filter((x) => secs.has(x)).concat([...secs.keys()].filter((x) => !arr(p.order).map(String).includes(x))) : [...secs.keys()];
       const variance = p.variance !== false && vals.length === 2;
-      const t = h("table", { class: "su-table su-stmt" });
+      const t = h("table", { class: "su-table su-stmt", style: { "--nc": vals.length + (p.variance !== false && vals.length === 2 ? 1 : 0) } });
       const head = h("tr", null, h("th", null, ""), vals.map((v) => h("th", { class: "su-num" }, (p.labels && p.labels[v]) || v)),
         variance ? [h("th", { class: "su-num" }, "Variance"), h("th", { class: "su-num" }, "%")] : null);
       t.append(h("thead", null, head));
@@ -820,6 +822,14 @@
     }
     return labels.map((_, i) => ser[i % 8]);
   }
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function shortDate(k, keys) {
+    // 2026-05-31 → 31 May; 2026-06 → Jun 26; add the year only when the axis spans years.
+    const s2 = String(k), m = s2.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/); if (!m) return s2;
+    const years = new Set(keys.map((x) => String(x).slice(0, 4))).size > 1;
+    if (!m[3]) return `${MON[+m[2] - 1]} ${m[1].slice(2)}`;
+    return `${+m[3]} ${MON[+m[2] - 1]}` + (years ? ` ${m[1].slice(2)}` : "");
+  }
   function chartModel(p) {
     const ds = p.data, rows = rowsFor(p, [p.x]), x = p.x, ys = arr(p.y).map(colKey), agg = p.agg && p.agg !== "none" ? p.agg : null;
     const xt = typeOf(ds, x);
@@ -851,7 +861,8 @@
       keys = tot.map((t) => t[0]); sets.forEach((s) => (s.data = tot.map((t) => s.data[t[2]])));
     }
     if (p.limit) { keys = keys.slice(0, p.limit); sets.forEach((s) => (s.data = s.data.slice(0, p.limit))); }
-    return { labels: keys.map((k) => fmt(k, null, xt)), keys, sets, xt };
+    const datey = xt === "date" || (keys.length && keys.every((k) => /^\d{4}-\d{2}(-\d{2})?$/.test(String(k))));
+    return { labels: keys.map((k) => (datey ? shortDate(k, keys) : fmt(k, null, xt))), keys, sets, xt };
   }
   const refLines = {
     id: "suRef",
@@ -923,7 +934,7 @@
     return { a, b, r2 };
   }
   C.chart = (p, el) => {
-    const box = h("div", { class: "su-chart", style: { height: (p.height || 260) + "px" } });
+    const box = h("div", { class: "su-chart", style: { "--ch": (p.height || 260) + "px" } });
     const cv = h("canvas", { role: "img", "aria-label": (p.title || "chart") + ": " + p.kind + " of " + arr(p.y).map(colKey).join(", ") + " by " + p.x });
     box.append(cv); el.append(box);
     let chart = null;
@@ -969,9 +980,11 @@
             borderColor: d.borderColor, borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, fill: false });
         }
       }
+      const narrow = box.clientWidth < 520;
       const tick = (v) => fmt(v, p.fmt);
-      const vAxis = { beginAtZero: p.zero !== false, stacked: !!p.stack, grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: fg, padding: 6, callback: tick, maxTicksLimit: 6, precision: m.sets.every((s) => s.data.every((v) => v == null || Number.isInteger(v))) ? 0 : undefined } };
-      const cAxis = { stacked: !!p.stack, grid: { display: false }, border: { color: css("--line-2") }, ticks: { color: fg, autoSkip: m.labels.length > 14, maxRotation: m.labels.length > 8 ? 40 : 0, maxTicksLimit: m.labels.length > 14 ? 12 : undefined } };
+      const vAxis = { beginAtZero: p.zero !== false, stacked: !!p.stack, grid: { color: grid, drawTicks: false }, border: { display: false }, ticks: { color: fg, padding: 6, callback: tick, maxTicksLimit: narrow ? 4 : 6, maxRotation: 0, font: { size: narrow ? 10.5 : 12 }, precision: m.sets.every((s) => s.data.every((v) => v == null || Number.isInteger(v))) ? 0 : undefined } };
+      const cAxis = { stacked: !!p.stack, grid: { display: false }, border: { color: css("--line-2") },
+        ticks: { color: fg, autoSkip: true, autoSkipPadding: 6, maxRotation: narrow ? 50 : 40, minRotation: 0, font: { size: narrow ? 10.5 : 12 } } };
       const horiz = !!p.horizontal && kind === "bar";
       const cfg = {
         type: kind === "area" ? "line" : kind === "donut" ? "doughnut" : kind === "waterfall" ? "bar" : kind,
@@ -980,7 +993,7 @@
           responsive: true, maintainAspectRatio: false, animation: false, indexAxis: horiz ? "y" : "x",
           interaction: { mode: kind === "scatter" || kind === "donut" ? "nearest" : "index", intersect: kind === "scatter" || kind === "donut" },
           plugins: {
-            legend: { display: (!single || kind === "donut" || (kind === "scatter" && p.trend)) && kind !== "waterfall", position: "top", align: "start", labels: { color: fg, boxWidth: 10, boxHeight: 10, font: { family: font, size: 12 }, padding: 12 } },
+            legend: { display: (!single || kind === "donut" || (kind === "scatter" && p.trend)) && kind !== "waterfall", position: kind === "donut" && !narrow ? "right" : "top", align: "start", labels: { color: fg, boxWidth: 10, boxHeight: 10, font: { family: font, size: narrow ? 11 : 12 }, padding: narrow ? 8 : 12 } },
             tooltip: { callbacks: { label: (c) => {
               if (kind === "waterfall") { const r = c.raw; return ` ${fmt(r[1] - r[0], p.fmt)} → ${fmt(r[1], p.fmt)}`; }
               if (kind === "scatter") return ` ${c.dataset.label}: (${fmt(c.parsed.x)}, ${fmt(c.parsed.y, p.fmt)})`;
@@ -1000,6 +1013,8 @@
       chart = new Chart(cv, cfg);
     };
     draw(); subscribe(p.data, draw); LIVE.push(draw);
+    let wasNarrow = box.clientWidth < 520;
+    new ResizeObserver(() => { const n2 = box.clientWidth < 520; if (n2 !== wasNarrow) { wasNarrow = n2; draw(); } }).observe(box);
   };
 
   C.heatmap = (p, el) => {
@@ -1112,7 +1127,13 @@
     return [mk(a), mk(b)];
   }
   C.diff = (p, el) => {
-    const split = (p.mode || "split") === "split";
+    const wantSplit = (p.mode || "split") === "split";
+    const draw = (narrow) => { el.replaceChildren(); drawDiff(p, el, wantSplit && !narrow); };
+    let narrow = null;
+    new ResizeObserver(() => { const n2 = el.clientWidth < 720; if (n2 !== narrow) { narrow = n2; draw(n2); } }).observe(el);
+    draw(false);
+  };
+  function drawDiff(p, el, split) {
     const notesFor = (f) => {
       const m = new Map();
       for (const n of arr(p.notes)) {
