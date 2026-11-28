@@ -25,8 +25,9 @@ import math
 import re
 import statistics
 
-STEP_KEYS = ("where", "join", "explode", "add", "group", "sum", "mean", "min", "max", "count", "pct", "describe",
-             "by", "corr", "then", "sort", "top", "rename", "select")
+STEP_KEYS = ("union", "where", "join", "explode", "add", "group", "sum", "mean", "min", "max", "count", "pct", "describe",
+             "by", "corr", "pivot", "then", "sort", "top", "rename", "select")
+ORDER = "union, where, explode, join, add, group, pct, describe, corr, pivot, then, sort, top, rename, select"
 SOURCE_KEYS = ("file", "path", "src", "rows", "csv", "from")
 
 
@@ -52,6 +53,8 @@ def _list(v):
 
 
 def _match(v, want):
+    if v is None and not (isinstance(want, str) and want.strip().lower() in ("null", "none", "")):
+        return isinstance(want, str) and want.startswith("!=")
     if isinstance(want, list):
         return str(v) in [str(w) for w in want]
     if isinstance(want, str):
@@ -72,6 +75,13 @@ def apply(ctx, rows, spec, path, fix_col, add_columns):
 
     def col(name, step):
         return fix_col(_cols(rows), name, f"{path}.{step}")
+
+    if "union" in spec:
+        for other in _list(spec["union"]):
+            if other in ctx.data:
+                rows += [dict(r) for r in ctx.data[other]["rows"]]
+            else:
+                ctx.err(path, f'union: no dataset "{other}" above this one. Datasets: {", ".join(ctx.data) or "none"}')
 
     if "where" in spec:
         w = spec["where"]
@@ -117,8 +127,9 @@ def apply(ctx, rows, spec, path, fix_col, add_columns):
         rows = add_columns(ctx, rows, spec["add"], path + ".add")
     aggs = {a: _list(spec.get(a)) for a in ("sum", "mean", "min", "max")}
     if "group" in spec:
-        keys = [col(k, "group") for k in _list(spec["group"])]
-        keys = [k for k in keys if k]
+        g = spec["group"]
+        allrows = g is True or (isinstance(g, str) and g.lower() in ("all", "*", "total"))
+        keys = [] if allrows else [k for k in (col(k, "group") for k in _list(g)) if k]
         for a in aggs:
             aggs[a] = [c for c in (col(x, a) for x in aggs[a]) if c]
         cname = spec.get("count", "count")
@@ -177,15 +188,30 @@ def apply(ctx, rows, spec, path, fix_col, add_columns):
                          if isinstance(r.get(a), (int, float)) and isinstance(r.get(b), (int, float))]
                 out.append({"a": a, "b": b, "r": round(_pearson(pairs), 3) if len(pairs) > 2 else None})
         rows = out
+    if "pivot" in spec:
+        pv = spec["pivot"] if isinstance(spec["pivot"], dict) else {}
+        idx = [c for c in (col(x, "pivot.index") for x in _list(pv.get("index"))) if c]
+        cc, vc = col(pv.get("columns", ""), "pivot.columns"), col(pv.get("values", ""), "pivot.values")
+        if not (idx and cc and vc):
+            ctx.err(path, "pivot needs {index: account, columns: month, values: actual}")
+        else:
+            out = {}
+            for r in rows:
+                k = tuple(str(r.get(c)) for c in idx)
+                row = out.setdefault(k, {c: r.get(c) for c in idx})
+                name = str(r.get(cc))
+                v = r.get(vc)
+                row[name] = (row.get(name) or 0) + v if isinstance(v, (int, float)) and not isinstance(v, bool) else v
+            rows = list(out.values())
     if "then" in spec:
         rows = add_columns(ctx, rows, spec["then"], path + ".then")
     if "sort" in spec:
-        s = str(spec["sort"])
-        c = col(s.lstrip("-+"), "sort")
-        if c:
-            rows.sort(key=lambda r: (r.get(c) is None, r.get(c) if isinstance(r.get(c), (int, float)) else str(r.get(c))),
-                      reverse=s.startswith("-"))
-            if s.startswith("-"):
+        for s in reversed(_list(spec["sort"])):   # stable sorts, last key first
+            s = str(s)
+            c = col(s.lstrip("-+"), "sort")
+            if c:
+                rows.sort(key=lambda r: (r.get(c) if isinstance(r.get(c), (int, float)) else str(r.get(c)))
+                          if r.get(c) is not None else 0, reverse=s.startswith("-"))
                 rows.sort(key=lambda r: r.get(c) is None)
     if "top" in spec:
         try:

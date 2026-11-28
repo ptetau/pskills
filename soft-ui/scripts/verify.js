@@ -24,8 +24,10 @@ try { ({ chromium } = require("playwright")); } catch (e) { console.log("check s
   }
   const page = await load(1280, "light");
   const st = await page.evaluate(() => ({ errors: (window.__softui || {}).errors || [], nodes: (window.__softui || {}).nodes || 0,
-    empty: [...document.querySelectorAll(".su-chart canvas")].filter((c) => !c.width).length }));
+    empty: [...document.querySelectorAll(".su-chart canvas")].filter((c) => !c.width).length,
+    novalue: [...document.querySelectorAll(".su-stat-v.su-novalue")].map((e) => e.closest(".su-stat").querySelector(".su-stat-l").textContent) }));
   st.errors.forEach((e) => problems.push(e));
+  if (st.novalue.length) problems.push(`stat tile(s) with no value: ${st.novalue.join(", ")}. Give value, or data with col and agg`);
   if (shot) await page.screenshot({ path: shot, fullPage: true });
   await page.close();
   const phone = await load(400, "dark");

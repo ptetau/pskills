@@ -22,26 +22,27 @@ spec. `scripts/softui.py` builds and checks the page.
 
 ## Inputs
 
-- The data to show: rows, CSV text, or a file that a different skill wrote.
-- `python3 scripts/softui.py catalog`: one line for each component.
-  `explain NAME [NAME ...]` gives the props and an example.
+- The data: rows, CSV text, or files that a different skill wrote.
+- `python3 scripts/softui.py catalog`, then `explain NAME` or `explain data`.
 
 ## Outputs
 
 - `<name>.yaml`: the spec.
-- `<name>.html`: the page, from `render <name>.yaml`. With the Artifact tool, render
-  with `--artifact` and publish the page.
+- `<name>.html` and `<name>.png`, from `render <name>.yaml --shot <name>.png`. With the
+  Artifact tool, also add `--artifact` and publish the page.
 
 ## Constraints
 
 - Run `catalog` before the first spec of a session. Do not read the scripts.
-- When a file holds the data, give its path. Do not copy the data into the spec. Shape
-  it with the dataset steps in `explain data`, not with numbers worked out by hand.
-- Put the summary first: stat tiles, then charts, then the detail.
+- Give each data file by its path, and shape it with the dataset steps. Do not type
+  numbers that the data holds.
+- Open with a `callout` that answers the question of the reader. Give each chart a
+  `note` that says what the chart shows.
 - When `render` prints "fixed", use the "Next time" form in later specs.
 - When `render` prints "error", fix the spec. Do not write HTML by hand.
 
 ## Done when
 
 - `render` prints "check ok".
+- The screenshot shows the right numbers.
 - The user has the page or its Artifact link.

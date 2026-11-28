@@ -5,7 +5,7 @@ aliases, and its example. The catalog, the explain text, and the spec checks all
 """
 
 TONES = ["good", "warn", "bad", "info", "neutral"]
-FMTS = ["int", "num", "pct", "money", "k", "ms", "s", "bytes", "date", "time", "delta", "code", "md", "raw"]
+FMTS = ["int", "num", "pct", "ratio", "money", "k", "ms", "s", "bytes", "date", "time", "delta", "code", "md", "raw"]
 
 
 def P(t, req=False, enum=None, default=None, doc=""):
@@ -141,6 +141,7 @@ comp("stat", "summary", "one big number with label, delta and optional sparkline
       "fmt": P("enum", enum=FMTS),
       "data": P("data", doc="compute value from data (follows filters)"),
       "of": P("any", doc="with data + where: true shows 'n / total rows' and a percent"),
+      "vs": P("col", doc="with data: compare with the same agg of this column (e.g. budget); sets delta and tone"),
       "agg": P("enum", enum=["count", "sum", "mean", "min", "max"], default="count", doc="with data"),
       "col": P("col", doc="column to aggregate (with data)")},
      aliases=["kpi", "metric"], example="""
@@ -153,7 +154,9 @@ comp("stats", "summary", "row of stat tiles: a list, one tile per row of `data`,
       "tone": P("col", doc="column for tone (with data)"),
       "by": P("col", doc="one tile per value of this column, with its row count (follows filters)"),
       "total": P("str", doc="with by: add a first tile with this label and the total count"),
-      "order": P("list", doc="with by: tile order")},
+      "order": P("list", doc="with by: tile order"),
+      "cols": P("cols", doc="with data: one tile per column, summed (e.g. [revenue, expenses, profit])"),
+      "fmt": P("enum", enum=FMTS)},
      short="items", aliases=["kpis", "metrics", "tiles-row"], data=True, example="""
 - stats:
   - {label: Findings, value: 14}
@@ -204,6 +207,7 @@ comp("table", "data", "sortable table; group, filter, search, inline bars, tones
       "fmt": P("map", doc="{col: fmt}; fmt is one of " + ", ".join(FMTS)),
       "expand": P("cols", doc="columns shown when a row is clicked open (long text, repro steps)"),
       "top": P("int", doc="show only the first N rows after sort"),
+      "order": P("list", doc="group order, e.g. [Revenue, Cost of sales, Operating expenses]"),
       "labels": P("map", doc="{col: header label}"),
       "good": P("map", doc="{col: up|down} colours a delta column: which direction is good"),
       "dense": P("bool", default=False)},
@@ -236,6 +240,7 @@ comp("chart", "data", "bar, line, area, scatter (+trend), donut, waterfall, hist
       "trend": P("bool", default=False, doc="scatter: add a least-squares line and r²"),
       "bins": P("int", doc="hist: number of bins (default: auto)"),
       "total": P("str", doc="waterfall: label of a final total bar, e.g. Net profit"),
+      "subtotals": P("list", doc="waterfall: [{after: Cost of sales, label: Gross profit}] adds running-total bars"),
       "height": P("int", default=260)},
      aliases=["plot"], data=True, example="""
 - chart: {kind: line, data: lat, x: day, y: [p50, p95], fmt: ms, mark: [{y: 300, label: SLO}]}
@@ -435,7 +440,9 @@ comp("graph", "diagram", "flowchart drawn from an edge list in data",
       "by": P("str", doc="box nodes by this column of nodes, e.g. kind"),
       "tone": P("map", doc="{nodes column: {value: tone}}; colours nodes"),
       "text": P("str", doc="nodes column used as the node label (e.g. step name for id S1)"),
-      "sign": P("col", doc="edge polarity column (+ / −): + solid, − dashed red, as in causal loop diagrams")},
+      "sign": P("col", doc="edge polarity column (+ / −): + solid, − dashed red, as in causal loop diagrams"),
+      "cycles": P("bool", default=False, doc="draw edges that are part of a cycle in red, and list the cycles"),
+      "edge_tone": P("map", doc="{edge column: {value: tone}} colours edges, e.g. {kind: {power: bad}}")},
      aliases=["network", "dag", "dependency-graph"], data=True, example="""
 - graph: {data: deps, from: src, to: dst, dir: LR}
 - graph: {data: d.calls, from: from, to: to, label: via, nodes: d.components, by: kind, tone: {volatility: {high: bad}}}
@@ -468,6 +475,7 @@ PAGE_KEYS = {
     "width": P("enum", enum=["narrow", "normal", "wide", "full"], default="normal"),
     "accent": P("str", doc="CSS colour for the accent"),
     "currency": P("str", doc="for fmt money: NZD, USD, EUR, GBP or a symbol"),
+    "base": P("str", doc="folder that data paths start from, e.g. ../../reports/R1"),
 }
 
 # Common wrong prop names, mapped to the right one. Fuzzy matching catches the rest.

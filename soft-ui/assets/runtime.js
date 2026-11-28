@@ -19,7 +19,7 @@
       if (v == null || v === false) continue;
       if (k === "class") el.className = v;
       else if (k === "html") el.innerHTML = v;
-      else if (k === "style" && typeof v === "object") Object.assign(el.style, v);
+      else if (k === "style" && typeof v === "object") { for (const sk in v) { if (v[sk] == null) continue; if (sk.startsWith("--")) el.style.setProperty(sk, v[sk]); else el.style[sk] = v[sk]; } }
       else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
       else if (k.startsWith("--")) el.style.setProperty(k, v);
       else el.setAttribute(k, v === true ? "" : v);
@@ -129,6 +129,7 @@
       case "int": return isNaN(n) ? String(v) : Math.round(n).toLocaleString("en");
       case "num": return isNaN(n) ? String(v) : n.toLocaleString("en", { maximumFractionDigits: 2 });
       case "pct": return isNaN(n) ? String(v) : n.toLocaleString("en", { maximumFractionDigits: 1 }) + "%";
+      case "ratio": return isNaN(n) ? String(v) : (n * 100).toLocaleString("en", { maximumFractionDigits: 1 }) + "%";
       case "ms": return isNaN(n) ? String(v) : n >= 1000 ? (n / 1000).toLocaleString("en", { maximumFractionDigits: 2 }) + " s" : Math.round(n * 10) / 10 + " ms";
       case "s": return isNaN(n) ? String(v) : n >= 120 ? (n / 60).toFixed(1) + " min" : n.toLocaleString("en", { maximumFractionDigits: 2 }) + " s";
       case "bytes": { if (isNaN(n)) return String(v); const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0, x = n; while (x >= 1024 && i < 4) { x /= 1024; i++; } return x.toLocaleString("en", { maximumFractionDigits: 1 }) + " " + u[i]; }
@@ -162,6 +163,7 @@
   function matchWhere(row, where) {
     for (const k in where) {
       const want = where[k], v = row[k];
+      if (v == null && !(typeof want === "string" && want.startsWith("!="))) return false;
       if (Array.isArray(want)) { if (!want.map(String).includes(String(v))) return false; }
       else if (typeof want === "string" && /^(>=|<=|>|<|!=)/.test(want)) {
         const m = want.match(/^(>=|<=|>|<|!=)\s*(.*)$/), x = isNum(v) ? +m[2] : m[2];
@@ -263,7 +265,7 @@
     const t = normTone(p.tone);
     const box = h("div", { class: "su-stat" + (t ? " su-tone su-t-" + t : "") });
     box.append(h("div", { class: "su-stat-l" }, p.label ?? ""));
-    const v = h("div", { class: "su-stat-v" }, typeof p.value === "number" ? fmt(p.value, p.fmt) : String(p.value ?? "—"));
+    const v = h("div", { class: "su-stat-v" + (p.value == null || p.value === "" ? " su-novalue" : "") }, typeof p.value === "number" ? fmt(p.value, p.fmt) : String(p.value ?? "—"));
     if (p.unit) v.append(h("span", { class: "su-stat-u" }, p.unit));
     if (p.delta != null && p.delta !== "") {
       const s = String(p.delta), n = parseFloat(s.replace(/[^\d.+-]/g, "")), up = s.trim().startsWith("-") || s.trim().startsWith("−") ? false : n > 0 ? true : n < 0 ? false : null;
@@ -277,20 +279,30 @@
     const sp = spark(p.spark); if (sp) box.append(sp[0]);
     return box;
   }
-  function aggValue(p) {
-    const rows = rowsFor(p), agg = p.agg || "count";
-    if (agg === "count") return rows.length;
-    const v = rows.map((r) => +r[p.col]).filter(isFinite);
+  function aggValue(p, col) {
+    const rows = rowsFor(p), agg = p.agg || (col || p.col ? "sum" : "count"), c = col || p.col;
+    if (agg === "count" && !col) return rows.length;
+    const v = rows.map((r) => +r[c]).filter(isFinite);
     if (!v.length) return null;
     return agg === "sum" ? v.reduce((a, b) => a + b, 0) : agg === "mean" ? v.reduce((a, b) => a + b, 0) / v.length : agg === "min" ? Math.min(...v) : Math.max(...v);
   }
+  function liveStat(p) {
+    // A stat whose value comes from data: agg of col, optional `of` (n / total) and `vs` (delta against a column).
+    if (!p.data) return p;
+    const v = aggValue(p);
+    const of = p.of ? (p.of === true ? rowsFor({ ...p, where: null }).length : p.of) : null;
+    const out = { ...p, value: v, unit: of != null ? `/ ${fmt(of)}` : p.unit, sub: p.sub ?? (of ? `${Math.round((100 * v) / (of || 1))}%` : null) };
+    if (p.vs) {
+      const b = aggValue(p, p.vs), d = v - b, good = (p.good || "up") === "up";
+      out.delta = (d >= 0 ? "+" : "-") + fmt(Math.abs(d), p.fmt) + (b ? ` (${(d >= 0 ? "+" : "-") + Math.abs((100 * d) / b).toFixed(1)}%)` : "");
+      out.sub = p.sub ?? `vs ${fmt(b, p.fmt)} ${p.vs}`;
+      if (!p.tone && d) out.tone = (d > 0) === good ? "good" : "bad";
+    }
+    return out;
+  }
   C.stat = (p, el) => {
     if (!p.data) { el.append(statEl(p)); return; }
-    const draw = () => {
-      const v = aggValue(p);
-      const of = p.of ? (p.of === true ? rowsFor({ ...p, where: null }).length : p.of) : null;
-      el.replaceChildren(statEl({ ...p, value: v, unit: of != null ? `/ ${fmt(of)}` : p.unit, sub: p.sub ?? (of ? `${Math.round((100 * v) / (of || 1))}%` : null) }));
-    };
+    const draw = () => el.replaceChildren(statEl(liveStat(p)));
     draw(); subscribe(p.data, draw);
   };
   C.stats = (p, el) => {
@@ -298,18 +310,20 @@
     const draw = () => {
       grid.innerHTML = "";
       let items = arr(p.items);
-      if (p.data && p.by) {
+      if (p.data && p.by && !p.cols) {
         const rows = rowsFor(p, [p.by]), groups = groupBy(rows, p.by);
         const order = p.order ? arr(p.order).map(String) : groups.map((g) => g[0]);
         const m = new Map(groups);
         items = (p.total ? [{ label: p.total === true ? "Total" : p.total, value: rows.length }] : [])
           .concat(order.map((k) => ({ label: k, value: (m.get(k) || []).length, tone: cellTone(p, p.data, p.by, k) || undefined, _pick: k })));
-      } else if (p.data) {
+      } else if (p.data && !p.cols) {
         const rows = rowsFor(p), d = DS[p.data];
         const lc = p.label || d.cols.find((c) => typeOf(p.data, c) === "str") || d.cols[0];
         const vc = p.value || d.cols.find((c) => typeOf(p.data, c) === "num") || d.cols[1];
         items = rows.map((r) => ({ label: r[lc], value: r[vc], tone: p.tone ? r[p.tone] : null, delta: r.delta, unit: r.unit, sub: r.sub, good: r.good }));
       }
+      if (p.data && p.cols) items = arr(p.cols).map((c) => { c = colKey(c); return { label: (p.labels && p.labels[c]) || c, value: aggValue(p, c) }; });
+      items = items.map((it) => (it && typeof it === "object" ? liveStat({ fmt: p.fmt, ...it }) : it));
       const sel = p.by && picked(p.data, p.by);
       for (const it of items) {
         const t = statEl(typeof it === "object" ? it : { label: "", value: it });
@@ -323,6 +337,7 @@
       }
     };
     draw(); if (p.data) subscribe(p.data, draw);
+    for (const ds2 of new Set(arr(p.items).map((it) => it && it.data).filter(Boolean))) subscribe(ds2, draw);
     el.append(grid);
   };
 
@@ -385,7 +400,9 @@
         return [row, h("tr", { class: "su-xtr" }, h("td", { colspan: cols.length }, det))];
       };
       if (p.group) {
-        for (const [k, rs] of groupBy(rows, p.group)) {
+        let gs = groupBy(rows, p.group);
+        if (p.order) { const o = arr(p.order).map(String); gs = gs.sort((a, b) => (o.indexOf(a[0]) + 1 || 1e9) - (o.indexOf(b[0]) + 1 || 1e9)); }
+        for (const [k, rs] of gs) {
           const tone = cellTone(p, ds, p.group, k);
           const g = h("tr", { class: "su-grp" + (shut.has(k) ? " su-shut" : ""), onclick: () => { shut.has(k) ? shut.delete(k) : shut.add(k); draw(); } },
             h("td", { colspan: cols.length }, tone ? badge(k, tone) : k, " ", h("span", { class: "su-count" }, rs.length)));
@@ -843,11 +860,20 @@
       if (!marks.length && !bands.length) return;
       const { ctx, chartArea: a } = chart, horiz = chart.options.indexAxis === "y";
       const sc = horiz ? chart.scales.x : chart.scales.y, cat = horiz ? chart.scales.y : chart.scales.x;
-      const catPx = (x) => { const i = keys.indexOf(String(x)); if (i >= 0) return cat.getPixelForValue(i);
+      const linear = cat.type === "linear";
+      const catPx = (x) => { if (linear) return cat.getPixelForValue(+x); const i = keys.indexOf(String(x)); if (i >= 0) return cat.getPixelForValue(i);
         // between two keys (e.g. a date not in the data): place by order
         const j = keys.findIndex((k) => k > String(x)); return j <= 0 ? (j === 0 ? cat.getPixelForValue(0) : null) : (cat.getPixelForValue(j - 1) + cat.getPixelForValue(j)) / 2; };
       ctx.save(); ctx.font = "11px " + css("--mono");
       for (const b of bands) {
+        if (Array.isArray(b.x) || Array.isArray(b.y)) {   // value box, e.g. a scatter quadrant: {x: [300, null], y: [8, null]}
+          const xs = b.x || [null, null], ys = b.y || [null, null];
+          const x1 = xs[0] == null ? a.left : catPx(xs[0]), x2 = xs[1] == null ? a.right : catPx(xs[1]);
+          const y1 = ys[1] == null ? a.top : sc.getPixelForValue(+ys[1]), y2 = ys[0] == null ? a.bottom : sc.getPixelForValue(+ys[0]);
+          ctx.fillStyle = css("--warn") + "22"; ctx.fillRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+          if (b.label) { ctx.fillStyle = css("--muted"); ctx.textAlign = "left"; ctx.fillText(b.label, Math.min(x1, x2) + 4, Math.min(y1, y2) + 12); }
+          continue;
+        }
         const p1 = catPx(b.from), p2 = catPx(b.to ?? keys[keys.length - 1]); if (p1 == null || p2 == null) continue;
         ctx.fillStyle = css("--accent") + "14";
         if (horiz) ctx.fillRect(a.left, Math.min(p1, p2), a.right - a.left, Math.abs(p2 - p1)); else ctx.fillRect(Math.min(p1, p2), a.top, Math.abs(p2 - p1), a.bottom - a.top);
@@ -921,15 +947,20 @@
           return { ...base, label: p.series ? base.label : (p.labels && p.labels[y]) || y, data: pts, pointRadius: 4, pointHoverRadius: 6, backgroundColor: c + "b3" };
         }
         if (kind === "waterfall") {
-          let cum = 0; const fl = s.data.map((v) => { const a = cum; cum += +v || 0; return [a, cum]; });
-          if (p.total) fl.push([0, cum]);
-          const cols = s.data.map((v) => css(+v >= 0 ? "--good" : "--bad")); if (p.total) cols.push(css("--s1"));
+          let cum = 0; const fl = [], cols = [], labs = [];
+          const subs = arr(p.subtotals);
+          s.data.forEach((v, i) => {
+            const a = cum; cum += +v || 0; fl.push([a, cum]); cols.push(css(+v >= 0 ? "--good" : "--bad")); labs.push(m.labels[i]);
+            for (const st of subs.filter((x) => String(x.after) === String(m.keys[i]))) { fl.push([0, cum]); cols.push(css("--s1")); labs.push(st.label || "Subtotal"); }
+          });
+          if (p.total) { fl.push([0, cum]); cols.push(css("--s1")); labs.push(p.total); }
+          m.wlabels = labs;
           return { ...base, data: fl, backgroundColor: cols, borderRadius: 3, borderSkipped: false, maxBarThickness: 46, borderWidth: 0 };
         }
         if (kind === "donut") return { ...base, backgroundColor: ser, borderColor: css("--surface"), borderWidth: 2 };
         return { ...base, backgroundColor: sel ? m.keys.map((_, i) => dim(c, i)) : c, borderRadius: 4, borderSkipped: "start", maxBarThickness: 38, borderWidth: 0 };
       });
-      if (kind === "waterfall" && p.total) m.labels = m.labels.concat([p.total]);
+      if (kind === "waterfall" && m.wlabels) m.labels = m.wlabels;
       if (kind === "scatter" && p.trend) {
         for (const d of datasets.slice()) {
           const lr = linreg(d.data); if (!lr) continue;
@@ -1178,6 +1209,8 @@
   }
   C.diagram = (p, el, n, path) => {
     const box = h("div", { class: "su-diagram su-pending" }, "Drawing diagram…"); el.append(box);
+    if (p.legend && p.legend.length) el.append(h("div", { class: "su-legend", style: { marginTop: "8px" } }, p.legend.map((l) => h("span", null, h("i", { style: { background: `var(--${l.tone})` } }), l.label))));
+    if (p.cyclelist && p.cyclelist.length) el.append(h("div", { class: "su-note" }, `Cycles (red edges): ${p.cyclelist.map((c) => c.join(" → ")).join("; ")}`));
     const job = { el: box, src: p.src, path };
     PENDING.push(job);
     LIVE.push(() => { if (!PENDING.includes(job)) { mermaidReady = false; PENDING.push(job); } });

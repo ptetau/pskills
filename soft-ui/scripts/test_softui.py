@@ -133,6 +133,55 @@ class NewComponents(unittest.TestCase):
         self.assertIn("linkStyle 0 stroke:#dc3c3d", src)
 
 
+class RoundTwoFixes(unittest.TestCase):
+    def test_where_skips_nulls(self):
+        ctx, plan = compile_yaml("title: T\ndata:\n  d: {rows: [{a: 1, b: 2}, {a: 2}], where: {b: '>0'}}\nlayout: [{table: d}]")
+        self.assertEqual(len(plan["data"]["d"]["rows"]), 1)
+
+    def test_keyword_column_in_expression(self):
+        ctx, plan = compile_yaml("title: T\ndata:\n  d: {rows: [{from: a, to: b, my col: 3}], add: {pair: \"from + '>' + to\", x: '`my col` * 2'}}\n"
+                                 "layout: [{table: d}]")
+        self.assertEqual(ctx.errors, [])
+        self.assertEqual((plan["data"]["d"]["rows"][0]["pair"], plan["data"]["d"]["rows"][0]["x"]), ("a>b", 6))
+
+    def test_pivot_union_group_all_multisort(self):
+        ctx, plan = compile_yaml("title: T\ndata:\n  a: [{acc: x, m: jan, v: 1}, {acc: x, m: feb, v: 2}]\n  b: [{acc: y, m: jan, v: 5}]\n"
+                                 "  p: {from: a, union: [b], pivot: {index: acc, columns: m, values: v}, sort: [-jan, acc]}\n"
+                                 "  t: {from: a, group: all, sum: [v]}\nlayout: [{table: p}]")
+        self.assertEqual(ctx.errors, [])
+        self.assertEqual(plan["data"]["p"]["rows"][0], {"acc": "y", "jan": 5})
+        self.assertEqual(plan["data"]["t"]["rows"], [{"count": 2, "v": 3}])
+
+    def test_bytes_function(self):
+        ctx, plan = compile_yaml("title: T\ndata:\n  d: {rows: [{s: 1.5 GB}, {s: 64 kB}], add: {b: bytes(s)}}\nlayout: [{table: d}]")
+        self.assertEqual([r["b"] for r in plan["data"]["d"]["rows"]], [1.5 * 1024 ** 3, 64 * 1024])
+
+    def test_pct_on_fractions_becomes_ratio(self):
+        ctx, plan = compile_yaml("title: T\ndata: {d: [{m: 0.146}, {m: 0.5}]}\nlayout: [{table: {data: d, fmt: {m: pct}}}]")
+        self.assertEqual(plan["layout"][0]["p"]["fmt"], {"m": "ratio"})
+        self.assertTrue(any("ratio" in f for f in ctx.fixes))
+
+    def test_truth_from_object(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "l.json").write_text('{"inputs": ["a", "b"], "outputs": {"y": "a and b"}}')
+        ctx, plan = compile_yaml("title: T\ndata: {l: l.json}\nlayout: [{truth: {data: l, highlight: y}}]", d)
+        self.assertEqual(ctx.errors, [])
+        self.assertEqual(len(plan["layout"][0]["p"]["rows"]), 4)
+
+    def test_graph_cycles(self):
+        ctx, plan = compile_yaml("title: T\ndata: {e: [{a: x, b: y}, {a: y, b: x}, {a: y, b: z}]}\nlayout:\n- graph: {data: e, from: a, to: b, cycles: true}")
+        p = plan["layout"][0]["p"]
+        self.assertEqual(p["cyclelist"], [["x", "y", "x"]])
+        self.assertIn("linkStyle 0 stroke:#dc3c3d", p["src"])
+        self.assertNotIn("linkStyle 2", p["src"])
+
+    def test_object_file_is_one_row(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "c.json").write_text('{"bank": 5, "savings": 7}')
+        ctx, plan = compile_yaml("title: T\ndata:\n  c: {file: c.json, add: {total: bank + savings}}\nlayout: [{kv: {data: c}}]", d)
+        self.assertEqual(plan["data"]["c"]["rows"], [{"bank": 5, "savings": 7, "total": 12}])
+
+
 class Repairs(unittest.TestCase):
     def test_typo_component_alias_and_prop(self):
         ctx, plan = compile_yaml("title: T\ndata: {d: [{Name: a, n: 1}]}\nlayout:\n"
@@ -205,7 +254,7 @@ class Cli(unittest.TestCase):
         self.assertEqual(rc, 0)
         for name in softui.R.C:
             self.assertIn(f"  {name}:", out)
-        self.assertLess(len(out), 5200)
+        self.assertLess(len(out), 5600)
 
     def test_explain_alias(self):
         rc, out = run("explain", "kanban")

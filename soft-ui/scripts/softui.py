@@ -194,7 +194,54 @@ import operator as op
 BINOPS = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul, ast.Div: op.truediv, ast.Mod: op.mod,
           ast.Pow: op.pow, ast.FloorDiv: op.floordiv}
 CMPOPS = {ast.Eq: op.eq, ast.NotEq: op.ne, ast.Lt: op.lt, ast.LtE: op.le, ast.Gt: op.gt, ast.GtE: op.ge}
-FUNCS = {"round": round, "abs": abs, "min": min, "max": max, "len": len, "str": str, "int": int, "float": float}
+def _bytes(v):
+    """'1.2 GB' -> 1288490188.8; plain numbers pass through."""
+    if isinstance(v, (int, float)):
+        return v
+    m = re.match(r"\s*([\d.]+)\s*([kKmMgGtT]?)i?[bB]?\s*$", str(v))
+    if not m:
+        return None
+    return float(m.group(1)) * 1024 ** "_KMGT".index(m.group(2).upper() or "_")
+
+
+def _num(v):
+    """'$1,234.50' or '12%' -> a number."""
+    if isinstance(v, (int, float)):
+        return v
+    t = re.sub(r"[^\d.eE+-]", "", str(v).replace("−", "-"))
+    try:
+        return float(t)
+    except ValueError:
+        return None
+
+
+FUNCS = {"round": round, "abs": abs, "min": min, "max": max, "len": len, "str": str, "int": int, "float": float,
+         "bytes": _bytes, "num": _num, "lower": lambda x: str(x).lower(), "upper": lambda x: str(x).upper(),
+         "split": lambda x, sep=".", i=0: str(x).split(sep)[i] if len(str(x).split(sep)) > i else None}
+PY_KEYWORDS = {"from", "class", "def", "return", "lambda", "global", "import", "pass", "with", "yield", "try",
+               "while", "for", "del", "as", "raise", "assert", "break", "continue", "elif", "except", "finally",
+               "nonlocal", "async", "await", "else", "if", "True", "False", "None"}
+
+
+def prep_expr(expr, cols):
+    """Let an expression name any column: `odd name` in backticks, or a bare Python keyword such as from.
+    Return (expression, {alias: column})."""
+    alias = {}
+
+    def name_for(c):
+        a = f"_c{len(alias)}"
+        alias[a] = c
+        return a
+    out, parts = [], re.split(r"('(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\")", str(expr))
+    for i, part in enumerate(parts):
+        if i % 2:   # quoted text
+            out.append(part)
+            continue
+        part = re.sub(r"`([^`]+)`", lambda m: name_for(m.group(1)), part)
+        for kw in sorted({c for c in cols if c in PY_KEYWORDS - {"if", "else", "True", "False", "None"}}, key=len, reverse=True):
+            part = re.sub(rf"(?<![\w.]){kw}(?!\w)", lambda m, kw=kw: name_for(kw), part)
+        out.append(part)
+    return "".join(out), alias
 
 
 def safe_eval(node, row):
@@ -239,12 +286,16 @@ def add_columns(ctx, rows, adds, path):
         return rows
     cols = list(rows[0].keys()) if rows else []
     for name, expr in adds.items():
+        text, alias = prep_expr(expr, cols)
         try:
-            tree = ast.parse(str(expr), mode="eval")
+            tree = ast.parse(text, mode="eval")
         except SyntaxError:
-            ctx.err(path, f'add.{name}: "{expr}" is not a valid expression')
+            hint = " Use Python syntax: x if c else y (not c ? x : y), and quote text with '." if "?" in str(expr) else \
+                " Put a column whose name has spaces or symbols in backticks: `my col`."
+            ctx.err(path, f'add.{name}: "{expr}" is not a valid expression.{hint}')
             continue
-        names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)} - set(FUNCS)
+        names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)} - set(FUNCS) - set(alias)
+        names |= {c for c in alias.values() if c not in cols}
         for nm in sorted(names - set(cols)):
             m = close(nm, cols, 0.6)
             ctx.err(path, f'add.{name}: no column "{nm}"' + (f' (did you mean "{m}"?)' if m else f". Columns: {', '.join(cols)}"))
@@ -252,7 +303,7 @@ def add_columns(ctx, rows, adds, path):
             continue
         try:
             for r in rows:
-                v = safe_eval(tree, r)
+                v = safe_eval(tree, {**r, **{a: r.get(c) for a, c in alias.items()}})
                 r[name] = round(v, 4) if isinstance(v, float) else v
         except (ValueError, TypeError, KeyError) as e:
             ctx.err(path, f'add.{name}: {e}. Allowed: + - * / % **, comparisons, x if c else y, {", ".join(FUNCS)}')
@@ -294,7 +345,8 @@ def to_rows(val, ctx, path, base_key=None):
             if m:
                 ctx.fix(where, f'column "{name}" → "{m}"', m)
                 return m
-            ctx.err(where, f'no column "{name}". Columns: {", ".join(cols)}')
+            ctx.err(where, f'no column "{name}". Columns: {", ".join(cols)}. Steps run in this order: {T.ORDER};'
+                           f' to use a column that a later step makes, start a new dataset with from:')
             return None
         out = T.apply(ctx, rows, steps, path, fix_col, add_columns)
         return out if len(ctx.errors) == n_err else None
@@ -347,6 +399,8 @@ def to_rows(val, ctx, path, base_key=None):
         if all(isinstance(v, list) for v in val.values()):
             n = max(len(v) for v in val.values())
             return [{k: (v[i] if i < len(v) else None) for k, v in val.items()} for i in range(n)]
+        if all(not isinstance(v, dict) for v in val.values()) and not all(isinstance(v, list) for v in val.values()):
+            return [dict(val)]   # one object = one row (kv shows it; expressions can use its keys)
         return [{"key": k, "value": v} for k, v in val.items()]
     ctx.err(path, "data must be rows (a list of maps), CSV text, TOON text, or a file path")
     return None
@@ -416,7 +470,7 @@ def register_parts(ctx, name, val):
                 register(ctx, nm, [{"n": i + 1, "value": x} for i, x in enumerate(v)])
             elif isinstance(v, dict) and v:
                 if all(not isinstance(x, (dict, list)) for x in v.values()):
-                    register(ctx, nm, [{"key": a, "value": b} for a, b in v.items()])
+                    register(ctx, nm, [dict(v)])
                 walk(v, nm, depth + 1)
     walk(raw, name, 0)
 
@@ -900,6 +954,20 @@ def check_cols(ctx, comp, node, ds, path):
                     if r:
                         out.append(r)
             p[k] = out
+    if isinstance(p.get("fmt"), dict):
+        for c, f in list(p["fmt"].items()):
+            if f == "pct" and pct_check(ctx, ds, [c], path, f"fmt.{c}"):
+                p["fmt"][c] = "ratio"
+    elif p.get("fmt") == "pct":
+        if comp == "stat":
+            cols = [p.get("col")]
+        elif comp == "heatmap":
+            cols = [p.get("v")]
+        else:
+            cols = [c if isinstance(c, str) else c.get("key") for c in (p.get("y") or [])]
+        cols = [c for c in cols if c]
+        if cols and pct_check(ctx, ds, cols, path, "fmt"):
+            p["fmt"] = "ratio"
     if comp == "graph":
         return
     tm = p.get("tone")
@@ -937,6 +1005,18 @@ def check_cols(ctx, comp, node, ds, path):
             if r:
                 w[r] = v
         p["where"] = w
+
+
+def pct_check(ctx, ds, cols, path, where):
+    """fmt pct expects 0-100. Values that are all fractions get fmt ratio, with a fixed line."""
+    if ds not in ctx.data:
+        return False
+    vals = [r.get(c) for r in ctx.data[ds]["rows"] for c in cols if isinstance(r.get(c), (int, float)) and not isinstance(r.get(c), bool)]
+    if vals and all(abs(v) <= 1.0 for v in vals) and any(0 < abs(v) < 1 for v in vals):
+        ctx.fix(path, f"{where}: pct expects 0-100 and these values are fractions; used ratio (0.146 → 14.6%)",
+                f"fmt ratio for 0-1 values, pct for 0-100")
+        return True
+    return False
 
 
 def text_or_file(ctx, s, path, key):
@@ -1125,8 +1205,19 @@ def finish(ctx, comp, node, path):
     if comp == "stats" and isinstance(p.get("items"), list):
         items = []
         for i, it in enumerate(p["items"]):
+            if isinstance(it, dict) and len(it) == 1 and isinstance(next(iter(it.values())), dict) and lookup_comp(next(iter(it)))[0] == "stat":
+                it = next(iter(it.values()))
+                ctx.fix(f"{path}.items[{i}]", "unwrapped `stat:` inside a stats list", "stats items are stat props: - {label: X, value: 1}")
             if isinstance(it, dict):
-                items.append(norm_props(ctx, "stat", dict(it), f"{path}.items[{i}]"))
+                it = norm_props(ctx, "stat", dict(it), f"{path}.items[{i}]")
+                if "data" in it:
+                    ds = resolve_data(ctx, it["data"], f"{path}.items[{i}]")
+                    if ds:
+                        it["data"] = ds
+                        for k in ("col", "vs"):
+                            if it.get(k):
+                                it[k] = col_fix(ctx, ds, it[k], f"{path}.items[{i}]", k) or it[k]
+                items.append(it)
             else:
                 items.append(it)
         p["items"] = items
@@ -1217,8 +1308,18 @@ def classes_mermaid(rows, p):
 
 
 def truth_rows(ctx, p, path):
-    if p.get("data"):
-        return
+    if p.get("data") in ctx.data:
+        d = ctx.data[p["data"]]
+        row = d["rows"][0] if len(d["rows"]) == 1 else {r.get("key"): r.get("value") for r in d["rows"]} if "key" in d["cols"] else {}
+        if isinstance(row.get("inputs"), list) and isinstance(row.get("outputs"), dict):
+            p.setdefault("inputs", row["inputs"])
+            p.setdefault("outputs", row["outputs"])
+            p.pop("data")
+        else:
+            bad = [c for c in d["cols"] if any(r.get(c) not in (0, 1, True, False, None) for r in d["rows"])]
+            if bad:
+                ctx.err(path, f"truth data must be 0/1 rows, or an object with inputs and outputs. Not 0/1: {', '.join(bad)}")
+            return
     ins = [str(x) for x in (p.get("inputs") or [])]
     outs = p.get("outputs") or {}
     if not ins or not outs:
@@ -1289,6 +1390,8 @@ def edges_to_mermaid(rows, p, nodes=None):
     styles = []
     attrs = {}
     text = {}
+    pairs = []
+    legend = {}
     if nodes:
         key = p.get("key") or next((c for c in nodes["cols"] if c.lower() in ("name", "id", "node", "key")), nodes["cols"][0])
         for r in nodes["rows"]:
@@ -1315,8 +1418,17 @@ def edges_to_mermaid(rows, p, nodes=None):
             lab = ("−" if neg else "+") + (f" {lab}" if lab not in (None, "") else "")
         arrow = "-.->" if neg else "-->"
         edges.append(f"  {ia} {arrow}|{mlabel(lab)}| {ib}" if lab not in (None, "") else f"  {ia} {arrow} {ib}")
+        pairs.append((a, b))
         if p.get("sign"):
             styles.append(f"  linkStyle {len(edges) - 1} stroke:{'#dc3c3d' if neg else '#0a8a1f'},stroke-width:1.6px")
+        et = p.get("edge_tone")
+        if isinstance(et, dict) and et:
+            ecol, emap = next(iter(et.items()))
+            t = emap.get(r.get(ecol)) if isinstance(emap, dict) else None
+            t = t or AUTO_TONE.get(str(r.get(ecol)).lower())
+            if t in TONE_FILL:
+                styles.append(f"  linkStyle {len(edges) - 1} stroke:{TONE_FILL[t][1]},stroke-width:2px")
+                legend.setdefault((f"{ecol}: {r.get(ecol)}", t), True)
     shown = {name: text.get(name, name) for name in ids}
     grouped = set()
     for gi, (g, members) in enumerate(groups.items()):
@@ -1339,10 +1451,57 @@ def edges_to_mermaid(rows, p, nodes=None):
             if t in TONE_FILL:
                 out.append(f"  class {ids[name]} t_{t}")
                 used.add(t)
+                legend.setdefault((f"{col}: {v}", t), True)
         for t in sorted(used):
             fill, stroke = TONE_FILL[t]
             out.append(f"  classDef t_{t} fill:{fill},stroke:{stroke},color:#1b2029,stroke-width:1.5px")
+    if p.get("cycles"):
+        comp_of = scc([x for x in pairs])
+        cyc_edges = [i for i, (a, b) in enumerate(pairs) if comp_of.get(a) is not None and comp_of.get(a) == comp_of.get(b)]
+        for i in cyc_edges:
+            styles.append(f"  linkStyle {i} stroke:#dc3c3d,stroke-width:2.4px")
+        groups_c = {}
+        for i in cyc_edges:
+            groups_c.setdefault(comp_of[pairs[i][0]], []).append(pairs[i])
+        p["cyclelist"] = [[str(x) for x in (find_cycle(es) or [])] for es in groups_c.values()]
+    p["legend"] = [{"label": k[0], "tone": k[1]} for k in legend]
     return "\n".join(out + edges + styles)
+
+
+def scc(edges):
+    """Return {node: component id} for nodes in a cycle (a strongly connected part of size > 1, or a self loop)."""
+    graph = {}
+    for a, b in edges:
+        graph.setdefault(a, []).append(b)
+        graph.setdefault(b, [])
+    index, low, stack, on, out, n = {}, {}, [], set(), {}, [0]
+
+    def strong(v):
+        index[v] = low[v] = n[0]
+        n[0] += 1
+        stack.append(v)
+        on.add(v)
+        for w in graph[v]:
+            if w not in index:
+                strong(w)
+                low[v] = min(low[v], low[w])
+            elif w in on:
+                low[v] = min(low[v], index[w])
+        if low[v] == index[v]:
+            comp = []
+            while True:
+                w = stack.pop()
+                on.discard(w)
+                comp.append(w)
+                if w == v:
+                    break
+            if len(comp) > 1 or v in graph[v]:
+                for w in comp:
+                    out[w] = index[v]
+    for v in list(graph):
+        if v not in index:
+            strong(v)
+    return out
 
 
 HUNK = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@ ?(.*)")
@@ -1442,6 +1601,8 @@ def normalise_page(ctx, spec):
 def compile_spec(spec, base):
     ctx = Ctx(base)
     page = normalise_page(ctx, spec)
+    if page.get("base"):
+        ctx.base = (base / str(page["base"])).resolve()
     data = page.get("data") or {}
     if not isinstance(data, dict):
         ctx.err("data", "data must be a map of name: rows|csv|file")
@@ -1578,20 +1739,24 @@ DATA_HELP = """data — named datasets under the page key `data:`. Each node nam
 SHAPE a dataset (steps run in this order; any subset):
   d:
     file: results.csv          # or rows: [...], csv: |..., or from: <a dataset defined above>
+    union: [other]             # add the rows of other datasets
     where: {status: [failed, flaky], ms: ">500", day: ">=2026-11-20"}
     explode: after             # one row per item of a list column (e.g. dependencies)
     join: {data: failures, on: test, cols: [error]}     # on: [left, right] when names differ
     add: {delta: "after - before", period: "'after' if day >= '2026-11-20' else 'before'"}
-    group: [suite]             # one row per group, with count ...
+    group: [suite]             # one row per group, with count ... (group: all = one total row)
     sum: [ms]                  # ... and sum / mean / min / max of columns
     pct: [ms]                  # adds ms_pct = share of the total
     describe: [minutes]        # n mean sd min q1 median q3 max  (by: arm for one row per group)
     corr: [a, b, c]            # rows a, b, r (Pearson) → heatmap {x: a, y: b, v: r, scale: div}
+    pivot: {index: account, columns: month, values: actual}   # months become columns
     then: {secs: "ms / 1000"}  # computed columns after group
-    sort: -ms
+    sort: [section, -ms]
     top: 10
     rename: {ms: Time}
-  expressions: + - * / % **, == != < > <= >=, and or not, x if cond else y, round abs min max len str int float
+  expressions: + - * / % **, == != < > <= >=, and or not, x if cond else y, round abs min max len str int float,
+               bytes('1.2 GB'), num('$1,200'), lower, upper, split(x, '.', 0). `odd name` in backticks for any column.
+  page key base: ../../data   makes every data path start from that folder.
   single object (e.g. run.json): show it with kv: {data: d, keys: [app, commit]}
   per node:    where: {sev: [high, critical]}  or  where: {ms: ">500"} keeps matching rows
 Paths resolve from the folder of the spec."""
@@ -1630,12 +1795,14 @@ def catalog():
         for name, c in R.C.items():
             if c["group"] == g:
                 print(f"  {sig(name)} — {c['doc']}")
-    print("fmt values: " + " ".join(R.FMTS) + " · tone values: " + " ".join(R.TONES))
+    print("fmt values: " + " ".join(R.FMTS) + " (pct = 0-100, ratio = 0-1) · tone values: " + " ".join(R.TONES)
+          + " · tone thresholds: {col: {'>300': bad}}")
     print("Values such as high/medium/low and pass/fail/done get tone colours without a tone map.")
     print("example:")
     for ln in EXAMPLE.strip("\n").split("\n"):
         print("  " + ln)
-    print("`softui.py explain table chart` for prop details and examples; `explain data` for every data form.")
+    print("`softui.py explain table chart` for props and examples; `explain data` for data forms and steps.")
+    print("render spec.yaml --shot page.png also saves a screenshot to look at; --artifact for the Artifact tool.")
 
 
 def explain(names):
