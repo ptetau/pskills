@@ -37,5 +37,21 @@ not show.
 | R9 | Migration plan | Engineering manager |
 | R10 | Dependency audit | Security lead |
 
+Round 2 adds 8 briefs for the wider jobs: finance, research, systems, data and code
+structure, hardware logic, choices, and the business.
+
+| ID | Report | Reader |
+|---|---|---|
+| R11 | Profit and loss against budget | Owner and accountant |
+| R12 | Meta-analysis of a sleep intervention | Clinical researcher |
+| R13 | System model of a subscription business | Leadership team |
+| R14 | Database schema | New engineer |
+| R15 | Codebase structure | Tech lead who plans a refactor |
+| R16 | Sensor node block diagram and alarm logic | Firmware engineer |
+| R17 | Choose a hosting platform | CTO |
+| R18 | How the business is doing (Xero snapshot) | Owner on Monday morning |
+
 Each folder in `reports/` holds `brief.md` and the data. `shoot.js` takes a full-page
-screenshot. The results of each run are in `runs/<run>/`, with a `RESULTS.md` summary.
+screenshot. The results of each run are in `runs/<run>/`, with a `RESULTS.md` summary:
+`runs/pilot/` (R1, R3, R5), `runs/full/` (R1 to R10), and `runs/round2/` (R11 to R18).
+`summarise.py` writes each `RESULTS.md` from the results of the workflow.
